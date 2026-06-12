@@ -1,0 +1,649 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-12T09:36:48.222Z",
+  "source_files": [
+    "benchmarks/summaries.json",
+    "computed/signals.json",
+    "damodaran/credit_ratings.json",
+    "macro/stablecoins.json",
+    "macro/tga.json",
+    "sentiment/cnn-components.json",
+    "slickcharts/magnificent7.json",
+    "slickcharts/membership-changes.json",
+    "slickcharts/sp500-analysis.json",
+    "slickcharts/nasdaq100-analysis.json",
+    "slickcharts/dowjones-analysis.json"
+  ],
+  "membershipChanges": {
+    "updated": "2026-06-08T13:25:47+00:00",
+    "recent": [
+      {
+        "date": "2026-06-08",
+        "index": "sp500",
+        "added": [
+          "BNY",
+          "CASY",
+          "CIEN",
+          "COHR",
+          "FDXF",
+          "LITE",
+          "MRSH",
+          "SATS",
+          "VEEV",
+          "VRT"
+        ],
+        "removed": [
+          "BK",
+          "CTRA",
+          "DAY",
+          "EPAM",
+          "HOLX",
+          "LW",
+          "MMC",
+          "MOH",
+          "MTCH",
+          "PAYC"
+        ],
+        "previousCount": 503,
+        "currentCount": 503
+      },
+      {
+        "date": "2026-06-08",
+        "index": "nasdaq100",
+        "added": [
+          "ALNY",
+          "FER",
+          "INSM",
+          "LITE",
+          "MPWR",
+          "SNDK",
+          "STX",
+          "WDC",
+          "WMT"
+        ],
+        "removed": [
+          "AZN",
+          "BIIB",
+          "CDW",
+          "CSGP",
+          "GFS",
+          "LULU",
+          "ON",
+          "TEAM",
+          "TTD"
+        ],
+        "previousCount": 101,
+        "currentCount": 101
+      }
+    ]
+  },
+  "magnificent7": {
+    "updated": "2026-06-07T09:54:39+00:00",
+    "totalMarketCap": 21580000000000,
+    "totalWeight": 100,
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "NVDA",
+        "company": "Nvidia",
+        "weight": 21.95,
+        "changePercent": -6.2
+      },
+      {
+        "rank": 2,
+        "symbol": "AAPL",
+        "company": "Apple Inc.",
+        "weight": 19.95,
+        "changePercent": -1.25
+      },
+      {
+        "rank": 3,
+        "symbol": "GOOG",
+        "company": "Alphabet Inc.",
+        "weight": 19.58,
+        "changePercent": -0.95
+      },
+      {
+        "rank": 4,
+        "symbol": "MSFT",
+        "company": "Microsoft",
+        "weight": 13.68,
+        "changePercent": -2.66
+      },
+      {
+        "rank": 5,
+        "symbol": "AMZN",
+        "company": "Amazon",
+        "weight": 11.7,
+        "changePercent": -3.06
+      },
+      {
+        "rank": 6,
+        "symbol": "META",
+        "company": "Meta Platforms",
+        "weight": 6.65,
+        "changePercent": -5.51
+      },
+      {
+        "rank": 7,
+        "symbol": "TSLA",
+        "company": "Tesla Inc.",
+        "weight": 6.49,
+        "changePercent": -6.56
+      }
+    ]
+  },
+  "concentration": [
+    {
+      "id": "sp500",
+      "label": "S&P 500",
+      "updated": "2026-06-01T13:27:02+00:00",
+      "count": 503,
+      "top3Weight": 19.19,
+      "top10Weight": 39.37,
+      "leaders": [
+        {
+          "symbol": "NVDA",
+          "company": "NVIDIA Corp",
+          "weight": 7.59,
+          "cumulativeWeight": 7.59
+        },
+        {
+          "symbol": "AAPL",
+          "company": "Apple Inc",
+          "weight": 6.62,
+          "cumulativeWeight": 14.22
+        },
+        {
+          "symbol": "MSFT",
+          "company": "Microsoft Corp",
+          "weight": 4.98,
+          "cumulativeWeight": 19.2
+        },
+        {
+          "symbol": "AMZN",
+          "company": "Amazon.com Inc",
+          "weight": 4.18,
+          "cumulativeWeight": 23.38
+        },
+        {
+          "symbol": "GOOGL",
+          "company": "Alphabet Inc",
+          "weight": 3.42,
+          "cumulativeWeight": 26.8
+        }
+      ]
+    },
+    {
+      "id": "nasdaq100",
+      "label": "Nasdaq 100",
+      "updated": "2026-06-01T13:27:04+00:00",
+      "count": 101,
+      "top3Weight": 32.64,
+      "top10Weight": 66.94,
+      "leaders": [
+        {
+          "symbol": "NVDA",
+          "company": "Nvidia Corp",
+          "weight": 12.91,
+          "cumulativeWeight": 12.91
+        },
+        {
+          "symbol": "AAPL",
+          "company": "Apple Inc.",
+          "weight": 11.26,
+          "cumulativeWeight": 24.17
+        },
+        {
+          "symbol": "MSFT",
+          "company": "Microsoft Corp",
+          "weight": 8.47,
+          "cumulativeWeight": 32.64
+        },
+        {
+          "symbol": "AMZN",
+          "company": "Amazon.Com Inc",
+          "weight": 7.1,
+          "cumulativeWeight": 39.74
+        },
+        {
+          "symbol": "GOOGL",
+          "company": "Alphabet Inc. Class A Common Stock",
+          "weight": 5.81,
+          "cumulativeWeight": 45.55
+        }
+      ]
+    },
+    {
+      "id": "dowjones",
+      "label": "Dow Jones",
+      "updated": "2026-06-01T13:27:06+00:00",
+      "count": 30,
+      "top3Weight": 28.27,
+      "top10Weight": 56.03,
+      "leaders": [
+        {
+          "symbol": "GS",
+          "company": "Goldman Sachs Group Inc/The",
+          "weight": 12.26,
+          "cumulativeWeight": 12.26
+        },
+        {
+          "symbol": "CAT",
+          "company": "Caterpillar Inc",
+          "weight": 10.44,
+          "cumulativeWeight": 22.7
+        },
+        {
+          "symbol": "MSFT",
+          "company": "Microsoft Corp",
+          "weight": 5.57,
+          "cumulativeWeight": 28.26
+        },
+        {
+          "symbol": "UNH",
+          "company": "UnitedHealth Group Inc",
+          "weight": 4.56,
+          "cumulativeWeight": 32.82
+        },
+        {
+          "symbol": "AMGN",
+          "company": "Amgen Inc",
+          "weight": 4.04,
+          "cumulativeWeight": 36.86
+        }
+      ]
+    }
+  ],
+  "benchmarkMatrix": {
+    "generated": "2026-06-08T14:07:30.758570",
+    "rows": [
+      {
+        "id": "sp500",
+        "label": "S&P 500",
+        "price": {
+          "1w": -0.0259,
+          "1m": -0.0021,
+          "3m": 0.0955,
+          "6m": 0.0747,
+          "ytd": 0.0655
+        },
+        "eps": {
+          "1w": 0.0036,
+          "1m": 0.0266,
+          "3m": 0.1139,
+          "6m": 0.1814,
+          "ytd": 0.1647
+        },
+        "pe": {
+          "1w": -0.0294,
+          "1m": -0.0279,
+          "3m": -0.0165,
+          "6m": -0.0903,
+          "ytd": -0.0852
+        },
+        "pb": {
+          "1w": -0.0282,
+          "1m": -0.0276,
+          "3m": 0.0683,
+          "6m": 0.0228,
+          "ytd": 0.0142
+        },
+        "roe": {
+          "1w": 0.0012,
+          "1m": 0.0003,
+          "3m": 0.0862,
+          "6m": 0.1243,
+          "ytd": 0.1086
+        }
+      },
+      {
+        "id": "nasdaq100",
+        "label": "Nasdaq 100",
+        "price": {
+          "1w": -0.0453,
+          "1m": -0.0095,
+          "3m": 0.1751,
+          "6m": 0.1271,
+          "ytd": 0.1292
+        },
+        "eps": {
+          "1w": 0.0051,
+          "1m": 0.0303,
+          "3m": 0.1863,
+          "6m": 0.2595,
+          "ytd": 0.2192
+        },
+        "pe": {
+          "1w": -0.0502,
+          "1m": -0.0387,
+          "3m": -0.0094,
+          "6m": -0.1051,
+          "ytd": -0.0738
+        },
+        "pb": {
+          "1w": -0.0543,
+          "1m": -0.0538,
+          "3m": 0.1254,
+          "6m": -0.0096,
+          "ytd": 0.0284
+        },
+        "roe": {
+          "1w": -0.0044,
+          "1m": -0.0157,
+          "3m": 0.1361,
+          "6m": 0.1067,
+          "ytd": 0.1104
+        }
+      },
+      {
+        "id": "russell2000",
+        "label": "Russell 2000",
+        "price": {
+          "1w": -0.0294,
+          "1m": -0.0097,
+          "3m": 0.122,
+          "6m": 0.1237,
+          "ytd": 0.118
+        },
+        "eps": {
+          "1w": 0.0061,
+          "1m": 0.0189,
+          "3m": 0.0271,
+          "6m": 0.0712,
+          "ytd": 0.0644
+        },
+        "pe": {
+          "1w": -0.0353,
+          "1m": -0.028,
+          "3m": 0.0924,
+          "6m": 0.0491,
+          "ytd": 0.0504
+        },
+        "pb": {
+          "1w": -0.0289,
+          "1m": -0.0093,
+          "3m": 0.1211,
+          "6m": 0.11,
+          "ytd": 0.1077
+        },
+        "roe": {
+          "1w": 0.0066,
+          "1m": 0.0193,
+          "3m": 0.0262,
+          "6m": 0.0581,
+          "ytd": 0.0546
+        }
+      },
+      {
+        "id": "financials",
+        "label": "Financials",
+        "price": {
+          "1w": 0.0131,
+          "1m": 0.0187,
+          "3m": 0.0348,
+          "6m": -0.026,
+          "ytd": -0.0625
+        },
+        "eps": {
+          "1w": 0.0012,
+          "1m": 0.0061,
+          "3m": 0.0283,
+          "6m": 0.0625,
+          "ytd": 0.0537
+        },
+        "pe": {
+          "1w": 0.012,
+          "1m": 0.0125,
+          "3m": 0.0063,
+          "6m": -0.0833,
+          "ytd": -0.1103
+        },
+        "pb": {
+          "1w": 0.0131,
+          "1m": 0.0188,
+          "3m": 0.0249,
+          "6m": -0.0496,
+          "ytd": -0.0852
+        },
+        "roe": {
+          "1w": 0.0012,
+          "1m": 0.0062,
+          "3m": 0.0185,
+          "6m": 0.0368,
+          "ytd": 0.0283
+        }
+      },
+      {
+        "id": "information_technology",
+        "label": "Technology",
+        "price": {
+          "1w": -0.0542,
+          "1m": 0.0104,
+          "3m": 0.2423,
+          "6m": 0.1493,
+          "ytd": 0.1503
+        },
+        "eps": {
+          "1w": 0.0078,
+          "1m": 0.0531,
+          "3m": 0.2056,
+          "6m": 0.3905,
+          "ytd": 0.3293
+        },
+        "pe": {
+          "1w": -0.0614,
+          "1m": -0.0405,
+          "3m": 0.0305,
+          "6m": -0.1735,
+          "ytd": -0.1346
+        },
+        "pb": {
+          "1w": -0.0541,
+          "1m": 0.0104,
+          "3m": 0.1462,
+          "6m": 0.0268,
+          "ytd": 0.0613
+        },
+        "roe": {
+          "1w": 0.0078,
+          "1m": 0.0531,
+          "3m": 0.1123,
+          "6m": 0.2423,
+          "ytd": 0.2264
+        }
+      },
+      {
+        "id": "energy",
+        "label": "Energy",
+        "price": {
+          "1w": 0.0246,
+          "1m": 0.0305,
+          "3m": 0.0145,
+          "6m": 0.2581,
+          "ytd": 0.2895
+        },
+        "eps": {
+          "1w": 0.0023,
+          "1m": 0.0524,
+          "3m": 0.602,
+          "6m": 0.5494,
+          "ytd": 0.5541
+        },
+        "pe": {
+          "1w": 0.0222,
+          "1m": -0.0208,
+          "3m": -0.3667,
+          "6m": -0.188,
+          "ytd": -0.1703
+        },
+        "pb": {
+          "1w": 0.0246,
+          "1m": 0.0305,
+          "3m": 0.0072,
+          "6m": 0.239,
+          "ytd": 0.2699
+        },
+        "roe": {
+          "1w": 0.0023,
+          "1m": 0.0525,
+          "3m": 0.5904,
+          "6m": 0.5259,
+          "ytd": 0.5305
+        }
+      },
+      {
+        "id": "china",
+        "label": "China",
+        "price": {
+          "1w": 0.0013,
+          "1m": -0.0612,
+          "3m": -0.0452,
+          "6m": -0.1054,
+          "ytd": -0.0874
+        },
+        "eps": {
+          "1w": -0.0162,
+          "1m": -0.0177,
+          "3m": -0.0148,
+          "6m": 0.0231,
+          "ytd": 0.0103
+        },
+        "pe": {
+          "1w": 0.0289,
+          "1m": -0.0339,
+          "3m": -0.0204,
+          "6m": -0.1161,
+          "ytd": -0.0869
+        },
+        "pb": {
+          "1w": 0.0123,
+          "1m": -0.0803,
+          "3m": -0.084,
+          "6m": -0.1266,
+          "ytd": -0.1091
+        },
+        "roe": {
+          "1w": -0.0162,
+          "1m": -0.0481,
+          "3m": -0.065,
+          "6m": -0.0119,
+          "ytd": -0.0242
+        }
+      }
+    ]
+  },
+  "liquidity": [
+    {
+      "id": "tga",
+      "label": "Treasury General Account",
+      "updated": "2026-06-12T02:42:25.130Z",
+      "date": "2026-06-10",
+      "value": 830.399,
+      "delta7d": -73.482,
+      "delta30d": -171.983,
+      "points": 5196
+    },
+    {
+      "id": "stablecoins",
+      "label": "Stablecoin supply",
+      "updated": "2026-06-12T04:10:30.830Z",
+      "date": "2026-06-12",
+      "value": 313.66102660915004,
+      "delta7d": -1.8013,
+      "delta30d": -7.0708,
+      "points": 3118
+    }
+  ],
+  "sentimentComponents": {
+    "latestDate": "2026-06-11",
+    "points": 162,
+    "components": [
+      {
+        "id": "market_momentum",
+        "value": 51.2,
+        "delta7d": -42.2
+      },
+      {
+        "id": "stock_strength",
+        "value": 31.6,
+        "delta7d": -3.4
+      },
+      {
+        "id": "stock_breadth",
+        "value": 19.2,
+        "delta7d": -12.4
+      },
+      {
+        "id": "put_call",
+        "value": 27,
+        "delta7d": -70.4
+      },
+      {
+        "id": "volatility",
+        "value": 50,
+        "delta7d": 0
+      },
+      {
+        "id": "safe_haven",
+        "value": 22.4,
+        "delta7d": -47.8
+      },
+      {
+        "id": "junk_bond",
+        "value": 6.4,
+        "delta7d": 6
+      }
+    ]
+  },
+  "creditRatings": {
+    "sourceDate": "January 2026",
+    "generatedAt": "2026-06-05T10:58:54.284853",
+    "tableCount": 3,
+    "tables": [
+      {
+        "id": "large_manufacturing",
+        "rows": 15,
+        "bestRating": "Aaa/AAA",
+        "worstRating": "D2/D",
+        "medianSpread": 0.0184
+      },
+      {
+        "id": "small_risky",
+        "rows": 15,
+        "bestRating": "Aaa/AAA",
+        "worstRating": "D2/D",
+        "medianSpread": 0.0184
+      },
+      {
+        "id": "financial",
+        "rows": 15,
+        "bestRating": "Aaa/AAA",
+        "worstRating": "D2/D",
+        "medianSpread": 0.0184
+      }
+    ]
+  },
+  "component_as_of": [
+    {
+      "id": "banking_health",
+      "asOf": "2026-05-27",
+      "status": "normal"
+    },
+    {
+      "id": "liquidity_flow",
+      "asOf": "2026-06-12",
+      "status": "stable"
+    },
+    {
+      "id": "liquidity_stress",
+      "asOf": "2026-06-11",
+      "status": "caution"
+    },
+    {
+      "id": "sentiment_signal",
+      "asOf": "2026-06-11",
+      "status": "neutral"
+    }
+  ]
+}

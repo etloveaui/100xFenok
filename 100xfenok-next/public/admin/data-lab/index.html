@@ -75,22 +75,6 @@
       <!-- Rendered by Renderer.renderSummary() -->
     </section>
 
-    <!-- Data Atlas Section -->
-    <section class="mb-8">
-      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-600">
-            <i class="fas fa-sitemap text-indigo-500 mr-2"></i>Feno Data Atlas
-          </h2>
-          <p class="mt-1 text-xs text-gray-500">모든 JSON 파일 · 히스토리 여부 · 앱 소비 위치</p>
-        </div>
-        <span class="text-xs text-gray-400">public/data 전체 인덱스</span>
-      </div>
-      <div id="atlas-container">
-        <!-- Rendered by Renderer.renderDataAtlas() -->
-      </div>
-    </section>
-
     <!-- Ops Health Section -->
     <section class="mb-8">
       <div class="flex items-center justify-between mb-4">
@@ -101,6 +85,19 @@
       </div>
       <div id="ops-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Rendered by Renderer.renderOpsResults() -->
+      </div>
+    </section>
+
+    <!-- Depth Coverage Section -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-600">
+          <i class="fas fa-layer-group text-violet-500 mr-2"></i>데이터 깊이 커버리지
+        </h2>
+        <span class="text-xs text-gray-400">usage manifest · generated indexes · mirror</span>
+      </div>
+      <div id="depth-container" class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <!-- Rendered by Renderer.renderDepthCoverage() -->
       </div>
     </section>
 

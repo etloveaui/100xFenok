@@ -10,6 +10,21 @@ import StockDetailPanel from "./StockDetailPanel";
 
 const PAGE_SIZE = 50;
 
+interface ActionRow {
+  symbol: string;
+  actionScore?: number | null;
+  actionLabel?: string | null;
+  actionBucket?: string | null;
+  actionReasons?: string[];
+  indexMembership?: string[];
+  guruHolders?: number | null;
+  quality_flags?: string[];
+}
+interface ActionIndexDoc {
+  rows?: ActionRow[];
+}
+type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum";
+
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
   KR: "한국",
@@ -21,6 +36,7 @@ const COUNTRY_LABEL: Record<string, string> = {
 
 const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left" | "right" }> = [
   { key: "ticker", label: "티커", align: "left" },
+  { key: "actionScore", label: "액션", align: "left" },
   { key: "name", label: "종목", align: "left" },
   { key: "sector", label: "섹터", align: "left" },
   { key: "country", label: "국가", align: "left" },
@@ -48,10 +64,11 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "ret5y", label: "5Y", align: "right" },
 ];
 
-type ColumnPreset = "basic" | "value" | "momentum" | "dividend" | "guru";
+type ColumnPreset = "basic" | "action" | "value" | "momentum" | "dividend" | "guru";
 
 const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  basic: ["ticker", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
+  basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
+  action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
   value: ["ticker", "name", "sector", "per", "peForward", "pbr", "roe", "opm", "eps", "perBandCurrent", "rank"],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
@@ -60,6 +77,7 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
 
 const PRESET_LABEL: Record<ColumnPreset, string> = {
   basic: "기본",
+  action: "액션",
   value: "밸류",
   momentum: "모멘텀",
   dividend: "배당",
@@ -96,6 +114,15 @@ function fmtEps(value: number | null): string {
 }
 function fmtRank(value: number | null): string {
   return value === null ? "—" : value.toLocaleString();
+}
+
+function actionTone(bucket: string | null | undefined): string {
+  if (bucket === "smart_money") return "border-violet-200 bg-violet-50 text-violet-700";
+  if (bucket === "value_momentum") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (bucket === "index_core") return "border-sky-200 bg-sky-50 text-sky-700";
+  if (bucket === "income") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (bucket === "momentum") return "border-rose-200 bg-rose-50 text-rose-700";
+  return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
 function getMomentumClass(value: number | null): string {
@@ -183,6 +210,15 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className="text-sm font-black text-slate-950">{stock.ticker}</span>;
     case "name":
       return <span className="block max-w-[180px] truncate text-sm font-semibold text-slate-700">{stock.name}</span>;
+    case "actionScore":
+      return (
+        <span className="flex min-w-0 max-w-[150px] flex-col items-start gap-1" title={(stock.actionReasons ?? []).join(" · ")}>
+          <span className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket))}>
+            {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
+          </span>
+          {stock.actionReasons?.[0] ? <span className="max-w-full truncate text-[10px] font-semibold text-slate-400">{stock.actionReasons[0]}</span> : null}
+        </span>
+      );
     case "sector":
       return <span className="text-xs font-bold text-slate-500">{stock.sector || "—"}</span>;
     case "country":
@@ -243,6 +279,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
 export default function ScreenerClient({ initialSearch = "" }: { initialSearch?: string }) {
   const { stocks: rawStocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
+  const [actionMap, setActionMap] = useState<Record<string, ActionRow> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -255,10 +292,38 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/data/computed/stock_action_index.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: ActionIndexDoc | null) => {
+        if (cancelled || !Array.isArray(j?.rows)) return;
+        const next: Record<string, ActionRow> = {};
+        j.rows.forEach((row) => {
+          if (row.symbol) next[row.symbol] = row;
+        });
+        setActionMap(next);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   const stocks = useMemo(() => {
-    if (!guruMap) return rawStocks;
-    return rawStocks.map((s) => ({ ...s, guruHolders: guruMap[s.ticker] ?? null }));
-  }, [rawStocks, guruMap]);
+    if (!guruMap && !actionMap) return rawStocks;
+    return rawStocks.map((s) => {
+      const action = actionMap?.[s.ticker];
+      return {
+        ...s,
+        guruHolders: action?.guruHolders ?? guruMap?.[s.ticker] ?? null,
+        actionScore: action?.actionScore ?? null,
+        actionLabel: action?.actionLabel ?? null,
+        actionBucket: action?.actionBucket ?? null,
+        actionReasons: action?.actionReasons ?? [],
+        indexMembership: action?.indexMembership ?? [],
+        qualityFlags: action?.quality_flags ?? [],
+      };
+    });
+  }, [rawStocks, guruMap, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
   const [sector, setSector] = useState("");
@@ -266,6 +331,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [perMax, setPerMax] = useState("");
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
+  const [actionFilter, setActionFilter] = useState<ActionFilter>("");
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
@@ -311,6 +377,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       if (sector && stock.sector !== sector) return false;
       if (country && stock.country !== country) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
+      if (actionFilter && stock.actionBucket !== actionFilter) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       if (bandFilter) {
         const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
@@ -322,7 +389,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, profitableOnly, bandFilter]);
+  }, [stocks, search, sector, country, perMax, profitableOnly, bandFilter, actionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -336,7 +403,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${bandFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${profitableOnly}|${bandFilter}|${actionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -364,9 +431,10 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     setPerMax("");
     setProfitableOnly(false);
     setBandFilter("");
+    setActionFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || profitableOnly || bandFilter);
+  const hasFilters = Boolean(search || sector || country || perMax || profitableOnly || bandFilter || actionFilter);
 
   return (
     <div className="data-shell-page">
@@ -462,6 +530,21 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               <option value="cheap">저평가 (하위 25%)</option>
               <option value="fair">적정 (중간 50%)</option>
               <option value="rich">고평가 (상위 25%)</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">액션</span>
+            <select
+              value={actionFilter}
+              onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
+              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+            >
+              <option value="">전체 액션</option>
+              <option value="smart_money">구루/13F 주목</option>
+              <option value="value_momentum">저평가+모멘텀</option>
+              <option value="index_core">지수 핵심</option>
+              <option value="income">배당 점검</option>
+              <option value="momentum">모멘텀 리더</option>
             </select>
           </label>
         </div>
@@ -609,7 +692,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       </section>
 
       <p className="px-1 text-[11px] text-slate-400">
-        데이터: Global Scouter (정렬 시 결측치는 항상 뒤로 정렬). 투자 판단의 근거가 아닌 참고용입니다.
+        데이터: Global Scouter · SlickCharts · SEC 13F · YF quarter closes · computed stock action index. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
     </div>
   );

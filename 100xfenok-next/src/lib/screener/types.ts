@@ -11,6 +11,12 @@
 
 export interface ScreenerStock {
   guruHolders?: number | null;
+  actionScore?: number | null;
+  actionLabel?: string | null;
+  actionBucket?: string | null;
+  actionReasons?: string[];
+  indexMembership?: string[];
+  qualityFlags?: string[];
   ticker: string;
   name: string;
   exchange: string;
@@ -70,6 +76,7 @@ export type ScreenerSortKey =
   | "ret1y"
   | "ret3y"
   | "ret5y"
+  | "actionScore"
   | "guruHolders";
 
 export type SortDir = "asc" | "desc";

@@ -585,3 +585,45 @@ These remain intentionally skipped under the current low-resource constraint.
 When the right pane returns its final MiMo-side audit, merge only evidence-backed
 delta into this document. Do not replace the current plan with peer opinion
 unless it points to concrete file/line or measured data evidence.
+
+## Implementation Slice 2C: Phase 2 Closeout Indexes
+
+Implemented after the follow-up agent/Kimi review:
+
+- Added `scripts/build-phase2-closeout-indexes.mjs`.
+- Generated and mirrored:
+  - `data/admin/data-usage-manifest.json`
+  - `data/computed/stock_action_index.json`
+  - `data/computed/market_structure_index.json`
+  - matching files under `100xfenok-next/public/data/**`
+- `stock_action_index` uses Global Scouter, YF quarter closes, SEC 13F
+  holders/enhanced consensus/conviction/by-sector, SlickCharts universe,
+  index analysis, returns, and dividends. It includes ticker normalization,
+  market classification, action bucket/score, reasons, quarter-close coverage,
+  and quality flags.
+- `market_structure_index` uses benchmarks summaries, computed signal as-of
+  dates, Damodaran credit-rating lookup tables, TGA/stablecoin histories, CNN
+  component sentiment, membership changes, Mag7, and index concentration.
+- Admin Data Lab now renders a `데이터 깊이 커버리지` proof section from
+  `data/admin/data-usage-manifest.json` and freshness-guards the three generated
+  files.
+- Screener now fetches `stock_action_index` once, adds action labels/scores and
+  an action filter/preset without bulk-fetching 1,066 detail payloads.
+- Explore now has `액션 후보` and `시장 구조 인덱스` cards.
+- Market Valuation now adds a cached `시장 구조 깊이` panel below the existing
+  market-structure panel, without adding another item to the main
+  `useMarketValuation` `Promise.all`.
+- `static-route-manifest.ts` was regenerated once so the generated data files
+  and the prior SlickCharts discovery summary are in the static data manifest.
+
+Low-resource verification for this slice:
+
+- PASS: `node --check scripts/build-phase2-closeout-indexes.mjs`
+- PASS: `node scripts/build-phase2-closeout-indexes.mjs`
+- PASS: `jq empty` for the three generated root JSON files and public mirrors.
+- PASS: root/public `cmp` for the three generated mirrors.
+- PASS: targeted ESLint for Screener, Explore, Market Valuation changed TS/TSX.
+- PASS: `node --check` for Data Lab `dashboard.js`, `renderer.js`,
+  `ops-console.js`.
+- `[not verified]` browser/dev-server/Playwright rendering; intentionally
+  skipped under the active low-resource Mac mini constraint.
