@@ -9,6 +9,7 @@ import {
   type Portfolio,
   type Holding,
 } from "@/lib/portfolio";
+import { formatSignedPercent } from "@/lib/format";
 
 interface PriceDoc {
   data?: { info?: { currentPrice?: number | null } };
@@ -71,8 +72,7 @@ function fmt$(v: number): string {
 }
 
 function fmtPct(v: number): string {
-  const s = v >= 0 ? "+" : "";
-  return `${s}${(v * 100).toFixed(2)}%`;
+  return formatSignedPercent(v, { digits: 2 });
 }
 
 function gainColor(v: number): string {
@@ -321,7 +321,7 @@ export default function PortfolioClient() {
               key={p.id}
               type="button"
               onClick={() => setActiveId(p.id)}
-              className={`inline-flex min-h-8 items-center rounded-full border px-3 text-[11px] font-black transition ${
+              className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black transition sm:min-h-8 ${
                 active?.id === p.id
                   ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive"
                   : "border-slate-200 bg-white text-slate-500 hover:text-slate-800"
@@ -333,7 +333,7 @@ export default function PortfolioClient() {
           <button
             type="button"
             onClick={handleCreateEmpty}
-            className="inline-flex min-h-8 items-center rounded-full border border-dashed border-slate-300 px-3 text-[11px] font-black text-slate-400 transition hover:border-brand-interactive hover:text-brand-interactive"
+            className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-3 text-[11px] font-black text-slate-400 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             + 새 포트폴리오
           </button>
@@ -433,14 +433,14 @@ export default function PortfolioClient() {
             <button
               type="button"
               onClick={handleCashSave}
-              className="inline-flex min-h-8 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive"
+              className="inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive sm:min-h-8"
             >
               저장
             </button>
             <button
               type="button"
               onClick={() => setEditingCash(false)}
-              className="inline-flex min-h-8 items-center rounded-full border border-slate-200 px-3 text-[11px] font-black text-slate-500"
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 px-3 text-[11px] font-black text-slate-500 sm:min-h-8"
             >
               취소
             </button>
@@ -466,7 +466,7 @@ export default function PortfolioClient() {
           <button
             type="button"
             onClick={handleExport}
-            className="mt-2 inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+            className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             내보내기
           </button>
@@ -494,7 +494,7 @@ export default function PortfolioClient() {
             type="button"
             onClick={handleImport}
             disabled={!importText.trim()}
-            className="mt-2 inline-flex min-h-8 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 disabled:opacity-40"
+            className="mt-2 inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 disabled:opacity-40 sm:min-h-8"
           >
             가져오기
           </button>

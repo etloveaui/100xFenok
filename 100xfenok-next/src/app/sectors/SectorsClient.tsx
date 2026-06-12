@@ -131,7 +131,7 @@ export default function SectorsClient() {
                         type="button"
                         onClick={() => setSortWindow(window.key)}
                         className={cx(
-                          "inline-flex min-h-7 w-full items-center justify-center rounded-md px-2 text-[11px] font-black uppercase tracking-[0.08em] transition",
+                          "inline-flex min-h-11 w-full items-center justify-center rounded-md px-2 text-[11px] font-black uppercase tracking-[0.08em] transition sm:min-h-7",
                           active
                             ? "bg-brand-navy text-white"
                             : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
