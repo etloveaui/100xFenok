@@ -11,6 +11,7 @@ import {
   PerBandChart,
   RevisionPulse,
   RawFinancialDepth,
+  SlickChartsDepth,
   fmtLarge,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
@@ -701,7 +702,12 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </div>
               </SectionCard>
 
-              {/* 2. 재무 추이 */}
+              {/* 2. SlickCharts 히스토리 */}
+              <SectionCard title="가격·수익률·배당">
+                <SlickChartsDepth ticker={symbol} showUnavailable />
+              </SectionCard>
+
+              {/* 3. 재무 추이 */}
               <SectionCard title="재무 추이">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {([
@@ -722,13 +728,13 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </div>
               </SectionCard>
 
-              {/* 3. 리비전·원재무 깊이 */}
+              {/* 4. 리비전·원재무 깊이 */}
               <SectionCard title="리비전·원재무 깊이">
                 <RevisionPulse detail={detail} />
                 <RawFinancialDepth detail={detail} />
               </SectionCard>
 
-              {/* 4. 수익성·성장 */}
+              {/* 5. 수익성·성장 */}
               <SectionCard title="수익성·성장">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
@@ -751,7 +757,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </div>
               </SectionCard>
 
-              {/* 5. 구루 동향 */}
+              {/* 6. 구루 동향 */}
               <div id="guru-section">
                 <SectionCard>
                   <GuruSection f13Entries={f13Entries} ticker={symbol} />

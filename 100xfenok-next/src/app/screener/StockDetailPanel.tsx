@@ -103,6 +103,39 @@ export interface F13Entry {
   weight?: number;
 }
 
+interface SlickMetricPoint {
+  date?: string;
+  price?: MaybeNumber;
+  pe_trailing?: MaybeNumber;
+  pe_forward?: MaybeNumber;
+  eps_trailing?: MaybeNumber;
+  eps_forward?: MaybeNumber;
+  dividend_yield?: MaybeNumber;
+  dividend_ttm?: MaybeNumber;
+  market_cap_billions?: MaybeNumber;
+}
+
+interface SlickReturnPoint {
+  year?: number;
+  return?: MaybeNumber;
+}
+
+interface SlickDividendPoint {
+  amount?: MaybeNumber;
+  exDate?: string;
+  payDate?: string;
+}
+
+interface SlickStockData {
+  symbol?: string;
+  company?: string;
+  updated?: string;
+  current?: SlickMetricPoint;
+  metrics_history?: SlickMetricPoint[];
+  returns?: SlickReturnPoint[];
+  dividends?: SlickDividendPoint[];
+}
+
 function isFiniteNumber(value: MaybeNumber): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -117,6 +150,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function finiteValues(data: NumberSeries | null | undefined): number[] {
   return (data ?? []).filter(isFiniteNumber);
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
 
 type FiscalPoint = { label: string; value: number; index: number; estimate?: boolean };
@@ -268,6 +309,117 @@ export function use13FData(ticker: string) {
   }, [ticker]);
 
   return entries;
+}
+
+const SLICK_STOCK_CACHE = new Map<string, SlickStockData | null>();
+
+function readSlickMetric(value: unknown): SlickMetricPoint | null {
+  if (!isRecord(value)) return null;
+  const point: SlickMetricPoint = {
+    date: optionalString(value.date),
+    price: finiteNumber(value.price),
+    pe_trailing: finiteNumber(value.pe_trailing),
+    pe_forward: finiteNumber(value.pe_forward),
+    eps_trailing: finiteNumber(value.eps_trailing),
+    eps_forward: finiteNumber(value.eps_forward),
+    dividend_yield: finiteNumber(value.dividend_yield),
+    dividend_ttm: finiteNumber(value.dividend_ttm),
+    market_cap_billions: finiteNumber(value.market_cap_billions),
+  };
+  return point.date ||
+    isFiniteNumber(point.price) ||
+    isFiniteNumber(point.pe_trailing) ||
+    isFiniteNumber(point.pe_forward) ||
+    isFiniteNumber(point.market_cap_billions)
+    ? point
+    : null;
+}
+
+function readSlickReturn(value: unknown): SlickReturnPoint | null {
+  if (!isRecord(value)) return null;
+  const year = finiteNumber(value.year);
+  const returnPct = finiteNumber(value.return);
+  return isFiniteNumber(year) && isFiniteNumber(returnPct) ? { year, return: returnPct } : null;
+}
+
+function readSlickDividend(value: unknown): SlickDividendPoint | null {
+  if (!isRecord(value)) return null;
+  const point = {
+    amount: finiteNumber(value.amount),
+    exDate: optionalString(value.exDate),
+    payDate: optionalString(value.payDate),
+  };
+  return isFiniteNumber(point.amount) || point.exDate || point.payDate ? point : null;
+}
+
+function normalizeSlickStock(value: unknown): SlickStockData | null {
+  if (!isRecord(value)) return null;
+  const current = readSlickMetric(value.current);
+  const metrics = Array.isArray(value.metrics_history)
+    ? value.metrics_history.map(readSlickMetric).filter((point): point is SlickMetricPoint => point !== null)
+    : [];
+  const returns = Array.isArray(value.returns)
+    ? value.returns.map(readSlickReturn).filter((point): point is SlickReturnPoint => point !== null)
+    : [];
+  const dividends = Array.isArray(value.dividends)
+    ? value.dividends.map(readSlickDividend).filter((point): point is SlickDividendPoint => point !== null)
+    : [];
+  if (!current && metrics.length === 0 && returns.length === 0 && dividends.length === 0) return null;
+  return {
+    symbol: optionalString(value.symbol),
+    company: optionalString(value.company),
+    updated: optionalString(value.updated),
+    current: current ?? undefined,
+    metrics_history: metrics,
+    returns,
+    dividends,
+  };
+}
+
+export function useSlickStock(ticker: string, enabled = true) {
+  const [data, setData] = useState<SlickStockData | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const symbol = normalizeTicker(ticker);
+    if (!enabled || !symbol) {
+      setData(null);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    const cached = SLICK_STOCK_CACHE.get(symbol);
+    if (cached !== undefined) {
+      setData(cached);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        const r = await fetch(`/data/slickcharts/stocks/${encodeURIComponent(symbol)}.json`);
+        const parsed = r.ok ? normalizeSlickStock(await r.json()) : null;
+        SLICK_STOCK_CACHE.set(symbol, parsed);
+        if (!cancelled) setData(parsed);
+      } catch {
+        SLICK_STOCK_CACHE.set(symbol, null);
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticker, enabled]);
+
+  return { data, loading };
 }
 
 export function Sparkline({
@@ -721,12 +873,228 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
   );
 }
 
+function hasSlickMetricValue(point: SlickMetricPoint | null | undefined) {
+  return Boolean(
+    point &&
+      (isFiniteNumber(point.price) ||
+        isFiniteNumber(point.pe_trailing) ||
+        isFiniteNumber(point.pe_forward) ||
+        isFiniteNumber(point.eps_forward) ||
+        isFiniteNumber(point.dividend_yield) ||
+        isFiniteNumber(point.market_cap_billions)),
+  );
+}
+
+function slickMetricRows(data: SlickStockData): SlickMetricPoint[] {
+  const rows = [data.current, ...(data.metrics_history ?? [])].filter(hasSlickMetricValue) as SlickMetricPoint[];
+  const seen = new Set<string>();
+  return rows.filter((row, index) => {
+    const key = row.date ?? `row-${index}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function fmtSlickMoney(value: MaybeNumber, digits = 2) {
+  return isFiniteNumber(value) ? `$${value.toFixed(digits)}` : "—";
+}
+
+function fmtSlickMarketCap(value: MaybeNumber) {
+  if (!isFiniteNumber(value)) return "—";
+  return value >= 1_000 ? `$${(value / 1_000).toFixed(2)}T` : `$${value.toFixed(1)}B`;
+}
+
+function fmtSlickMultiple(value: MaybeNumber) {
+  return isFiniteNumber(value) ? `${value.toFixed(1)}x` : "—";
+}
+
+function fmtSlickYield(value: MaybeNumber) {
+  return isFiniteNumber(value) ? `${value.toFixed(2)}%` : "—";
+}
+
+function fmtSlickReturn(value: MaybeNumber) {
+  if (!isFiniteNumber(value)) return "—";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
+
+function fmtRelativeDelta(current: MaybeNumber, previous: MaybeNumber) {
+  if (!isFiniteNumber(current) || !isFiniteNumber(previous) || previous === 0) return null;
+  const delta = ((current - previous) / Math.abs(previous)) * 100;
+  return fmtSlickReturn(delta);
+}
+
+function SlickMetricCard({ label, value, delta }: { label: string; value: string; delta?: string | null }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+      <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
+      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{value}</p>
+      <p className="mt-1 min-h-[16px] text-[11px] font-bold tabular-nums text-slate-400">{delta ? `직전 ${delta}` : ""}</p>
+    </div>
+  );
+}
+
+export function SlickChartsDepth({
+  ticker,
+  compact = false,
+  showUnavailable = false,
+}: {
+  ticker: string;
+  compact?: boolean;
+  showUnavailable?: boolean;
+}) {
+  const { data, loading } = useSlickStock(ticker);
+
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-sm font-semibold text-slate-500">
+        SlickCharts 데이터 확인 중…
+      </div>
+    );
+  }
+
+  if (!data) {
+    return showUnavailable ? (
+      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
+        SlickCharts per-stock 데이터가 아직 수집되지 않은 티커입니다.
+      </div>
+    ) : null;
+  }
+
+  const metrics = slickMetricRows(data);
+  const latestMetric = metrics[0] ?? null;
+  const previousMetric = metrics[1] ?? null;
+  const returnRows = [...(data.returns ?? [])]
+    .filter((row) => isFiniteNumber(row.year) && isFiniteNumber(row.return))
+    .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+    .slice(0, compact ? 5 : 8);
+  const dividendRows = [...(data.dividends ?? [])]
+    .filter((row) => isFiniteNumber(row.amount) || row.exDate || row.payDate)
+    .sort((a, b) => (b.exDate ?? "").localeCompare(a.exDate ?? ""))
+    .slice(0, compact ? 3 : 5);
+  const metricCards = latestMetric
+    ? [
+        {
+          label: "가격",
+          value: fmtSlickMoney(latestMetric.price),
+          delta: fmtRelativeDelta(latestMetric.price, previousMetric?.price),
+        },
+        {
+          label: "시총",
+          value: fmtSlickMarketCap(latestMetric.market_cap_billions),
+          delta: fmtRelativeDelta(latestMetric.market_cap_billions, previousMetric?.market_cap_billions),
+        },
+        {
+          label: "PER TTM",
+          value: fmtSlickMultiple(latestMetric.pe_trailing),
+          delta: fmtRelativeDelta(latestMetric.pe_trailing, previousMetric?.pe_trailing),
+        },
+        {
+          label: "PER FWD",
+          value: fmtSlickMultiple(latestMetric.pe_forward),
+          delta: fmtRelativeDelta(latestMetric.pe_forward, previousMetric?.pe_forward),
+        },
+        {
+          label: "EPS FWD",
+          value: fmtSlickMoney(latestMetric.eps_forward),
+          delta: fmtRelativeDelta(latestMetric.eps_forward, previousMetric?.eps_forward),
+        },
+        {
+          label: "배당률",
+          value: fmtSlickYield(latestMetric.dividend_yield),
+          delta: previousMetric && isFiniteNumber(latestMetric.dividend_yield) && isFiniteNumber(previousMetric.dividend_yield)
+            ? `${(latestMetric.dividend_yield - previousMetric.dividend_yield >= 0 ? "+" : "")}${(latestMetric.dividend_yield - previousMetric.dividend_yield).toFixed(2)}%p`
+            : null,
+        },
+      ]
+    : [];
+
+  if (metricCards.length === 0 && returnRows.length === 0 && dividendRows.length === 0) return null;
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+      <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+        <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">SlickCharts 히스토리</h4>
+        <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
+          {latestMetric?.date ?? data.updated?.slice(0, 10) ?? "—"} · 529-stock universe
+        </span>
+      </div>
+
+      {metricCards.length > 0 ? (
+        <div className="grid min-w-0 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          {metricCards.map((card) => (
+            <SlickMetricCard key={card.label} {...card} />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">
+        {returnRows.length > 0 ? (
+          <div className="min-w-0">
+            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">연도별 수익률</p>
+            <div className="-mx-1 overflow-x-auto px-1">
+              <table className="w-full min-w-[240px] text-[11px]">
+                <thead>
+                  <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                    <th className="px-2 py-1.5 text-left">연도</th>
+                    <th className="px-2 py-1.5 text-right">수익률</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {returnRows.map((row) => (
+                    <tr key={row.year} className="border-b border-slate-100 last:border-b-0">
+                      <td className="px-2 py-1.5 font-bold tabular-nums text-slate-600">{row.year}</td>
+                      <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.return)}`}>
+                        {fmtSlickReturn(row.return)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+
+        {dividendRows.length > 0 ? (
+          <div className="min-w-0">
+            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">배당 이력</p>
+            <div className="-mx-1 overflow-x-auto px-1">
+              <table className="w-full min-w-[320px] text-[11px]">
+                <thead>
+                  <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                    <th className="px-2 py-1.5 text-left">락일</th>
+                    <th className="px-2 py-1.5 text-right">배당</th>
+                    <th className="px-2 py-1.5 text-right">지급일</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dividendRows.map((row, index) => (
+                    <tr key={`${row.exDate ?? "ex"}-${index}`} className="border-b border-slate-100 last:border-b-0">
+                      <td className="px-2 py-1.5 font-bold tabular-nums text-slate-600">{row.exDate ?? "—"}</td>
+                      <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-slate-900">
+                        {fmtSlickMoney(row.amount, 3)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-bold tabular-nums text-slate-500">{row.payDate ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function StockDetailBody({
   detail,
   f13Entries,
+  ticker,
 }: {
   detail: DetailData;
   f13Entries: F13Entry[] | null;
+  ticker?: string;
 }) {
   const revenue = detail.income_statement?.revenue ?? [];
   const eps = detail.per_share?.eps ?? [];
@@ -805,6 +1173,7 @@ export function StockDetailBody({
         </div>
       </div>
 
+      {ticker ? <SlickChartsDepth ticker={ticker} compact /> : null}
       <RevisionPulse detail={detail} compact />
       <RawFinancialDepth detail={detail} compact />
 
@@ -863,7 +1232,7 @@ export default function StockDetailPanel({ ticker }: { ticker: string }) {
           전체 화면 →
         </TransitionLink>
       </div>
-      <StockDetailBody detail={detail} f13Entries={f13Entries} />
+      <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} />
     </div>
   );
 }

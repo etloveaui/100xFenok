@@ -250,6 +250,45 @@ Low-resource verification for this slice:
 - `[not verified]` browser/dev-server/Playwright rendering; intentionally
   skipped because the active constraint is low resource usage on the Mac mini.
 
+## Implementation Slice 2B: SlickCharts Per-Stock Depth
+
+Implemented in `100xfenok-next`:
+
+- `/stock/[ticker]` now renders a `가격·수익률·배당` section after valuation,
+  backed by `/data/slickcharts/stocks/{TICKER}.json`.
+- Screener expanded rows now reuse the same on-demand SlickCharts component after
+  the PER/revenue/EPS quick charts, before revision/raw-financial blocks.
+- The new client hook uses a module-level cache and fail-closed 404 handling, so
+  unsupported tickers do not trigger list-wide fetches or render errors.
+- Rendered fields cover `current` plus `metrics_history` for price, market cap,
+  trailing/forward PER, forward EPS, dividend yield, recent annual returns, and
+  recent dividend rows.
+- The component treats SlickCharts `dividend_yield` as a percent-number
+  (`0.34 = 0.34%`), not as a fraction, and filters sparse/null metric rows before
+  doing deltas.
+
+Measured data shape for this slice:
+
+- Per-stock SlickCharts files: 529 in both `data/slickcharts/stocks` and
+  `100xfenok-next/public/data/slickcharts/stocks`.
+- Source/public mirror check: filename diff 0 and content diff 0 in the read-only
+  subagent audit.
+- `metrics_history`: non-empty in 529 of 529, length range 1..6.
+- `returns`: non-empty in 520 of 529, length range 0..65.
+- `dividends`: non-empty in 431 of 529, length range 0..266.
+- Sampled supported files: `AAPL`, `NVDA`, `MSFT`, `JPM`, `BNY`.
+- `SCHD` and `KORU` remain absent from this SlickCharts universe and should stay
+  normal missing-coverage cases.
+
+Deferred from 2B:
+
+- Full return-history charts and dividend cash-flow projection. The first product
+  slice intentionally uses compact tables to reduce overflow and runtime risk.
+- Screener list-level SlickCharts presets. They should use a generated summary
+  index, not 529 per-row client fetches.
+- Browser/Playwright visual QA. It remains intentionally skipped during
+  Mac-mini low-resource work unless explicitly approved.
+
 ## Dataset Findings
 
 ### Benchmarks, Indices, Yardeni
