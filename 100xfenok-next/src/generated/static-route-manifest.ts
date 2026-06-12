@@ -23,19 +23,24 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 23447,
-      "updatedAt": "2026-06-12T02:37:46.787Z"
+      "updatedAt": "2026-06-12T07:28:13.954Z"
     },
     {
       "name": "reports-index.json",
       "sizeBytes": 86,
-      "updatedAt": "2026-06-11T11:02:15.583Z"
+      "updatedAt": "2026-06-12T07:28:14.567Z"
     }
   ],
   "admin": [
     {
+      "name": "data-usage-manifest.json",
+      "sizeBytes": 35279,
+      "updatedAt": "2026-06-12T09:36:48.404Z"
+    },
+    {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-12T02:37:46.786Z"
+      "updatedAt": "2026-06-12T07:28:13.444Z"
     }
   ],
   "benchmarks": [
@@ -47,14384 +52,14399 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "developed.json",
       "sizeBytes": 705720,
-      "updatedAt": "2026-06-11T11:02:14.840Z"
+      "updatedAt": "2026-06-12T07:28:13.950Z"
     },
     {
       "name": "emerging.json",
       "sizeBytes": 1058655,
-      "updatedAt": "2026-06-11T11:02:14.834Z"
+      "updatedAt": "2026-06-12T07:28:13.944Z"
     },
     {
       "name": "micro_sectors.json",
       "sizeBytes": 816922,
-      "updatedAt": "2026-06-11T11:02:14.835Z"
+      "updatedAt": "2026-06-12T07:28:13.945Z"
     },
     {
       "name": "msci.json",
       "sizeBytes": 1048246,
-      "updatedAt": "2026-06-11T11:02:14.838Z"
+      "updatedAt": "2026-06-12T07:28:13.948Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 5071,
-      "updatedAt": "2026-06-11T11:02:14.839Z"
+      "updatedAt": "2026-06-12T07:28:13.949Z"
     },
     {
       "name": "summaries.json",
       "sizeBytes": 90023,
-      "updatedAt": "2026-06-11T11:02:14.844Z"
+      "updatedAt": "2026-06-12T07:28:13.954Z"
     },
     {
       "name": "us_sectors.json",
       "sizeBytes": 2094733,
-      "updatedAt": "2026-06-11T11:02:14.843Z"
+      "updatedAt": "2026-06-12T07:28:13.953Z"
     },
     {
       "name": "us.json",
       "sizeBytes": 705532,
-      "updatedAt": "2026-06-11T11:02:14.837Z"
+      "updatedAt": "2026-06-12T07:28:13.946Z"
     }
   ],
   "calendar": [
     {
       "name": "prev-values.json",
       "sizeBytes": 1505,
-      "updatedAt": "2026-06-11T12:59:02.833Z"
+      "updatedAt": "2026-06-12T07:28:13.239Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 1555,
-      "updatedAt": "2026-06-11T11:02:14.170Z"
+      "updatedAt": "2026-06-12T07:28:13.239Z"
     },
     {
       "name": "usd-calendar.json",
       "sizeBytes": 440376,
-      "updatedAt": "2026-06-11T11:02:14.171Z"
+      "updatedAt": "2026-06-12T07:28:13.240Z"
     }
   ],
   "computed": [
     {
+      "name": "market_structure_index.json",
+      "sizeBytes": 13938,
+      "updatedAt": "2026-06-12T09:36:48.290Z"
+    },
+    {
       "name": "signals.json",
       "sizeBytes": 12729,
-      "updatedAt": "2026-06-12T02:37:46.786Z"
+      "updatedAt": "2026-06-12T07:28:13.443Z"
+    },
+    {
+      "name": "stock_action_index.json",
+      "sizeBytes": 1494416,
+      "updatedAt": "2026-06-12T09:36:48.277Z"
     }
   ],
   "damodaran": [
     {
       "name": "credit_ratings.json",
       "sizeBytes": 6572,
-      "updatedAt": "2026-06-11T11:02:14.172Z"
+      "updatedAt": "2026-06-12T07:28:13.241Z"
     },
     {
       "name": "erp.json",
       "sizeBytes": 45568,
-      "updatedAt": "2026-06-11T11:02:14.173Z"
+      "updatedAt": "2026-06-12T07:28:13.242Z"
     },
     {
       "name": "historical_erp.json",
       "sizeBytes": 6663,
-      "updatedAt": "2026-06-11T11:02:14.174Z"
+      "updatedAt": "2026-06-12T07:28:13.242Z"
     },
     {
       "name": "industries.json",
       "sizeBytes": 76588,
-      "updatedAt": "2026-06-11T11:02:14.181Z"
+      "updatedAt": "2026-06-12T07:28:13.250Z"
     },
     {
       "name": "industry_benchmarks.json",
       "sizeBytes": 24630,
-      "updatedAt": "2026-06-11T12:59:02.834Z"
+      "updatedAt": "2026-06-12T07:28:13.241Z"
     },
     {
       "name": "industry_metrics_regions.json",
       "sizeBytes": 4415105,
-      "updatedAt": "2026-06-11T11:02:14.181Z"
+      "updatedAt": "2026-06-12T07:28:13.249Z"
     },
     {
       "name": "industry_metrics.json",
       "sizeBytes": 314303,
-      "updatedAt": "2026-06-11T11:02:14.175Z"
+      "updatedAt": "2026-06-12T07:28:13.243Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 8846,
-      "updatedAt": "2026-06-11T11:02:14.174Z"
+      "updatedAt": "2026-06-12T07:28:13.243Z"
     }
   ],
   "global-scouter": [
     {
       "name": "schema.json",
       "sizeBytes": 6560,
-      "updatedAt": "2026-06-11T11:02:15.530Z"
+      "updatedAt": "2026-06-12T07:28:14.526Z"
     }
   ],
   "global-scouter/core": [
     {
       "name": "dashboard.json",
       "sizeBytes": 3193,
-      "updatedAt": "2026-06-11T11:02:14.847Z"
+      "updatedAt": "2026-06-12T07:28:13.956Z"
     },
     {
       "name": "metadata.json",
       "sizeBytes": 386,
-      "updatedAt": "2026-06-11T11:02:14.846Z"
+      "updatedAt": "2026-06-12T07:28:13.955Z"
     },
     {
       "name": "per_bands_index.json",
       "sizeBytes": 110027,
-      "updatedAt": "2026-06-11T12:59:02.835Z"
+      "updatedAt": "2026-06-12T07:28:13.955Z"
     },
     {
       "name": "revision_movers.json",
       "sizeBytes": 2725,
-      "updatedAt": "2026-06-11T12:59:02.835Z"
+      "updatedAt": "2026-06-12T07:28:13.956Z"
     },
     {
       "name": "slick_index.json",
       "sizeBytes": 79672,
-      "updatedAt": "2026-06-11T12:59:02.835Z"
+      "updatedAt": "2026-06-12T07:28:13.957Z"
     },
     {
       "name": "stocks_analyzer.json",
       "sizeBytes": 860321,
-      "updatedAt": "2026-06-11T12:59:02.836Z"
+      "updatedAt": "2026-06-12T07:28:13.959Z"
     },
     {
       "name": "stocks_index.json",
       "sizeBytes": 294183,
-      "updatedAt": "2026-06-11T11:02:14.848Z"
+      "updatedAt": "2026-06-12T07:28:13.957Z"
     }
   ],
   "global-scouter/etfs": [
     {
       "name": "index.json",
       "sizeBytes": 12994,
-      "updatedAt": "2026-06-11T11:02:15.529Z"
+      "updatedAt": "2026-06-12T07:28:14.525Z"
     }
   ],
   "global-scouter/indicators": [
     {
       "name": "economic.json",
       "sizeBytes": 463584,
-      "updatedAt": "2026-06-11T11:02:14.851Z"
+      "updatedAt": "2026-06-12T07:28:13.960Z"
     }
   ],
   "global-scouter/raw": [
     {
       "name": "companies_a_company.json",
       "sizeBytes": 964657,
-      "updatedAt": "2026-06-11T11:02:15.541Z"
+      "updatedAt": "2026-06-12T07:28:14.536Z"
     },
     {
       "name": "company_master_m_company.json",
       "sizeBytes": 3324277,
-      "updatedAt": "2026-06-11T11:02:15.540Z"
+      "updatedAt": "2026-06-12T07:28:14.535Z"
     },
     {
       "name": "eps_consensus_t_eps_c.json",
       "sizeBytes": 501377,
-      "updatedAt": "2026-06-11T11:02:15.531Z"
+      "updatedAt": "2026-06-12T07:28:14.527Z"
     },
     {
       "name": "etfs_a_etfs.json",
       "sizeBytes": 424117,
-      "updatedAt": "2026-06-11T11:02:15.533Z"
+      "updatedAt": "2026-06-12T07:28:14.529Z"
     },
     {
       "name": "etfs_m_etfs.json",
       "sizeBytes": 19617,
-      "updatedAt": "2026-06-11T11:02:15.535Z"
+      "updatedAt": "2026-06-12T07:28:14.530Z"
     },
     {
       "name": "growth_consensus_t_growth_c.json",
       "sizeBytes": 904304,
-      "updatedAt": "2026-06-11T11:02:15.532Z"
+      "updatedAt": "2026-06-12T07:28:14.528Z"
     },
     {
       "name": "manifest.json",
       "sizeBytes": 1105,
-      "updatedAt": "2026-06-11T11:02:15.534Z"
+      "updatedAt": "2026-06-12T07:28:14.529Z"
     },
     {
       "name": "valuation_s_valuation.json",
       "sizeBytes": 30993,
-      "updatedAt": "2026-06-11T11:02:15.531Z"
+      "updatedAt": "2026-06-12T07:28:14.527Z"
     },
     {
       "name": "workbook_inventory.json",
       "sizeBytes": 66967,
-      "updatedAt": "2026-06-11T11:02:15.535Z"
+      "updatedAt": "2026-06-12T07:28:14.530Z"
     }
   ],
   "global-scouter/stocks/detail": [
     {
       "name": "000001.SZ.json",
       "sizeBytes": 101879,
-      "updatedAt": "2026-06-11T11:02:15.034Z"
+      "updatedAt": "2026-06-12T07:28:14.107Z"
     },
     {
       "name": "000050.SZ.json",
       "sizeBytes": 100462,
-      "updatedAt": "2026-06-11T11:02:15.298Z"
+      "updatedAt": "2026-06-12T07:28:14.332Z"
     },
     {
       "name": "000080.KS.json",
       "sizeBytes": 57624,
-      "updatedAt": "2026-06-11T11:02:14.983Z"
+      "updatedAt": "2026-06-12T07:28:14.069Z"
     },
     {
       "name": "0001.HK.json",
       "sizeBytes": 97836,
-      "updatedAt": "2026-06-11T11:02:14.952Z"
+      "updatedAt": "2026-06-12T07:28:14.044Z"
     },
     {
       "name": "000100.KS.json",
       "sizeBytes": 63505,
-      "updatedAt": "2026-06-11T11:02:15.408Z"
+      "updatedAt": "2026-06-12T07:28:14.423Z"
     },
     {
       "name": "000120.KS.json",
       "sizeBytes": 59653,
-      "updatedAt": "2026-06-11T11:02:15.190Z"
+      "updatedAt": "2026-06-12T07:28:14.241Z"
     },
     {
       "name": "000150.KS.json",
       "sizeBytes": 81289,
-      "updatedAt": "2026-06-11T11:02:14.936Z"
+      "updatedAt": "2026-06-12T07:28:14.032Z"
     },
     {
       "name": "000210.KS.json",
       "sizeBytes": 92775,
-      "updatedAt": "2026-06-11T11:02:14.857Z"
+      "updatedAt": "2026-06-12T07:28:13.965Z"
     },
     {
       "name": "000240.KS.json",
       "sizeBytes": 62107,
-      "updatedAt": "2026-06-11T11:02:15.422Z"
+      "updatedAt": "2026-06-12T07:28:14.434Z"
     },
     {
       "name": "000270.KS.json",
       "sizeBytes": 93329,
-      "updatedAt": "2026-06-11T11:02:15.126Z"
+      "updatedAt": "2026-06-12T07:28:14.187Z"
     },
     {
       "name": "0003.HK.json",
       "sizeBytes": 97809,
-      "updatedAt": "2026-06-11T11:02:15.029Z"
+      "updatedAt": "2026-06-12T07:28:14.104Z"
     },
     {
       "name": "000333.SZ.json",
       "sizeBytes": 79304,
-      "updatedAt": "2026-06-11T11:02:15.105Z"
+      "updatedAt": "2026-06-12T07:28:14.169Z"
     },
     {
       "name": "000568.SZ.json",
       "sizeBytes": 101857,
-      "updatedAt": "2026-06-11T11:02:15.423Z"
+      "updatedAt": "2026-06-12T07:28:14.435Z"
     },
     {
       "name": "000651.SZ.json",
       "sizeBytes": 102678,
-      "updatedAt": "2026-06-11T11:02:15.361Z"
+      "updatedAt": "2026-06-12T07:28:14.385Z"
     },
     {
       "name": "000660.KS.json",
       "sizeBytes": 92324,
-      "updatedAt": "2026-06-11T11:02:15.377Z"
+      "updatedAt": "2026-06-12T07:28:14.397Z"
     },
     {
       "name": "000720.KS.json",
       "sizeBytes": 58121,
-      "updatedAt": "2026-06-11T11:02:15.089Z"
+      "updatedAt": "2026-06-12T07:28:14.155Z"
     },
     {
       "name": "000725.SZ.json",
       "sizeBytes": 95976,
-      "updatedAt": "2026-06-11T11:02:15.088Z"
+      "updatedAt": "2026-06-12T07:28:14.153Z"
     },
     {
       "name": "000858.SZ.json",
       "sizeBytes": 100478,
-      "updatedAt": "2026-06-11T11:02:15.163Z"
+      "updatedAt": "2026-06-12T07:28:14.219Z"
     },
     {
       "name": "000880.KS.json",
       "sizeBytes": 93893,
-      "updatedAt": "2026-06-11T11:02:15.436Z"
+      "updatedAt": "2026-06-12T07:28:14.446Z"
     },
     {
       "name": "000990.KS.json",
       "sizeBytes": 88769,
-      "updatedAt": "2026-06-11T11:02:15.281Z"
+      "updatedAt": "2026-06-12T07:28:14.318Z"
     },
     {
       "name": "001040.KS.json",
       "sizeBytes": 38508,
-      "updatedAt": "2026-06-11T11:02:15.522Z"
+      "updatedAt": "2026-06-12T07:28:14.520Z"
     },
     {
       "name": "001120.KS.json",
       "sizeBytes": 91443,
-      "updatedAt": "2026-06-11T11:02:15.434Z"
+      "updatedAt": "2026-06-12T07:28:14.445Z"
     },
     {
       "name": "001430.KS.json",
       "sizeBytes": 57992,
-      "updatedAt": "2026-06-11T11:02:15.024Z"
+      "updatedAt": "2026-06-12T07:28:14.100Z"
     },
     {
       "name": "001440.KS.json",
       "sizeBytes": 61543,
-      "updatedAt": "2026-06-11T11:02:15.113Z"
+      "updatedAt": "2026-06-12T07:28:14.176Z"
     },
     {
       "name": "001450.KS.json",
       "sizeBytes": 86759,
-      "updatedAt": "2026-06-11T11:02:15.111Z"
+      "updatedAt": "2026-06-12T07:28:14.173Z"
     },
     {
       "name": "001530.KS.json",
       "sizeBytes": 38543,
-      "updatedAt": "2026-06-11T11:02:15.187Z"
+      "updatedAt": "2026-06-12T07:28:14.238Z"
     },
     {
       "name": "001680.KS.json",
       "sizeBytes": 59524,
-      "updatedAt": "2026-06-11T11:02:15.293Z"
+      "updatedAt": "2026-06-12T07:28:14.327Z"
     },
     {
       "name": "001740.KS.json",
       "sizeBytes": 40846,
-      "updatedAt": "2026-06-11T11:02:15.249Z"
+      "updatedAt": "2026-06-12T07:28:14.291Z"
     },
     {
       "name": "001820.KS.json",
       "sizeBytes": 77776,
-      "updatedAt": "2026-06-11T11:02:15.141Z"
+      "updatedAt": "2026-06-12T07:28:14.201Z"
     },
     {
       "name": "002027.SZ.json",
       "sizeBytes": 90825,
-      "updatedAt": "2026-06-11T11:02:14.914Z"
+      "updatedAt": "2026-06-12T07:28:14.014Z"
     },
     {
       "name": "002142.SZ.json",
       "sizeBytes": 86756,
-      "updatedAt": "2026-06-11T11:02:15.400Z"
+      "updatedAt": "2026-06-12T07:28:14.417Z"
     },
     {
       "name": "002304.SZ.json",
       "sizeBytes": 83933,
-      "updatedAt": "2026-06-11T11:02:15.021Z"
+      "updatedAt": "2026-06-12T07:28:14.098Z"
     },
     {
       "name": "002350.KS.json",
       "sizeBytes": 56156,
-      "updatedAt": "2026-06-11T11:02:15.453Z"
+      "updatedAt": "2026-06-12T07:28:14.460Z"
     },
     {
       "name": "002352.SZ.json",
       "sizeBytes": 83959,
-      "updatedAt": "2026-06-11T11:02:15.035Z"
+      "updatedAt": "2026-06-12T07:28:14.108Z"
     },
     {
       "name": "002380.KS.json",
       "sizeBytes": 61185,
-      "updatedAt": "2026-06-11T11:02:15.319Z"
+      "updatedAt": "2026-06-12T07:28:14.350Z"
     },
     {
       "name": "002415.SZ.json",
       "sizeBytes": 83206,
-      "updatedAt": "2026-06-11T11:02:15.126Z"
+      "updatedAt": "2026-06-12T07:28:14.186Z"
     },
     {
       "name": "002475.SZ.json",
       "sizeBytes": 83365,
-      "updatedAt": "2026-06-11T11:02:14.854Z"
+      "updatedAt": "2026-06-12T07:28:13.962Z"
     },
     {
       "name": "002594.SZ.json",
       "sizeBytes": 82441,
-      "updatedAt": "2026-06-11T11:02:15.343Z"
+      "updatedAt": "2026-06-12T07:28:14.370Z"
     },
     {
       "name": "0027.HK.json",
       "sizeBytes": 96302,
-      "updatedAt": "2026-06-11T11:02:15.013Z"
+      "updatedAt": "2026-06-12T07:28:14.093Z"
     },
     {
       "name": "002714.SZ.json",
       "sizeBytes": 77619,
-      "updatedAt": "2026-06-11T11:02:15.280Z"
+      "updatedAt": "2026-06-12T07:28:14.317Z"
     },
     {
       "name": "002790.KS.json",
       "sizeBytes": 88528,
-      "updatedAt": "2026-06-11T11:02:14.877Z"
+      "updatedAt": "2026-06-12T07:28:13.983Z"
     },
     {
       "name": "003220.KS.json",
       "sizeBytes": 37753,
-      "updatedAt": "2026-06-11T11:02:15.113Z"
+      "updatedAt": "2026-06-12T07:28:14.176Z"
     },
     {
       "name": "003230.KS.json",
       "sizeBytes": 66390,
-      "updatedAt": "2026-06-11T11:02:15.112Z"
+      "updatedAt": "2026-06-12T07:28:14.175Z"
     },
     {
       "name": "003490.KS.json",
       "sizeBytes": 95810,
-      "updatedAt": "2026-06-11T11:02:15.124Z"
+      "updatedAt": "2026-06-12T07:28:14.185Z"
     },
     {
       "name": "003550.KS.json",
       "sizeBytes": 84953,
-      "updatedAt": "2026-06-11T11:02:15.075Z"
+      "updatedAt": "2026-06-12T07:28:14.141Z"
     },
     {
       "name": "003670.KS.json",
       "sizeBytes": 61384,
-      "updatedAt": "2026-06-11T11:02:14.979Z"
+      "updatedAt": "2026-06-12T07:28:14.066Z"
     },
     {
       "name": "003690.KS.json",
       "sizeBytes": 35487,
-      "updatedAt": "2026-06-11T11:02:15.474Z"
+      "updatedAt": "2026-06-12T07:28:14.478Z"
     },
     {
       "name": "003850.KS.json",
       "sizeBytes": 64415,
-      "updatedAt": "2026-06-11T11:02:15.026Z"
+      "updatedAt": "2026-06-12T07:28:14.101Z"
     },
     {
       "name": "004000.KS.json",
       "sizeBytes": 89367,
-      "updatedAt": "2026-06-11T11:02:14.920Z"
+      "updatedAt": "2026-06-12T07:28:14.019Z"
     },
     {
       "name": "004020.KS.json",
       "sizeBytes": 57688,
-      "updatedAt": "2026-06-11T11:02:15.315Z"
+      "updatedAt": "2026-06-12T07:28:14.347Z"
     },
     {
       "name": "004170.KS.json",
       "sizeBytes": 92170,
-      "updatedAt": "2026-06-11T11:02:15.020Z"
+      "updatedAt": "2026-06-12T07:28:14.098Z"
     },
     {
       "name": "004370.KS.json",
       "sizeBytes": 58975,
-      "updatedAt": "2026-06-11T11:02:15.352Z"
+      "updatedAt": "2026-06-12T07:28:14.378Z"
     },
     {
       "name": "004800.KS.json",
       "sizeBytes": 33069,
-      "updatedAt": "2026-06-11T11:02:15.487Z"
+      "updatedAt": "2026-06-12T07:28:14.489Z"
     },
     {
       "name": "004990.KS.json",
       "sizeBytes": 40938,
-      "updatedAt": "2026-06-11T11:02:14.887Z"
+      "updatedAt": "2026-06-12T07:28:13.992Z"
     },
     {
       "name": "005070.KS.json",
       "sizeBytes": 55912,
-      "updatedAt": "2026-06-11T11:02:15.447Z"
+      "updatedAt": "2026-06-12T07:28:14.455Z"
     },
     {
       "name": "005180.KS.json",
       "sizeBytes": 61629,
-      "updatedAt": "2026-06-11T11:02:15.119Z"
+      "updatedAt": "2026-06-12T07:28:14.182Z"
     },
     {
       "name": "005300.KS.json",
       "sizeBytes": 90235,
-      "updatedAt": "2026-06-11T11:02:15.157Z"
+      "updatedAt": "2026-06-12T07:28:14.213Z"
     },
     {
       "name": "005380.KS.json",
       "sizeBytes": 94573,
-      "updatedAt": "2026-06-11T11:02:15.433Z"
+      "updatedAt": "2026-06-12T07:28:14.444Z"
     },
     {
       "name": "005440.KS.json",
       "sizeBytes": 64846,
-      "updatedAt": "2026-06-11T11:02:15.406Z"
+      "updatedAt": "2026-06-12T07:28:14.421Z"
     },
     {
       "name": "005490.KS.json",
       "sizeBytes": 74468,
-      "updatedAt": "2026-06-11T11:02:15.355Z"
+      "updatedAt": "2026-06-12T07:28:14.380Z"
     },
     {
       "name": "005850.KS.json",
       "sizeBytes": 77568,
-      "updatedAt": "2026-06-11T11:02:15.271Z"
+      "updatedAt": "2026-06-12T07:28:14.309Z"
     },
     {
       "name": "005880.KS.json",
       "sizeBytes": 85645,
-      "updatedAt": "2026-06-11T11:02:15.484Z"
+      "updatedAt": "2026-06-12T07:28:14.487Z"
     },
     {
       "name": "005930.KS.json",
       "sizeBytes": 93664,
-      "updatedAt": "2026-06-11T11:02:15.374Z"
+      "updatedAt": "2026-06-12T07:28:14.395Z"
     },
     {
       "name": "006040.KS.json",
       "sizeBytes": 63379,
-      "updatedAt": "2026-06-11T11:02:15.215Z"
+      "updatedAt": "2026-06-12T07:28:14.263Z"
     },
     {
       "name": "006260.KS.json",
       "sizeBytes": 58520,
-      "updatedAt": "2026-06-11T11:02:15.362Z"
+      "updatedAt": "2026-06-12T07:28:14.385Z"
     },
     {
       "name": "006280.KS.json",
       "sizeBytes": 60995,
-      "updatedAt": "2026-06-11T11:02:15.204Z"
+      "updatedAt": "2026-06-12T07:28:14.254Z"
     },
     {
       "name": "006360.KS.json",
       "sizeBytes": 60507,
-      "updatedAt": "2026-06-11T11:02:15.526Z"
+      "updatedAt": "2026-06-12T07:28:14.522Z"
     },
     {
       "name": "006400.KS.json",
       "sizeBytes": 92695,
-      "updatedAt": "2026-06-11T11:02:15.495Z"
+      "updatedAt": "2026-06-12T07:28:14.496Z"
     },
     {
       "name": "0066.HK.json",
       "sizeBytes": 95236,
-      "updatedAt": "2026-06-11T11:02:15.442Z"
+      "updatedAt": "2026-06-12T07:28:14.451Z"
     },
     {
       "name": "006650.KS.json",
       "sizeBytes": 57435,
-      "updatedAt": "2026-06-11T11:02:15.317Z"
+      "updatedAt": "2026-06-12T07:28:14.348Z"
     },
     {
       "name": "007070.KS.json",
       "sizeBytes": 78991,
-      "updatedAt": "2026-06-11T11:02:15.266Z"
+      "updatedAt": "2026-06-12T07:28:14.306Z"
     },
     {
       "name": "007310.KS.json",
       "sizeBytes": 66947,
-      "updatedAt": "2026-06-11T11:02:15.005Z"
+      "updatedAt": "2026-06-12T07:28:14.086Z"
     },
     {
       "name": "007660.KS.json",
       "sizeBytes": 88350,
-      "updatedAt": "2026-06-11T11:02:15.364Z"
+      "updatedAt": "2026-06-12T07:28:14.387Z"
     },
     {
       "name": "007690.KS.json",
       "sizeBytes": 39899,
-      "updatedAt": "2026-06-11T11:02:15.180Z"
+      "updatedAt": "2026-06-12T07:28:14.232Z"
     },
     {
       "name": "007810.KS.json",
       "sizeBytes": 92058,
-      "updatedAt": "2026-06-11T11:02:14.861Z"
+      "updatedAt": "2026-06-12T07:28:13.969Z"
     },
     {
       "name": "008770.KS.json",
       "sizeBytes": 75394,
-      "updatedAt": "2026-06-11T11:02:15.308Z"
+      "updatedAt": "2026-06-12T07:28:14.339Z"
     },
     {
       "name": "008930.KS.json",
       "sizeBytes": 39646,
-      "updatedAt": "2026-06-11T11:02:15.317Z"
+      "updatedAt": "2026-06-12T07:28:14.348Z"
     },
     {
       "name": "009150.KS.json",
       "sizeBytes": 76824,
-      "updatedAt": "2026-06-11T11:02:15.270Z"
+      "updatedAt": "2026-06-12T07:28:14.309Z"
     },
     {
       "name": "009240.KS.json",
       "sizeBytes": 54365,
-      "updatedAt": "2026-06-11T11:02:15.082Z"
+      "updatedAt": "2026-06-12T07:28:14.148Z"
     },
     {
       "name": "009420.KS.json",
       "sizeBytes": 59487,
-      "updatedAt": "2026-06-11T11:02:14.931Z"
+      "updatedAt": "2026-06-12T07:28:14.028Z"
     },
     {
       "name": "009450.KS.json",
       "sizeBytes": 57363,
-      "updatedAt": "2026-06-11T11:02:15.201Z"
+      "updatedAt": "2026-06-12T07:28:14.251Z"
     },
     {
       "name": "009540.KS.json",
       "sizeBytes": 97066,
-      "updatedAt": "2026-06-11T11:02:15.009Z"
+      "updatedAt": "2026-06-12T07:28:14.089Z"
     },
     {
       "name": "009830.KS.json",
       "sizeBytes": 62920,
-      "updatedAt": "2026-06-11T11:02:15.048Z"
+      "updatedAt": "2026-06-12T07:28:14.119Z"
     },
     {
       "name": "009900.KS.json",
       "sizeBytes": 35999,
-      "updatedAt": "2026-06-11T11:02:15.362Z"
+      "updatedAt": "2026-06-12T07:28:14.386Z"
     },
     {
       "name": "010120.KS.json",
       "sizeBytes": 58815,
-      "updatedAt": "2026-06-11T11:02:15.394Z"
+      "updatedAt": "2026-06-12T07:28:14.411Z"
     },
     {
       "name": "010130.KS.json",
       "sizeBytes": 90392,
-      "updatedAt": "2026-06-11T11:02:15.395Z"
+      "updatedAt": "2026-06-12T07:28:14.412Z"
     },
     {
       "name": "010140.KS.json",
       "sizeBytes": 98281,
-      "updatedAt": "2026-06-11T11:02:15.306Z"
+      "updatedAt": "2026-06-12T07:28:14.338Z"
     },
     {
       "name": "010780.KS.json",
       "sizeBytes": 83474,
-      "updatedAt": "2026-06-11T11:02:15.510Z"
+      "updatedAt": "2026-06-12T07:28:14.510Z"
     },
     {
       "name": "010950.KS.json",
       "sizeBytes": 92289,
-      "updatedAt": "2026-06-11T11:02:15.079Z"
+      "updatedAt": "2026-06-12T07:28:14.146Z"
     },
     {
       "name": "011070.KS.json",
       "sizeBytes": 85617,
-      "updatedAt": "2026-06-11T11:02:15.497Z"
+      "updatedAt": "2026-06-12T07:28:14.498Z"
     },
     {
       "name": "011170.KS.json",
       "sizeBytes": 61807,
-      "updatedAt": "2026-06-11T11:02:15.337Z"
+      "updatedAt": "2026-06-12T07:28:14.364Z"
     },
     {
       "name": "011200.KS.json",
       "sizeBytes": 93308,
-      "updatedAt": "2026-06-11T11:02:14.938Z"
+      "updatedAt": "2026-06-12T07:28:14.033Z"
     },
     {
       "name": "011210.KS.json",
       "sizeBytes": 46726,
-      "updatedAt": "2026-06-11T11:02:14.939Z"
+      "updatedAt": "2026-06-12T07:28:14.034Z"
     },
     {
       "name": "011780.KS.json",
       "sizeBytes": 92942,
-      "updatedAt": "2026-06-11T11:02:15.119Z"
+      "updatedAt": "2026-06-12T07:28:14.181Z"
     },
     {
       "name": "011790.KS.json",
       "sizeBytes": 57303,
-      "updatedAt": "2026-06-11T11:02:15.117Z"
+      "updatedAt": "2026-06-12T07:28:14.180Z"
     },
     {
       "name": "012330.KS.json",
       "sizeBytes": 93453,
-      "updatedAt": "2026-06-11T11:02:14.869Z"
+      "updatedAt": "2026-06-12T07:28:13.976Z"
     },
     {
       "name": "012450.KS.json",
       "sizeBytes": 83357,
-      "updatedAt": "2026-06-11T11:02:14.882Z"
+      "updatedAt": "2026-06-12T07:28:13.988Z"
     },
     {
       "name": "012510.KS.json",
       "sizeBytes": 57868,
-      "updatedAt": "2026-06-11T11:02:15.282Z"
+      "updatedAt": "2026-06-12T07:28:14.319Z"
     },
     {
       "name": "012630.KS.json",
       "sizeBytes": 37723,
-      "updatedAt": "2026-06-11T11:02:15.455Z"
+      "updatedAt": "2026-06-12T07:28:14.462Z"
     },
     {
       "name": "012750.KS.json",
       "sizeBytes": 33162,
-      "updatedAt": "2026-06-11T11:02:15.395Z"
+      "updatedAt": "2026-06-12T07:28:14.412Z"
     },
     {
       "name": "014620.KQ.json",
       "sizeBytes": 55747,
-      "updatedAt": "2026-06-11T11:02:15.502Z"
+      "updatedAt": "2026-06-12T07:28:14.503Z"
     },
     {
       "name": "014680.KS.json",
       "sizeBytes": 83045,
-      "updatedAt": "2026-06-11T11:02:14.982Z"
+      "updatedAt": "2026-06-12T07:28:14.068Z"
     },
     {
       "name": "014830.KS.json",
       "sizeBytes": 56633,
-      "updatedAt": "2026-06-11T11:02:15.464Z"
+      "updatedAt": "2026-06-12T07:28:14.470Z"
     },
     {
       "name": "014940.KQ.json",
       "sizeBytes": 54762,
-      "updatedAt": "2026-06-11T11:02:14.892Z"
+      "updatedAt": "2026-06-12T07:28:13.995Z"
     },
     {
       "name": "015760.KS.json",
       "sizeBytes": 82861,
-      "updatedAt": "2026-06-11T11:02:14.884Z"
+      "updatedAt": "2026-06-12T07:28:13.990Z"
     },
     {
       "name": "017670.KS.json",
       "sizeBytes": 62835,
-      "updatedAt": "2026-06-11T11:02:14.871Z"
+      "updatedAt": "2026-06-12T07:28:13.979Z"
     },
     {
       "name": "017800.KS.json",
       "sizeBytes": 41716,
-      "updatedAt": "2026-06-11T11:02:15.356Z"
+      "updatedAt": "2026-06-12T07:28:14.382Z"
     },
     {
       "name": "017960.KS.json",
       "sizeBytes": 56410,
-      "updatedAt": "2026-06-11T11:02:15.287Z"
+      "updatedAt": "2026-06-12T07:28:14.322Z"
     },
     {
       "name": "018260.KS.json",
       "sizeBytes": 62796,
-      "updatedAt": "2026-06-11T11:02:15.512Z"
+      "updatedAt": "2026-06-12T07:28:14.511Z"
     },
     {
       "name": "018670.KS.json",
       "sizeBytes": 62622,
-      "updatedAt": "2026-06-11T11:02:15.097Z"
+      "updatedAt": "2026-06-12T07:28:14.162Z"
     },
     {
       "name": "018880.KS.json",
       "sizeBytes": 56642,
-      "updatedAt": "2026-06-11T11:02:15.028Z"
+      "updatedAt": "2026-06-12T07:28:14.103Z"
     },
     {
       "name": "020000.KS.json",
       "sizeBytes": 66309,
-      "updatedAt": "2026-06-11T11:02:15.068Z"
+      "updatedAt": "2026-06-12T07:28:14.136Z"
     },
     {
       "name": "020150.KS.json",
       "sizeBytes": 46590,
-      "updatedAt": "2026-06-11T11:02:15.433Z"
+      "updatedAt": "2026-06-12T07:28:14.444Z"
     },
     {
       "name": "021240.KS.json",
       "sizeBytes": 88983,
-      "updatedAt": "2026-06-11T11:02:15.340Z"
+      "updatedAt": "2026-06-12T07:28:14.368Z"
     },
     {
       "name": "023160.KQ.json",
       "sizeBytes": 60935,
-      "updatedAt": "2026-06-11T11:02:15.049Z"
+      "updatedAt": "2026-06-12T07:28:14.121Z"
     },
     {
       "name": "023530.KS.json",
       "sizeBytes": 51597,
-      "updatedAt": "2026-06-11T11:02:15.497Z"
+      "updatedAt": "2026-06-12T07:28:14.498Z"
     },
     {
       "name": "0241.HK.json",
       "sizeBytes": 91744,
-      "updatedAt": "2026-06-11T11:02:15.199Z"
+      "updatedAt": "2026-06-12T07:28:14.249Z"
     },
     {
       "name": "024110.KS.json",
       "sizeBytes": 56434,
-      "updatedAt": "2026-06-11T11:02:15.275Z"
+      "updatedAt": "2026-06-12T07:28:14.312Z"
     },
     {
       "name": "025540.KS.json",
       "sizeBytes": 57889,
-      "updatedAt": "2026-06-11T11:02:15.064Z"
+      "updatedAt": "2026-06-12T07:28:14.133Z"
     },
     {
       "name": "028050.KS.json",
       "sizeBytes": 89192,
-      "updatedAt": "2026-06-11T11:02:15.373Z"
+      "updatedAt": "2026-06-12T07:28:14.394Z"
     },
     {
       "name": "028260.KS.json",
       "sizeBytes": 68817,
-      "updatedAt": "2026-06-11T11:02:15.224Z"
+      "updatedAt": "2026-06-12T07:28:14.271Z"
     },
     {
       "name": "028670.KS.json",
       "sizeBytes": 80649,
-      "updatedAt": "2026-06-11T11:02:14.954Z"
+      "updatedAt": "2026-06-12T07:28:14.046Z"
     },
     {
       "name": "029780.KS.json",
       "sizeBytes": 50011,
-      "updatedAt": "2026-06-11T11:02:14.856Z"
+      "updatedAt": "2026-06-12T07:28:13.964Z"
     },
     {
       "name": "030000.KS.json",
       "sizeBytes": 76487,
-      "updatedAt": "2026-06-11T11:02:15.496Z"
+      "updatedAt": "2026-06-12T07:28:14.498Z"
     },
     {
       "name": "030200.KS.json",
       "sizeBytes": 89514,
-      "updatedAt": "2026-06-11T11:02:15.192Z"
+      "updatedAt": "2026-06-12T07:28:14.243Z"
     },
     {
       "name": "030520.KQ.json",
       "sizeBytes": 56726,
-      "updatedAt": "2026-06-11T11:02:15.146Z"
+      "updatedAt": "2026-06-12T07:28:14.205Z"
     },
     {
       "name": "032350.KS.json",
       "sizeBytes": 54874,
-      "updatedAt": "2026-06-11T11:02:15.294Z"
+      "updatedAt": "2026-06-12T07:28:14.328Z"
     },
     {
       "name": "032640.KS.json",
       "sizeBytes": 57565,
-      "updatedAt": "2026-06-11T11:02:15.040Z"
+      "updatedAt": "2026-06-12T07:28:14.113Z"
     },
     {
       "name": "032830.KS.json",
       "sizeBytes": 70940,
-      "updatedAt": "2026-06-11T11:02:15.513Z"
+      "updatedAt": "2026-06-12T07:28:14.512Z"
     },
     {
       "name": "033500.KQ.json",
       "sizeBytes": 57452,
-      "updatedAt": "2026-06-11T11:02:14.987Z"
+      "updatedAt": "2026-06-12T07:28:14.072Z"
     },
     {
       "name": "033780.KS.json",
       "sizeBytes": 83233,
-      "updatedAt": "2026-06-11T11:02:15.416Z"
+      "updatedAt": "2026-06-12T07:28:14.430Z"
     },
     {
       "name": "034020.KS.json",
       "sizeBytes": 61872,
-      "updatedAt": "2026-06-11T11:02:15.424Z"
+      "updatedAt": "2026-06-12T07:28:14.436Z"
     },
     {
       "name": "034120.KS.json",
       "sizeBytes": 59248,
-      "updatedAt": "2026-06-11T11:02:15.247Z"
+      "updatedAt": "2026-06-12T07:28:14.290Z"
     },
     {
       "name": "034220.KS.json",
       "sizeBytes": 91064,
-      "updatedAt": "2026-06-11T11:02:15.115Z"
+      "updatedAt": "2026-06-12T07:28:14.178Z"
     },
     {
       "name": "034230.KS.json",
       "sizeBytes": 54132,
-      "updatedAt": "2026-06-11T11:02:15.116Z"
+      "updatedAt": "2026-06-12T07:28:14.179Z"
     },
     {
       "name": "034730.KS.json",
       "sizeBytes": 79808,
-      "updatedAt": "2026-06-11T11:02:15.359Z"
+      "updatedAt": "2026-06-12T07:28:14.383Z"
     },
     {
       "name": "035150.KS.json",
       "sizeBytes": 36502,
-      "updatedAt": "2026-06-11T11:02:15.089Z"
+      "updatedAt": "2026-06-12T07:28:14.154Z"
     },
     {
       "name": "035250.KS.json",
       "sizeBytes": 56273,
-      "updatedAt": "2026-06-11T11:02:15.276Z"
+      "updatedAt": "2026-06-12T07:28:14.313Z"
     },
     {
       "name": "035420.KS.json",
       "sizeBytes": 93005,
-      "updatedAt": "2026-06-11T11:02:15.421Z"
+      "updatedAt": "2026-06-12T07:28:14.434Z"
     },
     {
       "name": "035720.KS.json",
       "sizeBytes": 91605,
-      "updatedAt": "2026-06-11T11:02:14.937Z"
+      "updatedAt": "2026-06-12T07:28:14.033Z"
     },
     {
       "name": "035760.KQ.json",
       "sizeBytes": 59018,
-      "updatedAt": "2026-06-11T11:02:14.860Z"
+      "updatedAt": "2026-06-12T07:28:13.968Z"
     },
     {
       "name": "035900.KQ.json",
       "sizeBytes": 82781,
-      "updatedAt": "2026-06-11T11:02:15.363Z"
+      "updatedAt": "2026-06-12T07:28:14.386Z"
     },
     {
       "name": "036460.KS.json",
       "sizeBytes": 92439,
-      "updatedAt": "2026-06-11T11:02:15.485Z"
+      "updatedAt": "2026-06-12T07:28:14.487Z"
     },
     {
       "name": "036540.KQ.json",
       "sizeBytes": 53909,
-      "updatedAt": "2026-06-11T11:02:15.430Z"
+      "updatedAt": "2026-06-12T07:28:14.441Z"
     },
     {
       "name": "036570.KS.json",
       "sizeBytes": 87822,
-      "updatedAt": "2026-06-11T11:02:15.312Z"
+      "updatedAt": "2026-06-12T07:28:14.344Z"
     },
     {
       "name": "036800.KQ.json",
       "sizeBytes": 42387,
-      "updatedAt": "2026-06-11T11:02:14.910Z"
+      "updatedAt": "2026-06-12T07:28:14.011Z"
     },
     {
       "name": "036930.KQ.json",
       "sizeBytes": 56657,
-      "updatedAt": "2026-06-11T11:02:15.456Z"
+      "updatedAt": "2026-06-12T07:28:14.463Z"
     },
     {
       "name": "0386.HK.json",
       "sizeBytes": 88164,
-      "updatedAt": "2026-06-11T11:02:15.420Z"
+      "updatedAt": "2026-06-12T07:28:14.433Z"
     },
     {
       "name": "0388.HK.json",
       "sizeBytes": 95416,
-      "updatedAt": "2026-06-11T11:02:15.106Z"
+      "updatedAt": "2026-06-12T07:28:14.170Z"
     },
     {
       "name": "039030.KQ.json",
       "sizeBytes": 57788,
-      "updatedAt": "2026-06-11T11:02:14.893Z"
+      "updatedAt": "2026-06-12T07:28:13.996Z"
     },
     {
       "name": "039130.KS.json",
       "sizeBytes": 70881,
-      "updatedAt": "2026-06-11T11:02:15.221Z"
+      "updatedAt": "2026-06-12T07:28:14.269Z"
     },
     {
       "name": "039200.KQ.json",
       "sizeBytes": 49480,
-      "updatedAt": "2026-06-11T11:02:14.996Z"
+      "updatedAt": "2026-06-12T07:28:14.080Z"
     },
     {
       "name": "039440.KQ.json",
       "sizeBytes": 41194,
-      "updatedAt": "2026-06-11T11:02:15.406Z"
+      "updatedAt": "2026-06-12T07:28:14.421Z"
     },
     {
       "name": "041510.KQ.json",
       "sizeBytes": 91892,
-      "updatedAt": "2026-06-11T11:02:15.229Z"
+      "updatedAt": "2026-06-12T07:28:14.276Z"
     },
     {
       "name": "041830.KQ.json",
       "sizeBytes": 68166,
-      "updatedAt": "2026-06-11T11:02:14.967Z"
+      "updatedAt": "2026-06-12T07:28:14.057Z"
     },
     {
       "name": "042000.KQ.json",
       "sizeBytes": 38339,
-      "updatedAt": "2026-06-11T11:02:15.209Z"
+      "updatedAt": "2026-06-12T07:28:14.258Z"
     },
     {
       "name": "042660.KS.json",
       "sizeBytes": 94837,
-      "updatedAt": "2026-06-11T11:02:14.867Z"
+      "updatedAt": "2026-06-12T07:28:13.975Z"
     },
     {
       "name": "042700.KS.json",
       "sizeBytes": 70143,
-      "updatedAt": "2026-06-11T11:02:14.950Z"
+      "updatedAt": "2026-06-12T07:28:14.043Z"
     },
     {
       "name": "043150.KQ.json",
       "sizeBytes": 81879,
-      "updatedAt": "2026-06-11T11:02:15.341Z"
+      "updatedAt": "2026-06-12T07:28:14.368Z"
     },
     {
       "name": "043370.KQ.json",
       "sizeBytes": 40427,
-      "updatedAt": "2026-06-11T11:02:15.228Z"
+      "updatedAt": "2026-06-12T07:28:14.275Z"
     },
     {
       "name": "047040.KS.json",
       "sizeBytes": 55269,
-      "updatedAt": "2026-06-11T11:02:15.320Z"
+      "updatedAt": "2026-06-12T07:28:14.350Z"
     },
     {
       "name": "047050.KS.json",
       "sizeBytes": 42882,
-      "updatedAt": "2026-06-11T11:02:15.321Z"
+      "updatedAt": "2026-06-12T07:28:14.351Z"
     },
     {
       "name": "047810.KS.json",
       "sizeBytes": 77381,
-      "updatedAt": "2026-06-11T11:02:15.245Z"
+      "updatedAt": "2026-06-12T07:28:14.288Z"
     },
     {
       "name": "050890.KQ.json",
       "sizeBytes": 51937,
-      "updatedAt": "2026-06-11T11:02:14.943Z"
+      "updatedAt": "2026-06-12T07:28:14.038Z"
     },
     {
       "name": "051600.KS.json",
       "sizeBytes": 49683,
-      "updatedAt": "2026-06-11T11:02:14.985Z"
+      "updatedAt": "2026-06-12T07:28:14.070Z"
     },
     {
       "name": "051900.KS.json",
       "sizeBytes": 91080,
-      "updatedAt": "2026-06-11T11:02:15.313Z"
+      "updatedAt": "2026-06-12T07:28:14.345Z"
     },
     {
       "name": "051910.KS.json",
       "sizeBytes": 91439,
-      "updatedAt": "2026-06-11T11:02:15.314Z"
+      "updatedAt": "2026-06-12T07:28:14.346Z"
     },
     {
       "name": "052690.KS.json",
       "sizeBytes": 78665,
-      "updatedAt": "2026-06-11T11:02:15.185Z"
+      "updatedAt": "2026-06-12T07:28:14.237Z"
     },
     {
       "name": "053030.KQ.json",
       "sizeBytes": 54447,
-      "updatedAt": "2026-06-11T11:02:14.976Z"
+      "updatedAt": "2026-06-12T07:28:14.064Z"
     },
     {
       "name": "053580.KQ.json",
       "sizeBytes": 38265,
-      "updatedAt": "2026-06-11T11:02:15.446Z"
+      "updatedAt": "2026-06-12T07:28:14.455Z"
     },
     {
       "name": "055550.KS.json",
       "sizeBytes": 83754,
-      "updatedAt": "2026-06-11T11:02:15.374Z"
+      "updatedAt": "2026-06-12T07:28:14.395Z"
     },
     {
       "name": "056190.KQ.json",
       "sizeBytes": 54774,
-      "updatedAt": "2026-06-11T11:02:15.050Z"
+      "updatedAt": "2026-06-12T07:28:14.122Z"
     },
     {
       "name": "058470.KQ.json",
       "sizeBytes": 90874,
-      "updatedAt": "2026-06-11T11:02:15.256Z"
+      "updatedAt": "2026-06-12T07:28:14.297Z"
     },
     {
       "name": "058970.KQ.json",
       "sizeBytes": 38154,
-      "updatedAt": "2026-06-11T11:02:15.210Z"
+      "updatedAt": "2026-06-12T07:28:14.258Z"
     },
     {
       "name": "060980.KS.json",
       "sizeBytes": 82328,
-      "updatedAt": "2026-06-11T11:02:15.431Z"
+      "updatedAt": "2026-06-12T07:28:14.442Z"
     },
     {
       "name": "062040.KS.json",
       "sizeBytes": 35411,
-      "updatedAt": "2026-06-11T11:02:15.096Z"
+      "updatedAt": "2026-06-12T07:28:14.160Z"
     },
     {
       "name": "063570.KQ.json",
       "sizeBytes": 50996,
-      "updatedAt": "2026-06-11T11:02:15.133Z"
+      "updatedAt": "2026-06-12T07:28:14.193Z"
     },
     {
       "name": "064350.KS.json",
       "sizeBytes": 43722,
-      "updatedAt": "2026-06-11T11:02:15.057Z"
+      "updatedAt": "2026-06-12T07:28:14.127Z"
     },
     {
       "name": "064400.KS.json",
       "sizeBytes": 49317,
-      "updatedAt": "2026-06-11T11:02:15.491Z"
+      "updatedAt": "2026-06-12T07:28:14.493Z"
     },
     {
       "name": "064760.KQ.json",
       "sizeBytes": 53799,
-      "updatedAt": "2026-06-11T11:02:15.251Z"
+      "updatedAt": "2026-06-12T07:28:14.292Z"
     },
     {
       "name": "064960.KS.json",
       "sizeBytes": 78470,
-      "updatedAt": "2026-06-11T11:02:15.212Z"
+      "updatedAt": "2026-06-12T07:28:14.260Z"
     },
     {
       "name": "066570.KS.json",
       "sizeBytes": 92649,
-      "updatedAt": "2026-06-11T11:02:15.287Z"
+      "updatedAt": "2026-06-12T07:28:14.323Z"
     },
     {
       "name": "0669.HK.json",
       "sizeBytes": 91061,
-      "updatedAt": "2026-06-11T11:02:15.049Z"
+      "updatedAt": "2026-06-12T07:28:14.120Z"
     },
     {
       "name": "066970.KS.json",
       "sizeBytes": 90317,
-      "updatedAt": "2026-06-11T11:02:15.399Z"
+      "updatedAt": "2026-06-12T07:28:14.415Z"
     },
     {
       "name": "067160.KQ.json",
       "sizeBytes": 59763,
-      "updatedAt": "2026-06-11T11:02:15.091Z"
+      "updatedAt": "2026-06-12T07:28:14.156Z"
     },
     {
       "name": "067310.KQ.json",
       "sizeBytes": 55927,
-      "updatedAt": "2026-06-11T11:02:15.365Z"
+      "updatedAt": "2026-06-12T07:28:14.387Z"
     },
     {
       "name": "068270.KS.json",
       "sizeBytes": 96780,
-      "updatedAt": "2026-06-11T11:02:14.884Z"
+      "updatedAt": "2026-06-12T07:28:13.989Z"
     },
     {
       "name": "069080.KQ.json",
       "sizeBytes": 46636,
-      "updatedAt": "2026-06-11T11:02:14.977Z"
+      "updatedAt": "2026-06-12T07:28:14.065Z"
     },
     {
       "name": "069260.KS.json",
       "sizeBytes": 57405,
-      "updatedAt": "2026-06-11T11:02:15.331Z"
+      "updatedAt": "2026-06-12T07:28:14.360Z"
     },
     {
       "name": "069620.KS.json",
       "sizeBytes": 61763,
-      "updatedAt": "2026-06-11T11:02:15.451Z"
+      "updatedAt": "2026-06-12T07:28:14.459Z"
     },
     {
       "name": "069960.KS.json",
       "sizeBytes": 55034,
-      "updatedAt": "2026-06-11T11:02:15.260Z"
+      "updatedAt": "2026-06-12T07:28:14.300Z"
     },
     {
       "name": "0700.HK.json",
       "sizeBytes": 93270,
-      "updatedAt": "2026-06-11T11:02:15.181Z"
+      "updatedAt": "2026-06-12T07:28:14.234Z"
     },
     {
       "name": "071320.KS.json",
       "sizeBytes": 46748,
-      "updatedAt": "2026-06-11T11:02:15.292Z"
+      "updatedAt": "2026-06-12T07:28:14.326Z"
     },
     {
       "name": "071970.KS.json",
       "sizeBytes": 47974,
-      "updatedAt": "2026-06-11T11:02:14.889Z"
+      "updatedAt": "2026-06-12T07:28:13.994Z"
     },
     {
       "name": "074600.KQ.json",
       "sizeBytes": 82104,
-      "updatedAt": "2026-06-11T11:02:14.888Z"
+      "updatedAt": "2026-06-12T07:28:13.992Z"
     },
     {
       "name": "075580.KS.json",
       "sizeBytes": 42008,
-      "updatedAt": "2026-06-11T11:02:14.887Z"
+      "updatedAt": "2026-06-12T07:28:13.991Z"
     },
     {
       "name": "078340.KQ.json",
       "sizeBytes": 51330,
-      "updatedAt": "2026-06-11T11:02:15.234Z"
+      "updatedAt": "2026-06-12T07:28:14.279Z"
     },
     {
       "name": "078600.KQ.json",
       "sizeBytes": 55148,
-      "updatedAt": "2026-06-11T11:02:15.369Z"
+      "updatedAt": "2026-06-12T07:28:14.392Z"
     },
     {
       "name": "078930.KS.json",
       "sizeBytes": 84981,
-      "updatedAt": "2026-06-11T11:02:15.092Z"
+      "updatedAt": "2026-06-12T07:28:14.157Z"
     },
     {
       "name": "079160.KS.json",
       "sizeBytes": 56440,
-      "updatedAt": "2026-06-11T11:02:15.440Z"
+      "updatedAt": "2026-06-12T07:28:14.450Z"
     },
     {
       "name": "079550.KS.json",
       "sizeBytes": 73028,
-      "updatedAt": "2026-06-11T11:02:15.402Z"
+      "updatedAt": "2026-06-12T07:28:14.418Z"
     },
     {
       "name": "079900.KS.json",
       "sizeBytes": 35269,
-      "updatedAt": "2026-06-11T11:02:15.063Z"
+      "updatedAt": "2026-06-12T07:28:14.131Z"
     },
     {
       "name": "082740.KS.json",
       "sizeBytes": 49010,
-      "updatedAt": "2026-06-11T11:02:15.424Z"
+      "updatedAt": "2026-06-12T07:28:14.436Z"
     },
     {
       "name": "082920.KQ.json",
       "sizeBytes": 49595,
-      "updatedAt": "2026-06-11T11:02:15.304Z"
+      "updatedAt": "2026-06-12T07:28:14.337Z"
     },
     {
       "name": "084370.KQ.json",
       "sizeBytes": 54622,
-      "updatedAt": "2026-06-11T11:02:15.414Z"
+      "updatedAt": "2026-06-12T07:28:14.427Z"
     },
     {
       "name": "0857.HK.json",
       "sizeBytes": 79071,
-      "updatedAt": "2026-06-11T11:02:15.330Z"
+      "updatedAt": "2026-06-12T07:28:14.358Z"
     },
     {
       "name": "086280.KS.json",
       "sizeBytes": 83737,
-      "updatedAt": "2026-06-11T11:02:15.432Z"
+      "updatedAt": "2026-06-12T07:28:14.443Z"
     },
     {
       "name": "086450.KQ.json",
       "sizeBytes": 50546,
-      "updatedAt": "2026-06-11T11:02:15.047Z"
+      "updatedAt": "2026-06-12T07:28:14.118Z"
     },
     {
       "name": "086790.KS.json",
       "sizeBytes": 79411,
-      "updatedAt": "2026-06-11T11:02:14.988Z"
+      "updatedAt": "2026-06-12T07:28:14.074Z"
     },
     {
       "name": "086900.KQ.json",
       "sizeBytes": 50683,
-      "updatedAt": "2026-06-11T11:02:15.218Z"
+      "updatedAt": "2026-06-12T07:28:14.266Z"
     },
     {
       "name": "0883.HK.json",
       "sizeBytes": 92358,
-      "updatedAt": "2026-06-11T11:02:14.900Z"
+      "updatedAt": "2026-06-12T07:28:14.003Z"
     },
     {
       "name": "089030.KQ.json",
       "sizeBytes": 66875,
-      "updatedAt": "2026-06-11T11:02:15.435Z"
+      "updatedAt": "2026-06-12T07:28:14.445Z"
     },
     {
       "name": "089590.KS.json",
       "sizeBytes": 42950,
-      "updatedAt": "2026-06-11T11:02:15.469Z"
+      "updatedAt": "2026-06-12T07:28:14.473Z"
     },
     {
       "name": "089600.KQ.json",
       "sizeBytes": 45743,
-      "updatedAt": "2026-06-11T11:02:15.035Z"
+      "updatedAt": "2026-06-12T07:28:14.108Z"
     },
     {
       "name": "089860.KS.json",
       "sizeBytes": 63336,
-      "updatedAt": "2026-06-11T11:02:14.993Z"
+      "updatedAt": "2026-06-12T07:28:14.077Z"
     },
     {
       "name": "090430.KS.json",
       "sizeBytes": 85498,
-      "updatedAt": "2026-06-11T11:02:15.227Z"
+      "updatedAt": "2026-06-12T07:28:14.274Z"
     },
     {
       "name": "090460.KS.json",
       "sizeBytes": 81420,
-      "updatedAt": "2026-06-11T11:02:15.105Z"
+      "updatedAt": "2026-06-12T07:28:14.168Z"
     },
     {
       "name": "091700.KQ.json",
       "sizeBytes": 52221,
-      "updatedAt": "2026-06-11T11:02:15.289Z"
+      "updatedAt": "2026-06-12T07:28:14.324Z"
     },
     {
       "name": "091810.KS.json",
       "sizeBytes": 37682,
-      "updatedAt": "2026-06-11T11:02:15.397Z"
+      "updatedAt": "2026-06-12T07:28:14.414Z"
     },
     {
       "name": "093050.KS.json",
       "sizeBytes": 47847,
-      "updatedAt": "2026-06-11T11:02:15.305Z"
+      "updatedAt": "2026-06-12T07:28:14.338Z"
     },
     {
       "name": "093320.KQ.json",
       "sizeBytes": 44284,
-      "updatedAt": "2026-06-11T11:02:15.389Z"
+      "updatedAt": "2026-06-12T07:28:14.407Z"
     },
     {
       "name": "093370.KS.json",
       "sizeBytes": 48992,
-      "updatedAt": "2026-06-11T11:02:15.437Z"
+      "updatedAt": "2026-06-12T07:28:14.447Z"
     },
     {
       "name": "0939.HK.json",
       "sizeBytes": 89042,
-      "updatedAt": "2026-06-11T11:02:14.859Z"
+      "updatedAt": "2026-06-12T07:28:13.967Z"
     },
     {
       "name": "0941.HK.json",
       "sizeBytes": 96082,
-      "updatedAt": "2026-06-11T11:02:15.039Z"
+      "updatedAt": "2026-06-12T07:28:14.112Z"
     },
     {
       "name": "094360.KQ.json",
       "sizeBytes": 41876,
-      "updatedAt": "2026-06-11T11:02:15.142Z"
+      "updatedAt": "2026-06-12T07:28:14.202Z"
     },
     {
       "name": "095340.KQ.json",
       "sizeBytes": 71024,
-      "updatedAt": "2026-06-11T11:02:15.200Z"
+      "updatedAt": "2026-06-12T07:28:14.250Z"
     },
     {
       "name": "095570.KS.json",
       "sizeBytes": 42032,
-      "updatedAt": "2026-06-11T11:02:14.972Z"
+      "updatedAt": "2026-06-12T07:28:14.060Z"
     },
     {
       "name": "095610.KQ.json",
       "sizeBytes": 51028,
-      "updatedAt": "2026-06-11T11:02:15.051Z"
+      "updatedAt": "2026-06-12T07:28:14.122Z"
     },
     {
       "name": "095660.KQ.json",
       "sizeBytes": 50083,
-      "updatedAt": "2026-06-11T11:02:14.966Z"
+      "updatedAt": "2026-06-12T07:28:14.056Z"
     },
     {
       "name": "096770.KS.json",
       "sizeBytes": 77130,
-      "updatedAt": "2026-06-11T11:02:15.068Z"
+      "updatedAt": "2026-06-12T07:28:14.136Z"
     },
     {
       "name": "097520.KS.json",
       "sizeBytes": 77438,
-      "updatedAt": "2026-06-11T11:02:15.338Z"
+      "updatedAt": "2026-06-12T07:28:14.366Z"
     },
     {
       "name": "097950.KS.json",
       "sizeBytes": 50425,
-      "updatedAt": "2026-06-11T11:02:15.221Z"
+      "updatedAt": "2026-06-12T07:28:14.268Z"
     },
     {
       "name": "098460.KQ.json",
       "sizeBytes": 68157,
-      "updatedAt": "2026-06-11T11:02:15.352Z"
+      "updatedAt": "2026-06-12T07:28:14.377Z"
     },
     {
       "name": "099190.KQ.json",
       "sizeBytes": 44032,
-      "updatedAt": "2026-06-11T11:02:14.989Z"
+      "updatedAt": "2026-06-12T07:28:14.074Z"
     },
     {
       "name": "100090.KS.json",
       "sizeBytes": 52286,
-      "updatedAt": "2026-06-11T11:02:14.865Z"
+      "updatedAt": "2026-06-12T07:28:13.974Z"
     },
     {
       "name": "100120.KQ.json",
       "sizeBytes": 66488,
-      "updatedAt": "2026-06-11T11:02:15.268Z"
+      "updatedAt": "2026-06-12T07:28:14.307Z"
     },
     {
       "name": "100840.KS.json",
       "sizeBytes": 52648,
-      "updatedAt": "2026-06-11T11:02:15.224Z"
+      "updatedAt": "2026-06-12T07:28:14.271Z"
     },
     {
       "name": "101490.KQ.json",
       "sizeBytes": 52730,
-      "updatedAt": "2026-06-11T11:02:15.407Z"
+      "updatedAt": "2026-06-12T07:28:14.422Z"
     },
     {
       "name": "1024.HK.json",
       "sizeBytes": 68308,
-      "updatedAt": "2026-06-11T11:02:15.396Z"
+      "updatedAt": "2026-06-12T07:28:14.412Z"
     },
     {
       "name": "102710.KQ.json",
       "sizeBytes": 41614,
-      "updatedAt": "2026-06-11T11:02:15.054Z"
+      "updatedAt": "2026-06-12T07:28:14.125Z"
     },
     {
       "name": "103140.KS.json",
       "sizeBytes": 38611,
-      "updatedAt": "2026-06-11T11:02:15.438Z"
+      "updatedAt": "2026-06-12T07:28:14.448Z"
     },
     {
       "name": "103590.KS.json",
       "sizeBytes": 52556,
-      "updatedAt": "2026-06-11T11:02:14.897Z"
+      "updatedAt": "2026-06-12T07:28:14.000Z"
     },
     {
       "name": "104830.KQ.json",
       "sizeBytes": 68207,
-      "updatedAt": "2026-06-11T11:02:15.360Z"
+      "updatedAt": "2026-06-12T07:28:14.384Z"
     },
     {
       "name": "105560.KS.json",
       "sizeBytes": 81292,
-      "updatedAt": "2026-06-11T11:02:14.905Z"
+      "updatedAt": "2026-06-12T07:28:14.007Z"
     },
     {
       "name": "105630.KS.json",
       "sizeBytes": 67995,
-      "updatedAt": "2026-06-11T11:02:14.889Z"
+      "updatedAt": "2026-06-12T07:28:13.993Z"
     },
     {
       "name": "108320.KS.json",
       "sizeBytes": 80721,
-      "updatedAt": "2026-06-11T11:02:15.520Z"
+      "updatedAt": "2026-06-12T07:28:14.519Z"
     },
     {
       "name": "108490.KQ.json",
       "sizeBytes": 37216,
-      "updatedAt": "2026-06-11T11:02:15.052Z"
+      "updatedAt": "2026-06-12T07:28:14.123Z"
     },
     {
       "name": "108670.KS.json",
       "sizeBytes": 32032,
-      "updatedAt": "2026-06-11T11:02:15.398Z"
+      "updatedAt": "2026-06-12T07:28:14.414Z"
     },
     {
       "name": "1109.HK.json",
       "sizeBytes": 97500,
-      "updatedAt": "2026-06-11T11:02:15.458Z"
+      "updatedAt": "2026-06-12T07:28:14.465Z"
     },
     {
       "name": "111770.KS.json",
       "sizeBytes": 79390,
-      "updatedAt": "2026-06-11T11:02:15.340Z"
+      "updatedAt": "2026-06-12T07:28:14.367Z"
     },
     {
       "name": "112040.KQ.json",
       "sizeBytes": 45991,
-      "updatedAt": "2026-06-11T11:02:15.061Z"
+      "updatedAt": "2026-06-12T07:28:14.130Z"
     },
     {
       "name": "114090.KS.json",
       "sizeBytes": 65942,
-      "updatedAt": "2026-06-11T11:02:14.979Z"
+      "updatedAt": "2026-06-12T07:28:14.067Z"
     },
     {
       "name": "114840.KQ.json",
       "sizeBytes": 33936,
-      "updatedAt": "2026-06-11T11:02:15.127Z"
+      "updatedAt": "2026-06-12T07:28:14.188Z"
     },
     {
       "name": "119610.KQ.json",
       "sizeBytes": 68343,
-      "updatedAt": "2026-06-11T11:02:15.187Z"
+      "updatedAt": "2026-06-12T07:28:14.239Z"
     },
     {
       "name": "120110.KS.json",
       "sizeBytes": 47795,
-      "updatedAt": "2026-06-11T11:02:14.940Z"
+      "updatedAt": "2026-06-12T07:28:14.035Z"
     },
     {
       "name": "1211.HK.json",
       "sizeBytes": 98752,
-      "updatedAt": "2026-06-11T11:02:14.877Z"
+      "updatedAt": "2026-06-12T07:28:13.983Z"
     },
     {
       "name": "121600.KQ.json",
       "sizeBytes": 64672,
-      "updatedAt": "2026-06-11T11:02:14.955Z"
+      "updatedAt": "2026-06-12T07:28:14.047Z"
     },
     {
       "name": "122870.KQ.json",
       "sizeBytes": 63701,
-      "updatedAt": "2026-06-11T11:02:15.175Z"
+      "updatedAt": "2026-06-12T07:28:14.229Z"
     },
     {
       "name": "126340.KQ.json",
       "sizeBytes": 40549,
-      "updatedAt": "2026-06-11T11:02:15.145Z"
+      "updatedAt": "2026-06-12T07:28:14.204Z"
     },
     {
       "name": "1288.HK.json",
       "sizeBytes": 73215,
-      "updatedAt": "2026-06-11T11:02:15.360Z"
+      "updatedAt": "2026-06-12T07:28:14.384Z"
     },
     {
       "name": "128940.KS.json",
       "sizeBytes": 81397,
-      "updatedAt": "2026-06-11T11:02:14.957Z"
+      "updatedAt": "2026-06-12T07:28:14.049Z"
     },
     {
       "name": "1299.HK.json",
       "sizeBytes": 82192,
-      "updatedAt": "2026-06-11T11:02:15.230Z"
+      "updatedAt": "2026-06-12T07:28:14.276Z"
     },
     {
       "name": "131290.KQ.json",
       "sizeBytes": 46116,
-      "updatedAt": "2026-06-11T11:02:15.277Z"
+      "updatedAt": "2026-06-12T07:28:14.314Z"
     },
     {
       "name": "131970.KQ.json",
       "sizeBytes": 42971,
-      "updatedAt": "2026-06-11T11:02:15.129Z"
+      "updatedAt": "2026-06-12T07:28:14.190Z"
     },
     {
       "name": "137310.KS.json",
       "sizeBytes": 60898,
-      "updatedAt": "2026-06-11T11:02:15.153Z"
+      "updatedAt": "2026-06-12T07:28:14.211Z"
     },
     {
       "name": "138930.KS.json",
       "sizeBytes": 46217,
-      "updatedAt": "2026-06-11T11:02:15.526Z"
+      "updatedAt": "2026-06-12T07:28:14.523Z"
     },
     {
       "name": "139130.KS.json",
       "sizeBytes": 45521,
-      "updatedAt": "2026-06-11T11:02:15.327Z"
+      "updatedAt": "2026-06-12T07:28:14.356Z"
     },
     {
       "name": "139480.KS.json",
       "sizeBytes": 46739,
-      "updatedAt": "2026-06-11T11:02:15.114Z"
+      "updatedAt": "2026-06-12T07:28:14.177Z"
     },
     {
       "name": "1398.HK.json",
       "sizeBytes": 87630,
-      "updatedAt": "2026-06-11T11:02:15.528Z"
+      "updatedAt": "2026-06-12T07:28:14.524Z"
     },
     {
       "name": "140860.KQ.json",
       "sizeBytes": 41302,
-      "updatedAt": "2026-06-11T11:02:15.169Z"
+      "updatedAt": "2026-06-12T07:28:14.224Z"
     },
     {
       "name": "141080.KQ.json",
       "sizeBytes": 43012,
-      "updatedAt": "2026-06-11T11:02:15.462Z"
+      "updatedAt": "2026-06-12T07:28:14.469Z"
     },
     {
       "name": "145020.KQ.json",
       "sizeBytes": 42201,
-      "updatedAt": "2026-06-11T11:02:15.131Z"
+      "updatedAt": "2026-06-12T07:28:14.192Z"
     },
     {
       "name": "145720.KS.json",
       "sizeBytes": 71225,
-      "updatedAt": "2026-06-11T11:02:15.386Z"
+      "updatedAt": "2026-06-12T07:28:14.405Z"
     },
     {
       "name": "161390.KS.json",
       "sizeBytes": 44839,
-      "updatedAt": "2026-06-11T11:02:14.960Z"
+      "updatedAt": "2026-06-12T07:28:14.052Z"
     },
     {
       "name": "161890.KS.json",
       "sizeBytes": 44087,
-      "updatedAt": "2026-06-11T11:02:14.932Z"
+      "updatedAt": "2026-06-12T07:28:14.028Z"
     },
     {
       "name": "166090.KQ.json",
       "sizeBytes": 68448,
-      "updatedAt": "2026-06-11T11:02:15.095Z"
+      "updatedAt": "2026-06-12T07:28:14.159Z"
     },
     {
       "name": "170900.KS.json",
       "sizeBytes": 42232,
-      "updatedAt": "2026-06-11T11:02:15.457Z"
+      "updatedAt": "2026-06-12T07:28:14.464Z"
     },
     {
       "name": "171090.KQ.json",
       "sizeBytes": 38654,
-      "updatedAt": "2026-06-11T11:02:15.282Z"
+      "updatedAt": "2026-06-12T07:28:14.319Z"
     },
     {
       "name": "175330.KS.json",
       "sizeBytes": 60773,
-      "updatedAt": "2026-06-11T11:02:14.926Z"
+      "updatedAt": "2026-06-12T07:28:14.024Z"
     },
     {
       "name": "178320.KQ.json",
       "sizeBytes": 56997,
-      "updatedAt": "2026-06-11T11:02:15.380Z"
+      "updatedAt": "2026-06-12T07:28:14.400Z"
     },
     {
       "name": "178920.KS.json",
       "sizeBytes": 41227,
-      "updatedAt": "2026-06-11T11:02:15.162Z"
+      "updatedAt": "2026-06-12T07:28:14.218Z"
     },
     {
       "name": "180640.KS.json",
       "sizeBytes": 36543,
-      "updatedAt": "2026-06-11T11:02:15.495Z"
+      "updatedAt": "2026-06-12T07:28:14.497Z"
     },
     {
       "name": "1810.HK.json",
       "sizeBytes": 72840,
-      "updatedAt": "2026-06-11T11:02:15.037Z"
+      "updatedAt": "2026-06-12T07:28:14.109Z"
     },
     {
       "name": "181710.KS.json",
       "sizeBytes": 44117,
-      "updatedAt": "2026-06-11T11:02:15.376Z"
+      "updatedAt": "2026-06-12T07:28:14.397Z"
     },
     {
       "name": "183190.KS.json",
       "sizeBytes": 37482,
-      "updatedAt": "2026-06-11T11:02:14.866Z"
+      "updatedAt": "2026-06-12T07:28:13.974Z"
     },
     {
       "name": "183300.KQ.json",
       "sizeBytes": 39902,
-      "updatedAt": "2026-06-11T11:02:15.463Z"
+      "updatedAt": "2026-06-12T07:28:14.469Z"
     },
     {
       "name": "185750.KS.json",
       "sizeBytes": 51860,
-      "updatedAt": "2026-06-11T11:02:15.209Z"
+      "updatedAt": "2026-06-12T07:28:14.257Z"
     },
     {
       "name": "189300.KQ.json",
       "sizeBytes": 39413,
-      "updatedAt": "2026-06-11T11:02:15.247Z"
+      "updatedAt": "2026-06-12T07:28:14.290Z"
     },
     {
       "name": "192080.KS.json",
       "sizeBytes": 41609,
-      "updatedAt": "2026-06-11T11:02:15.122Z"
+      "updatedAt": "2026-06-12T07:28:14.183Z"
     },
     {
       "name": "192650.KS.json",
       "sizeBytes": 38148,
-      "updatedAt": "2026-06-11T11:02:14.854Z"
+      "updatedAt": "2026-06-12T07:28:13.963Z"
     },
     {
       "name": "1928.HK.json",
       "sizeBytes": 82281,
-      "updatedAt": "2026-06-11T11:02:15.267Z"
+      "updatedAt": "2026-06-12T07:28:14.306Z"
     },
     {
       "name": "192820.KS.json",
       "sizeBytes": 44652,
-      "updatedAt": "2026-06-11T11:02:15.370Z"
+      "updatedAt": "2026-06-12T07:28:14.392Z"
     },
     {
       "name": "195870.KS.json",
       "sizeBytes": 74940,
-      "updatedAt": "2026-06-11T11:02:14.898Z"
+      "updatedAt": "2026-06-12T07:28:14.001Z"
     },
     {
       "name": "195940.KQ.json",
       "sizeBytes": 35705,
-      "updatedAt": "2026-06-11T11:02:14.969Z"
+      "updatedAt": "2026-06-12T07:28:14.059Z"
     },
     {
       "name": "196170.KQ.json",
       "sizeBytes": 43316,
-      "updatedAt": "2026-06-11T11:02:15.208Z"
+      "updatedAt": "2026-06-12T07:28:14.257Z"
     },
     {
       "name": "200130.KQ.json",
       "sizeBytes": 61506,
-      "updatedAt": "2026-06-11T11:02:15.084Z"
+      "updatedAt": "2026-06-12T07:28:14.149Z"
     },
     {
       "name": "200670.KQ.json",
       "sizeBytes": 40481,
-      "updatedAt": "2026-06-11T11:02:15.474Z"
+      "updatedAt": "2026-06-12T07:28:14.479Z"
     },
     {
       "name": "2020.HK.json",
       "sizeBytes": 87053,
-      "updatedAt": "2026-06-11T11:02:15.487Z"
+      "updatedAt": "2026-06-12T07:28:14.490Z"
     },
     {
       "name": "204270.KQ.json",
       "sizeBytes": 35326,
-      "updatedAt": "2026-06-11T11:02:15.444Z"
+      "updatedAt": "2026-06-12T07:28:14.452Z"
     },
     {
       "name": "204320.KS.json",
       "sizeBytes": 42667,
-      "updatedAt": "2026-06-11T11:02:15.216Z"
+      "updatedAt": "2026-06-12T07:28:14.264Z"
     },
     {
       "name": "207940.KS.json",
       "sizeBytes": 78945,
-      "updatedAt": "2026-06-11T11:02:15.161Z"
+      "updatedAt": "2026-06-12T07:28:14.217Z"
     },
     {
       "name": "213420.KQ.json",
       "sizeBytes": 41962,
-      "updatedAt": "2026-06-11T11:02:15.464Z"
+      "updatedAt": "2026-06-12T07:28:14.470Z"
     },
     {
       "name": "214150.KQ.json",
       "sizeBytes": 67304,
-      "updatedAt": "2026-06-11T11:02:14.930Z"
+      "updatedAt": "2026-06-12T07:28:14.027Z"
     },
     {
       "name": "214320.KS.json",
       "sizeBytes": 42565,
-      "updatedAt": "2026-06-11T11:02:15.003Z"
+      "updatedAt": "2026-06-12T07:28:14.085Z"
     },
     {
       "name": "214450.KQ.json",
       "sizeBytes": 76057,
-      "updatedAt": "2026-06-11T11:02:15.515Z"
+      "updatedAt": "2026-06-12T07:28:14.513Z"
     },
     {
       "name": "215200.KQ.json",
       "sizeBytes": 59907,
-      "updatedAt": "2026-06-11T11:02:15.308Z"
+      "updatedAt": "2026-06-12T07:28:14.340Z"
     },
     {
       "name": "218410.KQ.json",
       "sizeBytes": 39346,
-      "updatedAt": "2026-06-11T11:02:15.274Z"
+      "updatedAt": "2026-06-12T07:28:14.312Z"
     },
     {
       "name": "222800.KQ.json",
       "sizeBytes": 40753,
-      "updatedAt": "2026-06-11T11:02:15.435Z"
+      "updatedAt": "2026-06-12T07:28:14.446Z"
     },
     {
       "name": "229640.KS.json",
       "sizeBytes": 39479,
-      "updatedAt": "2026-06-11T11:02:15.430Z"
+      "updatedAt": "2026-06-12T07:28:14.441Z"
     },
     {
       "name": "230360.KQ.json",
       "sizeBytes": 38496,
-      "updatedAt": "2026-06-11T11:02:15.163Z"
+      "updatedAt": "2026-06-12T07:28:14.219Z"
     },
     {
       "name": "2313.HK.json",
       "sizeBytes": 88885,
-      "updatedAt": "2026-06-11T11:02:15.385Z"
+      "updatedAt": "2026-06-12T07:28:14.405Z"
     },
     {
       "name": "2318.HK.json",
       "sizeBytes": 90644,
-      "updatedAt": "2026-06-11T11:02:15.347Z"
+      "updatedAt": "2026-06-12T07:28:14.373Z"
     },
     {
       "name": "237690.KQ.json",
       "sizeBytes": 40664,
-      "updatedAt": "2026-06-11T11:02:14.977Z"
+      "updatedAt": "2026-06-12T07:28:14.065Z"
     },
     {
       "name": "2388.HK.json",
       "sizeBytes": 92352,
-      "updatedAt": "2026-06-11T11:02:14.908Z"
+      "updatedAt": "2026-06-12T07:28:14.009Z"
     },
     {
       "name": "240810.KQ.json",
       "sizeBytes": 69048,
-      "updatedAt": "2026-06-11T11:02:15.443Z"
+      "updatedAt": "2026-06-12T07:28:14.452Z"
     },
     {
       "name": "241560.KS.json",
       "sizeBytes": 58395,
-      "updatedAt": "2026-06-11T11:02:15.381Z"
+      "updatedAt": "2026-06-12T07:28:14.401Z"
     },
     {
       "name": "241590.KS.json",
       "sizeBytes": 40177,
-      "updatedAt": "2026-06-11T11:02:14.870Z"
+      "updatedAt": "2026-06-12T07:28:13.977Z"
     },
     {
       "name": "241710.KQ.json",
       "sizeBytes": 40189,
-      "updatedAt": "2026-06-11T11:02:15.470Z"
+      "updatedAt": "2026-06-12T07:28:14.474Z"
     },
     {
       "name": "243070.KQ.json",
       "sizeBytes": 35405,
-      "updatedAt": "2026-06-11T11:02:15.297Z"
+      "updatedAt": "2026-06-12T07:28:14.331Z"
     },
     {
       "name": "2454.TW.json",
       "sizeBytes": 26635,
-      "updatedAt": "2026-06-11T11:02:14.972Z"
+      "updatedAt": "2026-06-12T07:28:14.061Z"
     },
     {
       "name": "247540.KQ.json",
       "sizeBytes": 36927,
-      "updatedAt": "2026-06-11T11:02:15.131Z"
+      "updatedAt": "2026-06-12T07:28:14.191Z"
     },
     {
       "name": "248070.KS.json",
       "sizeBytes": 35874,
-      "updatedAt": "2026-06-11T11:02:15.301Z"
+      "updatedAt": "2026-06-12T07:28:14.335Z"
     },
     {
       "name": "251270.KS.json",
       "sizeBytes": 39049,
-      "updatedAt": "2026-06-11T11:02:14.917Z"
+      "updatedAt": "2026-06-12T07:28:14.017Z"
     },
     {
       "name": "251970.KQ.json",
       "sizeBytes": 36965,
-      "updatedAt": "2026-06-11T11:02:15.459Z"
+      "updatedAt": "2026-06-12T07:28:14.466Z"
     },
     {
       "name": "253450.KQ.json",
       "sizeBytes": 39274,
-      "updatedAt": "2026-06-11T11:02:14.881Z"
+      "updatedAt": "2026-06-12T07:28:13.987Z"
     },
     {
       "name": "257720.KQ.json",
       "sizeBytes": 35505,
-      "updatedAt": "2026-06-11T11:02:14.995Z"
+      "updatedAt": "2026-06-12T07:28:14.079Z"
     },
     {
       "name": "259960.KS.json",
       "sizeBytes": 64263,
-      "updatedAt": "2026-06-11T11:02:14.895Z"
+      "updatedAt": "2026-06-12T07:28:13.998Z"
     },
     {
       "name": "2628.HK.json",
       "sizeBytes": 82159,
-      "updatedAt": "2026-06-11T11:02:15.460Z"
+      "updatedAt": "2026-06-12T07:28:14.467Z"
     },
     {
       "name": "263750.KQ.json",
       "sizeBytes": 71906,
-      "updatedAt": "2026-06-11T11:02:15.357Z"
+      "updatedAt": "2026-06-12T07:28:14.382Z"
     },
     {
       "name": "267250.KS.json",
       "sizeBytes": 39822,
-      "updatedAt": "2026-06-11T11:02:14.862Z"
+      "updatedAt": "2026-06-12T07:28:13.970Z"
     },
     {
       "name": "267260.KS.json",
       "sizeBytes": 40318,
-      "updatedAt": "2026-06-11T11:02:15.342Z"
+      "updatedAt": "2026-06-12T07:28:14.369Z"
     },
     {
       "name": "267270.KS.json",
       "sizeBytes": 40893,
-      "updatedAt": "2026-06-11T11:02:15.343Z"
+      "updatedAt": "2026-06-12T07:28:14.369Z"
     },
     {
       "name": "271560.KS.json",
       "sizeBytes": 69159,
-      "updatedAt": "2026-06-11T11:02:15.371Z"
+      "updatedAt": "2026-06-12T07:28:14.393Z"
     },
     {
       "name": "272210.KS.json",
       "sizeBytes": 37448,
-      "updatedAt": "2026-06-11T11:02:15.118Z"
+      "updatedAt": "2026-06-12T07:28:14.181Z"
     },
     {
       "name": "272290.KQ.json",
       "sizeBytes": 59349,
-      "updatedAt": "2026-06-11T11:02:15.001Z"
+      "updatedAt": "2026-06-12T07:28:14.084Z"
     },
     {
       "name": "272450.KS.json",
       "sizeBytes": 38697,
-      "updatedAt": "2026-06-11T11:02:15.311Z"
+      "updatedAt": "2026-06-12T07:28:14.343Z"
     },
     {
       "name": "278280.KQ.json",
       "sizeBytes": 54923,
-      "updatedAt": "2026-06-11T11:02:15.110Z"
+      "updatedAt": "2026-06-12T07:28:14.172Z"
     },
     {
       "name": "278470.KS.json",
       "sizeBytes": 35657,
-      "updatedAt": "2026-06-11T11:02:15.195Z"
+      "updatedAt": "2026-06-12T07:28:14.246Z"
     },
     {
       "name": "280360.KS.json",
       "sizeBytes": 39845,
-      "updatedAt": "2026-06-11T11:02:15.141Z"
+      "updatedAt": "2026-06-12T07:28:14.200Z"
     },
     {
       "name": "281820.KS.json",
       "sizeBytes": 36362,
-      "updatedAt": "2026-06-11T11:02:14.955Z"
+      "updatedAt": "2026-06-12T07:28:14.047Z"
     },
     {
       "name": "282330.KS.json",
       "sizeBytes": 58818,
-      "updatedAt": "2026-06-11T11:02:15.493Z"
+      "updatedAt": "2026-06-12T07:28:14.495Z"
     },
     {
       "name": "285130.KS.json",
       "sizeBytes": 39531,
-      "updatedAt": "2026-06-11T11:02:14.869Z"
+      "updatedAt": "2026-06-12T07:28:13.977Z"
     },
     {
       "name": "290650.KQ.json",
       "sizeBytes": 39885,
-      "updatedAt": "2026-06-11T11:02:15.053Z"
+      "updatedAt": "2026-06-12T07:28:14.124Z"
     },
     {
       "name": "2914.T.json",
       "sizeBytes": 91058,
-      "updatedAt": "2026-06-11T11:02:15.080Z"
+      "updatedAt": "2026-06-12T07:28:14.146Z"
     },
     {
       "name": "293490.KQ.json",
       "sizeBytes": 64702,
-      "updatedAt": "2026-06-11T11:02:15.104Z"
+      "updatedAt": "2026-06-12T07:28:14.168Z"
     },
     {
       "name": "294870.KS.json",
       "sizeBytes": 39022,
-      "updatedAt": "2026-06-11T11:02:15.180Z"
+      "updatedAt": "2026-06-12T07:28:14.233Z"
     },
     {
       "name": "298020.KS.json",
       "sizeBytes": 73780,
-      "updatedAt": "2026-06-11T11:02:15.489Z"
+      "updatedAt": "2026-06-12T07:28:14.491Z"
     },
     {
       "name": "298040.KS.json",
       "sizeBytes": 38944,
-      "updatedAt": "2026-06-11T11:02:15.243Z"
+      "updatedAt": "2026-06-12T07:28:14.287Z"
     },
     {
       "name": "298050.KS.json",
       "sizeBytes": 56754,
-      "updatedAt": "2026-06-11T11:02:15.242Z"
+      "updatedAt": "2026-06-12T07:28:14.285Z"
     },
     {
       "name": "298380.KQ.json",
       "sizeBytes": 37223,
-      "updatedAt": "2026-06-11T11:02:15.512Z"
+      "updatedAt": "2026-06-12T07:28:14.512Z"
     },
     {
       "name": "300059.SZ.json",
       "sizeBytes": 83868,
-      "updatedAt": "2026-06-11T11:02:15.186Z"
+      "updatedAt": "2026-06-12T07:28:14.238Z"
     },
     {
       "name": "300720.KS.json",
       "sizeBytes": 38481,
-      "updatedAt": "2026-06-11T11:02:15.272Z"
+      "updatedAt": "2026-06-12T07:28:14.310Z"
     },
     {
       "name": "300750.SZ.json",
       "sizeBytes": 73608,
-      "updatedAt": "2026-06-11T11:02:14.858Z"
+      "updatedAt": "2026-06-12T07:28:13.966Z"
     },
     {
       "name": "300760.SZ.json",
       "sizeBytes": 71943,
-      "updatedAt": "2026-06-11T11:02:15.333Z"
+      "updatedAt": "2026-06-12T07:28:14.361Z"
     },
     {
       "name": "300999.SZ.json",
       "sizeBytes": 69427,
-      "updatedAt": "2026-06-11T11:02:15.364Z"
+      "updatedAt": "2026-06-12T07:28:14.387Z"
     },
     {
       "name": "307950.KS.json",
       "sizeBytes": 38081,
-      "updatedAt": "2026-06-11T11:02:15.099Z"
+      "updatedAt": "2026-06-12T07:28:14.164Z"
     },
     {
       "name": "314930.KQ.json",
       "sizeBytes": 31147,
-      "updatedAt": "2026-06-11T11:02:15.298Z"
+      "updatedAt": "2026-06-12T07:28:14.332Z"
     },
     {
       "name": "316140.KS.json",
       "sizeBytes": 36819,
-      "updatedAt": "2026-06-11T11:02:15.336Z"
+      "updatedAt": "2026-06-12T07:28:14.363Z"
     },
     {
       "name": "319660.KQ.json",
       "sizeBytes": 56628,
-      "updatedAt": "2026-06-11T11:02:15.524Z"
+      "updatedAt": "2026-06-12T07:28:14.521Z"
     },
     {
       "name": "323410.KS.json",
       "sizeBytes": 58952,
-      "updatedAt": "2026-06-11T11:02:15.407Z"
+      "updatedAt": "2026-06-12T07:28:14.421Z"
     },
     {
       "name": "326030.KS.json",
       "sizeBytes": 35623,
-      "updatedAt": "2026-06-11T11:02:15.481Z"
+      "updatedAt": "2026-06-12T07:28:14.485Z"
     },
     {
       "name": "329180.KS.json",
       "sizeBytes": 62668,
-      "updatedAt": "2026-06-11T11:02:15.466Z"
+      "updatedAt": "2026-06-12T07:28:14.471Z"
     },
     {
       "name": "336260.KS.json",
       "sizeBytes": 36420,
-      "updatedAt": "2026-06-11T11:02:14.881Z"
+      "updatedAt": "2026-06-12T07:28:13.986Z"
     },
     {
       "name": "336370.KS.json",
       "sizeBytes": 35870,
-      "updatedAt": "2026-06-11T11:02:15.066Z"
+      "updatedAt": "2026-06-12T07:28:14.135Z"
     },
     {
       "name": "336570.KQ.json",
       "sizeBytes": 36153,
-      "updatedAt": "2026-06-11T11:02:15.323Z"
+      "updatedAt": "2026-06-12T07:28:14.352Z"
     },
     {
       "name": "3382.T.json",
       "sizeBytes": 99590,
-      "updatedAt": "2026-06-11T11:02:15.070Z"
+      "updatedAt": "2026-06-12T07:28:14.137Z"
     },
     {
       "name": "339770.KS.json",
       "sizeBytes": 36613,
-      "updatedAt": "2026-06-11T11:02:15.345Z"
+      "updatedAt": "2026-06-12T07:28:14.371Z"
     },
     {
       "name": "348210.KQ.json",
       "sizeBytes": 35158,
-      "updatedAt": "2026-06-11T11:02:15.324Z"
+      "updatedAt": "2026-06-12T07:28:14.354Z"
     },
     {
       "name": "352820.KS.json",
       "sizeBytes": 69474,
-      "updatedAt": "2026-06-11T11:02:15.194Z"
+      "updatedAt": "2026-06-12T07:28:14.245Z"
     },
     {
       "name": "353200.KS.json",
       "sizeBytes": 67957,
-      "updatedAt": "2026-06-11T11:02:14.918Z"
+      "updatedAt": "2026-06-12T07:28:14.017Z"
     },
     {
       "name": "357780.KQ.json",
       "sizeBytes": 59752,
-      "updatedAt": "2026-06-11T11:02:14.873Z"
+      "updatedAt": "2026-06-12T07:28:13.980Z"
     },
     {
       "name": "365340.KQ.json",
       "sizeBytes": 34424,
-      "updatedAt": "2026-06-11T11:02:15.481Z"
+      "updatedAt": "2026-06-12T07:28:14.484Z"
     },
     {
       "name": "3690.HK.json",
       "sizeBytes": 71353,
-      "updatedAt": "2026-06-11T11:02:15.174Z"
+      "updatedAt": "2026-06-12T07:28:14.228Z"
     },
     {
       "name": "373220.KS.json",
       "sizeBytes": 58208,
-      "updatedAt": "2026-06-11T11:02:15.123Z"
+      "updatedAt": "2026-06-12T07:28:14.184Z"
     },
     {
       "name": "375500.KS.json",
       "sizeBytes": 54066,
-      "updatedAt": "2026-06-11T11:02:15.135Z"
+      "updatedAt": "2026-06-12T07:28:14.195Z"
     },
     {
       "name": "376300.KQ.json",
       "sizeBytes": 35068,
-      "updatedAt": "2026-06-11T11:02:15.153Z"
+      "updatedAt": "2026-06-12T07:28:14.210Z"
     },
     {
       "name": "377300.KS.json",
       "sizeBytes": 34621,
-      "updatedAt": "2026-06-11T11:02:14.865Z"
+      "updatedAt": "2026-06-12T07:28:13.973Z"
     },
     {
       "name": "381970.KS.json",
       "sizeBytes": 35550,
-      "updatedAt": "2026-06-11T11:02:15.271Z"
+      "updatedAt": "2026-06-12T07:28:14.310Z"
     },
     {
       "name": "383220.KS.json",
       "sizeBytes": 66400,
-      "updatedAt": "2026-06-11T11:02:15.004Z"
+      "updatedAt": "2026-06-12T07:28:14.086Z"
     },
     {
       "name": "389650.KQ.json",
       "sizeBytes": 33665,
-      "updatedAt": "2026-06-11T11:02:15.107Z"
+      "updatedAt": "2026-06-12T07:28:14.171Z"
     },
     {
       "name": "3968.HK.json",
       "sizeBytes": 87757,
-      "updatedAt": "2026-06-11T11:02:14.888Z"
+      "updatedAt": "2026-06-12T07:28:13.993Z"
     },
     {
       "name": "3988.HK.json",
       "sizeBytes": 88089,
-      "updatedAt": "2026-06-11T11:02:15.397Z"
+      "updatedAt": "2026-06-12T07:28:14.413Z"
     },
     {
       "name": "402340.KS.json",
       "sizeBytes": 40678,
-      "updatedAt": "2026-06-11T11:02:14.903Z"
+      "updatedAt": "2026-06-12T07:28:14.005Z"
     },
     {
       "name": "403550.KS.json",
       "sizeBytes": 33511,
-      "updatedAt": "2026-06-11T11:02:15.286Z"
+      "updatedAt": "2026-06-12T07:28:14.322Z"
     },
     {
       "name": "403870.KQ.json",
       "sizeBytes": 35459,
-      "updatedAt": "2026-06-11T11:02:15.490Z"
+      "updatedAt": "2026-06-12T07:28:14.492Z"
     },
     {
       "name": "4063.T.json",
       "sizeBytes": 92573,
-      "updatedAt": "2026-06-11T11:02:15.213Z"
+      "updatedAt": "2026-06-12T07:28:14.261Z"
     },
     {
       "name": "443060.KS.json",
       "sizeBytes": 35659,
-      "updatedAt": "2026-06-11T11:02:15.042Z"
+      "updatedAt": "2026-06-12T07:28:14.114Z"
     },
     {
       "name": "4452.T.json",
       "sizeBytes": 90645,
-      "updatedAt": "2026-06-11T11:02:15.277Z"
+      "updatedAt": "2026-06-12T07:28:14.314Z"
     },
     {
       "name": "4502.T.json",
       "sizeBytes": 91178,
-      "updatedAt": "2026-06-11T11:02:15.132Z"
+      "updatedAt": "2026-06-12T07:28:14.192Z"
     },
     {
       "name": "4519.T.json",
       "sizeBytes": 96280,
-      "updatedAt": "2026-06-11T11:02:15.253Z"
+      "updatedAt": "2026-06-12T07:28:14.294Z"
     },
     {
       "name": "4568.T.json",
       "sizeBytes": 95929,
-      "updatedAt": "2026-06-11T11:02:15.263Z"
+      "updatedAt": "2026-06-12T07:28:14.302Z"
     },
     {
       "name": "4612.T.json",
       "sizeBytes": 93975,
-      "updatedAt": "2026-06-11T11:02:15.467Z"
+      "updatedAt": "2026-06-12T07:28:14.472Z"
     },
     {
       "name": "462870.KS.json",
       "sizeBytes": 34921,
-      "updatedAt": "2026-06-11T11:02:15.416Z"
+      "updatedAt": "2026-06-12T07:28:14.430Z"
     },
     {
       "name": "4661.T.json",
       "sizeBytes": 90335,
-      "updatedAt": "2026-06-11T11:02:15.432Z"
+      "updatedAt": "2026-06-12T07:28:14.443Z"
     },
     {
       "name": "483650.KS.json",
       "sizeBytes": 20494,
-      "updatedAt": "2026-06-11T11:02:15.511Z"
+      "updatedAt": "2026-06-12T07:28:14.511Z"
     },
     {
       "name": "489790.KS.json",
       "sizeBytes": 35568,
-      "updatedAt": "2026-06-11T11:02:15.290Z"
+      "updatedAt": "2026-06-12T07:28:14.325Z"
     },
     {
       "name": "4911.T.json",
       "sizeBytes": 89689,
-      "updatedAt": "2026-06-11T11:02:15.246Z"
+      "updatedAt": "2026-06-12T07:28:14.289Z"
     },
     {
       "name": "5108.T.json",
       "sizeBytes": 90720,
-      "updatedAt": "2026-06-11T11:02:15.332Z"
+      "updatedAt": "2026-06-12T07:28:14.360Z"
     },
     {
       "name": "5401.T.json",
       "sizeBytes": 91382,
-      "updatedAt": "2026-06-11T11:02:15.237Z"
+      "updatedAt": "2026-06-12T07:28:14.282Z"
     },
     {
       "name": "600000.SS.json",
       "sizeBytes": 97281,
-      "updatedAt": "2026-06-11T11:02:15.472Z"
+      "updatedAt": "2026-06-12T07:28:14.477Z"
     },
     {
       "name": "600019.SS.json",
       "sizeBytes": 96669,
-      "updatedAt": "2026-06-11T11:02:15.517Z"
+      "updatedAt": "2026-06-12T07:28:14.515Z"
     },
     {
       "name": "600028.SS.json",
       "sizeBytes": 96251,
-      "updatedAt": "2026-06-11T11:02:15.203Z"
+      "updatedAt": "2026-06-12T07:28:14.253Z"
     },
     {
       "name": "600030.SS.json",
       "sizeBytes": 94003,
-      "updatedAt": "2026-06-11T11:02:15.098Z"
+      "updatedAt": "2026-06-12T07:28:14.163Z"
     },
     {
       "name": "600031.SS.json",
       "sizeBytes": 93314,
-      "updatedAt": "2026-06-11T11:02:15.142Z"
+      "updatedAt": "2026-06-12T07:28:14.201Z"
     },
     {
       "name": "600036.SS.json",
       "sizeBytes": 93903,
-      "updatedAt": "2026-06-11T11:02:15.504Z"
+      "updatedAt": "2026-06-12T07:28:14.504Z"
     },
     {
       "name": "600104.SS.json",
       "sizeBytes": 101074,
-      "updatedAt": "2026-06-11T11:02:15.137Z"
+      "updatedAt": "2026-06-12T07:28:14.197Z"
     },
     {
       "name": "600150.SS.json",
       "sizeBytes": 100136,
-      "updatedAt": "2026-06-11T11:02:15.202Z"
+      "updatedAt": "2026-06-12T07:28:14.252Z"
     },
     {
       "name": "600309.SS.json",
       "sizeBytes": 96548,
-      "updatedAt": "2026-06-11T11:02:14.989Z"
+      "updatedAt": "2026-06-12T07:28:14.075Z"
     },
     {
       "name": "600346.SS.json",
       "sizeBytes": 96031,
-      "updatedAt": "2026-06-11T11:02:15.094Z"
+      "updatedAt": "2026-06-12T07:28:14.158Z"
     },
     {
       "name": "600519.SS.json",
       "sizeBytes": 96631,
-      "updatedAt": "2026-06-11T11:02:14.928Z"
+      "updatedAt": "2026-06-12T07:28:14.026Z"
     },
     {
       "name": "600585.SS.json",
       "sizeBytes": 95138,
-      "updatedAt": "2026-06-11T11:02:15.073Z"
+      "updatedAt": "2026-06-12T07:28:14.139Z"
     },
     {
       "name": "600809.SS.json",
       "sizeBytes": 102541,
-      "updatedAt": "2026-06-11T11:02:14.879Z"
+      "updatedAt": "2026-06-12T07:28:13.985Z"
     },
     {
       "name": "600887.SS.json",
       "sizeBytes": 102503,
-      "updatedAt": "2026-06-11T11:02:14.953Z"
+      "updatedAt": "2026-06-12T07:28:14.045Z"
     },
     {
       "name": "600900.SS.json",
       "sizeBytes": 93058,
-      "updatedAt": "2026-06-11T11:02:15.102Z"
+      "updatedAt": "2026-06-12T07:28:14.166Z"
     },
     {
       "name": "601012.SS.json",
       "sizeBytes": 80435,
-      "updatedAt": "2026-06-11T11:02:14.967Z"
+      "updatedAt": "2026-06-12T07:28:14.057Z"
     },
     {
       "name": "601066.SS.json",
       "sizeBytes": 72310,
-      "updatedAt": "2026-06-11T11:02:15.207Z"
+      "updatedAt": "2026-06-12T07:28:14.256Z"
     },
     {
       "name": "601088.SS.json",
       "sizeBytes": 87295,
-      "updatedAt": "2026-06-11T11:02:15.404Z"
+      "updatedAt": "2026-06-12T07:28:14.419Z"
     },
     {
       "name": "601138.SS.json",
       "sizeBytes": 72480,
-      "updatedAt": "2026-06-11T11:02:15.289Z"
+      "updatedAt": "2026-06-12T07:28:14.324Z"
     },
     {
       "name": "601166.SS.json",
       "sizeBytes": 87220,
-      "updatedAt": "2026-06-11T11:02:15.384Z"
+      "updatedAt": "2026-06-12T07:28:14.403Z"
     },
     {
       "name": "601288.SS.json",
       "sizeBytes": 82206,
-      "updatedAt": "2026-06-11T11:02:15.038Z"
+      "updatedAt": "2026-06-12T07:28:14.111Z"
     },
     {
       "name": "601318.SS.json",
       "sizeBytes": 87717,
-      "updatedAt": "2026-06-11T11:02:15.310Z"
+      "updatedAt": "2026-06-12T07:28:14.342Z"
     },
     {
       "name": "601319.SS.json",
       "sizeBytes": 71590,
-      "updatedAt": "2026-06-11T11:02:15.262Z"
+      "updatedAt": "2026-06-12T07:28:14.301Z"
     },
     {
       "name": "601328.SS.json",
       "sizeBytes": 86699,
-      "updatedAt": "2026-06-11T11:02:14.917Z"
+      "updatedAt": "2026-06-12T07:28:14.016Z"
     },
     {
       "name": "601398.SS.json",
       "sizeBytes": 87349,
-      "updatedAt": "2026-06-11T11:02:14.859Z"
+      "updatedAt": "2026-06-12T07:28:13.967Z"
     },
     {
       "name": "601601.SS.json",
       "sizeBytes": 86667,
-      "updatedAt": "2026-06-11T11:02:15.083Z"
+      "updatedAt": "2026-06-12T07:28:14.149Z"
     },
     {
       "name": "601628.SS.json",
       "sizeBytes": 88048,
-      "updatedAt": "2026-06-11T11:02:15.493Z"
+      "updatedAt": "2026-06-12T07:28:14.494Z"
     },
     {
       "name": "601633.SS.json",
       "sizeBytes": 81912,
-      "updatedAt": "2026-06-11T11:02:15.205Z"
+      "updatedAt": "2026-06-12T07:28:14.255Z"
     },
     {
       "name": "601658.SS.json",
       "sizeBytes": 69297,
-      "updatedAt": "2026-06-11T11:02:15.258Z"
+      "updatedAt": "2026-06-12T07:28:14.298Z"
     },
     {
       "name": "601668.SS.json",
       "sizeBytes": 84735,
-      "updatedAt": "2026-06-11T11:02:14.946Z"
+      "updatedAt": "2026-06-12T07:28:14.040Z"
     },
     {
       "name": "601816.SS.json",
       "sizeBytes": 68973,
-      "updatedAt": "2026-06-11T11:02:14.909Z"
+      "updatedAt": "2026-06-12T07:28:14.010Z"
     },
     {
       "name": "601857.SS.json",
       "sizeBytes": 87573,
-      "updatedAt": "2026-06-11T11:02:15.498Z"
+      "updatedAt": "2026-06-12T07:28:14.500Z"
     },
     {
       "name": "601888.SS.json",
       "sizeBytes": 84280,
-      "updatedAt": "2026-06-11T11:02:15.011Z"
+      "updatedAt": "2026-06-12T07:28:14.091Z"
     },
     {
       "name": "601899.SS.json",
       "sizeBytes": 86627,
-      "updatedAt": "2026-06-11T11:02:14.874Z"
+      "updatedAt": "2026-06-12T07:28:13.981Z"
     },
     {
       "name": "601919.SS.json",
       "sizeBytes": 88011,
-      "updatedAt": "2026-06-11T11:02:15.477Z"
+      "updatedAt": "2026-06-12T07:28:14.481Z"
     },
     {
       "name": "601988.SS.json",
       "sizeBytes": 87891,
-      "updatedAt": "2026-06-11T11:02:15.199Z"
+      "updatedAt": "2026-06-12T07:28:14.249Z"
     },
     {
       "name": "603288.SS.json",
       "sizeBytes": 78802,
-      "updatedAt": "2026-06-11T11:02:14.893Z"
+      "updatedAt": "2026-06-12T07:28:13.996Z"
     },
     {
       "name": "603501.SS.json",
       "sizeBytes": 74068,
-      "updatedAt": "2026-06-11T11:02:15.417Z"
+      "updatedAt": "2026-06-12T07:28:14.431Z"
     },
     {
       "name": "6098.T.json",
       "sizeBytes": 77132,
-      "updatedAt": "2026-06-11T11:02:15.173Z"
+      "updatedAt": "2026-06-12T07:28:14.227Z"
     },
     {
       "name": "6178.T.json",
       "sizeBytes": 75434,
-      "updatedAt": "2026-06-11T11:02:15.524Z"
+      "updatedAt": "2026-06-12T07:28:14.521Z"
     },
     {
       "name": "6273.T.json",
       "sizeBytes": 91286,
-      "updatedAt": "2026-06-11T11:02:15.231Z"
+      "updatedAt": "2026-06-12T07:28:14.277Z"
     },
     {
       "name": "6367.T.json",
       "sizeBytes": 91586,
-      "updatedAt": "2026-06-11T11:02:15.429Z"
+      "updatedAt": "2026-06-12T07:28:14.440Z"
     },
     {
       "name": "6501.T.json",
       "sizeBytes": 93164,
-      "updatedAt": "2026-06-11T11:02:15.030Z"
+      "updatedAt": "2026-06-12T07:28:14.105Z"
     },
     {
       "name": "6594.T.json",
       "sizeBytes": 90050,
-      "updatedAt": "2026-06-11T11:02:15.300Z"
+      "updatedAt": "2026-06-12T07:28:14.334Z"
     },
     {
       "name": "6702.T.json",
       "sizeBytes": 92880,
-      "updatedAt": "2026-06-11T11:02:15.114Z"
+      "updatedAt": "2026-06-12T07:28:14.177Z"
     },
     {
       "name": "6752.T.json",
       "sizeBytes": 91742,
-      "updatedAt": "2026-06-11T11:02:15.301Z"
+      "updatedAt": "2026-06-12T07:28:14.335Z"
     },
     {
       "name": "6758.T.json",
       "sizeBytes": 94509,
-      "updatedAt": "2026-06-11T11:02:15.508Z"
+      "updatedAt": "2026-06-12T07:28:14.508Z"
     },
     {
       "name": "6861.T.json",
       "sizeBytes": 94944,
-      "updatedAt": "2026-06-11T11:02:15.272Z"
+      "updatedAt": "2026-06-12T07:28:14.311Z"
     },
     {
       "name": "6902.T.json",
       "sizeBytes": 91296,
-      "updatedAt": "2026-06-11T11:02:15.269Z"
+      "updatedAt": "2026-06-12T07:28:14.307Z"
     },
     {
       "name": "6954.T.json",
       "sizeBytes": 91224,
-      "updatedAt": "2026-06-11T11:02:15.014Z"
+      "updatedAt": "2026-06-12T07:28:14.093Z"
     },
     {
       "name": "6981.T.json",
       "sizeBytes": 99482,
-      "updatedAt": "2026-06-11T11:02:14.905Z"
+      "updatedAt": "2026-06-12T07:28:14.007Z"
     },
     {
       "name": "7182.T.json",
       "sizeBytes": 73798,
-      "updatedAt": "2026-06-11T11:02:15.111Z"
+      "updatedAt": "2026-06-12T07:28:14.175Z"
     },
     {
       "name": "7203.T.json",
       "sizeBytes": 94129,
-      "updatedAt": "2026-06-11T11:02:15.076Z"
+      "updatedAt": "2026-06-12T07:28:14.143Z"
     },
     {
       "name": "7267.T.json",
       "sizeBytes": 98360,
-      "updatedAt": "2026-06-11T11:02:15.255Z"
+      "updatedAt": "2026-06-12T07:28:14.296Z"
     },
     {
       "name": "7309.T.json",
       "sizeBytes": 89892,
-      "updatedAt": "2026-06-11T11:02:14.890Z"
+      "updatedAt": "2026-06-12T07:28:13.994Z"
     },
     {
       "name": "7741.T.json",
       "sizeBytes": 90274,
-      "updatedAt": "2026-06-11T11:02:15.204Z"
+      "updatedAt": "2026-06-12T07:28:14.253Z"
     },
     {
       "name": "7751.T.json",
       "sizeBytes": 92532,
-      "updatedAt": "2026-06-11T11:02:15.062Z"
+      "updatedAt": "2026-06-12T07:28:14.131Z"
     },
     {
       "name": "7832.T.json",
       "sizeBytes": 95773,
-      "updatedAt": "2026-06-11T11:02:15.235Z"
+      "updatedAt": "2026-06-12T07:28:14.281Z"
     },
     {
       "name": "7936.T.json",
       "sizeBytes": 88838,
-      "updatedAt": "2026-06-11T11:02:15.470Z"
+      "updatedAt": "2026-06-12T07:28:14.474Z"
     },
     {
       "name": "7951.T.json",
       "sizeBytes": 97600,
-      "updatedAt": "2026-06-11T11:02:15.228Z"
+      "updatedAt": "2026-06-12T07:28:14.275Z"
     },
     {
       "name": "7974.T.json",
       "sizeBytes": 90467,
-      "updatedAt": "2026-06-11T11:02:14.928Z"
+      "updatedAt": "2026-06-12T07:28:14.025Z"
     },
     {
       "name": "8001.T.json",
       "sizeBytes": 90711,
-      "updatedAt": "2026-06-11T11:02:15.065Z"
+      "updatedAt": "2026-06-12T07:28:14.134Z"
     },
     {
       "name": "8031.T.json",
       "sizeBytes": 90827,
-      "updatedAt": "2026-06-11T11:02:14.925Z"
+      "updatedAt": "2026-06-12T07:28:14.022Z"
     },
     {
       "name": "8035.T.json",
       "sizeBytes": 98567,
-      "updatedAt": "2026-06-11T11:02:15.168Z"
+      "updatedAt": "2026-06-12T07:28:14.222Z"
     },
     {
       "name": "8058.T.json",
       "sizeBytes": 98966,
-      "updatedAt": "2026-06-11T11:02:15.045Z"
+      "updatedAt": "2026-06-12T07:28:14.117Z"
     },
     {
       "name": "8306.T.json",
       "sizeBytes": 85831,
-      "updatedAt": "2026-06-11T11:02:15.022Z"
+      "updatedAt": "2026-06-12T07:28:14.099Z"
     },
     {
       "name": "8316.T.json",
       "sizeBytes": 98210,
-      "updatedAt": "2026-06-11T11:02:14.895Z"
+      "updatedAt": "2026-06-12T07:28:13.998Z"
     },
     {
       "name": "8411.T.json",
       "sizeBytes": 86894,
-      "updatedAt": "2026-06-11T11:02:15.328Z"
+      "updatedAt": "2026-06-12T07:28:14.356Z"
     },
     {
       "name": "8766.T.json",
       "sizeBytes": 97212,
-      "updatedAt": "2026-06-11T11:02:15.032Z"
+      "updatedAt": "2026-06-12T07:28:14.106Z"
     },
     {
       "name": "9022.T.json",
       "sizeBytes": 90366,
-      "updatedAt": "2026-06-11T11:02:15.379Z"
+      "updatedAt": "2026-06-12T07:28:14.400Z"
     },
     {
       "name": "9432.T.json",
       "sizeBytes": 97989,
-      "updatedAt": "2026-06-11T11:02:14.950Z"
+      "updatedAt": "2026-06-12T07:28:14.043Z"
     },
     {
       "name": "9433.T.json",
       "sizeBytes": 94899,
-      "updatedAt": "2026-06-11T11:02:15.354Z"
+      "updatedAt": "2026-06-12T07:28:14.379Z"
     },
     {
       "name": "9434.T.json",
       "sizeBytes": 72629,
-      "updatedAt": "2026-06-11T11:02:15.178Z"
+      "updatedAt": "2026-06-12T07:28:14.231Z"
     },
     {
       "name": "9618.HK.json",
       "sizeBytes": 70446,
-      "updatedAt": "2026-06-11T11:02:15.278Z"
+      "updatedAt": "2026-06-12T07:28:14.315Z"
     },
     {
       "name": "9633.HK.json",
       "sizeBytes": 69451,
-      "updatedAt": "2026-06-11T11:02:15.117Z"
+      "updatedAt": "2026-06-12T07:28:14.179Z"
     },
     {
       "name": "9888.HK.json",
       "sizeBytes": 46022,
-      "updatedAt": "2026-06-11T11:02:15.469Z"
+      "updatedAt": "2026-06-12T07:28:14.474Z"
     },
     {
       "name": "9983.T.json",
       "sizeBytes": 98578,
-      "updatedAt": "2026-06-11T11:02:15.365Z"
+      "updatedAt": "2026-06-12T07:28:14.388Z"
     },
     {
       "name": "9984.T.json",
       "sizeBytes": 92837,
-      "updatedAt": "2026-06-11T11:02:15.191Z"
+      "updatedAt": "2026-06-12T07:28:14.242Z"
     },
     {
       "name": "9988.HK.json",
       "sizeBytes": 71230,
-      "updatedAt": "2026-06-11T11:02:15.301Z"
+      "updatedAt": "2026-06-12T07:28:14.334Z"
     },
     {
       "name": "9999.HK.json",
       "sizeBytes": 66798,
-      "updatedAt": "2026-06-11T11:02:15.250Z"
+      "updatedAt": "2026-06-12T07:28:14.292Z"
     },
     {
       "name": "A.json",
       "sizeBytes": 98575,
-      "updatedAt": "2026-06-11T11:02:14.891Z"
+      "updatedAt": "2026-06-12T07:28:13.995Z"
     },
     {
       "name": "AA.json",
       "sizeBytes": 100146,
-      "updatedAt": "2026-06-11T11:02:15.346Z"
+      "updatedAt": "2026-06-12T07:28:14.371Z"
     },
     {
       "name": "AAL.json",
       "sizeBytes": 54775,
-      "updatedAt": "2026-06-11T11:02:15.079Z"
+      "updatedAt": "2026-06-12T07:28:14.145Z"
     },
     {
       "name": "AAPL.json",
       "sizeBytes": 103483,
-      "updatedAt": "2026-06-11T11:02:15.150Z"
+      "updatedAt": "2026-06-12T07:28:14.208Z"
     },
     {
       "name": "ABBV.json",
       "sizeBytes": 80023,
-      "updatedAt": "2026-06-11T11:02:15.368Z"
+      "updatedAt": "2026-06-12T07:28:14.391Z"
     },
     {
       "name": "ABNB.json",
       "sizeBytes": 68999,
-      "updatedAt": "2026-06-11T11:02:15.160Z"
+      "updatedAt": "2026-06-12T07:28:14.216Z"
     },
     {
       "name": "ABT.json",
       "sizeBytes": 103160,
-      "updatedAt": "2026-06-11T11:02:15.008Z"
+      "updatedAt": "2026-06-12T07:28:14.089Z"
     },
     {
       "name": "ACM.json",
       "sizeBytes": 54000,
-      "updatedAt": "2026-06-11T11:02:15.158Z"
+      "updatedAt": "2026-06-12T07:28:14.214Z"
     },
     {
       "name": "ACN.json",
       "sizeBytes": 96121,
-      "updatedAt": "2026-06-11T11:02:15.208Z"
+      "updatedAt": "2026-06-12T07:28:14.256Z"
     },
     {
       "name": "ADBE.json",
       "sizeBytes": 101554,
-      "updatedAt": "2026-06-11T11:02:15.359Z"
+      "updatedAt": "2026-06-12T07:28:14.383Z"
     },
     {
       "name": "ADI.json",
       "sizeBytes": 101044,
-      "updatedAt": "2026-06-11T11:02:15.283Z"
+      "updatedAt": "2026-06-12T07:28:14.320Z"
     },
     {
       "name": "ADM.json",
       "sizeBytes": 102501,
-      "updatedAt": "2026-06-11T11:02:14.858Z"
+      "updatedAt": "2026-06-12T07:28:13.966Z"
     },
     {
       "name": "ADP.json",
       "sizeBytes": 103158,
-      "updatedAt": "2026-06-11T11:02:15.214Z"
+      "updatedAt": "2026-06-12T07:28:14.262Z"
     },
     {
       "name": "ADSK.json",
       "sizeBytes": 100814,
-      "updatedAt": "2026-06-11T11:02:15.367Z"
+      "updatedAt": "2026-06-12T07:28:14.390Z"
     },
     {
       "name": "AEE.json",
       "sizeBytes": 65777,
-      "updatedAt": "2026-06-11T11:02:15.440Z"
+      "updatedAt": "2026-06-12T07:28:14.449Z"
     },
     {
       "name": "AEP.json",
       "sizeBytes": 100610,
-      "updatedAt": "2026-06-11T11:02:15.428Z"
+      "updatedAt": "2026-06-12T07:28:14.439Z"
     },
     {
       "name": "AFL.json",
       "sizeBytes": 100647,
-      "updatedAt": "2026-06-11T11:02:14.948Z"
+      "updatedAt": "2026-06-12T07:28:14.042Z"
     },
     {
       "name": "AFRM.json",
       "sizeBytes": 43858,
-      "updatedAt": "2026-06-11T11:02:15.241Z"
+      "updatedAt": "2026-06-12T07:28:14.285Z"
     },
     {
       "name": "AIG.json",
       "sizeBytes": 100090,
-      "updatedAt": "2026-06-11T11:02:15.478Z"
+      "updatedAt": "2026-06-12T07:28:14.481Z"
     },
     {
       "name": "AIT.json",
       "sizeBytes": 68600,
-      "updatedAt": "2026-06-11T11:02:15.348Z"
+      "updatedAt": "2026-06-12T07:28:14.374Z"
     },
     {
       "name": "AJG.json",
       "sizeBytes": 100789,
-      "updatedAt": "2026-06-11T11:02:15.294Z"
+      "updatedAt": "2026-06-12T07:28:14.328Z"
     },
     {
       "name": "AKAM.json",
       "sizeBytes": 71891,
-      "updatedAt": "2026-06-11T11:02:15.426Z"
+      "updatedAt": "2026-06-12T07:28:14.438Z"
     },
     {
       "name": "ALAB.json",
       "sizeBytes": 34817,
-      "updatedAt": "2026-06-11T11:02:15.498Z"
+      "updatedAt": "2026-06-12T07:28:14.499Z"
     },
     {
       "name": "ALB.json",
       "sizeBytes": 100224,
-      "updatedAt": "2026-06-11T11:02:14.960Z"
+      "updatedAt": "2026-06-12T07:28:14.051Z"
     },
     {
       "name": "ALC.json",
       "sizeBytes": 37832,
-      "updatedAt": "2026-06-11T11:02:14.922Z"
+      "updatedAt": "2026-06-12T07:28:14.020Z"
     },
     {
       "name": "ALGM.json",
       "sizeBytes": 43257,
-      "updatedAt": "2026-06-11T11:02:14.991Z"
+      "updatedAt": "2026-06-12T07:28:14.076Z"
     },
     {
       "name": "ALGN.json",
       "sizeBytes": 96225,
-      "updatedAt": "2026-06-11T11:02:15.379Z"
+      "updatedAt": "2026-06-12T07:28:14.399Z"
     },
     {
       "name": "ALL.json",
       "sizeBytes": 100056,
-      "updatedAt": "2026-06-11T11:02:15.509Z"
+      "updatedAt": "2026-06-12T07:28:14.509Z"
     },
     {
       "name": "ALLE.json",
       "sizeBytes": 78877,
-      "updatedAt": "2026-06-11T11:02:14.984Z"
+      "updatedAt": "2026-06-12T07:28:14.070Z"
     },
     {
       "name": "ALNY.json",
       "sizeBytes": 56757,
-      "updatedAt": "2026-06-11T11:02:15.249Z"
+      "updatedAt": "2026-06-12T07:28:14.291Z"
     },
     {
       "name": "AMAT.json",
       "sizeBytes": 101378,
-      "updatedAt": "2026-06-11T11:02:15.254Z"
+      "updatedAt": "2026-06-12T07:28:14.295Z"
     },
     {
       "name": "AMD.json",
       "sizeBytes": 102024,
-      "updatedAt": "2026-06-11T11:02:14.943Z"
+      "updatedAt": "2026-06-12T07:28:14.037Z"
     },
     {
       "name": "AME.json",
       "sizeBytes": 102572,
-      "updatedAt": "2026-06-11T11:02:14.935Z"
+      "updatedAt": "2026-06-12T07:28:14.031Z"
     },
     {
       "name": "AMGN.json",
       "sizeBytes": 101545,
-      "updatedAt": "2026-06-11T11:02:15.097Z"
+      "updatedAt": "2026-06-12T07:28:14.161Z"
     },
     {
       "name": "AMH.json",
       "sizeBytes": 46711,
-      "updatedAt": "2026-06-11T11:02:14.985Z"
+      "updatedAt": "2026-06-12T07:28:14.071Z"
     },
     {
       "name": "AMKR.json",
       "sizeBytes": 73947,
-      "updatedAt": "2026-06-11T11:02:14.923Z"
+      "updatedAt": "2026-06-12T07:28:14.021Z"
     },
     {
       "name": "AMP.json",
       "sizeBytes": 90555,
-      "updatedAt": "2026-06-11T11:02:14.907Z"
+      "updatedAt": "2026-06-12T07:28:14.008Z"
     },
     {
       "name": "AMT.json",
       "sizeBytes": 99244,
-      "updatedAt": "2026-06-11T11:02:15.239Z"
+      "updatedAt": "2026-06-12T07:28:14.283Z"
     },
     {
       "name": "AMZN.json",
       "sizeBytes": 102503,
-      "updatedAt": "2026-06-11T11:02:15.190Z"
+      "updatedAt": "2026-06-12T07:28:14.241Z"
     },
     {
       "name": "ANET.json",
       "sizeBytes": 53364,
-      "updatedAt": "2026-06-11T11:02:14.864Z"
+      "updatedAt": "2026-06-12T07:28:13.972Z"
     },
     {
       "name": "AON.json",
       "sizeBytes": 101044,
-      "updatedAt": "2026-06-11T11:02:15.195Z"
+      "updatedAt": "2026-06-12T07:28:14.246Z"
     },
     {
       "name": "AOS.json",
       "sizeBytes": 100251,
-      "updatedAt": "2026-06-11T11:02:15.527Z"
+      "updatedAt": "2026-06-12T07:28:14.523Z"
     },
     {
       "name": "APD.json",
       "sizeBytes": 102547,
-      "updatedAt": "2026-06-11T11:02:14.863Z"
+      "updatedAt": "2026-06-12T07:28:13.971Z"
     },
     {
       "name": "APH.json",
       "sizeBytes": 102333,
-      "updatedAt": "2026-06-11T11:02:14.914Z"
+      "updatedAt": "2026-06-12T07:28:14.014Z"
     },
     {
       "name": "APP.json",
       "sizeBytes": 43060,
-      "updatedAt": "2026-06-11T11:02:15.002Z"
+      "updatedAt": "2026-06-12T07:28:14.084Z"
     },
     {
       "name": "APTV.json",
       "sizeBytes": 81932,
-      "updatedAt": "2026-06-11T11:02:15.036Z"
+      "updatedAt": "2026-06-12T07:28:14.109Z"
     },
     {
       "name": "AR.json",
       "sizeBytes": 44608,
-      "updatedAt": "2026-06-11T11:02:15.488Z"
+      "updatedAt": "2026-06-12T07:28:14.490Z"
     },
     {
       "name": "ARM.json",
       "sizeBytes": 39705,
-      "updatedAt": "2026-06-11T11:02:15.313Z"
+      "updatedAt": "2026-06-12T07:28:14.345Z"
     },
     {
       "name": "ARMK.json",
       "sizeBytes": 45033,
-      "updatedAt": "2026-06-11T11:02:15.486Z"
+      "updatedAt": "2026-06-12T07:28:14.489Z"
     },
     {
       "name": "AS.json",
       "sizeBytes": 34141,
-      "updatedAt": "2026-06-11T11:02:15.414Z"
+      "updatedAt": "2026-06-12T07:28:14.428Z"
     },
     {
       "name": "ASML.json",
       "sizeBytes": 102315,
-      "updatedAt": "2026-06-11T11:02:14.926Z"
+      "updatedAt": "2026-06-12T07:28:14.023Z"
     },
     {
       "name": "ATO.json",
       "sizeBytes": 67113,
-      "updatedAt": "2026-06-11T11:02:15.028Z"
+      "updatedAt": "2026-06-12T07:28:14.103Z"
     },
     {
       "name": "AVGO.json",
       "sizeBytes": 86643,
-      "updatedAt": "2026-06-11T11:02:15.390Z"
+      "updatedAt": "2026-06-12T07:28:14.408Z"
     },
     {
       "name": "AWK.json",
       "sizeBytes": 84129,
-      "updatedAt": "2026-06-11T11:02:15.261Z"
+      "updatedAt": "2026-06-12T07:28:14.300Z"
     },
     {
       "name": "AXP.json",
       "sizeBytes": 103264,
-      "updatedAt": "2026-06-11T11:02:15.489Z"
+      "updatedAt": "2026-06-12T07:28:14.491Z"
     },
     {
       "name": "AZN.json",
       "sizeBytes": 72966,
-      "updatedAt": "2026-06-11T11:02:15.288Z"
+      "updatedAt": "2026-06-12T07:28:14.324Z"
     },
     {
       "name": "AZO.json",
       "sizeBytes": 96404,
-      "updatedAt": "2026-06-11T11:02:15.290Z"
+      "updatedAt": "2026-06-12T07:28:14.325Z"
     },
     {
       "name": "BA.json",
       "sizeBytes": 99529,
-      "updatedAt": "2026-06-11T11:02:15.505Z"
+      "updatedAt": "2026-06-12T07:28:14.505Z"
     },
     {
       "name": "BAC.json",
       "sizeBytes": 100050,
-      "updatedAt": "2026-06-11T11:02:14.939Z"
+      "updatedAt": "2026-06-12T07:28:14.034Z"
     },
     {
       "name": "BALL.json",
       "sizeBytes": 87335,
-      "updatedAt": "2026-06-11T11:02:15.053Z"
+      "updatedAt": "2026-06-12T07:28:14.124Z"
     },
     {
       "name": "BAX.json",
       "sizeBytes": 101004,
-      "updatedAt": "2026-06-11T11:02:15.410Z"
+      "updatedAt": "2026-06-12T07:28:14.424Z"
     },
     {
       "name": "BBY.json",
       "sizeBytes": 68885,
-      "updatedAt": "2026-06-11T11:02:15.356Z"
+      "updatedAt": "2026-06-12T07:28:14.381Z"
     },
     {
       "name": "BCE.json",
       "sizeBytes": 101405,
-      "updatedAt": "2026-06-11T11:02:15.078Z"
+      "updatedAt": "2026-06-12T07:28:14.145Z"
     },
     {
       "name": "BDX.json",
       "sizeBytes": 103281,
-      "updatedAt": "2026-06-11T11:02:15.291Z"
+      "updatedAt": "2026-06-12T07:28:14.326Z"
     },
     {
       "name": "BHP.json",
       "sizeBytes": 103286,
-      "updatedAt": "2026-06-11T11:02:15.419Z"
+      "updatedAt": "2026-06-12T07:28:14.432Z"
     },
     {
       "name": "BIIB.json",
       "sizeBytes": 101587,
-      "updatedAt": "2026-06-11T11:02:15.255Z"
+      "updatedAt": "2026-06-12T07:28:14.296Z"
     },
     {
       "name": "BKNG.json",
       "sizeBytes": 97882,
-      "updatedAt": "2026-06-11T11:02:15.171Z"
+      "updatedAt": "2026-06-12T07:28:14.226Z"
     },
     {
       "name": "BKR.json",
       "sizeBytes": 100737,
-      "updatedAt": "2026-06-11T11:02:15.087Z"
+      "updatedAt": "2026-06-12T07:28:14.152Z"
     },
     {
       "name": "BLD.json",
       "sizeBytes": 76888,
-      "updatedAt": "2026-06-11T11:02:15.442Z"
+      "updatedAt": "2026-06-12T07:28:14.451Z"
     },
     {
       "name": "BLDR.json",
       "sizeBytes": 90598,
-      "updatedAt": "2026-06-11T11:02:15.127Z"
+      "updatedAt": "2026-06-12T07:28:14.188Z"
     },
     {
       "name": "BLK.json",
       "sizeBytes": 97782,
-      "updatedAt": "2026-06-11T11:02:15.011Z"
+      "updatedAt": "2026-06-12T07:28:14.092Z"
     },
     {
       "name": "BMO.json",
       "sizeBytes": 99920,
-      "updatedAt": "2026-06-11T11:02:15.494Z"
+      "updatedAt": "2026-06-12T07:28:14.496Z"
     },
     {
       "name": "BMRN.json",
       "sizeBytes": 64117,
-      "updatedAt": "2026-06-11T11:02:15.483Z"
+      "updatedAt": "2026-06-12T07:28:14.486Z"
     },
     {
       "name": "BMW.DE.json",
       "sizeBytes": 39794,
-      "updatedAt": "2026-06-11T11:02:14.902Z"
+      "updatedAt": "2026-06-12T07:28:14.004Z"
     },
     {
       "name": "BMY.json",
       "sizeBytes": 101254,
-      "updatedAt": "2026-06-11T11:02:14.896Z"
+      "updatedAt": "2026-06-12T07:28:13.999Z"
     },
     {
       "name": "BNS.json",
       "sizeBytes": 93384,
-      "updatedAt": "2026-06-11T11:02:14.862Z"
+      "updatedAt": "2026-06-12T07:28:13.970Z"
     },
     {
       "name": "BNY.json",
       "sizeBytes": 101693,
-      "updatedAt": "2026-06-11T11:02:15.038Z"
+      "updatedAt": "2026-06-12T07:28:14.111Z"
     },
     {
       "name": "BRK.A.json",
       "sizeBytes": 94237,
-      "updatedAt": "2026-06-11T11:02:15.447Z"
+      "updatedAt": "2026-06-12T07:28:14.455Z"
     },
     {
       "name": "BRK.B.json",
       "sizeBytes": 102483,
-      "updatedAt": "2026-06-11T11:02:14.978Z"
+      "updatedAt": "2026-06-12T07:28:14.066Z"
     },
     {
       "name": "BSX.json",
       "sizeBytes": 100873,
-      "updatedAt": "2026-06-11T11:02:15.121Z"
+      "updatedAt": "2026-06-12T07:28:14.183Z"
     },
     {
       "name": "BSY.json",
       "sizeBytes": 44328,
-      "updatedAt": "2026-06-11T11:02:15.124Z"
+      "updatedAt": "2026-06-12T07:28:14.185Z"
     },
     {
       "name": "BURL.json",
       "sizeBytes": 45467,
-      "updatedAt": "2026-06-11T11:02:14.980Z"
+      "updatedAt": "2026-06-12T07:28:14.067Z"
     },
     {
       "name": "BX.json",
       "sizeBytes": 87630,
-      "updatedAt": "2026-06-11T11:02:15.465Z"
+      "updatedAt": "2026-06-12T07:28:14.471Z"
     },
     {
       "name": "C.json",
       "sizeBytes": 99074,
-      "updatedAt": "2026-06-11T11:02:15.380Z"
+      "updatedAt": "2026-06-12T07:28:14.401Z"
     },
     {
       "name": "CACI.json",
       "sizeBytes": 75811,
-      "updatedAt": "2026-06-11T11:02:15.149Z"
+      "updatedAt": "2026-06-12T07:28:14.207Z"
     },
     {
       "name": "CAH.json",
       "sizeBytes": 66815,
-      "updatedAt": "2026-06-11T11:02:15.510Z"
+      "updatedAt": "2026-06-12T07:28:14.510Z"
     },
     {
       "name": "CARR.json",
       "sizeBytes": 70273,
-      "updatedAt": "2026-06-11T11:02:15.134Z"
+      "updatedAt": "2026-06-12T07:28:14.194Z"
     },
     {
       "name": "CASY.json",
       "sizeBytes": 66915,
-      "updatedAt": "2026-06-11T11:02:15.063Z"
+      "updatedAt": "2026-06-12T07:28:14.133Z"
     },
     {
       "name": "CAT.json",
       "sizeBytes": 101411,
-      "updatedAt": "2026-06-11T11:02:15.046Z"
+      "updatedAt": "2026-06-12T07:28:14.117Z"
     },
     {
       "name": "CB.json",
       "sizeBytes": 101447,
-      "updatedAt": "2026-06-11T11:02:15.120Z"
+      "updatedAt": "2026-06-12T07:28:14.182Z"
     },
     {
       "name": "CBRE.json",
       "sizeBytes": 91891,
-      "updatedAt": "2026-06-11T11:02:14.883Z"
+      "updatedAt": "2026-06-12T07:28:13.989Z"
     },
     {
       "name": "CCI.json",
       "sizeBytes": 97679,
-      "updatedAt": "2026-06-11T11:02:15.435Z"
+      "updatedAt": "2026-06-12T07:28:14.446Z"
     },
     {
       "name": "CCJ.json",
       "sizeBytes": 67735,
-      "updatedAt": "2026-06-11T11:02:14.964Z"
+      "updatedAt": "2026-06-12T07:28:14.055Z"
     },
     {
       "name": "CCL.json",
       "sizeBytes": 66951,
-      "updatedAt": "2026-06-11T11:02:15.179Z"
+      "updatedAt": "2026-06-12T07:28:14.232Z"
     },
     {
       "name": "CDNS.json",
       "sizeBytes": 100802,
-      "updatedAt": "2026-06-11T11:02:15.453Z"
+      "updatedAt": "2026-06-12T07:28:14.461Z"
     },
     {
       "name": "CDW.json",
       "sizeBytes": 54637,
-      "updatedAt": "2026-06-11T11:02:15.441Z"
+      "updatedAt": "2026-06-12T07:28:14.450Z"
     },
     {
       "name": "CEG.json",
       "sizeBytes": 56830,
-      "updatedAt": "2026-06-11T11:02:14.941Z"
+      "updatedAt": "2026-06-12T07:28:14.036Z"
     },
     {
       "name": "CHD.json",
       "sizeBytes": 68398,
-      "updatedAt": "2026-06-11T11:02:15.183Z"
+      "updatedAt": "2026-06-12T07:28:14.236Z"
     },
     {
       "name": "CHKP.json",
       "sizeBytes": 77068,
-      "updatedAt": "2026-06-11T11:02:15.037Z"
+      "updatedAt": "2026-06-12T07:28:14.110Z"
     },
     {
       "name": "CHRW.json",
       "sizeBytes": 66052,
-      "updatedAt": "2026-06-11T11:02:14.999Z"
+      "updatedAt": "2026-06-12T07:28:14.082Z"
     },
     {
       "name": "CHTR.json",
       "sizeBytes": 84261,
-      "updatedAt": "2026-06-11T11:02:15.346Z"
+      "updatedAt": "2026-06-12T07:28:14.372Z"
     },
     {
       "name": "CHWY.json",
       "sizeBytes": 70125,
-      "updatedAt": "2026-06-11T11:02:15.222Z"
+      "updatedAt": "2026-06-12T07:28:14.269Z"
     },
     {
       "name": "CI.json",
       "sizeBytes": 102785,
-      "updatedAt": "2026-06-11T11:02:14.942Z"
+      "updatedAt": "2026-06-12T07:28:14.036Z"
     },
     {
       "name": "CIEN.json",
       "sizeBytes": 75728,
-      "updatedAt": "2026-06-11T11:02:15.058Z"
+      "updatedAt": "2026-06-12T07:28:14.128Z"
     },
     {
       "name": "CL.json",
       "sizeBytes": 100574,
-      "updatedAt": "2026-06-11T11:02:15.205Z"
+      "updatedAt": "2026-06-12T07:28:14.254Z"
     },
     {
       "name": "CLS.json",
       "sizeBytes": 74140,
-      "updatedAt": "2026-06-11T11:02:15.212Z"
+      "updatedAt": "2026-06-12T07:28:14.261Z"
     },
     {
       "name": "CLX.json",
       "sizeBytes": 66887,
-      "updatedAt": "2026-06-11T11:02:15.518Z"
+      "updatedAt": "2026-06-12T07:28:14.516Z"
     },
     {
       "name": "CM.json",
       "sizeBytes": 98813,
-      "updatedAt": "2026-06-11T11:02:15.373Z"
+      "updatedAt": "2026-06-12T07:28:14.394Z"
     },
     {
       "name": "CMCSA.json",
       "sizeBytes": 102319,
-      "updatedAt": "2026-06-11T11:02:15.480Z"
+      "updatedAt": "2026-06-12T07:28:14.483Z"
     },
     {
       "name": "CME.json",
       "sizeBytes": 94005,
-      "updatedAt": "2026-06-11T11:02:14.965Z"
+      "updatedAt": "2026-06-12T07:28:14.055Z"
     },
     {
       "name": "CMG.json",
       "sizeBytes": 91577,
-      "updatedAt": "2026-06-11T11:02:15.468Z"
+      "updatedAt": "2026-06-12T07:28:14.473Z"
     },
     {
       "name": "CMI.json",
       "sizeBytes": 101196,
-      "updatedAt": "2026-06-11T11:02:15.007Z"
+      "updatedAt": "2026-06-12T07:28:14.088Z"
     },
     {
       "name": "CMS.json",
       "sizeBytes": 67025,
-      "updatedAt": "2026-06-11T11:02:15.425Z"
+      "updatedAt": "2026-06-12T07:28:14.437Z"
     },
     {
       "name": "CNC.json",
       "sizeBytes": 94236,
-      "updatedAt": "2026-06-11T11:02:14.993Z"
+      "updatedAt": "2026-06-12T07:28:14.077Z"
     },
     {
       "name": "CNH.json",
       "sizeBytes": 45576,
-      "updatedAt": "2026-06-11T11:02:15.061Z"
+      "updatedAt": "2026-06-12T07:28:14.130Z"
     },
     {
       "name": "CNI.json",
       "sizeBytes": 102031,
-      "updatedAt": "2026-06-11T11:02:15.160Z"
+      "updatedAt": "2026-06-12T07:28:14.216Z"
     },
     {
       "name": "CNM.json",
       "sizeBytes": 34973,
-      "updatedAt": "2026-06-11T11:02:15.486Z"
+      "updatedAt": "2026-06-12T07:28:14.488Z"
     },
     {
       "name": "CNP.json",
       "sizeBytes": 69264,
-      "updatedAt": "2026-06-11T11:02:15.152Z"
+      "updatedAt": "2026-06-12T07:28:14.210Z"
     },
     {
       "name": "CNQ.json",
       "sizeBytes": 97967,
-      "updatedAt": "2026-06-11T11:02:15.073Z"
+      "updatedAt": "2026-06-12T07:28:14.140Z"
     },
     {
       "name": "COF.json",
       "sizeBytes": 101136,
-      "updatedAt": "2026-06-11T11:02:15.388Z"
+      "updatedAt": "2026-06-12T07:28:14.407Z"
     },
     {
       "name": "COHR.json",
       "sizeBytes": 74227,
-      "updatedAt": "2026-06-11T11:02:14.855Z"
+      "updatedAt": "2026-06-12T07:28:13.963Z"
     },
     {
       "name": "COIN.json",
       "sizeBytes": 65324,
-      "updatedAt": "2026-06-11T11:02:15.479Z"
+      "updatedAt": "2026-06-12T07:28:14.483Z"
     },
     {
       "name": "COLM.json",
       "sizeBytes": 99237,
-      "updatedAt": "2026-06-11T11:02:15.175Z"
+      "updatedAt": "2026-06-12T07:28:14.229Z"
     },
     {
       "name": "COO.json",
       "sizeBytes": 67144,
-      "updatedAt": "2026-06-11T11:02:15.166Z"
+      "updatedAt": "2026-06-12T07:28:14.221Z"
     },
     {
       "name": "COP.json",
       "sizeBytes": 103395,
-      "updatedAt": "2026-06-11T11:02:15.005Z"
+      "updatedAt": "2026-06-12T07:28:14.087Z"
     },
     {
       "name": "COR.json",
       "sizeBytes": 67059,
-      "updatedAt": "2026-06-11T11:02:15.500Z"
+      "updatedAt": "2026-06-12T07:28:14.501Z"
     },
     {
       "name": "COST.json",
       "sizeBytes": 101507,
-      "updatedAt": "2026-06-11T11:02:15.081Z"
+      "updatedAt": "2026-06-12T07:28:14.147Z"
     },
     {
       "name": "CP.json",
       "sizeBytes": 102667,
-      "updatedAt": "2026-06-11T11:02:15.018Z"
+      "updatedAt": "2026-06-12T07:28:14.096Z"
     },
     {
       "name": "CPNG.json",
       "sizeBytes": 35508,
-      "updatedAt": "2026-06-11T11:02:15.468Z"
+      "updatedAt": "2026-06-12T07:28:14.472Z"
     },
     {
       "name": "CPRT.json",
       "sizeBytes": 68773,
-      "updatedAt": "2026-06-11T11:02:15.396Z"
+      "updatedAt": "2026-06-12T07:28:14.413Z"
     },
     {
       "name": "CRDO.json",
       "sizeBytes": 35780,
-      "updatedAt": "2026-06-11T11:02:15.219Z"
+      "updatedAt": "2026-06-12T07:28:14.267Z"
     },
     {
       "name": "CRH.json",
       "sizeBytes": 67426,
-      "updatedAt": "2026-06-11T11:02:15.019Z"
+      "updatedAt": "2026-06-12T07:28:14.097Z"
     },
     {
       "name": "CRM.json",
       "sizeBytes": 92131,
-      "updatedAt": "2026-06-11T11:02:15.284Z"
+      "updatedAt": "2026-06-12T07:28:14.321Z"
     },
     {
       "name": "CROX.json",
       "sizeBytes": 88231,
-      "updatedAt": "2026-06-11T11:02:15.398Z"
+      "updatedAt": "2026-06-12T07:28:14.414Z"
     },
     {
       "name": "CRSP.json",
       "sizeBytes": 74420,
-      "updatedAt": "2026-06-11T11:02:15.000Z"
+      "updatedAt": "2026-06-12T07:28:14.083Z"
     },
     {
       "name": "CRUS.json",
       "sizeBytes": 74261,
-      "updatedAt": "2026-06-11T11:02:15.458Z"
+      "updatedAt": "2026-06-12T07:28:14.465Z"
     },
     {
       "name": "CRWD.json",
       "sizeBytes": 70378,
-      "updatedAt": "2026-06-11T11:02:15.023Z"
+      "updatedAt": "2026-06-12T07:28:14.099Z"
     },
     {
       "name": "CSCO.json",
       "sizeBytes": 101775,
-      "updatedAt": "2026-06-11T11:02:15.150Z"
+      "updatedAt": "2026-06-12T07:28:14.208Z"
     },
     {
       "name": "CSGP.json",
       "sizeBytes": 99712,
-      "updatedAt": "2026-06-11T11:02:14.921Z"
+      "updatedAt": "2026-06-12T07:28:14.020Z"
     },
     {
       "name": "CSL.json",
       "sizeBytes": 100693,
-      "updatedAt": "2026-06-11T11:02:15.503Z"
+      "updatedAt": "2026-06-12T07:28:14.503Z"
     },
     {
       "name": "CSX.json",
       "sizeBytes": 102559,
-      "updatedAt": "2026-06-11T11:02:15.383Z"
+      "updatedAt": "2026-06-12T07:28:14.402Z"
     },
     {
       "name": "CTSH.json",
       "sizeBytes": 99681,
-      "updatedAt": "2026-06-11T11:02:15.066Z"
+      "updatedAt": "2026-06-12T07:28:14.135Z"
     },
     {
       "name": "CTVA.json",
       "sizeBytes": 71391,
-      "updatedAt": "2026-06-11T11:02:15.254Z"
+      "updatedAt": "2026-06-12T07:28:14.294Z"
     },
     {
       "name": "CVE.json",
       "sizeBytes": 51059,
-      "updatedAt": "2026-06-11T11:02:14.973Z"
+      "updatedAt": "2026-06-12T07:28:14.061Z"
     },
     {
       "name": "CVNA.json",
       "sizeBytes": 73323,
-      "updatedAt": "2026-06-11T11:02:15.485Z"
+      "updatedAt": "2026-06-12T07:28:14.488Z"
     },
     {
       "name": "CVS.json",
       "sizeBytes": 100980,
-      "updatedAt": "2026-06-11T11:02:15.431Z"
+      "updatedAt": "2026-06-12T07:28:14.442Z"
     },
     {
       "name": "CVX.json",
       "sizeBytes": 101305,
-      "updatedAt": "2026-06-11T11:02:15.316Z"
+      "updatedAt": "2026-06-12T07:28:14.347Z"
     },
     {
       "name": "D.json",
       "sizeBytes": 100790,
-      "updatedAt": "2026-06-11T11:02:15.325Z"
+      "updatedAt": "2026-06-12T07:28:14.354Z"
     },
     {
       "name": "DAL.json",
       "sizeBytes": 54178,
-      "updatedAt": "2026-06-11T11:02:15.304Z"
+      "updatedAt": "2026-06-12T07:28:14.336Z"
     },
     {
       "name": "DASH.json",
       "sizeBytes": 39767,
-      "updatedAt": "2026-06-11T11:02:15.033Z"
+      "updatedAt": "2026-06-12T07:28:14.107Z"
     },
     {
       "name": "DD.json",
       "sizeBytes": 102469,
-      "updatedAt": "2026-06-11T11:02:15.196Z"
+      "updatedAt": "2026-06-12T07:28:14.247Z"
     },
     {
       "name": "DDOG.json",
       "sizeBytes": 45267,
-      "updatedAt": "2026-06-11T11:02:14.958Z"
+      "updatedAt": "2026-06-12T07:28:14.049Z"
     },
     {
       "name": "DE.json",
       "sizeBytes": 101618,
-      "updatedAt": "2026-06-11T11:02:15.026Z"
+      "updatedAt": "2026-06-12T07:28:14.102Z"
     },
     {
       "name": "DECK.json",
       "sizeBytes": 105440,
-      "updatedAt": "2026-06-11T11:02:15.071Z"
+      "updatedAt": "2026-06-12T07:28:14.138Z"
     },
     {
       "name": "DELL.json",
       "sizeBytes": 74674,
-      "updatedAt": "2026-06-11T11:02:15.225Z"
+      "updatedAt": "2026-06-12T07:28:14.272Z"
     },
     {
       "name": "DG.json",
       "sizeBytes": 84817,
-      "updatedAt": "2026-06-11T11:02:15.245Z"
+      "updatedAt": "2026-06-12T07:28:14.288Z"
     },
     {
       "name": "DGX.json",
       "sizeBytes": 66670,
-      "updatedAt": "2026-06-11T11:02:15.335Z"
+      "updatedAt": "2026-06-12T07:28:14.363Z"
     },
     {
       "name": "DHI.json",
       "sizeBytes": 103096,
-      "updatedAt": "2026-06-11T11:02:15.258Z"
+      "updatedAt": "2026-06-12T07:28:14.298Z"
     },
     {
       "name": "DHR.json",
       "sizeBytes": 103210,
-      "updatedAt": "2026-06-11T11:02:15.043Z"
+      "updatedAt": "2026-06-12T07:28:14.115Z"
     },
     {
       "name": "DIS.json",
       "sizeBytes": 103146,
-      "updatedAt": "2026-06-11T11:02:14.981Z"
+      "updatedAt": "2026-06-12T07:28:14.068Z"
     },
     {
       "name": "DKNG.json",
       "sizeBytes": 67196,
-      "updatedAt": "2026-06-11T11:02:15.444Z"
+      "updatedAt": "2026-06-12T07:28:14.453Z"
     },
     {
       "name": "DKS.json",
       "sizeBytes": 60687,
-      "updatedAt": "2026-06-11T11:02:14.990Z"
+      "updatedAt": "2026-06-12T07:28:14.075Z"
     },
     {
       "name": "DLR.json",
       "sizeBytes": 91202,
-      "updatedAt": "2026-06-11T11:02:15.194Z"
+      "updatedAt": "2026-06-12T07:28:14.244Z"
     },
     {
       "name": "DLTR.json",
       "sizeBytes": 68327,
-      "updatedAt": "2026-06-11T11:02:15.033Z"
+      "updatedAt": "2026-06-12T07:28:14.106Z"
     },
     {
       "name": "DOV.json",
       "sizeBytes": 69486,
-      "updatedAt": "2026-06-11T11:02:15.315Z"
+      "updatedAt": "2026-06-12T07:28:14.346Z"
     },
     {
       "name": "DOW.json",
       "sizeBytes": 70828,
-      "updatedAt": "2026-06-11T11:02:15.264Z"
+      "updatedAt": "2026-06-12T07:28:14.303Z"
     },
     {
       "name": "DPZ.json",
       "sizeBytes": 57293,
-      "updatedAt": "2026-06-11T11:02:15.206Z"
+      "updatedAt": "2026-06-12T07:28:14.255Z"
     },
     {
       "name": "DRI.json",
       "sizeBytes": 69469,
-      "updatedAt": "2026-06-11T11:02:15.378Z"
+      "updatedAt": "2026-06-12T07:28:14.399Z"
     },
     {
       "name": "DRS.json",
       "sizeBytes": 68130,
-      "updatedAt": "2026-06-11T11:02:14.976Z"
+      "updatedAt": "2026-06-12T07:28:14.064Z"
     },
     {
       "name": "DSGX.json",
       "sizeBytes": 72921,
-      "updatedAt": "2026-06-11T11:02:14.879Z"
+      "updatedAt": "2026-06-12T07:28:13.985Z"
     },
     {
       "name": "DT.json",
       "sizeBytes": 45229,
-      "updatedAt": "2026-06-11T11:02:15.417Z"
+      "updatedAt": "2026-06-12T07:28:14.431Z"
     },
     {
       "name": "DTE.json",
       "sizeBytes": 102879,
-      "updatedAt": "2026-06-11T11:02:15.499Z"
+      "updatedAt": "2026-06-12T07:28:14.500Z"
     },
     {
       "name": "DTM.json",
       "sizeBytes": 34833,
-      "updatedAt": "2026-06-11T11:02:15.182Z"
+      "updatedAt": "2026-06-12T07:28:14.235Z"
     },
     {
       "name": "DUK.json",
       "sizeBytes": 102855,
-      "updatedAt": "2026-06-11T11:02:15.200Z"
+      "updatedAt": "2026-06-12T07:28:14.250Z"
     },
     {
       "name": "DUOL.json",
       "sizeBytes": 43323,
-      "updatedAt": "2026-06-11T11:02:15.306Z"
+      "updatedAt": "2026-06-12T07:28:14.338Z"
     },
     {
       "name": "DVN.json",
       "sizeBytes": 100939,
-      "updatedAt": "2026-06-11T11:02:15.262Z"
+      "updatedAt": "2026-06-12T07:28:14.301Z"
     },
     {
       "name": "DXCM.json",
       "sizeBytes": 90475,
-      "updatedAt": "2026-06-11T11:02:15.516Z"
+      "updatedAt": "2026-06-12T07:28:14.514Z"
     },
     {
       "name": "EA.json",
       "sizeBytes": 100865,
-      "updatedAt": "2026-06-11T11:02:15.226Z"
+      "updatedAt": "2026-06-12T07:28:14.274Z"
     },
     {
       "name": "EBAY.json",
       "sizeBytes": 99610,
-      "updatedAt": "2026-06-11T11:02:15.445Z"
+      "updatedAt": "2026-06-12T07:28:14.454Z"
     },
     {
       "name": "ECL.json",
       "sizeBytes": 101181,
-      "updatedAt": "2026-06-11T11:02:14.949Z"
+      "updatedAt": "2026-06-12T07:28:14.042Z"
     },
     {
       "name": "ED.json",
       "sizeBytes": 98136,
-      "updatedAt": "2026-06-11T11:02:14.962Z"
+      "updatedAt": "2026-06-12T07:28:14.053Z"
     },
     {
       "name": "EHC.json",
       "sizeBytes": 69381,
-      "updatedAt": "2026-06-11T11:02:15.064Z"
+      "updatedAt": "2026-06-12T07:28:14.133Z"
     },
     {
       "name": "EIX.json",
       "sizeBytes": 98241,
-      "updatedAt": "2026-06-11T11:02:15.399Z"
+      "updatedAt": "2026-06-12T07:28:14.416Z"
     },
     {
       "name": "EL.json",
       "sizeBytes": 100251,
-      "updatedAt": "2026-06-11T11:02:15.309Z"
+      "updatedAt": "2026-06-12T07:28:14.341Z"
     },
     {
       "name": "ELS.json",
       "sizeBytes": 68033,
-      "updatedAt": "2026-06-11T11:02:15.438Z"
+      "updatedAt": "2026-06-12T07:28:14.447Z"
     },
     {
       "name": "ELV.json",
       "sizeBytes": 95455,
-      "updatedAt": "2026-06-11T11:02:15.183Z"
+      "updatedAt": "2026-06-12T07:28:14.235Z"
     },
     {
       "name": "EME.json",
       "sizeBytes": 67414,
-      "updatedAt": "2026-06-11T11:02:15.162Z"
+      "updatedAt": "2026-06-12T07:28:14.218Z"
     },
     {
       "name": "EMR.json",
       "sizeBytes": 100941,
-      "updatedAt": "2026-06-11T11:02:15.334Z"
+      "updatedAt": "2026-06-12T07:28:14.362Z"
     },
     {
       "name": "ENB.json",
       "sizeBytes": 101030,
-      "updatedAt": "2026-06-11T11:02:15.091Z"
+      "updatedAt": "2026-06-12T07:28:14.157Z"
     },
     {
       "name": "ENTG.json",
       "sizeBytes": 71866,
-      "updatedAt": "2026-06-11T11:02:15.050Z"
+      "updatedAt": "2026-06-12T07:28:14.121Z"
     },
     {
       "name": "EOG.json",
       "sizeBytes": 101410,
-      "updatedAt": "2026-06-11T11:02:15.293Z"
+      "updatedAt": "2026-06-12T07:28:14.328Z"
     },
     {
       "name": "EQIX.json",
       "sizeBytes": 96738,
-      "updatedAt": "2026-06-11T11:02:15.488Z"
+      "updatedAt": "2026-06-12T07:28:14.490Z"
     },
     {
       "name": "EQT.json",
       "sizeBytes": 69125,
-      "updatedAt": "2026-06-11T11:02:15.257Z"
+      "updatedAt": "2026-06-12T07:28:14.297Z"
     },
     {
       "name": "ES.json",
       "sizeBytes": 97726,
-      "updatedAt": "2026-06-11T11:02:15.480Z"
+      "updatedAt": "2026-06-12T07:28:14.483Z"
     },
     {
       "name": "ETN.json",
       "sizeBytes": 102847,
-      "updatedAt": "2026-06-11T11:02:14.909Z"
+      "updatedAt": "2026-06-12T07:28:14.010Z"
     },
     {
       "name": "EVRG.json",
       "sizeBytes": 67019,
-      "updatedAt": "2026-06-11T11:02:15.125Z"
+      "updatedAt": "2026-06-12T07:28:14.186Z"
     },
     {
       "name": "EW.json",
       "sizeBytes": 97674,
-      "updatedAt": "2026-06-11T11:02:15.168Z"
+      "updatedAt": "2026-06-12T07:28:14.223Z"
     },
     {
       "name": "EXC.json",
       "sizeBytes": 103066,
-      "updatedAt": "2026-06-11T11:02:15.378Z"
+      "updatedAt": "2026-06-12T07:28:14.398Z"
     },
     {
       "name": "EXE.json",
       "sizeBytes": 34403,
-      "updatedAt": "2026-06-11T11:02:15.252Z"
+      "updatedAt": "2026-06-12T07:28:14.293Z"
     },
     {
       "name": "EXPD.json",
       "sizeBytes": 67170,
-      "updatedAt": "2026-06-11T11:02:15.366Z"
+      "updatedAt": "2026-06-12T07:28:14.389Z"
     },
     {
       "name": "EXPE.json",
       "sizeBytes": 56635,
-      "updatedAt": "2026-06-11T11:02:15.216Z"
+      "updatedAt": "2026-06-12T07:28:14.264Z"
     },
     {
       "name": "F.json",
       "sizeBytes": 100982,
-      "updatedAt": "2026-06-11T11:02:15.128Z"
+      "updatedAt": "2026-06-12T07:28:14.189Z"
     },
     {
       "name": "FANG.json",
       "sizeBytes": 47138,
-      "updatedAt": "2026-06-11T11:02:15.461Z"
+      "updatedAt": "2026-06-12T07:28:14.468Z"
     },
     {
       "name": "FAST.json",
       "sizeBytes": 101470,
-      "updatedAt": "2026-06-11T11:02:15.273Z"
+      "updatedAt": "2026-06-12T07:28:14.311Z"
     },
     {
       "name": "FCX.json",
       "sizeBytes": 100908,
-      "updatedAt": "2026-06-11T11:02:15.368Z"
+      "updatedAt": "2026-06-12T07:28:14.391Z"
     },
     {
       "name": "FDX.json",
       "sizeBytes": 101583,
-      "updatedAt": "2026-06-11T11:02:15.409Z"
+      "updatedAt": "2026-06-12T07:28:14.423Z"
     },
     {
       "name": "FE.json",
       "sizeBytes": 97197,
-      "updatedAt": "2026-06-11T11:02:15.108Z"
+      "updatedAt": "2026-06-12T07:28:14.172Z"
     },
     {
       "name": "FER.json",
       "sizeBytes": 45766,
-      "updatedAt": "2026-06-11T11:02:15.441Z"
+      "updatedAt": "2026-06-12T07:28:14.450Z"
     },
     {
       "name": "FERG.json",
       "sizeBytes": 50502,
-      "updatedAt": "2026-06-11T11:02:15.519Z"
+      "updatedAt": "2026-06-12T07:28:14.517Z"
     },
     {
       "name": "FFIV.json",
       "sizeBytes": 72997,
-      "updatedAt": "2026-06-11T11:02:15.376Z"
+      "updatedAt": "2026-06-12T07:28:14.396Z"
     },
     {
       "name": "FICO.json",
       "sizeBytes": 77055,
-      "updatedAt": "2026-06-11T11:02:15.325Z"
+      "updatedAt": "2026-06-12T07:28:14.355Z"
     },
     {
       "name": "FIS.json",
       "sizeBytes": 95178,
-      "updatedAt": "2026-06-11T11:02:14.924Z"
+      "updatedAt": "2026-06-12T07:28:14.021Z"
     },
     {
       "name": "FIX.json",
       "sizeBytes": 65824,
-      "updatedAt": "2026-06-11T11:02:15.138Z"
+      "updatedAt": "2026-06-12T07:28:14.198Z"
     },
     {
       "name": "FLEX.json",
       "sizeBytes": 77990,
-      "updatedAt": "2026-06-11T11:02:15.372Z"
+      "updatedAt": "2026-06-12T07:28:14.393Z"
     },
     {
       "name": "FLUT.json",
       "sizeBytes": 56304,
-      "updatedAt": "2026-06-11T11:02:14.945Z"
+      "updatedAt": "2026-06-12T07:28:14.039Z"
     },
     {
       "name": "FN.json",
       "sizeBytes": 58669,
-      "updatedAt": "2026-06-11T11:02:14.947Z"
+      "updatedAt": "2026-06-12T07:28:14.041Z"
     },
     {
       "name": "FOX.json",
       "sizeBytes": 38109,
-      "updatedAt": "2026-06-11T11:02:15.027Z"
+      "updatedAt": "2026-06-12T07:28:14.102Z"
     },
     {
       "name": "FOXA.json",
       "sizeBytes": 70952,
-      "updatedAt": "2026-06-11T11:02:14.971Z"
+      "updatedAt": "2026-06-12T07:28:14.060Z"
     },
     {
       "name": "FSLR.json",
       "sizeBytes": 53793,
-      "updatedAt": "2026-06-11T11:02:15.296Z"
+      "updatedAt": "2026-06-12T07:28:14.330Z"
     },
     {
       "name": "FTNT.json",
       "sizeBytes": 83564,
-      "updatedAt": "2026-06-11T11:02:14.983Z"
+      "updatedAt": "2026-06-12T07:28:14.069Z"
     },
     {
       "name": "FTS.json",
       "sizeBytes": 50446,
-      "updatedAt": "2026-06-11T11:02:15.016Z"
+      "updatedAt": "2026-06-12T07:28:14.095Z"
     },
     {
       "name": "FTV.json",
       "sizeBytes": 41739,
-      "updatedAt": "2026-06-11T11:02:15.278Z"
+      "updatedAt": "2026-06-12T07:28:14.315Z"
     },
     {
       "name": "GAP.json",
       "sizeBytes": 68304,
-      "updatedAt": "2026-06-11T11:02:15.348Z"
+      "updatedAt": "2026-06-12T07:28:14.373Z"
     },
     {
       "name": "GD.json",
       "sizeBytes": 101323,
-      "updatedAt": "2026-06-11T11:02:14.998Z"
+      "updatedAt": "2026-06-12T07:28:14.081Z"
     },
     {
       "name": "GDDY.json",
       "sizeBytes": 51174,
-      "updatedAt": "2026-06-11T11:02:15.246Z"
+      "updatedAt": "2026-06-12T07:28:14.289Z"
     },
     {
       "name": "GE.json",
       "sizeBytes": 103028,
-      "updatedAt": "2026-06-11T11:02:14.883Z"
+      "updatedAt": "2026-06-12T07:28:13.988Z"
     },
     {
       "name": "GEHC.json",
       "sizeBytes": 35067,
-      "updatedAt": "2026-06-11T11:02:14.867Z"
+      "updatedAt": "2026-06-12T07:28:13.975Z"
     },
     {
       "name": "GEN.json",
       "sizeBytes": 75998,
-      "updatedAt": "2026-06-11T11:02:15.517Z"
+      "updatedAt": "2026-06-12T07:28:14.515Z"
     },
     {
       "name": "GEV.json",
       "sizeBytes": 34515,
-      "updatedAt": "2026-06-11T11:02:15.449Z"
+      "updatedAt": "2026-06-12T07:28:14.458Z"
     },
     {
       "name": "GFS.json",
       "sizeBytes": 42405,
-      "updatedAt": "2026-06-11T11:02:14.998Z"
+      "updatedAt": "2026-06-12T07:28:14.082Z"
     },
     {
       "name": "GGG.json",
       "sizeBytes": 69145,
-      "updatedAt": "2026-06-11T11:02:15.070Z"
+      "updatedAt": "2026-06-12T07:28:14.137Z"
     },
     {
       "name": "GIB.json",
       "sizeBytes": 73434,
-      "updatedAt": "2026-06-11T11:02:14.903Z"
+      "updatedAt": "2026-06-12T07:28:14.005Z"
     },
     {
       "name": "GIII.json",
       "sizeBytes": 68261,
-      "updatedAt": "2026-06-11T11:02:14.912Z"
+      "updatedAt": "2026-06-12T07:28:14.012Z"
     },
     {
       "name": "GIL.json",
       "sizeBytes": 99002,
-      "updatedAt": "2026-06-11T11:02:15.412Z"
+      "updatedAt": "2026-06-12T07:28:14.426Z"
     },
     {
       "name": "GILD.json",
       "sizeBytes": 101241,
-      "updatedAt": "2026-06-11T11:02:15.090Z"
+      "updatedAt": "2026-06-12T07:28:14.156Z"
     },
     {
       "name": "GIS.json",
       "sizeBytes": 100716,
-      "updatedAt": "2026-06-11T11:02:15.211Z"
+      "updatedAt": "2026-06-12T07:28:14.259Z"
     },
     {
       "name": "GLW.json",
       "sizeBytes": 102107,
-      "updatedAt": "2026-06-11T11:02:15.154Z"
+      "updatedAt": "2026-06-12T07:28:14.211Z"
     },
     {
       "name": "GM.json",
       "sizeBytes": 79672,
-      "updatedAt": "2026-06-11T11:02:15.217Z"
+      "updatedAt": "2026-06-12T07:28:14.265Z"
     },
     {
       "name": "GMED.json",
       "sizeBytes": 46812,
-      "updatedAt": "2026-06-11T11:02:15.324Z"
+      "updatedAt": "2026-06-12T07:28:14.353Z"
     },
     {
       "name": "GNRC.json",
       "sizeBytes": 84091,
-      "updatedAt": "2026-06-11T11:02:15.266Z"
+      "updatedAt": "2026-06-12T07:28:14.305Z"
     },
     {
       "name": "GOOG.json",
       "sizeBytes": 93362,
-      "updatedAt": "2026-06-11T11:02:15.351Z"
+      "updatedAt": "2026-06-12T07:28:14.377Z"
     },
     {
       "name": "GOOGL.json",
       "sizeBytes": 93463,
-      "updatedAt": "2026-06-11T11:02:15.377Z"
+      "updatedAt": "2026-06-12T07:28:14.398Z"
     },
     {
       "name": "GPC.json",
       "sizeBytes": 67398,
-      "updatedAt": "2026-06-11T11:02:14.987Z"
+      "updatedAt": "2026-06-12T07:28:14.073Z"
     },
     {
       "name": "GRAB.json",
       "sizeBytes": 43927,
-      "updatedAt": "2026-06-11T11:02:14.894Z"
+      "updatedAt": "2026-06-12T07:28:13.997Z"
     },
     {
       "name": "GRMN.json",
       "sizeBytes": 71409,
-      "updatedAt": "2026-06-11T11:02:15.454Z"
+      "updatedAt": "2026-06-12T07:28:14.461Z"
     },
     {
       "name": "GS.json",
       "sizeBytes": 98305,
-      "updatedAt": "2026-06-11T11:02:15.502Z"
+      "updatedAt": "2026-06-12T07:28:14.503Z"
     },
     {
       "name": "GWRE.json",
       "sizeBytes": 55676,
-      "updatedAt": "2026-06-11T11:02:15.074Z"
+      "updatedAt": "2026-06-12T07:28:14.140Z"
     },
     {
       "name": "GWW.json",
       "sizeBytes": 67168,
-      "updatedAt": "2026-06-11T11:02:15.164Z"
+      "updatedAt": "2026-06-12T07:28:14.220Z"
     },
     {
       "name": "H.json",
       "sizeBytes": 49512,
-      "updatedAt": "2026-06-11T11:02:15.367Z"
+      "updatedAt": "2026-06-12T07:28:14.390Z"
     },
     {
       "name": "HAL.json",
       "sizeBytes": 100896,
-      "updatedAt": "2026-06-11T11:02:15.299Z"
+      "updatedAt": "2026-06-12T07:28:14.333Z"
     },
     {
       "name": "HCA.json",
       "sizeBytes": 82200,
-      "updatedAt": "2026-06-11T11:02:15.248Z"
+      "updatedAt": "2026-06-12T07:28:14.290Z"
     },
     {
       "name": "HD.json",
       "sizeBytes": 100699,
-      "updatedAt": "2026-06-11T11:02:15.211Z"
+      "updatedAt": "2026-06-12T07:28:14.259Z"
     },
     {
       "name": "HLT.json",
       "sizeBytes": 78533,
-      "updatedAt": "2026-06-11T11:02:14.974Z"
+      "updatedAt": "2026-06-12T07:28:14.062Z"
     },
     {
       "name": "HON.json",
       "sizeBytes": 103503,
-      "updatedAt": "2026-06-11T11:02:15.240Z"
+      "updatedAt": "2026-06-12T07:28:14.283Z"
     },
     {
       "name": "HOOD.json",
       "sizeBytes": 43410,
-      "updatedAt": "2026-06-11T11:02:15.518Z"
+      "updatedAt": "2026-06-12T07:28:14.516Z"
     },
     {
       "name": "HPE.json",
       "sizeBytes": 51022,
-      "updatedAt": "2026-06-11T11:02:15.403Z"
+      "updatedAt": "2026-06-12T07:28:14.418Z"
     },
     {
       "name": "HPQ.json",
       "sizeBytes": 77042,
-      "updatedAt": "2026-06-11T11:02:15.505Z"
+      "updatedAt": "2026-06-12T07:28:14.505Z"
     },
     {
       "name": "HRL.json",
       "sizeBytes": 67654,
-      "updatedAt": "2026-06-11T11:02:15.138Z"
+      "updatedAt": "2026-06-12T07:28:14.198Z"
     },
     {
       "name": "HSY.json",
       "sizeBytes": 100577,
-      "updatedAt": "2026-06-11T11:02:15.017Z"
+      "updatedAt": "2026-06-12T07:28:14.095Z"
     },
     {
       "name": "HUBB.json",
       "sizeBytes": 67617,
-      "updatedAt": "2026-06-11T11:02:15.015Z"
+      "updatedAt": "2026-06-12T07:28:14.094Z"
     },
     {
       "name": "HUBS.json",
       "sizeBytes": 52246,
-      "updatedAt": "2026-06-11T11:02:15.329Z"
+      "updatedAt": "2026-06-12T07:28:14.358Z"
     },
     {
       "name": "HUM.json",
       "sizeBytes": 100785,
-      "updatedAt": "2026-06-11T11:02:14.961Z"
+      "updatedAt": "2026-06-12T07:28:14.052Z"
     },
     {
       "name": "IBM.json",
       "sizeBytes": 103483,
-      "updatedAt": "2026-06-11T11:02:15.059Z"
+      "updatedAt": "2026-06-12T07:28:14.129Z"
     },
     {
       "name": "ICE.json",
       "sizeBytes": 90107,
-      "updatedAt": "2026-06-11T11:02:15.259Z"
+      "updatedAt": "2026-06-12T07:28:14.299Z"
     },
     {
       "name": "IDXX.json",
       "sizeBytes": 100600,
-      "updatedAt": "2026-06-11T11:02:15.055Z"
+      "updatedAt": "2026-06-12T07:28:14.125Z"
     },
     {
       "name": "IEX.json",
       "sizeBytes": 68689,
-      "updatedAt": "2026-06-11T11:02:14.986Z"
+      "updatedAt": "2026-06-12T07:28:14.071Z"
     },
     {
       "name": "IFF.json",
       "sizeBytes": 99083,
-      "updatedAt": "2026-06-11T11:02:14.878Z"
+      "updatedAt": "2026-06-12T07:28:13.984Z"
     },
     {
       "name": "ILMN.json",
       "sizeBytes": 97067,
-      "updatedAt": "2026-06-11T11:02:15.019Z"
+      "updatedAt": "2026-06-12T07:28:14.097Z"
     },
     {
       "name": "IMO.json",
       "sizeBytes": 68486,
-      "updatedAt": "2026-06-11T11:02:14.996Z"
+      "updatedAt": "2026-06-12T07:28:14.079Z"
     },
     {
       "name": "INCY.json",
       "sizeBytes": 66993,
-      "updatedAt": "2026-06-11T11:02:14.970Z"
+      "updatedAt": "2026-06-12T07:28:14.059Z"
     },
     {
       "name": "INSM.json",
       "sizeBytes": 60982,
-      "updatedAt": "2026-06-11T11:02:15.263Z"
+      "updatedAt": "2026-06-12T07:28:14.302Z"
     },
     {
       "name": "INTC.json",
       "sizeBytes": 100174,
-      "updatedAt": "2026-06-11T11:02:15.002Z"
+      "updatedAt": "2026-06-12T07:28:14.085Z"
     },
     {
       "name": "INTU.json",
       "sizeBytes": 101925,
-      "updatedAt": "2026-06-11T11:02:15.384Z"
+      "updatedAt": "2026-06-12T07:28:14.403Z"
     },
     {
       "name": "IOT.json",
       "sizeBytes": 43277,
-      "updatedAt": "2026-06-11T11:02:15.513Z"
+      "updatedAt": "2026-06-12T07:28:14.512Z"
     },
     {
       "name": "IQV.json",
       "sizeBytes": 79797,
-      "updatedAt": "2026-06-11T11:02:15.100Z"
+      "updatedAt": "2026-06-12T07:28:14.165Z"
     },
     {
       "name": "IR.json",
       "sizeBytes": 40444,
-      "updatedAt": "2026-06-11T11:02:14.966Z"
+      "updatedAt": "2026-06-12T07:28:14.056Z"
     },
     {
       "name": "ISRG.json",
       "sizeBytes": 97676,
-      "updatedAt": "2026-06-11T11:02:15.184Z"
+      "updatedAt": "2026-06-12T07:28:14.237Z"
     },
     {
       "name": "IT.json",
       "sizeBytes": 77922,
-      "updatedAt": "2026-06-11T11:02:15.181Z"
+      "updatedAt": "2026-06-12T07:28:14.234Z"
     },
     {
       "name": "ITRI.json",
       "sizeBytes": 74101,
-      "updatedAt": "2026-06-11T11:02:15.129Z"
+      "updatedAt": "2026-06-12T07:28:14.190Z"
     },
     {
       "name": "ITW.json",
       "sizeBytes": 101294,
-      "updatedAt": "2026-06-11T11:02:14.874Z"
+      "updatedAt": "2026-06-12T07:28:13.980Z"
     },
     {
       "name": "JBHT.json",
       "sizeBytes": 67368,
-      "updatedAt": "2026-06-11T11:02:15.439Z"
+      "updatedAt": "2026-06-12T07:28:14.448Z"
     },
     {
       "name": "JBL.json",
       "sizeBytes": 76307,
-      "updatedAt": "2026-06-11T11:02:15.450Z"
+      "updatedAt": "2026-06-12T07:28:14.458Z"
     },
     {
       "name": "JCI.json",
       "sizeBytes": 103093,
-      "updatedAt": "2026-06-11T11:02:14.963Z"
+      "updatedAt": "2026-06-12T07:28:14.054Z"
     },
     {
       "name": "JKHY.json",
       "sizeBytes": 75993,
-      "updatedAt": "2026-06-11T11:02:14.870Z"
+      "updatedAt": "2026-06-12T07:28:13.978Z"
     },
     {
       "name": "JNJ.json",
       "sizeBytes": 101348,
-      "updatedAt": "2026-06-11T11:02:15.159Z"
+      "updatedAt": "2026-06-12T07:28:14.215Z"
     },
     {
       "name": "JPM.json",
       "sizeBytes": 101418,
-      "updatedAt": "2026-06-11T11:02:15.165Z"
+      "updatedAt": "2026-06-12T07:28:14.220Z"
     },
     {
       "name": "KDP.json",
       "sizeBytes": 86338,
-      "updatedAt": "2026-06-11T11:02:15.448Z"
+      "updatedAt": "2026-06-12T07:28:14.456Z"
     },
     {
       "name": "KEYS.json",
       "sizeBytes": 52890,
-      "updatedAt": "2026-06-11T11:02:15.280Z"
+      "updatedAt": "2026-06-12T07:28:14.317Z"
     },
     {
       "name": "KHC.json",
       "sizeBytes": 75537,
-      "updatedAt": "2026-06-11T11:02:15.198Z"
+      "updatedAt": "2026-06-12T07:28:14.249Z"
     },
     {
       "name": "KIM.json",
       "sizeBytes": 69497,
-      "updatedAt": "2026-06-11T11:02:15.501Z"
+      "updatedAt": "2026-06-12T07:28:14.502Z"
     },
     {
       "name": "KKR.json",
       "sizeBytes": 82272,
-      "updatedAt": "2026-06-11T11:02:15.309Z"
+      "updatedAt": "2026-06-12T07:28:14.341Z"
     },
     {
       "name": "KLAC.json",
       "sizeBytes": 101337,
-      "updatedAt": "2026-06-11T11:02:15.232Z"
+      "updatedAt": "2026-06-12T07:28:14.277Z"
     },
     {
       "name": "KMB.json",
       "sizeBytes": 102817,
-      "updatedAt": "2026-06-11T11:02:14.974Z"
+      "updatedAt": "2026-06-12T07:28:14.062Z"
     },
     {
       "name": "KMI.json",
       "sizeBytes": 82712,
-      "updatedAt": "2026-06-11T11:02:15.077Z"
+      "updatedAt": "2026-06-12T07:28:14.143Z"
     },
     {
       "name": "KO.json",
       "sizeBytes": 100850,
-      "updatedAt": "2026-06-11T11:02:15.350Z"
+      "updatedAt": "2026-06-12T07:28:14.375Z"
     },
     {
       "name": "KR.json",
       "sizeBytes": 67509,
-      "updatedAt": "2026-06-11T11:02:14.997Z"
+      "updatedAt": "2026-06-12T07:28:14.080Z"
     },
     {
       "name": "KVUE.json",
       "sizeBytes": 43001,
-      "updatedAt": "2026-06-11T11:02:15.088Z"
+      "updatedAt": "2026-06-12T07:28:14.153Z"
     },
     {
       "name": "LDOS.json",
       "sizeBytes": 64242,
-      "updatedAt": "2026-06-11T11:02:14.994Z"
+      "updatedAt": "2026-06-12T07:28:14.078Z"
     },
     {
       "name": "LEN.json",
       "sizeBytes": 103574,
-      "updatedAt": "2026-06-11T11:02:15.010Z"
+      "updatedAt": "2026-06-12T07:28:14.090Z"
     },
     {
       "name": "LEVI.json",
       "sizeBytes": 70707,
-      "updatedAt": "2026-06-11T11:02:15.107Z"
+      "updatedAt": "2026-06-12T07:28:14.170Z"
     },
     {
       "name": "LHX.json",
       "sizeBytes": 103109,
-      "updatedAt": "2026-06-11T11:02:15.145Z"
+      "updatedAt": "2026-06-12T07:28:14.204Z"
     },
     {
       "name": "LII.json",
       "sizeBytes": 97895,
-      "updatedAt": "2026-06-11T11:02:15.319Z"
+      "updatedAt": "2026-06-12T07:28:14.350Z"
     },
     {
       "name": "LIN.json",
       "sizeBytes": 100972,
-      "updatedAt": "2026-06-11T11:02:15.393Z"
+      "updatedAt": "2026-06-12T07:28:14.410Z"
     },
     {
       "name": "LITE.json",
       "sizeBytes": 30659,
-      "updatedAt": "2026-06-11T11:02:15.075Z"
+      "updatedAt": "2026-06-12T07:28:14.142Z"
     },
     {
       "name": "LLY.json",
       "sizeBytes": 101048,
-      "updatedAt": "2026-06-11T11:02:15.140Z"
+      "updatedAt": "2026-06-12T07:28:14.200Z"
     },
     {
       "name": "LMT.json",
       "sizeBytes": 101358,
-      "updatedAt": "2026-06-11T11:02:14.899Z"
+      "updatedAt": "2026-06-12T07:28:14.002Z"
     },
     {
       "name": "LNG.json",
       "sizeBytes": 67504,
-      "updatedAt": "2026-06-11T11:02:14.872Z"
+      "updatedAt": "2026-06-12T07:28:13.979Z"
     },
     {
       "name": "LNT.json",
       "sizeBytes": 67171,
-      "updatedAt": "2026-06-11T11:02:15.104Z"
+      "updatedAt": "2026-06-12T07:28:14.167Z"
     },
     {
       "name": "LOGI.json",
       "sizeBytes": 75433,
-      "updatedAt": "2026-06-11T11:02:15.451Z"
+      "updatedAt": "2026-06-12T07:28:14.460Z"
     },
     {
       "name": "LOW.json",
       "sizeBytes": 101322,
-      "updatedAt": "2026-06-11T11:02:15.521Z"
+      "updatedAt": "2026-06-12T07:28:14.519Z"
     },
     {
       "name": "LRCX.json",
       "sizeBytes": 104254,
-      "updatedAt": "2026-06-11T11:02:15.238Z"
+      "updatedAt": "2026-06-12T07:28:14.282Z"
     },
     {
       "name": "LSCC.json",
       "sizeBytes": 75479,
-      "updatedAt": "2026-06-11T11:02:15.387Z"
+      "updatedAt": "2026-06-12T07:28:14.406Z"
     },
     {
       "name": "LULU.json",
       "sizeBytes": 88837,
-      "updatedAt": "2026-06-11T11:02:15.427Z"
+      "updatedAt": "2026-06-12T07:28:14.439Z"
     },
     {
       "name": "LUV.json",
       "sizeBytes": 102175,
-      "updatedAt": "2026-06-11T11:02:15.267Z"
+      "updatedAt": "2026-06-12T07:28:14.306Z"
     },
     {
       "name": "LVS.json",
       "sizeBytes": 90671,
-      "updatedAt": "2026-06-11T11:02:15.188Z"
+      "updatedAt": "2026-06-12T07:28:14.240Z"
     },
     {
       "name": "LYB.json",
       "sizeBytes": 83190,
-      "updatedAt": "2026-06-11T11:02:15.094Z"
+      "updatedAt": "2026-06-12T07:28:14.159Z"
     },
     {
       "name": "LYV.json",
       "sizeBytes": 54543,
-      "updatedAt": "2026-06-11T11:02:15.144Z"
+      "updatedAt": "2026-06-12T07:28:14.203Z"
     },
     {
       "name": "MA.json",
       "sizeBytes": 89660,
-      "updatedAt": "2026-06-11T11:02:15.067Z"
+      "updatedAt": "2026-06-12T07:28:14.136Z"
     },
     {
       "name": "MAR.json",
       "sizeBytes": 100435,
-      "updatedAt": "2026-06-11T11:02:14.959Z"
+      "updatedAt": "2026-06-12T07:28:14.051Z"
     },
     {
       "name": "MAS.json",
       "sizeBytes": 101961,
-      "updatedAt": "2026-06-11T11:02:14.921Z"
+      "updatedAt": "2026-06-12T07:28:14.019Z"
     },
     {
       "name": "MBG.DE.json",
       "sizeBytes": 40345,
-      "updatedAt": "2026-06-11T11:02:15.339Z"
+      "updatedAt": "2026-06-12T07:28:14.366Z"
     },
     {
       "name": "MBLY.json",
       "sizeBytes": 43428,
-      "updatedAt": "2026-06-11T11:02:15.071Z"
+      "updatedAt": "2026-06-12T07:28:14.138Z"
     },
     {
       "name": "MC.PA.json",
       "sizeBytes": 46888,
-      "updatedAt": "2026-06-11T11:02:15.010Z"
+      "updatedAt": "2026-06-12T07:28:14.091Z"
     },
     {
       "name": "MCD.json",
       "sizeBytes": 100085,
-      "updatedAt": "2026-06-11T11:02:15.392Z"
+      "updatedAt": "2026-06-12T07:28:14.409Z"
     },
     {
       "name": "MCHP.json",
       "sizeBytes": 101816,
-      "updatedAt": "2026-06-11T11:02:15.029Z"
+      "updatedAt": "2026-06-12T07:28:14.104Z"
     },
     {
       "name": "MCK.json",
       "sizeBytes": 100034,
-      "updatedAt": "2026-06-11T11:02:14.959Z"
+      "updatedAt": "2026-06-12T07:28:14.050Z"
     },
     {
       "name": "MCO.json",
       "sizeBytes": 100952,
-      "updatedAt": "2026-06-11T11:02:15.354Z"
+      "updatedAt": "2026-06-12T07:28:14.379Z"
     },
     {
       "name": "MDB.json",
       "sizeBytes": 48117,
-      "updatedAt": "2026-06-11T11:02:15.465Z"
+      "updatedAt": "2026-06-12T07:28:14.471Z"
     },
     {
       "name": "MDLZ.json",
       "sizeBytes": 95727,
-      "updatedAt": "2026-06-11T11:02:15.514Z"
+      "updatedAt": "2026-06-12T07:28:14.513Z"
     },
     {
       "name": "MDT.json",
       "sizeBytes": 100007,
-      "updatedAt": "2026-06-11T11:02:14.925Z"
+      "updatedAt": "2026-06-12T07:28:14.023Z"
     },
     {
       "name": "MELI.json",
       "sizeBytes": 87709,
-      "updatedAt": "2026-06-11T11:02:15.017Z"
+      "updatedAt": "2026-06-12T07:28:14.095Z"
     },
     {
       "name": "MET.json",
       "sizeBytes": 97647,
-      "updatedAt": "2026-06-11T11:02:15.056Z"
+      "updatedAt": "2026-06-12T07:28:14.127Z"
     },
     {
       "name": "META.json",
       "sizeBytes": 81842,
-      "updatedAt": "2026-06-11T11:02:15.511Z"
+      "updatedAt": "2026-06-12T07:28:14.510Z"
     },
     {
       "name": "MFC.json",
       "sizeBytes": 96844,
-      "updatedAt": "2026-06-11T11:02:15.386Z"
+      "updatedAt": "2026-06-12T07:28:14.405Z"
     },
     {
       "name": "MGA.json",
       "sizeBytes": 100983,
-      "updatedAt": "2026-06-11T11:02:15.110Z"
+      "updatedAt": "2026-06-12T07:28:14.173Z"
     },
     {
       "name": "MIDD.json",
       "sizeBytes": 100895,
-      "updatedAt": "2026-06-11T11:02:15.421Z"
+      "updatedAt": "2026-06-12T07:28:14.434Z"
     },
     {
       "name": "MKC.json",
       "sizeBytes": 67035,
-      "updatedAt": "2026-06-11T11:02:15.148Z"
+      "updatedAt": "2026-06-12T07:28:14.207Z"
     },
     {
       "name": "MLM.json",
       "sizeBytes": 101341,
-      "updatedAt": "2026-06-11T11:02:15.375Z"
+      "updatedAt": "2026-06-12T07:28:14.396Z"
     },
     {
       "name": "MMM.json",
       "sizeBytes": 102466,
-      "updatedAt": "2026-06-11T11:02:15.265Z"
+      "updatedAt": "2026-06-12T07:28:14.305Z"
     },
     {
       "name": "MNST.json",
       "sizeBytes": 102828,
-      "updatedAt": "2026-06-11T11:02:15.025Z"
+      "updatedAt": "2026-06-12T07:28:14.101Z"
     },
     {
       "name": "MO.json",
       "sizeBytes": 100221,
-      "updatedAt": "2026-06-11T11:02:15.252Z"
+      "updatedAt": "2026-06-12T07:28:14.293Z"
     },
     {
       "name": "MPC.json",
       "sizeBytes": 82832,
-      "updatedAt": "2026-06-11T11:02:15.147Z"
+      "updatedAt": "2026-06-12T07:28:14.206Z"
     },
     {
       "name": "MPWR.json",
       "sizeBytes": 66397,
-      "updatedAt": "2026-06-11T11:02:15.193Z"
+      "updatedAt": "2026-06-12T07:28:14.244Z"
     },
     {
       "name": "MRK.json",
       "sizeBytes": 104351,
-      "updatedAt": "2026-06-11T11:02:15.521Z"
+      "updatedAt": "2026-06-12T07:28:14.520Z"
     },
     {
       "name": "MRNA.json",
       "sizeBytes": 71779,
-      "updatedAt": "2026-06-11T11:02:14.876Z"
+      "updatedAt": "2026-06-12T07:28:13.982Z"
     },
     {
       "name": "MRVL.json",
       "sizeBytes": 96335,
-      "updatedAt": "2026-06-11T11:02:15.151Z"
+      "updatedAt": "2026-06-12T07:28:14.209Z"
     },
     {
       "name": "MS.json",
       "sizeBytes": 100973,
-      "updatedAt": "2026-06-11T11:02:14.975Z"
+      "updatedAt": "2026-06-12T07:28:14.063Z"
     },
     {
       "name": "MSCI.json",
       "sizeBytes": 85613,
-      "updatedAt": "2026-06-11T11:02:15.349Z"
+      "updatedAt": "2026-06-12T07:28:14.375Z"
     },
     {
       "name": "MSFT.json",
       "sizeBytes": 101865,
-      "updatedAt": "2026-06-11T11:02:15.096Z"
+      "updatedAt": "2026-06-12T07:28:14.160Z"
     },
     {
       "name": "MSI.json",
       "sizeBytes": 77919,
-      "updatedAt": "2026-06-11T11:02:15.136Z"
+      "updatedAt": "2026-06-12T07:28:14.196Z"
     },
     {
       "name": "MTD.json",
       "sizeBytes": 98435,
-      "updatedAt": "2026-06-11T11:02:15.006Z"
+      "updatedAt": "2026-06-12T07:28:14.087Z"
     },
     {
       "name": "MTSI.json",
       "sizeBytes": 55084,
-      "updatedAt": "2026-06-11T11:02:15.508Z"
+      "updatedAt": "2026-06-12T07:28:14.508Z"
     },
     {
       "name": "MTZ.json",
       "sizeBytes": 67566,
-      "updatedAt": "2026-06-11T11:02:15.052Z"
+      "updatedAt": "2026-06-12T07:28:14.123Z"
     },
     {
       "name": "MU.json",
       "sizeBytes": 100185,
-      "updatedAt": "2026-06-11T11:02:15.192Z"
+      "updatedAt": "2026-06-12T07:28:14.243Z"
     },
     {
       "name": "NBIX.json",
       "sizeBytes": 66622,
-      "updatedAt": "2026-06-11T11:02:15.085Z"
+      "updatedAt": "2026-06-12T07:28:14.151Z"
     },
     {
       "name": "NDSN.json",
       "sizeBytes": 67126,
-      "updatedAt": "2026-06-11T11:02:15.310Z"
+      "updatedAt": "2026-06-12T07:28:14.342Z"
     },
     {
       "name": "NEE.json",
       "sizeBytes": 101665,
-      "updatedAt": "2026-06-11T11:02:15.161Z"
+      "updatedAt": "2026-06-12T07:28:14.217Z"
     },
     {
       "name": "NEM.json",
       "sizeBytes": 100040,
-      "updatedAt": "2026-06-11T11:02:15.516Z"
+      "updatedAt": "2026-06-12T07:28:14.514Z"
     },
     {
       "name": "NET.json",
       "sizeBytes": 69284,
-      "updatedAt": "2026-06-11T11:02:15.457Z"
+      "updatedAt": "2026-06-12T07:28:14.463Z"
     },
     {
       "name": "NFLX.json",
       "sizeBytes": 95846,
-      "updatedAt": "2026-06-11T11:02:15.085Z"
+      "updatedAt": "2026-06-12T07:28:14.150Z"
     },
     {
       "name": "NI.json",
       "sizeBytes": 69209,
-      "updatedAt": "2026-06-11T11:02:15.233Z"
+      "updatedAt": "2026-06-12T07:28:14.279Z"
     },
     {
       "name": "NKE.json",
       "sizeBytes": 101347,
-      "updatedAt": "2026-06-11T11:02:15.257Z"
+      "updatedAt": "2026-06-12T07:28:14.298Z"
     },
     {
       "name": "NOC.json",
       "sizeBytes": 103232,
-      "updatedAt": "2026-06-11T11:02:15.506Z"
+      "updatedAt": "2026-06-12T07:28:14.507Z"
     },
     {
       "name": "NOW.json",
       "sizeBytes": 82556,
-      "updatedAt": "2026-06-11T11:02:15.401Z"
+      "updatedAt": "2026-06-12T07:28:14.417Z"
     },
     {
       "name": "NRG.json",
       "sizeBytes": 58298,
-      "updatedAt": "2026-06-11T11:02:15.031Z"
+      "updatedAt": "2026-06-12T07:28:14.105Z"
     },
     {
       "name": "NSC.json",
       "sizeBytes": 101535,
-      "updatedAt": "2026-06-11T11:02:15.237Z"
+      "updatedAt": "2026-06-12T07:28:14.281Z"
     },
     {
       "name": "NSIT.json",
       "sizeBytes": 76409,
-      "updatedAt": "2026-06-11T11:02:15.355Z"
+      "updatedAt": "2026-06-12T07:28:14.380Z"
     },
     {
       "name": "NTAP.json",
       "sizeBytes": 76103,
-      "updatedAt": "2026-06-11T11:02:14.944Z"
+      "updatedAt": "2026-06-12T07:28:14.038Z"
     },
     {
       "name": "NTNX.json",
       "sizeBytes": 48761,
-      "updatedAt": "2026-06-11T11:02:14.919Z"
+      "updatedAt": "2026-06-12T07:28:14.018Z"
     },
     {
       "name": "NTR.json",
       "sizeBytes": 73147,
-      "updatedAt": "2026-06-11T11:02:15.139Z"
+      "updatedAt": "2026-06-12T07:28:14.199Z"
     },
     {
       "name": "NTRA.json",
       "sizeBytes": 42599,
-      "updatedAt": "2026-06-11T11:02:15.174Z"
+      "updatedAt": "2026-06-12T07:28:14.228Z"
     },
     {
       "name": "NUE.json",
       "sizeBytes": 101613,
-      "updatedAt": "2026-06-11T11:02:15.520Z"
+      "updatedAt": "2026-06-12T07:28:14.517Z"
     },
     {
       "name": "NVDA.json",
       "sizeBytes": 103341,
-      "updatedAt": "2026-06-11T11:02:15.473Z"
+      "updatedAt": "2026-06-12T07:28:14.478Z"
     },
     {
       "name": "NVMI.json",
       "sizeBytes": 71396,
-      "updatedAt": "2026-06-11T11:02:15.501Z"
+      "updatedAt": "2026-06-12T07:28:14.502Z"
     },
     {
       "name": "NVO.json",
       "sizeBytes": 74587,
-      "updatedAt": "2026-06-11T11:02:15.504Z"
+      "updatedAt": "2026-06-12T07:28:14.504Z"
     },
     {
       "name": "NVR.json",
       "sizeBytes": 98751,
-      "updatedAt": "2026-06-11T11:02:15.170Z"
+      "updatedAt": "2026-06-12T07:28:14.225Z"
     },
     {
       "name": "NVT.json",
       "sizeBytes": 39110,
-      "updatedAt": "2026-06-11T11:02:14.957Z"
+      "updatedAt": "2026-06-12T07:28:14.048Z"
     },
     {
       "name": "NWSA.json",
       "sizeBytes": 45320,
-      "updatedAt": "2026-06-11T11:02:15.240Z"
+      "updatedAt": "2026-06-12T07:28:14.284Z"
     },
     {
       "name": "NXPI.json",
       "sizeBytes": 83738,
-      "updatedAt": "2026-06-11T11:02:15.462Z"
+      "updatedAt": "2026-06-12T07:28:14.468Z"
     },
     {
       "name": "O.json",
       "sizeBytes": 70624,
-      "updatedAt": "2026-06-11T11:02:15.419Z"
+      "updatedAt": "2026-06-12T07:28:14.432Z"
     },
     {
       "name": "OC.json",
       "sizeBytes": 88304,
-      "updatedAt": "2026-06-11T11:02:15.279Z"
+      "updatedAt": "2026-06-12T07:28:14.316Z"
     },
     {
       "name": "ODFL.json",
       "sizeBytes": 103262,
-      "updatedAt": "2026-06-11T11:02:15.353Z"
+      "updatedAt": "2026-06-12T07:28:14.378Z"
     },
     {
       "name": "OKE.json",
       "sizeBytes": 102963,
-      "updatedAt": "2026-06-11T11:02:14.876Z"
+      "updatedAt": "2026-06-12T07:28:13.982Z"
     },
     {
       "name": "OKTA.json",
       "sizeBytes": 48805,
-      "updatedAt": "2026-06-11T11:02:15.332Z"
+      "updatedAt": "2026-06-12T07:28:14.361Z"
     },
     {
       "name": "OLED.json",
       "sizeBytes": 74820,
-      "updatedAt": "2026-06-11T11:02:14.915Z"
+      "updatedAt": "2026-06-12T07:28:14.015Z"
     },
     {
       "name": "OMC.json",
       "sizeBytes": 99440,
-      "updatedAt": "2026-06-11T11:02:15.197Z"
+      "updatedAt": "2026-06-12T07:28:14.248Z"
     },
     {
       "name": "ON.json",
       "sizeBytes": 89985,
-      "updatedAt": "2026-06-11T11:02:15.344Z"
+      "updatedAt": "2026-06-12T07:28:14.370Z"
     },
     {
       "name": "ONON.json",
       "sizeBytes": 43261,
-      "updatedAt": "2026-06-11T11:02:15.361Z"
+      "updatedAt": "2026-06-12T07:28:14.385Z"
     },
     {
       "name": "OR.PA.json",
       "sizeBytes": 46414,
-      "updatedAt": "2026-06-11T11:02:15.041Z"
+      "updatedAt": "2026-06-12T07:28:14.114Z"
     },
     {
       "name": "ORCL.json",
       "sizeBytes": 101079,
-      "updatedAt": "2026-06-11T11:02:15.472Z"
+      "updatedAt": "2026-06-12T07:28:14.475Z"
     },
     {
       "name": "ORLY.json",
       "sizeBytes": 104869,
-      "updatedAt": "2026-06-11T11:02:15.081Z"
+      "updatedAt": "2026-06-12T07:28:14.147Z"
     },
     {
       "name": "OTIS.json",
       "sizeBytes": 69312,
-      "updatedAt": "2026-06-11T11:02:14.951Z"
+      "updatedAt": "2026-06-12T07:28:14.044Z"
     },
     {
       "name": "OVV.json",
       "sizeBytes": 59843,
-      "updatedAt": "2026-06-11T11:02:15.156Z"
+      "updatedAt": "2026-06-12T07:28:14.213Z"
     },
     {
       "name": "OXY.json",
       "sizeBytes": 103284,
-      "updatedAt": "2026-06-11T11:02:15.157Z"
+      "updatedAt": "2026-06-12T07:28:14.214Z"
     },
     {
       "name": "PAG.json",
       "sizeBytes": 67353,
-      "updatedAt": "2026-06-11T11:02:15.413Z"
+      "updatedAt": "2026-06-12T07:28:14.427Z"
     },
     {
       "name": "PAH3.DE.json",
       "sizeBytes": 25426,
-      "updatedAt": "2026-06-11T11:02:14.875Z"
+      "updatedAt": "2026-06-12T07:28:13.981Z"
     },
     {
       "name": "PANW.json",
       "sizeBytes": 82323,
-      "updatedAt": "2026-06-11T11:02:14.934Z"
+      "updatedAt": "2026-06-12T07:28:14.030Z"
     },
     {
       "name": "PATH.json",
       "sizeBytes": 64589,
-      "updatedAt": "2026-06-11T11:02:14.868Z"
+      "updatedAt": "2026-06-12T07:28:13.976Z"
     },
     {
       "name": "PAYX.json",
       "sizeBytes": 101692,
-      "updatedAt": "2026-06-11T11:02:14.861Z"
+      "updatedAt": "2026-06-12T07:28:13.969Z"
     },
     {
       "name": "PBA.json",
       "sizeBytes": 49174,
-      "updatedAt": "2026-06-11T11:02:15.403Z"
+      "updatedAt": "2026-06-12T07:28:14.419Z"
     },
     {
       "name": "PCAR.json",
       "sizeBytes": 102737,
-      "updatedAt": "2026-06-11T11:02:15.015Z"
+      "updatedAt": "2026-06-12T07:28:14.094Z"
     },
     {
       "name": "PCG.json",
       "sizeBytes": 91111,
-      "updatedAt": "2026-06-11T11:02:15.411Z"
+      "updatedAt": "2026-06-12T07:28:14.424Z"
     },
     {
       "name": "PEG.json",
       "sizeBytes": 100099,
-      "updatedAt": "2026-06-11T11:02:15.479Z"
+      "updatedAt": "2026-06-12T07:28:14.482Z"
     },
     {
       "name": "PEN.json",
       "sizeBytes": 41596,
-      "updatedAt": "2026-06-11T11:02:15.103Z"
+      "updatedAt": "2026-06-12T07:28:14.167Z"
     },
     {
       "name": "PEP.json",
       "sizeBytes": 100943,
-      "updatedAt": "2026-06-11T11:02:14.964Z"
+      "updatedAt": "2026-06-12T07:28:14.054Z"
     },
     {
       "name": "PFE.json",
       "sizeBytes": 100125,
-      "updatedAt": "2026-06-11T11:02:15.152Z"
+      "updatedAt": "2026-06-12T07:28:14.209Z"
     },
     {
       "name": "PFGC.json",
       "sizeBytes": 42712,
-      "updatedAt": "2026-06-11T11:02:15.202Z"
+      "updatedAt": "2026-06-12T07:28:14.251Z"
     },
     {
       "name": "PG.json",
       "sizeBytes": 101101,
-      "updatedAt": "2026-06-11T11:02:15.007Z"
+      "updatedAt": "2026-06-12T07:28:14.088Z"
     },
     {
       "name": "PGR.json",
       "sizeBytes": 102217,
-      "updatedAt": "2026-06-11T11:02:15.509Z"
+      "updatedAt": "2026-06-12T07:28:14.509Z"
     },
     {
       "name": "PH.json",
       "sizeBytes": 102635,
-      "updatedAt": "2026-06-11T11:02:15.445Z"
+      "updatedAt": "2026-06-12T07:28:14.454Z"
     },
     {
       "name": "PHM.json",
       "sizeBytes": 101328,
-      "updatedAt": "2026-06-11T11:02:14.857Z"
+      "updatedAt": "2026-06-12T07:28:13.965Z"
     },
     {
       "name": "PINS.json",
       "sizeBytes": 70261,
-      "updatedAt": "2026-06-11T11:02:15.475Z"
+      "updatedAt": "2026-06-12T07:28:14.479Z"
     },
     {
       "name": "PLD.json",
       "sizeBytes": 99425,
-      "updatedAt": "2026-06-11T11:02:15.234Z"
+      "updatedAt": "2026-06-12T07:28:14.280Z"
     },
     {
       "name": "PLTR.json",
       "sizeBytes": 69042,
-      "updatedAt": "2026-06-11T11:02:15.169Z"
+      "updatedAt": "2026-06-12T07:28:14.224Z"
     },
     {
       "name": "PM.json",
       "sizeBytes": 86032,
-      "updatedAt": "2026-06-11T11:02:15.186Z"
+      "updatedAt": "2026-06-12T07:28:14.238Z"
     },
     {
       "name": "PNC.json",
       "sizeBytes": 100213,
-      "updatedAt": "2026-06-11T11:02:15.507Z"
+      "updatedAt": "2026-06-12T07:28:14.507Z"
     },
     {
       "name": "PNR.json",
       "sizeBytes": 69100,
-      "updatedAt": "2026-06-11T11:02:15.143Z"
+      "updatedAt": "2026-06-12T07:28:14.203Z"
     },
     {
       "name": "PNW.json",
       "sizeBytes": 67059,
-      "updatedAt": "2026-06-11T11:02:15.402Z"
+      "updatedAt": "2026-06-12T07:28:14.418Z"
     },
     {
       "name": "PODD.json",
       "sizeBytes": 54001,
-      "updatedAt": "2026-06-11T11:02:15.322Z"
+      "updatedAt": "2026-06-12T07:28:14.352Z"
     },
     {
       "name": "POOL.json",
       "sizeBytes": 68920,
-      "updatedAt": "2026-06-11T11:02:15.318Z"
+      "updatedAt": "2026-06-12T07:28:14.349Z"
     },
     {
       "name": "PPC.json",
       "sizeBytes": 67345,
-      "updatedAt": "2026-06-11T11:02:15.265Z"
+      "updatedAt": "2026-06-12T07:28:14.304Z"
     },
     {
       "name": "PPG.json",
       "sizeBytes": 101106,
-      "updatedAt": "2026-06-11T11:02:14.878Z"
+      "updatedAt": "2026-06-12T07:28:13.984Z"
     },
     {
       "name": "PPL.json",
       "sizeBytes": 69128,
-      "updatedAt": "2026-06-11T11:02:15.177Z"
+      "updatedAt": "2026-06-12T07:28:14.230Z"
     },
     {
       "name": "PR.json",
       "sizeBytes": 41878,
-      "updatedAt": "2026-06-11T11:02:15.000Z"
+      "updatedAt": "2026-06-12T07:28:14.083Z"
     },
     {
       "name": "PRU.json",
       "sizeBytes": 94384,
-      "updatedAt": "2026-06-11T11:02:15.177Z"
+      "updatedAt": "2026-06-12T07:28:14.231Z"
     },
     {
       "name": "PSA.json",
       "sizeBytes": 100800,
-      "updatedAt": "2026-06-11T11:02:14.906Z"
+      "updatedAt": "2026-06-12T07:28:14.008Z"
     },
     {
       "name": "PSX.json",
       "sizeBytes": 81461,
-      "updatedAt": "2026-06-11T11:02:14.898Z"
+      "updatedAt": "2026-06-12T07:28:14.000Z"
     },
     {
       "name": "PTC.json",
       "sizeBytes": 75446,
-      "updatedAt": "2026-06-11T11:02:15.327Z"
+      "updatedAt": "2026-06-12T07:28:14.355Z"
     },
     {
       "name": "PTON.json",
       "sizeBytes": 69294,
-      "updatedAt": "2026-06-11T11:02:15.391Z"
+      "updatedAt": "2026-06-12T07:28:14.409Z"
     },
     {
       "name": "PWR.json",
       "sizeBytes": 66541,
-      "updatedAt": "2026-06-11T11:02:15.171Z"
+      "updatedAt": "2026-06-12T07:28:14.225Z"
     },
     {
       "name": "PYPL.json",
       "sizeBytes": 76678,
-      "updatedAt": "2026-06-11T11:02:15.326Z"
+      "updatedAt": "2026-06-12T07:28:14.355Z"
     },
     {
       "name": "QCOM.json",
       "sizeBytes": 101909,
-      "updatedAt": "2026-06-11T11:02:15.297Z"
+      "updatedAt": "2026-06-12T07:28:14.330Z"
     },
     {
       "name": "QRVO.json",
       "sizeBytes": 76709,
-      "updatedAt": "2026-06-11T11:02:15.244Z"
+      "updatedAt": "2026-06-12T07:28:14.287Z"
     },
     {
       "name": "QSR.json",
       "sizeBytes": 77131,
-      "updatedAt": "2026-06-11T11:02:15.429Z"
+      "updatedAt": "2026-06-12T07:28:14.440Z"
     },
     {
       "name": "RACE.json",
       "sizeBytes": 76408,
-      "updatedAt": "2026-06-11T11:02:15.338Z"
+      "updatedAt": "2026-06-12T07:28:14.365Z"
     },
     {
       "name": "RBC.json",
       "sizeBytes": 56441,
-      "updatedAt": "2026-06-11T11:02:14.991Z"
+      "updatedAt": "2026-06-12T07:28:14.076Z"
     },
     {
       "name": "RBLX.json",
       "sizeBytes": 63601,
-      "updatedAt": "2026-06-11T11:02:14.968Z"
+      "updatedAt": "2026-06-12T07:28:14.058Z"
     },
     {
       "name": "RCI.json",
       "sizeBytes": 67446,
-      "updatedAt": "2026-06-11T11:02:14.956Z"
+      "updatedAt": "2026-06-12T07:28:14.048Z"
     },
     {
       "name": "RCL.json",
       "sizeBytes": 66865,
-      "updatedAt": "2026-06-11T11:02:15.218Z"
+      "updatedAt": "2026-06-12T07:28:14.266Z"
     },
     {
       "name": "RDDT.json",
       "sizeBytes": 34608,
-      "updatedAt": "2026-06-11T11:02:15.303Z"
+      "updatedAt": "2026-06-12T07:28:14.336Z"
     },
     {
       "name": "REGN.json",
       "sizeBytes": 100598,
-      "updatedAt": "2026-06-11T11:02:15.269Z"
+      "updatedAt": "2026-06-12T07:28:14.308Z"
     },
     {
       "name": "RIO.json",
       "sizeBytes": 100880,
-      "updatedAt": "2026-06-11T11:02:15.331Z"
+      "updatedAt": "2026-06-12T07:28:14.359Z"
     },
     {
       "name": "RIVN.json",
       "sizeBytes": 35456,
-      "updatedAt": "2026-06-11T11:02:15.043Z"
+      "updatedAt": "2026-06-12T07:28:14.115Z"
     },
     {
       "name": "RKT.json",
       "sizeBytes": 68055,
-      "updatedAt": "2026-06-11T11:02:15.123Z"
+      "updatedAt": "2026-06-12T07:28:14.184Z"
     },
     {
       "name": "RL.json",
       "sizeBytes": 99545,
-      "updatedAt": "2026-06-11T11:02:15.099Z"
+      "updatedAt": "2026-06-12T07:28:14.164Z"
     },
     {
       "name": "RMBS.json",
       "sizeBytes": 73273,
-      "updatedAt": "2026-06-11T11:02:14.935Z"
+      "updatedAt": "2026-06-12T07:28:14.030Z"
     },
     {
       "name": "RMD.json",
       "sizeBytes": 100923,
-      "updatedAt": "2026-06-11T11:02:15.477Z"
+      "updatedAt": "2026-06-12T07:28:14.480Z"
     },
     {
       "name": "RMS.PA.json",
       "sizeBytes": 46794,
-      "updatedAt": "2026-06-11T11:02:14.930Z"
+      "updatedAt": "2026-06-12T07:28:14.027Z"
     },
     {
       "name": "ROK.json",
       "sizeBytes": 100819,
-      "updatedAt": "2026-06-11T11:02:14.916Z"
+      "updatedAt": "2026-06-12T07:28:14.016Z"
     },
     {
       "name": "ROKU.json",
       "sizeBytes": 73032,
-      "updatedAt": "2026-06-11T11:02:15.478Z"
+      "updatedAt": "2026-06-12T07:28:14.482Z"
     },
     {
       "name": "ROP.json",
       "sizeBytes": 100931,
-      "updatedAt": "2026-06-11T11:02:15.385Z"
+      "updatedAt": "2026-06-12T07:28:14.404Z"
     },
     {
       "name": "ROST.json",
       "sizeBytes": 101806,
-      "updatedAt": "2026-06-11T11:02:15.281Z"
+      "updatedAt": "2026-06-12T07:28:14.318Z"
     },
     {
       "name": "RPM.json",
       "sizeBytes": 67340,
-      "updatedAt": "2026-06-11T11:02:15.198Z"
+      "updatedAt": "2026-06-12T07:28:14.248Z"
     },
     {
       "name": "RPRX.json",
       "sizeBytes": 37013,
-      "updatedAt": "2026-06-11T11:02:14.919Z"
+      "updatedAt": "2026-06-12T07:28:14.018Z"
     },
     {
       "name": "RS.json",
       "sizeBytes": 67941,
-      "updatedAt": "2026-06-11T11:02:14.910Z"
+      "updatedAt": "2026-06-12T07:28:14.011Z"
     },
     {
       "name": "RSG.json",
       "sizeBytes": 99640,
-      "updatedAt": "2026-06-11T11:02:15.167Z"
+      "updatedAt": "2026-06-12T07:28:14.222Z"
     },
     {
       "name": "RTX.json",
       "sizeBytes": 103266,
-      "updatedAt": "2026-06-11T11:02:15.048Z"
+      "updatedAt": "2026-06-12T07:28:14.120Z"
     },
     {
       "name": "RVTY.json",
       "sizeBytes": 66942,
-      "updatedAt": "2026-06-11T11:02:15.086Z"
+      "updatedAt": "2026-06-12T07:28:14.152Z"
     },
     {
       "name": "RY.json",
       "sizeBytes": 100256,
-      "updatedAt": "2026-06-11T11:02:15.086Z"
+      "updatedAt": "2026-06-12T07:28:14.151Z"
     },
     {
       "name": "SAIA.json",
       "sizeBytes": 60743,
-      "updatedAt": "2026-06-11T11:02:15.391Z"
+      "updatedAt": "2026-06-12T07:28:14.408Z"
     },
     {
       "name": "SBAC.json",
       "sizeBytes": 97106,
-      "updatedAt": "2026-06-11T11:02:15.128Z"
+      "updatedAt": "2026-06-12T07:28:14.189Z"
     },
     {
       "name": "SBUX.json",
       "sizeBytes": 101129,
-      "updatedAt": "2026-06-11T11:02:14.866Z"
+      "updatedAt": "2026-06-12T07:28:13.974Z"
     },
     {
       "name": "SCCO.json",
       "sizeBytes": 103231,
-      "updatedAt": "2026-06-11T11:02:15.496Z"
+      "updatedAt": "2026-06-12T07:28:14.497Z"
     },
     {
       "name": "SCHW.json",
       "sizeBytes": 102013,
-      "updatedAt": "2026-06-11T11:02:15.101Z"
+      "updatedAt": "2026-06-12T07:28:14.165Z"
     },
     {
       "name": "SCI.json",
       "sizeBytes": 66518,
-      "updatedAt": "2026-06-11T11:02:15.372Z"
+      "updatedAt": "2026-06-12T07:28:14.393Z"
     },
     {
       "name": "SGI.json",
       "sizeBytes": 91457,
-      "updatedAt": "2026-06-11T11:02:15.220Z"
+      "updatedAt": "2026-06-12T07:28:14.268Z"
     },
     {
       "name": "SHOP.json",
       "sizeBytes": 76230,
-      "updatedAt": "2026-06-11T11:02:15.213Z"
+      "updatedAt": "2026-06-12T07:28:14.262Z"
     },
     {
       "name": "SHW.json",
       "sizeBytes": 102635,
-      "updatedAt": "2026-06-11T11:02:15.024Z"
+      "updatedAt": "2026-06-12T07:28:14.100Z"
     },
     {
       "name": "SIRI.json",
       "sizeBytes": 98135,
-      "updatedAt": "2026-06-11T11:02:14.941Z"
+      "updatedAt": "2026-06-12T07:28:14.035Z"
     },
     {
       "name": "SJM.json",
       "sizeBytes": 65470,
-      "updatedAt": "2026-06-11T11:02:15.336Z"
+      "updatedAt": "2026-06-12T07:28:14.364Z"
     },
     {
       "name": "SLB.json",
       "sizeBytes": 100847,
-      "updatedAt": "2026-06-11T11:02:15.176Z"
+      "updatedAt": "2026-06-12T07:28:14.230Z"
     },
     {
       "name": "SLF.json",
       "sizeBytes": 95784,
-      "updatedAt": "2026-06-11T11:02:15.471Z"
+      "updatedAt": "2026-06-12T07:28:14.475Z"
     },
     {
       "name": "SMCI.json",
       "sizeBytes": 65046,
-      "updatedAt": "2026-06-11T11:02:15.259Z"
+      "updatedAt": "2026-06-12T07:28:14.299Z"
     },
     {
       "name": "SN.json",
       "sizeBytes": 34959,
-      "updatedAt": "2026-06-11T11:02:15.375Z"
+      "updatedAt": "2026-06-12T07:28:14.396Z"
     },
     {
       "name": "SNDK.json",
       "sizeBytes": 29442,
-      "updatedAt": "2026-06-11T11:02:15.223Z"
+      "updatedAt": "2026-06-12T07:28:14.270Z"
     },
     {
       "name": "SNOW.json",
       "sizeBytes": 69138,
-      "updatedAt": "2026-06-11T11:02:15.350Z"
+      "updatedAt": "2026-06-12T07:28:14.376Z"
     },
     {
       "name": "SNPS.json",
       "sizeBytes": 100878,
-      "updatedAt": "2026-06-11T11:02:14.900Z"
+      "updatedAt": "2026-06-12T07:28:14.002Z"
     },
     {
       "name": "SNX.json",
       "sizeBytes": 67960,
-      "updatedAt": "2026-06-11T11:02:15.223Z"
+      "updatedAt": "2026-06-12T07:28:14.270Z"
     },
     {
       "name": "SO.json",
       "sizeBytes": 102414,
-      "updatedAt": "2026-06-11T11:02:15.525Z"
+      "updatedAt": "2026-06-12T07:28:14.522Z"
     },
     {
       "name": "SOLV.json",
       "sizeBytes": 34881,
-      "updatedAt": "2026-06-11T11:02:15.093Z"
+      "updatedAt": "2026-06-12T07:28:14.158Z"
     },
     {
       "name": "SPG.json",
       "sizeBytes": 102784,
-      "updatedAt": "2026-06-11T11:02:15.303Z"
+      "updatedAt": "2026-06-12T07:28:14.336Z"
     },
     {
       "name": "SPGI.json",
       "sizeBytes": 101353,
-      "updatedAt": "2026-06-11T11:02:15.084Z"
+      "updatedAt": "2026-06-12T07:28:14.150Z"
     },
     {
       "name": "SPOT.json",
       "sizeBytes": 72754,
-      "updatedAt": "2026-06-11T11:02:14.901Z"
+      "updatedAt": "2026-06-12T07:28:14.004Z"
     },
     {
       "name": "SRE.json",
       "sizeBytes": 98953,
-      "updatedAt": "2026-06-11T11:02:15.172Z"
+      "updatedAt": "2026-06-12T07:28:14.226Z"
     },
     {
       "name": "SSNC.json",
       "sizeBytes": 58882,
-      "updatedAt": "2026-06-11T11:02:14.969Z"
+      "updatedAt": "2026-06-12T07:28:14.058Z"
     },
     {
       "name": "STE.json",
       "sizeBytes": 66917,
-      "updatedAt": "2026-06-11T11:02:15.072Z"
+      "updatedAt": "2026-06-12T07:28:14.139Z"
     },
     {
       "name": "STLA.json",
       "sizeBytes": 49378,
-      "updatedAt": "2026-06-11T11:02:15.012Z"
+      "updatedAt": "2026-06-12T07:28:14.092Z"
     },
     {
       "name": "STLD.json",
       "sizeBytes": 67294,
-      "updatedAt": "2026-06-11T11:02:15.275Z"
+      "updatedAt": "2026-06-12T07:28:14.313Z"
     },
     {
       "name": "STT.json",
       "sizeBytes": 99471,
-      "updatedAt": "2026-06-11T11:02:15.381Z"
+      "updatedAt": "2026-06-12T07:28:14.402Z"
     },
     {
       "name": "STX.json",
       "sizeBytes": 67308,
-      "updatedAt": "2026-06-11T11:02:15.420Z"
+      "updatedAt": "2026-06-12T07:28:14.433Z"
     },
     {
       "name": "STZ.json",
       "sizeBytes": 100578,
-      "updatedAt": "2026-06-11T11:02:14.933Z"
+      "updatedAt": "2026-06-12T07:28:14.029Z"
     },
     {
       "name": "SU.json",
       "sizeBytes": 101465,
-      "updatedAt": "2026-06-11T11:02:14.904Z"
+      "updatedAt": "2026-06-12T07:28:14.006Z"
     },
     {
       "name": "SWK.json",
       "sizeBytes": 99703,
-      "updatedAt": "2026-06-11T11:02:15.388Z"
+      "updatedAt": "2026-06-12T07:28:14.406Z"
     },
     {
       "name": "SWKS.json",
       "sizeBytes": 75954,
-      "updatedAt": "2026-06-11T11:02:15.220Z"
+      "updatedAt": "2026-06-12T07:28:14.267Z"
     },
     {
       "name": "SYK.json",
       "sizeBytes": 100976,
-      "updatedAt": "2026-06-11T11:02:14.954Z"
+      "updatedAt": "2026-06-12T07:28:14.046Z"
     },
     {
       "name": "SYM.json",
       "sizeBytes": 34538,
-      "updatedAt": "2026-06-11T11:02:15.166Z"
+      "updatedAt": "2026-06-12T07:28:14.221Z"
     },
     {
       "name": "SYY.json",
       "sizeBytes": 100729,
-      "updatedAt": "2026-06-11T11:02:15.044Z"
+      "updatedAt": "2026-06-12T07:28:14.116Z"
     },
     {
       "name": "T.json",
       "sizeBytes": 102316,
-      "updatedAt": "2026-06-11T11:02:14.855Z"
+      "updatedAt": "2026-06-12T07:28:13.964Z"
     },
     {
       "name": "TD.json",
       "sizeBytes": 99872,
-      "updatedAt": "2026-06-11T11:02:15.492Z"
+      "updatedAt": "2026-06-12T07:28:14.494Z"
     },
     {
       "name": "TDOC.json",
       "sizeBytes": 76795,
-      "updatedAt": "2026-06-11T11:02:15.042Z"
+      "updatedAt": "2026-06-12T07:28:14.115Z"
     },
     {
       "name": "TDY.json",
       "sizeBytes": 72957,
-      "updatedAt": "2026-06-11T11:02:15.295Z"
+      "updatedAt": "2026-06-12T07:28:14.329Z"
     },
     {
       "name": "TEAM.json",
       "sizeBytes": 75284,
-      "updatedAt": "2026-06-11T11:02:15.455Z"
+      "updatedAt": "2026-06-12T07:28:14.462Z"
     },
     {
       "name": "TER.json",
       "sizeBytes": 75952,
-      "updatedAt": "2026-06-11T11:02:15.235Z"
+      "updatedAt": "2026-06-12T07:28:14.280Z"
     },
     {
       "name": "TFC.json",
       "sizeBytes": 99267,
-      "updatedAt": "2026-06-11T11:02:15.077Z"
+      "updatedAt": "2026-06-12T07:28:14.144Z"
     },
     {
       "name": "TFII.json",
       "sizeBytes": 56194,
-      "updatedAt": "2026-06-11T11:02:14.912Z"
+      "updatedAt": "2026-06-12T07:28:14.012Z"
     },
     {
       "name": "TGT.json",
       "sizeBytes": 101180,
-      "updatedAt": "2026-06-11T11:02:15.393Z"
+      "updatedAt": "2026-06-12T07:28:14.410Z"
     },
     {
       "name": "THC.json",
       "sizeBytes": 68121,
-      "updatedAt": "2026-06-11T11:02:15.344Z"
+      "updatedAt": "2026-06-12T07:28:14.371Z"
     },
     {
       "name": "TJX.json",
       "sizeBytes": 101750,
-      "updatedAt": "2026-06-11T11:02:15.191Z"
+      "updatedAt": "2026-06-12T07:28:14.242Z"
     },
     {
       "name": "TLN.json",
       "sizeBytes": 33219,
-      "updatedAt": "2026-06-11T11:02:15.307Z"
+      "updatedAt": "2026-06-12T07:28:14.339Z"
     },
     {
       "name": "TMO.json",
       "sizeBytes": 101195,
-      "updatedAt": "2026-06-11T11:02:15.412Z"
+      "updatedAt": "2026-06-12T07:28:14.425Z"
     },
     {
       "name": "TMUS.json",
       "sizeBytes": 88253,
-      "updatedAt": "2026-06-11T11:02:15.060Z"
+      "updatedAt": "2026-06-12T07:28:14.129Z"
     },
     {
       "name": "TOL.json",
       "sizeBytes": 101028,
-      "updatedAt": "2026-06-11T11:02:14.946Z"
+      "updatedAt": "2026-06-12T07:28:14.040Z"
     },
     {
       "name": "TOST.json",
       "sizeBytes": 35932,
-      "updatedAt": "2026-06-11T11:02:14.995Z"
+      "updatedAt": "2026-06-12T07:28:14.078Z"
     },
     {
       "name": "TPL.json",
       "sizeBytes": 69277,
-      "updatedAt": "2026-06-11T11:02:14.927Z"
+      "updatedAt": "2026-06-12T07:28:14.024Z"
     },
     {
       "name": "TPR.json",
       "sizeBytes": 61270,
-      "updatedAt": "2026-06-11T11:02:15.139Z"
+      "updatedAt": "2026-06-12T07:28:14.199Z"
     },
     {
       "name": "TRGP.json",
       "sizeBytes": 49191,
-      "updatedAt": "2026-06-11T11:02:15.461Z"
+      "updatedAt": "2026-06-12T07:28:14.467Z"
     },
     {
       "name": "TRI.json",
       "sizeBytes": 94654,
-      "updatedAt": "2026-06-11T11:02:15.311Z"
+      "updatedAt": "2026-06-12T07:28:14.343Z"
     },
     {
       "name": "TRMB.json",
       "sizeBytes": 76859,
-      "updatedAt": "2026-06-11T11:02:15.102Z"
+      "updatedAt": "2026-06-12T07:28:14.166Z"
     },
     {
       "name": "TROW.json",
       "sizeBytes": 100704,
-      "updatedAt": "2026-06-11T11:02:15.055Z"
+      "updatedAt": "2026-06-12T07:28:14.126Z"
     },
     {
       "name": "TRP.json",
       "sizeBytes": 100487,
-      "updatedAt": "2026-06-11T11:02:15.357Z"
+      "updatedAt": "2026-06-12T07:28:14.383Z"
     },
     {
       "name": "TRV.json",
       "sizeBytes": 101176,
-      "updatedAt": "2026-06-11T11:02:15.476Z"
+      "updatedAt": "2026-06-12T07:28:14.480Z"
     },
     {
       "name": "TSCO.json",
       "sizeBytes": 69257,
-      "updatedAt": "2026-06-11T11:02:14.897Z"
+      "updatedAt": "2026-06-12T07:28:13.999Z"
     },
     {
       "name": "TSLA.json",
       "sizeBytes": 86117,
-      "updatedAt": "2026-06-11T11:02:15.136Z"
+      "updatedAt": "2026-06-12T07:28:14.196Z"
     },
     {
       "name": "TSM.json",
       "sizeBytes": 101653,
-      "updatedAt": "2026-06-11T11:02:15.148Z"
+      "updatedAt": "2026-06-12T07:28:14.206Z"
     },
     {
       "name": "TSN.json",
       "sizeBytes": 66249,
-      "updatedAt": "2026-06-11T11:02:15.285Z"
+      "updatedAt": "2026-06-12T07:28:14.321Z"
     },
     {
       "name": "TT.json",
       "sizeBytes": 103370,
-      "updatedAt": "2026-06-11T11:02:15.116Z"
+      "updatedAt": "2026-06-12T07:28:14.178Z"
     },
     {
       "name": "TTD.json",
       "sizeBytes": 59457,
-      "updatedAt": "2026-06-11T11:02:15.328Z"
+      "updatedAt": "2026-06-12T07:28:14.357Z"
     },
     {
       "name": "TTWO.json",
       "sizeBytes": 100014,
-      "updatedAt": "2026-06-11T11:02:15.184Z"
+      "updatedAt": "2026-06-12T07:28:14.236Z"
     },
     {
       "name": "TWLO.json",
       "sizeBytes": 75073,
-      "updatedAt": "2026-06-11T11:02:15.425Z"
+      "updatedAt": "2026-06-12T07:28:14.437Z"
     },
     {
       "name": "TXN.json",
       "sizeBytes": 101274,
-      "updatedAt": "2026-06-11T11:02:14.907Z"
+      "updatedAt": "2026-06-12T07:28:14.009Z"
     },
     {
       "name": "TXRH.json",
       "sizeBytes": 57515,
-      "updatedAt": "2026-06-11T11:02:15.196Z"
+      "updatedAt": "2026-06-12T07:28:14.247Z"
     },
     {
       "name": "TYL.json",
       "sizeBytes": 75319,
-      "updatedAt": "2026-06-11T11:02:15.236Z"
+      "updatedAt": "2026-06-12T07:28:14.281Z"
     },
     {
       "name": "UAA.json",
       "sizeBytes": 43449,
-      "updatedAt": "2026-06-11T11:02:15.172Z"
+      "updatedAt": "2026-06-12T07:28:14.227Z"
     },
     {
       "name": "UBER.json",
       "sizeBytes": 70982,
-      "updatedAt": "2026-06-11T11:02:15.134Z"
+      "updatedAt": "2026-06-12T07:28:14.194Z"
     },
     {
       "name": "UHS.json",
       "sizeBytes": 67288,
-      "updatedAt": "2026-06-11T11:02:15.217Z"
+      "updatedAt": "2026-06-12T07:28:14.265Z"
     },
     {
       "name": "UI.json",
       "sizeBytes": 47601,
-      "updatedAt": "2026-06-11T11:02:15.232Z"
+      "updatedAt": "2026-06-12T07:28:14.278Z"
     },
     {
       "name": "ULTA.json",
       "sizeBytes": 53629,
-      "updatedAt": "2026-06-11T11:02:15.415Z"
+      "updatedAt": "2026-06-12T07:28:14.429Z"
     },
     {
       "name": "UNH.json",
       "sizeBytes": 101718,
-      "updatedAt": "2026-06-11T11:02:15.155Z"
+      "updatedAt": "2026-06-12T07:28:14.212Z"
     },
     {
       "name": "UNP.json",
       "sizeBytes": 99891,
-      "updatedAt": "2026-06-11T11:02:15.078Z"
+      "updatedAt": "2026-06-12T07:28:14.144Z"
     },
     {
       "name": "UPS.json",
       "sizeBytes": 97629,
-      "updatedAt": "2026-06-11T11:02:15.405Z"
+      "updatedAt": "2026-06-12T07:28:14.420Z"
     },
     {
       "name": "USB.json",
       "sizeBytes": 100475,
-      "updatedAt": "2026-06-11T11:02:14.913Z"
+      "updatedAt": "2026-06-12T07:28:14.013Z"
     },
     {
       "name": "UTHR.json",
       "sizeBytes": 64291,
-      "updatedAt": "2026-06-11T11:02:15.494Z"
+      "updatedAt": "2026-06-12T07:28:14.495Z"
     },
     {
       "name": "V.json",
       "sizeBytes": 87157,
-      "updatedAt": "2026-06-11T11:02:15.413Z"
+      "updatedAt": "2026-06-12T07:28:14.426Z"
     },
     {
       "name": "VEEV.json",
       "sizeBytes": 45354,
-      "updatedAt": "2026-06-11T11:02:15.147Z"
+      "updatedAt": "2026-06-12T07:28:14.205Z"
     },
     {
       "name": "VFC.json",
       "sizeBytes": 101817,
-      "updatedAt": "2026-06-11T11:02:15.130Z"
+      "updatedAt": "2026-06-12T07:28:14.191Z"
     },
     {
       "name": "VG.json",
       "sizeBytes": 34165,
-      "updatedAt": "2026-06-11T11:02:14.932Z"
+      "updatedAt": "2026-06-12T07:28:14.029Z"
     },
     {
       "name": "VLO.json",
       "sizeBytes": 103547,
-      "updatedAt": "2026-06-11T11:02:15.330Z"
+      "updatedAt": "2026-06-12T07:28:14.359Z"
     },
     {
       "name": "VMC.json",
       "sizeBytes": 101373,
-      "updatedAt": "2026-06-11T11:02:15.473Z"
+      "updatedAt": "2026-06-12T07:28:14.477Z"
     },
     {
       "name": "VNOM.json",
       "sizeBytes": 43096,
-      "updatedAt": "2026-06-11T11:02:15.299Z"
+      "updatedAt": "2026-06-12T07:28:14.333Z"
     },
     {
       "name": "VRSK.json",
       "sizeBytes": 59358,
-      "updatedAt": "2026-06-11T11:02:15.454Z"
+      "updatedAt": "2026-06-12T07:28:14.461Z"
     },
     {
       "name": "VRTX.json",
       "sizeBytes": 99837,
-      "updatedAt": "2026-06-11T11:02:15.405Z"
+      "updatedAt": "2026-06-12T07:28:14.420Z"
     },
     {
       "name": "VST.json",
       "sizeBytes": 40906,
-      "updatedAt": "2026-06-11T11:02:15.040Z"
+      "updatedAt": "2026-06-12T07:28:14.113Z"
     },
     {
       "name": "VTR.json",
       "sizeBytes": 69059,
-      "updatedAt": "2026-06-11T11:02:15.133Z"
+      "updatedAt": "2026-06-12T07:28:14.193Z"
     },
     {
       "name": "VTRS.json",
       "sizeBytes": 67396,
-      "updatedAt": "2026-06-11T11:02:15.411Z"
+      "updatedAt": "2026-06-12T07:28:14.425Z"
     },
     {
       "name": "VZ.json",
       "sizeBytes": 103222,
-      "updatedAt": "2026-06-11T11:02:15.284Z"
+      "updatedAt": "2026-06-12T07:28:14.320Z"
     },
     {
       "name": "W.json",
       "sizeBytes": 76592,
-      "updatedAt": "2026-06-11T11:02:15.490Z"
+      "updatedAt": "2026-06-12T07:28:14.493Z"
     },
     {
       "name": "WAB.json",
       "sizeBytes": 67032,
-      "updatedAt": "2026-06-11T11:02:15.335Z"
+      "updatedAt": "2026-06-12T07:28:14.362Z"
     },
     {
       "name": "WAT.json",
       "sizeBytes": 65838,
-      "updatedAt": "2026-06-11T11:02:15.057Z"
+      "updatedAt": "2026-06-12T07:28:14.128Z"
     },
     {
       "name": "WBD.json",
       "sizeBytes": 75541,
-      "updatedAt": "2026-06-11T11:02:15.323Z"
+      "updatedAt": "2026-06-12T07:28:14.353Z"
     },
     {
       "name": "WCN.json",
       "sizeBytes": 100615,
-      "updatedAt": "2026-06-11T11:02:15.366Z"
+      "updatedAt": "2026-06-12T07:28:14.389Z"
     },
     {
       "name": "WDAY.json",
       "sizeBytes": 79508,
-      "updatedAt": "2026-06-11T11:02:14.937Z"
+      "updatedAt": "2026-06-12T07:28:14.032Z"
     },
     {
       "name": "WDC.json",
       "sizeBytes": 77396,
-      "updatedAt": "2026-06-11T11:02:15.460Z"
+      "updatedAt": "2026-06-12T07:28:14.466Z"
     },
     {
       "name": "WEC.json",
       "sizeBytes": 98168,
-      "updatedAt": "2026-06-11T11:02:15.347Z"
+      "updatedAt": "2026-06-12T07:28:14.372Z"
     },
     {
       "name": "WELL.json",
       "sizeBytes": 100299,
-      "updatedAt": "2026-06-11T11:02:14.948Z"
+      "updatedAt": "2026-06-12T07:28:14.041Z"
     },
     {
       "name": "WFC.json",
       "sizeBytes": 100054,
-      "updatedAt": "2026-06-11T11:02:15.528Z"
+      "updatedAt": "2026-06-12T07:28:14.524Z"
     },
     {
       "name": "WHR.json",
       "sizeBytes": 99393,
-      "updatedAt": "2026-06-11T11:02:15.243Z"
+      "updatedAt": "2026-06-12T07:28:14.286Z"
     },
     {
       "name": "WLK.json",
       "sizeBytes": 57136,
-      "updatedAt": "2026-06-11T11:02:15.320Z"
+      "updatedAt": "2026-06-12T07:28:14.351Z"
     },
     {
       "name": "WM.json",
       "sizeBytes": 100783,
-      "updatedAt": "2026-06-11T11:02:14.885Z"
+      "updatedAt": "2026-06-12T07:28:13.990Z"
     },
     {
       "name": "WMB.json",
       "sizeBytes": 103001,
-      "updatedAt": "2026-06-11T11:02:15.059Z"
+      "updatedAt": "2026-06-12T07:28:14.129Z"
     },
     {
       "name": "WMG.json",
       "sizeBytes": 69296,
-      "updatedAt": "2026-06-11T11:02:15.482Z"
+      "updatedAt": "2026-06-12T07:28:14.485Z"
     },
     {
       "name": "WMT.json",
       "sizeBytes": 105922,
-      "updatedAt": "2026-06-11T11:02:15.337Z"
+      "updatedAt": "2026-06-12T07:28:14.365Z"
     },
     {
       "name": "WPM.json",
       "sizeBytes": 57756,
-      "updatedAt": "2026-06-11T11:02:15.226Z"
+      "updatedAt": "2026-06-12T07:28:14.273Z"
     },
     {
       "name": "WSM.json",
       "sizeBytes": 101041,
-      "updatedAt": "2026-06-11T11:02:15.383Z"
+      "updatedAt": "2026-06-12T07:28:14.402Z"
     },
     {
       "name": "WSO.json",
       "sizeBytes": 67823,
-      "updatedAt": "2026-06-11T11:02:14.886Z"
+      "updatedAt": "2026-06-12T07:28:13.991Z"
     },
     {
       "name": "WST.json",
       "sizeBytes": 67120,
-      "updatedAt": "2026-06-11T11:02:15.449Z"
+      "updatedAt": "2026-06-12T07:28:14.457Z"
     },
     {
       "name": "WWW.json",
       "sizeBytes": 68244,
-      "updatedAt": "2026-06-11T11:02:14.915Z"
+      "updatedAt": "2026-06-12T07:28:14.015Z"
     },
     {
       "name": "XEL.json",
       "sizeBytes": 100841,
-      "updatedAt": "2026-06-11T11:02:15.523Z"
+      "updatedAt": "2026-06-12T07:28:14.520Z"
     },
     {
       "name": "XOM.json",
       "sizeBytes": 101454,
-      "updatedAt": "2026-06-11T11:02:14.929Z"
+      "updatedAt": "2026-06-12T07:28:14.026Z"
     },
     {
       "name": "XPO.json",
       "sizeBytes": 59471,
-      "updatedAt": "2026-06-11T11:02:15.484Z"
+      "updatedAt": "2026-06-12T07:28:14.487Z"
     },
     {
       "name": "XYL.json",
       "sizeBytes": 48038,
-      "updatedAt": "2026-06-11T11:02:15.242Z"
+      "updatedAt": "2026-06-12T07:28:14.286Z"
     },
     {
       "name": "XYZ.json",
       "sizeBytes": 42266,
-      "updatedAt": "2026-06-11T11:02:15.158Z"
+      "updatedAt": "2026-06-12T07:28:14.215Z"
     },
     {
       "name": "YUM.json",
       "sizeBytes": 100955,
-      "updatedAt": "2026-06-11T11:02:15.426Z"
+      "updatedAt": "2026-06-12T07:28:14.438Z"
     },
     {
       "name": "Z.json",
       "sizeBytes": 76187,
-      "updatedAt": "2026-06-11T11:02:15.450Z"
+      "updatedAt": "2026-06-12T07:28:14.459Z"
     },
     {
       "name": "ZBRA.json",
       "sizeBytes": 77655,
-      "updatedAt": "2026-06-11T11:02:15.189Z"
+      "updatedAt": "2026-06-12T07:28:14.240Z"
     },
     {
       "name": "ZM.json",
       "sizeBytes": 71489,
-      "updatedAt": "2026-06-11T11:02:15.292Z"
+      "updatedAt": "2026-06-12T07:28:14.327Z"
     },
     {
       "name": "ZS.json",
       "sizeBytes": 47620,
-      "updatedAt": "2026-06-11T11:02:15.422Z"
+      "updatedAt": "2026-06-12T07:28:14.435Z"
     },
     {
       "name": "ZTS.json",
       "sizeBytes": 79693,
-      "updatedAt": "2026-06-11T11:02:15.108Z"
+      "updatedAt": "2026-06-12T07:28:14.171Z"
     }
   ],
   "indices": [
     {
       "name": "nasdaq.json",
-      "sizeBytes": 439244,
-      "updatedAt": "2026-06-11T12:59:22.047Z"
+      "sizeBytes": 439283,
+      "updatedAt": "2026-06-12T07:28:54.230Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 1580,
-      "updatedAt": "2026-06-11T11:02:14.170Z"
+      "updatedAt": "2026-06-12T07:28:13.238Z"
     },
     {
       "name": "sp500.json",
-      "sizeBytes": 438273,
-      "updatedAt": "2026-06-11T12:59:22.047Z"
+      "sizeBytes": 438311,
+      "updatedAt": "2026-06-12T07:28:54.230Z"
     }
   ],
   "macro": [
     {
       "name": "activity-surveys.json",
       "sizeBytes": 637547,
-      "updatedAt": "2026-06-11T11:02:14.721Z"
+      "updatedAt": "2026-06-12T07:28:13.830Z"
     },
     {
       "name": "fdic-tier1.json",
       "sizeBytes": 5776,
-      "updatedAt": "2026-06-11T11:02:14.716Z"
+      "updatedAt": "2026-06-12T07:28:13.825Z"
     },
     {
       "name": "fred-banking-daily.json",
       "sizeBytes": 526045,
-      "updatedAt": "2026-06-11T12:59:02.836Z"
+      "updatedAt": "2026-06-12T07:28:13.833Z"
     },
     {
       "name": "fred-banking-quarterly.json",
       "sizeBytes": 79974,
-      "updatedAt": "2026-06-11T12:59:02.837Z"
+      "updatedAt": "2026-06-12T07:28:13.828Z"
     },
     {
       "name": "fred-banking-weekly.json",
       "sizeBytes": 233120,
-      "updatedAt": "2026-06-11T12:59:02.837Z"
+      "updatedAt": "2026-06-12T07:28:13.827Z"
     },
     {
       "name": "fred-macro.json",
       "sizeBytes": 524498,
-      "updatedAt": "2026-06-11T12:59:02.837Z"
+      "updatedAt": "2026-06-12T07:28:13.825Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 2759,
-      "updatedAt": "2026-06-11T11:02:14.720Z"
+      "updatedAt": "2026-06-12T07:28:13.829Z"
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1032792,
-      "updatedAt": "2026-06-11T12:59:22.048Z"
+      "sizeBytes": 1034389,
+      "updatedAt": "2026-06-12T07:28:54.232Z"
     },
     {
       "name": "tga.json",
-      "sizeBytes": 773992,
-      "updatedAt": "2026-06-11T12:59:22.049Z"
+      "sizeBytes": 774142,
+      "updatedAt": "2026-06-12T07:28:54.232Z"
     },
     {
       "name": "yahoo-ticker.json",
-      "sizeBytes": 724,
-      "updatedAt": "2026-06-11T12:59:22.050Z"
+      "sizeBytes": 717,
+      "updatedAt": "2026-06-12T07:28:54.233Z"
     }
   ],
   "metadata": [
     {
       "name": "2025-06-21.json",
       "sizeBytes": 655,
-      "updatedAt": "2026-06-11T11:02:15.571Z"
+      "updatedAt": "2026-06-12T07:28:14.557Z"
     },
     {
       "name": "2025-06-24.json",
       "sizeBytes": 463,
-      "updatedAt": "2026-06-11T11:02:15.578Z"
+      "updatedAt": "2026-06-12T07:28:14.562Z"
     },
     {
       "name": "2025-06-25.json",
       "sizeBytes": 553,
-      "updatedAt": "2026-06-11T11:02:15.576Z"
+      "updatedAt": "2026-06-12T07:28:14.561Z"
     },
     {
       "name": "2025-06-26.json",
       "sizeBytes": 568,
-      "updatedAt": "2026-06-11T11:02:15.570Z"
+      "updatedAt": "2026-06-12T07:28:14.556Z"
     },
     {
       "name": "2025-06-27.json",
       "sizeBytes": 635,
-      "updatedAt": "2026-06-11T11:02:15.567Z"
+      "updatedAt": "2026-06-12T07:28:14.554Z"
     },
     {
       "name": "2025-06-28.json",
       "sizeBytes": 604,
-      "updatedAt": "2026-06-11T11:02:15.577Z"
+      "updatedAt": "2026-06-12T07:28:14.561Z"
     },
     {
       "name": "2025-07-01.json",
       "sizeBytes": 597,
-      "updatedAt": "2026-06-11T11:02:15.573Z"
+      "updatedAt": "2026-06-12T07:28:14.558Z"
     },
     {
       "name": "2025-07-02.json",
       "sizeBytes": 651,
-      "updatedAt": "2026-06-11T11:02:15.574Z"
+      "updatedAt": "2026-06-12T07:28:14.559Z"
     },
     {
       "name": "2025-07-09.json",
       "sizeBytes": 766,
-      "updatedAt": "2026-06-11T11:02:15.578Z"
+      "updatedAt": "2026-06-12T07:28:14.562Z"
     },
     {
       "name": "2025-07-10.json",
       "sizeBytes": 863,
-      "updatedAt": "2026-06-11T11:02:15.569Z"
+      "updatedAt": "2026-06-12T07:28:14.555Z"
     },
     {
       "name": "2025-07-11.json",
       "sizeBytes": 872,
-      "updatedAt": "2026-06-11T11:02:15.569Z"
+      "updatedAt": "2026-06-12T07:28:14.555Z"
     },
     {
       "name": "2025-07-12.json",
       "sizeBytes": 673,
-      "updatedAt": "2026-06-11T11:02:15.577Z"
+      "updatedAt": "2026-06-12T07:28:14.561Z"
     },
     {
       "name": "2025-07-14_data.json",
       "sizeBytes": 1403,
-      "updatedAt": "2026-06-11T11:02:15.581Z"
+      "updatedAt": "2026-06-12T07:28:14.565Z"
     },
     {
       "name": "2025-07-15.json",
       "sizeBytes": 802,
-      "updatedAt": "2026-06-11T11:02:15.576Z"
+      "updatedAt": "2026-06-12T07:28:14.560Z"
     },
     {
       "name": "2025-07-16.json",
       "sizeBytes": 834,
-      "updatedAt": "2026-06-11T11:02:15.571Z"
+      "updatedAt": "2026-06-12T07:28:14.556Z"
     },
     {
       "name": "2025-07-17.json",
       "sizeBytes": 869,
-      "updatedAt": "2026-06-11T11:02:15.573Z"
+      "updatedAt": "2026-06-12T07:28:14.558Z"
     },
     {
       "name": "2025-07-18.json",
       "sizeBytes": 879,
-      "updatedAt": "2026-06-11T11:02:15.575Z"
+      "updatedAt": "2026-06-12T07:28:14.559Z"
     },
     {
       "name": "2025-07-19.json",
       "sizeBytes": 885,
-      "updatedAt": "2026-06-11T11:02:15.575Z"
+      "updatedAt": "2026-06-12T07:28:14.560Z"
     },
     {
       "name": "2025-07-20_data.json",
       "sizeBytes": 1147,
-      "updatedAt": "2026-06-11T11:02:15.581Z"
+      "updatedAt": "2026-06-12T07:28:14.565Z"
     },
     {
       "name": "2025-07-22.json",
       "sizeBytes": 803,
-      "updatedAt": "2026-06-11T11:02:15.574Z"
+      "updatedAt": "2026-06-12T07:28:14.559Z"
     },
     {
       "name": "2025-07-23.json",
       "sizeBytes": 782,
-      "updatedAt": "2026-06-11T11:02:15.575Z"
+      "updatedAt": "2026-06-12T07:28:14.560Z"
     },
     {
       "name": "2025-07-24.json",
       "sizeBytes": 847,
-      "updatedAt": "2026-06-11T11:02:15.576Z"
+      "updatedAt": "2026-06-12T07:28:14.560Z"
     },
     {
       "name": "2025-07-25.json",
       "sizeBytes": 869,
-      "updatedAt": "2026-06-11T11:02:15.578Z"
+      "updatedAt": "2026-06-12T07:28:14.562Z"
     },
     {
       "name": "2025-07-26.json",
       "sizeBytes": 871,
-      "updatedAt": "2026-06-11T11:02:15.568Z"
+      "updatedAt": "2026-06-12T07:28:14.554Z"
     },
     {
       "name": "2025-07-28.json",
       "sizeBytes": 796,
-      "updatedAt": "2026-06-11T11:02:15.577Z"
+      "updatedAt": "2026-06-12T07:28:14.561Z"
     },
     {
       "name": "2025-07-29.json",
       "sizeBytes": 858,
-      "updatedAt": "2026-06-11T11:02:15.578Z"
+      "updatedAt": "2026-06-12T07:28:14.562Z"
     },
     {
       "name": "2025-07-30.json",
       "sizeBytes": 813,
-      "updatedAt": "2026-06-11T11:02:15.567Z"
+      "updatedAt": "2026-06-12T07:28:14.554Z"
     },
     {
       "name": "2025-07-31.json",
       "sizeBytes": 867,
-      "updatedAt": "2026-06-11T11:02:15.570Z"
+      "updatedAt": "2026-06-12T07:28:14.556Z"
     },
     {
       "name": "2025-08-01.json",
       "sizeBytes": 830,
-      "updatedAt": "2026-06-11T11:02:15.576Z"
+      "updatedAt": "2026-06-12T07:28:14.561Z"
     },
     {
       "name": "2025-08-02.json",
       "sizeBytes": 875,
-      "updatedAt": "2026-06-11T11:02:15.570Z"
+      "updatedAt": "2026-06-12T07:28:14.556Z"
     },
     {
       "name": "2025-08-05.json",
       "sizeBytes": 803,
-      "updatedAt": "2026-06-11T11:02:15.572Z"
+      "updatedAt": "2026-06-12T07:28:14.557Z"
     },
     {
       "name": "2025-08-06.json",
       "sizeBytes": 838,
-      "updatedAt": "2026-06-11T11:02:15.575Z"
+      "updatedAt": "2026-06-12T07:28:14.560Z"
     },
     {
       "name": "2025-08-07.json",
       "sizeBytes": 863,
-      "updatedAt": "2026-06-11T11:02:15.574Z"
+      "updatedAt": "2026-06-12T07:28:14.559Z"
     },
     {
       "name": "2025-08-08.json",
       "sizeBytes": 850,
-      "updatedAt": "2026-06-11T11:02:15.573Z"
+      "updatedAt": "2026-06-12T07:28:14.558Z"
     },
     {
       "name": "2025-08-09.json",
       "sizeBytes": 767,
-      "updatedAt": "2026-06-11T11:02:15.571Z"
+      "updatedAt": "2026-06-12T07:28:14.556Z"
     },
     {
       "name": "2025-08-12.json",
       "sizeBytes": 887,
-      "updatedAt": "2026-06-11T11:02:15.572Z"
+      "updatedAt": "2026-06-12T07:28:14.558Z"
     },
     {
       "name": "2025-08-13.json",
       "sizeBytes": 906,
-      "updatedAt": "2026-06-11T11:02:15.572Z"
+      "updatedAt": "2026-06-12T07:28:14.557Z"
     },
     {
       "name": "2025-08-14.json",
       "sizeBytes": 905,
-      "updatedAt": "2026-06-11T11:02:15.570Z"
+      "updatedAt": "2026-06-12T07:28:14.556Z"
     },
     {
       "name": "2025-08-15.json",
       "sizeBytes": 795,
-      "updatedAt": "2026-06-11T11:02:15.568Z"
+      "updatedAt": "2026-06-12T07:28:14.554Z"
     },
     {
       "name": "2025-08-16.json",
       "sizeBytes": 831,
-      "updatedAt": "2026-06-11T11:02:15.578Z"
+      "updatedAt": "2026-06-12T07:28:14.562Z"
     },
     {
       "name": "2025-08-19.json",
       "sizeBytes": 790,
-      "updatedAt": "2026-06-11T11:02:15.569Z"
+      "updatedAt": "2026-06-12T07:28:14.555Z"
     },
     {
       "name": "2025-08-20.json",
       "sizeBytes": 783,
-      "updatedAt": "2026-06-11T11:02:15.577Z"
+      "updatedAt": "2026-06-12T07:28:14.562Z"
     },
     {
       "name": "2025-08-21.json",
       "sizeBytes": 745,
-      "updatedAt": "2026-06-11T11:02:15.577Z"
+      "updatedAt": "2026-06-12T07:28:14.561Z"
     },
     {
       "name": "2025-08-22.json",
       "sizeBytes": 816,
-      "updatedAt": "2026-06-11T11:02:15.569Z"
+      "updatedAt": "2026-06-12T07:28:14.555Z"
     },
     {
       "name": "2025-08-23.json",
       "sizeBytes": 885,
-      "updatedAt": "2026-06-11T11:02:15.568Z"
+      "updatedAt": "2026-06-12T07:28:14.555Z"
     },
     {
       "name": "2025-08-24_data.json",
       "sizeBytes": 1202,
-      "updatedAt": "2026-06-11T11:02:15.581Z"
+      "updatedAt": "2026-06-12T07:28:14.565Z"
     },
     {
       "name": "2025-08-26.json",
       "sizeBytes": 838,
-      "updatedAt": "2026-06-11T11:02:15.576Z"
+      "updatedAt": "2026-06-12T07:28:14.560Z"
     },
     {
       "name": "2025-08-27.json",
       "sizeBytes": 821,
-      "updatedAt": "2026-06-11T11:02:15.574Z"
+      "updatedAt": "2026-06-12T07:28:14.558Z"
     },
     {
       "name": "2025-08-28.json",
       "sizeBytes": 816,
-      "updatedAt": "2026-06-11T11:02:15.573Z"
+      "updatedAt": "2026-06-12T07:28:14.558Z"
     },
     {
       "name": "2025-08-29.json",
       "sizeBytes": 798,
-      "updatedAt": "2026-06-11T11:02:15.572Z"
+      "updatedAt": "2026-06-12T07:28:14.557Z"
     },
     {
       "name": "2025-11-05.json",
       "sizeBytes": 820,
-      "updatedAt": "2026-06-11T11:02:15.571Z"
+      "updatedAt": "2026-06-12T07:28:14.557Z"
     },
     {
       "name": "2026-01-28.json",
       "sizeBytes": 401,
-      "updatedAt": "2026-06-11T11:02:15.574Z"
+      "updatedAt": "2026-06-12T07:28:14.559Z"
     }
   ],
   "sec-13f": [
     {
       "name": "by_sector.json",
       "sizeBytes": 6695,
-      "updatedAt": "2026-06-11T11:02:14.725Z"
+      "updatedAt": "2026-06-12T07:28:13.834Z"
     },
     {
       "name": "by_ticker.json",
       "sizeBytes": 416667,
-      "updatedAt": "2026-06-11T11:02:14.725Z"
+      "updatedAt": "2026-06-12T07:28:13.835Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 11528,
-      "updatedAt": "2026-06-11T11:02:14.725Z"
+      "updatedAt": "2026-06-12T07:28:13.835Z"
     },
     {
       "name": "summary.json",
       "sizeBytes": 14649,
-      "updatedAt": "2026-06-11T11:02:14.724Z"
+      "updatedAt": "2026-06-12T07:28:13.833Z"
     }
   ],
   "sec-13f/analytics": [
     {
       "name": "buying_pressure.json",
       "sizeBytes": 235341,
-      "updatedAt": "2026-06-11T11:02:14.731Z"
+      "updatedAt": "2026-06-12T07:28:13.841Z"
     },
     {
       "name": "consensus.json",
       "sizeBytes": 185415,
-      "updatedAt": "2026-06-11T11:02:14.732Z"
+      "updatedAt": "2026-06-12T07:28:13.842Z"
     },
     {
       "name": "conviction_entries.json",
       "sizeBytes": 29257,
-      "updatedAt": "2026-06-11T11:02:14.726Z"
+      "updatedAt": "2026-06-12T07:28:13.835Z"
     },
     {
       "name": "conviction.json",
       "sizeBytes": 141104,
-      "updatedAt": "2026-06-11T11:02:14.731Z"
+      "updatedAt": "2026-06-12T07:28:13.841Z"
     },
     {
       "name": "enhanced_consensus.json",
       "sizeBytes": 195433,
-      "updatedAt": "2026-06-11T11:02:14.728Z"
+      "updatedAt": "2026-06-12T07:28:13.838Z"
     },
     {
       "name": "guru_holders_index.json",
       "sizeBytes": 14170,
-      "updatedAt": "2026-06-11T12:59:02.838Z"
+      "updatedAt": "2026-06-12T07:28:13.839Z"
     },
     {
       "name": "hhi.json",
       "sizeBytes": 5179,
-      "updatedAt": "2026-06-11T11:02:14.729Z"
+      "updatedAt": "2026-06-12T07:28:13.839Z"
     },
     {
       "name": "multi_quarter_trends.json",
       "sizeBytes": 107751,
-      "updatedAt": "2026-06-11T11:02:14.728Z"
+      "updatedAt": "2026-06-12T07:28:13.837Z"
     },
     {
       "name": "new_positions.json",
       "sizeBytes": 205734,
-      "updatedAt": "2026-06-11T11:02:14.727Z"
+      "updatedAt": "2026-06-12T07:28:13.836Z"
     },
     {
       "name": "options_hedge.json",
       "sizeBytes": 7618,
-      "updatedAt": "2026-06-11T11:02:14.729Z"
+      "updatedAt": "2026-06-12T07:28:13.839Z"
     },
     {
       "name": "portfolio_views.json",
       "sizeBytes": 208317,
-      "updatedAt": "2026-06-11T12:59:02.838Z"
+      "updatedAt": "2026-06-12T07:28:13.840Z"
     },
     {
       "name": "trades_ranking.json",
       "sizeBytes": 36863,
-      "updatedAt": "2026-06-11T12:59:02.838Z"
+      "updatedAt": "2026-06-12T07:28:13.836Z"
     },
     {
       "name": "turnover.json",
       "sizeBytes": 5412,
-      "updatedAt": "2026-06-11T11:02:14.728Z"
+      "updatedAt": "2026-06-12T07:28:13.838Z"
     }
   ],
   "sec-13f/investors": [
     {
       "name": "ackman.json",
       "sizeBytes": 133007,
-      "updatedAt": "2026-06-11T11:02:14.830Z"
+      "updatedAt": "2026-06-12T07:28:13.939Z"
     },
     {
       "name": "asness.json",
       "sizeBytes": 8997414,
-      "updatedAt": "2026-06-11T11:02:14.785Z"
+      "updatedAt": "2026-06-12T07:28:13.896Z"
     },
     {
       "name": "buffett.json",
       "sizeBytes": 811653,
-      "updatedAt": "2026-06-11T11:02:14.771Z"
+      "updatedAt": "2026-06-12T07:28:13.882Z"
     },
     {
       "name": "cohen.json",
       "sizeBytes": 6940538,
-      "updatedAt": "2026-06-11T11:02:14.741Z"
+      "updatedAt": "2026-06-12T07:28:13.851Z"
     },
     {
       "name": "coleman.json",
       "sizeBytes": 640500,
-      "updatedAt": "2026-06-11T11:02:14.766Z"
+      "updatedAt": "2026-06-12T07:28:13.877Z"
     },
     {
       "name": "dalio.json",
       "sizeBytes": 3989224,
-      "updatedAt": "2026-06-11T11:02:14.765Z"
+      "updatedAt": "2026-06-12T07:28:13.876Z"
     },
     {
       "name": "druckenmiller.json",
       "sizeBytes": 753497,
-      "updatedAt": "2026-06-11T11:02:14.829Z"
+      "updatedAt": "2026-06-12T07:28:13.939Z"
     },
     {
       "name": "einhorn.json",
       "sizeBytes": 846232,
-      "updatedAt": "2026-06-11T11:02:14.744Z"
+      "updatedAt": "2026-06-12T07:28:13.855Z"
     },
     {
       "name": "fidelity.json",
       "sizeBytes": 2080903,
-      "updatedAt": "2026-06-11T11:02:14.770Z"
+      "updatedAt": "2026-06-12T07:28:13.881Z"
     },
     {
       "name": "fisher.json",
       "sizeBytes": 3948970,
-      "updatedAt": "2026-06-11T11:02:14.749Z"
+      "updatedAt": "2026-06-12T07:28:13.860Z"
     },
     {
       "name": "gayner.json",
       "sizeBytes": 1424473,
-      "updatedAt": "2026-06-11T11:02:14.825Z"
+      "updatedAt": "2026-06-12T07:28:13.934Z"
     },
     {
       "name": "greenblatt.json",
       "sizeBytes": 6324197,
-      "updatedAt": "2026-06-11T11:02:14.821Z"
+      "updatedAt": "2026-06-12T07:28:13.932Z"
     },
     {
       "name": "griffin.json",
       "sizeBytes": 13643185,
-      "updatedAt": "2026-06-11T11:02:14.807Z"
+      "updatedAt": "2026-06-12T07:28:13.917Z"
     },
     {
       "name": "halvorsen.json",
       "sizeBytes": 1086090,
-      "updatedAt": "2026-06-11T11:02:14.832Z"
+      "updatedAt": "2026-06-12T07:28:13.942Z"
     },
     {
       "name": "hohn.json",
       "sizeBytes": 151979,
-      "updatedAt": "2026-06-11T11:02:14.822Z"
+      "updatedAt": "2026-06-12T07:28:13.933Z"
     },
     {
       "name": "icahn.json",
       "sizeBytes": 239737,
-      "updatedAt": "2026-06-11T11:02:14.807Z"
+      "updatedAt": "2026-06-12T07:28:13.917Z"
     },
     {
       "name": "klarman.json",
       "sizeBytes": 374155,
-      "updatedAt": "2026-06-11T11:02:14.809Z"
+      "updatedAt": "2026-06-12T07:28:13.920Z"
     },
     {
       "name": "laffont.json",
       "sizeBytes": 1386878,
-      "updatedAt": "2026-06-11T11:02:14.828Z"
+      "updatedAt": "2026-06-12T07:28:13.938Z"
     },
     {
       "name": "loeb.json",
       "sizeBytes": 545356,
-      "updatedAt": "2026-06-11T11:02:14.812Z"
+      "updatedAt": "2026-06-12T07:28:13.923Z"
     },
     {
       "name": "mandel.json",
       "sizeBytes": 398157,
-      "updatedAt": "2026-06-11T11:02:14.825Z"
+      "updatedAt": "2026-06-12T07:28:13.936Z"
     },
     {
       "name": "marks.json",
       "sizeBytes": 1589938,
-      "updatedAt": "2026-06-11T11:02:14.743Z"
+      "updatedAt": "2026-06-12T07:28:13.853Z"
     },
     {
       "name": "miller.json",
       "sizeBytes": 648464,
-      "updatedAt": "2026-06-11T11:02:14.750Z"
+      "updatedAt": "2026-06-12T07:28:13.862Z"
     },
     {
       "name": "pabrai.json",
       "sizeBytes": 69674,
-      "updatedAt": "2026-06-11T11:02:14.767Z"
+      "updatedAt": "2026-06-12T07:28:13.878Z"
     },
     {
       "name": "peltz.json",
       "sizeBytes": 133898,
-      "updatedAt": "2026-06-11T11:02:14.786Z"
+      "updatedAt": "2026-06-12T07:28:13.897Z"
     },
     {
       "name": "russo.json",
       "sizeBytes": 448596,
-      "updatedAt": "2026-06-11T11:02:14.773Z"
+      "updatedAt": "2026-06-12T07:28:13.884Z"
     },
     {
       "name": "singer.json",
       "sizeBytes": 548456,
-      "updatedAt": "2026-06-11T11:02:14.808Z"
+      "updatedAt": "2026-06-12T07:28:13.918Z"
     },
     {
       "name": "soros.json",
       "sizeBytes": 1835192,
-      "updatedAt": "2026-06-11T11:02:14.789Z"
+      "updatedAt": "2026-06-12T07:28:13.900Z"
     },
     {
       "name": "tepper.json",
       "sizeBytes": 515697,
-      "updatedAt": "2026-06-11T11:02:14.772Z"
+      "updatedAt": "2026-06-12T07:28:13.883Z"
     },
     {
       "name": "tudor.json",
       "sizeBytes": 7538208,
-      "updatedAt": "2026-06-11T11:02:14.760Z"
+      "updatedAt": "2026-06-12T07:28:13.871Z"
     },
     {
       "name": "wood.json",
       "sizeBytes": 1700016,
-      "updatedAt": "2026-06-11T11:02:14.812Z"
+      "updatedAt": "2026-06-12T07:28:13.922Z"
     }
   ],
   "sentiment": [
     {
       "name": "aaii.json",
-      "sizeBytes": 191455,
-      "updatedAt": "2026-06-11T11:02:15.551Z"
+      "sizeBytes": 191550,
+      "updatedAt": "2026-06-12T07:28:54.233Z"
     },
     {
       "name": "cftc-sp500.json",
       "sizeBytes": 100374,
-      "updatedAt": "2026-06-11T11:02:15.545Z"
+      "updatedAt": "2026-06-12T07:28:14.539Z"
     },
     {
       "name": "cnn-breadth.json",
-      "sizeBytes": 57276,
-      "updatedAt": "2026-06-11T12:59:22.050Z"
+      "sizeBytes": 57362,
+      "updatedAt": "2026-06-12T07:28:54.233Z"
     },
     {
       "name": "cnn-components.json",
       "sizeBytes": 33367,
-      "updatedAt": "2026-06-12T02:37:46.787Z"
+      "updatedAt": "2026-06-12T07:28:14.542Z"
     },
     {
       "name": "cnn-fear-greed.json",
       "sizeBytes": 200710,
-      "updatedAt": "2026-06-12T02:37:46.787Z"
+      "updatedAt": "2026-06-12T07:28:14.541Z"
     },
     {
       "name": "cnn-junk-bond.json",
-      "sizeBytes": 54707,
-      "updatedAt": "2026-06-11T12:59:22.050Z"
+      "sizeBytes": 54790,
+      "updatedAt": "2026-06-12T07:28:54.233Z"
     },
     {
       "name": "cnn-momentum.json",
-      "sizeBytes": 57432,
-      "updatedAt": "2026-06-11T12:59:22.050Z"
+      "sizeBytes": 57518,
+      "updatedAt": "2026-06-12T07:28:54.233Z"
     },
     {
       "name": "cnn-put-call.json",
       "sizeBytes": 54708,
-      "updatedAt": "2026-06-12T02:37:46.788Z"
+      "updatedAt": "2026-06-12T07:28:14.543Z"
     },
     {
       "name": "cnn-safe-haven.json",
-      "sizeBytes": 54903,
-      "updatedAt": "2026-06-11T12:59:22.051Z"
+      "sizeBytes": 54987,
+      "updatedAt": "2026-06-12T07:28:54.234Z"
     },
     {
       "name": "cnn-strength.json",
-      "sizeBytes": 54895,
-      "updatedAt": "2026-06-11T12:59:22.051Z"
+      "sizeBytes": 54978,
+      "updatedAt": "2026-06-12T07:28:54.234Z"
     },
     {
       "name": "crypto-fear-greed.json",
       "sizeBytes": 256897,
-      "updatedAt": "2026-06-12T02:37:46.788Z"
+      "updatedAt": "2026-06-12T07:28:14.541Z"
     },
     {
       "name": "move.json",
-      "sizeBytes": 73973,
-      "updatedAt": "2026-06-11T12:59:22.051Z"
+      "sizeBytes": 74027,
+      "updatedAt": "2026-06-12T07:28:54.234Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 4575,
-      "updatedAt": "2026-06-11T11:02:15.549Z"
+      "updatedAt": "2026-06-12T07:28:14.542Z"
     },
     {
       "name": "vix.json",
       "sizeBytes": 495970,
-      "updatedAt": "2026-06-12T02:37:46.788Z"
+      "updatedAt": "2026-06-12T07:28:14.537Z"
     }
   ],
   "slickcharts": [
     {
       "name": "berkshire.json",
       "sizeBytes": 11609,
-      "updatedAt": "2026-06-11T11:02:14.340Z"
+      "updatedAt": "2026-06-12T07:28:13.420Z"
     },
     {
       "name": "btc-returns.json",
       "sizeBytes": 847,
-      "updatedAt": "2026-06-11T11:02:14.356Z"
+      "updatedAt": "2026-06-12T07:28:13.437Z"
     },
     {
       "name": "currency.json",
       "sizeBytes": 1364820,
-      "updatedAt": "2026-06-11T11:02:14.192Z"
+      "updatedAt": "2026-06-12T07:28:13.262Z"
+    },
+    {
+      "name": "discovery-summary.json",
+      "sizeBytes": 24221,
+      "updatedAt": "2026-06-12T08:40:07.172Z"
     },
     {
       "name": "dowjones-analysis.json",
       "sizeBytes": 5169,
-      "updatedAt": "2026-06-11T11:02:14.189Z"
+      "updatedAt": "2026-06-12T07:28:13.259Z"
     },
     {
       "name": "dowjones-performance.json",
       "sizeBytes": 3562,
-      "updatedAt": "2026-06-11T11:02:14.342Z"
+      "updatedAt": "2026-06-12T07:28:13.423Z"
     },
     {
       "name": "dowjones-returns.json",
       "sizeBytes": 7843,
-      "updatedAt": "2026-06-11T11:02:14.190Z"
+      "updatedAt": "2026-06-12T07:28:13.259Z"
     },
     {
       "name": "dowjones-yield.json",
       "sizeBytes": 111,
-      "updatedAt": "2026-06-11T11:02:14.355Z"
+      "updatedAt": "2026-06-12T07:28:13.436Z"
     },
     {
       "name": "dowjones.json",
       "sizeBytes": 5741,
-      "updatedAt": "2026-06-11T11:02:14.347Z"
+      "updatedAt": "2026-06-12T07:28:13.428Z"
     },
     {
       "name": "etf.json",
       "sizeBytes": 1097,
-      "updatedAt": "2026-06-11T11:02:14.346Z"
+      "updatedAt": "2026-06-12T07:28:13.427Z"
     },
     {
       "name": "eth-returns.json",
       "sizeBytes": 680,
-      "updatedAt": "2026-06-11T11:02:14.347Z"
+      "updatedAt": "2026-06-12T07:28:13.428Z"
     },
     {
       "name": "gainers.json",
       "sizeBytes": 2731548,
-      "updatedAt": "2026-06-11T11:02:14.346Z"
+      "updatedAt": "2026-06-12T07:28:13.427Z"
     },
     {
       "name": "inflation.json",
       "sizeBytes": 5989,
-      "updatedAt": "2026-06-11T11:02:14.361Z"
+      "updatedAt": "2026-06-12T07:28:13.443Z"
     },
     {
       "name": "losers.json",
       "sizeBytes": 3018541,
-      "updatedAt": "2026-06-11T11:02:14.197Z"
+      "updatedAt": "2026-06-12T07:28:13.267Z"
     },
     {
       "name": "magnificent7.json",
       "sizeBytes": 1419,
-      "updatedAt": "2026-06-11T11:02:14.361Z"
+      "updatedAt": "2026-06-12T07:28:13.442Z"
     },
     {
       "name": "membership-changes.json",
       "sizeBytes": 21067,
-      "updatedAt": "2026-06-11T11:02:14.182Z"
+      "updatedAt": "2026-06-12T07:28:13.251Z"
     },
     {
       "name": "mortgage.json",
       "sizeBytes": 659,
-      "updatedAt": "2026-06-11T11:02:14.182Z"
+      "updatedAt": "2026-06-12T07:28:13.251Z"
     },
     {
       "name": "nasdaq100-analysis.json",
       "sizeBytes": 19364,
-      "updatedAt": "2026-06-11T11:02:14.184Z"
+      "updatedAt": "2026-06-12T07:28:13.253Z"
     },
     {
       "name": "nasdaq100-performance.json",
       "sizeBytes": 12727,
-      "updatedAt": "2026-06-11T11:02:14.183Z"
+      "updatedAt": "2026-06-12T07:28:13.252Z"
     },
     {
       "name": "nasdaq100-ratio.json",
       "sizeBytes": 508233,
-      "updatedAt": "2026-06-11T11:02:14.341Z"
+      "updatedAt": "2026-06-12T07:28:13.422Z"
     },
     {
       "name": "nasdaq100-returns.json",
       "sizeBytes": 2356,
-      "updatedAt": "2026-06-11T11:02:14.353Z"
+      "updatedAt": "2026-06-12T07:28:13.435Z"
     },
     {
       "name": "nasdaq100-yield.json",
       "sizeBytes": 112,
-      "updatedAt": "2026-06-11T11:02:14.347Z"
+      "updatedAt": "2026-06-12T07:28:13.428Z"
     },
     {
       "name": "nasdaq100.json",
       "sizeBytes": 20029,
-      "updatedAt": "2026-06-11T11:02:14.343Z"
+      "updatedAt": "2026-06-12T07:28:13.423Z"
     },
     {
       "name": "schema.json",
       "sizeBytes": 5336,
-      "updatedAt": "2026-06-11T11:02:14.354Z"
+      "updatedAt": "2026-06-12T07:28:13.436Z"
     },
     {
       "name": "sp500-analysis.json",
       "sizeBytes": 91639,
-      "updatedAt": "2026-06-11T11:02:14.355Z"
+      "updatedAt": "2026-06-12T07:28:13.436Z"
     },
     {
       "name": "sp500-drawdown.json",
       "sizeBytes": 17524,
-      "updatedAt": "2026-06-11T11:02:14.356Z"
+      "updatedAt": "2026-06-12T07:28:13.437Z"
     },
     {
       "name": "sp500-marketcap.json",
       "sizeBytes": 130,
-      "updatedAt": "2026-06-11T11:02:14.355Z"
+      "updatedAt": "2026-06-12T07:28:13.437Z"
     },
     {
       "name": "sp500-performance.json",
       "sizeBytes": 58831,
-      "updatedAt": "2026-06-11T11:02:14.183Z"
+      "updatedAt": "2026-06-12T07:28:13.252Z"
     },
     {
       "name": "sp500-returns-details.json",
       "sizeBytes": 11778,
-      "updatedAt": "2026-06-11T11:02:14.342Z"
+      "updatedAt": "2026-06-12T07:28:13.422Z"
     },
     {
       "name": "sp500-returns.json",
       "sizeBytes": 5647,
-      "updatedAt": "2026-06-11T11:02:14.185Z"
+      "updatedAt": "2026-06-12T07:28:13.254Z"
     },
     {
       "name": "sp500-yield.json",
       "sizeBytes": 108,
-      "updatedAt": "2026-06-11T11:02:14.356Z"
+      "updatedAt": "2026-06-12T07:28:13.438Z"
     },
     {
       "name": "sp500.json",
       "sizeBytes": 95320,
-      "updatedAt": "2026-06-11T11:02:14.341Z"
+      "updatedAt": "2026-06-12T07:28:13.421Z"
     },
     {
       "name": "stocks-dividends-historical.json",
       "sizeBytes": 2432581,
-      "updatedAt": "2026-06-11T11:02:14.353Z"
+      "updatedAt": "2026-06-12T07:28:13.435Z"
     },
     {
       "name": "stocks-dividends-recent.json",
       "sizeBytes": 918912,
-      "updatedAt": "2026-06-11T11:02:14.193Z"
+      "updatedAt": "2026-06-12T07:28:13.263Z"
     },
     {
       "name": "stocks-dividends.json",
       "sizeBytes": 3332245,
-      "updatedAt": "2026-06-11T11:02:14.189Z"
+      "updatedAt": "2026-06-12T07:28:13.258Z"
     },
     {
       "name": "stocks-returns.json",
       "sizeBytes": 1303410,
-      "updatedAt": "2026-06-11T11:02:14.350Z"
+      "updatedAt": "2026-06-12T07:28:13.432Z"
     },
     {
       "name": "symbols-all.json",
       "sizeBytes": 178308,
-      "updatedAt": "2026-06-11T11:02:14.354Z"
+      "updatedAt": "2026-06-12T07:28:13.435Z"
     },
     {
       "name": "symbols.json",
       "sizeBytes": 3152203,
-      "updatedAt": "2026-06-11T11:02:14.360Z"
+      "updatedAt": "2026-06-12T07:28:13.442Z"
     },
     {
       "name": "treasury.json",
       "sizeBytes": 120719,
-      "updatedAt": "2026-06-11T11:02:14.194Z"
+      "updatedAt": "2026-06-12T07:28:13.264Z"
     },
     {
       "name": "universe.json",
       "sizeBytes": 55430,
-      "updatedAt": "2026-06-11T11:02:14.184Z"
+      "updatedAt": "2026-06-12T07:28:13.253Z"
     }
   ],
   "slickcharts/stocks": [
     {
       "name": "A.json",
       "sizeBytes": 6068,
-      "updatedAt": "2026-06-11T11:02:14.205Z"
+      "updatedAt": "2026-06-12T07:28:13.277Z"
     },
     {
       "name": "AAPL.json",
       "sizeBytes": 6550,
-      "updatedAt": "2026-06-11T11:02:14.257Z"
+      "updatedAt": "2026-06-12T07:28:13.332Z"
     },
     {
       "name": "ABBV.json",
       "sizeBytes": 5378,
-      "updatedAt": "2026-06-11T11:02:14.304Z"
+      "updatedAt": "2026-06-12T07:28:13.381Z"
     },
     {
       "name": "ABNB.json",
       "sizeBytes": 1603,
-      "updatedAt": "2026-06-11T11:02:14.259Z"
+      "updatedAt": "2026-06-12T07:28:13.334Z"
     },
     {
       "name": "ABT.json",
       "sizeBytes": 8885,
-      "updatedAt": "2026-06-11T11:02:14.228Z"
+      "updatedAt": "2026-06-12T07:28:13.303Z"
     },
     {
       "name": "ACGL.json",
       "sizeBytes": 2472,
-      "updatedAt": "2026-06-11T11:02:14.293Z"
+      "updatedAt": "2026-06-12T07:28:13.369Z"
     },
     {
       "name": "ACN.json",
       "sizeBytes": 5308,
-      "updatedAt": "2026-06-11T11:02:14.272Z"
+      "updatedAt": "2026-06-12T07:28:13.346Z"
     },
     {
       "name": "ADBE.json",
       "sizeBytes": 3203,
-      "updatedAt": "2026-06-11T11:02:14.303Z"
+      "updatedAt": "2026-06-12T07:28:13.380Z"
     },
     {
       "name": "ADI.json",
       "sizeBytes": 8877,
-      "updatedAt": "2026-06-11T11:02:14.287Z"
+      "updatedAt": "2026-06-12T07:28:13.362Z"
     },
     {
       "name": "ADM.json",
       "sizeBytes": 8887,
-      "updatedAt": "2026-06-11T11:02:14.200Z"
+      "updatedAt": "2026-06-12T07:28:13.270Z"
     },
     {
       "name": "ADP.json",
       "sizeBytes": 8891,
-      "updatedAt": "2026-06-11T11:02:14.273Z"
+      "updatedAt": "2026-06-12T07:28:13.348Z"
     },
     {
       "name": "ADSK.json",
       "sizeBytes": 3152,
-      "updatedAt": "2026-06-11T11:02:14.304Z"
+      "updatedAt": "2026-06-12T07:28:13.381Z"
     },
     {
       "name": "AEE.json",
       "sizeBytes": 8255,
-      "updatedAt": "2026-06-11T11:02:14.322Z"
+      "updatedAt": "2026-06-12T07:28:13.399Z"
     },
     {
       "name": "AEP.json",
       "sizeBytes": 9408,
-      "updatedAt": "2026-06-11T11:02:14.320Z"
+      "updatedAt": "2026-06-12T07:28:13.397Z"
     },
     {
       "name": "AES.json",
       "sizeBytes": 6203,
-      "updatedAt": "2026-06-11T11:02:14.217Z"
+      "updatedAt": "2026-06-12T07:28:13.291Z"
     },
     {
       "name": "AFL.json",
       "sizeBytes": 8859,
-      "updatedAt": "2026-06-11T11:02:14.216Z"
+      "updatedAt": "2026-06-12T07:28:13.290Z"
     },
     {
       "name": "AIG.json",
       "sizeBytes": 7777,
-      "updatedAt": "2026-06-11T11:02:14.330Z"
+      "updatedAt": "2026-06-12T07:28:13.409Z"
     },
     {
       "name": "AIZ.json",
       "sizeBytes": 7938,
-      "updatedAt": "2026-06-11T11:02:14.253Z"
+      "updatedAt": "2026-06-12T07:28:13.328Z"
     },
     {
       "name": "AJG.json",
       "sizeBytes": 8745,
-      "updatedAt": "2026-06-11T11:02:14.290Z"
+      "updatedAt": "2026-06-12T07:28:13.365Z"
     },
     {
       "name": "AKAM.json",
       "sizeBytes": 2295,
-      "updatedAt": "2026-06-11T11:02:14.319Z"
+      "updatedAt": "2026-06-12T07:28:13.396Z"
     },
     {
       "name": "ALB.json",
       "sizeBytes": 8463,
-      "updatedAt": "2026-06-11T11:02:14.219Z"
+      "updatedAt": "2026-06-12T07:28:13.293Z"
     },
     {
       "name": "ALGN.json",
       "sizeBytes": 2231,
-      "updatedAt": "2026-06-11T11:02:14.307Z"
+      "updatedAt": "2026-06-12T07:28:13.384Z"
     },
     {
       "name": "ALL.json",
       "sizeBytes": 8434,
-      "updatedAt": "2026-06-11T11:02:14.335Z"
+      "updatedAt": "2026-06-12T07:28:13.415Z"
     },
     {
       "name": "ALLE.json",
       "sizeBytes": 5051,
-      "updatedAt": "2026-06-11T11:02:14.223Z"
+      "updatedAt": "2026-06-12T07:28:13.297Z"
     },
     {
       "name": "ALNY.json",
       "sizeBytes": 1943,
-      "updatedAt": "2026-06-11T11:02:14.279Z"
+      "updatedAt": "2026-06-12T07:28:13.354Z"
     },
     {
       "name": "AMAT.json",
       "sizeBytes": 8541,
-      "updatedAt": "2026-06-11T11:02:14.280Z"
+      "updatedAt": "2026-06-12T07:28:13.355Z"
     },
     {
       "name": "AMCR.json",
       "sizeBytes": 4618,
-      "updatedAt": "2026-06-11T11:02:14.325Z"
+      "updatedAt": "2026-06-12T07:28:13.403Z"
     },
     {
       "name": "AMD.json",
       "sizeBytes": 2940,
-      "updatedAt": "2026-06-11T11:02:14.215Z"
+      "updatedAt": "2026-06-12T07:28:13.288Z"
     },
     {
       "name": "AME.json",
       "sizeBytes": 8732,
-      "updatedAt": "2026-06-11T11:02:14.213Z"
+      "updatedAt": "2026-06-12T07:28:13.286Z"
     },
     {
       "name": "AMGN.json",
       "sizeBytes": 6776,
-      "updatedAt": "2026-06-11T11:02:14.244Z"
+      "updatedAt": "2026-06-12T07:28:13.321Z"
     },
     {
       "name": "AMP.json",
       "sizeBytes": 7524,
-      "updatedAt": "2026-06-11T11:02:14.208Z"
+      "updatedAt": "2026-06-12T07:28:13.280Z"
     },
     {
       "name": "AMT.json",
       "sizeBytes": 6065,
-      "updatedAt": "2026-06-11T11:02:14.277Z"
+      "updatedAt": "2026-06-12T07:28:13.352Z"
     },
     {
       "name": "AMZN.json",
       "sizeBytes": 2361,
-      "updatedAt": "2026-06-11T11:02:14.268Z"
+      "updatedAt": "2026-06-12T07:28:13.342Z"
     },
     {
       "name": "ANET.json",
       "sizeBytes": 1794,
-      "updatedAt": "2026-06-11T11:02:14.201Z"
+      "updatedAt": "2026-06-12T07:28:13.271Z"
     },
     {
       "name": "AON.json",
       "sizeBytes": 4472,
-      "updatedAt": "2026-06-11T11:02:14.269Z"
+      "updatedAt": "2026-06-12T07:28:13.344Z"
     },
     {
       "name": "AOS.json",
       "sizeBytes": 8705,
-      "updatedAt": "2026-06-11T11:02:14.340Z"
+      "updatedAt": "2026-06-12T07:28:13.420Z"
     },
     {
       "name": "APA.json",
       "sizeBytes": 8840,
-      "updatedAt": "2026-06-11T11:02:14.292Z"
+      "updatedAt": "2026-06-12T07:28:13.368Z"
     },
     {
       "name": "APD.json",
       "sizeBytes": 8879,
-      "updatedAt": "2026-06-11T11:02:14.200Z"
+      "updatedAt": "2026-06-12T07:28:13.271Z"
     },
     {
       "name": "APH.json",
       "sizeBytes": 8224,
-      "updatedAt": "2026-06-11T11:02:14.210Z"
+      "updatedAt": "2026-06-12T07:28:13.282Z"
     },
     {
       "name": "APO.json",
       "sizeBytes": 4111,
-      "updatedAt": "2026-06-11T11:02:14.266Z"
+      "updatedAt": "2026-06-12T07:28:13.340Z"
     },
     {
       "name": "APP.json",
       "sizeBytes": 1594,
-      "updatedAt": "2026-06-11T11:02:14.225Z"
+      "updatedAt": "2026-06-12T07:28:13.300Z"
     },
     {
       "name": "APTV.json",
       "sizeBytes": 3807,
-      "updatedAt": "2026-06-11T11:02:14.233Z"
+      "updatedAt": "2026-06-12T07:28:13.309Z"
     },
     {
       "name": "ARE.json",
       "sizeBytes": 8306,
-      "updatedAt": "2026-06-11T11:02:14.218Z"
+      "updatedAt": "2026-06-12T07:28:13.291Z"
     },
     {
       "name": "ARES.json",
       "sizeBytes": 3697,
-      "updatedAt": "2026-06-11T11:02:14.204Z"
+      "updatedAt": "2026-06-12T07:28:13.276Z"
     },
     {
       "name": "ARM.json",
       "sizeBytes": 296,
-      "updatedAt": "2026-06-11T11:02:14.294Z"
+      "updatedAt": "2026-06-12T07:28:13.370Z"
     },
     {
       "name": "ASML.json",
       "sizeBytes": 3479,
-      "updatedAt": "2026-06-11T11:02:14.212Z"
+      "updatedAt": "2026-06-12T07:28:13.284Z"
     },
     {
       "name": "ATO.json",
       "sizeBytes": 8816,
-      "updatedAt": "2026-06-11T11:02:14.232Z"
+      "updatedAt": "2026-06-12T07:28:13.307Z"
     },
     {
       "name": "AVB.json",
       "sizeBytes": 8446,
-      "updatedAt": "2026-06-11T11:02:14.259Z"
+      "updatedAt": "2026-06-12T07:28:13.334Z"
     },
     {
       "name": "AVGO.json",
       "sizeBytes": 6060,
-      "updatedAt": "2026-06-11T11:02:14.310Z"
+      "updatedAt": "2026-06-12T07:28:13.388Z"
     },
     {
       "name": "AVY.json",
       "sizeBytes": 8969,
-      "updatedAt": "2026-06-11T11:02:14.289Z"
+      "updatedAt": "2026-06-12T07:28:13.364Z"
     },
     {
       "name": "AWK.json",
       "sizeBytes": 6794,
-      "updatedAt": "2026-06-11T11:02:14.282Z"
+      "updatedAt": "2026-06-12T07:28:13.357Z"
     },
     {
       "name": "AXON.json",
       "sizeBytes": 2244,
-      "updatedAt": "2026-06-11T11:02:14.206Z"
+      "updatedAt": "2026-06-12T07:28:13.278Z"
     },
     {
       "name": "AXP.json",
       "sizeBytes": 9212,
-      "updatedAt": "2026-06-11T11:02:14.332Z"
+      "updatedAt": "2026-06-12T07:28:13.412Z"
     },
     {
       "name": "AZN.json",
       "sizeBytes": 4292,
-      "updatedAt": "2026-06-11T11:02:14.288Z"
+      "updatedAt": "2026-06-12T07:28:13.363Z"
     },
     {
       "name": "AZO.json",
       "sizeBytes": 2566,
-      "updatedAt": "2026-06-11T11:02:14.288Z"
+      "updatedAt": "2026-06-12T07:28:13.364Z"
     },
     {
       "name": "BA.json",
       "sizeBytes": 7858,
-      "updatedAt": "2026-06-11T11:02:14.334Z"
+      "updatedAt": "2026-06-12T07:28:13.413Z"
     },
     {
       "name": "BAC.json",
       "sizeBytes": 8983,
-      "updatedAt": "2026-06-11T11:02:14.214Z"
+      "updatedAt": "2026-06-12T07:28:13.287Z"
     },
     {
       "name": "BALL.json",
       "sizeBytes": 8964,
-      "updatedAt": "2026-06-11T11:02:14.235Z"
+      "updatedAt": "2026-06-12T07:28:13.311Z"
     },
     {
       "name": "BAX.json",
       "sizeBytes": 8251,
-      "updatedAt": "2026-06-11T11:02:14.315Z"
+      "updatedAt": "2026-06-12T07:28:13.392Z"
     },
     {
       "name": "BBY.json",
       "sizeBytes": 8642,
-      "updatedAt": "2026-06-11T11:02:14.303Z"
+      "updatedAt": "2026-06-12T07:28:13.380Z"
     },
     {
       "name": "BDX.json",
       "sizeBytes": 9127,
-      "updatedAt": "2026-06-11T11:02:14.288Z"
+      "updatedAt": "2026-06-12T07:28:13.364Z"
     },
     {
       "name": "BEN.json",
       "sizeBytes": 8892,
-      "updatedAt": "2026-06-11T11:02:14.203Z"
+      "updatedAt": "2026-06-12T07:28:13.274Z"
     },
     {
       "name": "BF.B.json",
       "sizeBytes": 4888,
-      "updatedAt": "2026-06-11T11:02:14.264Z"
+      "updatedAt": "2026-06-12T07:28:13.338Z"
     },
     {
       "name": "BG.json",
       "sizeBytes": 8168,
-      "updatedAt": "2026-06-11T11:02:14.294Z"
+      "updatedAt": "2026-06-12T07:28:13.370Z"
     },
     {
       "name": "BIIB.json",
       "sizeBytes": 2566,
-      "updatedAt": "2026-06-11T11:02:14.281Z"
+      "updatedAt": "2026-06-12T07:28:13.355Z"
     },
     {
       "name": "BK.json",
       "sizeBytes": 8700,
-      "updatedAt": "2026-06-11T11:02:14.303Z"
+      "updatedAt": "2026-06-12T07:28:13.379Z"
     },
     {
       "name": "BKNG.json",
       "sizeBytes": 2872,
-      "updatedAt": "2026-06-11T11:02:14.263Z"
+      "updatedAt": "2026-06-12T07:28:13.338Z"
     },
     {
       "name": "BKR.json",
       "sizeBytes": 5293,
-      "updatedAt": "2026-06-11T11:02:14.242Z"
+      "updatedAt": "2026-06-12T07:28:13.319Z"
     },
     {
       "name": "BLDR.json",
       "sizeBytes": 2093,
-      "updatedAt": "2026-06-11T11:02:14.250Z"
+      "updatedAt": "2026-06-12T07:28:13.325Z"
     },
     {
       "name": "BLK.json",
       "sizeBytes": 8252,
-      "updatedAt": "2026-06-11T11:02:14.228Z"
+      "updatedAt": "2026-06-12T07:28:13.303Z"
     },
     {
       "name": "BMY.json",
       "sizeBytes": 9130,
-      "updatedAt": "2026-06-11T11:02:14.205Z"
+      "updatedAt": "2026-06-12T07:28:13.277Z"
     },
     {
       "name": "BNY.json",
       "sizeBytes": 553,
-      "updatedAt": "2026-06-11T11:02:14.233Z"
+      "updatedAt": "2026-06-12T07:28:13.309Z"
     },
     {
       "name": "BR.json",
       "sizeBytes": 7682,
-      "updatedAt": "2026-06-11T11:02:14.292Z"
+      "updatedAt": "2026-06-12T07:28:13.367Z"
     },
     {
       "name": "BRK.B.json",
       "sizeBytes": 2408,
-      "updatedAt": "2026-06-11T11:02:14.222Z"
+      "updatedAt": "2026-06-12T07:28:13.296Z"
     },
     {
       "name": "BRO.json",
       "sizeBytes": 8824,
-      "updatedAt": "2026-06-11T11:02:14.312Z"
+      "updatedAt": "2026-06-12T07:28:13.389Z"
     },
     {
       "name": "BSX.json",
       "sizeBytes": 2522,
-      "updatedAt": "2026-06-11T11:02:14.249Z"
+      "updatedAt": "2026-06-12T07:28:13.324Z"
     },
     {
       "name": "BX.json",
       "sizeBytes": 3701,
-      "updatedAt": "2026-06-11T11:02:14.328Z"
+      "updatedAt": "2026-06-12T07:28:13.406Z"
     },
     {
       "name": "BXP.json",
       "sizeBytes": 8286,
-      "updatedAt": "2026-06-11T11:02:14.248Z"
+      "updatedAt": "2026-06-12T07:28:13.324Z"
     },
     {
       "name": "C.json",
       "sizeBytes": 8440,
-      "updatedAt": "2026-06-11T11:02:14.307Z"
+      "updatedAt": "2026-06-12T07:28:13.385Z"
     },
     {
       "name": "CAG.json",
       "sizeBytes": 8837,
-      "updatedAt": "2026-06-11T11:02:14.212Z"
+      "updatedAt": "2026-06-12T07:28:13.285Z"
     },
     {
       "name": "CAH.json",
       "sizeBytes": 8907,
-      "updatedAt": "2026-06-11T11:02:14.336Z"
+      "updatedAt": "2026-06-12T07:28:13.416Z"
     },
     {
       "name": "CARR.json",
       "sizeBytes": 3151,
-      "updatedAt": "2026-06-11T11:02:14.252Z"
+      "updatedAt": "2026-06-12T07:28:13.326Z"
     },
     {
       "name": "CASY.json",
       "sizeBytes": 549,
-      "updatedAt": "2026-06-11T11:02:14.238Z"
+      "updatedAt": "2026-06-12T07:28:13.314Z"
     },
     {
       "name": "CAT.json",
       "sizeBytes": 9460,
-      "updatedAt": "2026-06-11T11:02:14.234Z"
+      "updatedAt": "2026-06-12T07:28:13.310Z"
     },
     {
       "name": "CB.json",
       "sizeBytes": 9123,
-      "updatedAt": "2026-06-11T11:02:14.248Z"
+      "updatedAt": "2026-06-12T07:28:13.324Z"
     },
     {
       "name": "CBOE.json",
       "sizeBytes": 6220,
-      "updatedAt": "2026-06-11T11:02:14.222Z"
+      "updatedAt": "2026-06-12T07:28:13.297Z"
     },
     {
       "name": "CBRE.json",
       "sizeBytes": 2118,
-      "updatedAt": "2026-06-11T11:02:14.204Z"
+      "updatedAt": "2026-06-12T07:28:13.275Z"
     },
     {
       "name": "CCEP.json",
       "sizeBytes": 2916,
-      "updatedAt": "2026-06-11T11:02:14.250Z"
+      "updatedAt": "2026-06-12T07:28:13.325Z"
     },
     {
       "name": "CCI.json",
       "sizeBytes": 5353,
-      "updatedAt": "2026-06-11T11:02:14.321Z"
+      "updatedAt": "2026-06-12T07:28:13.398Z"
     },
     {
       "name": "CCL.json",
       "sizeBytes": 6214,
-      "updatedAt": "2026-06-11T11:02:14.265Z"
+      "updatedAt": "2026-06-12T07:28:13.339Z"
     },
     {
       "name": "CDNS.json",
       "sizeBytes": 2681,
-      "updatedAt": "2026-06-11T11:02:14.325Z"
+      "updatedAt": "2026-06-12T07:28:13.403Z"
     },
     {
       "name": "CDW.json",
       "sizeBytes": 5140,
-      "updatedAt": "2026-06-11T11:02:14.322Z"
+      "updatedAt": "2026-06-12T07:28:13.400Z"
     },
     {
       "name": "CEG.json",
       "sizeBytes": 4975,
-      "updatedAt": "2026-06-11T11:02:14.215Z"
+      "updatedAt": "2026-06-12T07:28:13.288Z"
     },
     {
       "name": "CF.json",
       "sizeBytes": 7516,
-      "updatedAt": "2026-06-11T11:02:14.306Z"
+      "updatedAt": "2026-06-12T07:28:13.383Z"
     },
     {
       "name": "CFG.json",
       "sizeBytes": 4805,
-      "updatedAt": "2026-06-11T11:02:14.254Z"
+      "updatedAt": "2026-06-12T07:28:13.329Z"
     },
     {
       "name": "CHD.json",
       "sizeBytes": 8801,
-      "updatedAt": "2026-06-11T11:02:14.266Z"
+      "updatedAt": "2026-06-12T07:28:13.341Z"
     },
     {
       "name": "CHRW.json",
       "sizeBytes": 8451,
-      "updatedAt": "2026-06-11T11:02:14.225Z"
+      "updatedAt": "2026-06-12T07:28:13.300Z"
     },
     {
       "name": "CHTR.json",
       "sizeBytes": 1931,
-      "updatedAt": "2026-06-11T11:02:14.301Z"
+      "updatedAt": "2026-06-12T07:28:13.377Z"
     },
     {
       "name": "CI.json",
       "sizeBytes": 6129,
-      "updatedAt": "2026-06-11T11:02:14.215Z"
+      "updatedAt": "2026-06-12T07:28:13.288Z"
     },
     {
       "name": "CIEN.json",
       "sizeBytes": 962,
-      "updatedAt": "2026-06-11T11:02:14.237Z"
+      "updatedAt": "2026-06-12T07:28:13.313Z"
     },
     {
       "name": "CINF.json",
       "sizeBytes": 9043,
-      "updatedAt": "2026-06-11T11:02:14.238Z"
+      "updatedAt": "2026-06-12T07:28:13.314Z"
     },
     {
       "name": "CL.json",
       "sizeBytes": 9095,
-      "updatedAt": "2026-06-11T11:02:14.271Z"
+      "updatedAt": "2026-06-12T07:28:13.345Z"
     },
     {
       "name": "CLX.json",
       "sizeBytes": 9079,
-      "updatedAt": "2026-06-11T11:02:14.337Z"
+      "updatedAt": "2026-06-12T07:28:13.417Z"
     },
     {
       "name": "CMCSA.json",
       "sizeBytes": 7783,
-      "updatedAt": "2026-06-11T11:02:14.331Z"
+      "updatedAt": "2026-06-12T07:28:13.410Z"
     },
     {
       "name": "CME.json",
       "sizeBytes": 9060,
-      "updatedAt": "2026-06-11T11:02:14.220Z"
+      "updatedAt": "2026-06-12T07:28:13.294Z"
     },
     {
       "name": "CMG.json",
       "sizeBytes": 2061,
-      "updatedAt": "2026-06-11T11:02:14.328Z"
+      "updatedAt": "2026-06-12T07:28:13.407Z"
     },
     {
       "name": "CMI.json",
       "sizeBytes": 9075,
-      "updatedAt": "2026-06-11T11:02:14.227Z"
+      "updatedAt": "2026-06-12T07:28:13.302Z"
     },
     {
       "name": "CMS.json",
       "sizeBytes": 8298,
-      "updatedAt": "2026-06-11T11:02:14.319Z"
+      "updatedAt": "2026-06-12T07:28:13.395Z"
     },
     {
       "name": "CNC.json",
       "sizeBytes": 2212,
-      "updatedAt": "2026-06-11T11:02:14.223Z"
+      "updatedAt": "2026-06-12T07:28:13.298Z"
     },
     {
       "name": "CNP.json",
       "sizeBytes": 9665,
-      "updatedAt": "2026-06-11T11:02:14.258Z"
+      "updatedAt": "2026-06-12T07:28:13.332Z"
     },
     {
       "name": "COF.json",
       "sizeBytes": 8375,
-      "updatedAt": "2026-06-11T11:02:14.310Z"
+      "updatedAt": "2026-06-12T07:28:13.388Z"
     },
     {
       "name": "COHR.json",
       "sizeBytes": 757,
-      "updatedAt": "2026-06-11T11:02:14.199Z"
+      "updatedAt": "2026-06-12T07:28:13.269Z"
     },
     {
       "name": "COIN.json",
       "sizeBytes": 1584,
-      "updatedAt": "2026-06-11T11:02:14.331Z"
+      "updatedAt": "2026-06-12T07:28:13.410Z"
     },
     {
       "name": "COO.json",
       "sizeBytes": 5515,
-      "updatedAt": "2026-06-11T11:02:14.261Z"
+      "updatedAt": "2026-06-12T07:28:13.336Z"
     },
     {
       "name": "COP.json",
       "sizeBytes": 9300,
-      "updatedAt": "2026-06-11T11:02:14.226Z"
+      "updatedAt": "2026-06-12T07:28:13.301Z"
     },
     {
       "name": "COR.json",
       "sizeBytes": 8331,
-      "updatedAt": "2026-06-11T11:02:14.333Z"
+      "updatedAt": "2026-06-12T07:28:13.412Z"
     },
     {
       "name": "COST.json",
       "sizeBytes": 8895,
-      "updatedAt": "2026-06-11T11:02:14.241Z"
+      "updatedAt": "2026-06-12T07:28:13.317Z"
     },
     {
       "name": "CPAY.json",
       "sizeBytes": 1920,
-      "updatedAt": "2026-06-11T11:02:14.216Z"
+      "updatedAt": "2026-06-12T07:28:13.289Z"
     },
     {
       "name": "CPB.json",
       "sizeBytes": 9064,
-      "updatedAt": "2026-06-11T11:02:14.250Z"
+      "updatedAt": "2026-06-12T07:28:13.325Z"
     },
     {
       "name": "CPRT.json",
       "sizeBytes": 2432,
-      "updatedAt": "2026-06-11T11:02:14.311Z"
+      "updatedAt": "2026-06-12T07:28:13.389Z"
     },
     {
       "name": "CPT.json",
       "sizeBytes": 8234,
-      "updatedAt": "2026-06-11T11:02:14.287Z"
+      "updatedAt": "2026-06-12T07:28:13.363Z"
     },
     {
       "name": "CRH.json",
       "sizeBytes": 3292,
-      "updatedAt": "2026-06-11T11:02:14.230Z"
+      "updatedAt": "2026-06-12T07:28:13.305Z"
     },
     {
       "name": "CRL.json",
       "sizeBytes": 2274,
-      "updatedAt": "2026-06-11T11:02:14.290Z"
+      "updatedAt": "2026-06-12T07:28:13.366Z"
     },
     {
       "name": "CRM.json",
       "sizeBytes": 2673,
-      "updatedAt": "2026-06-11T11:02:14.287Z"
+      "updatedAt": "2026-06-12T07:28:13.362Z"
     },
     {
       "name": "CRWD.json",
       "sizeBytes": 1657,
-      "updatedAt": "2026-06-11T11:02:14.230Z"
+      "updatedAt": "2026-06-12T07:28:13.306Z"
     },
     {
       "name": "CSCO.json",
       "sizeBytes": 6632,
-      "updatedAt": "2026-06-11T11:02:14.256Z"
+      "updatedAt": "2026-06-12T07:28:13.331Z"
     },
     {
       "name": "CSGP.json",
       "sizeBytes": 2317,
-      "updatedAt": "2026-06-11T11:02:14.210Z"
+      "updatedAt": "2026-06-12T07:28:13.283Z"
     },
     {
       "name": "CSX.json",
       "sizeBytes": 8798,
-      "updatedAt": "2026-06-11T11:02:14.309Z"
+      "updatedAt": "2026-06-12T07:28:13.386Z"
     },
     {
       "name": "CTAS.json",
       "sizeBytes": 5346,
-      "updatedAt": "2026-06-11T11:02:14.206Z"
+      "updatedAt": "2026-06-12T07:28:13.278Z"
     },
     {
       "name": "CTRA.json",
       "sizeBytes": 8079,
-      "updatedAt": "2026-06-11T11:02:14.295Z"
+      "updatedAt": "2026-06-12T07:28:13.371Z"
     },
     {
       "name": "CTSH.json",
       "sizeBytes": 4661,
-      "updatedAt": "2026-06-11T11:02:14.238Z"
+      "updatedAt": "2026-06-12T07:28:13.314Z"
     },
     {
       "name": "CTVA.json",
       "sizeBytes": 3370,
-      "updatedAt": "2026-06-11T11:02:14.280Z"
+      "updatedAt": "2026-06-12T07:28:13.355Z"
     },
     {
       "name": "CVNA.json",
       "sizeBytes": 1689,
-      "updatedAt": "2026-06-11T11:02:14.332Z"
+      "updatedAt": "2026-06-12T07:28:13.411Z"
     },
     {
       "name": "CVS.json",
       "sizeBytes": 9185,
-      "updatedAt": "2026-06-11T11:02:14.320Z"
+      "updatedAt": "2026-06-12T07:28:13.398Z"
     },
     {
       "name": "CVX.json",
       "sizeBytes": 9392,
-      "updatedAt": "2026-06-11T11:02:14.295Z"
+      "updatedAt": "2026-06-12T07:28:13.371Z"
     },
     {
       "name": "D.json",
       "sizeBytes": 8903,
-      "updatedAt": "2026-06-11T11:02:14.297Z"
+      "updatedAt": "2026-06-12T07:28:13.373Z"
     },
     {
       "name": "DAL.json",
       "sizeBytes": 4520,
-      "updatedAt": "2026-06-11T11:02:14.292Z"
+      "updatedAt": "2026-06-12T07:28:13.368Z"
     },
     {
       "name": "DASH.json",
       "sizeBytes": 1606,
-      "updatedAt": "2026-06-11T11:02:14.233Z"
+      "updatedAt": "2026-06-12T07:28:13.308Z"
     },
     {
       "name": "DAY.json",
       "sizeBytes": 1021,
-      "updatedAt": "2026-06-11T11:02:14.296Z"
+      "updatedAt": "2026-06-12T07:28:13.372Z"
     },
     {
       "name": "DD.json",
       "sizeBytes": 5392,
-      "updatedAt": "2026-06-11T11:02:14.270Z"
+      "updatedAt": "2026-06-12T07:28:13.344Z"
     },
     {
       "name": "DDOG.json",
       "sizeBytes": 1642,
-      "updatedAt": "2026-06-11T11:02:14.218Z"
+      "updatedAt": "2026-06-12T07:28:13.291Z"
     },
     {
       "name": "DE.json",
       "sizeBytes": 9131,
-      "updatedAt": "2026-06-11T11:02:14.231Z"
+      "updatedAt": "2026-06-12T07:28:13.307Z"
     },
     {
       "name": "DECK.json",
       "sizeBytes": 2491,
-      "updatedAt": "2026-06-11T11:02:14.239Z"
+      "updatedAt": "2026-06-12T07:28:13.315Z"
     },
     {
       "name": "DELL.json",
       "sizeBytes": 3216,
-      "updatedAt": "2026-06-11T11:02:14.275Z"
+      "updatedAt": "2026-06-12T07:28:13.349Z"
     },
     {
       "name": "DG.json",
       "sizeBytes": 5849,
-      "updatedAt": "2026-06-11T11:02:14.278Z"
+      "updatedAt": "2026-06-12T07:28:13.353Z"
     },
     {
       "name": "DGX.json",
       "sizeBytes": 8245,
-      "updatedAt": "2026-06-11T11:02:14.300Z"
+      "updatedAt": "2026-06-12T07:28:13.376Z"
     },
     {
       "name": "DHI.json",
       "sizeBytes": 8272,
-      "updatedAt": "2026-06-11T11:02:14.281Z"
+      "updatedAt": "2026-06-12T07:28:13.356Z"
     },
     {
       "name": "DHR.json",
       "sizeBytes": 8964,
-      "updatedAt": "2026-06-11T11:02:14.234Z"
+      "updatedAt": "2026-06-12T07:28:13.309Z"
     },
     {
       "name": "DIS.json",
       "sizeBytes": 5259,
-      "updatedAt": "2026-06-11T11:02:14.222Z"
+      "updatedAt": "2026-06-12T07:28:13.297Z"
     },
     {
       "name": "DLR.json",
       "sizeBytes": 7855,
-      "updatedAt": "2026-06-11T11:02:14.269Z"
+      "updatedAt": "2026-06-12T07:28:13.343Z"
     },
     {
       "name": "DLTR.json",
       "sizeBytes": 2412,
-      "updatedAt": "2026-06-11T11:02:14.232Z"
+      "updatedAt": "2026-06-12T07:28:13.308Z"
     },
     {
       "name": "DOC.json",
       "sizeBytes": 6754,
-      "updatedAt": "2026-06-11T11:02:14.293Z"
+      "updatedAt": "2026-06-12T07:28:13.368Z"
     },
     {
       "name": "DOV.json",
       "sizeBytes": 8898,
-      "updatedAt": "2026-06-11T11:02:14.295Z"
+      "updatedAt": "2026-06-12T07:28:13.371Z"
     },
     {
       "name": "DOW.json",
       "sizeBytes": 5283,
-      "updatedAt": "2026-06-11T11:02:14.283Z"
+      "updatedAt": "2026-06-12T07:28:13.358Z"
     },
     {
       "name": "DPZ.json",
       "sizeBytes": 6348,
-      "updatedAt": "2026-06-11T11:02:14.271Z"
+      "updatedAt": "2026-06-12T07:28:13.345Z"
     },
     {
       "name": "DRI.json",
       "sizeBytes": 7757,
-      "updatedAt": "2026-06-11T11:02:14.307Z"
+      "updatedAt": "2026-06-12T07:28:13.384Z"
     },
     {
       "name": "DTE.json",
       "sizeBytes": 9532,
-      "updatedAt": "2026-06-11T11:02:14.333Z"
+      "updatedAt": "2026-06-12T07:28:13.412Z"
     },
     {
       "name": "DUK.json",
       "sizeBytes": 8935,
-      "updatedAt": "2026-06-11T11:02:14.271Z"
+      "updatedAt": "2026-06-12T07:28:13.345Z"
     },
     {
       "name": "DVA.json",
       "sizeBytes": 2401,
-      "updatedAt": "2026-06-11T11:02:14.261Z"
+      "updatedAt": "2026-06-12T07:28:13.335Z"
     },
     {
       "name": "DVN.json",
       "sizeBytes": 8726,
-      "updatedAt": "2026-06-11T11:02:14.283Z"
+      "updatedAt": "2026-06-12T07:28:13.358Z"
     },
     {
       "name": "DXCM.json",
       "sizeBytes": 2081,
-      "updatedAt": "2026-06-11T11:02:14.337Z"
+      "updatedAt": "2026-06-12T07:28:13.417Z"
     },
     {
       "name": "EA.json",
       "sizeBytes": 4029,
-      "updatedAt": "2026-06-11T11:02:14.275Z"
+      "updatedAt": "2026-06-12T07:28:13.350Z"
     },
     {
       "name": "EBAY.json",
       "sizeBytes": 4181,
-      "updatedAt": "2026-06-11T11:02:14.323Z"
+      "updatedAt": "2026-06-12T07:28:13.401Z"
     },
     {
       "name": "ECL.json",
       "sizeBytes": 9107,
-      "updatedAt": "2026-06-11T11:02:14.217Z"
+      "updatedAt": "2026-06-12T07:28:13.290Z"
     },
     {
       "name": "ED.json",
       "sizeBytes": 9360,
-      "updatedAt": "2026-06-11T11:02:14.219Z"
+      "updatedAt": "2026-06-12T07:28:13.293Z"
     },
     {
       "name": "EFX.json",
       "sizeBytes": 8811,
-      "updatedAt": "2026-06-11T11:02:14.269Z"
+      "updatedAt": "2026-06-12T07:28:13.343Z"
     },
     {
       "name": "EG.json",
       "sizeBytes": 8357,
-      "updatedAt": "2026-06-11T11:02:14.321Z"
+      "updatedAt": "2026-06-12T07:28:13.399Z"
     },
     {
       "name": "EIX.json",
       "sizeBytes": 9177,
-      "updatedAt": "2026-06-11T11:02:14.312Z"
+      "updatedAt": "2026-06-12T07:28:13.390Z"
     },
     {
       "name": "EL.json",
       "sizeBytes": 6503,
-      "updatedAt": "2026-06-11T11:02:14.293Z"
+      "updatedAt": "2026-06-12T07:28:13.369Z"
     },
     {
       "name": "ELV.json",
       "sizeBytes": 6840,
-      "updatedAt": "2026-06-11T11:02:14.266Z"
+      "updatedAt": "2026-06-12T07:28:13.340Z"
     },
     {
       "name": "EME.json",
       "sizeBytes": 6315,
-      "updatedAt": "2026-06-11T11:02:14.260Z"
+      "updatedAt": "2026-06-12T07:28:13.335Z"
     },
     {
       "name": "EMR.json",
       "sizeBytes": 9168,
-      "updatedAt": "2026-06-11T11:02:14.299Z"
+      "updatedAt": "2026-06-12T07:28:13.375Z"
     },
     {
       "name": "EOG.json",
       "sizeBytes": 9127,
-      "updatedAt": "2026-06-11T11:02:14.290Z"
+      "updatedAt": "2026-06-12T07:28:13.365Z"
     },
     {
       "name": "EPAM.json",
       "sizeBytes": 1852,
-      "updatedAt": "2026-06-11T11:02:14.305Z"
+      "updatedAt": "2026-06-12T07:28:13.382Z"
     },
     {
       "name": "EQIX.json",
       "sizeBytes": 5307,
-      "updatedAt": "2026-06-11T11:02:14.332Z"
+      "updatedAt": "2026-06-12T07:28:13.411Z"
     },
     {
       "name": "EQR.json",
       "sizeBytes": 8586,
-      "updatedAt": "2026-06-11T11:02:14.308Z"
+      "updatedAt": "2026-06-12T07:28:13.385Z"
     },
     {
       "name": "EQT.json",
       "sizeBytes": 8480,
-      "updatedAt": "2026-06-11T11:02:14.281Z"
+      "updatedAt": "2026-06-12T07:28:13.356Z"
     },
     {
       "name": "ERIE.json",
       "sizeBytes": 8499,
-      "updatedAt": "2026-06-11T11:02:14.306Z"
+      "updatedAt": "2026-06-12T07:28:13.383Z"
     },
     {
       "name": "ES.json",
       "sizeBytes": 9165,
-      "updatedAt": "2026-06-11T11:02:14.331Z"
+      "updatedAt": "2026-06-12T07:28:13.410Z"
     },
     {
       "name": "ESS.json",
       "sizeBytes": 8433,
-      "updatedAt": "2026-06-11T11:02:14.326Z"
+      "updatedAt": "2026-06-12T07:28:13.404Z"
     },
     {
       "name": "ETN.json",
       "sizeBytes": 8557,
-      "updatedAt": "2026-06-11T11:02:14.209Z"
+      "updatedAt": "2026-06-12T07:28:13.281Z"
     },
     {
       "name": "ETR.json",
       "sizeBytes": 9010,
-      "updatedAt": "2026-06-11T11:02:14.298Z"
+      "updatedAt": "2026-06-12T07:28:13.374Z"
     },
     {
       "name": "EVRG.json",
       "sizeBytes": 5188,
-      "updatedAt": "2026-06-11T11:02:14.249Z"
+      "updatedAt": "2026-06-12T07:28:13.325Z"
     },
     {
       "name": "EW.json",
       "sizeBytes": 2246,
-      "updatedAt": "2026-06-11T11:02:14.262Z"
+      "updatedAt": "2026-06-12T07:28:13.336Z"
     },
     {
       "name": "EXC.json",
       "sizeBytes": 9163,
-      "updatedAt": "2026-06-11T11:02:14.307Z"
+      "updatedAt": "2026-06-12T07:28:13.384Z"
     },
     {
       "name": "EXE.json",
       "sizeBytes": 3800,
-      "updatedAt": "2026-06-11T11:02:14.279Z"
+      "updatedAt": "2026-06-12T07:28:13.354Z"
     },
     {
       "name": "EXPD.json",
       "sizeBytes": 5812,
-      "updatedAt": "2026-06-11T11:02:14.304Z"
+      "updatedAt": "2026-06-12T07:28:13.381Z"
     },
     {
       "name": "EXPE.json",
       "sizeBytes": 5183,
-      "updatedAt": "2026-06-11T11:02:14.273Z"
+      "updatedAt": "2026-06-12T07:28:13.348Z"
     },
     {
       "name": "EXR.json",
       "sizeBytes": 7827,
-      "updatedAt": "2026-06-11T11:02:14.240Z"
+      "updatedAt": "2026-06-12T07:28:13.316Z"
     },
     {
       "name": "F.json",
       "sizeBytes": 7244,
-      "updatedAt": "2026-06-11T11:02:14.251Z"
+      "updatedAt": "2026-06-12T07:28:13.326Z"
     },
     {
       "name": "FANG.json",
       "sizeBytes": 3949,
-      "updatedAt": "2026-06-11T11:02:14.327Z"
+      "updatedAt": "2026-06-12T07:28:13.405Z"
     },
     {
       "name": "FAST.json",
       "sizeBytes": 7949,
-      "updatedAt": "2026-06-11T11:02:14.284Z"
+      "updatedAt": "2026-06-12T07:28:13.360Z"
     },
     {
       "name": "FCX.json",
       "sizeBytes": 8035,
-      "updatedAt": "2026-06-11T11:02:14.304Z"
+      "updatedAt": "2026-06-12T07:28:13.381Z"
     },
     {
       "name": "FDS.json",
       "sizeBytes": 8349,
-      "updatedAt": "2026-06-11T11:02:14.301Z"
+      "updatedAt": "2026-06-12T07:28:13.377Z"
     },
     {
       "name": "FDX.json",
       "sizeBytes": 8942,
-      "updatedAt": "2026-06-11T11:02:14.315Z"
+      "updatedAt": "2026-06-12T07:28:13.391Z"
     },
     {
       "name": "FDXF.json",
       "sizeBytes": 723,
-      "updatedAt": "2026-06-11T11:02:14.272Z"
+      "updatedAt": "2026-06-12T07:28:13.347Z"
     },
     {
       "name": "FE.json",
       "sizeBytes": 8398,
-      "updatedAt": "2026-06-11T11:02:14.247Z"
+      "updatedAt": "2026-06-12T07:28:13.323Z"
     },
     {
       "name": "FER.json",
       "sizeBytes": 2160,
-      "updatedAt": "2026-06-11T11:02:14.322Z"
+      "updatedAt": "2026-06-12T07:28:13.399Z"
     },
     {
       "name": "FFIV.json",
       "sizeBytes": 2307,
-      "updatedAt": "2026-06-11T11:02:14.305Z"
+      "updatedAt": "2026-06-12T07:28:13.382Z"
     },
     {
       "name": "FICO.json",
       "sizeBytes": 6317,
-      "updatedAt": "2026-06-11T11:02:14.297Z"
+      "updatedAt": "2026-06-12T07:28:13.373Z"
     },
     {
       "name": "FIS.json",
       "sizeBytes": 8257,
-      "updatedAt": "2026-06-11T11:02:14.211Z"
+      "updatedAt": "2026-06-12T07:28:13.283Z"
     },
     {
       "name": "FISV.json",
       "sizeBytes": 2692,
-      "updatedAt": "2026-06-11T11:02:14.230Z"
+      "updatedAt": "2026-06-12T07:28:13.306Z"
     },
     {
       "name": "FITB.json",
       "sizeBytes": 8860,
-      "updatedAt": "2026-06-11T11:02:14.270Z"
+      "updatedAt": "2026-06-12T07:28:13.344Z"
     },
     {
       "name": "FIX.json",
       "sizeBytes": 7829,
-      "updatedAt": "2026-06-11T11:02:14.252Z"
+      "updatedAt": "2026-06-12T07:28:13.327Z"
     },
     {
       "name": "FOX.json",
       "sizeBytes": 2580,
-      "updatedAt": "2026-06-11T11:02:14.231Z"
+      "updatedAt": "2026-06-12T07:28:13.307Z"
     },
     {
       "name": "FOXA.json",
       "sizeBytes": 2584,
-      "updatedAt": "2026-06-11T11:02:14.221Z"
+      "updatedAt": "2026-06-12T07:28:13.295Z"
     },
     {
       "name": "FRT.json",
       "sizeBytes": 4210,
-      "updatedAt": "2026-06-11T11:02:14.262Z"
+      "updatedAt": "2026-06-12T07:28:13.337Z"
     },
     {
       "name": "FSLR.json",
       "sizeBytes": 2063,
-      "updatedAt": "2026-06-11T11:02:14.291Z"
+      "updatedAt": "2026-06-12T07:28:13.366Z"
     },
     {
       "name": "FTNT.json",
       "sizeBytes": 1945,
-      "updatedAt": "2026-06-11T11:02:14.222Z"
+      "updatedAt": "2026-06-12T07:28:13.297Z"
     },
     {
       "name": "FTV.json",
       "sizeBytes": 4266,
-      "updatedAt": "2026-06-11T11:02:14.285Z"
+      "updatedAt": "2026-06-12T07:28:13.361Z"
     },
     {
       "name": "GD.json",
       "sizeBytes": 9484,
-      "updatedAt": "2026-06-11T11:02:14.224Z"
+      "updatedAt": "2026-06-12T07:28:13.299Z"
     },
     {
       "name": "GDDY.json",
       "sizeBytes": 1737,
-      "updatedAt": "2026-06-11T11:02:14.278Z"
+      "updatedAt": "2026-06-12T07:28:13.353Z"
     },
     {
       "name": "GE.json",
       "sizeBytes": 9458,
-      "updatedAt": "2026-06-11T11:02:14.204Z"
+      "updatedAt": "2026-06-12T07:28:13.275Z"
     },
     {
       "name": "GEHC.json",
       "sizeBytes": 2354,
-      "updatedAt": "2026-06-11T11:02:14.201Z"
+      "updatedAt": "2026-06-12T07:28:13.272Z"
     },
     {
       "name": "GEN.json",
       "sizeBytes": 6211,
-      "updatedAt": "2026-06-11T11:02:14.337Z"
+      "updatedAt": "2026-06-12T07:28:13.417Z"
     },
     {
       "name": "GEV.json",
       "sizeBytes": 1811,
-      "updatedAt": "2026-06-11T11:02:14.324Z"
+      "updatedAt": "2026-06-12T07:28:13.402Z"
     },
     {
       "name": "GFS.json",
       "sizeBytes": 365,
-      "updatedAt": "2026-06-11T11:02:14.225Z"
+      "updatedAt": "2026-06-12T07:28:13.299Z"
     },
     {
       "name": "GILD.json",
       "sizeBytes": 5416,
-      "updatedAt": "2026-06-11T11:02:14.243Z"
+      "updatedAt": "2026-06-12T07:28:13.319Z"
     },
     {
       "name": "GIS.json",
       "sizeBytes": 8864,
-      "updatedAt": "2026-06-11T11:02:14.272Z"
+      "updatedAt": "2026-06-12T07:28:13.346Z"
     },
     {
       "name": "GL.json",
       "sizeBytes": 8921,
-      "updatedAt": "2026-06-11T11:02:14.304Z"
+      "updatedAt": "2026-06-12T07:28:13.380Z"
     },
     {
       "name": "GLW.json",
       "sizeBytes": 7852,
-      "updatedAt": "2026-06-11T11:02:14.258Z"
+      "updatedAt": "2026-06-12T07:28:13.332Z"
     },
     {
       "name": "GM.json",
       "sizeBytes": 5662,
-      "updatedAt": "2026-06-11T11:02:14.274Z"
+      "updatedAt": "2026-06-12T07:28:13.348Z"
     },
     {
       "name": "GNRC.json",
       "sizeBytes": 2055,
-      "updatedAt": "2026-06-11T11:02:14.284Z"
+      "updatedAt": "2026-06-12T07:28:13.359Z"
     },
     {
       "name": "GOOG.json",
       "sizeBytes": 2631,
-      "updatedAt": "2026-06-11T11:02:14.302Z"
+      "updatedAt": "2026-06-12T07:28:13.378Z"
     },
     {
       "name": "GOOGL.json",
       "sizeBytes": 2629,
-      "updatedAt": "2026-06-11T11:02:14.306Z"
+      "updatedAt": "2026-06-12T07:28:13.383Z"
     },
     {
       "name": "GPC.json",
       "sizeBytes": 8930,
-      "updatedAt": "2026-06-11T11:02:14.223Z"
+      "updatedAt": "2026-06-12T07:28:13.298Z"
     },
     {
       "name": "GPN.json",
       "sizeBytes": 8184,
-      "updatedAt": "2026-06-11T11:02:14.214Z"
+      "updatedAt": "2026-06-12T07:28:13.287Z"
     },
     {
       "name": "GRMN.json",
       "sizeBytes": 6723,
-      "updatedAt": "2026-06-11T11:02:14.326Z"
+      "updatedAt": "2026-06-12T07:28:13.404Z"
     },
     {
       "name": "GS.json",
       "sizeBytes": 8187,
-      "updatedAt": "2026-06-11T11:02:14.334Z"
+      "updatedAt": "2026-06-12T07:28:13.413Z"
     },
     {
       "name": "GWW.json",
       "sizeBytes": 9041,
-      "updatedAt": "2026-06-11T11:02:14.260Z"
+      "updatedAt": "2026-06-12T07:28:13.335Z"
     },
     {
       "name": "HAL.json",
       "sizeBytes": 9093,
-      "updatedAt": "2026-06-11T11:02:14.291Z"
+      "updatedAt": "2026-06-12T07:28:13.367Z"
     },
     {
       "name": "HAS.json",
       "sizeBytes": 8773,
-      "updatedAt": "2026-06-11T11:02:14.332Z"
+      "updatedAt": "2026-06-12T07:28:13.411Z"
     },
     {
       "name": "HBAN.json",
       "sizeBytes": 8837,
-      "updatedAt": "2026-06-11T11:02:14.306Z"
+      "updatedAt": "2026-06-12T07:28:13.383Z"
     },
     {
       "name": "HCA.json",
       "sizeBytes": 4040,
-      "updatedAt": "2026-06-11T11:02:14.279Z"
+      "updatedAt": "2026-06-12T07:28:13.353Z"
     },
     {
       "name": "HD.json",
       "sizeBytes": 8939,
-      "updatedAt": "2026-06-11T11:02:14.272Z"
+      "updatedAt": "2026-06-12T07:28:13.347Z"
     },
     {
       "name": "HIG.json",
       "sizeBytes": 8323,
-      "updatedAt": "2026-06-11T11:02:14.211Z"
+      "updatedAt": "2026-06-12T07:28:13.284Z"
     },
     {
       "name": "HII.json",
       "sizeBytes": 5454,
-      "updatedAt": "2026-06-11T11:02:14.310Z"
+      "updatedAt": "2026-06-12T07:28:13.387Z"
     },
     {
       "name": "HLT.json",
       "sizeBytes": 5183,
-      "updatedAt": "2026-06-11T11:02:14.221Z"
+      "updatedAt": "2026-06-12T07:28:13.296Z"
     },
     {
       "name": "HOLX.json",
       "sizeBytes": 2183,
-      "updatedAt": "2026-06-11T11:02:14.205Z"
+      "updatedAt": "2026-06-12T07:28:13.276Z"
     },
     {
       "name": "HON.json",
       "sizeBytes": 9516,
-      "updatedAt": "2026-06-11T11:02:14.277Z"
+      "updatedAt": "2026-06-12T07:28:13.352Z"
     },
     {
       "name": "HOOD.json",
       "sizeBytes": 1579,
-      "updatedAt": "2026-06-11T11:02:14.338Z"
+      "updatedAt": "2026-06-12T07:28:13.418Z"
     },
     {
       "name": "HPE.json",
       "sizeBytes": 4540,
-      "updatedAt": "2026-06-11T11:02:14.313Z"
+      "updatedAt": "2026-06-12T07:28:13.390Z"
     },
     {
       "name": "HPQ.json",
       "sizeBytes": 9597,
-      "updatedAt": "2026-06-11T11:02:14.334Z"
+      "updatedAt": "2026-06-12T07:28:13.414Z"
     },
     {
       "name": "HRL.json",
       "sizeBytes": 8922,
-      "updatedAt": "2026-06-11T11:02:14.253Z"
+      "updatedAt": "2026-06-12T07:28:13.327Z"
     },
     {
       "name": "HSIC.json",
       "sizeBytes": 2389,
-      "updatedAt": "2026-06-11T11:02:14.318Z"
+      "updatedAt": "2026-06-12T07:28:13.395Z"
     },
     {
       "name": "HST.json",
       "sizeBytes": 7836,
-      "updatedAt": "2026-06-11T11:02:14.209Z"
+      "updatedAt": "2026-06-12T07:28:13.281Z"
     },
     {
       "name": "HSY.json",
       "sizeBytes": 8874,
-      "updatedAt": "2026-06-11T11:02:14.230Z"
+      "updatedAt": "2026-06-12T07:28:13.305Z"
     },
     {
       "name": "HUBB.json",
       "sizeBytes": 5831,
-      "updatedAt": "2026-06-11T11:02:14.229Z"
+      "updatedAt": "2026-06-12T07:28:13.304Z"
     },
     {
       "name": "HUM.json",
       "sizeBytes": 6848,
-      "updatedAt": "2026-06-11T11:02:14.219Z"
+      "updatedAt": "2026-06-12T07:28:13.293Z"
     },
     {
       "name": "HWM.json",
       "sizeBytes": 7293,
-      "updatedAt": "2026-06-11T11:02:14.224Z"
+      "updatedAt": "2026-06-12T07:28:13.299Z"
     },
     {
       "name": "IBKR.json",
       "sizeBytes": 6083,
-      "updatedAt": "2026-06-11T11:02:14.282Z"
+      "updatedAt": "2026-06-12T07:28:13.357Z"
     },
     {
       "name": "IBM.json",
       "sizeBytes": 9413,
-      "updatedAt": "2026-06-11T11:02:14.237Z"
+      "updatedAt": "2026-06-12T07:28:13.313Z"
     },
     {
       "name": "ICE.json",
       "sizeBytes": 5379,
-      "updatedAt": "2026-06-11T11:02:14.282Z"
+      "updatedAt": "2026-06-12T07:28:13.357Z"
     },
     {
       "name": "IDXX.json",
       "sizeBytes": 2568,
-      "updatedAt": "2026-06-11T11:02:14.236Z"
+      "updatedAt": "2026-06-12T07:28:13.312Z"
     },
     {
       "name": "IEX.json",
       "sizeBytes": 8561,
-      "updatedAt": "2026-06-11T11:02:14.223Z"
+      "updatedAt": "2026-06-12T07:28:13.297Z"
     },
     {
       "name": "IFF.json",
       "sizeBytes": 9154,
-      "updatedAt": "2026-06-11T11:02:14.202Z"
+      "updatedAt": "2026-06-12T07:28:13.273Z"
     },
     {
       "name": "INCY.json",
       "sizeBytes": 2478,
-      "updatedAt": "2026-06-11T11:02:14.221Z"
+      "updatedAt": "2026-06-12T07:28:13.295Z"
     },
     {
       "name": "INSM.json",
       "sizeBytes": 2151,
-      "updatedAt": "2026-06-11T11:02:14.283Z"
+      "updatedAt": "2026-06-12T07:28:13.358Z"
     },
     {
       "name": "INTC.json",
       "sizeBytes": 8518,
-      "updatedAt": "2026-06-11T11:02:14.225Z"
+      "updatedAt": "2026-06-12T07:28:13.300Z"
     },
     {
       "name": "INTU.json",
       "sizeBytes": 6365,
-      "updatedAt": "2026-06-11T11:02:14.309Z"
+      "updatedAt": "2026-06-12T07:28:13.387Z"
     },
     {
       "name": "INVH.json",
       "sizeBytes": 4120,
-      "updatedAt": "2026-06-11T11:02:14.246Z"
+      "updatedAt": "2026-06-12T07:28:13.322Z"
     },
     {
       "name": "IP.json",
       "sizeBytes": 9472,
-      "updatedAt": "2026-06-11T11:02:14.328Z"
+      "updatedAt": "2026-06-12T07:28:13.407Z"
     },
     {
       "name": "IQV.json",
       "sizeBytes": 1826,
-      "updatedAt": "2026-06-11T11:02:14.245Z"
+      "updatedAt": "2026-06-12T07:28:13.321Z"
     },
     {
       "name": "IR.json",
       "sizeBytes": 4315,
-      "updatedAt": "2026-06-11T11:02:14.220Z"
+      "updatedAt": "2026-06-12T07:28:13.294Z"
     },
     {
       "name": "IRM.json",
       "sizeBytes": 5383,
-      "updatedAt": "2026-06-11T11:02:14.308Z"
+      "updatedAt": "2026-06-12T07:28:13.386Z"
     },
     {
       "name": "ISRG.json",
       "sizeBytes": 2272,
-      "updatedAt": "2026-06-11T11:02:14.267Z"
+      "updatedAt": "2026-06-12T07:28:13.341Z"
     },
     {
       "name": "IT.json",
       "sizeBytes": 2478,
-      "updatedAt": "2026-06-11T11:02:14.265Z"
+      "updatedAt": "2026-06-12T07:28:13.340Z"
     },
     {
       "name": "ITW.json",
       "sizeBytes": 9049,
-      "updatedAt": "2026-06-11T11:02:14.202Z"
+      "updatedAt": "2026-06-12T07:28:13.272Z"
     },
     {
       "name": "IVZ.json",
       "sizeBytes": 7265,
-      "updatedAt": "2026-06-11T11:02:14.228Z"
+      "updatedAt": "2026-06-12T07:28:13.304Z"
     },
     {
       "name": "J.json",
       "sizeBytes": 3792,
-      "updatedAt": "2026-06-11T11:02:14.260Z"
+      "updatedAt": "2026-06-12T07:28:13.334Z"
     },
     {
       "name": "JBHT.json",
       "sizeBytes": 8643,
-      "updatedAt": "2026-06-11T11:02:14.321Z"
+      "updatedAt": "2026-06-12T07:28:13.399Z"
     },
     {
       "name": "JBL.json",
       "sizeBytes": 7782,
-      "updatedAt": "2026-06-11T11:02:14.325Z"
+      "updatedAt": "2026-06-12T07:28:13.403Z"
     },
     {
       "name": "JCI.json",
       "sizeBytes": 8940,
-      "updatedAt": "2026-06-11T11:02:14.220Z"
+      "updatedAt": "2026-06-12T07:28:13.294Z"
     },
     {
       "name": "JKHY.json",
       "sizeBytes": 8651,
-      "updatedAt": "2026-06-11T11:02:14.201Z"
+      "updatedAt": "2026-06-12T07:28:13.272Z"
     },
     {
       "name": "JNJ.json",
       "sizeBytes": 9475,
-      "updatedAt": "2026-06-11T11:02:14.259Z"
+      "updatedAt": "2026-06-12T07:28:13.333Z"
     },
     {
       "name": "JPM.json",
       "sizeBytes": 8854,
-      "updatedAt": "2026-06-11T11:02:14.260Z"
+      "updatedAt": "2026-06-12T07:28:13.335Z"
     },
     {
       "name": "KDP.json",
       "sizeBytes": 6360,
-      "updatedAt": "2026-06-11T11:02:14.324Z"
+      "updatedAt": "2026-06-12T07:28:13.402Z"
     },
     {
       "name": "KEY.json",
       "sizeBytes": 8632,
-      "updatedAt": "2026-06-11T11:02:14.227Z"
+      "updatedAt": "2026-06-12T07:28:13.302Z"
     },
     {
       "name": "KEYS.json",
       "sizeBytes": 1797,
-      "updatedAt": "2026-06-11T11:02:14.286Z"
+      "updatedAt": "2026-06-12T07:28:13.361Z"
     },
     {
       "name": "KHC.json",
       "sizeBytes": 4627,
-      "updatedAt": "2026-06-11T11:02:14.270Z"
+      "updatedAt": "2026-06-12T07:28:13.344Z"
     },
     {
       "name": "KIM.json",
       "sizeBytes": 3351,
-      "updatedAt": "2026-06-11T11:02:14.333Z"
+      "updatedAt": "2026-06-12T07:28:13.413Z"
     },
     {
       "name": "KKR.json",
       "sizeBytes": 2871,
-      "updatedAt": "2026-06-11T11:02:14.293Z"
+      "updatedAt": "2026-06-12T07:28:13.368Z"
     },
     {
       "name": "KLAC.json",
       "sizeBytes": 8553,
-      "updatedAt": "2026-06-11T11:02:14.275Z"
+      "updatedAt": "2026-06-12T07:28:13.350Z"
     },
     {
       "name": "KMB.json",
       "sizeBytes": 8853,
-      "updatedAt": "2026-06-11T11:02:14.222Z"
+      "updatedAt": "2026-06-12T07:28:13.296Z"
     },
     {
       "name": "KMI.json",
       "sizeBytes": 6832,
-      "updatedAt": "2026-06-11T11:02:14.239Z"
+      "updatedAt": "2026-06-12T07:28:13.316Z"
     },
     {
       "name": "KO.json",
       "sizeBytes": 9596,
-      "updatedAt": "2026-06-11T11:02:14.302Z"
+      "updatedAt": "2026-06-12T07:28:13.378Z"
     },
     {
       "name": "KR.json",
       "sizeBytes": 8826,
-      "updatedAt": "2026-06-11T11:02:14.224Z"
+      "updatedAt": "2026-06-12T07:28:13.298Z"
     },
     {
       "name": "KVUE.json",
       "sizeBytes": 2161,
-      "updatedAt": "2026-06-11T11:02:14.242Z"
+      "updatedAt": "2026-06-12T07:28:13.319Z"
     },
     {
       "name": "L.json",
       "sizeBytes": 9024,
-      "updatedAt": "2026-06-11T11:02:14.216Z"
+      "updatedAt": "2026-06-12T07:28:13.289Z"
     },
     {
       "name": "LDOS.json",
       "sizeBytes": 5949,
-      "updatedAt": "2026-06-11T11:02:14.224Z"
+      "updatedAt": "2026-06-12T07:28:13.298Z"
     },
     {
       "name": "LEN.json",
       "sizeBytes": 8827,
-      "updatedAt": "2026-06-11T11:02:14.228Z"
+      "updatedAt": "2026-06-12T07:28:13.303Z"
     },
     {
       "name": "LH.json",
       "sizeBytes": 3608,
-      "updatedAt": "2026-06-11T11:02:14.294Z"
+      "updatedAt": "2026-06-12T07:28:13.370Z"
     },
     {
       "name": "LHX.json",
       "sizeBytes": 8775,
-      "updatedAt": "2026-06-11T11:02:14.255Z"
+      "updatedAt": "2026-06-12T07:28:13.329Z"
     },
     {
       "name": "LII.json",
       "sizeBytes": 8257,
-      "updatedAt": "2026-06-11T11:02:14.296Z"
+      "updatedAt": "2026-06-12T07:28:13.372Z"
     },
     {
       "name": "LIN.json",
       "sizeBytes": 3335,
-      "updatedAt": "2026-06-11T11:02:14.311Z"
+      "updatedAt": "2026-06-12T07:28:13.388Z"
     },
     {
       "name": "LITE.json",
       "sizeBytes": 782,
-      "updatedAt": "2026-06-11T11:02:14.239Z"
+      "updatedAt": "2026-06-12T07:28:13.315Z"
     },
     {
       "name": "LLY.json",
       "sizeBytes": 9166,
-      "updatedAt": "2026-06-11T11:02:14.253Z"
+      "updatedAt": "2026-06-12T07:28:13.328Z"
     },
     {
       "name": "LMT.json",
       "sizeBytes": 9386,
-      "updatedAt": "2026-06-11T11:02:14.207Z"
+      "updatedAt": "2026-06-12T07:28:13.279Z"
     },
     {
       "name": "LNT.json",
       "sizeBytes": 9149,
-      "updatedAt": "2026-06-11T11:02:14.246Z"
+      "updatedAt": "2026-06-12T07:28:13.322Z"
     },
     {
       "name": "LOW.json",
       "sizeBytes": 8889,
-      "updatedAt": "2026-06-11T11:02:14.338Z"
+      "updatedAt": "2026-06-12T07:28:13.418Z"
     },
     {
       "name": "LRCX.json",
       "sizeBytes": 5926,
-      "updatedAt": "2026-06-11T11:02:14.277Z"
+      "updatedAt": "2026-06-12T07:28:13.352Z"
     },
     {
       "name": "LULU.json",
       "sizeBytes": 2033,
-      "updatedAt": "2026-06-11T11:02:14.320Z"
+      "updatedAt": "2026-06-12T07:28:13.396Z"
     },
     {
       "name": "LUV.json",
       "sizeBytes": 8212,
-      "updatedAt": "2026-06-11T11:02:14.284Z"
+      "updatedAt": "2026-06-12T07:28:13.359Z"
     },
     {
       "name": "LVS.json",
       "sizeBytes": 5057,
-      "updatedAt": "2026-06-11T11:02:14.267Z"
+      "updatedAt": "2026-06-12T07:28:13.342Z"
     },
     {
       "name": "LW.json",
       "sizeBytes": 3808,
-      "updatedAt": "2026-06-11T11:02:14.327Z"
+      "updatedAt": "2026-06-12T07:28:13.406Z"
     },
     {
       "name": "LYB.json",
       "sizeBytes": 5867,
-      "updatedAt": "2026-06-11T11:02:14.243Z"
+      "updatedAt": "2026-06-12T07:28:13.320Z"
     },
     {
       "name": "LYV.json",
       "sizeBytes": 2096,
-      "updatedAt": "2026-06-11T11:02:14.255Z"
+      "updatedAt": "2026-06-12T07:28:13.329Z"
     },
     {
       "name": "MA.json",
       "sizeBytes": 7290,
-      "updatedAt": "2026-06-11T11:02:14.239Z"
+      "updatedAt": "2026-06-12T07:28:13.315Z"
     },
     {
       "name": "MAA.json",
       "sizeBytes": 8487,
-      "updatedAt": "2026-06-11T11:02:14.267Z"
+      "updatedAt": "2026-06-12T07:28:13.341Z"
     },
     {
       "name": "MAR.json",
       "sizeBytes": 7597,
-      "updatedAt": "2026-06-11T11:02:14.218Z"
+      "updatedAt": "2026-06-12T07:28:13.292Z"
     },
     {
       "name": "MAS.json",
       "sizeBytes": 8844,
-      "updatedAt": "2026-06-11T11:02:14.210Z"
+      "updatedAt": "2026-06-12T07:28:13.282Z"
     },
     {
       "name": "MCD.json",
       "sizeBytes": 8474,
-      "updatedAt": "2026-06-11T11:02:14.311Z"
+      "updatedAt": "2026-06-12T07:28:13.388Z"
     },
     {
       "name": "MCHP.json",
       "sizeBytes": 8477,
-      "updatedAt": "2026-06-11T11:02:14.232Z"
+      "updatedAt": "2026-06-12T07:28:13.308Z"
     },
     {
       "name": "MCK.json",
       "sizeBytes": 8362,
-      "updatedAt": "2026-06-11T11:02:14.218Z"
+      "updatedAt": "2026-06-12T07:28:13.292Z"
     },
     {
       "name": "MCO.json",
       "sizeBytes": 8349,
-      "updatedAt": "2026-06-11T11:02:14.303Z"
+      "updatedAt": "2026-06-12T07:28:13.379Z"
     },
     {
       "name": "MDLZ.json",
       "sizeBytes": 5932,
-      "updatedAt": "2026-06-11T11:02:14.336Z"
+      "updatedAt": "2026-06-12T07:28:13.416Z"
     },
     {
       "name": "MDT.json",
       "sizeBytes": 9082,
-      "updatedAt": "2026-06-11T11:02:14.211Z"
+      "updatedAt": "2026-06-12T07:28:13.284Z"
     },
     {
       "name": "MELI.json",
       "sizeBytes": 2718,
-      "updatedAt": "2026-06-11T11:02:14.229Z"
+      "updatedAt": "2026-06-12T07:28:13.304Z"
     },
     {
       "name": "MET.json",
       "sizeBytes": 6407,
-      "updatedAt": "2026-06-11T11:02:14.236Z"
+      "updatedAt": "2026-06-12T07:28:13.312Z"
     },
     {
       "name": "META.json",
       "sizeBytes": 2443,
-      "updatedAt": "2026-06-11T11:02:14.336Z"
+      "updatedAt": "2026-06-12T07:28:13.416Z"
     },
     {
       "name": "MGM.json",
       "sizeBytes": 4339,
-      "updatedAt": "2026-06-11T11:02:14.237Z"
+      "updatedAt": "2026-06-12T07:28:13.313Z"
     },
     {
       "name": "MKC.json",
       "sizeBytes": 9115,
-      "updatedAt": "2026-06-11T11:02:14.256Z"
+      "updatedAt": "2026-06-12T07:28:13.331Z"
     },
     {
       "name": "MLM.json",
       "sizeBytes": 8334,
-      "updatedAt": "2026-06-11T11:02:14.305Z"
+      "updatedAt": "2026-06-12T07:28:13.382Z"
     },
     {
       "name": "MMC.json",
       "sizeBytes": 8226,
-      "updatedAt": "2026-06-11T11:02:14.235Z"
+      "updatedAt": "2026-06-12T07:28:13.311Z"
     },
     {
       "name": "MMM.json",
       "sizeBytes": 9398,
-      "updatedAt": "2026-06-11T11:02:14.283Z"
+      "updatedAt": "2026-06-12T07:28:13.359Z"
     },
     {
       "name": "MNST.json",
       "sizeBytes": 2747,
-      "updatedAt": "2026-06-11T11:02:14.231Z"
+      "updatedAt": "2026-06-12T07:28:13.306Z"
     },
     {
       "name": "MO.json",
       "sizeBytes": 9453,
-      "updatedAt": "2026-06-11T11:02:14.280Z"
+      "updatedAt": "2026-06-12T07:28:13.354Z"
     },
     {
       "name": "MOH.json",
       "sizeBytes": 1733,
-      "updatedAt": "2026-06-11T11:02:14.221Z"
+      "updatedAt": "2026-06-12T07:28:13.295Z"
     },
     {
       "name": "MOS.json",
       "sizeBytes": 6681,
-      "updatedAt": "2026-06-11T11:02:14.335Z"
+      "updatedAt": "2026-06-12T07:28:13.415Z"
     },
     {
       "name": "MPC.json",
       "sizeBytes": 5797,
-      "updatedAt": "2026-06-11T11:02:14.256Z"
+      "updatedAt": "2026-06-12T07:28:13.331Z"
     },
     {
       "name": "MPWR.json",
       "sizeBytes": 5339,
-      "updatedAt": "2026-06-11T11:02:14.269Z"
+      "updatedAt": "2026-06-12T07:28:13.343Z"
     },
     {
       "name": "MRK.json",
       "sizeBytes": 9471,
-      "updatedAt": "2026-06-11T11:02:14.338Z"
+      "updatedAt": "2026-06-12T07:28:13.418Z"
     },
     {
       "name": "MRNA.json",
       "sizeBytes": 1665,
-      "updatedAt": "2026-06-11T11:02:14.202Z"
+      "updatedAt": "2026-06-12T07:28:13.273Z"
     },
     {
       "name": "MRSH.json",
       "sizeBytes": 1156,
-      "updatedAt": "2026-06-11T11:02:14.286Z"
+      "updatedAt": "2026-06-12T07:28:13.361Z"
     },
     {
       "name": "MRVL.json",
       "sizeBytes": 2338,
-      "updatedAt": "2026-06-11T11:02:14.257Z"
+      "updatedAt": "2026-06-12T07:28:13.332Z"
     },
     {
       "name": "MS.json",
       "sizeBytes": 8390,
-      "updatedAt": "2026-06-11T11:02:14.222Z"
+      "updatedAt": "2026-06-12T07:28:13.296Z"
     },
     {
       "name": "MSCI.json",
       "sizeBytes": 5033,
-      "updatedAt": "2026-06-11T11:02:14.302Z"
+      "updatedAt": "2026-06-12T07:28:13.378Z"
     },
     {
       "name": "MSFT.json",
       "sizeBytes": 8565,
-      "updatedAt": "2026-06-11T11:02:14.244Z"
+      "updatedAt": "2026-06-12T07:28:13.320Z"
     },
     {
       "name": "MSI.json",
       "sizeBytes": 7425,
-      "updatedAt": "2026-06-11T11:02:14.252Z"
+      "updatedAt": "2026-06-12T07:28:13.327Z"
     },
     {
       "name": "MSTR.json",
       "sizeBytes": 1132,
-      "updatedAt": "2026-06-11T11:02:14.285Z"
+      "updatedAt": "2026-06-12T07:28:13.360Z"
     },
     {
       "name": "MTB.json",
       "sizeBytes": 8733,
-      "updatedAt": "2026-06-11T11:02:14.254Z"
+      "updatedAt": "2026-06-12T07:28:13.329Z"
     },
     {
       "name": "MTCH.json",
       "sizeBytes": 2390,
-      "updatedAt": "2026-06-11T11:02:14.235Z"
+      "updatedAt": "2026-06-12T07:28:13.311Z"
     },
     {
       "name": "MTD.json",
       "sizeBytes": 2375,
-      "updatedAt": "2026-06-11T11:02:14.227Z"
+      "updatedAt": "2026-06-12T07:28:13.301Z"
     },
     {
       "name": "MU.json",
       "sizeBytes": 4032,
-      "updatedAt": "2026-06-11T11:02:14.268Z"
+      "updatedAt": "2026-06-12T07:28:13.343Z"
     },
     {
       "name": "NCLH.json",
       "sizeBytes": 1841,
-      "updatedAt": "2026-06-11T11:02:14.207Z"
+      "updatedAt": "2026-06-12T07:28:13.278Z"
     },
     {
       "name": "NDAQ.json",
       "sizeBytes": 5870,
-      "updatedAt": "2026-06-11T11:02:14.265Z"
+      "updatedAt": "2026-06-12T07:28:13.340Z"
     },
     {
       "name": "NDSN.json",
       "sizeBytes": 8900,
-      "updatedAt": "2026-06-11T11:02:14.293Z"
+      "updatedAt": "2026-06-12T07:28:13.369Z"
     },
     {
       "name": "NEE.json",
       "sizeBytes": 9089,
-      "updatedAt": "2026-06-11T11:02:14.260Z"
+      "updatedAt": "2026-06-12T07:28:13.334Z"
     },
     {
       "name": "NEM.json",
       "sizeBytes": 8875,
-      "updatedAt": "2026-06-11T11:02:14.337Z"
+      "updatedAt": "2026-06-12T07:28:13.417Z"
     },
     {
       "name": "NFLX.json",
       "sizeBytes": 2180,
-      "updatedAt": "2026-06-11T11:02:14.241Z"
+      "updatedAt": "2026-06-12T07:28:13.318Z"
     },
     {
       "name": "NI.json",
       "sizeBytes": 9050,
-      "updatedAt": "2026-06-11T11:02:14.275Z"
+      "updatedAt": "2026-06-12T07:28:13.350Z"
     },
     {
       "name": "NKE.json",
       "sizeBytes": 8800,
-      "updatedAt": "2026-06-11T11:02:14.281Z"
+      "updatedAt": "2026-06-12T07:28:13.356Z"
     },
     {
       "name": "NOC.json",
       "sizeBytes": 8826,
-      "updatedAt": "2026-06-11T11:02:14.335Z"
+      "updatedAt": "2026-06-12T07:28:13.414Z"
     },
     {
       "name": "NOW.json",
       "sizeBytes": 1858,
-      "updatedAt": "2026-06-11T11:02:14.312Z"
+      "updatedAt": "2026-06-12T07:28:13.390Z"
     },
     {
       "name": "NRG.json",
       "sizeBytes": 5803,
-      "updatedAt": "2026-06-11T11:02:14.232Z"
+      "updatedAt": "2026-06-12T07:28:13.308Z"
     },
     {
       "name": "NSC.json",
       "sizeBytes": 8732,
-      "updatedAt": "2026-06-11T11:02:14.277Z"
+      "updatedAt": "2026-06-12T07:28:13.351Z"
     },
     {
       "name": "NTAP.json",
       "sizeBytes": 5823,
-      "updatedAt": "2026-06-11T11:02:14.215Z"
+      "updatedAt": "2026-06-12T07:28:13.289Z"
     },
     {
       "name": "NTRS.json",
       "sizeBytes": 8857,
-      "updatedAt": "2026-06-11T11:02:14.209Z"
+      "updatedAt": "2026-06-12T07:28:13.282Z"
     },
     {
       "name": "NUE.json",
       "sizeBytes": 8919,
-      "updatedAt": "2026-06-11T11:02:14.338Z"
+      "updatedAt": "2026-06-12T07:28:13.418Z"
     },
     {
       "name": "NVDA.json",
       "sizeBytes": 5884,
-      "updatedAt": "2026-06-11T11:02:14.329Z"
+      "updatedAt": "2026-06-12T07:28:13.408Z"
     },
     {
       "name": "NVR.json",
       "sizeBytes": 2769,
-      "updatedAt": "2026-06-11T11:02:14.263Z"
+      "updatedAt": "2026-06-12T07:28:13.337Z"
     },
     {
       "name": "NWS.json",
       "sizeBytes": 3359,
-      "updatedAt": "2026-06-11T11:02:14.213Z"
+      "updatedAt": "2026-06-12T07:28:13.286Z"
     },
     {
       "name": "NWSA.json",
       "sizeBytes": 3226,
-      "updatedAt": "2026-06-11T11:02:14.277Z"
+      "updatedAt": "2026-06-12T07:28:13.352Z"
     },
     {
       "name": "NXPI.json",
       "sizeBytes": 3980,
-      "updatedAt": "2026-06-11T11:02:14.327Z"
+      "updatedAt": "2026-06-12T07:28:13.405Z"
     },
     {
       "name": "O.json",
       "sizeBytes": 20903,
-      "updatedAt": "2026-06-11T11:02:14.318Z"
+      "updatedAt": "2026-06-12T07:28:13.394Z"
     },
     {
       "name": "ODFL.json",
       "sizeBytes": 4960,
-      "updatedAt": "2026-06-11T11:02:14.302Z"
+      "updatedAt": "2026-06-12T07:28:13.379Z"
     },
     {
       "name": "OKE.json",
       "sizeBytes": 8816,
-      "updatedAt": "2026-06-11T11:02:14.202Z"
+      "updatedAt": "2026-06-12T07:28:13.273Z"
     },
     {
       "name": "OMC.json",
       "sizeBytes": 8827,
-      "updatedAt": "2026-06-11T11:02:14.270Z"
+      "updatedAt": "2026-06-12T07:28:13.344Z"
     },
     {
       "name": "ON.json",
       "sizeBytes": 2257,
-      "updatedAt": "2026-06-11T11:02:14.301Z"
+      "updatedAt": "2026-06-12T07:28:13.377Z"
     },
     {
       "name": "ORCL.json",
       "sizeBytes": 7193,
-      "updatedAt": "2026-06-11T11:02:14.328Z"
+      "updatedAt": "2026-06-12T07:28:13.407Z"
     },
     {
       "name": "ORLY.json",
       "sizeBytes": 2475,
-      "updatedAt": "2026-06-11T11:02:14.240Z"
+      "updatedAt": "2026-06-12T07:28:13.317Z"
     },
     {
       "name": "OTIS.json",
       "sizeBytes": 3133,
-      "updatedAt": "2026-06-11T11:02:14.217Z"
+      "updatedAt": "2026-06-12T07:28:13.290Z"
     },
     {
       "name": "OXY.json",
       "sizeBytes": 8856,
-      "updatedAt": "2026-06-11T11:02:14.258Z"
+      "updatedAt": "2026-06-12T07:28:13.333Z"
     },
     {
       "name": "PANW.json",
       "sizeBytes": 1881,
-      "updatedAt": "2026-06-11T11:02:14.213Z"
+      "updatedAt": "2026-06-12T07:28:13.286Z"
     },
     {
       "name": "PAYC.json",
       "sizeBytes": 2121,
-      "updatedAt": "2026-06-11T11:02:14.317Z"
+      "updatedAt": "2026-06-12T07:28:13.394Z"
     },
     {
       "name": "PAYX.json",
       "sizeBytes": 8825,
-      "updatedAt": "2026-06-11T11:02:14.200Z"
+      "updatedAt": "2026-06-12T07:28:13.270Z"
     },
     {
       "name": "PCAR.json",
       "sizeBytes": 10360,
-      "updatedAt": "2026-06-11T11:02:14.229Z"
+      "updatedAt": "2026-06-12T07:28:13.304Z"
     },
     {
       "name": "PCG.json",
       "sizeBytes": 7212,
-      "updatedAt": "2026-06-11T11:02:14.315Z"
+      "updatedAt": "2026-06-12T07:28:13.392Z"
     },
     {
       "name": "PDD.json",
       "sizeBytes": 594,
-      "updatedAt": "2026-06-11T11:02:14.238Z"
+      "updatedAt": "2026-06-12T07:28:13.314Z"
     },
     {
       "name": "PEG.json",
       "sizeBytes": 8931,
-      "updatedAt": "2026-06-11T11:02:14.331Z"
+      "updatedAt": "2026-06-12T07:28:13.410Z"
     },
     {
       "name": "PEP.json",
       "sizeBytes": 9152,
-      "updatedAt": "2026-06-11T11:02:14.220Z"
+      "updatedAt": "2026-06-12T07:28:13.294Z"
     },
     {
       "name": "PFE.json",
       "sizeBytes": 9119,
-      "updatedAt": "2026-06-11T11:02:14.257Z"
+      "updatedAt": "2026-06-12T07:28:13.332Z"
     },
     {
       "name": "PFG.json",
       "sizeBytes": 6513,
-      "updatedAt": "2026-06-11T11:02:14.289Z"
+      "updatedAt": "2026-06-12T07:28:13.364Z"
     },
     {
       "name": "PG.json",
       "sizeBytes": 9713,
-      "updatedAt": "2026-06-11T11:02:14.227Z"
+      "updatedAt": "2026-06-12T07:28:13.302Z"
     },
     {
       "name": "PGR.json",
       "sizeBytes": 6613,
-      "updatedAt": "2026-06-11T11:02:14.336Z"
+      "updatedAt": "2026-06-12T07:28:13.415Z"
     },
     {
       "name": "PH.json",
       "sizeBytes": 8838,
-      "updatedAt": "2026-06-11T11:02:14.322Z"
+      "updatedAt": "2026-06-12T07:28:13.400Z"
     },
     {
       "name": "PHM.json",
       "sizeBytes": 7680,
-      "updatedAt": "2026-06-11T11:02:14.199Z"
+      "updatedAt": "2026-06-12T07:28:13.270Z"
     },
     {
       "name": "PKG.json",
       "sizeBytes": 8135,
-      "updatedAt": "2026-06-11T11:02:14.203Z"
+      "updatedAt": "2026-06-12T07:28:13.274Z"
     },
     {
       "name": "PLD.json",
       "sizeBytes": 8245,
-      "updatedAt": "2026-06-11T11:02:14.276Z"
+      "updatedAt": "2026-06-12T07:28:13.351Z"
     },
     {
       "name": "PLTR.json",
       "sizeBytes": 1639,
-      "updatedAt": "2026-06-11T11:02:14.262Z"
+      "updatedAt": "2026-06-12T07:28:13.337Z"
     },
     {
       "name": "PM.json",
       "sizeBytes": 6687,
-      "updatedAt": "2026-06-11T11:02:14.267Z"
+      "updatedAt": "2026-06-12T07:28:13.341Z"
     },
     {
       "name": "PNC.json",
       "sizeBytes": 9021,
-      "updatedAt": "2026-06-11T11:02:14.335Z"
+      "updatedAt": "2026-06-12T07:28:13.414Z"
     },
     {
       "name": "PNR.json",
       "sizeBytes": 6756,
-      "updatedAt": "2026-06-11T11:02:14.254Z"
+      "updatedAt": "2026-06-12T07:28:13.329Z"
     },
     {
       "name": "PNW.json",
       "sizeBytes": 9188,
-      "updatedAt": "2026-06-11T11:02:14.313Z"
+      "updatedAt": "2026-06-12T07:28:13.390Z"
     },
     {
       "name": "PODD.json",
       "sizeBytes": 2013,
-      "updatedAt": "2026-06-11T11:02:14.296Z"
+      "updatedAt": "2026-06-12T07:28:13.372Z"
     },
     {
       "name": "POOL.json",
       "sizeBytes": 8239,
-      "updatedAt": "2026-06-11T11:02:14.296Z"
+      "updatedAt": "2026-06-12T07:28:13.371Z"
     },
     {
       "name": "PPG.json",
       "sizeBytes": 8806,
-      "updatedAt": "2026-06-11T11:02:14.203Z"
+      "updatedAt": "2026-06-12T07:28:13.274Z"
     },
     {
       "name": "PPL.json",
       "sizeBytes": 8937,
-      "updatedAt": "2026-06-11T11:02:14.264Z"
+      "updatedAt": "2026-06-12T07:28:13.339Z"
     },
     {
       "name": "PRU.json",
       "sizeBytes": 6348,
-      "updatedAt": "2026-06-11T11:02:14.265Z"
+      "updatedAt": "2026-06-12T07:28:13.339Z"
     },
     {
       "name": "PSA.json",
       "sizeBytes": 3566,
-      "updatedAt": "2026-06-11T11:02:14.208Z"
+      "updatedAt": "2026-06-12T07:28:13.279Z"
     },
     {
       "name": "PSKY.json",
       "sizeBytes": 2253,
-      "updatedAt": "2026-06-11T11:02:14.339Z"
+      "updatedAt": "2026-06-12T07:28:13.419Z"
     },
     {
       "name": "PSX.json",
       "sizeBytes": 5465,
-      "updatedAt": "2026-06-11T11:02:14.207Z"
+      "updatedAt": "2026-06-12T07:28:13.279Z"
     },
     {
       "name": "PTC.json",
       "sizeBytes": 2606,
-      "updatedAt": "2026-06-11T11:02:14.298Z"
+      "updatedAt": "2026-06-12T07:28:13.374Z"
     },
     {
       "name": "PWR.json",
       "sizeBytes": 4276,
-      "updatedAt": "2026-06-11T11:02:14.263Z"
+      "updatedAt": "2026-06-12T07:28:13.338Z"
     },
     {
       "name": "PYPL.json",
       "sizeBytes": 1835,
-      "updatedAt": "2026-06-11T11:02:14.298Z"
+      "updatedAt": "2026-06-12T07:28:13.373Z"
     },
     {
       "name": "Q.json",
       "sizeBytes": 2364,
-      "updatedAt": "2026-06-11T11:02:14.289Z"
+      "updatedAt": "2026-06-12T07:28:13.365Z"
     },
     {
       "name": "QCOM.json",
       "sizeBytes": 8588,
-      "updatedAt": "2026-06-11T11:02:14.291Z"
+      "updatedAt": "2026-06-12T07:28:13.366Z"
     },
     {
       "name": "RCL.json",
       "sizeBytes": 6576,
-      "updatedAt": "2026-06-11T11:02:14.274Z"
+      "updatedAt": "2026-06-12T07:28:13.348Z"
     },
     {
       "name": "REG.json",
       "sizeBytes": 8522,
-      "updatedAt": "2026-06-11T11:02:14.323Z"
+      "updatedAt": "2026-06-12T07:28:13.401Z"
     },
     {
       "name": "REGN.json",
       "sizeBytes": 2855,
-      "updatedAt": "2026-06-11T11:02:14.284Z"
+      "updatedAt": "2026-06-12T07:28:13.359Z"
     },
     {
       "name": "RF.json",
       "sizeBytes": 8885,
-      "updatedAt": "2026-06-11T11:02:14.211Z"
+      "updatedAt": "2026-06-12T07:28:13.283Z"
     },
     {
       "name": "RJF.json",
       "sizeBytes": 8790,
-      "updatedAt": "2026-06-11T11:02:14.242Z"
+      "updatedAt": "2026-06-12T07:28:13.318Z"
     },
     {
       "name": "RL.json",
       "sizeBytes": 8067,
-      "updatedAt": "2026-06-11T11:02:14.245Z"
+      "updatedAt": "2026-06-12T07:28:13.321Z"
     },
     {
       "name": "RMD.json",
       "sizeBytes": 6038,
-      "updatedAt": "2026-06-11T11:02:14.330Z"
+      "updatedAt": "2026-06-12T07:28:13.409Z"
     },
     {
       "name": "ROK.json",
       "sizeBytes": 8876,
-      "updatedAt": "2026-06-11T11:02:14.210Z"
+      "updatedAt": "2026-06-12T07:28:13.282Z"
     },
     {
       "name": "ROL.json",
       "sizeBytes": 8820,
-      "updatedAt": "2026-06-11T11:02:14.266Z"
+      "updatedAt": "2026-06-12T07:28:13.340Z"
     },
     {
       "name": "ROP.json",
       "sizeBytes": 8554,
-      "updatedAt": "2026-06-11T11:02:14.309Z"
+      "updatedAt": "2026-06-12T07:28:13.387Z"
     },
     {
       "name": "ROST.json",
       "sizeBytes": 8556,
-      "updatedAt": "2026-06-11T11:02:14.286Z"
+      "updatedAt": "2026-06-12T07:28:13.362Z"
     },
     {
       "name": "RSG.json",
       "sizeBytes": 8309,
-      "updatedAt": "2026-06-11T11:02:14.261Z"
+      "updatedAt": "2026-06-12T07:28:13.336Z"
     },
     {
       "name": "RTX.json",
       "sizeBytes": 9432,
-      "updatedAt": "2026-06-11T11:02:14.235Z"
+      "updatedAt": "2026-06-12T07:28:13.311Z"
     },
     {
       "name": "RVTY.json",
       "sizeBytes": 9103,
-      "updatedAt": "2026-06-11T11:02:14.241Z"
+      "updatedAt": "2026-06-12T07:28:13.318Z"
     },
     {
       "name": "SATS.json",
       "sizeBytes": 763,
-      "updatedAt": "2026-06-11T11:02:14.271Z"
+      "updatedAt": "2026-06-12T07:28:13.346Z"
     },
     {
       "name": "SBAC.json",
       "sizeBytes": 4046,
-      "updatedAt": "2026-06-11T11:02:14.251Z"
+      "updatedAt": "2026-06-12T07:28:13.326Z"
     },
     {
       "name": "SBUX.json",
       "sizeBytes": 6795,
-      "updatedAt": "2026-06-11T11:02:14.201Z"
+      "updatedAt": "2026-06-12T07:28:13.271Z"
     },
     {
       "name": "SCHW.json",
       "sizeBytes": 8129,
-      "updatedAt": "2026-06-11T11:02:14.245Z"
+      "updatedAt": "2026-06-12T07:28:13.322Z"
     },
     {
       "name": "SHOP.json",
       "sizeBytes": 562,
-      "updatedAt": "2026-06-11T11:02:14.273Z"
+      "updatedAt": "2026-06-12T07:28:13.347Z"
     },
     {
       "name": "SHW.json",
       "sizeBytes": 8839,
-      "updatedAt": "2026-06-11T11:02:14.231Z"
+      "updatedAt": "2026-06-12T07:28:13.306Z"
     },
     {
       "name": "SJM.json",
       "sizeBytes": 8278,
-      "updatedAt": "2026-06-11T11:02:14.300Z"
+      "updatedAt": "2026-06-12T07:28:13.376Z"
     },
     {
       "name": "SLB.json",
       "sizeBytes": 8654,
-      "updatedAt": "2026-06-11T11:02:14.264Z"
+      "updatedAt": "2026-06-12T07:28:13.338Z"
     },
     {
       "name": "SMCI.json",
       "sizeBytes": 2032,
-      "updatedAt": "2026-06-11T11:02:14.282Z"
+      "updatedAt": "2026-06-12T07:28:13.357Z"
     },
     {
       "name": "SNA.json",
       "sizeBytes": 9041,
-      "updatedAt": "2026-06-11T11:02:14.285Z"
+      "updatedAt": "2026-06-12T07:28:13.360Z"
     },
     {
       "name": "SNDK.json",
       "sizeBytes": 2051,
-      "updatedAt": "2026-06-11T11:02:14.274Z"
+      "updatedAt": "2026-06-12T07:28:13.349Z"
     },
     {
       "name": "SNPS.json",
       "sizeBytes": 2512,
-      "updatedAt": "2026-06-11T11:02:14.207Z"
+      "updatedAt": "2026-06-12T07:28:13.279Z"
     },
     {
       "name": "SO.json",
       "sizeBytes": 8827,
-      "updatedAt": "2026-06-11T11:02:14.339Z"
+      "updatedAt": "2026-06-12T07:28:13.419Z"
     },
     {
       "name": "SOLV.json",
       "sizeBytes": 1449,
-      "updatedAt": "2026-06-11T11:02:14.243Z"
+      "updatedAt": "2026-06-12T07:28:13.319Z"
     },
     {
       "name": "SPG.json",
       "sizeBytes": 8484,
-      "updatedAt": "2026-06-11T11:02:14.291Z"
+      "updatedAt": "2026-06-12T07:28:13.367Z"
     },
     {
       "name": "SPGI.json",
       "sizeBytes": 9129,
-      "updatedAt": "2026-06-11T11:02:14.241Z"
+      "updatedAt": "2026-06-12T07:28:13.317Z"
     },
     {
       "name": "SRE.json",
       "sizeBytes": 8288,
-      "updatedAt": "2026-06-11T11:02:14.264Z"
+      "updatedAt": "2026-06-12T07:28:13.338Z"
     },
     {
       "name": "STE.json",
       "sizeBytes": 5187,
-      "updatedAt": "2026-06-11T11:02:14.239Z"
+      "updatedAt": "2026-06-12T07:28:13.315Z"
     },
     {
       "name": "STLD.json",
       "sizeBytes": 8224,
-      "updatedAt": "2026-06-11T11:02:14.285Z"
+      "updatedAt": "2026-06-12T07:28:13.361Z"
     },
     {
       "name": "STT.json",
       "sizeBytes": 8881,
-      "updatedAt": "2026-06-11T11:02:14.308Z"
+      "updatedAt": "2026-06-12T07:28:13.385Z"
     },
     {
       "name": "STX.json",
       "sizeBytes": 4685,
-      "updatedAt": "2026-06-11T11:02:14.318Z"
+      "updatedAt": "2026-06-12T07:28:13.395Z"
     },
     {
       "name": "STZ.json",
       "sizeBytes": 5537,
-      "updatedAt": "2026-06-11T11:02:14.213Z"
+      "updatedAt": "2026-06-12T07:28:13.286Z"
     },
     {
       "name": "SW.json",
       "sizeBytes": 2404,
-      "updatedAt": "2026-06-11T11:02:14.323Z"
+      "updatedAt": "2026-06-12T07:28:13.401Z"
     },
     {
       "name": "SWK.json",
       "sizeBytes": 8789,
-      "updatedAt": "2026-06-11T11:02:14.310Z"
+      "updatedAt": "2026-06-12T07:28:13.387Z"
     },
     {
       "name": "SWKS.json",
       "sizeBytes": 5927,
-      "updatedAt": "2026-06-11T11:02:14.274Z"
+      "updatedAt": "2026-06-12T07:28:13.349Z"
     },
     {
       "name": "SYF.json",
       "sizeBytes": 4318,
-      "updatedAt": "2026-06-11T11:02:14.204Z"
+      "updatedAt": "2026-06-12T07:28:13.275Z"
     },
     {
       "name": "SYK.json",
       "sizeBytes": 7706,
-      "updatedAt": "2026-06-11T11:02:14.217Z"
+      "updatedAt": "2026-06-12T07:28:13.291Z"
     },
     {
       "name": "SYY.json",
       "sizeBytes": 9079,
-      "updatedAt": "2026-06-11T11:02:14.234Z"
+      "updatedAt": "2026-06-12T07:28:13.310Z"
     },
     {
       "name": "T.json",
       "sizeBytes": 9352,
-      "updatedAt": "2026-06-11T11:02:14.199Z"
+      "updatedAt": "2026-06-12T07:28:13.269Z"
     },
     {
       "name": "TAP.json",
       "sizeBytes": 8720,
-      "updatedAt": "2026-06-11T11:02:14.270Z"
+      "updatedAt": "2026-06-12T07:28:13.345Z"
     },
     {
       "name": "TDG.json",
       "sizeBytes": 2889,
-      "updatedAt": "2026-06-11T11:02:14.317Z"
+      "updatedAt": "2026-06-12T07:28:13.393Z"
     },
     {
       "name": "TDY.json",
       "sizeBytes": 2306,
-      "updatedAt": "2026-06-11T11:02:14.290Z"
+      "updatedAt": "2026-06-12T07:28:13.366Z"
     },
     {
       "name": "TEAM.json",
       "sizeBytes": 563,
-      "updatedAt": "2026-06-11T11:02:14.326Z"
+      "updatedAt": "2026-06-12T07:28:13.404Z"
     },
     {
       "name": "TECH.json",
       "sizeBytes": 7225,
-      "updatedAt": "2026-06-11T11:02:14.247Z"
+      "updatedAt": "2026-06-12T07:28:13.323Z"
     },
     {
       "name": "TEL.json",
       "sizeBytes": 6514,
-      "updatedAt": "2026-06-11T11:02:14.334Z"
+      "updatedAt": "2026-06-12T07:28:13.413Z"
     },
     {
       "name": "TER.json",
       "sizeBytes": 6310,
-      "updatedAt": "2026-06-11T11:02:14.276Z"
+      "updatedAt": "2026-06-12T07:28:13.351Z"
     },
     {
       "name": "TFC.json",
       "sizeBytes": 8932,
-      "updatedAt": "2026-06-11T11:02:14.240Z"
+      "updatedAt": "2026-06-12T07:28:13.316Z"
     },
     {
       "name": "TGT.json",
       "sizeBytes": 9023,
-      "updatedAt": "2026-06-11T11:02:14.311Z"
+      "updatedAt": "2026-06-12T07:28:13.389Z"
     },
     {
       "name": "TJX.json",
       "sizeBytes": 8497,
-      "updatedAt": "2026-06-11T11:02:14.268Z"
+      "updatedAt": "2026-06-12T07:28:13.343Z"
     },
     {
       "name": "TKO.json",
       "sizeBytes": 2630,
-      "updatedAt": "2026-06-11T11:02:14.329Z"
+      "updatedAt": "2026-06-12T07:28:13.408Z"
     },
     {
       "name": "TMO.json",
       "sizeBytes": 6701,
-      "updatedAt": "2026-06-11T11:02:14.316Z"
+      "updatedAt": "2026-06-12T07:28:13.393Z"
     },
     {
       "name": "TMUS.json",
       "sizeBytes": 2708,
-      "updatedAt": "2026-06-11T11:02:14.237Z"
+      "updatedAt": "2026-06-12T07:28:13.314Z"
     },
     {
       "name": "TPL.json",
       "sizeBytes": 4321,
-      "updatedAt": "2026-06-11T11:02:14.212Z"
+      "updatedAt": "2026-06-12T07:28:13.285Z"
     },
     {
       "name": "TPR.json",
       "sizeBytes": 6477,
-      "updatedAt": "2026-06-11T11:02:14.253Z"
+      "updatedAt": "2026-06-12T07:28:13.328Z"
     },
     {
       "name": "TRGP.json",
       "sizeBytes": 5963,
-      "updatedAt": "2026-06-11T11:02:14.326Z"
+      "updatedAt": "2026-06-12T07:28:13.405Z"
     },
     {
       "name": "TRI.json",
       "sizeBytes": 6851,
-      "updatedAt": "2026-06-11T11:02:14.294Z"
+      "updatedAt": "2026-06-12T07:28:13.370Z"
     },
     {
       "name": "TRMB.json",
       "sizeBytes": 2589,
-      "updatedAt": "2026-06-11T11:02:14.246Z"
+      "updatedAt": "2026-06-12T07:28:13.322Z"
     },
     {
       "name": "TROW.json",
       "sizeBytes": 8867,
-      "updatedAt": "2026-06-11T11:02:14.236Z"
+      "updatedAt": "2026-06-12T07:28:13.312Z"
     },
     {
       "name": "TRV.json",
       "sizeBytes": 9103,
-      "updatedAt": "2026-06-11T11:02:14.330Z"
+      "updatedAt": "2026-06-12T07:28:13.409Z"
     },
     {
       "name": "TSCO.json",
       "sizeBytes": 6726,
-      "updatedAt": "2026-06-11T11:02:14.206Z"
+      "updatedAt": "2026-06-12T07:28:13.277Z"
     },
     {
       "name": "TSLA.json",
       "sizeBytes": 1947,
-      "updatedAt": "2026-06-11T11:02:14.252Z"
+      "updatedAt": "2026-06-12T07:28:13.327Z"
     },
     {
       "name": "TSN.json",
       "sizeBytes": 8884,
-      "updatedAt": "2026-06-11T11:02:14.288Z"
+      "updatedAt": "2026-06-12T07:28:13.363Z"
     },
     {
       "name": "TT.json",
       "sizeBytes": 8823,
-      "updatedAt": "2026-06-11T11:02:14.248Z"
+      "updatedAt": "2026-06-12T07:28:13.323Z"
     },
     {
       "name": "TTD.json",
       "sizeBytes": 1714,
-      "updatedAt": "2026-06-11T11:02:14.299Z"
+      "updatedAt": "2026-06-12T07:28:13.375Z"
     },
     {
       "name": "TTWO.json",
       "sizeBytes": 2376,
-      "updatedAt": "2026-06-11T11:02:14.267Z"
+      "updatedAt": "2026-06-12T07:28:13.341Z"
     },
     {
       "name": "TXN.json",
       "sizeBytes": 9081,
-      "updatedAt": "2026-06-11T11:02:14.208Z"
+      "updatedAt": "2026-06-12T07:28:13.280Z"
     },
     {
       "name": "TXT.json",
       "sizeBytes": 9048,
-      "updatedAt": "2026-06-11T11:02:14.339Z"
+      "updatedAt": "2026-06-12T07:28:13.420Z"
     },
     {
       "name": "TYL.json",
       "sizeBytes": 2921,
-      "updatedAt": "2026-06-11T11:02:14.276Z"
+      "updatedAt": "2026-06-12T07:28:13.351Z"
     },
     {
       "name": "UAL.json",
       "sizeBytes": 2139,
-      "updatedAt": "2026-06-11T11:02:14.243Z"
+      "updatedAt": "2026-06-12T07:28:13.320Z"
     },
     {
       "name": "UBER.json",
       "sizeBytes": 1627,
-      "updatedAt": "2026-06-11T11:02:14.251Z"
+      "updatedAt": "2026-06-12T07:28:13.326Z"
     },
     {
       "name": "UDR.json",
       "sizeBytes": 8914,
-      "updatedAt": "2026-06-11T11:02:14.234Z"
+      "updatedAt": "2026-06-12T07:28:13.310Z"
     },
     {
       "name": "UHS.json",
       "sizeBytes": 8676,
-      "updatedAt": "2026-06-11T11:02:14.274Z"
+      "updatedAt": "2026-06-12T07:28:13.348Z"
     },
     {
       "name": "ULTA.json",
       "sizeBytes": 2044,
-      "updatedAt": "2026-06-11T11:02:14.317Z"
+      "updatedAt": "2026-06-12T07:28:13.394Z"
     },
     {
       "name": "UNH.json",
       "sizeBytes": 7529,
-      "updatedAt": "2026-06-11T11:02:14.258Z"
+      "updatedAt": "2026-06-12T07:28:13.333Z"
     },
     {
       "name": "UNP.json",
       "sizeBytes": 8877,
-      "updatedAt": "2026-06-11T11:02:14.240Z"
+      "updatedAt": "2026-06-12T07:28:13.316Z"
     },
     {
       "name": "UPS.json",
       "sizeBytes": 8267,
-      "updatedAt": "2026-06-11T11:02:14.314Z"
+      "updatedAt": "2026-06-12T07:28:13.391Z"
     },
     {
       "name": "URI.json",
       "sizeBytes": 3174,
-      "updatedAt": "2026-06-11T11:02:14.229Z"
+      "updatedAt": "2026-06-12T07:28:13.305Z"
     },
     {
       "name": "USB.json",
       "sizeBytes": 9100,
-      "updatedAt": "2026-06-11T11:02:14.209Z"
+      "updatedAt": "2026-06-12T07:28:13.281Z"
     },
     {
       "name": "V.json",
       "sizeBytes": 6759,
-      "updatedAt": "2026-06-11T11:02:14.317Z"
+      "updatedAt": "2026-06-12T07:28:13.393Z"
     },
     {
       "name": "VEEV.json",
       "sizeBytes": 535,
-      "updatedAt": "2026-06-11T11:02:14.256Z"
+      "updatedAt": "2026-06-12T07:28:13.330Z"
     },
     {
       "name": "VICI.json",
       "sizeBytes": 3838,
-      "updatedAt": "2026-06-11T11:02:14.198Z"
+      "updatedAt": "2026-06-12T07:28:13.269Z"
     },
     {
       "name": "VLO.json",
       "sizeBytes": 8738,
-      "updatedAt": "2026-06-11T11:02:14.299Z"
+      "updatedAt": "2026-06-12T07:28:13.375Z"
     },
     {
       "name": "VLTO.json",
       "sizeBytes": 2098,
-      "updatedAt": "2026-06-11T11:02:14.244Z"
+      "updatedAt": "2026-06-12T07:28:13.321Z"
     },
     {
       "name": "VMC.json",
       "sizeBytes": 9035,
-      "updatedAt": "2026-06-11T11:02:14.329Z"
+      "updatedAt": "2026-06-12T07:28:13.408Z"
     },
     {
       "name": "VRSK.json",
       "sizeBytes": 3854,
-      "updatedAt": "2026-06-11T11:02:14.325Z"
+      "updatedAt": "2026-06-12T07:28:13.404Z"
     },
     {
       "name": "VRSN.json",
       "sizeBytes": 2599,
-      "updatedAt": "2026-06-11T11:02:14.231Z"
+      "updatedAt": "2026-06-12T07:28:13.307Z"
     },
     {
       "name": "VRT.json",
       "sizeBytes": 785,
-      "updatedAt": "2026-06-11T11:02:14.208Z"
+      "updatedAt": "2026-06-12T07:28:13.280Z"
     },
     {
       "name": "VRTX.json",
       "sizeBytes": 2572,
-      "updatedAt": "2026-06-11T11:02:14.313Z"
+      "updatedAt": "2026-06-12T07:28:13.391Z"
     },
     {
       "name": "VST.json",
       "sizeBytes": 3625,
-      "updatedAt": "2026-06-11T11:02:14.233Z"
+      "updatedAt": "2026-06-12T07:28:13.309Z"
     },
     {
       "name": "VTR.json",
       "sizeBytes": 8513,
-      "updatedAt": "2026-06-11T11:02:14.251Z"
+      "updatedAt": "2026-06-12T07:28:13.326Z"
     },
     {
       "name": "VTRS.json",
       "sizeBytes": 4189,
-      "updatedAt": "2026-06-11T11:02:14.316Z"
+      "updatedAt": "2026-06-12T07:28:13.392Z"
     },
     {
       "name": "VZ.json",
       "sizeBytes": 8853,
-      "updatedAt": "2026-06-11T11:02:14.287Z"
+      "updatedAt": "2026-06-12T07:28:13.362Z"
     },
     {
       "name": "WAB.json",
       "sizeBytes": 8308,
-      "updatedAt": "2026-06-11T11:02:14.299Z"
+      "updatedAt": "2026-06-12T07:28:13.375Z"
     },
     {
       "name": "WAT.json",
       "sizeBytes": 2417,
-      "updatedAt": "2026-06-11T11:02:14.236Z"
+      "updatedAt": "2026-06-12T07:28:13.312Z"
     },
     {
       "name": "WBD.json",
       "sizeBytes": 2389,
-      "updatedAt": "2026-06-11T11:02:14.297Z"
+      "updatedAt": "2026-06-12T07:28:13.373Z"
     },
     {
       "name": "WDAY.json",
       "sizeBytes": 1874,
-      "updatedAt": "2026-06-11T11:02:14.214Z"
+      "updatedAt": "2026-06-12T07:28:13.287Z"
     },
     {
       "name": "WDC.json",
       "sizeBytes": 5259,
-      "updatedAt": "2026-06-11T11:02:14.326Z"
+      "updatedAt": "2026-06-12T07:28:13.405Z"
     },
     {
       "name": "WEC.json",
       "sizeBytes": 9008,
-      "updatedAt": "2026-06-11T11:02:14.301Z"
+      "updatedAt": "2026-06-12T07:28:13.378Z"
     },
     {
       "name": "WELL.json",
       "sizeBytes": 3914,
-      "updatedAt": "2026-06-11T11:02:14.216Z"
+      "updatedAt": "2026-06-12T07:28:13.289Z"
     },
     {
       "name": "WFC.json",
       "sizeBytes": 9179,
-      "updatedAt": "2026-06-11T11:02:14.340Z"
+      "updatedAt": "2026-06-12T07:28:13.420Z"
     },
     {
       "name": "WM.json",
       "sizeBytes": 9793,
-      "updatedAt": "2026-06-11T11:02:14.205Z"
+      "updatedAt": "2026-06-12T07:28:13.276Z"
     },
     {
       "name": "WMB.json",
       "sizeBytes": 8855,
-      "updatedAt": "2026-06-11T11:02:14.237Z"
+      "updatedAt": "2026-06-12T07:28:13.313Z"
     },
     {
       "name": "WMT.json",
       "sizeBytes": 9270,
-      "updatedAt": "2026-06-11T11:02:14.300Z"
+      "updatedAt": "2026-06-12T07:28:13.376Z"
     },
     {
       "name": "WRB.json",
       "sizeBytes": 9361,
-      "updatedAt": "2026-06-11T11:02:14.261Z"
+      "updatedAt": "2026-06-12T07:28:13.336Z"
     },
     {
       "name": "WSM.json",
       "sizeBytes": 8189,
-      "updatedAt": "2026-06-11T11:02:14.308Z"
+      "updatedAt": "2026-06-12T07:28:13.386Z"
     },
     {
       "name": "WST.json",
       "sizeBytes": 8884,
-      "updatedAt": "2026-06-11T11:02:14.324Z"
+      "updatedAt": "2026-06-12T07:28:13.402Z"
     },
     {
       "name": "WTW.json",
       "sizeBytes": 6847,
-      "updatedAt": "2026-06-11T11:02:14.248Z"
+      "updatedAt": "2026-06-12T07:28:13.324Z"
     },
     {
       "name": "WY.json",
       "sizeBytes": 9149,
-      "updatedAt": "2026-06-11T11:02:14.226Z"
+      "updatedAt": "2026-06-12T07:28:13.301Z"
     },
     {
       "name": "WYNN.json",
       "sizeBytes": 5836,
-      "updatedAt": "2026-06-11T11:02:14.279Z"
+      "updatedAt": "2026-06-12T07:28:13.354Z"
     },
     {
       "name": "XEL.json",
       "sizeBytes": 9231,
-      "updatedAt": "2026-06-11T11:02:14.339Z"
+      "updatedAt": "2026-06-12T07:28:13.419Z"
     },
     {
       "name": "XOM.json",
       "sizeBytes": 9404,
-      "updatedAt": "2026-06-11T11:02:14.212Z"
+      "updatedAt": "2026-06-12T07:28:13.285Z"
     },
     {
       "name": "XYL.json",
       "sizeBytes": 5728,
-      "updatedAt": "2026-06-11T11:02:14.278Z"
+      "updatedAt": "2026-06-12T07:28:13.353Z"
     },
     {
       "name": "XYZ.json",
       "sizeBytes": 1740,
-      "updatedAt": "2026-06-11T11:02:14.259Z"
+      "updatedAt": "2026-06-12T07:28:13.333Z"
     },
     {
       "name": "YUM.json",
       "sizeBytes": 8114,
-      "updatedAt": "2026-06-11T11:02:14.319Z"
+      "updatedAt": "2026-06-12T07:28:13.396Z"
     },
     {
       "name": "ZBH.json",
       "sizeBytes": 5973,
-      "updatedAt": "2026-06-11T11:02:14.219Z"
+      "updatedAt": "2026-06-12T07:28:13.292Z"
     },
     {
       "name": "ZBRA.json",
       "sizeBytes": 2563,
-      "updatedAt": "2026-06-11T11:02:14.268Z"
+      "updatedAt": "2026-06-12T07:28:13.342Z"
     },
     {
       "name": "ZS.json",
       "sizeBytes": 461,
-      "updatedAt": "2026-06-11T11:02:14.318Z"
+      "updatedAt": "2026-06-12T07:28:13.395Z"
     },
     {
       "name": "ZTS.json",
       "sizeBytes": 5333,
-      "updatedAt": "2026-06-11T11:02:14.247Z"
+      "updatedAt": "2026-06-12T07:28:13.323Z"
     }
   ],
   "yardney": [
     {
       "name": "yardney_model.json",
       "sizeBytes": 462522,
-      "updatedAt": "2026-06-11T11:02:14.167Z"
+      "updatedAt": "2026-06-12T07:28:13.235Z"
     }
   ],
   "yf": [
     {
       "name": "quarter_closes.json",
       "sizeBytes": 567957,
-      "updatedAt": "2026-06-11T11:02:14.714Z"
+      "updatedAt": "2026-06-12T07:28:13.824Z"
     }
   ],
   "yf/finance": [
     {
       "name": "_summary.json",
       "sizeBytes": 382,
-      "updatedAt": "2026-06-11T11:02:14.483Z"
+      "updatedAt": "2026-06-12T07:28:13.568Z"
     },
     {
       "name": "000001.SZ.json",
       "sizeBytes": 10650,
-      "updatedAt": "2026-06-11T11:02:14.452Z"
+      "updatedAt": "2026-06-12T07:28:13.536Z"
     },
     {
       "name": "000050.SZ.json",
       "sizeBytes": 13434,
-      "updatedAt": "2026-06-11T11:02:14.588Z"
+      "updatedAt": "2026-06-12T07:28:13.682Z"
     },
     {
       "name": "000080.KS.json",
       "sizeBytes": 13751,
-      "updatedAt": "2026-06-11T11:02:14.428Z"
+      "updatedAt": "2026-06-12T07:28:13.512Z"
     },
     {
       "name": "0001.HK.json",
       "sizeBytes": 10199,
-      "updatedAt": "2026-06-11T11:02:14.413Z"
+      "updatedAt": "2026-06-12T07:28:13.496Z"
     },
     {
       "name": "000100.KS.json",
       "sizeBytes": 16111,
-      "updatedAt": "2026-06-11T11:02:14.648Z"
+      "updatedAt": "2026-06-12T07:28:13.748Z"
     },
     {
       "name": "000120.KS.json",
       "sizeBytes": 13575,
-      "updatedAt": "2026-06-11T11:02:14.532Z"
+      "updatedAt": "2026-06-12T07:28:13.622Z"
     },
     {
       "name": "000150.KS.json",
       "sizeBytes": 15286,
-      "updatedAt": "2026-06-11T11:02:14.405Z"
+      "updatedAt": "2026-06-12T07:28:13.489Z"
     },
     {
       "name": "000210.KS.json",
       "sizeBytes": 14378,
-      "updatedAt": "2026-06-11T11:02:14.366Z"
+      "updatedAt": "2026-06-12T07:28:13.448Z"
     },
     {
       "name": "000240.KS.json",
       "sizeBytes": 13555,
-      "updatedAt": "2026-06-11T11:02:14.655Z"
+      "updatedAt": "2026-06-12T07:28:13.758Z"
     },
     {
       "name": "000270.KS.json",
       "sizeBytes": 14795,
-      "updatedAt": "2026-06-11T11:02:14.498Z"
+      "updatedAt": "2026-06-12T07:28:13.585Z"
     },
     {
       "name": "0003.HK.json",
       "sizeBytes": 9937,
-      "updatedAt": "2026-06-11T11:02:14.450Z"
+      "updatedAt": "2026-06-12T07:28:13.533Z"
     },
     {
       "name": "000333.SZ.json",
       "sizeBytes": 13529,
-      "updatedAt": "2026-06-11T11:02:14.488Z"
+      "updatedAt": "2026-06-12T07:28:13.573Z"
     },
     {
       "name": "000568.SZ.json",
       "sizeBytes": 13997,
-      "updatedAt": "2026-06-11T11:02:14.656Z"
+      "updatedAt": "2026-06-12T07:28:13.759Z"
     },
     {
       "name": "000651.SZ.json",
       "sizeBytes": 14383,
-      "updatedAt": "2026-06-11T11:02:14.622Z"
+      "updatedAt": "2026-06-12T07:28:13.720Z"
     },
     {
       "name": "000660.KS.json",
       "sizeBytes": 15334,
-      "updatedAt": "2026-06-11T11:02:14.632Z"
+      "updatedAt": "2026-06-12T07:28:13.729Z"
     },
     {
       "name": "000720.KS.json",
       "sizeBytes": 14447,
-      "updatedAt": "2026-06-11T11:02:14.480Z"
+      "updatedAt": "2026-06-12T07:28:13.565Z"
     },
     {
       "name": "000725.SZ.json",
       "sizeBytes": 13902,
-      "updatedAt": "2026-06-11T11:02:14.479Z"
+      "updatedAt": "2026-06-12T07:28:13.564Z"
     },
     {
       "name": "000858.SZ.json",
       "sizeBytes": 13162,
-      "updatedAt": "2026-06-11T11:02:14.517Z"
+      "updatedAt": "2026-06-12T07:28:13.607Z"
     },
     {
       "name": "000880.KS.json",
       "sizeBytes": 14101,
-      "updatedAt": "2026-06-11T11:02:14.663Z"
+      "updatedAt": "2026-06-12T07:28:13.768Z"
     },
     {
       "name": "000990.KS.json",
       "sizeBytes": 13671,
-      "updatedAt": "2026-06-11T11:02:14.579Z"
+      "updatedAt": "2026-06-12T07:28:13.673Z"
     },
     {
       "name": "001040.KS.json",
       "sizeBytes": 14551,
-      "updatedAt": "2026-06-11T11:02:14.711Z"
+      "updatedAt": "2026-06-12T07:28:13.820Z"
     },
     {
       "name": "001120.KS.json",
       "sizeBytes": 13343,
-      "updatedAt": "2026-06-11T11:02:14.662Z"
+      "updatedAt": "2026-06-12T07:28:13.766Z"
     },
     {
       "name": "001430.KS.json",
       "sizeBytes": 14202,
-      "updatedAt": "2026-06-11T11:02:14.447Z"
+      "updatedAt": "2026-06-12T07:28:13.530Z"
     },
     {
       "name": "001440.KS.json",
       "sizeBytes": 13178,
-      "updatedAt": "2026-06-11T11:02:14.492Z"
+      "updatedAt": "2026-06-12T07:28:13.578Z"
     },
     {
       "name": "001450.KS.json",
       "sizeBytes": 11133,
-      "updatedAt": "2026-06-11T11:02:14.490Z"
+      "updatedAt": "2026-06-12T07:28:13.576Z"
     },
     {
       "name": "001530.KS.json",
       "sizeBytes": 13578,
-      "updatedAt": "2026-06-11T11:02:14.530Z"
+      "updatedAt": "2026-06-12T07:28:13.620Z"
     },
     {
       "name": "001680.KS.json",
       "sizeBytes": 13991,
-      "updatedAt": "2026-06-11T11:02:14.585Z"
+      "updatedAt": "2026-06-12T07:28:13.679Z"
     },
     {
       "name": "001740.KS.json",
       "sizeBytes": 14015,
-      "updatedAt": "2026-06-11T11:02:14.563Z"
+      "updatedAt": "2026-06-12T07:28:13.654Z"
     },
     {
       "name": "001820.KS.json",
       "sizeBytes": 12967,
-      "updatedAt": "2026-06-11T11:02:14.506Z"
+      "updatedAt": "2026-06-12T07:28:13.593Z"
     },
     {
       "name": "002027.SZ.json",
       "sizeBytes": 13695,
-      "updatedAt": "2026-06-11T11:02:14.394Z"
+      "updatedAt": "2026-06-12T07:28:13.477Z"
     },
     {
       "name": "002142.SZ.json",
       "sizeBytes": 10992,
-      "updatedAt": "2026-06-11T11:02:14.644Z"
+      "updatedAt": "2026-06-12T07:28:13.743Z"
     },
     {
       "name": "002304.SZ.json",
       "sizeBytes": 13046,
-      "updatedAt": "2026-06-11T11:02:14.446Z"
+      "updatedAt": "2026-06-12T07:28:13.529Z"
     },
     {
       "name": "002350.KS.json",
       "sizeBytes": 14240,
-      "updatedAt": "2026-06-11T11:02:14.672Z"
+      "updatedAt": "2026-06-12T07:28:13.778Z"
     },
     {
       "name": "002352.SZ.json",
       "sizeBytes": 13807,
-      "updatedAt": "2026-06-11T11:02:14.452Z"
+      "updatedAt": "2026-06-12T07:28:13.536Z"
     },
     {
       "name": "002380.KS.json",
       "sizeBytes": 14709,
-      "updatedAt": "2026-06-11T11:02:14.600Z"
+      "updatedAt": "2026-06-12T07:28:13.695Z"
     },
     {
       "name": "002415.SZ.json",
       "sizeBytes": 13688,
-      "updatedAt": "2026-06-11T11:02:14.497Z"
+      "updatedAt": "2026-06-12T07:28:13.584Z"
     },
     {
       "name": "002475.SZ.json",
       "sizeBytes": 13940,
-      "updatedAt": "2026-06-11T11:02:14.364Z"
+      "updatedAt": "2026-06-12T07:28:13.446Z"
     },
     {
       "name": "002594.SZ.json",
       "sizeBytes": 13915,
-      "updatedAt": "2026-06-11T11:02:14.613Z"
+      "updatedAt": "2026-06-12T07:28:13.710Z"
     },
     {
       "name": "0027.HK.json",
       "sizeBytes": 9851,
-      "updatedAt": "2026-06-11T11:02:14.442Z"
+      "updatedAt": "2026-06-12T07:28:13.526Z"
     },
     {
       "name": "002714.SZ.json",
       "sizeBytes": 13909,
-      "updatedAt": "2026-06-11T11:02:14.578Z"
+      "updatedAt": "2026-06-12T07:28:13.672Z"
     },
     {
       "name": "002790.KS.json",
       "sizeBytes": 13647,
-      "updatedAt": "2026-06-11T11:02:14.376Z"
+      "updatedAt": "2026-06-12T07:28:13.458Z"
     },
     {
       "name": "003220.KS.json",
       "sizeBytes": 13740,
-      "updatedAt": "2026-06-11T11:02:14.491Z"
+      "updatedAt": "2026-06-12T07:28:13.577Z"
     },
     {
       "name": "003230.KS.json",
       "sizeBytes": 13862,
-      "updatedAt": "2026-06-11T11:02:14.491Z"
+      "updatedAt": "2026-06-12T07:28:13.577Z"
     },
     {
       "name": "003490.KS.json",
       "sizeBytes": 14020,
-      "updatedAt": "2026-06-11T11:02:14.497Z"
+      "updatedAt": "2026-06-12T07:28:13.584Z"
     },
     {
       "name": "003550.KS.json",
       "sizeBytes": 14479,
-      "updatedAt": "2026-06-11T11:02:14.472Z"
+      "updatedAt": "2026-06-12T07:28:13.557Z"
     },
     {
       "name": "003670.KS.json",
       "sizeBytes": 14487,
-      "updatedAt": "2026-06-11T11:02:14.426Z"
+      "updatedAt": "2026-06-12T07:28:13.510Z"
     },
     {
       "name": "003690.KS.json",
       "sizeBytes": 10188,
-      "updatedAt": "2026-06-11T11:02:14.684Z"
+      "updatedAt": "2026-06-12T07:28:13.791Z"
     },
     {
       "name": "003850.KS.json",
       "sizeBytes": 13535,
-      "updatedAt": "2026-06-11T11:02:14.448Z"
+      "updatedAt": "2026-06-12T07:28:13.531Z"
     },
     {
       "name": "004000.KS.json",
       "sizeBytes": 13615,
-      "updatedAt": "2026-06-11T11:02:14.397Z"
+      "updatedAt": "2026-06-12T07:28:13.481Z"
     },
     {
       "name": "004020.KS.json",
       "sizeBytes": 14127,
-      "updatedAt": "2026-06-11T11:02:14.598Z"
+      "updatedAt": "2026-06-12T07:28:13.693Z"
     },
     {
       "name": "004170.KS.json",
       "sizeBytes": 14726,
-      "updatedAt": "2026-06-11T11:02:14.445Z"
+      "updatedAt": "2026-06-12T07:28:13.529Z"
     },
     {
       "name": "004370.KS.json",
       "sizeBytes": 14164,
-      "updatedAt": "2026-06-11T11:02:14.618Z"
+      "updatedAt": "2026-06-12T07:28:13.715Z"
     },
     {
       "name": "004800.KS.json",
       "sizeBytes": 14083,
-      "updatedAt": "2026-06-11T11:02:14.691Z"
+      "updatedAt": "2026-06-12T07:28:13.800Z"
     },
     {
       "name": "004990.KS.json",
       "sizeBytes": 14146,
-      "updatedAt": "2026-06-11T11:02:14.381Z"
+      "updatedAt": "2026-06-12T07:28:13.464Z"
     },
     {
       "name": "005070.KS.json",
       "sizeBytes": 12927,
-      "updatedAt": "2026-06-11T11:02:14.670Z"
+      "updatedAt": "2026-06-12T07:28:13.775Z"
     },
     {
       "name": "005180.KS.json",
       "sizeBytes": 13561,
-      "updatedAt": "2026-06-11T11:02:14.495Z"
+      "updatedAt": "2026-06-12T07:28:13.581Z"
     },
     {
       "name": "005300.KS.json",
       "sizeBytes": 13974,
-      "updatedAt": "2026-06-11T11:02:14.513Z"
+      "updatedAt": "2026-06-12T07:28:13.602Z"
     },
     {
       "name": "005380.KS.json",
       "sizeBytes": 15937,
-      "updatedAt": "2026-06-11T11:02:14.661Z"
+      "updatedAt": "2026-06-12T07:28:13.766Z"
     },
     {
       "name": "005440.KS.json",
       "sizeBytes": 14247,
-      "updatedAt": "2026-06-11T11:02:14.647Z"
+      "updatedAt": "2026-06-12T07:28:13.747Z"
     },
     {
       "name": "005490.KS.json",
       "sizeBytes": 15235,
-      "updatedAt": "2026-06-11T11:02:14.620Z"
+      "updatedAt": "2026-06-12T07:28:13.717Z"
     },
     {
       "name": "005850.KS.json",
       "sizeBytes": 14164,
-      "updatedAt": "2026-06-11T11:02:14.574Z"
+      "updatedAt": "2026-06-12T07:28:13.667Z"
     },
     {
       "name": "005880.KS.json",
       "sizeBytes": 12678,
-      "updatedAt": "2026-06-11T11:02:14.690Z"
+      "updatedAt": "2026-06-12T07:28:13.798Z"
     },
     {
       "name": "005930.KS.json",
       "sizeBytes": 16392,
-      "updatedAt": "2026-06-11T11:02:14.630Z"
+      "updatedAt": "2026-06-12T07:28:13.727Z"
     },
     {
       "name": "006040.KS.json",
       "sizeBytes": 14114,
-      "updatedAt": "2026-06-11T11:02:14.545Z"
+      "updatedAt": "2026-06-12T07:28:13.636Z"
     },
     {
       "name": "006260.KS.json",
       "sizeBytes": 14776,
-      "updatedAt": "2026-06-11T11:02:14.623Z"
+      "updatedAt": "2026-06-12T07:28:13.721Z"
     },
     {
       "name": "006280.KS.json",
       "sizeBytes": 14260,
-      "updatedAt": "2026-06-11T11:02:14.539Z"
+      "updatedAt": "2026-06-12T07:28:13.631Z"
     },
     {
       "name": "006360.KS.json",
       "sizeBytes": 13914,
-      "updatedAt": "2026-06-11T11:02:14.712Z"
+      "updatedAt": "2026-06-12T07:28:13.822Z"
     },
     {
       "name": "006400.KS.json",
       "sizeBytes": 15063,
-      "updatedAt": "2026-06-11T11:02:14.696Z"
+      "updatedAt": "2026-06-12T07:28:13.804Z"
     },
     {
       "name": "0066.HK.json",
       "sizeBytes": 9784,
-      "updatedAt": "2026-06-11T11:02:14.667Z"
+      "updatedAt": "2026-06-12T07:28:13.771Z"
     },
     {
       "name": "006650.KS.json",
       "sizeBytes": 13620,
-      "updatedAt": "2026-06-11T11:02:14.598Z"
+      "updatedAt": "2026-06-12T07:28:13.694Z"
     },
     {
       "name": "007070.KS.json",
       "sizeBytes": 14122,
-      "updatedAt": "2026-06-11T11:02:14.572Z"
+      "updatedAt": "2026-06-12T07:28:13.664Z"
     },
     {
       "name": "007310.KS.json",
       "sizeBytes": 13561,
-      "updatedAt": "2026-06-11T11:02:14.438Z"
+      "updatedAt": "2026-06-12T07:28:13.522Z"
     },
     {
       "name": "007660.KS.json",
       "sizeBytes": 14280,
-      "updatedAt": "2026-06-11T11:02:14.624Z"
+      "updatedAt": "2026-06-12T07:28:13.722Z"
     },
     {
       "name": "007690.KS.json",
       "sizeBytes": 14042,
-      "updatedAt": "2026-06-11T11:02:14.526Z"
+      "updatedAt": "2026-06-12T07:28:13.615Z"
     },
     {
       "name": "007810.KS.json",
       "sizeBytes": 13178,
-      "updatedAt": "2026-06-11T11:02:14.368Z"
+      "updatedAt": "2026-06-12T07:28:13.450Z"
     },
     {
       "name": "008770.KS.json",
       "sizeBytes": 13663,
-      "updatedAt": "2026-06-11T11:02:14.592Z"
+      "updatedAt": "2026-06-12T07:28:13.688Z"
     },
     {
       "name": "008930.KS.json",
       "sizeBytes": 12247,
-      "updatedAt": "2026-06-11T11:02:14.599Z"
+      "updatedAt": "2026-06-12T07:28:13.694Z"
     },
     {
       "name": "009150.KS.json",
       "sizeBytes": 14538,
-      "updatedAt": "2026-06-11T11:02:14.573Z"
+      "updatedAt": "2026-06-12T07:28:13.667Z"
     },
     {
       "name": "009240.KS.json",
       "sizeBytes": 13734,
-      "updatedAt": "2026-06-11T11:02:14.476Z"
+      "updatedAt": "2026-06-12T07:28:13.561Z"
     },
     {
       "name": "009420.KS.json",
       "sizeBytes": 12682,
-      "updatedAt": "2026-06-11T11:02:14.402Z"
+      "updatedAt": "2026-06-12T07:28:13.486Z"
     },
     {
       "name": "009450.KS.json",
       "sizeBytes": 14004,
-      "updatedAt": "2026-06-11T11:02:14.538Z"
+      "updatedAt": "2026-06-12T07:28:13.629Z"
     },
     {
       "name": "009540.KS.json",
       "sizeBytes": 13920,
-      "updatedAt": "2026-06-11T11:02:14.440Z"
+      "updatedAt": "2026-06-12T07:28:13.524Z"
     },
     {
       "name": "009830.KS.json",
       "sizeBytes": 14770,
-      "updatedAt": "2026-06-11T11:02:14.458Z"
+      "updatedAt": "2026-06-12T07:28:13.542Z"
     },
     {
       "name": "009900.KS.json",
       "sizeBytes": 12831,
-      "updatedAt": "2026-06-11T11:02:14.623Z"
+      "updatedAt": "2026-06-12T07:28:13.721Z"
     },
     {
       "name": "010120.KS.json",
       "sizeBytes": 14617,
-      "updatedAt": "2026-06-11T11:02:14.641Z"
+      "updatedAt": "2026-06-12T07:28:13.738Z"
     },
     {
       "name": "010130.KS.json",
       "sizeBytes": 14370,
-      "updatedAt": "2026-06-11T11:02:14.641Z"
+      "updatedAt": "2026-06-12T07:28:13.739Z"
     },
     {
       "name": "010140.KS.json",
       "sizeBytes": 14261,
-      "updatedAt": "2026-06-11T11:02:14.592Z"
+      "updatedAt": "2026-06-12T07:28:13.688Z"
     },
     {
       "name": "010780.KS.json",
       "sizeBytes": 14318,
-      "updatedAt": "2026-06-11T11:02:14.704Z"
+      "updatedAt": "2026-06-12T07:28:13.813Z"
     },
     {
       "name": "010950.KS.json",
       "sizeBytes": 14403,
-      "updatedAt": "2026-06-11T11:02:14.475Z"
+      "updatedAt": "2026-06-12T07:28:13.560Z"
     },
     {
       "name": "011070.KS.json",
       "sizeBytes": 14553,
-      "updatedAt": "2026-06-11T11:02:14.697Z"
+      "updatedAt": "2026-06-12T07:28:13.806Z"
     },
     {
       "name": "011170.KS.json",
       "sizeBytes": 14951,
-      "updatedAt": "2026-06-11T11:02:14.610Z"
+      "updatedAt": "2026-06-12T07:28:13.706Z"
     },
     {
       "name": "011200.KS.json",
       "sizeBytes": 13675,
-      "updatedAt": "2026-06-11T11:02:14.406Z"
+      "updatedAt": "2026-06-12T07:28:13.489Z"
     },
     {
       "name": "011210.KS.json",
       "sizeBytes": 14214,
-      "updatedAt": "2026-06-11T11:02:14.406Z"
+      "updatedAt": "2026-06-12T07:28:13.490Z"
     },
     {
       "name": "011780.KS.json",
       "sizeBytes": 15060,
-      "updatedAt": "2026-06-11T11:02:14.495Z"
+      "updatedAt": "2026-06-12T07:28:13.581Z"
     },
     {
       "name": "011790.KS.json",
       "sizeBytes": 14462,
-      "updatedAt": "2026-06-11T11:02:14.494Z"
+      "updatedAt": "2026-06-12T07:28:13.580Z"
     },
     {
       "name": "012330.KS.json",
       "sizeBytes": 15081,
-      "updatedAt": "2026-06-11T11:02:14.372Z"
+      "updatedAt": "2026-06-12T07:28:13.454Z"
     },
     {
       "name": "012450.KS.json",
       "sizeBytes": 14849,
-      "updatedAt": "2026-06-11T11:02:14.378Z"
+      "updatedAt": "2026-06-12T07:28:13.461Z"
     },
     {
       "name": "012510.KS.json",
       "sizeBytes": 12989,
-      "updatedAt": "2026-06-11T11:02:14.580Z"
+      "updatedAt": "2026-06-12T07:28:13.673Z"
     },
     {
       "name": "012630.KS.json",
       "sizeBytes": 14045,
-      "updatedAt": "2026-06-11T11:02:14.674Z"
+      "updatedAt": "2026-06-12T07:28:13.779Z"
     },
     {
       "name": "012750.KS.json",
       "sizeBytes": 13008,
-      "updatedAt": "2026-06-11T11:02:14.641Z"
+      "updatedAt": "2026-06-12T07:28:13.739Z"
     },
     {
       "name": "014620.KQ.json",
       "sizeBytes": 13215,
-      "updatedAt": "2026-06-11T11:02:14.700Z"
+      "updatedAt": "2026-06-12T07:28:13.809Z"
     },
     {
       "name": "014680.KS.json",
       "sizeBytes": 14503,
-      "updatedAt": "2026-06-11T11:02:14.427Z"
+      "updatedAt": "2026-06-12T07:28:13.511Z"
     },
     {
       "name": "014830.KS.json",
       "sizeBytes": 14006,
-      "updatedAt": "2026-06-11T11:02:14.678Z"
+      "updatedAt": "2026-06-12T07:28:13.784Z"
     },
     {
       "name": "014940.KQ.json",
       "sizeBytes": 11970,
-      "updatedAt": "2026-06-11T11:02:14.383Z"
+      "updatedAt": "2026-06-12T07:28:13.466Z"
     },
     {
       "name": "015760.KS.json",
       "sizeBytes": 14638,
-      "updatedAt": "2026-06-11T11:02:14.379Z"
+      "updatedAt": "2026-06-12T07:28:13.462Z"
     },
     {
       "name": "017670.KS.json",
       "sizeBytes": 15525,
-      "updatedAt": "2026-06-11T11:02:14.373Z"
+      "updatedAt": "2026-06-12T07:28:13.456Z"
     },
     {
       "name": "017800.KS.json",
       "sizeBytes": 14126,
-      "updatedAt": "2026-06-11T11:02:14.620Z"
+      "updatedAt": "2026-06-12T07:28:13.717Z"
     },
     {
       "name": "017960.KS.json",
       "sizeBytes": 13778,
-      "updatedAt": "2026-06-11T11:02:14.582Z"
+      "updatedAt": "2026-06-12T07:28:13.676Z"
     },
     {
       "name": "018260.KS.json",
       "sizeBytes": 13663,
-      "updatedAt": "2026-06-11T11:02:14.705Z"
+      "updatedAt": "2026-06-12T07:28:13.814Z"
     },
     {
       "name": "018670.KS.json",
       "sizeBytes": 13944,
-      "updatedAt": "2026-06-11T11:02:14.484Z"
+      "updatedAt": "2026-06-12T07:28:13.569Z"
     },
     {
       "name": "018880.KS.json",
       "sizeBytes": 14958,
-      "updatedAt": "2026-06-11T11:02:14.449Z"
+      "updatedAt": "2026-06-12T07:28:13.532Z"
     },
     {
       "name": "020000.KS.json",
       "sizeBytes": 13565,
-      "updatedAt": "2026-06-11T11:02:14.469Z"
+      "updatedAt": "2026-06-12T07:28:13.554Z"
     },
     {
       "name": "020150.KS.json",
       "sizeBytes": 13496,
-      "updatedAt": "2026-06-11T11:02:14.662Z"
+      "updatedAt": "2026-06-12T07:28:13.766Z"
     },
     {
       "name": "021240.KS.json",
       "sizeBytes": 14858,
-      "updatedAt": "2026-06-11T11:02:14.611Z"
+      "updatedAt": "2026-06-12T07:28:13.708Z"
     },
     {
       "name": "023160.KQ.json",
       "sizeBytes": 11853,
-      "updatedAt": "2026-06-11T11:02:14.459Z"
+      "updatedAt": "2026-06-12T07:28:13.543Z"
     },
     {
       "name": "023530.KS.json",
       "sizeBytes": 14623,
-      "updatedAt": "2026-06-11T11:02:14.697Z"
+      "updatedAt": "2026-06-12T07:28:13.806Z"
     },
     {
       "name": "0241.HK.json",
       "sizeBytes": 10386,
-      "updatedAt": "2026-06-11T11:02:14.536Z"
+      "updatedAt": "2026-06-12T07:28:13.628Z"
     },
     {
       "name": "024110.KS.json",
       "sizeBytes": 11667,
-      "updatedAt": "2026-06-11T11:02:14.576Z"
+      "updatedAt": "2026-06-12T07:28:13.669Z"
     },
     {
       "name": "025540.KS.json",
       "sizeBytes": 14151,
-      "updatedAt": "2026-06-11T11:02:14.467Z"
+      "updatedAt": "2026-06-12T07:28:13.551Z"
     },
     {
       "name": "028050.KS.json",
       "sizeBytes": 13376,
-      "updatedAt": "2026-06-11T11:02:14.629Z"
+      "updatedAt": "2026-06-12T07:28:13.727Z"
     },
     {
       "name": "028260.KS.json",
       "sizeBytes": 14517,
-      "updatedAt": "2026-06-11T11:02:14.550Z"
+      "updatedAt": "2026-06-12T07:28:13.642Z"
     },
     {
       "name": "028670.KS.json",
       "sizeBytes": 13159,
-      "updatedAt": "2026-06-11T11:02:14.414Z"
+      "updatedAt": "2026-06-12T07:28:13.497Z"
     },
     {
       "name": "029780.KS.json",
       "sizeBytes": 10583,
-      "updatedAt": "2026-06-11T11:02:14.365Z"
+      "updatedAt": "2026-06-12T07:28:13.447Z"
     },
     {
       "name": "030000.KS.json",
       "sizeBytes": 13580,
-      "updatedAt": "2026-06-11T11:02:14.697Z"
+      "updatedAt": "2026-06-12T07:28:13.805Z"
     },
     {
       "name": "030200.KS.json",
       "sizeBytes": 15171,
-      "updatedAt": "2026-06-11T11:02:14.533Z"
+      "updatedAt": "2026-06-12T07:28:13.623Z"
     },
     {
       "name": "030520.KQ.json",
       "sizeBytes": 12642,
-      "updatedAt": "2026-06-11T11:02:14.508Z"
+      "updatedAt": "2026-06-12T07:28:13.596Z"
     },
     {
       "name": "032350.KS.json",
       "sizeBytes": 12104,
-      "updatedAt": "2026-06-11T11:02:14.586Z"
+      "updatedAt": "2026-06-12T07:28:13.680Z"
     },
     {
       "name": "032640.KS.json",
       "sizeBytes": 14417,
-      "updatedAt": "2026-06-11T11:02:14.454Z"
+      "updatedAt": "2026-06-12T07:28:13.538Z"
     },
     {
       "name": "032830.KS.json",
       "sizeBytes": 11832,
-      "updatedAt": "2026-06-11T11:02:14.706Z"
+      "updatedAt": "2026-06-12T07:28:13.815Z"
     },
     {
       "name": "033500.KQ.json",
       "sizeBytes": 12224,
-      "updatedAt": "2026-06-11T11:02:14.430Z"
+      "updatedAt": "2026-06-12T07:28:13.513Z"
     },
     {
       "name": "033780.KS.json",
       "sizeBytes": 15036,
-      "updatedAt": "2026-06-11T11:02:14.652Z"
+      "updatedAt": "2026-06-12T07:28:13.753Z"
     },
     {
       "name": "034020.KS.json",
       "sizeBytes": 14861,
-      "updatedAt": "2026-06-11T11:02:14.656Z"
+      "updatedAt": "2026-06-12T07:28:13.760Z"
     },
     {
       "name": "034120.KS.json",
       "sizeBytes": 13652,
-      "updatedAt": "2026-06-11T11:02:14.562Z"
+      "updatedAt": "2026-06-12T07:28:13.653Z"
     },
     {
       "name": "034220.KS.json",
       "sizeBytes": 14215,
-      "updatedAt": "2026-06-11T11:02:14.493Z"
+      "updatedAt": "2026-06-12T07:28:13.579Z"
     },
     {
       "name": "034230.KS.json",
       "sizeBytes": 13773,
-      "updatedAt": "2026-06-11T11:02:14.493Z"
+      "updatedAt": "2026-06-12T07:28:13.580Z"
     },
     {
       "name": "034730.KS.json",
       "sizeBytes": 14919,
-      "updatedAt": "2026-06-11T11:02:14.621Z"
+      "updatedAt": "2026-06-12T07:28:13.719Z"
     },
     {
       "name": "035150.KS.json",
       "sizeBytes": 13257,
-      "updatedAt": "2026-06-11T11:02:14.480Z"
+      "updatedAt": "2026-06-12T07:28:13.564Z"
     },
     {
       "name": "035250.KS.json",
       "sizeBytes": 13820,
-      "updatedAt": "2026-06-11T11:02:14.576Z"
+      "updatedAt": "2026-06-12T07:28:13.669Z"
     },
     {
       "name": "035420.KS.json",
       "sizeBytes": 15241,
-      "updatedAt": "2026-06-11T11:02:14.654Z"
+      "updatedAt": "2026-06-12T07:28:13.758Z"
     },
     {
       "name": "035720.KS.json",
       "sizeBytes": 13912,
-      "updatedAt": "2026-06-11T11:02:14.405Z"
+      "updatedAt": "2026-06-12T07:28:13.489Z"
     },
     {
       "name": "035760.KQ.json",
       "sizeBytes": 13880,
-      "updatedAt": "2026-06-11T11:02:14.368Z"
+      "updatedAt": "2026-06-12T07:28:13.450Z"
     },
     {
       "name": "035900.KQ.json",
       "sizeBytes": 13033,
-      "updatedAt": "2026-06-11T11:02:14.624Z"
+      "updatedAt": "2026-06-12T07:28:13.721Z"
     },
     {
       "name": "036460.KS.json",
       "sizeBytes": 14504,
-      "updatedAt": "2026-06-11T11:02:14.690Z"
+      "updatedAt": "2026-06-12T07:28:13.798Z"
     },
     {
       "name": "036540.KQ.json",
       "sizeBytes": 12024,
-      "updatedAt": "2026-06-11T11:02:14.660Z"
+      "updatedAt": "2026-06-12T07:28:13.764Z"
     },
     {
       "name": "036570.KS.json",
       "sizeBytes": 13706,
-      "updatedAt": "2026-06-11T11:02:14.595Z"
+      "updatedAt": "2026-06-12T07:28:13.691Z"
     },
     {
       "name": "036800.KQ.json",
       "sizeBytes": 13277,
-      "updatedAt": "2026-06-11T11:02:14.392Z"
+      "updatedAt": "2026-06-12T07:28:13.476Z"
     },
     {
       "name": "036930.KQ.json",
       "sizeBytes": 11717,
-      "updatedAt": "2026-06-11T11:02:14.674Z"
+      "updatedAt": "2026-06-12T07:28:13.780Z"
     },
     {
       "name": "0386.HK.json",
       "sizeBytes": 10380,
-      "updatedAt": "2026-06-11T11:02:14.654Z"
+      "updatedAt": "2026-06-12T07:28:13.757Z"
     },
     {
       "name": "0388.HK.json",
       "sizeBytes": 11530,
-      "updatedAt": "2026-06-11T11:02:14.488Z"
+      "updatedAt": "2026-06-12T07:28:13.573Z"
     },
     {
       "name": "039030.KQ.json",
       "sizeBytes": 13494,
-      "updatedAt": "2026-06-11T11:02:14.383Z"
+      "updatedAt": "2026-06-12T07:28:13.467Z"
     },
     {
       "name": "039130.KS.json",
       "sizeBytes": 13851,
-      "updatedAt": "2026-06-11T11:02:14.548Z"
+      "updatedAt": "2026-06-12T07:28:13.640Z"
     },
     {
       "name": "039200.KQ.json",
       "sizeBytes": 11294,
-      "updatedAt": "2026-06-11T11:02:14.434Z"
+      "updatedAt": "2026-06-12T07:28:13.518Z"
     },
     {
       "name": "039440.KQ.json",
       "sizeBytes": 13338,
-      "updatedAt": "2026-06-11T11:02:14.647Z"
+      "updatedAt": "2026-06-12T07:28:13.747Z"
     },
     {
       "name": "041510.KQ.json",
       "sizeBytes": 13520,
-      "updatedAt": "2026-06-11T11:02:14.552Z"
+      "updatedAt": "2026-06-12T07:28:13.644Z"
     },
     {
       "name": "041830.KQ.json",
       "sizeBytes": 12175,
-      "updatedAt": "2026-06-11T11:02:14.420Z"
+      "updatedAt": "2026-06-12T07:28:13.504Z"
     },
     {
       "name": "042000.KQ.json",
       "sizeBytes": 12672,
-      "updatedAt": "2026-06-11T11:02:14.542Z"
+      "updatedAt": "2026-06-12T07:28:13.633Z"
     },
     {
       "name": "042660.KS.json",
       "sizeBytes": 14324,
-      "updatedAt": "2026-06-11T11:02:14.371Z"
+      "updatedAt": "2026-06-12T07:28:13.453Z"
     },
     {
       "name": "042700.KS.json",
       "sizeBytes": 14105,
-      "updatedAt": "2026-06-11T11:02:14.412Z"
+      "updatedAt": "2026-06-12T07:28:13.495Z"
     },
     {
       "name": "043150.KQ.json",
       "sizeBytes": 12433,
-      "updatedAt": "2026-06-11T11:02:14.612Z"
+      "updatedAt": "2026-06-12T07:28:13.709Z"
     },
     {
       "name": "043370.KQ.json",
       "sizeBytes": 12535,
-      "updatedAt": "2026-06-11T11:02:14.552Z"
+      "updatedAt": "2026-06-12T07:28:13.644Z"
     },
     {
       "name": "047040.KS.json",
       "sizeBytes": 14027,
-      "updatedAt": "2026-06-11T11:02:14.600Z"
+      "updatedAt": "2026-06-12T07:28:13.696Z"
     },
     {
       "name": "047050.KS.json",
       "sizeBytes": 14461,
-      "updatedAt": "2026-06-11T11:02:14.601Z"
+      "updatedAt": "2026-06-12T07:28:13.696Z"
     },
     {
       "name": "047810.KS.json",
       "sizeBytes": 14334,
-      "updatedAt": "2026-06-11T11:02:14.560Z"
+      "updatedAt": "2026-06-12T07:28:13.651Z"
     },
     {
       "name": "050890.KQ.json",
       "sizeBytes": 12296,
-      "updatedAt": "2026-06-11T11:02:14.409Z"
+      "updatedAt": "2026-06-12T07:28:13.492Z"
     },
     {
       "name": "051600.KS.json",
       "sizeBytes": 13119,
-      "updatedAt": "2026-06-11T11:02:14.429Z"
+      "updatedAt": "2026-06-12T07:28:13.513Z"
     },
     {
       "name": "051900.KS.json",
       "sizeBytes": 14418,
-      "updatedAt": "2026-06-11T11:02:14.596Z"
+      "updatedAt": "2026-06-12T07:28:13.692Z"
     },
     {
       "name": "051910.KS.json",
       "sizeBytes": 14919,
-      "updatedAt": "2026-06-11T11:02:14.596Z"
+      "updatedAt": "2026-06-12T07:28:13.692Z"
     },
     {
       "name": "052690.KS.json",
       "sizeBytes": 14957,
-      "updatedAt": "2026-06-11T11:02:14.529Z"
+      "updatedAt": "2026-06-12T07:28:13.619Z"
     },
     {
       "name": "053030.KQ.json",
       "sizeBytes": 12109,
-      "updatedAt": "2026-06-11T11:02:14.425Z"
+      "updatedAt": "2026-06-12T07:28:13.509Z"
     },
     {
       "name": "053580.KQ.json",
       "sizeBytes": 11677,
-      "updatedAt": "2026-06-11T11:02:14.669Z"
+      "updatedAt": "2026-06-12T07:28:13.774Z"
     },
     {
       "name": "055550.KS.json",
       "sizeBytes": 12122,
-      "updatedAt": "2026-06-11T11:02:14.629Z"
+      "updatedAt": "2026-06-12T07:28:13.727Z"
     },
     {
       "name": "056190.KQ.json",
       "sizeBytes": 14192,
-      "updatedAt": "2026-06-11T11:02:14.459Z"
+      "updatedAt": "2026-06-12T07:28:13.544Z"
     },
     {
       "name": "058470.KQ.json",
       "sizeBytes": 12724,
-      "updatedAt": "2026-06-11T11:02:14.566Z"
+      "updatedAt": "2026-06-12T07:28:13.657Z"
     },
     {
       "name": "058970.KQ.json",
       "sizeBytes": 11967,
-      "updatedAt": "2026-06-11T11:02:14.542Z"
+      "updatedAt": "2026-06-12T07:28:13.634Z"
     },
     {
       "name": "060980.KS.json",
       "sizeBytes": 13893,
-      "updatedAt": "2026-06-11T11:02:14.660Z"
+      "updatedAt": "2026-06-12T07:28:13.764Z"
     },
     {
       "name": "062040.KS.json",
       "sizeBytes": 13111,
-      "updatedAt": "2026-06-11T11:02:14.483Z"
+      "updatedAt": "2026-06-12T07:28:13.568Z"
     },
     {
       "name": "063570.KQ.json",
       "sizeBytes": 12403,
-      "updatedAt": "2026-06-11T11:02:14.501Z"
+      "updatedAt": "2026-06-12T07:28:13.588Z"
     },
     {
       "name": "064350.KS.json",
       "sizeBytes": 13887,
-      "updatedAt": "2026-06-11T11:02:14.463Z"
+      "updatedAt": "2026-06-12T07:28:13.548Z"
     },
     {
       "name": "064400.KS.json",
       "sizeBytes": 13492,
-      "updatedAt": "2026-06-11T11:02:14.694Z"
+      "updatedAt": "2026-06-12T07:28:13.802Z"
     },
     {
       "name": "064760.KQ.json",
       "sizeBytes": 12033,
-      "updatedAt": "2026-06-11T11:02:14.564Z"
+      "updatedAt": "2026-06-12T07:28:13.655Z"
     },
     {
       "name": "064960.KS.json",
       "sizeBytes": 13707,
-      "updatedAt": "2026-06-11T11:02:14.543Z"
+      "updatedAt": "2026-06-12T07:28:13.635Z"
     },
     {
       "name": "066570.KS.json",
       "sizeBytes": 14981,
-      "updatedAt": "2026-06-11T11:02:14.582Z"
+      "updatedAt": "2026-06-12T07:28:13.676Z"
     },
     {
       "name": "0669.HK.json",
       "sizeBytes": 10221,
-      "updatedAt": "2026-06-11T11:02:14.458Z"
+      "updatedAt": "2026-06-12T07:28:13.543Z"
     },
     {
       "name": "066970.KS.json",
       "sizeBytes": 14104,
-      "updatedAt": "2026-06-11T11:02:14.644Z"
+      "updatedAt": "2026-06-12T07:28:13.742Z"
     },
     {
       "name": "067160.KQ.json",
       "sizeBytes": 12557,
-      "updatedAt": "2026-06-11T11:02:14.481Z"
+      "updatedAt": "2026-06-12T07:28:13.565Z"
     },
     {
       "name": "067310.KQ.json",
       "sizeBytes": 11527,
-      "updatedAt": "2026-06-11T11:02:14.625Z"
+      "updatedAt": "2026-06-12T07:28:13.722Z"
     },
     {
       "name": "068270.KS.json",
       "sizeBytes": 14139,
-      "updatedAt": "2026-06-11T11:02:14.379Z"
+      "updatedAt": "2026-06-12T07:28:13.462Z"
     },
     {
       "name": "069080.KQ.json",
       "sizeBytes": 11225,
-      "updatedAt": "2026-06-11T11:02:14.425Z"
+      "updatedAt": "2026-06-12T07:28:13.509Z"
     },
     {
       "name": "069260.KS.json",
       "sizeBytes": 13507,
-      "updatedAt": "2026-06-11T11:02:14.607Z"
+      "updatedAt": "2026-06-12T07:28:13.702Z"
     },
     {
       "name": "069620.KS.json",
       "sizeBytes": 14087,
-      "updatedAt": "2026-06-11T11:02:14.672Z"
+      "updatedAt": "2026-06-12T07:28:13.777Z"
     },
     {
       "name": "069960.KS.json",
       "sizeBytes": 14884,
-      "updatedAt": "2026-06-11T11:02:14.569Z"
+      "updatedAt": "2026-06-12T07:28:13.660Z"
     },
     {
       "name": "0700.HK.json",
       "sizeBytes": 10237,
-      "updatedAt": "2026-06-11T11:02:14.527Z"
+      "updatedAt": "2026-06-12T07:28:13.616Z"
     },
     {
       "name": "071320.KS.json",
       "sizeBytes": 13945,
-      "updatedAt": "2026-06-11T11:02:14.584Z"
+      "updatedAt": "2026-06-12T07:28:13.679Z"
     },
     {
       "name": "071970.KS.json",
       "sizeBytes": 12370,
-      "updatedAt": "2026-06-11T11:02:14.382Z"
+      "updatedAt": "2026-06-12T07:28:13.465Z"
     },
     {
       "name": "074600.KQ.json",
       "sizeBytes": 13596,
-      "updatedAt": "2026-06-11T11:02:14.381Z"
+      "updatedAt": "2026-06-12T07:28:13.464Z"
     },
     {
       "name": "075580.KS.json",
       "sizeBytes": 13294,
-      "updatedAt": "2026-06-11T11:02:14.380Z"
+      "updatedAt": "2026-06-12T07:28:13.463Z"
     },
     {
       "name": "078340.KQ.json",
       "sizeBytes": 13279,
-      "updatedAt": "2026-06-11T11:02:14.554Z"
+      "updatedAt": "2026-06-12T07:28:13.646Z"
     },
     {
       "name": "078600.KQ.json",
       "sizeBytes": 12374,
-      "updatedAt": "2026-06-11T11:02:14.627Z"
+      "updatedAt": "2026-06-12T07:28:13.725Z"
     },
     {
       "name": "078930.KS.json",
       "sizeBytes": 13944,
-      "updatedAt": "2026-06-11T11:02:14.481Z"
+      "updatedAt": "2026-06-12T07:28:13.566Z"
     },
     {
       "name": "079160.KS.json",
       "sizeBytes": 13240,
-      "updatedAt": "2026-06-11T11:02:14.666Z"
+      "updatedAt": "2026-06-12T07:28:13.770Z"
     },
     {
       "name": "079550.KS.json",
       "sizeBytes": 14193,
-      "updatedAt": "2026-06-11T11:02:14.645Z"
+      "updatedAt": "2026-06-12T07:28:13.744Z"
     },
     {
       "name": "079900.KS.json",
       "sizeBytes": 13198,
-      "updatedAt": "2026-06-11T11:02:14.466Z"
+      "updatedAt": "2026-06-12T07:28:13.551Z"
     },
     {
       "name": "082740.KS.json",
       "sizeBytes": 13063,
-      "updatedAt": "2026-06-11T11:02:14.656Z"
+      "updatedAt": "2026-06-12T07:28:13.760Z"
     },
     {
       "name": "082920.KQ.json",
       "sizeBytes": 12043,
-      "updatedAt": "2026-06-11T11:02:14.591Z"
+      "updatedAt": "2026-06-12T07:28:13.686Z"
     },
     {
       "name": "084370.KQ.json",
       "sizeBytes": 12332,
-      "updatedAt": "2026-06-11T11:02:14.651Z"
+      "updatedAt": "2026-06-12T07:28:13.752Z"
     },
     {
       "name": "0857.HK.json",
       "sizeBytes": 14789,
-      "updatedAt": "2026-06-11T11:02:14.606Z"
+      "updatedAt": "2026-06-12T07:28:13.701Z"
     },
     {
       "name": "086280.KS.json",
       "sizeBytes": 14436,
-      "updatedAt": "2026-06-11T11:02:14.661Z"
+      "updatedAt": "2026-06-12T07:28:13.765Z"
     },
     {
       "name": "086450.KQ.json",
       "sizeBytes": 12564,
-      "updatedAt": "2026-06-11T11:02:14.457Z"
+      "updatedAt": "2026-06-12T07:28:13.542Z"
     },
     {
       "name": "086790.KS.json",
       "sizeBytes": 12349,
-      "updatedAt": "2026-06-11T11:02:14.431Z"
+      "updatedAt": "2026-06-12T07:28:13.514Z"
     },
     {
       "name": "086900.KQ.json",
       "sizeBytes": 13708,
-      "updatedAt": "2026-06-11T11:02:14.546Z"
+      "updatedAt": "2026-06-12T07:28:13.638Z"
     },
     {
       "name": "0883.HK.json",
       "sizeBytes": 11697,
-      "updatedAt": "2026-06-11T11:02:14.387Z"
+      "updatedAt": "2026-06-12T07:28:13.471Z"
     },
     {
       "name": "089030.KQ.json",
       "sizeBytes": 15709,
-      "updatedAt": "2026-06-11T11:02:14.662Z"
+      "updatedAt": "2026-06-12T07:28:13.767Z"
     },
     {
       "name": "089590.KS.json",
       "sizeBytes": 13265,
-      "updatedAt": "2026-06-11T11:02:14.681Z"
+      "updatedAt": "2026-06-12T07:28:13.787Z"
     },
     {
       "name": "089600.KQ.json",
       "sizeBytes": 12472,
-      "updatedAt": "2026-06-11T11:02:14.452Z"
+      "updatedAt": "2026-06-12T07:28:13.536Z"
     },
     {
       "name": "089860.KS.json",
       "sizeBytes": 13358,
-      "updatedAt": "2026-06-11T11:02:14.433Z"
+      "updatedAt": "2026-06-12T07:28:13.516Z"
     },
     {
       "name": "090430.KS.json",
       "sizeBytes": 14201,
-      "updatedAt": "2026-06-11T11:02:14.551Z"
+      "updatedAt": "2026-06-12T07:28:13.643Z"
     },
     {
       "name": "090460.KS.json",
       "sizeBytes": 14224,
-      "updatedAt": "2026-06-11T11:02:14.487Z"
+      "updatedAt": "2026-06-12T07:28:13.573Z"
     },
     {
       "name": "091700.KQ.json",
       "sizeBytes": 13057,
-      "updatedAt": "2026-06-11T11:02:14.583Z"
+      "updatedAt": "2026-06-12T07:28:13.677Z"
     },
     {
       "name": "091810.KS.json",
       "sizeBytes": 11974,
-      "updatedAt": "2026-06-11T11:02:14.643Z"
+      "updatedAt": "2026-06-12T07:28:13.741Z"
     },
     {
       "name": "093050.KS.json",
       "sizeBytes": 12115,
-      "updatedAt": "2026-06-11T11:02:14.591Z"
+      "updatedAt": "2026-06-12T07:28:13.686Z"
     },
     {
       "name": "093320.KQ.json",
       "sizeBytes": 12202,
-      "updatedAt": "2026-06-11T11:02:14.639Z"
+      "updatedAt": "2026-06-12T07:28:13.736Z"
     },
     {
       "name": "093370.KS.json",
       "sizeBytes": 13254,
-      "updatedAt": "2026-06-11T11:02:14.664Z"
+      "updatedAt": "2026-06-12T07:28:13.768Z"
     },
     {
       "name": "0939.HK.json",
       "sizeBytes": 13033,
-      "updatedAt": "2026-06-11T11:02:14.367Z"
+      "updatedAt": "2026-06-12T07:28:13.449Z"
     },
     {
       "name": "0941.HK.json",
       "sizeBytes": 9584,
-      "updatedAt": "2026-06-11T11:02:14.454Z"
+      "updatedAt": "2026-06-12T07:28:13.538Z"
     },
     {
       "name": "094360.KQ.json",
       "sizeBytes": 11482,
-      "updatedAt": "2026-06-11T11:02:14.507Z"
+      "updatedAt": "2026-06-12T07:28:13.594Z"
     },
     {
       "name": "095340.KQ.json",
       "sizeBytes": 11875,
-      "updatedAt": "2026-06-11T11:02:14.537Z"
+      "updatedAt": "2026-06-12T07:28:13.629Z"
     },
     {
       "name": "095570.KS.json",
       "sizeBytes": 13264,
-      "updatedAt": "2026-06-11T11:02:14.423Z"
+      "updatedAt": "2026-06-12T07:28:13.506Z"
     },
     {
       "name": "095610.KQ.json",
       "sizeBytes": 11955,
-      "updatedAt": "2026-06-11T11:02:14.460Z"
+      "updatedAt": "2026-06-12T07:28:13.544Z"
     },
     {
       "name": "095660.KQ.json",
       "sizeBytes": 11427,
-      "updatedAt": "2026-06-11T11:02:14.420Z"
+      "updatedAt": "2026-06-12T07:28:13.504Z"
     },
     {
       "name": "096770.KS.json",
       "sizeBytes": 14956,
-      "updatedAt": "2026-06-11T11:02:14.469Z"
+      "updatedAt": "2026-06-12T07:28:13.554Z"
     },
     {
       "name": "097520.KS.json",
       "sizeBytes": 13778,
-      "updatedAt": "2026-06-11T11:02:14.610Z"
+      "updatedAt": "2026-06-12T07:28:13.707Z"
     },
     {
       "name": "097950.KS.json",
       "sizeBytes": 14731,
-      "updatedAt": "2026-06-11T11:02:14.548Z"
+      "updatedAt": "2026-06-12T07:28:13.640Z"
     },
     {
       "name": "098460.KQ.json",
       "sizeBytes": 12900,
-      "updatedAt": "2026-06-11T11:02:14.618Z"
+      "updatedAt": "2026-06-12T07:28:13.714Z"
     },
     {
       "name": "099190.KQ.json",
       "sizeBytes": 12408,
-      "updatedAt": "2026-06-11T11:02:14.431Z"
+      "updatedAt": "2026-06-12T07:28:13.515Z"
     },
     {
       "name": "100090.KS.json",
       "sizeBytes": 13093,
-      "updatedAt": "2026-06-11T11:02:14.370Z"
+      "updatedAt": "2026-06-12T07:28:13.452Z"
     },
     {
       "name": "100120.KQ.json",
       "sizeBytes": 13871,
-      "updatedAt": "2026-06-11T11:02:14.572Z"
+      "updatedAt": "2026-06-12T07:28:13.665Z"
     },
     {
       "name": "100840.KS.json",
       "sizeBytes": 13031,
-      "updatedAt": "2026-06-11T11:02:14.550Z"
+      "updatedAt": "2026-06-12T07:28:13.642Z"
     },
     {
       "name": "101490.KQ.json",
       "sizeBytes": 10924,
-      "updatedAt": "2026-06-11T11:02:14.648Z"
+      "updatedAt": "2026-06-12T07:28:13.748Z"
     },
     {
       "name": "1024.HK.json",
       "sizeBytes": 9364,
-      "updatedAt": "2026-06-11T11:02:14.642Z"
+      "updatedAt": "2026-06-12T07:28:13.739Z"
     },
     {
       "name": "102710.KQ.json",
       "sizeBytes": 12651,
-      "updatedAt": "2026-06-11T11:02:14.461Z"
+      "updatedAt": "2026-06-12T07:28:13.546Z"
     },
     {
       "name": "103140.KS.json",
       "sizeBytes": 13608,
-      "updatedAt": "2026-06-11T11:02:14.665Z"
+      "updatedAt": "2026-06-12T07:28:13.769Z"
     },
     {
       "name": "103590.KS.json",
       "sizeBytes": 13579,
-      "updatedAt": "2026-06-11T11:02:14.386Z"
+      "updatedAt": "2026-06-12T07:28:13.469Z"
     },
     {
       "name": "104830.KQ.json",
       "sizeBytes": 13784,
-      "updatedAt": "2026-06-11T11:02:14.622Z"
+      "updatedAt": "2026-06-12T07:28:13.719Z"
     },
     {
       "name": "105560.KS.json",
       "sizeBytes": 11674,
-      "updatedAt": "2026-06-11T11:02:14.389Z"
+      "updatedAt": "2026-06-12T07:28:13.473Z"
     },
     {
       "name": "105630.KS.json",
       "sizeBytes": 13345,
-      "updatedAt": "2026-06-11T11:02:14.382Z"
+      "updatedAt": "2026-06-12T07:28:13.465Z"
     },
     {
       "name": "108320.KS.json",
       "sizeBytes": 13287,
-      "updatedAt": "2026-06-11T11:02:14.710Z"
+      "updatedAt": "2026-06-12T07:28:13.819Z"
     },
     {
       "name": "108490.KQ.json",
       "sizeBytes": 12575,
-      "updatedAt": "2026-06-11T11:02:14.460Z"
+      "updatedAt": "2026-06-12T07:28:13.545Z"
     },
     {
       "name": "108670.KS.json",
       "sizeBytes": 13628,
-      "updatedAt": "2026-06-11T11:02:14.643Z"
+      "updatedAt": "2026-06-12T07:28:13.741Z"
     },
     {
       "name": "1109.HK.json",
       "sizeBytes": 11662,
-      "updatedAt": "2026-06-11T11:02:14.675Z"
+      "updatedAt": "2026-06-12T07:28:13.781Z"
     },
     {
       "name": "111770.KS.json",
       "sizeBytes": 13567,
-      "updatedAt": "2026-06-11T11:02:14.611Z"
+      "updatedAt": "2026-06-12T07:28:13.708Z"
     },
     {
       "name": "112040.KQ.json",
       "sizeBytes": 11776,
-      "updatedAt": "2026-06-11T11:02:14.465Z"
+      "updatedAt": "2026-06-12T07:28:13.550Z"
     },
     {
       "name": "114090.KS.json",
       "sizeBytes": 13313,
-      "updatedAt": "2026-06-11T11:02:14.426Z"
+      "updatedAt": "2026-06-12T07:28:13.510Z"
     },
     {
       "name": "114840.KQ.json",
       "sizeBytes": 11411,
-      "updatedAt": "2026-06-11T11:02:14.498Z"
+      "updatedAt": "2026-06-12T07:28:13.585Z"
     },
     {
       "name": "119610.KQ.json",
       "sizeBytes": 13601,
-      "updatedAt": "2026-06-11T11:02:14.530Z"
+      "updatedAt": "2026-06-12T07:28:13.620Z"
     },
     {
       "name": "120110.KS.json",
       "sizeBytes": 14286,
-      "updatedAt": "2026-06-11T11:02:14.407Z"
+      "updatedAt": "2026-06-12T07:28:13.491Z"
     },
     {
       "name": "1211.HK.json",
       "sizeBytes": 15242,
-      "updatedAt": "2026-06-11T11:02:14.376Z"
+      "updatedAt": "2026-06-12T07:28:13.459Z"
     },
     {
       "name": "121600.KQ.json",
       "sizeBytes": 13404,
-      "updatedAt": "2026-06-11T11:02:14.415Z"
+      "updatedAt": "2026-06-12T07:28:13.498Z"
     },
     {
       "name": "122870.KQ.json",
       "sizeBytes": 13002,
-      "updatedAt": "2026-06-11T11:02:14.523Z"
+      "updatedAt": "2026-06-12T07:28:13.613Z"
     },
     {
       "name": "126340.KQ.json",
       "sizeBytes": 12194,
-      "updatedAt": "2026-06-11T11:02:14.508Z"
+      "updatedAt": "2026-06-12T07:28:13.596Z"
     },
     {
       "name": "1288.HK.json",
       "sizeBytes": 12865,
-      "updatedAt": "2026-06-11T11:02:14.622Z"
+      "updatedAt": "2026-06-12T07:28:13.719Z"
     },
     {
       "name": "128940.KS.json",
       "sizeBytes": 13897,
-      "updatedAt": "2026-06-11T11:02:14.416Z"
+      "updatedAt": "2026-06-12T07:28:13.499Z"
     },
     {
       "name": "1299.HK.json",
       "sizeBytes": 8689,
-      "updatedAt": "2026-06-11T11:02:14.553Z"
+      "updatedAt": "2026-06-12T07:28:13.644Z"
     },
     {
       "name": "131290.KQ.json",
       "sizeBytes": 11766,
-      "updatedAt": "2026-06-11T11:02:14.577Z"
+      "updatedAt": "2026-06-12T07:28:13.670Z"
     },
     {
       "name": "131970.KQ.json",
       "sizeBytes": 12353,
-      "updatedAt": "2026-06-11T11:02:14.499Z"
+      "updatedAt": "2026-06-12T07:28:13.586Z"
     },
     {
       "name": "137310.KS.json",
       "sizeBytes": 12715,
-      "updatedAt": "2026-06-11T11:02:14.512Z"
+      "updatedAt": "2026-06-12T07:28:13.601Z"
     },
     {
       "name": "138930.KS.json",
       "sizeBytes": 13225,
-      "updatedAt": "2026-06-11T11:02:14.713Z"
+      "updatedAt": "2026-06-12T07:28:13.822Z"
     },
     {
       "name": "139130.KS.json",
       "sizeBytes": 11529,
-      "updatedAt": "2026-06-11T11:02:14.604Z"
+      "updatedAt": "2026-06-12T07:28:13.700Z"
     },
     {
       "name": "139480.KS.json",
       "sizeBytes": 14659,
-      "updatedAt": "2026-06-11T11:02:14.492Z"
+      "updatedAt": "2026-06-12T07:28:13.578Z"
     },
     {
       "name": "1398.HK.json",
       "sizeBytes": 11356,
-      "updatedAt": "2026-06-11T11:02:14.713Z"
+      "updatedAt": "2026-06-12T07:28:13.823Z"
     },
     {
       "name": "140860.KQ.json",
       "sizeBytes": 13620,
-      "updatedAt": "2026-06-11T11:02:14.520Z"
+      "updatedAt": "2026-06-12T07:28:13.610Z"
     },
     {
       "name": "141080.KQ.json",
       "sizeBytes": 13012,
-      "updatedAt": "2026-06-11T11:02:14.678Z"
+      "updatedAt": "2026-06-12T07:28:13.784Z"
     },
     {
       "name": "145020.KQ.json",
       "sizeBytes": 12890,
-      "updatedAt": "2026-06-11T11:02:14.500Z"
+      "updatedAt": "2026-06-12T07:28:13.587Z"
     },
     {
       "name": "145720.KS.json",
       "sizeBytes": 13514,
-      "updatedAt": "2026-06-11T11:02:14.638Z"
+      "updatedAt": "2026-06-12T07:28:13.735Z"
     },
     {
       "name": "161390.KS.json",
       "sizeBytes": 14503,
-      "updatedAt": "2026-06-11T11:02:14.417Z"
+      "updatedAt": "2026-06-12T07:28:13.501Z"
     },
     {
       "name": "161890.KS.json",
       "sizeBytes": 14198,
-      "updatedAt": "2026-06-11T11:02:14.403Z"
+      "updatedAt": "2026-06-12T07:28:13.487Z"
     },
     {
       "name": "166090.KQ.json",
       "sizeBytes": 13412,
-      "updatedAt": "2026-06-11T11:02:14.482Z"
+      "updatedAt": "2026-06-12T07:28:13.567Z"
     },
     {
       "name": "170900.KS.json",
       "sizeBytes": 13806,
-      "updatedAt": "2026-06-11T11:02:14.675Z"
+      "updatedAt": "2026-06-12T07:28:13.781Z"
     },
     {
       "name": "171090.KQ.json",
       "sizeBytes": 12750,
-      "updatedAt": "2026-06-11T11:02:14.580Z"
+      "updatedAt": "2026-06-12T07:28:13.673Z"
     },
     {
       "name": "175330.KS.json",
       "sizeBytes": 11724,
-      "updatedAt": "2026-06-11T11:02:14.400Z"
+      "updatedAt": "2026-06-12T07:28:13.484Z"
     },
     {
       "name": "178320.KQ.json",
       "sizeBytes": 13715,
-      "updatedAt": "2026-06-11T11:02:14.634Z"
+      "updatedAt": "2026-06-12T07:28:13.731Z"
     },
     {
       "name": "178920.KS.json",
       "sizeBytes": 12830,
-      "updatedAt": "2026-06-11T11:02:14.516Z"
+      "updatedAt": "2026-06-12T07:28:13.606Z"
     },
     {
       "name": "180640.KS.json",
       "sizeBytes": 12273,
-      "updatedAt": "2026-06-11T11:02:14.696Z"
+      "updatedAt": "2026-06-12T07:28:13.805Z"
     },
     {
       "name": "1810.HK.json",
       "sizeBytes": 9494,
-      "updatedAt": "2026-06-11T11:02:14.453Z"
+      "updatedAt": "2026-06-12T07:28:13.537Z"
     },
     {
       "name": "181710.KS.json",
       "sizeBytes": 12995,
-      "updatedAt": "2026-06-11T11:02:14.632Z"
+      "updatedAt": "2026-06-12T07:28:13.729Z"
     },
     {
       "name": "183190.KS.json",
       "sizeBytes": 14086,
-      "updatedAt": "2026-06-11T11:02:14.370Z"
+      "updatedAt": "2026-06-12T07:28:13.453Z"
     },
     {
       "name": "183300.KQ.json",
       "sizeBytes": 14020,
-      "updatedAt": "2026-06-11T11:02:14.678Z"
+      "updatedAt": "2026-06-12T07:28:13.784Z"
     },
     {
       "name": "185750.KS.json",
       "sizeBytes": 14116,
-      "updatedAt": "2026-06-11T11:02:14.541Z"
+      "updatedAt": "2026-06-12T07:28:13.633Z"
     },
     {
       "name": "189300.KQ.json",
       "sizeBytes": 12871,
-      "updatedAt": "2026-06-11T11:02:14.562Z"
+      "updatedAt": "2026-06-12T07:28:13.653Z"
     },
     {
       "name": "192080.KS.json",
       "sizeBytes": 13255,
-      "updatedAt": "2026-06-11T11:02:14.496Z"
+      "updatedAt": "2026-06-12T07:28:13.583Z"
     },
     {
       "name": "192650.KS.json",
       "sizeBytes": 13284,
-      "updatedAt": "2026-06-11T11:02:14.364Z"
+      "updatedAt": "2026-06-12T07:28:13.446Z"
     },
     {
       "name": "1928.HK.json",
       "sizeBytes": 9303,
-      "updatedAt": "2026-06-11T11:02:14.572Z"
+      "updatedAt": "2026-06-12T07:28:13.665Z"
     },
     {
       "name": "192820.KS.json",
       "sizeBytes": 14088,
-      "updatedAt": "2026-06-11T11:02:14.628Z"
+      "updatedAt": "2026-06-12T07:28:13.725Z"
     },
     {
       "name": "195870.KS.json",
       "sizeBytes": 13834,
-      "updatedAt": "2026-06-11T11:02:14.386Z"
+      "updatedAt": "2026-06-12T07:28:13.470Z"
     },
     {
       "name": "195940.KQ.json",
       "sizeBytes": 13370,
-      "updatedAt": "2026-06-11T11:02:14.421Z"
+      "updatedAt": "2026-06-12T07:28:13.506Z"
     },
     {
       "name": "196170.KQ.json",
       "sizeBytes": 13174,
-      "updatedAt": "2026-06-11T11:02:14.541Z"
+      "updatedAt": "2026-06-12T07:28:13.632Z"
     },
     {
       "name": "200130.KQ.json",
       "sizeBytes": 14491,
-      "updatedAt": "2026-06-11T11:02:14.477Z"
+      "updatedAt": "2026-06-12T07:28:13.562Z"
     },
     {
       "name": "200670.KQ.json",
       "sizeBytes": 12722,
-      "updatedAt": "2026-06-11T11:02:14.684Z"
+      "updatedAt": "2026-06-12T07:28:13.791Z"
     },
     {
       "name": "2020.HK.json",
       "sizeBytes": 9969,
-      "updatedAt": "2026-06-11T11:02:14.692Z"
+      "updatedAt": "2026-06-12T07:28:13.800Z"
     },
     {
       "name": "204270.KQ.json",
       "sizeBytes": 13078,
-      "updatedAt": "2026-06-11T11:02:14.668Z"
+      "updatedAt": "2026-06-12T07:28:13.772Z"
     },
     {
       "name": "204320.KS.json",
       "sizeBytes": 4277,
-      "updatedAt": "2026-06-11T11:02:14.545Z"
+      "updatedAt": "2026-06-12T07:28:13.637Z"
     },
     {
       "name": "207940.KS.json",
       "sizeBytes": 13916,
-      "updatedAt": "2026-06-11T11:02:14.515Z"
+      "updatedAt": "2026-06-12T07:28:13.605Z"
     },
     {
       "name": "213420.KQ.json",
       "sizeBytes": 13027,
-      "updatedAt": "2026-06-11T11:02:14.679Z"
+      "updatedAt": "2026-06-12T07:28:13.785Z"
     },
     {
       "name": "214150.KQ.json",
       "sizeBytes": 14129,
-      "updatedAt": "2026-06-11T11:02:14.402Z"
+      "updatedAt": "2026-06-12T07:28:13.486Z"
     },
     {
       "name": "214320.KS.json",
       "sizeBytes": 13377,
-      "updatedAt": "2026-06-11T11:02:14.438Z"
+      "updatedAt": "2026-06-12T07:28:13.522Z"
     },
     {
       "name": "214450.KQ.json",
       "sizeBytes": 13314,
-      "updatedAt": "2026-06-11T11:02:14.706Z"
+      "updatedAt": "2026-06-12T07:28:13.816Z"
     },
     {
       "name": "215200.KQ.json",
       "sizeBytes": 13358,
-      "updatedAt": "2026-06-11T11:02:14.593Z"
+      "updatedAt": "2026-06-12T07:28:13.688Z"
     },
     {
       "name": "218410.KQ.json",
       "sizeBytes": 12892,
-      "updatedAt": "2026-06-11T11:02:14.575Z"
+      "updatedAt": "2026-06-12T07:28:13.669Z"
     },
     {
       "name": "222800.KQ.json",
       "sizeBytes": 14126,
-      "updatedAt": "2026-06-11T11:02:14.663Z"
+      "updatedAt": "2026-06-12T07:28:13.768Z"
     },
     {
       "name": "229640.KS.json",
       "sizeBytes": 13299,
-      "updatedAt": "2026-06-11T11:02:14.659Z"
+      "updatedAt": "2026-06-12T07:28:13.763Z"
     },
     {
       "name": "230360.KQ.json",
       "sizeBytes": 13042,
-      "updatedAt": "2026-06-11T11:02:14.516Z"
+      "updatedAt": "2026-06-12T07:28:13.606Z"
     },
     {
       "name": "2313.HK.json",
       "sizeBytes": 9742,
-      "updatedAt": "2026-06-11T11:02:14.637Z"
+      "updatedAt": "2026-06-12T07:28:13.734Z"
     },
     {
       "name": "2318.HK.json",
       "sizeBytes": 11970,
-      "updatedAt": "2026-06-11T11:02:14.615Z"
+      "updatedAt": "2026-06-12T07:28:13.712Z"
     },
     {
       "name": "237690.KQ.json",
       "sizeBytes": 12426,
-      "updatedAt": "2026-06-11T11:02:14.425Z"
+      "updatedAt": "2026-06-12T07:28:13.509Z"
     },
     {
       "name": "2388.HK.json",
       "sizeBytes": 7872,
-      "updatedAt": "2026-06-11T11:02:14.391Z"
+      "updatedAt": "2026-06-12T07:28:13.474Z"
     },
     {
       "name": "240810.KQ.json",
       "sizeBytes": 13577,
-      "updatedAt": "2026-06-11T11:02:14.667Z"
+      "updatedAt": "2026-06-12T07:28:13.772Z"
     },
     {
       "name": "241560.KS.json",
       "sizeBytes": 14204,
-      "updatedAt": "2026-06-11T11:02:14.635Z"
+      "updatedAt": "2026-06-12T07:28:13.732Z"
     },
     {
       "name": "241590.KS.json",
       "sizeBytes": 13673,
-      "updatedAt": "2026-06-11T11:02:14.373Z"
+      "updatedAt": "2026-06-12T07:28:13.455Z"
     },
     {
       "name": "241710.KQ.json",
       "sizeBytes": 13618,
-      "updatedAt": "2026-06-11T11:02:14.682Z"
+      "updatedAt": "2026-06-12T07:28:13.788Z"
     },
     {
       "name": "243070.KQ.json",
       "sizeBytes": 12682,
-      "updatedAt": "2026-06-11T11:02:14.587Z"
+      "updatedAt": "2026-06-12T07:28:13.681Z"
     },
     {
       "name": "2454.TW.json",
       "sizeBytes": 14013,
-      "updatedAt": "2026-06-11T11:02:14.423Z"
+      "updatedAt": "2026-06-12T07:28:13.507Z"
     },
     {
       "name": "247540.KQ.json",
       "sizeBytes": 14076,
-      "updatedAt": "2026-06-11T11:02:14.500Z"
+      "updatedAt": "2026-06-12T07:28:13.587Z"
     },
     {
       "name": "248070.KS.json",
       "sizeBytes": 13539,
-      "updatedAt": "2026-06-11T11:02:14.589Z"
+      "updatedAt": "2026-06-12T07:28:13.684Z"
     },
     {
       "name": "251270.KS.json",
       "sizeBytes": 13905,
-      "updatedAt": "2026-06-11T11:02:14.395Z"
+      "updatedAt": "2026-06-12T07:28:13.479Z"
     },
     {
       "name": "251970.KQ.json",
       "sizeBytes": 13838,
-      "updatedAt": "2026-06-11T11:02:14.676Z"
+      "updatedAt": "2026-06-12T07:28:13.782Z"
     },
     {
       "name": "253450.KQ.json",
       "sizeBytes": 12318,
-      "updatedAt": "2026-06-11T11:02:14.378Z"
+      "updatedAt": "2026-06-12T07:28:13.461Z"
     },
     {
       "name": "257720.KQ.json",
       "sizeBytes": 12658,
-      "updatedAt": "2026-06-11T11:02:14.434Z"
+      "updatedAt": "2026-06-12T07:28:13.518Z"
     },
     {
       "name": "259960.KS.json",
       "sizeBytes": 12796,
-      "updatedAt": "2026-06-11T11:02:14.385Z"
+      "updatedAt": "2026-06-12T07:28:13.468Z"
     },
     {
       "name": "2628.HK.json",
       "sizeBytes": 10371,
-      "updatedAt": "2026-06-11T11:02:14.676Z"
+      "updatedAt": "2026-06-12T07:28:13.782Z"
     },
     {
       "name": "263750.KQ.json",
       "sizeBytes": 12562,
-      "updatedAt": "2026-06-11T11:02:14.620Z"
+      "updatedAt": "2026-06-12T07:28:13.718Z"
     },
     {
       "name": "267250.KS.json",
       "sizeBytes": 13840,
-      "updatedAt": "2026-06-11T11:02:14.369Z"
+      "updatedAt": "2026-06-12T07:28:13.451Z"
     },
     {
       "name": "267260.KS.json",
       "sizeBytes": 13556,
-      "updatedAt": "2026-06-11T11:02:14.612Z"
+      "updatedAt": "2026-06-12T07:28:13.709Z"
     },
     {
       "name": "267270.KS.json",
       "sizeBytes": 13539,
-      "updatedAt": "2026-06-11T11:02:14.612Z"
+      "updatedAt": "2026-06-12T07:28:13.709Z"
     },
     {
       "name": "271560.KS.json",
       "sizeBytes": 13790,
-      "updatedAt": "2026-06-11T11:02:14.628Z"
+      "updatedAt": "2026-06-12T07:28:13.726Z"
     },
     {
       "name": "272210.KS.json",
       "sizeBytes": 13323,
-      "updatedAt": "2026-06-11T11:02:14.494Z"
+      "updatedAt": "2026-06-12T07:28:13.581Z"
     },
     {
       "name": "272290.KQ.json",
       "sizeBytes": 13438,
-      "updatedAt": "2026-06-11T11:02:14.437Z"
+      "updatedAt": "2026-06-12T07:28:13.521Z"
     },
     {
       "name": "272450.KS.json",
       "sizeBytes": 12508,
-      "updatedAt": "2026-06-11T11:02:14.595Z"
+      "updatedAt": "2026-06-12T07:28:13.691Z"
     },
     {
       "name": "278280.KQ.json",
       "sizeBytes": 12976,
-      "updatedAt": "2026-06-11T11:02:14.490Z"
+      "updatedAt": "2026-06-12T07:28:13.576Z"
     },
     {
       "name": "278470.KS.json",
       "sizeBytes": 13287,
-      "updatedAt": "2026-06-11T11:02:14.534Z"
+      "updatedAt": "2026-06-12T07:28:13.625Z"
     },
     {
       "name": "280360.KS.json",
       "sizeBytes": 13717,
-      "updatedAt": "2026-06-11T11:02:14.506Z"
+      "updatedAt": "2026-06-12T07:28:13.593Z"
     },
     {
       "name": "281820.KS.json",
       "sizeBytes": 12618,
-      "updatedAt": "2026-06-11T11:02:14.414Z"
+      "updatedAt": "2026-06-12T07:28:13.497Z"
     },
     {
       "name": "282330.KS.json",
       "sizeBytes": 13778,
-      "updatedAt": "2026-06-11T11:02:14.695Z"
+      "updatedAt": "2026-06-12T07:28:13.804Z"
     },
     {
       "name": "285130.KS.json",
       "sizeBytes": 13875,
-      "updatedAt": "2026-06-11T11:02:14.372Z"
+      "updatedAt": "2026-06-12T07:28:13.455Z"
     },
     {
       "name": "290650.KQ.json",
       "sizeBytes": 13620,
-      "updatedAt": "2026-06-11T11:02:14.461Z"
+      "updatedAt": "2026-06-12T07:28:13.546Z"
     },
     {
       "name": "2914.T.json",
       "sizeBytes": 10140,
-      "updatedAt": "2026-06-11T11:02:14.475Z"
+      "updatedAt": "2026-06-12T07:28:13.560Z"
     },
     {
       "name": "293490.KQ.json",
       "sizeBytes": 12611,
-      "updatedAt": "2026-06-11T11:02:14.487Z"
+      "updatedAt": "2026-06-12T07:28:13.572Z"
     },
     {
       "name": "294870.KS.json",
       "sizeBytes": 13711,
-      "updatedAt": "2026-06-11T11:02:14.526Z"
+      "updatedAt": "2026-06-12T07:28:13.616Z"
     },
     {
       "name": "298020.KS.json",
       "sizeBytes": 14040,
-      "updatedAt": "2026-06-11T11:02:14.693Z"
+      "updatedAt": "2026-06-12T07:28:13.801Z"
     },
     {
       "name": "298040.KS.json",
       "sizeBytes": 14120,
-      "updatedAt": "2026-06-11T11:02:14.560Z"
+      "updatedAt": "2026-06-12T07:28:13.651Z"
     },
     {
       "name": "298050.KS.json",
       "sizeBytes": 13855,
-      "updatedAt": "2026-06-11T11:02:14.559Z"
+      "updatedAt": "2026-06-12T07:28:13.650Z"
     },
     {
       "name": "298380.KQ.json",
       "sizeBytes": 11478,
-      "updatedAt": "2026-06-11T11:02:14.705Z"
+      "updatedAt": "2026-06-12T07:28:13.814Z"
     },
     {
       "name": "300059.SZ.json",
       "sizeBytes": 13641,
-      "updatedAt": "2026-06-11T11:02:14.530Z"
+      "updatedAt": "2026-06-12T07:28:13.619Z"
     },
     {
       "name": "300720.KS.json",
       "sizeBytes": 13352,
-      "updatedAt": "2026-06-11T11:02:14.574Z"
+      "updatedAt": "2026-06-12T07:28:13.668Z"
     },
     {
       "name": "300750.SZ.json",
       "sizeBytes": 13741,
-      "updatedAt": "2026-06-11T11:02:14.366Z"
+      "updatedAt": "2026-06-12T07:28:13.448Z"
     },
     {
       "name": "300760.SZ.json",
       "sizeBytes": 13168,
-      "updatedAt": "2026-06-11T11:02:14.608Z"
+      "updatedAt": "2026-06-12T07:28:13.703Z"
     },
     {
       "name": "300999.SZ.json",
       "sizeBytes": 13232,
-      "updatedAt": "2026-06-11T11:02:14.624Z"
+      "updatedAt": "2026-06-12T07:28:13.722Z"
     },
     {
       "name": "307950.KS.json",
       "sizeBytes": 12924,
-      "updatedAt": "2026-06-11T11:02:14.485Z"
+      "updatedAt": "2026-06-12T07:28:13.570Z"
     },
     {
       "name": "314930.KQ.json",
       "sizeBytes": 11203,
-      "updatedAt": "2026-06-11T11:02:14.587Z"
+      "updatedAt": "2026-06-12T07:28:13.682Z"
     },
     {
       "name": "316140.KS.json",
       "sizeBytes": 11493,
-      "updatedAt": "2026-06-11T11:02:14.609Z"
+      "updatedAt": "2026-06-12T07:28:13.705Z"
     },
     {
       "name": "319660.KQ.json",
       "sizeBytes": 13342,
-      "updatedAt": "2026-06-11T11:02:14.712Z"
+      "updatedAt": "2026-06-12T07:28:13.821Z"
     },
     {
       "name": "323410.KS.json",
       "sizeBytes": 9577,
-      "updatedAt": "2026-06-11T11:02:14.648Z"
+      "updatedAt": "2026-06-12T07:28:13.747Z"
     },
     {
       "name": "326030.KS.json",
       "sizeBytes": 13077,
-      "updatedAt": "2026-06-11T11:02:14.688Z"
+      "updatedAt": "2026-06-12T07:28:13.796Z"
     },
     {
       "name": "329180.KS.json",
       "sizeBytes": 13451,
-      "updatedAt": "2026-06-11T11:02:14.680Z"
+      "updatedAt": "2026-06-12T07:28:13.786Z"
     },
     {
       "name": "336260.KS.json",
       "sizeBytes": 13071,
-      "updatedAt": "2026-06-11T11:02:14.377Z"
+      "updatedAt": "2026-06-12T07:28:13.460Z"
     },
     {
       "name": "336370.KS.json",
       "sizeBytes": 13627,
-      "updatedAt": "2026-06-11T11:02:14.468Z"
+      "updatedAt": "2026-06-12T07:28:13.553Z"
     },
     {
       "name": "336570.KQ.json",
       "sizeBytes": 12912,
-      "updatedAt": "2026-06-11T11:02:14.601Z"
+      "updatedAt": "2026-06-12T07:28:13.697Z"
     },
     {
       "name": "3382.T.json",
       "sizeBytes": 10046,
-      "updatedAt": "2026-06-11T11:02:14.470Z"
+      "updatedAt": "2026-06-12T07:28:13.554Z"
     },
     {
       "name": "339770.KS.json",
       "sizeBytes": 13273,
-      "updatedAt": "2026-06-11T11:02:14.614Z"
+      "updatedAt": "2026-06-12T07:28:13.711Z"
     },
     {
       "name": "348210.KQ.json",
       "sizeBytes": 13409,
-      "updatedAt": "2026-06-11T11:02:14.602Z"
+      "updatedAt": "2026-06-12T07:28:13.698Z"
     },
     {
       "name": "352820.KS.json",
       "sizeBytes": 13920,
-      "updatedAt": "2026-06-11T11:02:14.534Z"
+      "updatedAt": "2026-06-12T07:28:13.624Z"
     },
     {
       "name": "353200.KS.json",
       "sizeBytes": 13365,
-      "updatedAt": "2026-06-11T11:02:14.396Z"
+      "updatedAt": "2026-06-12T07:28:13.480Z"
     },
     {
       "name": "357780.KQ.json",
       "sizeBytes": 13401,
-      "updatedAt": "2026-06-11T11:02:14.374Z"
+      "updatedAt": "2026-06-12T07:28:13.456Z"
     },
     {
       "name": "365340.KQ.json",
       "sizeBytes": 13159,
-      "updatedAt": "2026-06-11T11:02:14.688Z"
+      "updatedAt": "2026-06-12T07:28:13.795Z"
     },
     {
       "name": "3690.HK.json",
       "sizeBytes": 9963,
-      "updatedAt": "2026-06-11T11:02:14.522Z"
+      "updatedAt": "2026-06-12T07:28:13.612Z"
     },
     {
       "name": "373220.KS.json",
       "sizeBytes": 14132,
-      "updatedAt": "2026-06-11T11:02:14.497Z"
+      "updatedAt": "2026-06-12T07:28:13.583Z"
     },
     {
       "name": "375500.KS.json",
       "sizeBytes": 13965,
-      "updatedAt": "2026-06-11T11:02:14.503Z"
+      "updatedAt": "2026-06-12T07:28:13.589Z"
     },
     {
       "name": "376300.KQ.json",
       "sizeBytes": 11970,
-      "updatedAt": "2026-06-11T11:02:14.511Z"
+      "updatedAt": "2026-06-12T07:28:13.601Z"
     },
     {
       "name": "377300.KS.json",
       "sizeBytes": 11994,
-      "updatedAt": "2026-06-11T11:02:14.370Z"
+      "updatedAt": "2026-06-12T07:28:13.452Z"
     },
     {
       "name": "381970.KS.json",
       "sizeBytes": 13438,
-      "updatedAt": "2026-06-11T11:02:14.574Z"
+      "updatedAt": "2026-06-12T07:28:13.667Z"
     },
     {
       "name": "383220.KS.json",
       "sizeBytes": 13750,
-      "updatedAt": "2026-06-11T11:02:14.438Z"
+      "updatedAt": "2026-06-12T07:28:13.522Z"
     },
     {
       "name": "389650.KQ.json",
       "sizeBytes": 12228,
-      "updatedAt": "2026-06-11T11:02:14.489Z"
+      "updatedAt": "2026-06-12T07:28:13.574Z"
     },
     {
       "name": "3968.HK.json",
       "sizeBytes": 11221,
-      "updatedAt": "2026-06-11T11:02:14.381Z"
+      "updatedAt": "2026-06-12T07:28:13.465Z"
     },
     {
       "name": "3988.HK.json",
       "sizeBytes": 12658,
-      "updatedAt": "2026-06-11T11:02:14.642Z"
+      "updatedAt": "2026-06-12T07:28:13.740Z"
     },
     {
       "name": "402340.KS.json",
       "sizeBytes": 14000,
-      "updatedAt": "2026-06-11T11:02:14.388Z"
+      "updatedAt": "2026-06-12T07:28:13.472Z"
     },
     {
       "name": "403550.KS.json",
       "sizeBytes": 12311,
-      "updatedAt": "2026-06-11T11:02:14.581Z"
+      "updatedAt": "2026-06-12T07:28:13.675Z"
     },
     {
       "name": "403870.KQ.json",
       "sizeBytes": 12820,
-      "updatedAt": "2026-06-11T11:02:14.693Z"
+      "updatedAt": "2026-06-12T07:28:13.802Z"
     },
     {
       "name": "4063.T.json",
       "sizeBytes": 10356,
-      "updatedAt": "2026-06-11T11:02:14.544Z"
+      "updatedAt": "2026-06-12T07:28:13.635Z"
     },
     {
       "name": "443060.KS.json",
       "sizeBytes": 12989,
-      "updatedAt": "2026-06-11T11:02:14.455Z"
+      "updatedAt": "2026-06-12T07:28:13.540Z"
     },
     {
       "name": "4452.T.json",
       "sizeBytes": 10167,
-      "updatedAt": "2026-06-11T11:02:14.577Z"
+      "updatedAt": "2026-06-12T07:28:13.670Z"
     },
     {
       "name": "4502.T.json",
       "sizeBytes": 15659,
-      "updatedAt": "2026-06-11T11:02:14.500Z"
+      "updatedAt": "2026-06-12T07:28:13.588Z"
     },
     {
       "name": "4519.T.json",
       "sizeBytes": 9887,
-      "updatedAt": "2026-06-11T11:02:14.565Z"
+      "updatedAt": "2026-06-12T07:28:13.656Z"
     },
     {
       "name": "4568.T.json",
       "sizeBytes": 10294,
-      "updatedAt": "2026-06-11T11:02:14.570Z"
+      "updatedAt": "2026-06-12T07:28:13.662Z"
     },
     {
       "name": "4612.T.json",
       "sizeBytes": 10243,
-      "updatedAt": "2026-06-11T11:02:14.680Z"
+      "updatedAt": "2026-06-12T07:28:13.786Z"
     },
     {
       "name": "462870.KS.json",
       "sizeBytes": 12181,
-      "updatedAt": "2026-06-11T11:02:14.652Z"
+      "updatedAt": "2026-06-12T07:28:13.755Z"
     },
     {
       "name": "4661.T.json",
       "sizeBytes": 10078,
-      "updatedAt": "2026-06-11T11:02:14.661Z"
+      "updatedAt": "2026-06-12T07:28:13.765Z"
     },
     {
       "name": "483650.KS.json",
       "sizeBytes": 12574,
-      "updatedAt": "2026-06-11T11:02:14.704Z"
+      "updatedAt": "2026-06-12T07:28:13.814Z"
     },
     {
       "name": "489790.KS.json",
       "sizeBytes": 10853,
-      "updatedAt": "2026-06-11T11:02:14.583Z"
+      "updatedAt": "2026-06-12T07:28:13.677Z"
     },
     {
       "name": "4911.T.json",
       "sizeBytes": 10259,
-      "updatedAt": "2026-06-11T11:02:14.561Z"
+      "updatedAt": "2026-06-12T07:28:13.652Z"
     },
     {
       "name": "5108.T.json",
       "sizeBytes": 9929,
-      "updatedAt": "2026-06-11T11:02:14.607Z"
+      "updatedAt": "2026-06-12T07:28:13.703Z"
     },
     {
       "name": "5401.T.json",
       "sizeBytes": 10769,
-      "updatedAt": "2026-06-11T11:02:14.556Z"
+      "updatedAt": "2026-06-12T07:28:13.648Z"
     },
     {
       "name": "600000.SS.json",
       "sizeBytes": 10108,
-      "updatedAt": "2026-06-11T11:02:14.683Z"
+      "updatedAt": "2026-06-12T07:28:13.790Z"
     },
     {
       "name": "600019.SS.json",
       "sizeBytes": 13246,
-      "updatedAt": "2026-06-11T11:02:14.708Z"
+      "updatedAt": "2026-06-12T07:28:13.817Z"
     },
     {
       "name": "600028.SS.json",
       "sizeBytes": 9030,
-      "updatedAt": "2026-06-11T11:02:14.539Z"
+      "updatedAt": "2026-06-12T07:28:13.630Z"
     },
     {
       "name": "600030.SS.json",
       "sizeBytes": 9820,
-      "updatedAt": "2026-06-11T11:02:14.484Z"
+      "updatedAt": "2026-06-12T07:28:13.569Z"
     },
     {
       "name": "600031.SS.json",
       "sizeBytes": 12886,
-      "updatedAt": "2026-06-11T11:02:14.506Z"
+      "updatedAt": "2026-06-12T07:28:13.593Z"
     },
     {
       "name": "600036.SS.json",
       "sizeBytes": 9987,
-      "updatedAt": "2026-06-11T11:02:14.700Z"
+      "updatedAt": "2026-06-12T07:28:13.809Z"
     },
     {
       "name": "600104.SS.json",
       "sizeBytes": 12963,
-      "updatedAt": "2026-06-11T11:02:14.504Z"
+      "updatedAt": "2026-06-12T07:28:13.590Z"
     },
     {
       "name": "600150.SS.json",
       "sizeBytes": 12580,
-      "updatedAt": "2026-06-11T11:02:14.538Z"
+      "updatedAt": "2026-06-12T07:28:13.630Z"
     },
     {
       "name": "600309.SS.json",
       "sizeBytes": 11736,
-      "updatedAt": "2026-06-11T11:02:14.431Z"
+      "updatedAt": "2026-06-12T07:28:13.515Z"
     },
     {
       "name": "600346.SS.json",
       "sizeBytes": 12850,
-      "updatedAt": "2026-06-11T11:02:14.482Z"
+      "updatedAt": "2026-06-12T07:28:13.567Z"
     },
     {
       "name": "600519.SS.json",
       "sizeBytes": 12131,
-      "updatedAt": "2026-06-11T11:02:14.401Z"
+      "updatedAt": "2026-06-12T07:28:13.485Z"
     },
     {
       "name": "600585.SS.json",
       "sizeBytes": 12494,
-      "updatedAt": "2026-06-11T11:02:14.472Z"
+      "updatedAt": "2026-06-12T07:28:13.556Z"
     },
     {
       "name": "600809.SS.json",
       "sizeBytes": 12360,
-      "updatedAt": "2026-06-11T11:02:14.377Z"
+      "updatedAt": "2026-06-12T07:28:13.460Z"
     },
     {
       "name": "600887.SS.json",
       "sizeBytes": 13332,
-      "updatedAt": "2026-06-11T11:02:14.413Z"
+      "updatedAt": "2026-06-12T07:28:13.496Z"
     },
     {
       "name": "600900.SS.json",
       "sizeBytes": 13344,
-      "updatedAt": "2026-06-11T11:02:14.486Z"
+      "updatedAt": "2026-06-12T07:28:13.571Z"
     },
     {
       "name": "601012.SS.json",
       "sizeBytes": 12707,
-      "updatedAt": "2026-06-11T11:02:14.420Z"
+      "updatedAt": "2026-06-12T07:28:13.505Z"
     },
     {
       "name": "601066.SS.json",
       "sizeBytes": 9507,
-      "updatedAt": "2026-06-11T11:02:14.540Z"
+      "updatedAt": "2026-06-12T07:28:13.632Z"
     },
     {
       "name": "601088.SS.json",
       "sizeBytes": 12536,
-      "updatedAt": "2026-06-11T11:02:14.646Z"
+      "updatedAt": "2026-06-12T07:28:13.745Z"
     },
     {
       "name": "601138.SS.json",
       "sizeBytes": 12250,
-      "updatedAt": "2026-06-11T11:02:14.583Z"
+      "updatedAt": "2026-06-12T07:28:13.677Z"
     },
     {
       "name": "601166.SS.json",
       "sizeBytes": 9919,
-      "updatedAt": "2026-06-11T11:02:14.636Z"
+      "updatedAt": "2026-06-12T07:28:13.734Z"
     },
     {
       "name": "601288.SS.json",
       "sizeBytes": 9980,
-      "updatedAt": "2026-06-11T11:02:14.454Z"
+      "updatedAt": "2026-06-12T07:28:13.538Z"
     },
     {
       "name": "601318.SS.json",
       "sizeBytes": 10750,
-      "updatedAt": "2026-06-11T11:02:14.594Z"
+      "updatedAt": "2026-06-12T07:28:13.690Z"
     },
     {
       "name": "601319.SS.json",
       "sizeBytes": 6806,
-      "updatedAt": "2026-06-11T11:02:14.569Z"
+      "updatedAt": "2026-06-12T07:28:13.661Z"
     },
     {
       "name": "601328.SS.json",
       "sizeBytes": 9934,
-      "updatedAt": "2026-06-11T11:02:14.395Z"
+      "updatedAt": "2026-06-12T07:28:13.479Z"
     },
     {
       "name": "601398.SS.json",
       "sizeBytes": 10074,
-      "updatedAt": "2026-06-11T11:02:14.367Z"
+      "updatedAt": "2026-06-12T07:28:13.449Z"
     },
     {
       "name": "601601.SS.json",
       "sizeBytes": 9337,
-      "updatedAt": "2026-06-11T11:02:14.476Z"
+      "updatedAt": "2026-06-12T07:28:13.561Z"
     },
     {
       "name": "601628.SS.json",
       "sizeBytes": 9234,
-      "updatedAt": "2026-06-11T11:02:14.695Z"
+      "updatedAt": "2026-06-12T07:28:13.803Z"
     },
     {
       "name": "601633.SS.json",
       "sizeBytes": 11798,
-      "updatedAt": "2026-06-11T11:02:14.540Z"
+      "updatedAt": "2026-06-12T07:28:13.631Z"
     },
     {
       "name": "601658.SS.json",
       "sizeBytes": 7347,
-      "updatedAt": "2026-06-11T11:02:14.567Z"
+      "updatedAt": "2026-06-12T07:28:13.659Z"
     },
     {
       "name": "601668.SS.json",
       "sizeBytes": 13107,
-      "updatedAt": "2026-06-11T11:02:14.410Z"
+      "updatedAt": "2026-06-12T07:28:13.494Z"
     },
     {
       "name": "601816.SS.json",
       "sizeBytes": 12813,
-      "updatedAt": "2026-06-11T11:02:14.392Z"
+      "updatedAt": "2026-06-12T07:28:13.475Z"
     },
     {
       "name": "601857.SS.json",
       "sizeBytes": 13383,
-      "updatedAt": "2026-06-11T11:02:14.698Z"
+      "updatedAt": "2026-06-12T07:28:13.807Z"
     },
     {
       "name": "601888.SS.json",
       "sizeBytes": 12561,
-      "updatedAt": "2026-06-11T11:02:14.441Z"
+      "updatedAt": "2026-06-12T07:28:13.525Z"
     },
     {
       "name": "601899.SS.json",
       "sizeBytes": 12580,
-      "updatedAt": "2026-06-11T11:02:14.374Z"
+      "updatedAt": "2026-06-12T07:28:13.457Z"
     },
     {
       "name": "601919.SS.json",
       "sizeBytes": 9914,
-      "updatedAt": "2026-06-11T11:02:14.686Z"
+      "updatedAt": "2026-06-12T07:28:13.792Z"
     },
     {
       "name": "601988.SS.json",
       "sizeBytes": 9684,
-      "updatedAt": "2026-06-11T11:02:14.537Z"
+      "updatedAt": "2026-06-12T07:28:13.628Z"
     },
     {
       "name": "603288.SS.json",
       "sizeBytes": 12373,
-      "updatedAt": "2026-06-11T11:02:14.384Z"
+      "updatedAt": "2026-06-12T07:28:13.467Z"
     },
     {
       "name": "603501.SS.json",
       "sizeBytes": 14260,
-      "updatedAt": "2026-06-11T11:02:14.652Z"
+      "updatedAt": "2026-06-12T07:28:13.755Z"
     },
     {
       "name": "6098.T.json",
       "sizeBytes": 9873,
-      "updatedAt": "2026-06-11T11:02:14.521Z"
+      "updatedAt": "2026-06-12T07:28:13.612Z"
     },
     {
       "name": "6178.T.json",
       "sizeBytes": 7868,
-      "updatedAt": "2026-06-11T11:02:14.711Z"
+      "updatedAt": "2026-06-12T07:28:13.821Z"
     },
     {
       "name": "6273.T.json",
       "sizeBytes": 10244,
-      "updatedAt": "2026-06-11T11:02:14.553Z"
+      "updatedAt": "2026-06-12T07:28:13.645Z"
     },
     {
       "name": "6367.T.json",
       "sizeBytes": 10282,
-      "updatedAt": "2026-06-11T11:02:14.659Z"
+      "updatedAt": "2026-06-12T07:28:13.763Z"
     },
     {
       "name": "6501.T.json",
       "sizeBytes": 10780,
-      "updatedAt": "2026-06-11T11:02:14.450Z"
+      "updatedAt": "2026-06-12T07:28:13.533Z"
     },
     {
       "name": "6594.T.json",
       "sizeBytes": 11206,
-      "updatedAt": "2026-06-11T11:02:14.589Z"
+      "updatedAt": "2026-06-12T07:28:13.684Z"
     },
     {
       "name": "6702.T.json",
       "sizeBytes": 9996,
-      "updatedAt": "2026-06-11T11:02:14.492Z"
+      "updatedAt": "2026-06-12T07:28:13.578Z"
     },
     {
       "name": "6752.T.json",
       "sizeBytes": 10384,
-      "updatedAt": "2026-06-11T11:02:14.589Z"
+      "updatedAt": "2026-06-12T07:28:13.685Z"
     },
     {
       "name": "6758.T.json",
       "sizeBytes": 15351,
-      "updatedAt": "2026-06-11T11:02:14.703Z"
+      "updatedAt": "2026-06-12T07:28:13.812Z"
     },
     {
       "name": "6861.T.json",
       "sizeBytes": 9409,
-      "updatedAt": "2026-06-11T11:02:14.575Z"
+      "updatedAt": "2026-06-12T07:28:13.668Z"
     },
     {
       "name": "6902.T.json",
       "sizeBytes": 10257,
-      "updatedAt": "2026-06-11T11:02:14.573Z"
+      "updatedAt": "2026-06-12T07:28:13.666Z"
     },
     {
       "name": "6954.T.json",
       "sizeBytes": 10189,
-      "updatedAt": "2026-06-11T11:02:14.442Z"
+      "updatedAt": "2026-06-12T07:28:13.526Z"
     },
     {
       "name": "6981.T.json",
       "sizeBytes": 14890,
-      "updatedAt": "2026-06-11T11:02:14.390Z"
+      "updatedAt": "2026-06-12T07:28:13.473Z"
     },
     {
       "name": "7182.T.json",
       "sizeBytes": 8231,
-      "updatedAt": "2026-06-11T11:02:14.491Z"
+      "updatedAt": "2026-06-12T07:28:13.577Z"
     },
     {
       "name": "7203.T.json",
       "sizeBytes": 15157,
-      "updatedAt": "2026-06-11T11:02:14.473Z"
+      "updatedAt": "2026-06-12T07:28:13.558Z"
     },
     {
       "name": "7267.T.json",
       "sizeBytes": 15335,
-      "updatedAt": "2026-06-11T11:02:14.566Z"
+      "updatedAt": "2026-06-12T07:28:13.657Z"
     },
     {
       "name": "7309.T.json",
       "sizeBytes": 9725,
-      "updatedAt": "2026-06-11T11:02:14.382Z"
+      "updatedAt": "2026-06-12T07:28:13.466Z"
     },
     {
       "name": "7741.T.json",
       "sizeBytes": 10708,
-      "updatedAt": "2026-06-11T11:02:14.539Z"
+      "updatedAt": "2026-06-12T07:28:13.630Z"
     },
     {
       "name": "7751.T.json",
       "sizeBytes": 10596,
-      "updatedAt": "2026-06-11T11:02:14.466Z"
+      "updatedAt": "2026-06-12T07:28:13.550Z"
     },
     {
       "name": "7832.T.json",
       "sizeBytes": 10132,
-      "updatedAt": "2026-06-11T11:02:14.555Z"
+      "updatedAt": "2026-06-12T07:28:13.647Z"
     },
     {
       "name": "7936.T.json",
       "sizeBytes": 9897,
-      "updatedAt": "2026-06-11T11:02:14.682Z"
+      "updatedAt": "2026-06-12T07:28:13.788Z"
     },
     {
       "name": "7951.T.json",
       "sizeBytes": 9741,
-      "updatedAt": "2026-06-11T11:02:14.552Z"
+      "updatedAt": "2026-06-12T07:28:13.643Z"
     },
     {
       "name": "7974.T.json",
       "sizeBytes": 10113,
-      "updatedAt": "2026-06-11T11:02:14.401Z"
+      "updatedAt": "2026-06-12T07:28:13.485Z"
     },
     {
       "name": "8001.T.json",
       "sizeBytes": 10685,
-      "updatedAt": "2026-06-11T11:02:14.468Z"
+      "updatedAt": "2026-06-12T07:28:13.552Z"
     },
     {
       "name": "8031.T.json",
       "sizeBytes": 10435,
-      "updatedAt": "2026-06-11T11:02:14.399Z"
+      "updatedAt": "2026-06-12T07:28:13.483Z"
     },
     {
       "name": "8035.T.json",
       "sizeBytes": 10134,
-      "updatedAt": "2026-06-11T11:02:14.519Z"
+      "updatedAt": "2026-06-12T07:28:13.609Z"
     },
     {
       "name": "8058.T.json",
       "sizeBytes": 11375,
-      "updatedAt": "2026-06-11T11:02:14.457Z"
+      "updatedAt": "2026-06-12T07:28:13.541Z"
     },
     {
       "name": "8306.T.json",
       "sizeBytes": 10290,
-      "updatedAt": "2026-06-11T11:02:14.446Z"
+      "updatedAt": "2026-06-12T07:28:13.529Z"
     },
     {
       "name": "8316.T.json",
       "sizeBytes": 10336,
-      "updatedAt": "2026-06-11T11:02:14.384Z"
+      "updatedAt": "2026-06-12T07:28:13.468Z"
     },
     {
       "name": "8411.T.json",
       "sizeBytes": 10096,
-      "updatedAt": "2026-06-11T11:02:14.604Z"
+      "updatedAt": "2026-06-12T07:28:13.700Z"
     },
     {
       "name": "8766.T.json",
       "sizeBytes": 8940,
-      "updatedAt": "2026-06-11T11:02:14.451Z"
+      "updatedAt": "2026-06-12T07:28:13.534Z"
     },
     {
       "name": "9022.T.json",
       "sizeBytes": 10449,
-      "updatedAt": "2026-06-11T11:02:14.634Z"
+      "updatedAt": "2026-06-12T07:28:13.731Z"
     },
     {
       "name": "9432.T.json",
       "sizeBytes": 10506,
-      "updatedAt": "2026-06-11T11:02:14.412Z"
+      "updatedAt": "2026-06-12T07:28:13.496Z"
     },
     {
       "name": "9433.T.json",
       "sizeBytes": 10576,
-      "updatedAt": "2026-06-11T11:02:14.619Z"
+      "updatedAt": "2026-06-12T07:28:13.716Z"
     },
     {
       "name": "9434.T.json",
       "sizeBytes": 9825,
-      "updatedAt": "2026-06-11T11:02:14.525Z"
+      "updatedAt": "2026-06-12T07:28:13.615Z"
     },
     {
       "name": "9618.HK.json",
       "sizeBytes": 13680,
-      "updatedAt": "2026-06-11T11:02:14.577Z"
+      "updatedAt": "2026-06-12T07:28:13.671Z"
     },
     {
       "name": "9633.HK.json",
       "sizeBytes": 9392,
-      "updatedAt": "2026-06-11T11:02:14.494Z"
+      "updatedAt": "2026-06-12T07:28:13.580Z"
     },
     {
       "name": "9888.HK.json",
       "sizeBytes": 13327,
-      "updatedAt": "2026-06-11T11:02:14.681Z"
+      "updatedAt": "2026-06-12T07:28:13.787Z"
     },
     {
       "name": "9983.T.json",
       "sizeBytes": 10579,
-      "updatedAt": "2026-06-11T11:02:14.625Z"
+      "updatedAt": "2026-06-12T07:28:13.722Z"
     },
     {
       "name": "9984.T.json",
       "sizeBytes": 11113,
-      "updatedAt": "2026-06-11T11:02:14.532Z"
+      "updatedAt": "2026-06-12T07:28:13.622Z"
     },
     {
       "name": "9988.HK.json",
       "sizeBytes": 13862,
-      "updatedAt": "2026-06-11T11:02:14.589Z"
+      "updatedAt": "2026-06-12T07:28:13.684Z"
     },
     {
       "name": "9999.HK.json",
       "sizeBytes": 14540,
-      "updatedAt": "2026-06-11T11:02:14.563Z"
+      "updatedAt": "2026-06-12T07:28:13.654Z"
     },
     {
       "name": "A.json",
       "sizeBytes": 16099,
-      "updatedAt": "2026-06-11T11:02:14.383Z"
+      "updatedAt": "2026-06-12T07:28:13.466Z"
     },
     {
       "name": "AA.json",
       "sizeBytes": 15792,
-      "updatedAt": "2026-06-11T11:02:14.614Z"
+      "updatedAt": "2026-06-12T07:28:13.711Z"
     },
     {
       "name": "AAL.json",
       "sizeBytes": 14916,
-      "updatedAt": "2026-06-11T11:02:14.475Z"
+      "updatedAt": "2026-06-12T07:28:13.559Z"
     },
     {
       "name": "AAPL.json",
       "sizeBytes": 16327,
-      "updatedAt": "2026-06-11T11:02:14.510Z"
+      "updatedAt": "2026-06-12T07:28:13.599Z"
     },
     {
       "name": "ABBV.json",
       "sizeBytes": 16428,
-      "updatedAt": "2026-06-11T11:02:14.627Z"
+      "updatedAt": "2026-06-12T07:28:13.724Z"
     },
     {
       "name": "ABNB.json",
       "sizeBytes": 13964,
-      "updatedAt": "2026-06-11T11:02:14.515Z"
+      "updatedAt": "2026-06-12T07:28:13.605Z"
     },
     {
       "name": "ABT.json",
       "sizeBytes": 16426,
-      "updatedAt": "2026-06-11T11:02:14.440Z"
+      "updatedAt": "2026-06-12T07:28:13.524Z"
     },
     {
       "name": "ACM.json",
       "sizeBytes": 15357,
-      "updatedAt": "2026-06-11T11:02:14.514Z"
+      "updatedAt": "2026-06-12T07:28:13.603Z"
     },
     {
       "name": "ACN.json",
       "sizeBytes": 15598,
-      "updatedAt": "2026-06-11T11:02:14.541Z"
+      "updatedAt": "2026-06-12T07:28:13.632Z"
     },
     {
       "name": "ADBE.json",
       "sizeBytes": 15855,
-      "updatedAt": "2026-06-11T11:02:14.621Z"
+      "updatedAt": "2026-06-12T07:28:13.718Z"
     },
     {
       "name": "ADI.json",
       "sizeBytes": 16260,
-      "updatedAt": "2026-06-11T11:02:14.580Z"
+      "updatedAt": "2026-06-12T07:28:13.674Z"
     },
     {
       "name": "ADM.json",
       "sizeBytes": 15601,
-      "updatedAt": "2026-06-11T11:02:14.367Z"
+      "updatedAt": "2026-06-12T07:28:13.449Z"
     },
     {
       "name": "ADP.json",
       "sizeBytes": 15908,
-      "updatedAt": "2026-06-11T11:02:14.544Z"
+      "updatedAt": "2026-06-12T07:28:13.636Z"
     },
     {
       "name": "ADSK.json",
       "sizeBytes": 15310,
-      "updatedAt": "2026-06-11T11:02:14.626Z"
+      "updatedAt": "2026-06-12T07:28:13.724Z"
     },
     {
       "name": "AEE.json",
       "sizeBytes": 15310,
-      "updatedAt": "2026-06-11T11:02:14.665Z"
+      "updatedAt": "2026-06-12T07:28:13.770Z"
     },
     {
       "name": "AEP.json",
       "sizeBytes": 15571,
-      "updatedAt": "2026-06-11T11:02:14.658Z"
+      "updatedAt": "2026-06-12T07:28:13.762Z"
     },
     {
       "name": "AFL.json",
       "sizeBytes": 13328,
-      "updatedAt": "2026-06-11T11:02:14.411Z"
+      "updatedAt": "2026-06-12T07:28:13.494Z"
     },
     {
       "name": "AFRM.json",
       "sizeBytes": 14513,
-      "updatedAt": "2026-06-11T11:02:14.558Z"
+      "updatedAt": "2026-06-12T07:28:13.649Z"
     },
     {
       "name": "AIG.json",
       "sizeBytes": 13330,
-      "updatedAt": "2026-06-11T11:02:14.686Z"
+      "updatedAt": "2026-06-12T07:28:13.793Z"
     },
     {
       "name": "AIT.json",
       "sizeBytes": 15196,
-      "updatedAt": "2026-06-11T11:02:14.616Z"
+      "updatedAt": "2026-06-12T07:28:13.713Z"
     },
     {
       "name": "AJG.json",
       "sizeBytes": 15530,
-      "updatedAt": "2026-06-11T11:02:14.586Z"
+      "updatedAt": "2026-06-12T07:28:13.680Z"
     },
     {
       "name": "AKAM.json",
       "sizeBytes": 14712,
-      "updatedAt": "2026-06-11T11:02:14.658Z"
+      "updatedAt": "2026-06-12T07:28:13.761Z"
     },
     {
       "name": "ALAB.json",
       "sizeBytes": 13319,
-      "updatedAt": "2026-06-11T11:02:14.698Z"
+      "updatedAt": "2026-06-12T07:28:13.806Z"
     },
     {
       "name": "ALB.json",
       "sizeBytes": 15741,
-      "updatedAt": "2026-06-11T11:02:14.417Z"
+      "updatedAt": "2026-06-12T07:28:13.501Z"
     },
     {
       "name": "ALC.json",
       "sizeBytes": 14996,
-      "updatedAt": "2026-06-11T11:02:14.398Z"
+      "updatedAt": "2026-06-12T07:28:13.482Z"
     },
     {
       "name": "ALGM.json",
       "sizeBytes": 14447,
-      "updatedAt": "2026-06-11T11:02:14.432Z"
+      "updatedAt": "2026-06-12T07:28:13.516Z"
     },
     {
       "name": "ALGN.json",
       "sizeBytes": 13865,
-      "updatedAt": "2026-06-11T11:02:14.633Z"
+      "updatedAt": "2026-06-12T07:28:13.731Z"
     },
     {
       "name": "ALL.json",
       "sizeBytes": 13526,
-      "updatedAt": "2026-06-11T11:02:14.703Z"
+      "updatedAt": "2026-06-12T07:28:13.812Z"
     },
     {
       "name": "ALLE.json",
       "sizeBytes": 15627,
-      "updatedAt": "2026-06-11T11:02:14.428Z"
+      "updatedAt": "2026-06-12T07:28:13.512Z"
     },
     {
       "name": "ALNY.json",
       "sizeBytes": 14172,
-      "updatedAt": "2026-06-11T11:02:14.563Z"
+      "updatedAt": "2026-06-12T07:28:13.654Z"
     },
     {
       "name": "AMAT.json",
       "sizeBytes": 16222,
-      "updatedAt": "2026-06-11T11:02:14.565Z"
+      "updatedAt": "2026-06-12T07:28:13.656Z"
     },
     {
       "name": "AMD.json",
       "sizeBytes": 14897,
-      "updatedAt": "2026-06-11T11:02:14.408Z"
+      "updatedAt": "2026-06-12T07:28:13.492Z"
     },
     {
       "name": "AME.json",
       "sizeBytes": 15258,
-      "updatedAt": "2026-06-11T11:02:14.404Z"
+      "updatedAt": "2026-06-12T07:28:13.488Z"
     },
     {
       "name": "AMGN.json",
       "sizeBytes": 16036,
-      "updatedAt": "2026-06-11T11:02:14.484Z"
+      "updatedAt": "2026-06-12T07:28:13.569Z"
     },
     {
       "name": "AMH.json",
       "sizeBytes": 15217,
-      "updatedAt": "2026-06-11T11:02:14.429Z"
+      "updatedAt": "2026-06-12T07:28:13.513Z"
     },
     {
       "name": "AMKR.json",
       "sizeBytes": 14998,
-      "updatedAt": "2026-06-11T11:02:14.398Z"
+      "updatedAt": "2026-06-12T07:28:13.482Z"
     },
     {
       "name": "AMP.json",
       "sizeBytes": 13324,
-      "updatedAt": "2026-06-11T11:02:14.390Z"
+      "updatedAt": "2026-06-12T07:28:13.474Z"
     },
     {
       "name": "AMT.json",
       "sizeBytes": 15729,
-      "updatedAt": "2026-06-11T11:02:14.556Z"
+      "updatedAt": "2026-06-12T07:28:13.648Z"
     },
     {
       "name": "AMZN.json",
       "sizeBytes": 14594,
-      "updatedAt": "2026-06-11T11:02:14.531Z"
+      "updatedAt": "2026-06-12T07:28:13.622Z"
     },
     {
       "name": "ANET.json",
       "sizeBytes": 13760,
-      "updatedAt": "2026-06-11T11:02:14.370Z"
+      "updatedAt": "2026-06-12T07:28:13.452Z"
     },
     {
       "name": "AON.json",
       "sizeBytes": 15821,
-      "updatedAt": "2026-06-11T11:02:14.534Z"
+      "updatedAt": "2026-06-12T07:28:13.625Z"
     },
     {
       "name": "AOS.json",
       "sizeBytes": 15371,
-      "updatedAt": "2026-06-11T11:02:14.713Z"
+      "updatedAt": "2026-06-12T07:28:13.823Z"
     },
     {
       "name": "APD.json",
       "sizeBytes": 15911,
-      "updatedAt": "2026-06-11T11:02:14.369Z"
+      "updatedAt": "2026-06-12T07:28:13.451Z"
     },
     {
       "name": "APH.json",
       "sizeBytes": 15955,
-      "updatedAt": "2026-06-11T11:02:14.394Z"
+      "updatedAt": "2026-06-12T07:28:13.478Z"
     },
     {
       "name": "APP.json",
       "sizeBytes": 14712,
-      "updatedAt": "2026-06-11T11:02:14.437Z"
+      "updatedAt": "2026-06-12T07:28:13.521Z"
     },
     {
       "name": "APTV.json",
       "sizeBytes": 15402,
-      "updatedAt": "2026-06-11T11:02:14.452Z"
+      "updatedAt": "2026-06-12T07:28:13.537Z"
     },
     {
       "name": "AR.json",
       "sizeBytes": 13488,
-      "updatedAt": "2026-06-11T11:02:14.692Z"
+      "updatedAt": "2026-06-12T07:28:13.801Z"
     },
     {
       "name": "ARM.json",
       "sizeBytes": 13614,
-      "updatedAt": "2026-06-11T11:02:14.595Z"
+      "updatedAt": "2026-06-12T07:28:13.692Z"
     },
     {
       "name": "ARMK.json",
       "sizeBytes": 15868,
-      "updatedAt": "2026-06-11T11:02:14.691Z"
+      "updatedAt": "2026-06-12T07:28:13.799Z"
     },
     {
       "name": "AS.json",
       "sizeBytes": 14088,
-      "updatedAt": "2026-06-11T11:02:14.651Z"
+      "updatedAt": "2026-06-12T07:28:13.753Z"
     },
     {
       "name": "ASML.json",
       "sizeBytes": 15464,
-      "updatedAt": "2026-06-11T11:02:14.399Z"
+      "updatedAt": "2026-06-12T07:28:13.484Z"
     },
     {
       "name": "ATO.json",
       "sizeBytes": 15377,
-      "updatedAt": "2026-06-11T11:02:14.449Z"
+      "updatedAt": "2026-06-12T07:28:13.532Z"
     },
     {
       "name": "AVGO.json",
       "sizeBytes": 16467,
-      "updatedAt": "2026-06-11T11:02:14.639Z"
+      "updatedAt": "2026-06-12T07:28:13.736Z"
     },
     {
       "name": "AWK.json",
       "sizeBytes": 15461,
-      "updatedAt": "2026-06-11T11:02:14.569Z"
+      "updatedAt": "2026-06-12T07:28:13.661Z"
     },
     {
       "name": "AXP.json",
       "sizeBytes": 13023,
-      "updatedAt": "2026-06-11T11:02:14.693Z"
+      "updatedAt": "2026-06-12T07:28:13.801Z"
     },
     {
       "name": "AZN.json",
       "sizeBytes": 15872,
-      "updatedAt": "2026-06-11T11:02:14.583Z"
+      "updatedAt": "2026-06-12T07:28:13.676Z"
     },
     {
       "name": "AZO.json",
       "sizeBytes": 14318,
-      "updatedAt": "2026-06-11T11:02:14.584Z"
+      "updatedAt": "2026-06-12T07:28:13.678Z"
     },
     {
       "name": "BA.json",
       "sizeBytes": 15851,
-      "updatedAt": "2026-06-11T11:02:14.701Z"
+      "updatedAt": "2026-06-12T07:28:13.810Z"
     },
     {
       "name": "BAC.json",
       "sizeBytes": 12757,
-      "updatedAt": "2026-06-11T11:02:14.406Z"
+      "updatedAt": "2026-06-12T07:28:13.490Z"
     },
     {
       "name": "BALL.json",
       "sizeBytes": 15695,
-      "updatedAt": "2026-06-11T11:02:14.461Z"
+      "updatedAt": "2026-06-12T07:28:13.545Z"
     },
     {
       "name": "BAX.json",
       "sizeBytes": 15596,
-      "updatedAt": "2026-06-11T11:02:14.649Z"
+      "updatedAt": "2026-06-12T07:28:13.749Z"
     },
     {
       "name": "BBY.json",
       "sizeBytes": 15252,
-      "updatedAt": "2026-06-11T11:02:14.620Z"
+      "updatedAt": "2026-06-12T07:28:13.717Z"
     },
     {
       "name": "BCE.json",
       "sizeBytes": 15960,
-      "updatedAt": "2026-06-11T11:02:14.474Z"
+      "updatedAt": "2026-06-12T07:28:13.559Z"
     },
     {
       "name": "BDX.json",
       "sizeBytes": 16042,
-      "updatedAt": "2026-06-11T11:02:14.584Z"
+      "updatedAt": "2026-06-12T07:28:13.678Z"
     },
     {
       "name": "BHP.json",
       "sizeBytes": 11371,
-      "updatedAt": "2026-06-11T11:02:14.653Z"
+      "updatedAt": "2026-06-12T07:28:13.756Z"
     },
     {
       "name": "BIIB.json",
       "sizeBytes": 14613,
-      "updatedAt": "2026-06-11T11:02:14.566Z"
+      "updatedAt": "2026-06-12T07:28:13.657Z"
     },
     {
       "name": "BKNG.json",
       "sizeBytes": 14561,
-      "updatedAt": "2026-06-11T11:02:14.520Z"
+      "updatedAt": "2026-06-12T07:28:13.611Z"
     },
     {
       "name": "BKR.json",
       "sizeBytes": 15860,
-      "updatedAt": "2026-06-11T11:02:14.479Z"
+      "updatedAt": "2026-06-12T07:28:13.563Z"
     },
     {
       "name": "BLD.json",
       "sizeBytes": 14454,
-      "updatedAt": "2026-06-11T11:02:14.667Z"
+      "updatedAt": "2026-06-12T07:28:13.771Z"
     },
     {
       "name": "BLDR.json",
       "sizeBytes": 14632,
-      "updatedAt": "2026-06-11T11:02:14.498Z"
+      "updatedAt": "2026-06-12T07:28:13.585Z"
     },
     {
       "name": "BLK.json",
       "sizeBytes": 15849,
-      "updatedAt": "2026-06-11T11:02:14.441Z"
+      "updatedAt": "2026-06-12T07:28:13.525Z"
     },
     {
       "name": "BMO.json",
       "sizeBytes": 12956,
-      "updatedAt": "2026-06-11T11:02:14.695Z"
+      "updatedAt": "2026-06-12T07:28:13.804Z"
     },
     {
       "name": "BMRN.json",
       "sizeBytes": 14004,
-      "updatedAt": "2026-06-11T11:02:14.689Z"
+      "updatedAt": "2026-06-12T07:28:13.796Z"
     },
     {
       "name": "BMW.DE.json",
       "sizeBytes": 13740,
-      "updatedAt": "2026-06-11T11:02:14.388Z"
+      "updatedAt": "2026-06-12T07:28:13.472Z"
     },
     {
       "name": "BMY.json",
       "sizeBytes": 16200,
-      "updatedAt": "2026-06-11T11:02:14.385Z"
+      "updatedAt": "2026-06-12T07:28:13.468Z"
     },
     {
       "name": "BNS.json",
       "sizeBytes": 12895,
-      "updatedAt": "2026-06-11T11:02:14.369Z"
+      "updatedAt": "2026-06-12T07:28:13.451Z"
     },
     {
       "name": "BNY.json",
       "sizeBytes": 12667,
-      "updatedAt": "2026-06-11T11:02:14.453Z"
+      "updatedAt": "2026-06-12T07:28:13.538Z"
     },
     {
       "name": "BRK.A.json",
       "sizeBytes": 12629,
-      "updatedAt": "2026-06-11T11:02:14.669Z"
+      "updatedAt": "2026-06-12T07:28:13.775Z"
     },
     {
       "name": "BRK.B.json",
       "sizeBytes": 12674,
-      "updatedAt": "2026-06-11T11:02:14.426Z"
+      "updatedAt": "2026-06-12T07:28:13.510Z"
     },
     {
       "name": "BSX.json",
       "sizeBytes": 14820,
-      "updatedAt": "2026-06-11T11:02:14.496Z"
+      "updatedAt": "2026-06-12T07:28:13.582Z"
     },
     {
       "name": "BSY.json",
       "sizeBytes": 15564,
-      "updatedAt": "2026-06-11T11:02:14.497Z"
+      "updatedAt": "2026-06-12T07:28:13.583Z"
     },
     {
       "name": "BURL.json",
       "sizeBytes": 14633,
-      "updatedAt": "2026-06-11T11:02:14.427Z"
+      "updatedAt": "2026-06-12T07:28:13.511Z"
     },
     {
       "name": "BX.json",
       "sizeBytes": 13170,
-      "updatedAt": "2026-06-11T11:02:14.679Z"
+      "updatedAt": "2026-06-12T07:28:13.785Z"
     },
     {
       "name": "C.json",
       "sizeBytes": 13077,
-      "updatedAt": "2026-06-11T11:02:14.634Z"
+      "updatedAt": "2026-06-12T07:28:13.732Z"
     },
     {
       "name": "CACI.json",
       "sizeBytes": 14196,
-      "updatedAt": "2026-06-11T11:02:14.510Z"
+      "updatedAt": "2026-06-12T07:28:13.598Z"
     },
     {
       "name": "CAH.json",
       "sizeBytes": 15862,
-      "updatedAt": "2026-06-11T11:02:14.704Z"
+      "updatedAt": "2026-06-12T07:28:13.813Z"
     },
     {
       "name": "CARR.json",
       "sizeBytes": 15950,
-      "updatedAt": "2026-06-11T11:02:14.502Z"
+      "updatedAt": "2026-06-12T07:28:13.589Z"
     },
     {
       "name": "CASY.json",
       "sizeBytes": 14793,
-      "updatedAt": "2026-06-11T11:02:14.467Z"
+      "updatedAt": "2026-06-12T07:28:13.551Z"
     },
     {
       "name": "CAT.json",
       "sizeBytes": 16459,
-      "updatedAt": "2026-06-11T11:02:14.457Z"
+      "updatedAt": "2026-06-12T07:28:13.541Z"
     },
     {
       "name": "CB.json",
       "sizeBytes": 13496,
-      "updatedAt": "2026-06-11T11:02:14.495Z"
+      "updatedAt": "2026-06-12T07:28:13.582Z"
     },
     {
       "name": "CBRE.json",
       "sizeBytes": 14315,
-      "updatedAt": "2026-06-11T11:02:14.379Z"
+      "updatedAt": "2026-06-12T07:28:13.462Z"
     },
     {
       "name": "CCI.json",
       "sizeBytes": 15743,
-      "updatedAt": "2026-06-11T11:02:14.663Z"
+      "updatedAt": "2026-06-12T07:28:13.767Z"
     },
     {
       "name": "CCJ.json",
       "sizeBytes": 15234,
-      "updatedAt": "2026-06-11T11:02:14.419Z"
+      "updatedAt": "2026-06-12T07:28:13.503Z"
     },
     {
       "name": "CCL.json",
       "sizeBytes": 15332,
-      "updatedAt": "2026-06-11T11:02:14.525Z"
+      "updatedAt": "2026-06-12T07:28:13.615Z"
     },
     {
       "name": "CDNS.json",
       "sizeBytes": 14631,
-      "updatedAt": "2026-06-11T11:02:14.673Z"
+      "updatedAt": "2026-06-12T07:28:13.778Z"
     },
     {
       "name": "CDW.json",
       "sizeBytes": 15771,
-      "updatedAt": "2026-06-11T11:02:14.666Z"
+      "updatedAt": "2026-06-12T07:28:13.771Z"
     },
     {
       "name": "CEG.json",
       "sizeBytes": 15449,
-      "updatedAt": "2026-06-11T11:02:14.408Z"
+      "updatedAt": "2026-06-12T07:28:13.491Z"
     },
     {
       "name": "CHD.json",
       "sizeBytes": 15401,
-      "updatedAt": "2026-06-11T11:02:14.528Z"
+      "updatedAt": "2026-06-12T07:28:13.618Z"
     },
     {
       "name": "CHKP.json",
       "sizeBytes": 14016,
-      "updatedAt": "2026-06-11T11:02:14.453Z"
+      "updatedAt": "2026-06-12T07:28:13.537Z"
     },
     {
       "name": "CHRW.json",
       "sizeBytes": 15689,
-      "updatedAt": "2026-06-11T11:02:14.436Z"
+      "updatedAt": "2026-06-12T07:28:13.520Z"
     },
     {
       "name": "CHTR.json",
       "sizeBytes": 14877,
-      "updatedAt": "2026-06-11T11:02:14.615Z"
+      "updatedAt": "2026-06-12T07:28:13.711Z"
     },
     {
       "name": "CHWY.json",
       "sizeBytes": 13938,
-      "updatedAt": "2026-06-11T11:02:14.549Z"
+      "updatedAt": "2026-06-12T07:28:13.640Z"
     },
     {
       "name": "CI.json",
       "sizeBytes": 15701,
-      "updatedAt": "2026-06-11T11:02:14.408Z"
+      "updatedAt": "2026-06-12T07:28:13.492Z"
     },
     {
       "name": "CIEN.json",
       "sizeBytes": 14837,
-      "updatedAt": "2026-06-11T11:02:14.464Z"
+      "updatedAt": "2026-06-12T07:28:13.548Z"
     },
     {
       "name": "CL.json",
       "sizeBytes": 15818,
-      "updatedAt": "2026-06-11T11:02:14.540Z"
+      "updatedAt": "2026-06-12T07:28:13.631Z"
     },
     {
       "name": "CLS.json",
       "sizeBytes": 14890,
-      "updatedAt": "2026-06-11T11:02:14.543Z"
+      "updatedAt": "2026-06-12T07:28:13.635Z"
     },
     {
       "name": "CLX.json",
       "sizeBytes": 15591,
-      "updatedAt": "2026-06-11T11:02:14.708Z"
+      "updatedAt": "2026-06-12T07:28:13.818Z"
     },
     {
       "name": "CM.json",
       "sizeBytes": 12973,
-      "updatedAt": "2026-06-11T11:02:14.629Z"
+      "updatedAt": "2026-06-12T07:28:13.727Z"
     },
     {
       "name": "CMCSA.json",
       "sizeBytes": 16350,
-      "updatedAt": "2026-06-11T11:02:14.687Z"
+      "updatedAt": "2026-06-12T07:28:13.795Z"
     },
     {
       "name": "CME.json",
       "sizeBytes": 15677,
-      "updatedAt": "2026-06-11T11:02:14.419Z"
+      "updatedAt": "2026-06-12T07:28:13.503Z"
     },
     {
       "name": "CMG.json",
       "sizeBytes": 13605,
-      "updatedAt": "2026-06-11T11:02:14.681Z"
+      "updatedAt": "2026-06-12T07:28:13.787Z"
     },
     {
       "name": "CMI.json",
       "sizeBytes": 16017,
-      "updatedAt": "2026-06-11T11:02:14.439Z"
+      "updatedAt": "2026-06-12T07:28:13.523Z"
     },
     {
       "name": "CMS.json",
       "sizeBytes": 15588,
-      "updatedAt": "2026-06-11T11:02:14.657Z"
+      "updatedAt": "2026-06-12T07:28:13.761Z"
     },
     {
       "name": "CNC.json",
       "sizeBytes": 14700,
-      "updatedAt": "2026-06-11T11:02:14.433Z"
+      "updatedAt": "2026-06-12T07:28:13.517Z"
     },
     {
       "name": "CNH.json",
       "sizeBytes": 15783,
-      "updatedAt": "2026-06-11T11:02:14.466Z"
+      "updatedAt": "2026-06-12T07:28:13.550Z"
     },
     {
       "name": "CNI.json",
       "sizeBytes": 16032,
-      "updatedAt": "2026-06-11T11:02:14.515Z"
+      "updatedAt": "2026-06-12T07:28:13.604Z"
     },
     {
       "name": "CNM.json",
       "sizeBytes": 14128,
-      "updatedAt": "2026-06-11T11:02:14.691Z"
+      "updatedAt": "2026-06-12T07:28:13.799Z"
     },
     {
       "name": "CNP.json",
       "sizeBytes": 15499,
-      "updatedAt": "2026-06-11T11:02:14.511Z"
+      "updatedAt": "2026-06-12T07:28:13.600Z"
     },
     {
       "name": "CNQ.json",
       "sizeBytes": 15735,
-      "updatedAt": "2026-06-11T11:02:14.472Z"
+      "updatedAt": "2026-06-12T07:28:13.557Z"
     },
     {
       "name": "COF.json",
       "sizeBytes": 12805,
-      "updatedAt": "2026-06-11T11:02:14.638Z"
+      "updatedAt": "2026-06-12T07:28:13.736Z"
     },
     {
       "name": "COHR.json",
       "sizeBytes": 14675,
-      "updatedAt": "2026-06-11T11:02:14.365Z"
+      "updatedAt": "2026-06-12T07:28:13.447Z"
     },
     {
       "name": "COIN.json",
       "sizeBytes": 14303,
-      "updatedAt": "2026-06-11T11:02:14.687Z"
+      "updatedAt": "2026-06-12T07:28:13.794Z"
     },
     {
       "name": "COLM.json",
       "sizeBytes": 14643,
-      "updatedAt": "2026-06-11T11:02:14.522Z"
+      "updatedAt": "2026-06-12T07:28:13.613Z"
     },
     {
       "name": "COO.json",
       "sizeBytes": 15955,
-      "updatedAt": "2026-06-11T11:02:14.518Z"
+      "updatedAt": "2026-06-12T07:28:13.608Z"
     },
     {
       "name": "COP.json",
       "sizeBytes": 15876,
-      "updatedAt": "2026-06-11T11:02:14.439Z"
+      "updatedAt": "2026-06-12T07:28:13.522Z"
     },
     {
       "name": "COR.json",
       "sizeBytes": 15926,
-      "updatedAt": "2026-06-11T11:02:14.699Z"
+      "updatedAt": "2026-06-12T07:28:13.807Z"
     },
     {
       "name": "COST.json",
       "sizeBytes": 15806,
-      "updatedAt": "2026-06-11T11:02:14.476Z"
+      "updatedAt": "2026-06-12T07:28:13.561Z"
     },
     {
       "name": "CP.json",
       "sizeBytes": 15755,
-      "updatedAt": "2026-06-11T11:02:14.444Z"
+      "updatedAt": "2026-06-12T07:28:13.528Z"
     },
     {
       "name": "CPNG.json",
       "sizeBytes": 14379,
-      "updatedAt": "2026-06-11T11:02:14.680Z"
+      "updatedAt": "2026-06-12T07:28:13.786Z"
     },
     {
       "name": "CPRT.json",
       "sizeBytes": 13616,
-      "updatedAt": "2026-06-11T11:02:14.642Z"
+      "updatedAt": "2026-06-12T07:28:13.740Z"
     },
     {
       "name": "CRDO.json",
       "sizeBytes": 13331,
-      "updatedAt": "2026-06-11T11:02:14.547Z"
+      "updatedAt": "2026-06-12T07:28:13.639Z"
     },
     {
       "name": "CRH.json",
       "sizeBytes": 15891,
-      "updatedAt": "2026-06-11T11:02:14.445Z"
+      "updatedAt": "2026-06-12T07:28:13.528Z"
     },
     {
       "name": "CRM.json",
       "sizeBytes": 15370,
-      "updatedAt": "2026-06-11T11:02:14.581Z"
+      "updatedAt": "2026-06-12T07:28:13.674Z"
     },
     {
       "name": "CROX.json",
       "sizeBytes": 14528,
-      "updatedAt": "2026-06-11T11:02:14.643Z"
+      "updatedAt": "2026-06-12T07:28:13.741Z"
     },
     {
       "name": "CRSP.json",
       "sizeBytes": 13248,
-      "updatedAt": "2026-06-11T11:02:14.436Z"
+      "updatedAt": "2026-06-12T07:28:13.520Z"
     },
     {
       "name": "CRUS.json",
       "sizeBytes": 14000,
-      "updatedAt": "2026-06-11T11:02:14.675Z"
+      "updatedAt": "2026-06-12T07:28:13.781Z"
     },
     {
       "name": "CRWD.json",
       "sizeBytes": 13931,
-      "updatedAt": "2026-06-11T11:02:14.446Z"
+      "updatedAt": "2026-06-12T07:28:13.530Z"
     },
     {
       "name": "CSCO.json",
       "sizeBytes": 16379,
-      "updatedAt": "2026-06-11T11:02:14.510Z"
+      "updatedAt": "2026-06-12T07:28:13.599Z"
     },
     {
       "name": "CSGP.json",
       "sizeBytes": 13967,
-      "updatedAt": "2026-06-11T11:02:14.397Z"
+      "updatedAt": "2026-06-12T07:28:13.481Z"
     },
     {
       "name": "CSL.json",
       "sizeBytes": 15738,
-      "updatedAt": "2026-06-11T11:02:14.700Z"
+      "updatedAt": "2026-06-12T07:28:13.809Z"
     },
     {
       "name": "CSX.json",
       "sizeBytes": 15811,
-      "updatedAt": "2026-06-11T11:02:14.636Z"
+      "updatedAt": "2026-06-12T07:28:13.733Z"
     },
     {
       "name": "CTSH.json",
       "sizeBytes": 15411,
-      "updatedAt": "2026-06-11T11:02:14.468Z"
+      "updatedAt": "2026-06-12T07:28:13.552Z"
     },
     {
       "name": "CTVA.json",
       "sizeBytes": 15910,
-      "updatedAt": "2026-06-11T11:02:14.565Z"
+      "updatedAt": "2026-06-12T07:28:13.656Z"
     },
     {
       "name": "CVE.json",
       "sizeBytes": 15583,
-      "updatedAt": "2026-06-11T11:02:14.423Z"
+      "updatedAt": "2026-06-12T07:28:13.507Z"
     },
     {
       "name": "CVNA.json",
       "sizeBytes": 14265,
-      "updatedAt": "2026-06-11T11:02:14.691Z"
+      "updatedAt": "2026-06-12T07:28:13.799Z"
     },
     {
       "name": "CVS.json",
       "sizeBytes": 15922,
-      "updatedAt": "2026-06-11T11:02:14.660Z"
+      "updatedAt": "2026-06-12T07:28:13.765Z"
     },
     {
       "name": "CVX.json",
       "sizeBytes": 16164,
-      "updatedAt": "2026-06-11T11:02:14.598Z"
+      "updatedAt": "2026-06-12T07:28:13.694Z"
     },
     {
       "name": "D.json",
       "sizeBytes": 15680,
-      "updatedAt": "2026-06-11T11:02:14.603Z"
+      "updatedAt": "2026-06-12T07:28:13.698Z"
     },
     {
       "name": "DAL.json",
       "sizeBytes": 15329,
-      "updatedAt": "2026-06-11T11:02:14.590Z"
+      "updatedAt": "2026-06-12T07:28:13.686Z"
     },
     {
       "name": "DASH.json",
       "sizeBytes": 14148,
-      "updatedAt": "2026-06-11T11:02:14.451Z"
+      "updatedAt": "2026-06-12T07:28:13.535Z"
     },
     {
       "name": "DD.json",
       "sizeBytes": 15870,
-      "updatedAt": "2026-06-11T11:02:14.535Z"
+      "updatedAt": "2026-06-12T07:28:13.626Z"
     },
     {
       "name": "DDOG.json",
       "sizeBytes": 14304,
-      "updatedAt": "2026-06-11T11:02:14.416Z"
+      "updatedAt": "2026-06-12T07:28:13.499Z"
     },
     {
       "name": "DE.json",
       "sizeBytes": 16368,
-      "updatedAt": "2026-06-11T11:02:14.448Z"
+      "updatedAt": "2026-06-12T07:28:13.531Z"
     },
     {
       "name": "DECK.json",
       "sizeBytes": 13815,
-      "updatedAt": "2026-06-11T11:02:14.471Z"
+      "updatedAt": "2026-06-12T07:28:13.555Z"
     },
     {
       "name": "DELL.json",
       "sizeBytes": 15921,
-      "updatedAt": "2026-06-11T11:02:14.551Z"
+      "updatedAt": "2026-06-12T07:28:13.642Z"
     },
     {
       "name": "DG.json",
       "sizeBytes": 15447,
-      "updatedAt": "2026-06-11T11:02:14.561Z"
+      "updatedAt": "2026-06-12T07:28:13.652Z"
     },
     {
       "name": "DGX.json",
       "sizeBytes": 15611,
-      "updatedAt": "2026-06-11T11:02:14.609Z"
+      "updatedAt": "2026-06-12T07:28:13.705Z"
     },
     {
       "name": "DHI.json",
       "sizeBytes": 15642,
-      "updatedAt": "2026-06-11T11:02:14.568Z"
+      "updatedAt": "2026-06-12T07:28:13.659Z"
     },
     {
       "name": "DHR.json",
       "sizeBytes": 16249,
-      "updatedAt": "2026-06-11T11:02:14.456Z"
+      "updatedAt": "2026-06-12T07:28:13.540Z"
     },
     {
       "name": "DIS.json",
       "sizeBytes": 15989,
-      "updatedAt": "2026-06-11T11:02:14.427Z"
+      "updatedAt": "2026-06-12T07:28:13.511Z"
     },
     {
       "name": "DKNG.json",
       "sizeBytes": 14652,
-      "updatedAt": "2026-06-11T11:02:14.668Z"
+      "updatedAt": "2026-06-12T07:28:13.773Z"
     },
     {
       "name": "DKS.json",
       "sizeBytes": 15463,
-      "updatedAt": "2026-06-11T11:02:14.432Z"
+      "updatedAt": "2026-06-12T07:28:13.515Z"
     },
     {
       "name": "DLR.json",
       "sizeBytes": 15120,
-      "updatedAt": "2026-06-11T11:02:14.533Z"
+      "updatedAt": "2026-06-12T07:28:13.624Z"
     },
     {
       "name": "DLTR.json",
       "sizeBytes": 14598,
-      "updatedAt": "2026-06-11T11:02:14.451Z"
+      "updatedAt": "2026-06-12T07:28:13.535Z"
     },
     {
       "name": "DOV.json",
       "sizeBytes": 15359,
-      "updatedAt": "2026-06-11T11:02:14.597Z"
+      "updatedAt": "2026-06-12T07:28:13.693Z"
     },
     {
       "name": "DOW.json",
       "sizeBytes": 15894,
-      "updatedAt": "2026-06-11T11:02:14.570Z"
+      "updatedAt": "2026-06-12T07:28:13.662Z"
     },
     {
       "name": "DPZ.json",
       "sizeBytes": 15524,
-      "updatedAt": "2026-06-11T11:02:14.540Z"
+      "updatedAt": "2026-06-12T07:28:13.631Z"
     },
     {
       "name": "DRI.json",
       "sizeBytes": 15669,
-      "updatedAt": "2026-06-11T11:02:14.633Z"
+      "updatedAt": "2026-06-12T07:28:13.730Z"
     },
     {
       "name": "DRS.json",
       "sizeBytes": 14504,
-      "updatedAt": "2026-06-11T11:02:14.425Z"
+      "updatedAt": "2026-06-12T07:28:13.508Z"
     },
     {
       "name": "DSGX.json",
       "sizeBytes": 13797,
-      "updatedAt": "2026-06-11T11:02:14.377Z"
+      "updatedAt": "2026-06-12T07:28:13.460Z"
     },
     {
       "name": "DT.json",
       "sizeBytes": 13876,
-      "updatedAt": "2026-06-11T11:02:14.653Z"
+      "updatedAt": "2026-06-12T07:28:13.755Z"
     },
     {
       "name": "DTE.json",
       "sizeBytes": 15652,
-      "updatedAt": "2026-06-11T11:02:14.698Z"
+      "updatedAt": "2026-06-12T07:28:13.807Z"
     },
     {
       "name": "DTM.json",
       "sizeBytes": 14841,
-      "updatedAt": "2026-06-11T11:02:14.527Z"
+      "updatedAt": "2026-06-12T07:28:13.617Z"
     },
     {
       "name": "DUK.json",
       "sizeBytes": 15860,
-      "updatedAt": "2026-06-11T11:02:14.537Z"
+      "updatedAt": "2026-06-12T07:28:13.628Z"
     },
     {
       "name": "DUOL.json",
       "sizeBytes": 13428,
-      "updatedAt": "2026-06-11T11:02:14.591Z"
+      "updatedAt": "2026-06-12T07:28:13.687Z"
     },
     {
       "name": "DVN.json",
       "sizeBytes": 15709,
-      "updatedAt": "2026-06-11T11:02:14.569Z"
+      "updatedAt": "2026-06-12T07:28:13.661Z"
     },
     {
       "name": "DXCM.json",
       "sizeBytes": 14141,
-      "updatedAt": "2026-06-11T11:02:14.707Z"
+      "updatedAt": "2026-06-12T07:28:13.816Z"
     },
     {
       "name": "EA.json",
       "sizeBytes": 15075,
-      "updatedAt": "2026-06-11T11:02:14.551Z"
+      "updatedAt": "2026-06-12T07:28:13.643Z"
     },
     {
       "name": "EBAY.json",
       "sizeBytes": 15991,
-      "updatedAt": "2026-06-11T11:02:14.669Z"
+      "updatedAt": "2026-06-12T07:28:13.773Z"
     },
     {
       "name": "ECL.json",
       "sizeBytes": 15769,
-      "updatedAt": "2026-06-11T11:02:14.411Z"
+      "updatedAt": "2026-06-12T07:28:13.495Z"
     },
     {
       "name": "ED.json",
       "sizeBytes": 15599,
-      "updatedAt": "2026-06-11T11:02:14.418Z"
+      "updatedAt": "2026-06-12T07:28:13.502Z"
     },
     {
       "name": "EHC.json",
       "sizeBytes": 15664,
-      "updatedAt": "2026-06-11T11:02:14.467Z"
+      "updatedAt": "2026-06-12T07:28:13.552Z"
     },
     {
       "name": "EIX.json",
       "sizeBytes": 15737,
-      "updatedAt": "2026-06-11T11:02:14.644Z"
+      "updatedAt": "2026-06-12T07:28:13.742Z"
     },
     {
       "name": "EL.json",
       "sizeBytes": 15703,
-      "updatedAt": "2026-06-11T11:02:14.593Z"
+      "updatedAt": "2026-06-12T07:28:13.689Z"
     },
     {
       "name": "ELS.json",
       "sizeBytes": 15202,
-      "updatedAt": "2026-06-11T11:02:14.664Z"
+      "updatedAt": "2026-06-12T07:28:13.769Z"
     },
     {
       "name": "ELV.json",
       "sizeBytes": 13855,
-      "updatedAt": "2026-06-11T11:02:14.528Z"
+      "updatedAt": "2026-06-12T07:28:13.617Z"
     },
     {
       "name": "EME.json",
       "sizeBytes": 15325,
-      "updatedAt": "2026-06-11T11:02:14.516Z"
+      "updatedAt": "2026-06-12T07:28:13.606Z"
     },
     {
       "name": "EMR.json",
       "sizeBytes": 15867,
-      "updatedAt": "2026-06-11T11:02:14.608Z"
+      "updatedAt": "2026-06-12T07:28:13.704Z"
     },
     {
       "name": "ENB.json",
       "sizeBytes": 15869,
-      "updatedAt": "2026-06-11T11:02:14.481Z"
+      "updatedAt": "2026-06-12T07:28:13.566Z"
     },
     {
       "name": "ENTG.json",
       "sizeBytes": 15521,
-      "updatedAt": "2026-06-11T11:02:14.459Z"
+      "updatedAt": "2026-06-12T07:28:13.543Z"
     },
     {
       "name": "EOG.json",
       "sizeBytes": 15578,
-      "updatedAt": "2026-06-11T11:02:14.585Z"
+      "updatedAt": "2026-06-12T07:28:13.679Z"
     },
     {
       "name": "EQIX.json",
       "sizeBytes": 15470,
-      "updatedAt": "2026-06-11T11:02:14.692Z"
+      "updatedAt": "2026-06-12T07:28:13.800Z"
     },
     {
       "name": "EQT.json",
       "sizeBytes": 15667,
-      "updatedAt": "2026-06-11T11:02:14.567Z"
+      "updatedAt": "2026-06-12T07:28:13.658Z"
     },
     {
       "name": "ES.json",
       "sizeBytes": 15590,
-      "updatedAt": "2026-06-11T11:02:14.688Z"
+      "updatedAt": "2026-06-12T07:28:13.795Z"
     },
     {
       "name": "ETN.json",
       "sizeBytes": 16231,
-      "updatedAt": "2026-06-11T11:02:14.391Z"
+      "updatedAt": "2026-06-12T07:28:13.475Z"
     },
     {
       "name": "EVRG.json",
       "sizeBytes": 15350,
-      "updatedAt": "2026-06-11T11:02:14.497Z"
+      "updatedAt": "2026-06-12T07:28:13.584Z"
     },
     {
       "name": "EW.json",
       "sizeBytes": 14176,
-      "updatedAt": "2026-06-11T11:02:14.519Z"
+      "updatedAt": "2026-06-12T07:28:13.609Z"
     },
     {
       "name": "EXC.json",
       "sizeBytes": 15700,
-      "updatedAt": "2026-06-11T11:02:14.633Z"
+      "updatedAt": "2026-06-12T07:28:13.730Z"
     },
     {
       "name": "EXE.json",
       "sizeBytes": 15419,
-      "updatedAt": "2026-06-11T11:02:14.564Z"
+      "updatedAt": "2026-06-12T07:28:13.655Z"
     },
     {
       "name": "EXPD.json",
       "sizeBytes": 15150,
-      "updatedAt": "2026-06-11T11:02:14.625Z"
+      "updatedAt": "2026-06-12T07:28:13.723Z"
     },
     {
       "name": "EXPE.json",
       "sizeBytes": 16022,
-      "updatedAt": "2026-06-11T11:02:14.545Z"
+      "updatedAt": "2026-06-12T07:28:13.637Z"
     },
     {
       "name": "F.json",
       "sizeBytes": 16068,
-      "updatedAt": "2026-06-11T11:02:14.499Z"
+      "updatedAt": "2026-06-12T07:28:13.586Z"
     },
     {
       "name": "FANG.json",
       "sizeBytes": 15782,
-      "updatedAt": "2026-06-11T11:02:14.677Z"
+      "updatedAt": "2026-06-12T07:28:13.783Z"
     },
     {
       "name": "FAST.json",
       "sizeBytes": 15424,
-      "updatedAt": "2026-06-11T11:02:14.575Z"
+      "updatedAt": "2026-06-12T07:28:13.668Z"
     },
     {
       "name": "FCX.json",
       "sizeBytes": 15954,
-      "updatedAt": "2026-06-11T11:02:14.627Z"
+      "updatedAt": "2026-06-12T07:28:13.725Z"
     },
     {
       "name": "FDX.json",
       "sizeBytes": 15879,
-      "updatedAt": "2026-06-11T11:02:14.649Z"
+      "updatedAt": "2026-06-12T07:28:13.749Z"
     },
     {
       "name": "FE.json",
       "sizeBytes": 15358,
-      "updatedAt": "2026-06-11T11:02:14.489Z"
+      "updatedAt": "2026-06-12T07:28:13.575Z"
     },
     {
       "name": "FER.json",
       "sizeBytes": 11505,
-      "updatedAt": "2026-06-11T11:02:14.666Z"
+      "updatedAt": "2026-06-12T07:28:13.770Z"
     },
     {
       "name": "FERG.json",
       "sizeBytes": 14813,
-      "updatedAt": "2026-06-11T11:02:14.709Z"
+      "updatedAt": "2026-06-12T07:28:13.819Z"
     },
     {
       "name": "FFIV.json",
       "sizeBytes": 13896,
-      "updatedAt": "2026-06-11T11:02:14.631Z"
+      "updatedAt": "2026-06-12T07:28:13.729Z"
     },
     {
       "name": "FICO.json",
       "sizeBytes": 15634,
-      "updatedAt": "2026-06-11T11:02:14.603Z"
+      "updatedAt": "2026-06-12T07:28:13.699Z"
     },
     {
       "name": "FIS.json",
       "sizeBytes": 15667,
-      "updatedAt": "2026-06-11T11:02:14.398Z"
+      "updatedAt": "2026-06-12T07:28:13.483Z"
     },
     {
       "name": "FIX.json",
       "sizeBytes": 15363,
-      "updatedAt": "2026-06-11T11:02:14.504Z"
+      "updatedAt": "2026-06-12T07:28:13.591Z"
     },
     {
       "name": "FLEX.json",
       "sizeBytes": 14637,
-      "updatedAt": "2026-06-11T11:02:14.629Z"
+      "updatedAt": "2026-06-12T07:28:13.726Z"
     },
     {
       "name": "FLUT.json",
       "sizeBytes": 15140,
-      "updatedAt": "2026-06-11T11:02:14.409Z"
+      "updatedAt": "2026-06-12T07:28:13.493Z"
     },
     {
       "name": "FN.json",
       "sizeBytes": 13527,
-      "updatedAt": "2026-06-11T11:02:14.410Z"
+      "updatedAt": "2026-06-12T07:28:13.494Z"
     },
     {
       "name": "FOX.json",
       "sizeBytes": 12807,
-      "updatedAt": "2026-06-11T11:02:14.448Z"
+      "updatedAt": "2026-06-12T07:28:13.532Z"
     },
     {
       "name": "FOXA.json",
       "sizeBytes": 14592,
-      "updatedAt": "2026-06-11T11:02:14.422Z"
+      "updatedAt": "2026-06-12T07:28:13.506Z"
     },
     {
       "name": "FSLR.json",
       "sizeBytes": 14198,
-      "updatedAt": "2026-06-11T11:02:14.586Z"
+      "updatedAt": "2026-06-12T07:28:13.681Z"
     },
     {
       "name": "FTNT.json",
       "sizeBytes": 14359,
-      "updatedAt": "2026-06-11T11:02:14.428Z"
+      "updatedAt": "2026-06-12T07:28:13.512Z"
     },
     {
       "name": "FTS.json",
       "sizeBytes": 15463,
-      "updatedAt": "2026-06-11T11:02:14.443Z"
+      "updatedAt": "2026-06-12T07:28:13.527Z"
     },
     {
       "name": "FTV.json",
       "sizeBytes": 16005,
-      "updatedAt": "2026-06-11T11:02:14.577Z"
+      "updatedAt": "2026-06-12T07:28:13.670Z"
     },
     {
       "name": "GAP.json",
       "sizeBytes": 15180,
-      "updatedAt": "2026-06-11T11:02:14.616Z"
+      "updatedAt": "2026-06-12T07:28:13.712Z"
     },
     {
       "name": "GD.json",
       "sizeBytes": 15896,
-      "updatedAt": "2026-06-11T11:02:14.435Z"
+      "updatedAt": "2026-06-12T07:28:13.519Z"
     },
     {
       "name": "GDDY.json",
       "sizeBytes": 14579,
-      "updatedAt": "2026-06-11T11:02:14.561Z"
+      "updatedAt": "2026-06-12T07:28:13.652Z"
     },
     {
       "name": "GE.json",
       "sizeBytes": 16366,
-      "updatedAt": "2026-06-11T11:02:14.378Z"
+      "updatedAt": "2026-06-12T07:28:13.461Z"
     },
     {
       "name": "GEHC.json",
       "sizeBytes": 15650,
-      "updatedAt": "2026-06-11T11:02:14.371Z"
+      "updatedAt": "2026-06-12T07:28:13.454Z"
     },
     {
       "name": "GEN.json",
       "sizeBytes": 15906,
-      "updatedAt": "2026-06-11T11:02:14.707Z"
+      "updatedAt": "2026-06-12T07:28:13.817Z"
     },
     {
       "name": "GEV.json",
       "sizeBytes": 14479,
-      "updatedAt": "2026-06-11T11:02:14.671Z"
+      "updatedAt": "2026-06-12T07:28:13.776Z"
     },
     {
       "name": "GFS.json",
       "sizeBytes": 14535,
-      "updatedAt": "2026-06-11T11:02:14.435Z"
+      "updatedAt": "2026-06-12T07:28:13.519Z"
     },
     {
       "name": "GGG.json",
       "sizeBytes": 15260,
-      "updatedAt": "2026-06-11T11:02:14.470Z"
+      "updatedAt": "2026-06-12T07:28:13.555Z"
     },
     {
       "name": "GIB.json",
       "sizeBytes": 14525,
-      "updatedAt": "2026-06-11T11:02:14.389Z"
+      "updatedAt": "2026-06-12T07:28:13.472Z"
     },
     {
       "name": "GIII.json",
       "sizeBytes": 14312,
-      "updatedAt": "2026-06-11T11:02:14.393Z"
+      "updatedAt": "2026-06-12T07:28:13.476Z"
     },
     {
       "name": "GIL.json",
       "sizeBytes": 15524,
-      "updatedAt": "2026-06-11T11:02:14.650Z"
+      "updatedAt": "2026-06-12T07:28:13.751Z"
     },
     {
       "name": "GILD.json",
       "sizeBytes": 16204,
-      "updatedAt": "2026-06-11T11:02:14.480Z"
+      "updatedAt": "2026-06-12T07:28:13.565Z"
     },
     {
       "name": "GIS.json",
       "sizeBytes": 15681,
-      "updatedAt": "2026-06-11T11:02:14.542Z"
+      "updatedAt": "2026-06-12T07:28:13.634Z"
     },
     {
       "name": "GLW.json",
       "sizeBytes": 16094,
-      "updatedAt": "2026-06-11T11:02:14.512Z"
+      "updatedAt": "2026-06-12T07:28:13.602Z"
     },
     {
       "name": "GM.json",
       "sizeBytes": 16139,
-      "updatedAt": "2026-06-11T11:02:14.546Z"
+      "updatedAt": "2026-06-12T07:28:13.638Z"
     },
     {
       "name": "GMED.json",
       "sizeBytes": 13950,
-      "updatedAt": "2026-06-11T11:02:14.602Z"
+      "updatedAt": "2026-06-12T07:28:13.698Z"
     },
     {
       "name": "GNRC.json",
       "sizeBytes": 14921,
-      "updatedAt": "2026-06-11T11:02:14.571Z"
+      "updatedAt": "2026-06-12T07:28:13.664Z"
     },
     {
       "name": "GOOG.json",
       "sizeBytes": 15618,
-      "updatedAt": "2026-06-11T11:02:14.617Z"
+      "updatedAt": "2026-06-12T07:28:13.714Z"
     },
     {
       "name": "GOOGL.json",
       "sizeBytes": 15633,
-      "updatedAt": "2026-06-11T11:02:14.633Z"
+      "updatedAt": "2026-06-12T07:28:13.730Z"
     },
     {
       "name": "GPC.json",
       "sizeBytes": 15605,
-      "updatedAt": "2026-06-11T11:02:14.430Z"
+      "updatedAt": "2026-06-12T07:28:13.514Z"
     },
     {
       "name": "GRAB.json",
       "sizeBytes": 14784,
-      "updatedAt": "2026-06-11T11:02:14.384Z"
+      "updatedAt": "2026-06-12T07:28:13.467Z"
     },
     {
       "name": "GRMN.json",
       "sizeBytes": 14608,
-      "updatedAt": "2026-06-11T11:02:14.673Z"
+      "updatedAt": "2026-06-12T07:28:13.779Z"
     },
     {
       "name": "GS.json",
       "sizeBytes": 13064,
-      "updatedAt": "2026-06-11T11:02:14.700Z"
+      "updatedAt": "2026-06-12T07:28:13.808Z"
     },
     {
       "name": "GWRE.json",
       "sizeBytes": 14333,
-      "updatedAt": "2026-06-11T11:02:14.472Z"
+      "updatedAt": "2026-06-12T07:28:13.557Z"
     },
     {
       "name": "GWW.json",
       "sizeBytes": 15815,
-      "updatedAt": "2026-06-11T11:02:14.517Z"
+      "updatedAt": "2026-06-12T07:28:13.607Z"
     },
     {
       "name": "H.json",
       "sizeBytes": 15278,
-      "updatedAt": "2026-06-11T11:02:14.626Z"
+      "updatedAt": "2026-06-12T07:28:13.724Z"
     },
     {
       "name": "HAL.json",
       "sizeBytes": 15436,
-      "updatedAt": "2026-06-11T11:02:14.588Z"
+      "updatedAt": "2026-06-12T07:28:13.683Z"
     },
     {
       "name": "HCA.json",
       "sizeBytes": 15926,
-      "updatedAt": "2026-06-11T11:02:14.562Z"
+      "updatedAt": "2026-06-12T07:28:13.653Z"
     },
     {
       "name": "HD.json",
       "sizeBytes": 16036,
-      "updatedAt": "2026-06-11T11:02:14.543Z"
+      "updatedAt": "2026-06-12T07:28:13.634Z"
     },
     {
       "name": "HLT.json",
       "sizeBytes": 15717,
-      "updatedAt": "2026-06-11T11:02:14.424Z"
+      "updatedAt": "2026-06-12T07:28:13.507Z"
     },
     {
       "name": "HON.json",
       "sizeBytes": 16569,
-      "updatedAt": "2026-06-11T11:02:14.558Z"
+      "updatedAt": "2026-06-12T07:28:13.649Z"
     },
     {
       "name": "HOOD.json",
       "sizeBytes": 14635,
-      "updatedAt": "2026-06-11T11:02:14.709Z"
+      "updatedAt": "2026-06-12T07:28:13.818Z"
     },
     {
       "name": "HPE.json",
       "sizeBytes": 16158,
-      "updatedAt": "2026-06-11T11:02:14.645Z"
+      "updatedAt": "2026-06-12T07:28:13.745Z"
     },
     {
       "name": "HPQ.json",
       "sizeBytes": 16241,
-      "updatedAt": "2026-06-11T11:02:14.701Z"
+      "updatedAt": "2026-06-12T07:28:13.810Z"
     },
     {
       "name": "HRL.json",
       "sizeBytes": 15367,
-      "updatedAt": "2026-06-11T11:02:14.504Z"
+      "updatedAt": "2026-06-12T07:28:13.591Z"
     },
     {
       "name": "HSY.json",
       "sizeBytes": 15761,
-      "updatedAt": "2026-06-11T11:02:14.444Z"
+      "updatedAt": "2026-06-12T07:28:13.528Z"
     },
     {
       "name": "HUBB.json",
       "sizeBytes": 15387,
-      "updatedAt": "2026-06-11T11:02:14.443Z"
+      "updatedAt": "2026-06-12T07:28:13.526Z"
     },
     {
       "name": "HUBS.json",
       "sizeBytes": 14258,
-      "updatedAt": "2026-06-11T11:02:14.605Z"
+      "updatedAt": "2026-06-12T07:28:13.701Z"
     },
     {
       "name": "HUM.json",
       "sizeBytes": 13699,
-      "updatedAt": "2026-06-11T11:02:14.417Z"
+      "updatedAt": "2026-06-12T07:28:13.502Z"
     },
     {
       "name": "IBM.json",
       "sizeBytes": 16534,
-      "updatedAt": "2026-06-11T11:02:14.464Z"
+      "updatedAt": "2026-06-12T07:28:13.549Z"
     },
     {
       "name": "ICE.json",
       "sizeBytes": 15726,
-      "updatedAt": "2026-06-11T11:02:14.568Z"
+      "updatedAt": "2026-06-12T07:28:13.660Z"
     },
     {
       "name": "IDXX.json",
       "sizeBytes": 14755,
-      "updatedAt": "2026-06-11T11:02:14.462Z"
+      "updatedAt": "2026-06-12T07:28:13.547Z"
     },
     {
       "name": "IEX.json",
       "sizeBytes": 15608,
-      "updatedAt": "2026-06-11T11:02:14.429Z"
+      "updatedAt": "2026-06-12T07:28:13.513Z"
     },
     {
       "name": "IFF.json",
       "sizeBytes": 15913,
-      "updatedAt": "2026-06-11T11:02:14.376Z"
+      "updatedAt": "2026-06-12T07:28:13.459Z"
     },
     {
       "name": "ILMN.json",
       "sizeBytes": 14628,
-      "updatedAt": "2026-06-11T11:02:14.445Z"
+      "updatedAt": "2026-06-12T07:28:13.528Z"
     },
     {
       "name": "IMO.json",
       "sizeBytes": 15631,
-      "updatedAt": "2026-06-11T11:02:14.434Z"
+      "updatedAt": "2026-06-12T07:28:13.518Z"
     },
     {
       "name": "INCY.json",
       "sizeBytes": 14200,
-      "updatedAt": "2026-06-11T11:02:14.422Z"
+      "updatedAt": "2026-06-12T07:28:13.506Z"
     },
     {
       "name": "INSM.json",
       "sizeBytes": 13906,
-      "updatedAt": "2026-06-11T11:02:14.570Z"
+      "updatedAt": "2026-06-12T07:28:13.662Z"
     },
     {
       "name": "INTC.json",
       "sizeBytes": 15973,
-      "updatedAt": "2026-06-11T11:02:14.437Z"
+      "updatedAt": "2026-06-12T07:28:13.521Z"
     },
     {
       "name": "INTU.json",
       "sizeBytes": 16122,
-      "updatedAt": "2026-06-11T11:02:14.636Z"
+      "updatedAt": "2026-06-12T07:28:13.733Z"
     },
     {
       "name": "IOT.json",
       "sizeBytes": 13531,
-      "updatedAt": "2026-06-11T11:02:14.706Z"
+      "updatedAt": "2026-06-12T07:28:13.815Z"
     },
     {
       "name": "IQV.json",
       "sizeBytes": 14739,
-      "updatedAt": "2026-06-11T11:02:14.485Z"
+      "updatedAt": "2026-06-12T07:28:13.570Z"
     },
     {
       "name": "IR.json",
       "sizeBytes": 15239,
-      "updatedAt": "2026-06-11T11:02:14.419Z"
+      "updatedAt": "2026-06-12T07:28:13.504Z"
     },
     {
       "name": "ISRG.json",
       "sizeBytes": 13630,
-      "updatedAt": "2026-06-11T11:02:14.529Z"
+      "updatedAt": "2026-06-12T07:28:13.618Z"
     },
     {
       "name": "IT.json",
       "sizeBytes": 14524,
-      "updatedAt": "2026-06-11T11:02:14.527Z"
+      "updatedAt": "2026-06-12T07:28:13.616Z"
     },
     {
       "name": "ITRI.json",
       "sizeBytes": 14469,
-      "updatedAt": "2026-06-11T11:02:14.499Z"
+      "updatedAt": "2026-06-12T07:28:13.586Z"
     },
     {
       "name": "ITW.json",
       "sizeBytes": 15726,
-      "updatedAt": "2026-06-11T11:02:14.374Z"
+      "updatedAt": "2026-06-12T07:28:13.457Z"
     },
     {
       "name": "JBHT.json",
       "sizeBytes": 15832,
-      "updatedAt": "2026-06-11T11:02:14.665Z"
+      "updatedAt": "2026-06-12T07:28:13.769Z"
     },
     {
       "name": "JBL.json",
       "sizeBytes": 16126,
-      "updatedAt": "2026-06-11T11:02:14.671Z"
+      "updatedAt": "2026-06-12T07:28:13.776Z"
     },
     {
       "name": "JCI.json",
       "sizeBytes": 15902,
-      "updatedAt": "2026-06-11T11:02:14.418Z"
+      "updatedAt": "2026-06-12T07:28:13.502Z"
     },
     {
       "name": "JKHY.json",
       "sizeBytes": 15827,
-      "updatedAt": "2026-06-11T11:02:14.373Z"
+      "updatedAt": "2026-06-12T07:28:13.455Z"
     },
     {
       "name": "JNJ.json",
       "sizeBytes": 16547,
-      "updatedAt": "2026-06-11T11:02:14.514Z"
+      "updatedAt": "2026-06-12T07:28:13.604Z"
     },
     {
       "name": "JPM.json",
       "sizeBytes": 12660,
-      "updatedAt": "2026-06-11T11:02:14.517Z"
+      "updatedAt": "2026-06-12T07:28:13.608Z"
     },
     {
       "name": "KDP.json",
       "sizeBytes": 15812,
-      "updatedAt": "2026-06-11T11:02:14.670Z"
+      "updatedAt": "2026-06-12T07:28:13.775Z"
     },
     {
       "name": "KEYS.json",
       "sizeBytes": 14601,
-      "updatedAt": "2026-06-11T11:02:14.578Z"
+      "updatedAt": "2026-06-12T07:28:13.672Z"
     },
     {
       "name": "KHC.json",
       "sizeBytes": 15760,
-      "updatedAt": "2026-06-11T11:02:14.536Z"
+      "updatedAt": "2026-06-12T07:28:13.627Z"
     },
     {
       "name": "KIM.json",
       "sizeBytes": 15093,
-      "updatedAt": "2026-06-11T11:02:14.699Z"
+      "updatedAt": "2026-06-12T07:28:13.808Z"
     },
     {
       "name": "KKR.json",
       "sizeBytes": 15813,
-      "updatedAt": "2026-06-11T11:02:14.593Z"
+      "updatedAt": "2026-06-12T07:28:13.689Z"
     },
     {
       "name": "KLAC.json",
       "sizeBytes": 15979,
-      "updatedAt": "2026-06-11T11:02:14.553Z"
+      "updatedAt": "2026-06-12T07:28:13.645Z"
     },
     {
       "name": "KMB.json",
       "sizeBytes": 15581,
-      "updatedAt": "2026-06-11T11:02:14.424Z"
+      "updatedAt": "2026-06-12T07:28:13.508Z"
     },
     {
       "name": "KMI.json",
       "sizeBytes": 15483,
-      "updatedAt": "2026-06-11T11:02:14.473Z"
+      "updatedAt": "2026-06-12T07:28:13.558Z"
     },
     {
       "name": "KO.json",
       "sizeBytes": 16052,
-      "updatedAt": "2026-06-11T11:02:14.617Z"
+      "updatedAt": "2026-06-12T07:28:13.713Z"
     },
     {
       "name": "KR.json",
       "sizeBytes": 15875,
-      "updatedAt": "2026-06-11T11:02:14.435Z"
+      "updatedAt": "2026-06-12T07:28:13.519Z"
     },
     {
       "name": "KVUE.json",
       "sizeBytes": 15156,
-      "updatedAt": "2026-06-11T11:02:14.479Z"
+      "updatedAt": "2026-06-12T07:28:13.564Z"
     },
     {
       "name": "LDOS.json",
       "sizeBytes": 15720,
-      "updatedAt": "2026-06-11T11:02:14.433Z"
+      "updatedAt": "2026-06-12T07:28:13.517Z"
     },
     {
       "name": "LEN.json",
       "sizeBytes": 15630,
-      "updatedAt": "2026-06-11T11:02:14.440Z"
+      "updatedAt": "2026-06-12T07:28:13.524Z"
     },
     {
       "name": "LEVI.json",
       "sizeBytes": 15010,
-      "updatedAt": "2026-06-11T11:02:14.488Z"
+      "updatedAt": "2026-06-12T07:28:13.574Z"
     },
     {
       "name": "LHX.json",
       "sizeBytes": 16008,
-      "updatedAt": "2026-06-11T11:02:14.508Z"
+      "updatedAt": "2026-06-12T07:28:13.595Z"
     },
     {
       "name": "LII.json",
       "sizeBytes": 15576,
-      "updatedAt": "2026-06-11T11:02:14.600Z"
+      "updatedAt": "2026-06-12T07:28:13.695Z"
     },
     {
       "name": "LIN.json",
       "sizeBytes": 16345,
-      "updatedAt": "2026-06-11T11:02:14.640Z"
+      "updatedAt": "2026-06-12T07:28:13.738Z"
     },
     {
       "name": "LITE.json",
       "sizeBytes": 14566,
-      "updatedAt": "2026-06-11T11:02:14.473Z"
+      "updatedAt": "2026-06-12T07:28:13.557Z"
     },
     {
       "name": "LLY.json",
       "sizeBytes": 16370,
-      "updatedAt": "2026-06-11T11:02:14.506Z"
+      "updatedAt": "2026-06-12T07:28:13.592Z"
     },
     {
       "name": "LMT.json",
       "sizeBytes": 15777,
-      "updatedAt": "2026-06-11T11:02:14.387Z"
+      "updatedAt": "2026-06-12T07:28:13.470Z"
     },
     {
       "name": "LNG.json",
       "sizeBytes": 15578,
-      "updatedAt": "2026-06-11T11:02:14.374Z"
+      "updatedAt": "2026-06-12T07:28:13.456Z"
     },
     {
       "name": "LNT.json",
       "sizeBytes": 15301,
-      "updatedAt": "2026-06-11T11:02:14.487Z"
+      "updatedAt": "2026-06-12T07:28:13.572Z"
     },
     {
       "name": "LOGI.json",
       "sizeBytes": 14356,
-      "updatedAt": "2026-06-11T11:02:14.672Z"
+      "updatedAt": "2026-06-12T07:28:13.777Z"
     },
     {
       "name": "LOW.json",
       "sizeBytes": 15787,
-      "updatedAt": "2026-06-11T11:02:14.710Z"
+      "updatedAt": "2026-06-12T07:28:13.820Z"
     },
     {
       "name": "LRCX.json",
       "sizeBytes": 15847,
-      "updatedAt": "2026-06-11T11:02:14.556Z"
+      "updatedAt": "2026-06-12T07:28:13.648Z"
     },
     {
       "name": "LSCC.json",
       "sizeBytes": 13697,
-      "updatedAt": "2026-06-11T11:02:14.638Z"
+      "updatedAt": "2026-06-12T07:28:13.735Z"
     },
     {
       "name": "LULU.json",
       "sizeBytes": 13315,
-      "updatedAt": "2026-06-11T11:02:14.658Z"
+      "updatedAt": "2026-06-12T07:28:13.762Z"
     },
     {
       "name": "LUV.json",
       "sizeBytes": 15616,
-      "updatedAt": "2026-06-11T11:02:14.572Z"
+      "updatedAt": "2026-06-12T07:28:13.665Z"
     },
     {
       "name": "LVS.json",
       "sizeBytes": 16164,
-      "updatedAt": "2026-06-11T11:02:14.531Z"
+      "updatedAt": "2026-06-12T07:28:13.620Z"
     },
     {
       "name": "LYB.json",
       "sizeBytes": 16055,
-      "updatedAt": "2026-06-11T11:02:14.482Z"
+      "updatedAt": "2026-06-12T07:28:13.567Z"
     },
     {
       "name": "LYV.json",
       "sizeBytes": 14218,
-      "updatedAt": "2026-06-11T11:02:14.507Z"
+      "updatedAt": "2026-06-12T07:28:13.595Z"
     },
     {
       "name": "MA.json",
       "sizeBytes": 15927,
-      "updatedAt": "2026-06-11T11:02:14.469Z"
+      "updatedAt": "2026-06-12T07:28:13.553Z"
     },
     {
       "name": "MAR.json",
       "sizeBytes": 15832,
-      "updatedAt": "2026-06-11T11:02:14.417Z"
+      "updatedAt": "2026-06-12T07:28:13.500Z"
     },
     {
       "name": "MAS.json",
       "sizeBytes": 15626,
-      "updatedAt": "2026-06-11T11:02:14.397Z"
+      "updatedAt": "2026-06-12T07:28:13.481Z"
     },
     {
       "name": "MBG.DE.json",
       "sizeBytes": 15567,
-      "updatedAt": "2026-06-11T11:02:14.611Z"
+      "updatedAt": "2026-06-12T07:28:13.708Z"
     },
     {
       "name": "MBLY.json",
       "sizeBytes": 13369,
-      "updatedAt": "2026-06-11T11:02:14.471Z"
+      "updatedAt": "2026-06-12T07:28:13.556Z"
     },
     {
       "name": "MC.PA.json",
       "sizeBytes": 10998,
-      "updatedAt": "2026-06-11T11:02:14.441Z"
+      "updatedAt": "2026-06-12T07:28:13.525Z"
     },
     {
       "name": "MCD.json",
       "sizeBytes": 15962,
-      "updatedAt": "2026-06-11T11:02:14.640Z"
+      "updatedAt": "2026-06-12T07:28:13.737Z"
     },
     {
       "name": "MCHP.json",
       "sizeBytes": 16125,
-      "updatedAt": "2026-06-11T11:02:14.449Z"
+      "updatedAt": "2026-06-12T07:28:13.533Z"
     },
     {
       "name": "MCK.json",
       "sizeBytes": 15892,
-      "updatedAt": "2026-06-11T11:02:14.416Z"
+      "updatedAt": "2026-06-12T07:28:13.499Z"
     },
     {
       "name": "MCO.json",
       "sizeBytes": 15442,
-      "updatedAt": "2026-06-11T11:02:14.619Z"
+      "updatedAt": "2026-06-12T07:28:13.716Z"
     },
     {
       "name": "MDB.json",
       "sizeBytes": 14346,
-      "updatedAt": "2026-06-11T11:02:14.679Z"
+      "updatedAt": "2026-06-12T07:28:13.785Z"
     },
     {
       "name": "MDLZ.json",
       "sizeBytes": 15886,
-      "updatedAt": "2026-06-11T11:02:14.706Z"
+      "updatedAt": "2026-06-12T07:28:13.816Z"
     },
     {
       "name": "MDT.json",
       "sizeBytes": 15833,
-      "updatedAt": "2026-06-11T11:02:14.399Z"
+      "updatedAt": "2026-06-12T07:28:13.483Z"
     },
     {
       "name": "MELI.json",
       "sizeBytes": 15553,
-      "updatedAt": "2026-06-11T11:02:14.444Z"
+      "updatedAt": "2026-06-12T07:28:13.527Z"
     },
     {
       "name": "MET.json",
       "sizeBytes": 13332,
-      "updatedAt": "2026-06-11T11:02:14.462Z"
+      "updatedAt": "2026-06-12T07:28:13.547Z"
     },
     {
       "name": "META.json",
       "sizeBytes": 15794,
-      "updatedAt": "2026-06-11T11:02:14.704Z"
+      "updatedAt": "2026-06-12T07:28:13.813Z"
     },
     {
       "name": "MFC.json",
       "sizeBytes": 13224,
-      "updatedAt": "2026-06-11T11:02:14.637Z"
+      "updatedAt": "2026-06-12T07:28:13.735Z"
     },
     {
       "name": "MGA.json",
       "sizeBytes": 15881,
-      "updatedAt": "2026-06-11T11:02:14.490Z"
+      "updatedAt": "2026-06-12T07:28:13.576Z"
     },
     {
       "name": "MIDD.json",
       "sizeBytes": 14616,
-      "updatedAt": "2026-06-11T11:02:14.655Z"
+      "updatedAt": "2026-06-12T07:28:13.758Z"
     },
     {
       "name": "MKC.json",
       "sizeBytes": 15692,
-      "updatedAt": "2026-06-11T11:02:14.510Z"
+      "updatedAt": "2026-06-12T07:28:13.598Z"
     },
     {
       "name": "MLM.json",
       "sizeBytes": 15674,
-      "updatedAt": "2026-06-11T11:02:14.630Z"
+      "updatedAt": "2026-06-12T07:28:13.728Z"
     },
     {
       "name": "MMM.json",
       "sizeBytes": 16343,
-      "updatedAt": "2026-06-11T11:02:14.571Z"
+      "updatedAt": "2026-06-12T07:28:13.663Z"
     },
     {
       "name": "MNST.json",
       "sizeBytes": 13894,
-      "updatedAt": "2026-06-11T11:02:14.448Z"
+      "updatedAt": "2026-06-12T07:28:13.531Z"
     },
     {
       "name": "MO.json",
       "sizeBytes": 15759,
-      "updatedAt": "2026-06-11T11:02:14.565Z"
+      "updatedAt": "2026-06-12T07:28:13.656Z"
     },
     {
       "name": "MPC.json",
       "sizeBytes": 16037,
-      "updatedAt": "2026-06-11T11:02:14.509Z"
+      "updatedAt": "2026-06-12T07:28:13.597Z"
     },
     {
       "name": "MPWR.json",
       "sizeBytes": 14765,
-      "updatedAt": "2026-06-11T11:02:14.533Z"
+      "updatedAt": "2026-06-12T07:28:13.624Z"
     },
     {
       "name": "MRK.json",
       "sizeBytes": 16433,
-      "updatedAt": "2026-06-11T11:02:14.710Z"
+      "updatedAt": "2026-06-12T07:28:13.820Z"
     },
     {
       "name": "MRNA.json",
       "sizeBytes": 14051,
-      "updatedAt": "2026-06-11T11:02:14.375Z"
+      "updatedAt": "2026-06-12T07:28:13.458Z"
     },
     {
       "name": "MRVL.json",
       "sizeBytes": 16172,
-      "updatedAt": "2026-06-11T11:02:14.511Z"
+      "updatedAt": "2026-06-12T07:28:13.600Z"
     },
     {
       "name": "MS.json",
       "sizeBytes": 13150,
-      "updatedAt": "2026-06-11T11:02:14.424Z"
+      "updatedAt": "2026-06-12T07:28:13.508Z"
     },
     {
       "name": "MSCI.json",
       "sizeBytes": 15914,
-      "updatedAt": "2026-06-11T11:02:14.616Z"
+      "updatedAt": "2026-06-12T07:28:13.713Z"
     },
     {
       "name": "MSFT.json",
       "sizeBytes": 16531,
-      "updatedAt": "2026-06-11T11:02:14.484Z"
+      "updatedAt": "2026-06-12T07:28:13.568Z"
     },
     {
       "name": "MSI.json",
       "sizeBytes": 16135,
-      "updatedAt": "2026-06-11T11:02:14.503Z"
+      "updatedAt": "2026-06-12T07:28:13.590Z"
     },
     {
       "name": "MTD.json",
       "sizeBytes": 14923,
-      "updatedAt": "2026-06-11T11:02:14.439Z"
+      "updatedAt": "2026-06-12T07:28:13.523Z"
     },
     {
       "name": "MTSI.json",
       "sizeBytes": 14525,
-      "updatedAt": "2026-06-11T11:02:14.702Z"
+      "updatedAt": "2026-06-12T07:28:13.811Z"
     },
     {
       "name": "MTZ.json",
       "sizeBytes": 14554,
-      "updatedAt": "2026-06-11T11:02:14.460Z"
+      "updatedAt": "2026-06-12T07:28:13.545Z"
     },
     {
       "name": "MU.json",
       "sizeBytes": 16025,
-      "updatedAt": "2026-06-11T11:02:14.533Z"
+      "updatedAt": "2026-06-12T07:28:13.623Z"
     },
     {
       "name": "NBIX.json",
       "sizeBytes": 14051,
-      "updatedAt": "2026-06-11T11:02:14.478Z"
+      "updatedAt": "2026-06-12T07:28:13.563Z"
     },
     {
       "name": "NDSN.json",
       "sizeBytes": 15531,
-      "updatedAt": "2026-06-11T11:02:14.594Z"
+      "updatedAt": "2026-06-12T07:28:13.690Z"
     },
     {
       "name": "NEE.json",
       "sizeBytes": 15675,
-      "updatedAt": "2026-06-11T11:02:14.515Z"
+      "updatedAt": "2026-06-12T07:28:13.605Z"
     },
     {
       "name": "NEM.json",
       "sizeBytes": 16060,
-      "updatedAt": "2026-06-11T11:02:14.707Z"
+      "updatedAt": "2026-06-12T07:28:13.817Z"
     },
     {
       "name": "NET.json",
       "sizeBytes": 14279,
-      "updatedAt": "2026-06-11T11:02:14.675Z"
+      "updatedAt": "2026-06-12T07:28:13.780Z"
     },
     {
       "name": "NFLX.json",
       "sizeBytes": 14891,
-      "updatedAt": "2026-06-11T11:02:14.477Z"
+      "updatedAt": "2026-06-12T07:28:13.562Z"
     },
     {
       "name": "NI.json",
       "sizeBytes": 15682,
-      "updatedAt": "2026-06-11T11:02:14.554Z"
+      "updatedAt": "2026-06-12T07:28:13.646Z"
     },
     {
       "name": "NKE.json",
       "sizeBytes": 15184,
-      "updatedAt": "2026-06-11T11:02:14.567Z"
+      "updatedAt": "2026-06-12T07:28:13.659Z"
     },
     {
       "name": "NOC.json",
       "sizeBytes": 15893,
-      "updatedAt": "2026-06-11T11:02:14.702Z"
+      "updatedAt": "2026-06-12T07:28:13.811Z"
     },
     {
       "name": "NOW.json",
       "sizeBytes": 14448,
-      "updatedAt": "2026-06-11T11:02:14.644Z"
+      "updatedAt": "2026-06-12T07:28:13.743Z"
     },
     {
       "name": "NRG.json",
       "sizeBytes": 15813,
-      "updatedAt": "2026-06-11T11:02:14.450Z"
+      "updatedAt": "2026-06-12T07:28:13.534Z"
     },
     {
       "name": "NSC.json",
       "sizeBytes": 15910,
-      "updatedAt": "2026-06-11T11:02:14.555Z"
+      "updatedAt": "2026-06-12T07:28:13.647Z"
     },
     {
       "name": "NSIT.json",
       "sizeBytes": 14542,
-      "updatedAt": "2026-06-11T11:02:14.619Z"
+      "updatedAt": "2026-06-12T07:28:13.716Z"
     },
     {
       "name": "NTAP.json",
       "sizeBytes": 15836,
-      "updatedAt": "2026-06-11T11:02:14.409Z"
+      "updatedAt": "2026-06-12T07:28:13.493Z"
     },
     {
       "name": "NTNX.json",
       "sizeBytes": 14466,
-      "updatedAt": "2026-06-11T11:02:14.396Z"
+      "updatedAt": "2026-06-12T07:28:13.480Z"
     },
     {
       "name": "NTR.json",
       "sizeBytes": 15713,
-      "updatedAt": "2026-06-11T11:02:14.505Z"
+      "updatedAt": "2026-06-12T07:28:13.592Z"
     },
     {
       "name": "NTRA.json",
       "sizeBytes": 13781,
-      "updatedAt": "2026-06-11T11:02:14.522Z"
+      "updatedAt": "2026-06-12T07:28:13.613Z"
     },
     {
       "name": "NUE.json",
       "sizeBytes": 15879,
-      "updatedAt": "2026-06-11T11:02:14.710Z"
+      "updatedAt": "2026-06-12T07:28:13.819Z"
     },
     {
       "name": "NVDA.json",
       "sizeBytes": 16069,
-      "updatedAt": "2026-06-11T11:02:14.684Z"
+      "updatedAt": "2026-06-12T07:28:13.790Z"
     },
     {
       "name": "NVMI.json",
       "sizeBytes": 13845,
-      "updatedAt": "2026-06-11T11:02:14.699Z"
+      "updatedAt": "2026-06-12T07:28:13.808Z"
     },
     {
       "name": "NVO.json",
       "sizeBytes": 16671,
-      "updatedAt": "2026-06-11T11:02:14.701Z"
+      "updatedAt": "2026-06-12T07:28:13.810Z"
     },
     {
       "name": "NVR.json",
       "sizeBytes": 14348,
-      "updatedAt": "2026-06-11T11:02:14.520Z"
+      "updatedAt": "2026-06-12T07:28:13.610Z"
     },
     {
       "name": "NVT.json",
       "sizeBytes": 15751,
-      "updatedAt": "2026-06-11T11:02:14.415Z"
+      "updatedAt": "2026-06-12T07:28:13.498Z"
     },
     {
       "name": "NWSA.json",
       "sizeBytes": 14411,
-      "updatedAt": "2026-06-11T11:02:14.558Z"
+      "updatedAt": "2026-06-12T07:28:13.649Z"
     },
     {
       "name": "NXPI.json",
       "sizeBytes": 15956,
-      "updatedAt": "2026-06-11T11:02:14.677Z"
+      "updatedAt": "2026-06-12T07:28:13.783Z"
     },
     {
       "name": "O.json",
       "sizeBytes": 15427,
-      "updatedAt": "2026-06-11T11:02:14.653Z"
+      "updatedAt": "2026-06-12T07:28:13.756Z"
     },
     {
       "name": "OC.json",
       "sizeBytes": 15884,
-      "updatedAt": "2026-06-11T11:02:14.578Z"
+      "updatedAt": "2026-06-12T07:28:13.671Z"
     },
     {
       "name": "ODFL.json",
       "sizeBytes": 15191,
-      "updatedAt": "2026-06-11T11:02:14.618Z"
+      "updatedAt": "2026-06-12T07:28:13.715Z"
     },
     {
       "name": "OKE.json",
       "sizeBytes": 15686,
-      "updatedAt": "2026-06-11T11:02:14.375Z"
+      "updatedAt": "2026-06-12T07:28:13.458Z"
     },
     {
       "name": "OKTA.json",
       "sizeBytes": 14183,
-      "updatedAt": "2026-06-11T11:02:14.607Z"
+      "updatedAt": "2026-06-12T07:28:13.703Z"
     },
     {
       "name": "OLED.json",
       "sizeBytes": 14408,
-      "updatedAt": "2026-06-11T11:02:14.394Z"
+      "updatedAt": "2026-06-12T07:28:13.478Z"
     },
     {
       "name": "OMC.json",
       "sizeBytes": 15636,
-      "updatedAt": "2026-06-11T11:02:14.535Z"
+      "updatedAt": "2026-06-12T07:28:13.626Z"
     },
     {
       "name": "ON.json",
       "sizeBytes": 14709,
-      "updatedAt": "2026-06-11T11:02:14.613Z"
+      "updatedAt": "2026-06-12T07:28:13.710Z"
     },
     {
       "name": "ONON.json",
       "sizeBytes": 13834,
-      "updatedAt": "2026-06-11T11:02:14.623Z"
+      "updatedAt": "2026-06-12T07:28:13.720Z"
     },
     {
       "name": "OR.PA.json",
       "sizeBytes": 10842,
-      "updatedAt": "2026-06-11T11:02:14.455Z"
+      "updatedAt": "2026-06-12T07:28:13.539Z"
     },
     {
       "name": "ORCL.json",
       "sizeBytes": 16395,
-      "updatedAt": "2026-06-11T11:02:14.683Z"
+      "updatedAt": "2026-06-12T07:28:13.789Z"
     },
     {
       "name": "ORLY.json",
       "sizeBytes": 14626,
-      "updatedAt": "2026-06-11T11:02:14.476Z"
+      "updatedAt": "2026-06-12T07:28:13.560Z"
     },
     {
       "name": "OTIS.json",
       "sizeBytes": 15392,
-      "updatedAt": "2026-06-11T11:02:14.412Z"
+      "updatedAt": "2026-06-12T07:28:13.496Z"
     },
     {
       "name": "OVV.json",
       "sizeBytes": 15544,
-      "updatedAt": "2026-06-11T11:02:14.513Z"
+      "updatedAt": "2026-06-12T07:28:13.602Z"
     },
     {
       "name": "OXY.json",
       "sizeBytes": 15733,
-      "updatedAt": "2026-06-11T11:02:14.513Z"
+      "updatedAt": "2026-06-12T07:28:13.603Z"
     },
     {
       "name": "PAG.json",
       "sizeBytes": 15699,
-      "updatedAt": "2026-06-11T11:02:14.650Z"
+      "updatedAt": "2026-06-12T07:28:13.752Z"
     },
     {
       "name": "PAH3.DE.json",
       "sizeBytes": 11821,
-      "updatedAt": "2026-06-11T11:02:14.375Z"
+      "updatedAt": "2026-06-12T07:28:13.457Z"
     },
     {
       "name": "PANW.json",
       "sizeBytes": 14417,
-      "updatedAt": "2026-06-11T11:02:14.404Z"
+      "updatedAt": "2026-06-12T07:28:13.488Z"
     },
     {
       "name": "PATH.json",
       "sizeBytes": 13709,
-      "updatedAt": "2026-06-11T11:02:14.372Z"
+      "updatedAt": "2026-06-12T07:28:13.454Z"
     },
     {
       "name": "PAYX.json",
       "sizeBytes": 15082,
-      "updatedAt": "2026-06-11T11:02:14.368Z"
+      "updatedAt": "2026-06-12T07:28:13.450Z"
     },
     {
       "name": "PBA.json",
       "sizeBytes": 15850,
-      "updatedAt": "2026-06-11T11:02:14.646Z"
+      "updatedAt": "2026-06-12T07:28:13.745Z"
     },
     {
       "name": "PCAR.json",
       "sizeBytes": 16083,
-      "updatedAt": "2026-06-11T11:02:14.443Z"
+      "updatedAt": "2026-06-12T07:28:13.527Z"
     },
     {
       "name": "PCG.json",
       "sizeBytes": 15482,
-      "updatedAt": "2026-06-11T11:02:14.649Z"
+      "updatedAt": "2026-06-12T07:28:13.749Z"
     },
     {
       "name": "PEG.json",
       "sizeBytes": 15640,
-      "updatedAt": "2026-06-11T11:02:14.686Z"
+      "updatedAt": "2026-06-12T07:28:13.794Z"
     },
     {
       "name": "PEN.json",
       "sizeBytes": 13989,
-      "updatedAt": "2026-06-11T11:02:14.487Z"
+      "updatedAt": "2026-06-12T07:28:13.572Z"
     },
     {
       "name": "PEP.json",
       "sizeBytes": 16148,
-      "updatedAt": "2026-06-11T11:02:14.418Z"
+      "updatedAt": "2026-06-12T07:28:13.503Z"
     },
     {
       "name": "PFE.json",
       "sizeBytes": 16236,
-      "updatedAt": "2026-06-11T11:02:14.511Z"
+      "updatedAt": "2026-06-12T07:28:13.600Z"
     },
     {
       "name": "PFGC.json",
       "sizeBytes": 14333,
-      "updatedAt": "2026-06-11T11:02:14.538Z"
+      "updatedAt": "2026-06-12T07:28:13.629Z"
     },
     {
       "name": "PG.json",
       "sizeBytes": 16195,
-      "updatedAt": "2026-06-11T11:02:14.439Z"
+      "updatedAt": "2026-06-12T07:28:13.523Z"
     },
     {
       "name": "PGR.json",
       "sizeBytes": 13437,
-      "updatedAt": "2026-06-11T11:02:14.703Z"
+      "updatedAt": "2026-06-12T07:28:13.812Z"
     },
     {
       "name": "PH.json",
       "sizeBytes": 15791,
-      "updatedAt": "2026-06-11T11:02:14.668Z"
+      "updatedAt": "2026-06-12T07:28:13.773Z"
     },
     {
       "name": "PHM.json",
       "sizeBytes": 15704,
-      "updatedAt": "2026-06-11T11:02:14.366Z"
+      "updatedAt": "2026-06-12T07:28:13.448Z"
     },
     {
       "name": "PINS.json",
       "sizeBytes": 13954,
-      "updatedAt": "2026-06-11T11:02:14.685Z"
+      "updatedAt": "2026-06-12T07:28:13.791Z"
     },
     {
       "name": "PLD.json",
       "sizeBytes": 15161,
-      "updatedAt": "2026-06-11T11:02:14.554Z"
+      "updatedAt": "2026-06-12T07:28:13.646Z"
     },
     {
       "name": "PLTR.json",
       "sizeBytes": 13979,
-      "updatedAt": "2026-06-11T11:02:14.519Z"
+      "updatedAt": "2026-06-12T07:28:13.610Z"
     },
     {
       "name": "PM.json",
       "sizeBytes": 15751,
-      "updatedAt": "2026-06-11T11:02:14.529Z"
+      "updatedAt": "2026-06-12T07:28:13.619Z"
     },
     {
       "name": "PNC.json",
       "sizeBytes": 12484,
-      "updatedAt": "2026-06-11T11:02:14.702Z"
+      "updatedAt": "2026-06-12T07:28:13.811Z"
     },
     {
       "name": "PNR.json",
       "sizeBytes": 15868,
-      "updatedAt": "2026-06-11T11:02:14.507Z"
+      "updatedAt": "2026-06-12T07:28:13.594Z"
     },
     {
       "name": "PNW.json",
       "sizeBytes": 15347,
-      "updatedAt": "2026-06-11T11:02:14.645Z"
+      "updatedAt": "2026-06-12T07:28:13.744Z"
     },
     {
       "name": "PODD.json",
       "sizeBytes": 14742,
-      "updatedAt": "2026-06-11T11:02:14.601Z"
+      "updatedAt": "2026-06-12T07:28:13.697Z"
     },
     {
       "name": "POOL.json",
       "sizeBytes": 15640,
-      "updatedAt": "2026-06-11T11:02:14.599Z"
+      "updatedAt": "2026-06-12T07:28:13.695Z"
     },
     {
       "name": "PPC.json",
       "sizeBytes": 15077,
-      "updatedAt": "2026-06-11T11:02:14.571Z"
+      "updatedAt": "2026-06-12T07:28:13.663Z"
     },
     {
       "name": "PPG.json",
       "sizeBytes": 16185,
-      "updatedAt": "2026-06-11T11:02:14.377Z"
+      "updatedAt": "2026-06-12T07:28:13.459Z"
     },
     {
       "name": "PPL.json",
       "sizeBytes": 15431,
-      "updatedAt": "2026-06-11T11:02:14.524Z"
+      "updatedAt": "2026-06-12T07:28:13.614Z"
     },
     {
       "name": "PR.json",
       "sizeBytes": 15149,
-      "updatedAt": "2026-06-11T11:02:14.436Z"
+      "updatedAt": "2026-06-12T07:28:13.520Z"
     },
     {
       "name": "PRU.json",
       "sizeBytes": 12826,
-      "updatedAt": "2026-06-11T11:02:14.524Z"
+      "updatedAt": "2026-06-12T07:28:13.614Z"
     },
     {
       "name": "PSA.json",
       "sizeBytes": 15560,
-      "updatedAt": "2026-06-11T11:02:14.390Z"
+      "updatedAt": "2026-06-12T07:28:13.474Z"
     },
     {
       "name": "PSX.json",
       "sizeBytes": 15985,
-      "updatedAt": "2026-06-11T11:02:14.386Z"
+      "updatedAt": "2026-06-12T07:28:13.470Z"
     },
     {
       "name": "PTC.json",
       "sizeBytes": 14864,
-      "updatedAt": "2026-06-11T11:02:14.604Z"
+      "updatedAt": "2026-06-12T07:28:13.700Z"
     },
     {
       "name": "PTON.json",
       "sizeBytes": 14164,
-      "updatedAt": "2026-06-11T11:02:14.639Z"
+      "updatedAt": "2026-06-12T07:28:13.737Z"
     },
     {
       "name": "PWR.json",
       "sizeBytes": 15595,
-      "updatedAt": "2026-06-11T11:02:14.520Z"
+      "updatedAt": "2026-06-12T07:28:13.611Z"
     },
     {
       "name": "PYPL.json",
       "sizeBytes": 15461,
-      "updatedAt": "2026-06-11T11:02:14.603Z"
+      "updatedAt": "2026-06-12T07:28:13.699Z"
     },
     {
       "name": "QCOM.json",
       "sizeBytes": 16440,
-      "updatedAt": "2026-06-11T11:02:14.587Z"
+      "updatedAt": "2026-06-12T07:28:13.681Z"
     },
     {
       "name": "QRVO.json",
       "sizeBytes": 14455,
-      "updatedAt": "2026-06-11T11:02:14.560Z"
+      "updatedAt": "2026-06-12T07:28:13.651Z"
     },
     {
       "name": "QSR.json",
       "sizeBytes": 15540,
-      "updatedAt": "2026-06-11T11:02:14.659Z"
+      "updatedAt": "2026-06-12T07:28:13.763Z"
     },
     {
       "name": "RACE.json",
       "sizeBytes": 15455,
-      "updatedAt": "2026-06-11T11:02:14.610Z"
+      "updatedAt": "2026-06-12T07:28:13.707Z"
     },
     {
       "name": "RBC.json",
       "sizeBytes": 14943,
-      "updatedAt": "2026-06-11T11:02:14.432Z"
+      "updatedAt": "2026-06-12T07:28:13.516Z"
     },
     {
       "name": "RBLX.json",
       "sizeBytes": 13897,
-      "updatedAt": "2026-06-11T11:02:14.421Z"
+      "updatedAt": "2026-06-12T07:28:13.505Z"
     },
     {
       "name": "RCI.json",
       "sizeBytes": 15227,
-      "updatedAt": "2026-06-11T11:02:14.415Z"
+      "updatedAt": "2026-06-12T07:28:13.498Z"
     },
     {
       "name": "RCL.json",
       "sizeBytes": 15752,
-      "updatedAt": "2026-06-11T11:02:14.547Z"
+      "updatedAt": "2026-06-12T07:28:13.638Z"
     },
     {
       "name": "RDDT.json",
       "sizeBytes": 13485,
-      "updatedAt": "2026-06-11T11:02:14.590Z"
+      "updatedAt": "2026-06-12T07:28:13.685Z"
     },
     {
       "name": "REGN.json",
       "sizeBytes": 14825,
-      "updatedAt": "2026-06-11T11:02:14.573Z"
+      "updatedAt": "2026-06-12T07:28:13.666Z"
     },
     {
       "name": "RIO.json",
       "sizeBytes": 11520,
-      "updatedAt": "2026-06-11T11:02:14.606Z"
+      "updatedAt": "2026-06-12T07:28:13.702Z"
     },
     {
       "name": "RIVN.json",
       "sizeBytes": 14275,
-      "updatedAt": "2026-06-11T11:02:14.456Z"
+      "updatedAt": "2026-06-12T07:28:13.540Z"
     },
     {
       "name": "RKT.json",
       "sizeBytes": 11454,
-      "updatedAt": "2026-06-11T11:02:14.496Z"
+      "updatedAt": "2026-06-12T07:28:13.583Z"
     },
     {
       "name": "RL.json",
       "sizeBytes": 15431,
-      "updatedAt": "2026-06-11T11:02:14.485Z"
+      "updatedAt": "2026-06-12T07:28:13.570Z"
     },
     {
       "name": "RMBS.json",
       "sizeBytes": 14084,
-      "updatedAt": "2026-06-11T11:02:14.404Z"
+      "updatedAt": "2026-06-12T07:28:13.488Z"
     },
     {
       "name": "RMD.json",
       "sizeBytes": 15526,
-      "updatedAt": "2026-06-11T11:02:14.685Z"
+      "updatedAt": "2026-06-12T07:28:13.792Z"
     },
     {
       "name": "RMS.PA.json",
       "sizeBytes": 10315,
-      "updatedAt": "2026-06-11T11:02:14.402Z"
+      "updatedAt": "2026-06-12T07:28:13.486Z"
     },
     {
       "name": "ROK.json",
       "sizeBytes": 15909,
-      "updatedAt": "2026-06-11T11:02:14.395Z"
+      "updatedAt": "2026-06-12T07:28:13.479Z"
     },
     {
       "name": "ROKU.json",
       "sizeBytes": 14069,
-      "updatedAt": "2026-06-11T11:02:14.686Z"
+      "updatedAt": "2026-06-12T07:28:13.793Z"
     },
     {
       "name": "ROP.json",
       "sizeBytes": 15267,
-      "updatedAt": "2026-06-11T11:02:14.637Z"
+      "updatedAt": "2026-06-12T07:28:13.734Z"
     },
     {
       "name": "ROST.json",
       "sizeBytes": 15349,
-      "updatedAt": "2026-06-11T11:02:14.579Z"
+      "updatedAt": "2026-06-12T07:28:13.672Z"
     },
     {
       "name": "RPM.json",
       "sizeBytes": 15722,
-      "updatedAt": "2026-06-11T11:02:14.536Z"
+      "updatedAt": "2026-06-12T07:28:13.627Z"
     },
     {
       "name": "RPRX.json",
       "sizeBytes": 14589,
-      "updatedAt": "2026-06-11T11:02:14.396Z"
+      "updatedAt": "2026-06-12T07:28:13.480Z"
     },
     {
       "name": "RS.json",
       "sizeBytes": 15726,
-      "updatedAt": "2026-06-11T11:02:14.392Z"
+      "updatedAt": "2026-06-12T07:28:13.476Z"
     },
     {
       "name": "RSG.json",
       "sizeBytes": 15951,
-      "updatedAt": "2026-06-11T11:02:14.518Z"
+      "updatedAt": "2026-06-12T07:28:13.609Z"
     },
     {
       "name": "RTX.json",
       "sizeBytes": 16234,
-      "updatedAt": "2026-06-11T11:02:14.458Z"
+      "updatedAt": "2026-06-12T07:28:13.542Z"
     },
     {
       "name": "RVTY.json",
       "sizeBytes": 15754,
-      "updatedAt": "2026-06-11T11:02:14.478Z"
+      "updatedAt": "2026-06-12T07:28:13.563Z"
     },
     {
       "name": "RY.json",
       "sizeBytes": 12767,
-      "updatedAt": "2026-06-11T11:02:14.478Z"
+      "updatedAt": "2026-06-12T07:28:13.563Z"
     },
     {
       "name": "SAIA.json",
       "sizeBytes": 14002,
-      "updatedAt": "2026-06-11T11:02:14.639Z"
+      "updatedAt": "2026-06-12T07:28:13.737Z"
     },
     {
       "name": "SBAC.json",
       "sizeBytes": 15434,
-      "updatedAt": "2026-06-11T11:02:14.499Z"
+      "updatedAt": "2026-06-12T07:28:13.586Z"
     },
     {
       "name": "SBUX.json",
       "sizeBytes": 15790,
-      "updatedAt": "2026-06-11T11:02:14.371Z"
+      "updatedAt": "2026-06-12T07:28:13.453Z"
     },
     {
       "name": "SCCO.json",
       "sizeBytes": 15447,
-      "updatedAt": "2026-06-11T11:02:14.697Z"
+      "updatedAt": "2026-06-12T07:28:13.805Z"
     },
     {
       "name": "SCHW.json",
       "sizeBytes": 12796,
-      "updatedAt": "2026-06-11T11:02:14.486Z"
+      "updatedAt": "2026-06-12T07:28:13.571Z"
     },
     {
       "name": "SCI.json",
       "sizeBytes": 15609,
-      "updatedAt": "2026-06-11T11:02:14.628Z"
+      "updatedAt": "2026-06-12T07:28:13.726Z"
     },
     {
       "name": "SGI.json",
       "sizeBytes": 15478,
-      "updatedAt": "2026-06-11T11:02:14.548Z"
+      "updatedAt": "2026-06-12T07:28:13.640Z"
     },
     {
       "name": "SHOP.json",
       "sizeBytes": 13637,
-      "updatedAt": "2026-06-11T11:02:14.544Z"
+      "updatedAt": "2026-06-12T07:28:13.636Z"
     },
     {
       "name": "SHW.json",
       "sizeBytes": 15990,
-      "updatedAt": "2026-06-11T11:02:14.447Z"
+      "updatedAt": "2026-06-12T07:28:13.530Z"
     },
     {
       "name": "SIRI.json",
       "sizeBytes": 15943,
-      "updatedAt": "2026-06-11T11:02:14.407Z"
+      "updatedAt": "2026-06-12T07:28:13.491Z"
     },
     {
       "name": "SJM.json",
       "sizeBytes": 15416,
-      "updatedAt": "2026-06-11T11:02:14.609Z"
+      "updatedAt": "2026-06-12T07:28:13.706Z"
     },
     {
       "name": "SLB.json",
       "sizeBytes": 16254,
-      "updatedAt": "2026-06-11T11:02:14.524Z"
+      "updatedAt": "2026-06-12T07:28:13.614Z"
     },
     {
       "name": "SLF.json",
       "sizeBytes": 13273,
-      "updatedAt": "2026-06-11T11:02:14.682Z"
+      "updatedAt": "2026-06-12T07:28:13.789Z"
     },
     {
       "name": "SMCI.json",
       "sizeBytes": 14578,
-      "updatedAt": "2026-06-11T11:02:14.568Z"
+      "updatedAt": "2026-06-12T07:28:13.660Z"
     },
     {
       "name": "SN.json",
       "sizeBytes": 14592,
-      "updatedAt": "2026-06-11T11:02:14.630Z"
+      "updatedAt": "2026-06-12T07:28:13.728Z"
     },
     {
       "name": "SNDK.json",
       "sizeBytes": 12932,
-      "updatedAt": "2026-06-11T11:02:14.549Z"
+      "updatedAt": "2026-06-12T07:28:13.641Z"
     },
     {
       "name": "SNOW.json",
       "sizeBytes": 14343,
-      "updatedAt": "2026-06-11T11:02:14.617Z"
+      "updatedAt": "2026-06-12T07:28:13.714Z"
     },
     {
       "name": "SNPS.json",
       "sizeBytes": 14585,
-      "updatedAt": "2026-06-11T11:02:14.387Z"
+      "updatedAt": "2026-06-12T07:28:13.471Z"
     },
     {
       "name": "SNX.json",
       "sizeBytes": 15828,
-      "updatedAt": "2026-06-11T11:02:14.549Z"
+      "updatedAt": "2026-06-12T07:28:13.641Z"
     },
     {
       "name": "SO.json",
       "sizeBytes": 15723,
-      "updatedAt": "2026-06-11T11:02:14.712Z"
+      "updatedAt": "2026-06-12T07:28:13.822Z"
     },
     {
       "name": "SOLV.json",
       "sizeBytes": 14505,
-      "updatedAt": "2026-06-11T11:02:14.482Z"
+      "updatedAt": "2026-06-12T07:28:13.566Z"
     },
     {
       "name": "SPG.json",
       "sizeBytes": 15862,
-      "updatedAt": "2026-06-11T11:02:14.590Z"
+      "updatedAt": "2026-06-12T07:28:13.685Z"
     },
     {
       "name": "SPGI.json",
       "sizeBytes": 15819,
-      "updatedAt": "2026-06-11T11:02:14.477Z"
+      "updatedAt": "2026-06-12T07:28:13.562Z"
     },
     {
       "name": "SPOT.json",
       "sizeBytes": 14575,
-      "updatedAt": "2026-06-11T11:02:14.388Z"
+      "updatedAt": "2026-06-12T07:28:13.471Z"
     },
     {
       "name": "SRE.json",
       "sizeBytes": 15953,
-      "updatedAt": "2026-06-11T11:02:14.521Z"
+      "updatedAt": "2026-06-12T07:28:13.611Z"
     },
     {
       "name": "SSNC.json",
       "sizeBytes": 16011,
-      "updatedAt": "2026-06-11T11:02:14.421Z"
+      "updatedAt": "2026-06-12T07:28:13.505Z"
     },
     {
       "name": "STE.json",
       "sizeBytes": 15842,
-      "updatedAt": "2026-06-11T11:02:14.471Z"
+      "updatedAt": "2026-06-12T07:28:13.556Z"
     },
     {
       "name": "STLA.json",
       "sizeBytes": 13537,
-      "updatedAt": "2026-06-11T11:02:14.442Z"
+      "updatedAt": "2026-06-12T07:28:13.526Z"
     },
     {
       "name": "STLD.json",
       "sizeBytes": 15797,
-      "updatedAt": "2026-06-11T11:02:14.576Z"
+      "updatedAt": "2026-06-12T07:28:13.669Z"
     },
     {
       "name": "STT.json",
       "sizeBytes": 12412,
-      "updatedAt": "2026-06-11T11:02:14.635Z"
+      "updatedAt": "2026-06-12T07:28:13.732Z"
     },
     {
       "name": "STX.json",
       "sizeBytes": 15818,
-      "updatedAt": "2026-06-11T11:02:14.654Z"
+      "updatedAt": "2026-06-12T07:28:13.757Z"
     },
     {
       "name": "STZ.json",
       "sizeBytes": 15762,
-      "updatedAt": "2026-06-11T11:02:14.403Z"
+      "updatedAt": "2026-06-12T07:28:13.487Z"
     },
     {
       "name": "SU.json",
       "sizeBytes": 15875,
-      "updatedAt": "2026-06-11T11:02:14.389Z"
+      "updatedAt": "2026-06-12T07:28:13.473Z"
     },
     {
       "name": "SWK.json",
       "sizeBytes": 15711,
-      "updatedAt": "2026-06-11T11:02:14.638Z"
+      "updatedAt": "2026-06-12T07:28:13.736Z"
     },
     {
       "name": "SWKS.json",
       "sizeBytes": 15508,
-      "updatedAt": "2026-06-11T11:02:14.547Z"
+      "updatedAt": "2026-06-12T07:28:13.639Z"
     },
     {
       "name": "SYK.json",
       "sizeBytes": 15715,
-      "updatedAt": "2026-06-11T11:02:14.414Z"
+      "updatedAt": "2026-06-12T07:28:13.497Z"
     },
     {
       "name": "SYM.json",
       "sizeBytes": 13050,
-      "updatedAt": "2026-06-11T11:02:14.518Z"
+      "updatedAt": "2026-06-12T07:28:13.608Z"
     },
     {
       "name": "SYY.json",
       "sizeBytes": 15844,
-      "updatedAt": "2026-06-11T11:02:14.457Z"
+      "updatedAt": "2026-06-12T07:28:13.541Z"
     },
     {
       "name": "T.json",
       "sizeBytes": 16208,
-      "updatedAt": "2026-06-11T11:02:14.365Z"
+      "updatedAt": "2026-06-12T07:28:13.447Z"
     },
     {
       "name": "TD.json",
       "sizeBytes": 13060,
-      "updatedAt": "2026-06-11T11:02:14.694Z"
+      "updatedAt": "2026-06-12T07:28:13.803Z"
     },
     {
       "name": "TDOC.json",
       "sizeBytes": 13941,
-      "updatedAt": "2026-06-11T11:02:14.456Z"
+      "updatedAt": "2026-06-12T07:28:13.540Z"
     },
     {
       "name": "TDY.json",
       "sizeBytes": 14152,
-      "updatedAt": "2026-06-11T11:02:14.586Z"
+      "updatedAt": "2026-06-12T07:28:13.680Z"
     },
     {
       "name": "TEAM.json",
       "sizeBytes": 14382,
-      "updatedAt": "2026-06-11T11:02:14.674Z"
+      "updatedAt": "2026-06-12T07:28:13.780Z"
     },
     {
       "name": "TER.json",
       "sizeBytes": 15674,
-      "updatedAt": "2026-06-11T11:02:14.555Z"
+      "updatedAt": "2026-06-12T07:28:13.647Z"
     },
     {
       "name": "TFC.json",
       "sizeBytes": 12562,
-      "updatedAt": "2026-06-11T11:02:14.474Z"
+      "updatedAt": "2026-06-12T07:28:13.558Z"
     },
     {
       "name": "TFII.json",
       "sizeBytes": 15596,
-      "updatedAt": "2026-06-11T11:02:14.393Z"
+      "updatedAt": "2026-06-12T07:28:13.477Z"
     },
     {
       "name": "TGT.json",
       "sizeBytes": 15939,
-      "updatedAt": "2026-06-11T11:02:14.640Z"
+      "updatedAt": "2026-06-12T07:28:13.738Z"
     },
     {
       "name": "THC.json",
       "sizeBytes": 15588,
-      "updatedAt": "2026-06-11T11:02:14.614Z"
+      "updatedAt": "2026-06-12T07:28:13.710Z"
     },
     {
       "name": "TJX.json",
       "sizeBytes": 15359,
-      "updatedAt": "2026-06-11T11:02:14.532Z"
+      "updatedAt": "2026-06-12T07:28:13.623Z"
     },
     {
       "name": "TLN.json",
       "sizeBytes": 14333,
-      "updatedAt": "2026-06-11T11:02:14.592Z"
+      "updatedAt": "2026-06-12T07:28:13.688Z"
     },
     {
       "name": "TMO.json",
       "sizeBytes": 16349,
-      "updatedAt": "2026-06-11T11:02:14.650Z"
+      "updatedAt": "2026-06-12T07:28:13.751Z"
     },
     {
       "name": "TMUS.json",
       "sizeBytes": 15377,
-      "updatedAt": "2026-06-11T11:02:14.465Z"
+      "updatedAt": "2026-06-12T07:28:13.549Z"
     },
     {
       "name": "TOL.json",
       "sizeBytes": 15518,
-      "updatedAt": "2026-06-11T11:02:14.409Z"
+      "updatedAt": "2026-06-12T07:28:13.493Z"
     },
     {
       "name": "TOST.json",
       "sizeBytes": 13782,
-      "updatedAt": "2026-06-11T11:02:14.434Z"
+      "updatedAt": "2026-06-12T07:28:13.517Z"
     },
     {
       "name": "TPL.json",
       "sizeBytes": 14588,
-      "updatedAt": "2026-06-11T11:02:14.400Z"
+      "updatedAt": "2026-06-12T07:28:13.484Z"
     },
     {
       "name": "TPR.json",
       "sizeBytes": 15530,
-      "updatedAt": "2026-06-11T11:02:14.505Z"
+      "updatedAt": "2026-06-12T07:28:13.591Z"
     },
     {
       "name": "TRGP.json",
       "sizeBytes": 15872,
-      "updatedAt": "2026-06-11T11:02:14.677Z"
+      "updatedAt": "2026-06-12T07:28:13.783Z"
     },
     {
       "name": "TRI.json",
       "sizeBytes": 15656,
-      "updatedAt": "2026-06-11T11:02:14.594Z"
+      "updatedAt": "2026-06-12T07:28:13.691Z"
     },
     {
       "name": "TRMB.json",
       "sizeBytes": 14766,
-      "updatedAt": "2026-06-11T11:02:14.486Z"
+      "updatedAt": "2026-06-12T07:28:13.571Z"
     },
     {
       "name": "TROW.json",
       "sizeBytes": 14703,
-      "updatedAt": "2026-06-11T11:02:14.462Z"
+      "updatedAt": "2026-06-12T07:28:13.547Z"
     },
     {
       "name": "TRP.json",
       "sizeBytes": 16004,
-      "updatedAt": "2026-06-11T11:02:14.621Z"
+      "updatedAt": "2026-06-12T07:28:13.718Z"
     },
     {
       "name": "TRV.json",
       "sizeBytes": 13068,
-      "updatedAt": "2026-06-11T11:02:14.685Z"
+      "updatedAt": "2026-06-12T07:28:13.792Z"
     },
     {
       "name": "TSCO.json",
       "sizeBytes": 15804,
-      "updatedAt": "2026-06-11T11:02:14.385Z"
+      "updatedAt": "2026-06-12T07:28:13.469Z"
     },
     {
       "name": "TSLA.json",
       "sizeBytes": 14666,
-      "updatedAt": "2026-06-11T11:02:14.503Z"
+      "updatedAt": "2026-06-12T07:28:13.590Z"
     },
     {
       "name": "TSM.json",
       "sizeBytes": 16453,
-      "updatedAt": "2026-06-11T11:02:14.509Z"
+      "updatedAt": "2026-06-12T07:28:13.598Z"
     },
     {
       "name": "TSN.json",
       "sizeBytes": 15844,
-      "updatedAt": "2026-06-11T11:02:14.581Z"
+      "updatedAt": "2026-06-12T07:28:13.675Z"
     },
     {
       "name": "TT.json",
       "sizeBytes": 15714,
-      "updatedAt": "2026-06-11T11:02:14.493Z"
+      "updatedAt": "2026-06-12T07:28:13.579Z"
     },
     {
       "name": "TTD.json",
       "sizeBytes": 13930,
-      "updatedAt": "2026-06-11T11:02:14.605Z"
+      "updatedAt": "2026-06-12T07:28:13.701Z"
     },
     {
       "name": "TTWO.json",
       "sizeBytes": 14525,
-      "updatedAt": "2026-06-11T11:02:14.528Z"
+      "updatedAt": "2026-06-12T07:28:13.618Z"
     },
     {
       "name": "TWLO.json",
       "sizeBytes": 14396,
-      "updatedAt": "2026-06-11T11:02:14.657Z"
+      "updatedAt": "2026-06-12T07:28:13.761Z"
     },
     {
       "name": "TXN.json",
       "sizeBytes": 16309,
-      "updatedAt": "2026-06-11T11:02:14.391Z"
+      "updatedAt": "2026-06-12T07:28:13.474Z"
     },
     {
       "name": "TXRH.json",
       "sizeBytes": 14821,
-      "updatedAt": "2026-06-11T11:02:14.535Z"
+      "updatedAt": "2026-06-12T07:28:13.626Z"
     },
     {
       "name": "TYL.json",
       "sizeBytes": 14660,
-      "updatedAt": "2026-06-11T11:02:14.555Z"
+      "updatedAt": "2026-06-12T07:28:13.647Z"
     },
     {
       "name": "UAA.json",
       "sizeBytes": 13914,
-      "updatedAt": "2026-06-11T11:02:14.521Z"
+      "updatedAt": "2026-06-12T07:28:13.612Z"
     },
     {
       "name": "UBER.json",
       "sizeBytes": 15073,
-      "updatedAt": "2026-06-11T11:02:14.502Z"
+      "updatedAt": "2026-06-12T07:28:13.589Z"
     },
     {
       "name": "UHS.json",
       "sizeBytes": 15774,
-      "updatedAt": "2026-06-11T11:02:14.546Z"
+      "updatedAt": "2026-06-12T07:28:13.637Z"
     },
     {
       "name": "UI.json",
       "sizeBytes": 15050,
-      "updatedAt": "2026-06-11T11:02:14.553Z"
+      "updatedAt": "2026-06-12T07:28:13.645Z"
     },
     {
       "name": "ULTA.json",
       "sizeBytes": 14115,
-      "updatedAt": "2026-06-11T11:02:14.651Z"
+      "updatedAt": "2026-06-12T07:28:13.753Z"
     },
     {
       "name": "UNH.json",
       "sizeBytes": 16192,
-      "updatedAt": "2026-06-11T11:02:14.512Z"
+      "updatedAt": "2026-06-12T07:28:13.602Z"
     },
     {
       "name": "UNP.json",
       "sizeBytes": 15958,
-      "updatedAt": "2026-06-11T11:02:14.474Z"
+      "updatedAt": "2026-06-12T07:28:13.559Z"
     },
     {
       "name": "UPS.json",
       "sizeBytes": 15865,
-      "updatedAt": "2026-06-11T11:02:14.647Z"
+      "updatedAt": "2026-06-12T07:28:13.746Z"
     },
     {
       "name": "USB.json",
       "sizeBytes": 12445,
-      "updatedAt": "2026-06-11T11:02:14.393Z"
+      "updatedAt": "2026-06-12T07:28:13.477Z"
     },
     {
       "name": "UTHR.json",
       "sizeBytes": 14186,
-      "updatedAt": "2026-06-11T11:02:14.695Z"
+      "updatedAt": "2026-06-12T07:28:13.804Z"
     },
     {
       "name": "V.json",
       "sizeBytes": 15736,
-      "updatedAt": "2026-06-11T11:02:14.650Z"
+      "updatedAt": "2026-06-12T07:28:13.751Z"
     },
     {
       "name": "VEEV.json",
       "sizeBytes": 13365,
-      "updatedAt": "2026-06-11T11:02:14.508Z"
+      "updatedAt": "2026-06-12T07:28:13.597Z"
     },
     {
       "name": "VFC.json",
       "sizeBytes": 15386,
-      "updatedAt": "2026-06-11T11:02:14.500Z"
+      "updatedAt": "2026-06-12T07:28:13.587Z"
     },
     {
       "name": "VG.json",
       "sizeBytes": 15201,
-      "updatedAt": "2026-06-11T11:02:14.403Z"
+      "updatedAt": "2026-06-12T07:28:13.487Z"
     },
     {
       "name": "VLO.json",
       "sizeBytes": 15971,
-      "updatedAt": "2026-06-11T11:02:14.606Z"
+      "updatedAt": "2026-06-12T07:28:13.702Z"
     },
     {
       "name": "VMC.json",
       "sizeBytes": 15736,
-      "updatedAt": "2026-06-11T11:02:14.683Z"
+      "updatedAt": "2026-06-12T07:28:13.790Z"
     },
     {
       "name": "VNOM.json",
       "sizeBytes": 15567,
-      "updatedAt": "2026-06-11T11:02:14.588Z"
+      "updatedAt": "2026-06-12T07:28:13.683Z"
     },
     {
       "name": "VRSK.json",
       "sizeBytes": 15404,
-      "updatedAt": "2026-06-11T11:02:14.673Z"
+      "updatedAt": "2026-06-12T07:28:13.779Z"
     },
     {
       "name": "VRTX.json",
       "sizeBytes": 14640,
-      "updatedAt": "2026-06-11T11:02:14.646Z"
+      "updatedAt": "2026-06-12T07:28:13.746Z"
     },
     {
       "name": "VST.json",
       "sizeBytes": 15710,
-      "updatedAt": "2026-06-11T11:02:14.455Z"
+      "updatedAt": "2026-06-12T07:28:13.539Z"
     },
     {
       "name": "VTR.json",
       "sizeBytes": 15328,
-      "updatedAt": "2026-06-11T11:02:14.502Z"
+      "updatedAt": "2026-06-12T07:28:13.588Z"
     },
     {
       "name": "VTRS.json",
       "sizeBytes": 15890,
-      "updatedAt": "2026-06-11T11:02:14.649Z"
+      "updatedAt": "2026-06-12T07:28:13.750Z"
     },
     {
       "name": "VZ.json",
       "sizeBytes": 15911,
-      "updatedAt": "2026-06-11T11:02:14.581Z"
+      "updatedAt": "2026-06-12T07:28:13.674Z"
     },
     {
       "name": "W.json",
       "sizeBytes": 14104,
-      "updatedAt": "2026-06-11T11:02:14.694Z"
+      "updatedAt": "2026-06-12T07:28:13.802Z"
     },
     {
       "name": "WAB.json",
       "sizeBytes": 16151,
-      "updatedAt": "2026-06-11T11:02:14.608Z"
+      "updatedAt": "2026-06-12T07:28:13.705Z"
     },
     {
       "name": "WAT.json",
       "sizeBytes": 14863,
-      "updatedAt": "2026-06-11T11:02:14.464Z"
+      "updatedAt": "2026-06-12T07:28:13.548Z"
     },
     {
       "name": "WBD.json",
       "sizeBytes": 14470,
-      "updatedAt": "2026-06-11T11:02:14.602Z"
+      "updatedAt": "2026-06-12T07:28:13.697Z"
     },
     {
       "name": "WCN.json",
       "sizeBytes": 15803,
-      "updatedAt": "2026-06-11T11:02:14.626Z"
+      "updatedAt": "2026-06-12T07:28:13.723Z"
     },
     {
       "name": "WDAY.json",
       "sizeBytes": 14668,
-      "updatedAt": "2026-06-11T11:02:14.405Z"
+      "updatedAt": "2026-06-12T07:28:13.489Z"
     },
     {
       "name": "WDC.json",
       "sizeBytes": 16011,
-      "updatedAt": "2026-06-11T11:02:14.676Z"
+      "updatedAt": "2026-06-12T07:28:13.782Z"
     },
     {
       "name": "WEC.json",
       "sizeBytes": 15794,
-      "updatedAt": "2026-06-11T11:02:14.615Z"
+      "updatedAt": "2026-06-12T07:28:13.712Z"
     },
     {
       "name": "WELL.json",
       "sizeBytes": 15404,
-      "updatedAt": "2026-06-11T11:02:14.410Z"
+      "updatedAt": "2026-06-12T07:28:13.494Z"
     },
     {
       "name": "WFC.json",
       "sizeBytes": 12595,
-      "updatedAt": "2026-06-11T11:02:14.713Z"
+      "updatedAt": "2026-06-12T07:28:13.823Z"
     },
     {
       "name": "WHR.json",
       "sizeBytes": 15406,
-      "updatedAt": "2026-06-11T11:02:14.559Z"
+      "updatedAt": "2026-06-12T07:28:13.651Z"
     },
     {
       "name": "WLK.json",
       "sizeBytes": 15476,
-      "updatedAt": "2026-06-11T11:02:14.601Z"
+      "updatedAt": "2026-06-12T07:28:13.696Z"
     },
     {
       "name": "WM.json",
       "sizeBytes": 15913,
-      "updatedAt": "2026-06-11T11:02:14.380Z"
+      "updatedAt": "2026-06-12T07:28:13.463Z"
     },
     {
       "name": "WMB.json",
       "sizeBytes": 15660,
-      "updatedAt": "2026-06-11T11:02:14.465Z"
+      "updatedAt": "2026-06-12T07:28:13.549Z"
     },
     {
       "name": "WMG.json",
       "sizeBytes": 15096,
-      "updatedAt": "2026-06-11T11:02:14.689Z"
+      "updatedAt": "2026-06-12T07:28:13.796Z"
     },
     {
       "name": "WMT.json",
       "sizeBytes": 16234,
-      "updatedAt": "2026-06-11T11:02:14.610Z"
+      "updatedAt": "2026-06-12T07:28:13.707Z"
     },
     {
       "name": "WPM.json",
       "sizeBytes": 14640,
-      "updatedAt": "2026-06-11T11:02:14.551Z"
+      "updatedAt": "2026-06-12T07:28:13.643Z"
     },
     {
       "name": "WSM.json",
       "sizeBytes": 14776,
-      "updatedAt": "2026-06-11T11:02:14.635Z"
+      "updatedAt": "2026-06-12T07:28:13.733Z"
     },
     {
       "name": "WSO.json",
       "sizeBytes": 14956,
-      "updatedAt": "2026-06-11T11:02:14.380Z"
+      "updatedAt": "2026-06-12T07:28:13.463Z"
     },
     {
       "name": "WST.json",
       "sizeBytes": 15668,
-      "updatedAt": "2026-06-11T11:02:14.670Z"
+      "updatedAt": "2026-06-12T07:28:13.776Z"
     },
     {
       "name": "WWW.json",
       "sizeBytes": 15179,
-      "updatedAt": "2026-06-11T11:02:14.394Z"
+      "updatedAt": "2026-06-12T07:28:13.478Z"
     },
     {
       "name": "XEL.json",
       "sizeBytes": 15479,
-      "updatedAt": "2026-06-11T11:02:14.711Z"
+      "updatedAt": "2026-06-12T07:28:13.821Z"
     },
     {
       "name": "XOM.json",
       "sizeBytes": 16199,
-      "updatedAt": "2026-06-11T11:02:14.401Z"
+      "updatedAt": "2026-06-12T07:28:13.485Z"
     },
     {
       "name": "XPO.json",
       "sizeBytes": 14312,
-      "updatedAt": "2026-06-11T11:02:14.689Z"
+      "updatedAt": "2026-06-12T07:28:13.797Z"
     },
     {
       "name": "XYL.json",
       "sizeBytes": 15931,
-      "updatedAt": "2026-06-11T11:02:14.559Z"
+      "updatedAt": "2026-06-12T07:28:13.650Z"
     },
     {
       "name": "XYZ.json",
       "sizeBytes": 14616,
-      "updatedAt": "2026-06-11T11:02:14.514Z"
+      "updatedAt": "2026-06-12T07:28:13.604Z"
     },
     {
       "name": "YUM.json",
       "sizeBytes": 15652,
-      "updatedAt": "2026-06-11T11:02:14.658Z"
+      "updatedAt": "2026-06-12T07:28:13.762Z"
     },
     {
       "name": "Z.json",
       "sizeBytes": 14443,
-      "updatedAt": "2026-06-11T11:02:14.671Z"
+      "updatedAt": "2026-06-12T07:28:13.777Z"
     },
     {
       "name": "ZBRA.json",
       "sizeBytes": 14829,
-      "updatedAt": "2026-06-11T11:02:14.531Z"
+      "updatedAt": "2026-06-12T07:28:13.621Z"
     },
     {
       "name": "ZM.json",
       "sizeBytes": 13894,
-      "updatedAt": "2026-06-11T11:02:14.585Z"
+      "updatedAt": "2026-06-12T07:28:13.679Z"
     },
     {
       "name": "ZS.json",
       "sizeBytes": 13982,
-      "updatedAt": "2026-06-11T11:02:14.655Z"
+      "updatedAt": "2026-06-12T07:28:13.759Z"
     },
     {
       "name": "ZTS.json",
       "sizeBytes": 15966,
-      "updatedAt": "2026-06-11T11:02:14.489Z"
+      "updatedAt": "2026-06-12T07:28:13.574Z"
     }
   ]
 };
