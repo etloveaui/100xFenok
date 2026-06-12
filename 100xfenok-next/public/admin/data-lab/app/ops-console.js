@@ -66,10 +66,10 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
-      label: 'SlickCharts universe',
-      path: '/data/slickcharts/universe.json',
+      label: 'SlickCharts S&P 500 holdings',
+      path: '/data/slickcharts/sp500.json',
       datePath: 'updated',
-      minCountPath: 'uniqueCount',
+      minCountPath: 'count',
       minCount: 500,
       warnAfterDays: 7,
       failAfterDays: 14

@@ -38,12 +38,19 @@ const SENTIMENT_FILES = [
 type SentimentFile = (typeof SENTIMENT_FILES)[number];
 
 type DataFolderKey =
+  | "admin"
   | "benchmarks"
+  | "calendar"
+  | "computed"
   | "sentiment"
   | "slickcharts"
   | "damodaran"
+  | "global-scouter"
+  | "indices"
   | "macro"
-  | "sec-13f";
+  | "sec-13f"
+  | "yardney"
+  | "yf";
 
 type JsonFileEntry = {
   name: string;
@@ -112,6 +119,16 @@ function getManifestJsonEntries(publicBasePath: string): DataJsonManifestEntry[]
   return [...((DATA_JSON_FILES_BY_PATH as Record<string, readonly DataJsonManifestEntry[]>)[key] ?? [])];
 }
 
+function getAllManifestJsonEntries() {
+  return Object.entries(DATA_JSON_FILES_BY_PATH as Record<string, readonly DataJsonManifestEntry[]>)
+    .flatMap(([directory, entries]) =>
+      entries.map((entry) => ({
+        directory,
+        ...entry,
+      })),
+    );
+}
+
 async function listJsonFileNames(
   absDir: string,
   publicBasePath: string,
@@ -120,12 +137,203 @@ async function listJsonFileNames(
   try {
     entries = await readdir(absDir, { withFileTypes: true });
   } catch {
-    return getManifestJsonEntries(publicBasePath).map((entry) => entry.name);
+    return getManifestJsonEntries(publicBasePath)
+      .filter((entry) => entry.name !== "schema.json")
+      .map((entry) => entry.name);
   }
   return entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json") && entry.name !== "schema.json")
     .map((entry) => entry.name)
     .sort((a, b) => a.localeCompare(b));
+}
+
+function formatBytes(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  let size = value;
+  let unit = 0;
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit += 1;
+  }
+  return `${size >= 10 || unit === 0 ? size.toFixed(0) : size.toFixed(1)} ${units[unit]}`;
+}
+
+function getCategory(directory: string, name: string) {
+  if (directory !== ".") return directory.split("/")[0] ?? "root";
+  return name === "manifest.json" || name === "reports-index.json" ? "root" : "metadata";
+}
+
+function getConsumerLane(publicPath: string, category: string) {
+  if (category === "root" || category === "metadata" || category === "admin") return "admin";
+  if (category === "calendar" || category === "computed") return "explore";
+  if (category === "sec-13f") return "superinvestors";
+  if (category === "yf") return "stock";
+  if (category === "global-scouter") {
+    if (publicPath.includes("/stocks/detail/")) return "stock";
+    if (publicPath.includes("/raw/") || publicPath.includes("/indicators/")) return "screener";
+    return "screener";
+  }
+  if (category === "slickcharts") {
+    if (publicPath.includes("/stocks/") || publicPath.includes("stocks-dividends") || publicPath.includes("stocks-returns")) {
+      return "stock";
+    }
+    if (publicPath.includes("gainers") || publicPath.includes("losers") || publicPath.includes("membership")) {
+      return "explore";
+    }
+    return "market";
+  }
+  if (category === "damodaran") {
+    return publicPath.includes("industry") || publicPath.includes("credit") ? "stock" : "market";
+  }
+  if (category === "benchmarks" || category === "indices" || category === "macro" || category === "sentiment" || category === "yardney") {
+    return "market";
+  }
+  return "admin";
+}
+
+function getContentClass(publicPath: string, category: string) {
+  const key = publicPath.toLowerCase();
+  if (key.includes("schema.json") || key.includes("manifest.json") || category === "root" || category === "metadata") return "metadata";
+  if (category === "sec-13f") return key.includes("/investors/") ? "investor-history" : "investor-analytics";
+  if (category === "yf") return "ticker-finance";
+  if (key.includes("/stocks/detail/")) return "ticker-detail";
+  if (key.includes("/stocks/")) return "ticker-slickcharts";
+  if (category === "benchmarks") return "valuation-history";
+  if (category === "indices") return "index-history";
+  if (category === "macro") return "macro-series";
+  if (category === "sentiment") return "sentiment-series";
+  if (category === "slickcharts") return "market-structure";
+  if (category === "damodaran") return "valuation-input";
+  if (category === "computed") return "computed-signal";
+  if (category === "calendar") return "event-calendar";
+  return "dataset";
+}
+
+function hasHistoricalShape(publicPath: string, category: string) {
+  const key = publicPath.toLowerCase();
+  if (key.endsWith("/schema.json") || key.endsWith("/manifest.json") || key.endsWith("/reports-index.json")) return false;
+  return (
+    category === "benchmarks" ||
+    category === "indices" ||
+    category === "macro" ||
+    category === "sentiment" ||
+    category === "yardney" ||
+    key.includes("/stocks/detail/") ||
+    key.includes("/yf/finance/") ||
+    key.includes("/sec-13f/investors/") ||
+    key.includes("historical") ||
+    key.includes("history") ||
+    key.includes("returns") ||
+    key.includes("drawdown") ||
+    key.includes("performance") ||
+    key.includes("gainers") ||
+    key.includes("losers") ||
+    key.includes("multi_quarter") ||
+    key.includes("ratio")
+  );
+}
+
+function addCount(target: Record<string, number>, key: string) {
+  target[key] = (target[key] ?? 0) + 1;
+}
+
+export async function getDataAtlas() {
+  const root = await getRootDataManifest();
+  const entries = getAllManifestJsonEntries()
+    .map((entry) => {
+      const category = getCategory(entry.directory, entry.name);
+      const relativePath = entry.directory === "." ? entry.name : `${entry.directory}/${entry.name}`;
+      const publicPath = `/data/${relativePath}`;
+      const consumerLane = getConsumerLane(publicPath, category);
+      const historical = hasHistoricalShape(publicPath, category);
+
+      return {
+        path: publicPath,
+        directory: entry.directory,
+        category,
+        name: entry.name,
+        sizeBytes: entry.sizeBytes,
+        sizeLabel: formatBytes(entry.sizeBytes),
+        updatedAt: entry.updatedAt,
+        contentClass: getContentClass(publicPath, category),
+        consumerLane,
+        historical,
+      };
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
+
+  const categoryMap = new Map<string, {
+    key: string;
+    fileCount: number;
+    totalSizeBytes: number;
+    totalSizeLabel: string;
+    historicalCount: number;
+    directories: Set<string>;
+    lanes: Record<string, number>;
+    classes: Record<string, number>;
+    declaredFileCount: number | null;
+    updated: string | null;
+    source: string | null;
+    description: string | null;
+  }>();
+
+  for (const file of entries) {
+    const meta = root.folders[file.category];
+    const current = categoryMap.get(file.category) ?? {
+      key: file.category,
+      fileCount: 0,
+      totalSizeBytes: 0,
+      totalSizeLabel: "0 B",
+      historicalCount: 0,
+      directories: new Set<string>(),
+      lanes: {},
+      classes: {},
+      declaredFileCount: meta?.file_count ?? null,
+      updated: meta?.updated ?? null,
+      source: meta?.source ?? null,
+      description: meta?.description ?? null,
+    };
+    current.fileCount += 1;
+    current.totalSizeBytes += file.sizeBytes;
+    current.historicalCount += file.historical ? 1 : 0;
+    current.directories.add(file.directory);
+    addCount(current.lanes, file.consumerLane);
+    addCount(current.classes, file.contentClass);
+    current.totalSizeLabel = formatBytes(current.totalSizeBytes);
+    categoryMap.set(file.category, current);
+  }
+
+  const categories = [...categoryMap.values()]
+    .map((category) => ({
+      ...category,
+      directories: [...category.directories].sort(),
+    }))
+    .sort((left, right) => left.key.localeCompare(right.key));
+
+  const laneCounts: Record<string, number> = {};
+  const classCounts: Record<string, number> = {};
+  entries.forEach((entry) => {
+    addCount(laneCounts, entry.consumerLane);
+    addCount(classCounts, entry.contentClass);
+  });
+
+  return {
+    generatedAt: new Date().toISOString(),
+    manifestLastUpdated: root.last_updated ?? null,
+    totals: {
+      fileCount: entries.length,
+      categoryCount: categories.length,
+      directoryCount: new Set(entries.map((entry) => entry.directory)).size,
+      totalSizeBytes: entries.reduce((total, entry) => total + entry.sizeBytes, 0),
+      totalSizeLabel: formatBytes(entries.reduce((total, entry) => total + entry.sizeBytes, 0)),
+      historicalCount: entries.filter((entry) => entry.historical).length,
+      laneCounts,
+      classCounts,
+    },
+    categories,
+    files: entries,
+  };
 }
 
 async function buildJsonSample(

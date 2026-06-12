@@ -86,6 +86,209 @@ const Renderer = (function() {
   }
 
   /**
+   * Render Data Atlas loading state.
+   */
+  function renderAtlasLoading() {
+    if (!elements?.atlasContainer) return;
+    elements.atlasContainer.innerHTML = `
+      <div class="bg-white rounded-xl p-5 shadow animate-pulse">
+        <div class="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+          ${Array.from({ length: 4 }, () => '<div class="h-20 bg-gray-100 rounded-lg"></div>').join('')}
+        </div>
+        <div class="h-44 bg-gray-100 rounded-lg"></div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render Data Atlas unavailable state.
+   * @param {string} message
+   */
+  function renderAtlasUnavailable(message) {
+    if (!elements?.atlasContainer) return;
+    elements.atlasContainer.innerHTML = `
+      <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-5 text-sm text-yellow-800">
+        <div class="font-semibold mb-1">Data Atlas 확인 불가</div>
+        <div>${escapeHtml(message)}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render full feno-data atlas.
+   * @param {Object} atlas
+   * @param {string} activeCategory
+   */
+  function renderDataAtlas(atlas, activeCategory = 'all') {
+    if (!elements?.atlasContainer) return;
+
+    const totals = atlas?.totals || {};
+    const categories = Array.isArray(atlas?.categories) ? atlas.categories : [];
+    const files = Array.isArray(atlas?.files) ? atlas.files : [];
+    const visibleFiles = activeCategory === 'all'
+      ? files
+      : files.filter((file) => file.category === activeCategory);
+    const laneEntries = Object.entries(totals.laneCounts || {})
+      .sort((left, right) => right[1] - left[1]);
+    const activeLabel = activeCategory === 'all' ? '전체' : activeCategory;
+
+    elements.atlasContainer.innerHTML = `
+      <div class="bg-white rounded-xl border border-gray-100 shadow overflow-hidden">
+        <div class="p-5 border-b border-gray-100">
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            ${renderAtlasMetric('JSON 파일', Formatters.formatNumber(totals.fileCount || 0, 0), '전체 소비 대상')}
+            ${renderAtlasMetric('카테고리', Formatters.formatNumber(totals.categoryCount || 0, 0), 'root 포함')}
+            ${renderAtlasMetric('디렉터리', Formatters.formatNumber(totals.directoryCount || 0, 0), '세부 소스 경로')}
+            ${renderAtlasMetric('히스토리', Formatters.formatNumber(totals.historicalCount || 0, 0), '시계열/분기/과거값')}
+            ${renderAtlasMetric('용량', escapeHtml(totals.totalSizeLabel || '0 B'), 'manifest 기준')}
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button onclick="DataLabUI.showAtlasCategory('all')" class="${atlasFilterClass(activeCategory === 'all')}">
+              전체
+            </button>
+            ${categories.map((category) => `
+              <button onclick="DataLabUI.showAtlasCategory('${escapeAttr(category.key)}')" class="${atlasFilterClass(activeCategory === category.key)}" title="${escapeAttr(category.description || '')}">
+                ${escapeHtml(category.key)}
+                <span class="ml-1 text-[10px] opacity-70">${Formatters.formatNumber(category.fileCount || 0, 0)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <div class="border-b xl:border-b-0 xl:border-r border-gray-100 p-5">
+            <h3 class="text-sm font-bold text-gray-700 mb-3">앱 소비 위치</h3>
+            <div class="space-y-2">
+              ${laneEntries.map(([lane, count]) => renderAtlasLane(lane, count, totals.fileCount || 0)).join('')}
+            </div>
+            <h3 class="text-sm font-bold text-gray-700 mt-6 mb-3">카테고리 요약</h3>
+            <div class="max-h-[520px] overflow-y-auto pr-1 space-y-2">
+              ${categories.map((category) => renderAtlasCategory(category, activeCategory)).join('')}
+            </div>
+          </div>
+
+          <div class="min-w-0 p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 class="text-sm font-bold text-gray-700">${escapeHtml(activeLabel)} 파일 목록</h3>
+                <p class="text-xs text-gray-500">
+                  ${Formatters.formatNumber(visibleFiles.length, 0)}개 표시 · 모든 항목은 public data 경로로 직접 소비 가능
+                </p>
+              </div>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">
+                manifest ${escapeHtml(atlas.manifestLastUpdated || '-')}
+              </span>
+            </div>
+            <div class="overflow-x-auto rounded-xl border border-gray-100">
+              <table class="min-w-full text-left text-xs">
+                <thead class="bg-gray-50 text-[11px] uppercase tracking-[0.08em] text-gray-500">
+                  <tr>
+                    <th class="px-3 py-2">path</th>
+                    <th class="px-3 py-2">lane</th>
+                    <th class="px-3 py-2">class</th>
+                    <th class="px-3 py-2">history</th>
+                    <th class="px-3 py-2 text-right">size</th>
+                    <th class="px-3 py-2">updated</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  ${visibleFiles.map(renderAtlasFileRow).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAtlasMetric(label, value, detail) {
+    return `
+      <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+        <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500">${escapeHtml(label)}</div>
+        <div class="mt-1 text-2xl font-black text-gray-900">${value}</div>
+        <div class="mt-1 text-[11px] text-gray-500">${escapeHtml(detail)}</div>
+      </div>
+    `;
+  }
+
+  function renderAtlasLane(lane, count, total) {
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    return `
+      <div>
+        <div class="flex items-center justify-between gap-3 text-xs">
+          <span class="font-semibold text-gray-700">${escapeHtml(laneLabel(lane))}</span>
+          <span class="text-gray-500">${Formatters.formatNumber(count, 0)} · ${pct}%</span>
+        </div>
+        <div class="mt-1 h-2 overflow-hidden rounded-full bg-gray-100">
+          <div class="h-full rounded-full bg-indigo-500" style="width:${pct}%"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAtlasCategory(category, activeCategory) {
+    const isActive = activeCategory === category.key;
+    const historicalPct = category.fileCount > 0
+      ? Math.round((category.historicalCount / category.fileCount) * 100)
+      : 0;
+
+    return `
+      <button onclick="DataLabUI.showAtlasCategory('${escapeAttr(category.key)}')" class="w-full rounded-xl border p-3 text-left transition ${isActive ? 'border-indigo-300 bg-indigo-50' : 'border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/40'}">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-bold text-gray-800 truncate">${escapeHtml(category.key)}</div>
+            <div class="mt-1 text-[11px] text-gray-500 line-clamp-2">${escapeHtml(category.description || category.source || '')}</div>
+          </div>
+          <span class="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">${Formatters.formatNumber(category.fileCount || 0, 0)}</span>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-[11px] text-gray-500">
+          <span>hist ${Formatters.formatNumber(category.historicalCount || 0, 0)}</span>
+          <span>${historicalPct}%</span>
+          <span class="truncate text-right">${escapeHtml(category.totalSizeLabel || '0 B')}</span>
+        </div>
+      </button>
+    `;
+  }
+
+  function renderAtlasFileRow(file) {
+    return `
+      <tr class="align-top hover:bg-gray-50">
+        <td class="px-3 py-2 font-mono text-[11px] text-gray-700 break-all">${escapeHtml(file.path)}</td>
+        <td class="px-3 py-2">
+          <span class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">${escapeHtml(laneLabel(file.consumerLane))}</span>
+        </td>
+        <td class="px-3 py-2 text-gray-600">${escapeHtml(file.contentClass || '-')}</td>
+        <td class="px-3 py-2">
+          <span class="rounded-full px-2 py-1 text-[10px] font-bold ${file.historical ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+            ${file.historical ? 'yes' : 'no'}
+          </span>
+        </td>
+        <td class="px-3 py-2 text-right text-gray-600">${escapeHtml(file.sizeLabel || '0 B')}</td>
+        <td class="px-3 py-2 text-gray-500 whitespace-nowrap">${escapeHtml((file.updatedAt || '').slice(0, 10))}</td>
+      </tr>
+    `;
+  }
+
+  function atlasFilterClass(active) {
+    return active
+      ? 'rounded-full border border-indigo-300 bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white'
+      : 'rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:border-indigo-300 hover:text-indigo-700';
+  }
+
+  function laneLabel(lane) {
+    return {
+      admin: 'Admin',
+      explore: 'Explore',
+      market: 'Market',
+      screener: 'Screener',
+      stock: 'Stock',
+      superinvestors: 'Guru'
+    }[lane] || lane || '-';
+  }
+
+  /**
    * Render Ops loading state
    */
   function renderOpsLoading() {
@@ -358,12 +561,19 @@ const Renderer = (function() {
       .replace(/'/g, '&#039;');
   }
 
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(/`/g, '&#096;');
+  }
+
   return {
     init,
     renderSummary,
     renderCards,
     renderLoading,
     renderError,
+    renderAtlasLoading,
+    renderAtlasUnavailable,
+    renderDataAtlas,
     renderOpsLoading,
     renderOpsResults,
     renderOpsUnavailable,

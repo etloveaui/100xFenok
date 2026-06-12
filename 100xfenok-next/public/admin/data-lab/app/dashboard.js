@@ -9,6 +9,8 @@
  */
 
 const DataLabUI = (function() {
+  let atlasPayload = null;
+  let atlasCategory = 'all';
 
   /**
    * Initialize the dashboard
@@ -20,6 +22,7 @@ const DataLabUI = (function() {
     // Initialize renderer with DOM references
     Renderer.init({
       summaryContainer: document.getElementById('summary-container'),
+      atlasContainer: document.getElementById('atlas-container'),
       opsContainer: document.getElementById('ops-container'),
       cardsContainer: document.getElementById('cards-container'),
       detailsPanel: document.getElementById('details-panel'),
@@ -28,6 +31,7 @@ const DataLabUI = (function() {
 
     // Show loading state
     Renderer.renderLoading();
+    Renderer.renderAtlasLoading();
     Renderer.renderOpsLoading();
 
     // Subscribe to state changes
@@ -36,6 +40,7 @@ const DataLabUI = (function() {
     // Load data
     try {
       await loadAllData();
+      await loadDataAtlas();
       runOpsChecks();
       const loadTime = Math.round(performance.now() - startTime);
       StateManager.set('loadTime', loadTime);
@@ -130,6 +135,25 @@ const DataLabUI = (function() {
   }
 
   /**
+   * Load every public/data JSON file into the Data Atlas index.
+   */
+  async function loadDataAtlas() {
+    try {
+      const response = await fetch('/api/data/atlas', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`DATA_ATLAS_HTTP_${response.status}`);
+      }
+
+      atlasPayload = await response.json();
+      atlasCategory = 'all';
+      Renderer.renderDataAtlas(atlasPayload, atlasCategory);
+    } catch (error) {
+      console.error('[DataLab] Data Atlas failed:', error);
+      Renderer.renderAtlasUnavailable(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /**
    * Refresh data
    */
   async function refresh() {
@@ -171,6 +195,17 @@ const DataLabUI = (function() {
   }
 
   /**
+   * Filter Data Atlas by category.
+   * @param {string} category
+   */
+  function showAtlasCategory(category) {
+    atlasCategory = category || 'all';
+    if (atlasPayload) {
+      Renderer.renderDataAtlas(atlasPayload, atlasCategory);
+    }
+  }
+
+  /**
    * Close folder details
    */
   function closeDetails() {
@@ -189,6 +224,12 @@ const DataLabUI = (function() {
       loadTime: state.loadTime,
       lastUpdated: state.lastUpdated,
       health: state.health,
+      atlas: atlasPayload ? {
+        fileCount: atlasPayload.totals?.fileCount,
+        categoryCount: atlasPayload.totals?.categoryCount,
+        directoryCount: atlasPayload.totals?.directoryCount,
+        activeCategory: atlasCategory
+      } : null,
       ops: window.OpsConsole?.getLastResults?.() || null,
       cache: {
         manifest: ManifestLoader.getCacheStats(),
@@ -213,6 +254,7 @@ const DataLabUI = (function() {
     init,
     refresh,
     showFolderDetails,
+    showAtlasCategory,
     closeDetails,
     getStats,
     runOpsChecks,
