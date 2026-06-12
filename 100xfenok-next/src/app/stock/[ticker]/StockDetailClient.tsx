@@ -245,9 +245,13 @@ function MiniBarChart({
   };
   const latestActual = [...bars].reverse().find((bar) => !bar.estimate && isFiniteNumber(bar.value));
   const nextEstimate = bars.find((bar) => bar.estimate && isFiniteNumber(bar.value));
+  const axisLabel = `범위 ${formatValue(minVal)}~${formatValue(maxVal)} · 0선 ${formatValue(0)}`;
 
   return (
     <div className="space-y-1">
+      <div className="truncate text-[8px] font-bold tabular-nums text-slate-400" title={axisLabel}>
+        {axisLabel}
+      </div>
       <div className="relative flex gap-[2px]" style={{ height: 72 }}>
         <span
           className="pointer-events-none absolute left-0 right-0 border-t border-slate-300/80"
@@ -278,6 +282,13 @@ function MiniBarChart({
         {bars.map((bar) => (
           <span key={bar.key} className={`flex-1 text-center ${bar.estimate ? "text-slate-400" : ""}`}>
             {bar.label}
+          </span>
+        ))}
+      </div>
+      <div className="flex text-[8px] font-black tabular-nums text-slate-500">
+        {bars.map((bar) => (
+          <span key={`${bar.key}-value`} className={`min-w-0 flex-1 truncate text-center ${bar.estimate ? "text-slate-400" : ""}`}>
+            {isFiniteNumber(bar.value) ? formatValue(bar.value) : "—"}
           </span>
         ))}
       </div>

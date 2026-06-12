@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
@@ -198,44 +198,48 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
   const isClampedLow = pct <= 0;
 
   return (
-    <div className="inline-flex items-center gap-1.5" title={title}>
-      <div className="relative h-2 w-20 rounded-full overflow-hidden">
-        {/* 3-zone shading */}
-        <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${BAND_CHEAP * 100}%` }} />
-        <div className="absolute inset-y-0 bg-slate-100" style={{ left: `${BAND_CHEAP * 100}%`, width: `${(BAND_RICH - BAND_CHEAP) * 100}%` }} />
-        <div className="absolute inset-y-0 right-0 bg-rose-100" style={{ width: `${(1 - BAND_RICH) * 100}%` }} />
+    <div className="inline-flex min-w-[176px] flex-col items-start gap-1" title={title} role="img" aria-label={title}>
+      <div className="flex max-w-full items-center gap-1.5">
+        <div className="relative h-2 w-20 shrink-0 overflow-hidden rounded-full">
+          {/* 3-zone shading */}
+          <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${BAND_CHEAP * 100}%` }} />
+          <div className="absolute inset-y-0 bg-slate-100" style={{ left: `${BAND_CHEAP * 100}%`, width: `${(BAND_RICH - BAND_CHEAP) * 100}%` }} />
+          <div className="absolute inset-y-0 right-0 bg-rose-100" style={{ width: `${(1 - BAND_RICH) * 100}%` }} />
 
-        {/* avg line */}
-        {avgPct !== null && (
-          <div className="absolute top-0 h-full w-[1.5px] bg-slate-500" style={{ left: `${avgPct * 100}%` }} />
-        )}
+          {/* avg line */}
+          {avgPct !== null && (
+            <div className="absolute top-0 h-full w-[1.5px] bg-slate-500" style={{ left: `${avgPct * 100}%` }} />
+          )}
 
-        {/* edge marker or dot */}
-        {isClampedHigh ? (
-          <div
-            className="absolute top-1/2 border-y-4 border-l-[6px] border-y-transparent border-l-rose-500"
-            style={{ right: 0, transform: "translateY(-50%)" }}
-          />
-        ) : isClampedLow ? (
-          <div
-            className="absolute top-1/2 border-y-4 border-r-[6px] border-y-transparent border-r-emerald-500"
-            style={{ left: 0, transform: "translateY(-50%)" }}
-          />
-        ) : (
-          <div
-            className={cx("absolute top-1/2 h-2.5 w-2.5 rounded-full border-2 border-white", dotClass)}
-            style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)" }}
-          />
-        )}
+          {/* edge marker or dot */}
+          {isClampedHigh ? (
+            <div
+              className="absolute top-1/2 border-y-4 border-l-[6px] border-y-transparent border-l-rose-500"
+              style={{ right: 0, transform: "translateY(-50%)" }}
+            />
+          ) : isClampedLow ? (
+            <div
+              className="absolute top-1/2 border-y-4 border-r-[6px] border-y-transparent border-r-emerald-500"
+              style={{ left: 0, transform: "translateY(-50%)" }}
+            />
+          ) : (
+            <div
+              className={cx("absolute top-1/2 h-2.5 w-2.5 rounded-full border-2 border-white", dotClass)}
+              style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)" }}
+            />
+          )}
+        </div>
+
+        <span className="orbitron shrink-0 tabular-nums text-[9px] font-black text-slate-600">
+          현재 {safeCurrent.toFixed(1)}x
+        </span>
+
+        <span className={cx("orbitron shrink-0 tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
+          {label} {Math.round(pct * 100)}%
+        </span>
       </div>
-
-      {/* band width hint */}
-      <span className="text-[8px] text-slate-400">
-        ({(safeMax - safeMin).toFixed(0)})
-      </span>
-
-      <span className={cx("orbitron tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
-        {label} {Math.round(pct * 100)}%
+      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-slate-400">
+        평균 {safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y {safeMin.toFixed(1)}~{safeMax.toFixed(1)}
       </span>
     </div>
   );
@@ -673,10 +677,12 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((stock) => (
-                <>
+              {pageRows.map((stock) => {
+                const expanded = expandedTicker === stock.ticker;
+                const detailId = `screener-detail-${stock.ticker}`;
+                return (
+                <Fragment key={stock.ticker}>
                   <tr
-                    key={stock.ticker}
                     onClick={() =>
                       setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
                     }
@@ -687,19 +693,35 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                         key={column.key}
                         className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
                       >
-                        {renderCell(stock, column.key)}
+                        {column.key === "ticker" ? (
+                          <button
+                            type="button"
+                            aria-expanded={expanded}
+                            aria-controls={detailId}
+                            aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
+                            }}
+                            className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-slate-950 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                          >
+                            <span className="w-3 text-center text-[10px] text-slate-400" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                            <span className="truncate">{stock.ticker}</span>
+                          </button>
+                        ) : renderCell(stock, column.key)}
                       </td>
                     ))}
                   </tr>
-                  {expandedTicker === stock.ticker ? (
-                    <tr key={`${stock.ticker}-detail`}>
+                  {expanded ? (
+                    <tr id={detailId}>
                       <td colSpan={activeColumns.length} className="p-0">
                         <StockDetailPanel ticker={stock.ticker} />
                       </td>
                     </tr>
                   ) : null}
-                </>
-              ))}
+                </Fragment>
+                );
+              })}
               {dataReady && pageRows.length === 0 ? (
                 <tr>
                   <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-slate-500">

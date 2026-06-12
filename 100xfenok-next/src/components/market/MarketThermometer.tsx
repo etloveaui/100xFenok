@@ -107,10 +107,14 @@ export function verdict(row: MomentumRow): Verdict {
 }
 
 function DTrack({ value, cap, kind }: { value: number | null; cap: number; kind: "eps" | "per" }) {
-  if (value === null) return <div className="db-track" />;
+  const name = kind === "eps" ? "이익" : "멀티플";
+  const capText = `${(cap * 100).toFixed(0)}%`;
+  if (value === null) return <div className="db-track" role="img" aria-label={`${name} 기여 데이터 부족 · 표시 범위 ±${capText}`} />;
   const w = Math.max((Math.min(Math.abs(value), cap) / cap) * 50, 3);
+  const capped = Math.abs(value) > cap;
+  const label = `${name} 기여 ${fmtPct(value)}${capped ? " · 표시 한도 초과" : ""} · 표시 범위 -${capText}~+${capText}`;
   return (
-    <div className="db-track">
+    <div className="db-track" role="img" aria-label={label} title={label}>
       <span className="db-zero" />
       <i
         className={`db-bar ${kind}`}
@@ -171,7 +175,7 @@ export default function MarketThermometer() {
         <span className="desc">이익 × 멀티플 분해</span>
         <div className="seg" style={{ marginLeft: "auto" }}>
           {PERIODS.map((p) => (
-            <button key={p.id} type="button" onClick={() => setPeriod(p.id)} className={period === p.id ? "on" : ""}>
+            <button key={p.id} type="button" onClick={() => setPeriod(p.id)} className={period === p.id ? "on" : ""} aria-pressed={period === p.id}>
               {p.label}
             </button>
           ))}
@@ -205,7 +209,7 @@ export default function MarketThermometer() {
       })}
       <div className="panel-foot">
         Bloomberg 주간 집계 기준 · {activePeriodLabel}
-        {activeYear ? ` ${activeYear}` : ""} · 막대 중앙선 오른쪽 = 플러스 기여
+        {activeYear ? ` ${activeYear}` : ""} · 막대 중앙선 오른쪽 = 플러스 기여 · 이익 ±100%, 멀티플 ±22% 표시
       </div>
     </section>
   );

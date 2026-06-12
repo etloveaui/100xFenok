@@ -92,7 +92,7 @@ export default function YardeniCard() {
     const currentX = scaleX(currentIdx);
     const currentY = scaleY(vals[currentIdx]);
 
-    return { pts: pts.join(" "), zeroY, currentX, currentY, minV, maxV };
+    return { pts: pts.join(" "), zeroY, currentX, currentY, minV, maxV, currentValue: vals[currentIdx] };
   }, [doc]);
 
   const pctRank = useMemo(() => {
@@ -146,7 +146,8 @@ export default function YardeniCard() {
             viewBox={`0 0 ${W} ${H}`}
             className="w-full"
             preserveAspectRatio="none"
-            aria-label="프리미엄 퍼센트 역사적 추이"
+            role="img"
+            aria-label={`프리미엄 퍼센트 역사적 추이 · 현재 ${sparkline.currentValue.toFixed(1)}% · 범위 ${sparkline.minV.toFixed(1)}%~${sparkline.maxV.toFixed(1)}% · 기준일 ${latest.date}`}
           >
             <line
               x1={PAD}
@@ -178,6 +179,10 @@ export default function YardeniCard() {
             <span>0%</span>
             <span>{sparkline.maxV.toFixed(0)}%</span>
           </div>
+          <div className="mt-1 flex justify-between gap-2 text-[10px] font-black tabular-nums text-slate-500">
+            <span>현재 {sparkline.currentValue.toFixed(1)}%</span>
+            <span className="truncate text-slate-400">기준 {latest.date}</span>
+          </div>
         </div>
       ) : null}
 
@@ -188,7 +193,7 @@ export default function YardeniCard() {
       ) : null}
 
       <p className="mt-3 text-[9px] font-semibold text-slate-400">
-        Moody&apos;s AAA·BAA 스프레드 기반 · 주간 · 참고용
+        Moody&apos;s AAA·BAA 스프레드 기반 · 주간 · 참고용 · {latest.date}
       </p>
     </div>
   );
