@@ -6,9 +6,9 @@ name: Fetch FDIC Tier1 Data
 
 on:
   schedule:
-    # 분기 첫째 주 월요일 06:00 UTC (한국 15:00)
-    # 1월, 4월, 7월, 10월
-    - cron: '0 6 1-7 1,4,7,10 1'
+    # 월 첫째 주 월요일 06:00 UTC (한국 15:00)
+    # FDIC 분기 데이터는 지연 공개되므로 월간 보정으로 stale window를 줄인다.
+    - cron: '0 6 1-7 * 1'
   workflow_dispatch:  # 수동 실행 버튼
 
 jobs:
@@ -44,13 +44,14 @@ jobs:
             const quarters = [];
             const now = new Date();
             const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
+            const cutoff = new Date(now);
+            cutoff.setDate(cutoff.getDate() - 45);
 
             for (let year = 2009; year <= currentYear; year++) {
               for (let q = 0; q < 4; q++) {
                 const qMonth = q * 3 + 2; // 2, 5, 8, 11 (0-indexed)
-                // 현재 연도면 2개월 지연 고려
-                if (year < currentYear || (year === currentYear && qMonth <= currentMonth - 2)) {
+                const quarterEnd = new Date(Date.UTC(year, qMonth + 1, 0));
+                if (quarterEnd <= cutoff) {
                   quarters.push(`${year}${quarterEnds[q]}`);
                 }
               }
@@ -121,6 +122,8 @@ jobs:
 
             fs.mkdirSync('data/macro', { recursive: true });
             fs.writeFileSync('data/macro/fdic-tier1.json', JSON.stringify(output, null, 2));
+            fs.mkdirSync('100xfenok-next/public/data/macro', { recursive: true });
+            fs.writeFileSync('100xfenok-next/public/data/macro/fdic-tier1.json', JSON.stringify(output, null, 2));
             console.log(`\nSaved ${results.length} quarters to data/macro/fdic-tier1.json`);
           }
 
@@ -138,6 +141,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/macro/fdic-tier1.json
+          git add data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json
           git diff --staged --quiet || git commit -m "chore: update FDIC Tier1 data"
           git push

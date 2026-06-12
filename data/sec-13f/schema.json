@@ -1,7 +1,7 @@
 {
   "folder": "sec-13f",
   "version": "3.4.0",
-  "updated": "2026-05-18",
+  "updated": "2026-06-13",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
   "maintainer": "SEC 13F Converter v3.4.0 (accumulate mode, full backfill default)",
@@ -10,7 +10,7 @@
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
     "investors/": "30 individual investor files",
-    "analytics/": "Derived metrics (10 files)"
+    "analytics/": "Derived metrics (11 files)"
   },
   "files": {
     "summary.json": {
@@ -73,15 +73,21 @@
       }
     },
     "by_ticker.json": {
-      "description": "All holdings by ticker",
+      "description": "Current-quarter holdings grouped by normalized ticker",
       "size_kb": 401,
       "schema": {
         "{TICKER}": {
-          "name": "string",
-          "investors": "string[]",
-          "holder_count": "number",
-          "total_value": "number",
-          "avg_weight": "number (0-1)"
+          "holders": "string[] (deduplicated investor IDs)",
+          "total_shares": "number",
+          "total_market_value": "number",
+          "holder_details[]": {
+            "investor": "string",
+            "shares": "number",
+            "market_value": "number",
+            "weight": "number (0-1)",
+            "classes_held": "string[]",
+            "position_types": "string[]"
+          }
         }
       }
     },
@@ -187,12 +193,23 @@
       }
     },
     "analytics/consensus.json": {
-      "description": "Consensus score across all investors per ticker",
+      "description": "Current-quarter consensus score across non-stale investors per normalized ticker",
       "schema": {
-        "{TICKER}": {
-          "holder_count": "number",
-          "total_value": "number",
-          "consensus_score": "number"
+        "metadata": {
+          "total_investors": "number",
+          "tickers_count": "number",
+          "quarter": "YYYY-QN",
+          "current_cohort_investors": "number",
+          "excluded_stale_investors": "string[]",
+          "normalized": "boolean",
+          "alias_count": "number",
+          "unmapped_count": "number"
+        },
+        "consensus.{TICKER}": {
+          "ticker": "string",
+          "score": "number",
+          "holders_count": "number",
+          "holders_list": "string[]"
         }
       }
     },
@@ -284,6 +301,26 @@
         "metadata": {"investors_count": "number", "max_quarters_analyzed": "number"},
         "by_investor.{id}.quarterly_snapshots[]": {"quarter": "string", "aum": "number", "holdings_count": "number", "top_10_weight": "number"},
         "by_investor.{id}.streaks[]": {"ticker": "string", "direction": "buy|sell", "streak_quarters": "number", "start_quarter": "string", "end_quarter": "string"}
+      }
+    },
+    "analytics/ticker_aliases.json": {
+      "description": "Raw 13F company-name key normalization diagnostics for by_ticker and consensus rebuilds",
+      "schema": {
+        "schema_version": "sec-13f-ticker-aliases/v1",
+        "quarter": "YYYY-QN",
+        "source_rows": "number",
+        "mapped_rows": "number",
+        "unmapped_rows": "number",
+        "aliases": "object<string, string>",
+        "unmapped[]": {
+          "raw_key": "string",
+          "normalized_key": "string",
+          "rows": "number",
+          "market_value": "number",
+          "example_investor": "string",
+          "examples": "string[]",
+          "cusips": "string[]"
+        }
       }
     }
   },

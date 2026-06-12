@@ -30,6 +30,7 @@ INDEX_FILES = {
     "dowjones": "dowjones.json",
 }
 CRITICAL_MIRROR_FILES = (
+    "currency.json",
     "membership-changes.json",
     "universe.json",
     "stocks-returns.json",
@@ -37,6 +38,7 @@ CRITICAL_MIRROR_FILES = (
     "stocks-dividends-recent.json",
     "stocks-dividends-historical.json",
 )
+MOJIBAKE_MARKERS = ("Â", "Ã", "å", "ä", "ç")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -113,8 +115,34 @@ def assert_stock_files(data_dir: Path, symbols: list[str]) -> list[str]:
     missing = [symbol for symbol in symbols if not (stocks_dir / f"{symbol}.json").exists()]
     if missing:
         raise RuntimeError("Missing stock detail files: " + ", ".join(missing))
+    empty_metric_rows: list[str] = []
+    for symbol in symbols:
+        payload = load_json(stocks_dir / f"{symbol}.json")
+        for row in payload.get("metrics_history", []) or []:
+            if isinstance(row, dict) and row.get("date") and len(row.keys()) == 1:
+                empty_metric_rows.append(f"{symbol}:{row.get('date')}")
+                break
+    if empty_metric_rows:
+        raise RuntimeError("Date-only metrics_history rows: " + ", ".join(empty_metric_rows[:20]))
     all_files = sorted(path.stem.upper() for path in stocks_dir.glob("*.json"))
     return sorted(set(all_files) - set(symbols))
+
+
+def assert_currency(data_dir: Path) -> None:
+    payload = load_json(data_dir / "currency.json")
+    history = payload.get("history")
+    if not isinstance(history, list) or not history:
+        raise RuntimeError("currency.json history is empty")
+    latest = history[0]
+    if (latest.get("totalMarketCap") or 0) <= 0:
+        raise RuntimeError("currency.json latest totalMarketCap is not positive")
+    bad_names = [
+        currency.get("name", "")
+        for currency in latest.get("currencies", []) or []
+        if any(marker in str(currency.get("name", "")) for marker in MOJIBAKE_MARKERS)
+    ]
+    if bad_names:
+        raise RuntimeError("currency.json mojibake names: " + ", ".join(map(str, bad_names[:10])))
 
 
 def assert_aggregate(data_dir: Path, filename: str, symbols: list[str], *, exact_symbols: bool = True) -> None:
@@ -181,6 +209,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     current = index_membership(args.data_dir)
+    assert_currency(args.data_dir)
     symbols = assert_universe(args.data_dir, current)
     assert_membership_history(args.data_dir, current)
     extras = assert_stock_files(args.data_dir, symbols)

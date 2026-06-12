@@ -19,6 +19,7 @@ Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -26,10 +27,20 @@ from pathlib import Path
 import yfinance as yf
 
 ROOT = Path(__file__).resolve().parent.parent
-UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
+STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
+ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
+DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
+PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 
 SCHEMA_VERSION = "yf-finance/v1"
+SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
+MAJOR_ETFS = {
+    "SPY", "QQQ", "DIA", "IWM", "VOO", "VTI",
+    "TLT", "IEF", "SHY", "GLD", "SLV", "VNQ",
+    "SMH", "SOXX",
+}
+NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 
 ANNUAL_PERIODS = 4
 QUARTERLY_PERIODS = 5
@@ -209,8 +220,43 @@ def fetch_with_retry(ticker, retries=2, backoffs=(5, 20)):
     return None, 0, last_err
 
 
-def load_universe():
-    return sorted(p.stem for p in UNIVERSE_DIR.glob("*.json"))
+def load_scouter_etfs():
+    try:
+        payload = json.loads(ETF_INDEX.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+    symbols = set()
+    for symbol in (payload.get("etfs") or {}).keys():
+        clean = str(symbol).strip().upper()
+        if clean not in NON_YAHOO_ETF_LABELS and SYMBOL_RE.match(clean):
+            symbols.add(clean)
+    return symbols
+
+
+def load_dashboard_etfs():
+    try:
+        text = DASHBOARD_CONSTANTS.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return set()
+    return {m.group(1).upper() for m in re.finditer(r"etf:\s*'([^']+)'", text)}
+
+
+def load_portfolio_symbols():
+    try:
+        text = PORTFOLIO_TS.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return set()
+    return {m.group(1).upper() for m in re.finditer(r"ticker:\s*\"([^\"]+)\"", text)}
+
+
+def load_universe(stocks_only=False):
+    tickers = {p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}
+    if not stocks_only:
+        tickers |= load_scouter_etfs()
+        tickers |= load_dashboard_etfs()
+        tickers |= load_portfolio_symbols()
+        tickers |= MAJOR_ETFS
+    return sorted(t for t in tickers if SYMBOL_RE.match(t))
 
 
 def main():
@@ -218,13 +264,14 @@ def main():
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
+    parser.add_argument("--stocks-only", action="store_true", help="legacy mode: global-scouter stock detail only")
     parser.add_argument("--sleep", type=float, default=0.8)
     args = parser.parse_args()
 
     if args.tickers:
         tickers = [s.strip() for s in args.tickers.split(",") if s.strip()]
     else:
-        tickers = load_universe()
+        tickers = load_universe(stocks_only=args.stocks_only)
         if args.shard:
             i, n = (int(x) for x in args.shard.split("/"))
             tickers = tickers[i::n]

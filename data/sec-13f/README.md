@@ -2,7 +2,7 @@
 
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
-> **Files**: 43 (30 investors + 3 index + 10 analytics)
+> **Files**: 47 (30 investors + 3 index + 11 analytics + public mirror)
 > **Version**: 3.4.0
 
 ---
@@ -10,6 +10,8 @@
 ## Overview
 
 Institutional holdings data from SEC 13F filings. Tracks 30 major investors' portfolio positions across 29 quarters through 2026-Q1 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
+
+Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
 ## Structure
 
@@ -33,7 +35,8 @@ sec-13f/
     ├── options_hedge.json # Options hedge ratio
     ├── enhanced_consensus.json # Weighted consensus
     ├── conviction_entries.json # Conviction + new position cross-reference
-    └── multi_quarter_trends.json # Multi-quarter streaks + snapshots
+    ├── multi_quarter_trends.json # Multi-quarter streaks + snapshots
+    └── ticker_aliases.json # Raw company-name to ticker diagnostics
 ```
 
 ## Investors Tracked (30)
@@ -105,6 +108,56 @@ sec-13f/
 `holdings_count` is the public filtered `holdings[]` length. `reported_holdings_count` is the raw parsed information-table row count before the 0.1% public-output filter, and `filtered_out_count` is the difference.
 
 Stale investors are flagged in `summary.json` with `is_stale`, `latest_quarter`, `global_latest_quarter`, and `stale_quarters`. Current-quarter analytics exclude stale investors.
+
+### by_ticker.json
+
+```json
+{
+  "AAPL": {
+    "holders": ["buffett", "fisher"],
+    "total_shares": 300000000,
+    "total_market_value": 60000000000,
+    "holder_details": [
+      {
+        "investor": "buffett",
+        "shares": 300000000,
+        "market_value": 60000000000,
+        "weight": 0.22,
+        "classes_held": ["COM"],
+        "position_types": []
+      }
+    ]
+  }
+}
+```
+
+`holders` is deduplicated by investor. `holder_details` can include multiple title classes per investor, but the current-quarter holder count is investor-unique.
+
+### analytics/ticker_aliases.json
+
+```json
+{
+  "schema_version": "sec-13f-ticker-aliases/v1",
+  "quarter": "2026-Q1",
+  "source_rows": 2602,
+  "mapped_rows": 2435,
+  "unmapped_rows": 167,
+  "aliases": {
+    "APPLE INC": "AAPL"
+  },
+  "unmapped": [
+    {
+      "raw_key": "ISHARES SILVER TR",
+      "normalized_key": "ISHARES SILVER TR",
+      "rows": 2,
+      "market_value": 5187770760,
+      "example_investor": "griffin",
+      "examples": ["ISHARES SILVER TR"],
+      "cusips": ["46428Q109"]
+    }
+  ]
+}
+```
 
 ## Usage
 

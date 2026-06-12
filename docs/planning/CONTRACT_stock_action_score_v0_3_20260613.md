@@ -141,6 +141,10 @@ eligibleFamilyCount < 3 OR presentFamilyCount < 3
 
 - Eligible for US scope, or any row with guru/consensus/conviction evidence.
 - Conviction is a contribution, not an automatic `smart_money` bucket override.
+- If 13F total holders exceed equity-only holders, the first visible
+  `actionReasons` entry must preserve that distinction as
+  `13F 주식 N명 · 옵션/클래스 포함 M명`. This prevents option/class rows from
+  silently inflating the apparent equity-holder count.
 
 `sector_smart_money`
 
@@ -178,6 +182,19 @@ Only the income bucket gate changes from v0.3:
   `414/1066` rows (`38.8%`) to `257/1066` rows (`24.1%`).
 - No family weights, non-income thresholds, evidence guard, or scoring formula
   change in v0.3.1.
+
+## G4 Track D Addendum
+
+Track D does not change the scoring weights or bucket thresholds. It hardens the
+input integrity path:
+
+- SEC 13F `by_ticker.json` and `analytics/consensus.json` are rebuilt with
+  normalized ticker keys and investor-deduplicated holder counts.
+- Raw 13F company-name aliases and unresolved rows are recorded in
+  `data/sec-13f/analytics/ticker_aliases.json`.
+- When total 13F holders differ from equity-only holders, the difference is
+  pinned into the top four `actionReasons` so UI rows cannot hide the option or
+  class-share contribution.
 
 ## G2 Slim Summary Addendum
 

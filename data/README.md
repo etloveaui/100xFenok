@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-06-09
-> **Total Files**: 1,737 JSON files
+> **Last Updated**: 2026-06-13
+> **Total Files**: 2,844 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -12,15 +12,17 @@
 |--------|-------|------------------|--------|
 | [admin/](admin/README.md) | 1 | Hourly | GitHub repository tree |
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
-| [calendar/](calendar/README.md) | 1 | Daily / on edit | BujaBot USD Google Calendar |
-| [damodaran/](damodaran/README.md) | 6 | Yearly + ERP interim | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,080 | On-demand | Global Scouter Tool |
+| computed/ | 4 | Generated | Cross-source computed signals |
+| [calendar/](calendar/README.md) | 2 | Daily / on edit | BujaBot USD Google Calendar |
+| [damodaran/](damodaran/README.md) | 7 | Yearly + ERP interim | NYU Stern (Damodaran) |
+| [global-scouter/](global-scouter/README.md) | 1,084 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 9 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
-| [sec-13f/](sec-13f/README.md) | 43 | Quarterly | SEC EDGAR |
-| [sentiment/](sentiment/README.md) | 13 | Daily | AAII, Investors Intelligence |
-| [slickcharts/](slickcharts/README.md) | 556 | Daily/Weekly/Monthly | SlickCharts.com |
+| [sec-13f/](sec-13f/README.md) | 47 | Quarterly | SEC EDGAR |
+| [sentiment/](sentiment/README.md) | 13 | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
+| [slickcharts/](slickcharts/README.md) | 568 | Daily/Weekly/Monthly | SlickCharts.com |
 | [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
+| [yf/](yf/README.md) | 1,100 | Daily / on-demand | Yahoo Finance |
 
 ---
 
@@ -41,7 +43,7 @@
 ### Institutional Data (sec-13f/)
 - 30 tracked investors' 13F holdings, with 2026-Q1 included where filed (29Q accumulate mode; Einhorn last filed 2023-Q4 and is flagged `is_stale`)
 - v3.4.0 rebuild: per-filing value-unit normalization (thousands/dollars 1000x fix), 30/30 CIK→entity mappings audited and corrected, 13F-HR/A amendment merge
-- Analytics: 10 files (consensus, new_positions, buying_pressure, conviction, hhi, turnover, options_hedge, enhanced_consensus, conviction_entries, multi_quarter_trends)
+- Analytics: 11 files, including normalized `consensus`, `by_ticker`, and `ticker_aliases` diagnostics
 - Enrichment metadata: sector/cap/filing-return coverage + source mix
 - Quarterly updates
 
@@ -56,8 +58,8 @@
 - Google Calendar remains the operational alert source; JSON mirror is for feno-data and public reads
 
 ### Sentiment Data (sentiment/)
-- AAII sentiment, Investors Intelligence
-- 12+ indicators
+- AAII, CNN Fear & Greed, CFTC S&P 500 futures positioning, VIX/MOVE, crypto fear & greed
+- 13 indicators
 
 ### Stock Screening (global-scouter/)
 - 1,066 stock profiles + ETFs (23) + Economic Indicators (1,062 records) + raw preservation files (9)
@@ -65,6 +67,11 @@
 - v2.2.0: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
 - On-demand updates
+
+### Yahoo Finance (yf/)
+- 1,098 finance payloads plus `_summary.json` and `quarter_closes.json`
+- Universe includes stock detail symbols, scouter ETFs, sector/major ETFs, and portfolio symbols
+- `_summary.json` is rebuilt from local files so stale fetch failures do not hide available data
 
 ---
 

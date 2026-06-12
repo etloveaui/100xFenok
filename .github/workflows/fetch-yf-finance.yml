@@ -49,6 +49,9 @@ jobs:
           if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
           python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
 
+      - name: Rebuild local coverage summary
+        run: python3 scripts/rebuild-yf-finance-summary.py
+
       - name: Build quarter-end close snapshot
         run: python3 scripts/build-quarter-closes.py
 

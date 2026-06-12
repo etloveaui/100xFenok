@@ -3,7 +3,7 @@
 > **Source**: [SlickCharts](https://www.slickcharts.com/)
 > **Pipeline**: `.github/workflows/slickcharts-*.yml` (5 workflows)
 > **Scrapers**: `scripts/scrapers/` (36 files)
-> **Last Updated**: 2026-06-08
+> **Last Updated**: 2026-06-13
 
 ---
 
@@ -21,9 +21,14 @@
 | Crypto | 3 | Daily/Monthly |
 | Portfolios | 2 | Weekly |
 | Individual Stocks | 516 active universe | Monthly |
-| **Total** | **567 JSON files** | - |
+| **Total** | **568 JSON files** | - |
 
 > Integrity note: `universe.json`, `membership-changes.json`, and stock history aggregates are current-universe files. A small number of retained `stocks/{SYMBOL}.json` files may remain for former index members, but they are not referenced by the active universe or aggregate files.
+
+Additional integrity guards:
+
+- `currency.json` crypto names are UTF-8 normalized and `totalMarketCap` must be positive.
+- `stocks/{SYMBOL}.json` `metrics_history` rows must include at least one metric beyond `date`; date-only placeholder rows are skipped by the aggregator.
 
 ---
 

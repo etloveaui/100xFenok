@@ -1,7 +1,7 @@
 {
   "folder": "slickcharts",
   "version": "2.1.0",
-  "updated": "2026-01-20",
+  "updated": "2026-06-13",
   "source": "SlickCharts.com (32 scrapers)",
   "update_frequency": "daily/weekly/monthly",
   "maintainer": "GitHub Actions automation",
@@ -96,7 +96,11 @@
     "crypto": {
       "update": "daily/monthly",
       "files": {
-        "currency.json": {"description": "Top 100 cryptos", "update": "daily"},
+        "currency.json": {
+          "description": "Top 100 cryptos",
+          "update": "daily",
+          "integrity": "currency names are UTF-8 normalized; latest totalMarketCap must be positive"
+        },
         "btc-returns.json": {"description": "Bitcoin annual returns", "years": 13},
         "eth-returns.json": {"description": "Ethereum annual returns", "years": 10}
       }
@@ -133,7 +137,8 @@
           "date": "YYYY-MM-DD",
           "price": "number",
           "pe": "number",
-          "eps": "number"
+          "eps": "number",
+          "integrity": "date-only rows are skipped"
         },
         "returns[]": {
           "year": "number",

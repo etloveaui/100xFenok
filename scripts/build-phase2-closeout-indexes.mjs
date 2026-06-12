@@ -643,7 +643,13 @@ function smartMoneyFamily(context) {
   const reasons = [];
   if (finite(guru)) {
     score += Math.min(10, guru);
-    if (guru >= 5) reasons.push(`구루 ${guru}명`);
+    const equityHolders = num(consensus?.equity_holders ?? consensus?.equityHolders);
+    const totalHolders = num(consensus?.total_holders ?? consensus?.totalHolders);
+    if (finite(equityHolders) && finite(totalHolders) && totalHolders > equityHolders) {
+      reasons.push(`13F 주식 ${equityHolders}명 · 옵션/클래스 포함 ${totalHolders}명`);
+    } else if (guru >= 5) {
+      reasons.push(`구루 ${guru}명`);
+    }
   }
   if (finite(consensus?.equity_score)) {
     score += consensus.equity_score * 8;
@@ -755,10 +761,16 @@ function actionFrom(stock, context) {
   const families = Object.fromEntries(familyList.map((family) => [family.key, family]));
   const summary = summarizeActionFamilies(families);
   const selected = selectActionBucket(families, summary);
-  const reasons = familyList
+  let reasons = familyList
     .filter((family) => family.present && family.reason)
     .sort((a, b) => b.score / b.max - a.score / a.max)
     .map((family) => family.reason);
+  const equityHolders = num(context.consensus?.equity_holders ?? context.consensus?.equityHolders);
+  const totalHolders = num(context.consensus?.total_holders ?? context.consensus?.totalHolders);
+  if (finite(equityHolders) && finite(totalHolders) && totalHolders > equityHolders) {
+    const smartReason = `13F 주식 ${equityHolders}명 · 옵션/클래스 포함 ${totalHolders}명`;
+    reasons = [smartReason, ...reasons.filter((reason) => reason !== smartReason)];
+  }
   if (summary.lowEvidence) reasons.push("증거 부족");
 
   return {

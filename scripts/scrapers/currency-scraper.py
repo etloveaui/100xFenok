@@ -32,6 +32,21 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "data" / "slickcharts" / "currency.json"
 
 
+def clean_label(value: str) -> str:
+    """Remove mojibake/non-breaking-space artifacts from SlickCharts labels."""
+    if any(marker in value for marker in ("Â", "Ã", "å", "ä", "ç")):
+        try:
+            value = value.encode("latin-1").decode("utf-8")
+        except UnicodeError:
+            pass
+    return (
+        value.replace("\u00a0", " ")
+        .replace("Â", " ")
+        .replace("Ã", " ")
+        .strip()
+    )
+
+
 def parse_currency(html: str) -> Dict[str, object]:
     """Parse currency table and total market cap from the SlickCharts HTML."""
     soup = BeautifulSoup(html, "html.parser")
@@ -75,11 +90,11 @@ def parse_currency(html: str) -> Dict[str, object]:
             # Some might not have parens? Assuming format is Name (Symbol)
             match = re.match(r'^(.*?)\s*\((.*?)\)$', name_cell_text)
             if match:
-                name = match.group(1).strip()
+                name = clean_label(match.group(1))
                 symbol = match.group(2).strip()
             else:
                 # Fallback if parsing fails
-                name = name_cell_text
+                name = clean_label(name_cell_text)
                 symbol = ""
             
             # Column 2: Market Cap
@@ -109,6 +124,9 @@ def parse_currency(html: str) -> Dict[str, object]:
             }
         )
     
+    if total_market_cap <= 0:
+        total_market_cap = sum(float(row["marketCap"]) for row in currencies)
+
     return {
         "totalMarketCap": total_market_cap,
         "currencies": currencies

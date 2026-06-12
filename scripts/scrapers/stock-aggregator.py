@@ -199,6 +199,9 @@ def merge_metrics_history(
         if field in new_metrics:
             new_entry[field] = new_metrics[field]
 
+    if len(new_entry) == 1:
+        return prune_metrics_history(existing_history, retention_days)
+
     # Check if today's entry already exists
     existing_dates = {e.get("date") for e in existing_history}
 

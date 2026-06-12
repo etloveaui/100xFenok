@@ -37,6 +37,20 @@ Market sentiment indicators from various sources for the 100x Market Radar.
 |------|-------------|--------|
 | `cftc-sp500.json` | S&P 500 futures positioning | Weekly |
 
+Schema:
+
+```json
+[
+  {
+    "date": "2026-06-03",
+    "long": 123456,
+    "short": 234567,
+    "net": -111111,
+    "openInterest": 987654
+  }
+]
+```
+
 ### Other
 
 | File | Description | Update |
