@@ -3,11 +3,13 @@ import {
   normalizeCoachConfig,
   type CoachConfig,
 } from "@/lib/admin-live-coach-config";
+import type { CoachSessionState } from "@/lib/server/mona-study-tools";
 
 export type LiveToolSessionContext = {
   sessionId: string | null;
   mode: "fenok" | "mona";
   coachConfig: CoachConfig;
+  coachSessionState?: CoachSessionState | null;
 };
 
 const MAX_CONTEXTS = 40;
@@ -26,6 +28,44 @@ function normalizeSessionId(value: unknown): string | null {
   const trimmed = value.trim();
   if (!trimmed || trimmed.length > 120) return null;
   return trimmed.replace(/[^A-Za-z0-9._-]/g, "-");
+}
+
+function normalizeKey(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const key = value.trim().toLowerCase().replace(/\s+/g, " ");
+  return key ? key.slice(0, 160) : null;
+}
+
+function normalizeKeyArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const keys: string[] = [];
+  for (const item of value) {
+    const key = normalizeKey(item);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    keys.push(key);
+    if (keys.length >= 48) break;
+  }
+  return keys;
+}
+
+function normalizeCoachSessionState(value: unknown, fallbackSessionId: string | null): CoachSessionState | null {
+  if (!isRecord(value)) return null;
+  return {
+    sessionId: normalizeSessionId(value.sessionId) ?? fallbackSessionId,
+    currentItemKey: normalizeKey(value.currentItemKey),
+    seenItemKeys: normalizeKeyArray(value.seenItemKeys),
+    bufferedItemKeys: normalizeKeyArray(value.bufferedItemKeys),
+    lastLearnerIntent: typeof value.lastLearnerIntent === "string" ? value.lastLearnerIntent.slice(0, 40) : null,
+    lastToolIntent: typeof value.lastToolIntent === "string" ? value.lastToolIntent.slice(0, 40) : null,
+    reviewCountActual: typeof value.reviewCountActual === "number" && Number.isFinite(value.reviewCountActual)
+      ? Math.max(0, Math.round(value.reviewCountActual))
+      : 0,
+    newCountActual: typeof value.newCountActual === "number" && Number.isFinite(value.newCountActual)
+      ? Math.max(0, Math.round(value.newCountActual))
+      : 0,
+  };
 }
 
 function pruneSessionContexts() {
@@ -57,6 +97,7 @@ export function resolveLiveToolSessionContext(value: unknown): LiveToolSessionCo
     sessionId,
     mode: normalizeMode(input.mode),
     coachConfig: normalizeCoachConfig(input.coachConfig ?? DEFAULT_COACH_CONFIG),
+    coachSessionState: normalizeCoachSessionState(input.coachSessionState, sessionId),
   };
 }
 

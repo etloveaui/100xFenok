@@ -45,11 +45,18 @@ export async function POST(request: Request) {
   const name = typeof body?.name === "string" ? body.name : "";
   const id = typeof body?.id === "string" ? body.id : "";
   const args = body?.args && typeof body.args === "object" ? body.args as Record<string, unknown> : {};
-  const context = getRegisteredLiveToolSessionContext(body?.sessionId)
-    ?? resolveLiveToolSessionContext({
-      ...(body?.context && typeof body.context === "object" && !Array.isArray(body.context) ? body.context : {}),
-      sessionId: body?.sessionId,
-    });
+  const requestContext = resolveLiveToolSessionContext({
+    ...(body?.context && typeof body.context === "object" && !Array.isArray(body.context) ? body.context : {}),
+    sessionId: body?.sessionId,
+  });
+  const registeredContext = getRegisteredLiveToolSessionContext(body?.sessionId);
+  const context = registeredContext
+    ? {
+        ...registeredContext,
+        coachConfig: requestContext.coachConfig,
+        coachSessionState: requestContext.coachSessionState ?? registeredContext.coachSessionState ?? null,
+      }
+    : requestContext;
 
   const result = await executeLiveToolFunction(name, args, context);
   const status = "error" in result && result.error === "UNKNOWN_TOOL" ? 400 : 200;

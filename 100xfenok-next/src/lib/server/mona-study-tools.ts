@@ -41,6 +41,7 @@ export const MONA_STUDY_TOOL_IDS = [
   "mona-yesterday",
   "mona-memory",
   "mona-weekly-test",
+  "mona-lesson-material",
 ] as const;
 
 type JsonRecord = Record<string, unknown>;
@@ -49,6 +50,7 @@ type MonaStudyToolContext = {
   tester?: unknown;
   sessionId?: unknown;
   coachConfig?: unknown;
+  coachSessionState?: unknown;
 };
 
 type Best3Item = {
@@ -170,6 +172,9 @@ type ServerCoachReviewMode = "off" | "soft" | "hard";
 type ServerCoachConfig = LessonConfig & {
   reviewMode: ServerCoachReviewMode;
   reviewRatio: number;
+  freshMaterialEnabled: boolean;
+  honorLiveRequests: boolean;
+  emptyPraiseGuard: boolean;
 };
 
 export type LessonVariationKind = "negation" | "past" | "question" | "subject";
@@ -198,6 +203,7 @@ export type NextMaterialBufferItem = {
   ko: string;
   en: string;
   note: string | null;
+  theme: ExpressionBankTheme;
   difficulty: 1 | 2 | 3 | null;
   wordCount: number;
   sibling: { ko: string; en: string } | null;
@@ -213,6 +219,22 @@ export type CoachSessionState = {
   lastToolIntent: string | null;
   reviewCountActual: number;
   newCountActual: number;
+};
+
+export type LessonMaterialIntent = "new" | "easier" | "harder" | "again" | "switch_theme";
+
+export type LessonMaterialResult = {
+  items: NextMaterialBufferItem[];
+  theme: string | null;
+  intentApplied: LessonMaterialIntent;
+  fallback: "use_buffer_or_simplify_current" | null;
+  error: null;
+  log: {
+    intent: LessonMaterialIntent;
+    returnedCount: number;
+    latencyMs: number;
+    source: "buffer" | "tool";
+  };
 };
 
 const PLAN_THEME_TO_BANK_THEME: Record<WeekdayPlan["theme"], ExpressionBankTheme | null> = {
@@ -314,6 +336,31 @@ function normalizeServerCoachConfig(value: unknown): ServerCoachConfig {
     advancedDay: input.advancedDay === true,
     reviewMode: normalizeServerReviewMode(input.reviewMode),
     reviewRatio: clampFiniteNumber(input.reviewRatio, fallbackReviewRatio(input.reviewMode), 0, 1),
+    freshMaterialEnabled: input.freshMaterialEnabled !== false,
+    honorLiveRequests: input.honorLiveRequests !== false,
+    emptyPraiseGuard: input.emptyPraiseGuard !== false,
+  };
+}
+
+function normalizeCoachSessionState(value: unknown): CoachSessionState | null {
+  if (!isRecord(value)) return null;
+  return {
+    sessionId: normalizeSessionId(value.sessionId),
+    currentItemKey: typeof value.currentItemKey === "string" ? normalizeKey(value.currentItemKey) : null,
+    seenItemKeys: Array.isArray(value.seenItemKeys)
+      ? value.seenItemKeys.filter((item): item is string => typeof item === "string").map(normalizeKey).slice(0, 48)
+      : [],
+    bufferedItemKeys: Array.isArray(value.bufferedItemKeys)
+      ? value.bufferedItemKeys.filter((item): item is string => typeof item === "string").map(normalizeKey).slice(0, 48)
+      : [],
+    lastLearnerIntent: typeof value.lastLearnerIntent === "string" ? value.lastLearnerIntent.slice(0, 40) : null,
+    lastToolIntent: typeof value.lastToolIntent === "string" ? value.lastToolIntent.slice(0, 40) : null,
+    reviewCountActual: typeof value.reviewCountActual === "number" && Number.isFinite(value.reviewCountActual)
+      ? Math.max(0, Math.round(value.reviewCountActual))
+      : 0,
+    newCountActual: typeof value.newCountActual === "number" && Number.isFinite(value.newCountActual)
+      ? Math.max(0, Math.round(value.newCountActual))
+      : 0,
   };
 }
 
@@ -324,6 +371,7 @@ function normalizeMonaStudyContext(context?: MonaStudyToolContext | null) {
     tester,
     sessionId: normalizeSessionId(context?.sessionId),
     coachConfig: normalizeServerCoachConfig(coachConfig),
+    coachSessionState: normalizeCoachSessionState(context?.coachSessionState),
   };
 }
 
@@ -1324,11 +1372,191 @@ function toBufferItem(entry: ExpressionBankEntry): NextMaterialBufferItem {
     ko: entry.ko,
     en: entry.en,
     note: entry.note,
+    theme: entry.theme,
     difficulty: entry.difficulty ?? null,
     wordCount: bankWordCount(entry, entry.en),
     sibling: entry.sibling ?? null,
     variations: pickLessonVariations(entry, LESSON_VARIATION_ORDER),
   };
+}
+
+function normalizeLessonMaterialIntent(value: unknown): LessonMaterialIntent {
+  if (
+    value === "new" ||
+    value === "easier" ||
+    value === "harder" ||
+    value === "again" ||
+    value === "switch_theme"
+  ) return value;
+  return "new";
+}
+
+function normalizeRequestedBankTheme(value: unknown): ExpressionBankTheme | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  const direct = EXPRESSION_BANK_THEMES.find((theme) => theme === normalized);
+  if (direct) return direct;
+  if (/회사|업무|work/.test(normalized)) return "work";
+  if (/친구|가족|family|friend/.test(normalized)) return "family-friends";
+  if (/감정|혼잣|emotion|self/.test(normalized)) return "selftalk-emotion";
+  if (/외출|쇼핑|식당|dining|shopping|out/.test(normalized)) return "out-shopping-dining";
+  if (/심화|advanced/.test(normalized)) return "work-advanced";
+  if (/자유|free/.test(normalized)) return "free";
+  return null;
+}
+
+function buildBankEntryMap(snapshot: StudySnapshot): Map<string, ExpressionBankEntry> {
+  const map = new Map<string, ExpressionBankEntry>();
+  for (const entry of Array.isArray(snapshot.expressionBank) ? snapshot.expressionBank : []) {
+    const key = normalizeKey(entry.en);
+    if (!map.has(key)) map.set(key, entry);
+  }
+  return map;
+}
+
+function getEntryDifficulty(entry: ExpressionBankEntry | undefined): number | null {
+  return typeof entry?.difficulty === "number" && Number.isFinite(entry.difficulty)
+    ? entry.difficulty
+    : null;
+}
+
+function getEntryWordCount(entry: ExpressionBankEntry | undefined): number {
+  return entry ? bankWordCount(entry, entry.en) : 0;
+}
+
+function materialResult(
+  intent: LessonMaterialIntent,
+  items: NextMaterialBufferItem[],
+  theme: string | null,
+  startedAt: number,
+  source: "buffer" | "tool",
+): LessonMaterialResult {
+  return {
+    items,
+    theme,
+    intentApplied: intent,
+    fallback: items.length === 0 ? "use_buffer_or_simplify_current" : null,
+    error: null,
+    log: {
+      intent,
+      returnedCount: items.length,
+      latencyMs: Math.max(0, Date.now() - startedAt),
+      source,
+    },
+  };
+}
+
+function pickBufferMaterial(
+  intent: LessonMaterialIntent,
+  snapshot: StudySnapshot,
+  state: CoachSessionState | null,
+  current: ExpressionBankEntry | undefined,
+): NextMaterialBufferItem[] {
+  if (!state || intent === "again" || intent === "switch_theme") return [];
+  const bank = buildBankEntryMap(snapshot);
+  const currentDifficulty = getEntryDifficulty(current);
+  const currentWords = getEntryWordCount(current);
+  const seen = new Set(state.seenItemKeys);
+
+  for (const key of state.bufferedItemKeys) {
+    if (seen.has(key)) continue;
+    const entry = bank.get(key);
+    if (!entry) continue;
+    if (intent === "easier") {
+      const difficulty = getEntryDifficulty(entry);
+      const words = getEntryWordCount(entry);
+      if (currentDifficulty !== null && difficulty !== null && difficulty >= currentDifficulty) continue;
+      if (currentDifficulty === null && currentWords > 0 && words >= currentWords) continue;
+    }
+    if (intent === "harder") {
+      const difficulty = getEntryDifficulty(entry);
+      const words = getEntryWordCount(entry);
+      if (currentDifficulty !== null && difficulty !== null && difficulty <= currentDifficulty) continue;
+      if (currentDifficulty === null && currentWords > 0 && words <= currentWords) continue;
+    }
+    return [toBufferItem(entry)];
+  }
+
+  return [];
+}
+
+export async function requestLessonMaterial(
+  args: Record<string, unknown>,
+  context?: MonaStudyToolContext | null,
+): Promise<LessonMaterialResult> {
+  const startedAt = Date.now();
+  const intent = normalizeLessonMaterialIntent(args.intent);
+  const snapshot = await getSnapshotForTurn();
+  const toolContext = normalizeMonaStudyContext(context);
+  if (!toolContext.coachConfig.freshMaterialEnabled) {
+    return materialResult(intent, [], null, startedAt, "tool");
+  }
+  const state = toolContext.coachSessionState;
+  const studyDate = snapshot.studyDate ?? getCanonicalMonaStudyDate();
+  const plan = getWeekdayPlan(studyDate);
+  const requestedTheme = normalizeRequestedBankTheme(args.theme);
+  const config = toolContext.coachConfig;
+  const bank = Array.isArray(snapshot.expressionBank) ? snapshot.expressionBank : [];
+  const bankByKey = buildBankEntryMap(snapshot);
+  const current = state?.currentItemKey ? bankByKey.get(state.currentItemKey) : undefined;
+  const bufferItems = pickBufferMaterial(intent, snapshot, state, current);
+  if (bufferItems.length > 0) {
+    return materialResult(intent, bufferItems, bufferItems[0].theme ?? null, startedAt, "buffer");
+  }
+
+  if (intent === "again" && current) {
+    return materialResult(intent, [toBufferItem(current)], current.theme, startedAt, "tool");
+  }
+
+  const stateSeen = new Set(state?.seenItemKeys ?? []);
+  const stateBuffered = new Set(state?.bufferedItemKeys ?? []);
+  const excludeForNew = new Set([...stateSeen, ...stateBuffered]);
+  const theme = requestedTheme ?? getLessonBankTheme(plan, config) ?? "free";
+  const currentDifficulty = getEntryDifficulty(current);
+  const currentWords = getEntryWordCount(current);
+  const maxWords = intent === "harder" ? Math.min(14, config.difficultyCap + 2) : config.difficultyCap;
+
+  const candidates = sortLessonEntries(
+    bank.filter((entry) => {
+      const key = normalizeKey(entry.en);
+      if (intent !== "again" && stateSeen.has(key)) return false;
+      if ((intent === "new" || intent === "switch_theme") && excludeForNew.has(key)) return false;
+      if (requestedTheme && entry.theme !== requestedTheme) return false;
+      if (!requestedTheme && intent !== "switch_theme" && entry.theme !== theme && entry.theme !== "free") return false;
+      if (!isLessonRegisterAllowed(entry)) return false;
+      const words = getEntryWordCount(entry);
+      const difficulty = getEntryDifficulty(entry);
+      if (words > maxWords) return false;
+      if (intent === "easier") {
+        if (currentDifficulty !== null && difficulty !== null) return difficulty < currentDifficulty;
+        return currentWords === 0 || words < currentWords;
+      }
+      if (intent === "harder") {
+        if (currentDifficulty !== null && difficulty !== null) return difficulty > currentDifficulty;
+        return currentWords === 0 || words > currentWords;
+      }
+      return passesLessonLevelGate(entry, maxWords);
+    }),
+    studyDate,
+    `material:${intent}:${theme}`,
+  );
+
+  if (intent === "easier" && current?.sibling) {
+    const siblingKey = normalizeKey(current.sibling.en);
+    if (!stateSeen.has(siblingKey)) {
+      const siblingMeta = bankByKey.get(siblingKey);
+      const siblingEntry = copyBankMeta({
+        ko: current.sibling.ko,
+        en: current.sibling.en,
+        note: current.note,
+        theme: current.theme,
+        difficulty: currentDifficulty !== null ? Math.max(1, currentDifficulty - 1) as 1 | 2 | 3 : undefined,
+      }, siblingMeta);
+      return materialResult(intent, [toBufferItem(siblingEntry)], siblingEntry.theme, startedAt, "tool");
+    }
+  }
+
+  return materialResult(intent, candidates.slice(0, 2).map(toBufferItem), theme, startedAt, "tool");
 }
 
 export function isLessonV2Enabled(): boolean {
@@ -1425,11 +1653,11 @@ function copyBankMeta(
     theme: meta?.theme ?? fallback.theme ?? "free",
     register: meta?.register ?? fallback.register ?? "neutral",
     sourceId: meta?.sourceId ?? fallback.sourceId ?? `review:${normalizeKey(fallback.en).slice(0, 40)}`,
-    difficulty: meta?.difficulty,
-    wordCount: meta?.wordCount,
-    pattern: meta?.pattern,
-    sibling: meta?.sibling,
-    variations: meta?.variations,
+    difficulty: meta?.difficulty ?? fallback.difficulty,
+    wordCount: meta?.wordCount ?? fallback.wordCount,
+    pattern: meta?.pattern ?? fallback.pattern,
+    sibling: meta?.sibling ?? fallback.sibling,
+    variations: meta?.variations ?? fallback.variations,
   };
 }
 
@@ -1701,13 +1929,60 @@ function buildNextMaterialBufferSection(items: NextMaterialBufferItem[]): string
   if (items.length === 0) return [];
   return [
     "",
-    `[nextMaterialBuffer - 예비 새 문장 ${items.length}개. 모나가 "새로운거/더/다음"을 원할 때만 여기서 즉시 꺼낸다. 먼저 소개하지 마. 도구 호출 전에 이 버퍼를 우선 사용한다.]`,
+    `[nextMaterialBuffer - 예비 새 문장 ${items.length}개. 모나가 "새로운거/더/다음"을 원할 때만 여기서 즉시 꺼낸다. 먼저 소개하지 마. plain new/more/next는 requestLessonMaterial 호출 전에 이 버퍼를 우선 사용한다.]`,
     ...items.map((item, index) => {
       const note = item.note ? ` (${item.note})` : "";
       const sibling = item.sibling ? ` | 쉬운 대체: ${item.sibling.ko} -> ${item.sibling.en}` : "";
       return `buffer${index + 1} [key=${item.id}; words=${item.wordCount}; difficulty=${item.difficulty ?? "unknown"}]: ${item.ko} -> ${item.en}${note}${sibling}`;
     }),
   ];
+}
+
+function buildFlexibleCoachSections(coachConfig: ServerCoachConfig): string[] {
+  const sections = [
+    "[페르소나]",
+    "너는 모나의 따뜻한 한국어 wind-down 영어 코치다. RESPOND IN KOREAN. YOU MUST RESPOND UNMISTAKABLY IN KOREAN. 목표 영어 문장만 영어로 둔다.",
+    "",
+    "[한 번만 여는 인사]",
+    "세션 시작 시 네가 먼저 한 문장으로 따뜻하게 열고 바로 수업을 시작한다. 메뉴를 길게 설명하지 않는다.",
+  ];
+
+  if (coachConfig.honorLiveRequests !== false) {
+    sections.push(
+      "",
+      "[대화 루프 - 요청 즉시 반영]",
+      "Mona may ask for new / easier / harder / again / a different topic, or to stop, at ANY time, and may move freely between these.",
+      "Honor her request immediately: plain new/more/next는 nextMaterialBuffer에서 먼저 꺼내고, 버퍼가 비었거나 쉬운거/어려운거/다시/딴 주제/서버 dedup 확인이 필요하면 requestLessonMaterial을 호출한다.",
+      "Never refuse a request for new or easier material. requestLessonMaterial이 items=[]를 반환하면 버퍼를 쓰거나 현재 문장을 한 번만 쉽게 바꿔 계속한다.",
+    );
+  }
+
+  sections.push(
+    "",
+    "[문장별 마이크로 루프]",
+    `한 번에 한국어 프롬프트 하나 -> 모나 답변을 기다림 -> 구체적 칭찬 1개 + 교정 최대 1개 -> 자연스러운 버전 -> 변형 최대 ${coachConfig.variationsPerItem}개를 각각 기다리며 진행.`,
+  );
+
+  if (coachConfig.emptyPraiseGuard !== false) {
+    sections.push(
+      "",
+      "[emptyPraiseGuard]",
+      "입력이 비었거나 알아듣기 어려운/garbled transcript면 절대 칭찬하지 말고 '다시 한번 말해줄래?'처럼 한 번만 반복 요청한다.",
+    );
+  }
+
+  sections.push(
+    "",
+    "[가드레일]",
+    "각 응답은 net-new로 한다. 직전 말을 길게 요약하지 않는다. 모나가 '그만/끝'이라고 하면 정확히 한 문장으로 닫는다.",
+    "\"[CONTROL]\" 또는 \"[coach_control]\"로 시작하는 텍스트는 무대 지시/힌트다. 절대 소리 내어 읽거나 언급하지 말고, 의미만 참고한다.",
+  );
+
+  if (coachConfig.freshMaterialEnabled === false) {
+    sections.push("freshMaterialEnabled=false: requestLessonMaterial 도구를 쓰지 말고 현재 버퍼/수업 문장 안에서만 단순화한다.");
+  }
+
+  return sections;
 }
 
 function buildLessonV2PacingRules(): string[] {
@@ -1772,8 +2047,7 @@ export async function buildMonaCoachDynamicBlockV2WithState(
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${effectivePlan.theme} · 변동코너: ${effectivePlan.corner} · 연속: ${streak}일차`,
     "",
-    "[인사 규칙]",
-    "세션 시작 시 먼저 따뜻하게 인사한다. '안녕 모나야' 톤으로, 오늘 테마/연속 일수/어제 기억 중 두 가지를 짧게 언급한 뒤 바로 수업으로 들어간다. 인사는 한 문장.",
+    ...buildFlexibleCoachSections(coachConfig),
     "",
     "[복습 재료]",
     firstSession || !yesterday
@@ -1804,7 +2078,7 @@ export async function buildMonaCoachDynamicBlockV2WithState(
     "문장을 다룰 때마다 showCard로 화면을 맞춘다: 모나가 시도하기 전 state=prompt(ko만) -> 교정을 들려준 뒤 state=reveal(ko+en+pron) -> 변형 드릴은 state=drill(ko+drillHint) -> 다음 문장으로 넘어갈 때 새로 호출. 카드 호출 사실은 입 밖에 내지 않는다.",
     "",
     "[도구]",
-    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
+    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/requestLessonMaterial/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
   ].join("\n");
   return { dynamicBlock, coachSessionState };
 }

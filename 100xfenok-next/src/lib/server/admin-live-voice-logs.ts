@@ -351,7 +351,9 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       "micPermission", "connectionState", "firstResponseMs", "sessionPostMs", "socketOpenMs",
       "setupDoneMs", "transcriptLatencyMs", "turnCount", "interruptionCount",
       "audioFramesSent", "sessionDurationSec", "lowVoice", "lastError", "rating", "resumeCount",
-      "appendFailureCount", "lastAppendError",
+      "appendFailureCount", "lastAppendError", "lessonMaterialToolCalls", "lessonMaterialLastReturnedCount",
+      "lessonMaterialLastLatencyMs", "lessonMaterialLastSource", "clientIntentHint", "modelToolIntent",
+      "intentHintMatched",
     ]);
 
     const mergedSettings = Object.keys(incomingSettings).length > 0

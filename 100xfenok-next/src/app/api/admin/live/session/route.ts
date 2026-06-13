@@ -127,7 +127,8 @@ export async function POST(request: Request) {
   const resumeHandle = typeof body?.resumeHandle === "string" && body.resumeHandle.length > 0 && body.resumeHandle.length <= 512
     ? body.resumeHandle
     : null;
-  const enabledToolIds = normalizeRequestedToolIds(mode, body);
+  const enabledToolIds = normalizeRequestedToolIds(mode, body)
+    .filter((toolId) => coachConfig.freshMaterialEnabled || toolId !== "mona-lesson-material");
   const now = new Date();
   const apiKey = getGeminiApiKey();
   const sessionId = `live-${mode}-${now.getTime().toString(36)}`;
@@ -200,6 +201,7 @@ export async function POST(request: Request) {
     sessionId,
     mode,
     coachConfig,
+    coachSessionState,
   });
 
   return noStoreJson(

@@ -2,6 +2,7 @@ import { getTickerQuote } from "@/lib/server/ticker";
 import { readPublicAssetText } from "@/lib/server/public-assets";
 import {
   MONA_STUDY_TOOL_IDS,
+  requestLessonMaterial,
 } from "@/lib/server/mona-study-tools";
 import {
   LIVE_SKILL_BRIDGE_TOKEN_ENV,
@@ -24,6 +25,7 @@ export type LiveToolId =
   | "mona-yesterday"
   | "mona-memory"
   | "mona-weekly-test"
+  | "mona-lesson-material"
   | "mona-show-card";
 export type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 export type LiveToolStatus = "available" | "locked" | "soon";
@@ -207,6 +209,36 @@ const LIVE_TOOL_DEFINITIONS = [
             description: "Prioritize weak-note items first. Defaults true.",
           },
         },
+      },
+    },
+  },
+  {
+    id: "mona-lesson-material",
+    label: "요청형 문장",
+    category: "study",
+    status: "available",
+    description: "Buffer-first Mona material picker for new/easier/harder/again requests",
+    functionName: "requestLessonMaterial",
+    instruction:
+      "Tool: requestLessonMaterial({intent, theme}) fetches lesson material only when the learner asks for new/more/next/different/too-hard/too-easy/again/switch topic and the setup nextMaterialBuffer cannot answer instantly. Prefer nextMaterialBuffer first for new/more/next; call this tool for empty buffer, easier/harder, again, switch_theme, or server-confirmed dedup. If it returns no items, use the buffer or simplify the current sentence once and continue without a long apology.",
+    declaration: {
+      name: "requestLessonMaterial",
+      description:
+        "Fetch Mona lesson material. Invoke UNMISTAKABLY whenever the learner asks for new, more, next, different, easier, harder, again, or a different topic (Korean examples: 새로운거, 더, 다음거, 쉬운거, 어려운거, 딴거). Prefer nextMaterialBuffer before calling for plain new/more/next.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          intent: {
+            type: "STRING",
+            description: "Learner intent.",
+            enum: ["new", "easier", "harder", "again", "switch_theme"],
+          },
+          theme: {
+            type: "STRING",
+            description: "Optional requested theme for switch_theme, e.g. work, family-friends, selftalk-emotion, out-shopping-dining, free.",
+          },
+        },
+        required: ["intent"],
       },
     },
   },
@@ -975,6 +1007,10 @@ export async function executeLiveToolFunction(
       return bridgeResult.payload as Record<string, unknown>;
     }
     return bridgeResult;
+  }
+
+  if (name === "requestLessonMaterial") {
+    return requestLessonMaterial(args, context);
   }
 
   if (name === "getTickerSnapshot") {

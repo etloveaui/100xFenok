@@ -22,6 +22,8 @@ type InterruptionMode = "barge-in" | "no-interrupt";
 type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 type LiveToolStatus = "available" | "locked" | "soon";
 type SearchSelectionPolicy = "single" | "multi";
+type LessonMaterialIntent = "new" | "easier" | "harder" | "again" | "switch_theme";
+type LessonMaterialSource = "buffer" | "tool";
 
 type CoachSessionState = {
   sessionId: string | null;
@@ -79,6 +81,13 @@ type BenchMetrics = {
   appendFailureCount: number;
   lastAppendError: string | null;
   resumeCount: number;
+  lessonMaterialToolCalls: number;
+  lessonMaterialLastReturnedCount: number | null;
+  lessonMaterialLastLatencyMs: number | null;
+  lessonMaterialLastSource: LessonMaterialSource | null;
+  clientIntentHint: string | null;
+  modelToolIntent: string | null;
+  intentHintMatched: boolean | null;
 };
 
 type ReadinessResponse = {
@@ -309,6 +318,13 @@ const TOOL_REGISTRY_FALLBACK: LiveToolMetadata[] = [
     description: "Sunday random recall set from memory",
   },
   {
+    id: "mona-lesson-material",
+    label: "요청형 문장",
+    category: "study",
+    status: "available",
+    description: "New/easier/harder Mona material picker",
+  },
+  {
     id: "feno-data",
     label: "Feno Data",
     category: "data",
@@ -375,6 +391,13 @@ const EMPTY_METRICS: BenchMetrics = {
   appendFailureCount: 0,
   lastAppendError: null,
   resumeCount: 0,
+  lessonMaterialToolCalls: 0,
+  lessonMaterialLastReturnedCount: null,
+  lessonMaterialLastLatencyMs: null,
+  lessonMaterialLastSource: null,
+  clientIntentHint: null,
+  modelToolIntent: null,
+  intentHintMatched: null,
 };
 
 const STATUS_TEXT: Record<SessionStatus, string> = {
@@ -674,6 +697,40 @@ function detectCoachLearnerIntent(text: string): string | null {
   return null;
 }
 
+function toLessonMaterialIntent(value: unknown): LessonMaterialIntent | null {
+  if (
+    value === "new" ||
+    value === "easier" ||
+    value === "harder" ||
+    value === "again" ||
+    value === "switch_theme"
+  ) return value;
+  return null;
+}
+
+function toLessonMaterialSource(value: unknown): LessonMaterialSource | null {
+  return value === "buffer" || value === "tool" ? value : null;
+}
+
+function toCoachIntentHint(intent: string | null): string | null {
+  if (intent === "new") return "new_material";
+  if (intent === "easier") return "easier_material";
+  if (intent === "harder") return "harder_material";
+  if (intent === "again") return "repeat_current";
+  if (intent === "stop") return "stop";
+  return null;
+}
+
+function unwrapToolResult(response: unknown): Record<string, unknown> | null {
+  if (!isRecord(response)) return null;
+  const result = response.result;
+  return isRecord(result) ? result : null;
+}
+
+function getLessonMaterialItems(result: Record<string, unknown>): Array<Record<string, unknown>> {
+  return Array.isArray(result.items) ? result.items.filter(isRecord) : [];
+}
+
 async function readSocketData(data: MessageEvent["data"]): Promise<string> {
   if (typeof data === "string") return data;
   if (data instanceof Blob) return data.text();
@@ -815,7 +872,69 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       ...current,
       currentItemKey: key,
       seenItemKeys: alreadySeen ? current.seenItemKeys : [...current.seenItemKeys, key].slice(-24),
+      bufferedItemKeys: fromBuffer ? current.bufferedItemKeys.filter((item) => item !== key) : current.bufferedItemKeys,
       newCountActual: !alreadySeen && fromBuffer ? current.newCountActual + 1 : current.newCountActual,
+    };
+  };
+
+  const sendCoachIntentHint = (intent: string | null) => {
+    if (mode !== "mona" || !normalizedCoachConfig.honorLiveRequests) return;
+    const hint = toCoachIntentHint(intent);
+    if (!hint) return;
+    const socket = wsRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(JSON.stringify({
+      realtimeInput: {
+        text: `[coach_control] likely learner intent: ${hint}. Advisory only; infer from conversation and call requestLessonMaterial only if needed.`,
+      },
+    }));
+    setMetrics((current) => ({
+      ...current,
+      clientIntentHint: hint,
+      intentHintMatched: current.modelToolIntent ? current.modelToolIntent === hint : null,
+    }));
+  };
+
+  const patchLessonMaterialMetrics = (result: Record<string, unknown>, toolIntent: LessonMaterialIntent | null) => {
+    const log = isRecord(result.log) ? result.log : {};
+    const returnedCount = typeof log.returnedCount === "number" && Number.isFinite(log.returnedCount)
+      ? Math.max(0, Math.round(log.returnedCount))
+      : getLessonMaterialItems(result).length;
+    const latencyMs = typeof log.latencyMs === "number" && Number.isFinite(log.latencyMs)
+      ? Math.max(0, Math.round(log.latencyMs))
+      : null;
+    const source = toLessonMaterialSource(log.source);
+    const modelHint = toCoachIntentHint(toolIntent);
+    setMetrics((current) => ({
+      ...current,
+      lessonMaterialToolCalls: current.lessonMaterialToolCalls + 1,
+      lessonMaterialLastReturnedCount: returnedCount,
+      lessonMaterialLastLatencyMs: latencyMs,
+      lessonMaterialLastSource: source,
+      modelToolIntent: modelHint,
+      intentHintMatched: current.clientIntentHint && modelHint ? current.clientIntentHint === modelHint : current.intentHintMatched,
+    }));
+  };
+
+  const applyLessonMaterialToolResult = (response: unknown, toolIntent: LessonMaterialIntent | null) => {
+    if (mode !== "mona") return;
+    const result = unwrapToolResult(response);
+    if (!result) return;
+    patchLessonMaterialMetrics(result, toolIntent);
+    const firstItem = getLessonMaterialItems(result)[0];
+    const key = normalizeCoachItemKey(firstItem?.en ?? firstItem?.id);
+    if (!key) return;
+    const current = coachSessionStateRef.current ?? normalizeCoachSessionState(null, sessionIdRef.current);
+    if (!current) return;
+    const alreadySeen = current.seenItemKeys.includes(key);
+    const fromBuffer = current.bufferedItemKeys.includes(key);
+    coachSessionStateRef.current = {
+      ...current,
+      currentItemKey: key,
+      seenItemKeys: alreadySeen ? current.seenItemKeys : [...current.seenItemKeys, key].slice(-24),
+      bufferedItemKeys: fromBuffer ? current.bufferedItemKeys.filter((item) => item !== key) : current.bufferedItemKeys,
+      lastToolIntent: toolIntent,
+      newCountActual: !alreadySeen && toolIntent !== "again" ? current.newCountActual + 1 : current.newCountActual,
     };
   };
 
@@ -925,7 +1044,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     if (!cleanText) return;
     if (role === "user" && mode === "mona") {
       const learnerIntent = detectCoachLearnerIntent(cleanText);
-      if (learnerIntent) patchCoachSessionState({ lastLearnerIntent: learnerIntent });
+      if (learnerIntent) {
+        patchCoachSessionState({ lastLearnerIntent: learnerIntent });
+        sendCoachIntentHint(learnerIntent);
+      }
     }
 
     setLogs((current) => {
@@ -1296,7 +1418,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const name = typeof call.name === "string" ? call.name : "";
     const id = typeof call.id === "string" ? call.id : "";
     const args = call.args && typeof call.args === "object" ? call.args : {};
-    const toolIntent = typeof args.intent === "string" ? args.intent.slice(0, 40) : null;
+    const toolIntent = toLessonMaterialIntent(args.intent);
     if (toolIntent) patchCoachSessionState({ lastToolIntent: toolIntent });
 
     try {
@@ -1316,6 +1438,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           context: {
             mode,
             coachConfig: normalizedCoachConfig,
+            coachSessionState: coachSessionStateRef.current,
           },
         }),
       });
@@ -1323,10 +1446,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const payload = (await response.json().catch(() => null)) as
         | { response?: unknown }
         | null;
+      const toolResponse = payload?.response ?? { error: `TOOL_HTTP_${response.status}` };
+      if (name === "requestLessonMaterial") {
+        applyLessonMaterialToolResult(toolResponse, toolIntent);
+      }
       return {
         id,
         name,
-        response: payload?.response ?? { error: `TOOL_HTTP_${response.status}` },
+        response: toolResponse,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "TOOL_EXECUTION_FAILED";
