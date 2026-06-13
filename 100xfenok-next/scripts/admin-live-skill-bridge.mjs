@@ -426,16 +426,17 @@ async function handleSearch(body) {
 
 async function handleStudy(body) {
   if (!body || typeof body !== "object") return { error: "INVALID_JSON_BODY" };
-  const { name, args = {} } = body;
+  const { name, args = {}, context = {} } = body;
   if (typeof name !== "string" || !VALID_STUDY_NAMES.has(name)) {
     return { error: "UNKNOWN_STUDY_NAME", name, valid: [...VALID_STUDY_NAMES] };
   }
   if (args !== null && typeof args !== "object") return { error: "INVALID_ARGS" };
+  if (context !== null && typeof context !== "object") return { error: "INVALID_CONTEXT" };
   if (name === "prepareMonaStudySnapshot") {
     const studyDate = typeof args.studyDate === "string" ? args.studyDate : undefined;
     return prepareMonaStudySnapshot(studyDate);
   }
-  return executeMonaStudyToolFunction(name, args);
+  return executeMonaStudyToolFunction(name, args, context ?? {});
 }
 
 async function handleLog(body) {

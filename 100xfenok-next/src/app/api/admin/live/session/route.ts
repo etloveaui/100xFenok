@@ -26,6 +26,11 @@ import {
   LIVE_SEARCH_SELECTION_POLICY,
   normalizeLiveToolIds,
 } from "@/lib/server/admin-live-tools";
+import {
+  DEFAULT_COACH_CONFIG,
+  normalizeCoachConfig,
+} from "@/lib/admin-live-coach-config";
+import { registerLiveToolSessionContext } from "@/lib/server/admin-live-session-context";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -80,6 +85,7 @@ export async function GET() {
       voiceName: "Kore",
       responseStyle: "concise",
       vadPreset: "balanced",
+      coachConfig: DEFAULT_COACH_CONFIG,
       tools: {
         enabledToolIds: DEFAULT_LIVE_ENABLED_TOOL_IDS,
         enabledToolIdsByMode: {
@@ -108,6 +114,7 @@ export async function POST(request: Request) {
         resumeHandle?: unknown;
         systemPrompt?: unknown;
         enabledToolIds?: unknown;
+        coachConfig?: unknown;
       }
     | null;
   const mode = normalizeLiveMode(body?.mode);
@@ -116,6 +123,7 @@ export async function POST(request: Request) {
   const responseStyle = normalizeResponseStyle(body?.responseStyle);
   const vadPreset = normalizeVadPreset(body?.vadPreset, mode);
   const interruptionMode = body?.interruptionMode === "no-interrupt" ? "no-interrupt" : "barge-in";
+  const coachConfig = normalizeCoachConfig(body?.coachConfig);
   const resumeHandle = typeof body?.resumeHandle === "string" && body.resumeHandle.length > 0 && body.resumeHandle.length <= 512
     ? body.resumeHandle
     : null;
@@ -146,6 +154,7 @@ export async function POST(request: Request) {
     resumeHandle,
     systemPrompt: body?.systemPrompt,
     enabledToolIds,
+    coachConfig,
   });
   const tokenResponse = await fetch(GEMINI_AUTH_TOKEN_ENDPOINT, {
     method: "POST",
@@ -185,9 +194,16 @@ export async function POST(request: Request) {
     return noStoreJson({ error: "GEMINI_EPHEMERAL_TOKEN_EMPTY" }, 502);
   }
 
+  const sessionId = `live-${mode}-${now.getTime().toString(36)}`;
+  registerLiveToolSessionContext({
+    sessionId,
+    mode,
+    coachConfig,
+  });
+
   return noStoreJson(
     {
-      sessionId: `live-${mode}-${now.getTime().toString(36)}`,
+      sessionId,
       status: "LIVE_TOKEN_READY",
       startedAt: now.toISOString(),
       adapter: "gemini-live-ephemeral",
@@ -204,7 +220,9 @@ export async function POST(request: Request) {
         voiceName,
         responseStyle,
         vadPreset,
+        interruptionMode,
         enabledToolIds,
+        coachConfig,
       },
       token,
       expiresAt: typeof tokenPayload?.expireTime === "string" ? tokenPayload.expireTime : expireTime,

@@ -2,6 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
+import {
+  DEFAULT_COACH_CONFIG,
+  normalizeCoachConfig,
+  type CoachConfig,
+  type CoachDifficulty,
+  type CoachReviewMode,
+  type CoachTester,
+} from "@/lib/admin-live-coach-config";
 
 type BenchMode = "fenok" | "mona";
 type SessionStatus = "idle" | "checking" | "blocked" | "ready" | "connecting" | "listening" | "stopped";
@@ -88,6 +96,7 @@ type ReadinessResponse = {
     voiceName?: string;
     responseStyle?: ResponseStyle;
     vadPreset?: VadPreset;
+    coachConfig?: CoachConfig;
     tools?: {
       enabledToolIds?: string[];
       enabledToolIdsByMode?: Partial<Record<BenchMode, string[]>>;
@@ -120,6 +129,8 @@ type SessionResponse = {
     voiceName?: string;
     responseStyle?: ResponseStyle;
     vadPreset?: VadPreset;
+    interruptionMode?: InterruptionMode;
+    coachConfig?: CoachConfig;
     enabledToolIds?: string[];
   };
 };
@@ -211,6 +222,23 @@ const VAD_PRESET_LABEL: Record<VadPreset, string> = {
 const INTERRUPTION_MODE_LABEL: Record<InterruptionMode, string> = {
   "barge-in": "말하면 멈춤",
   "no-interrupt": "끝까지 말함",
+};
+
+const COACH_REVIEW_LABEL: Record<CoachReviewMode, string> = {
+  "new-first": "새 문장 중심",
+  balanced: "균형",
+  "review-first": "복습 중심",
+};
+
+const COACH_DIFFICULTY_LABEL: Record<CoachDifficulty, string> = {
+  easy: "쉬움",
+  normal: "보통",
+  challenge: "조금 도전",
+};
+
+const COACH_TESTER_LABEL: Record<CoachTester, string> = {
+  mona: "모나 학습",
+  owner: "테스트",
 };
 
 const MODE_PRESETS: Record<BenchMode, { voiceName: string; vadPreset: VadPreset; lowVoice: boolean }> = {
@@ -417,6 +445,10 @@ function formatClock(seconds: number): string {
   return `${min}:${sec}`;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function nowLabel(): string {
   return new Intl.DateTimeFormat("ko-KR", {
     hour: "2-digit",
@@ -597,6 +629,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const [responseStyle, setResponseStyle] = useState<ResponseStyle>("concise");
   const [vadPreset, setVadPreset] = useState<VadPreset>("balanced");
   const [interruptionMode, setInterruptionMode] = useState<InterruptionMode>(initialMode === "mona" ? "no-interrupt" : "barge-in");
+  const [coachConfig, setCoachConfig] = useState<CoachConfig>(DEFAULT_COACH_CONFIG);
   const [systemPrompt, setSystemPrompt] = useState(PROFILE_FALLBACK[0].defaultSystemPrompt ?? "");
   const [promptEdited, setPromptEdited] = useState(false);
   const [toolRegistry, setToolRegistry] = useState<LiveToolMetadata[]>(TOOL_REGISTRY_FALLBACK);
@@ -649,6 +682,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         sessionId: sid,
         mode,
         startedAt: startedAtMs ? new Date(startedAtMs).toISOString() : new Date().toISOString(),
+        tester: normalizedCoachConfig.tester,
+        settings: buildLiveSettings(),
         entries: pendingRef.current,
       }));
     } catch {
@@ -664,6 +699,27 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const activeProfile = useMemo(() => profiles.find((profile) => profile.id === mode) ?? profiles[0] ?? PROFILE_FALLBACK[0], [mode, profiles]);
   const settingsLocked = status === "connecting" || status === "listening";
   const activeToolCount = enabledToolIds.length;
+  const normalizedCoachConfig = useMemo(() => normalizeCoachConfig(coachConfig), [coachConfig]);
+
+  const updateCoachConfig = (patch: Partial<CoachConfig>) => {
+    setCoachConfig((current) => {
+      const next: Record<string, unknown> = { ...current, ...patch };
+      if (patch.reviewMode && patch.reviewRatio === undefined) delete next.reviewRatio;
+      if (patch.difficulty && patch.difficultyCap === undefined) delete next.difficultyCap;
+      return normalizeCoachConfig(next);
+    });
+  };
+
+  const buildLiveSettings = () => ({
+    lowVoice,
+    voiceName,
+    responseStyle,
+    vadPreset,
+    interruptionMode,
+    enabledToolIds,
+    coachConfig: normalizedCoachConfig,
+    tester: normalizedCoachConfig.tester,
+  });
 
   const mainMessage = useMemo(() => {
     if (metrics.lastError) return "연결이 막혔어요";
@@ -711,7 +767,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       if (typeof localStorage === "undefined") return;
       const raw = localStorage.getItem(PENDING_LOG_KEY);
       if (!raw) return;
-      const stored = JSON.parse(raw) as { sessionId?: string; mode?: string; startedAt?: string; entries?: unknown[] };
+      const stored = JSON.parse(raw) as { sessionId?: string; mode?: string; startedAt?: string; tester?: string; settings?: unknown; entries?: unknown[] };
       if (!stored.sessionId || !Array.isArray(stored.entries) || stored.entries.length === 0) {
         localStorage.removeItem(PENDING_LOG_KEY);
         return;
@@ -722,6 +778,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         sessionId: stored.sessionId,
         mode: stored.mode ?? "fenok",
         startedAt: stored.startedAt ?? new Date().toISOString(),
+        tester: stored.tester ?? (isRecord(stored.settings) && stored.settings.tester === "owner" ? "owner" : "mona"),
+        settings: stored.settings,
         entries: stored.entries,
       };
       const response = await fetch("/api/admin/live/log/", {
@@ -853,18 +911,12 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       sessionId: sid,
       mode,
       startedAt: startedAtMs ? new Date(startedAtMs).toISOString() : new Date().toISOString(),
+      tester: normalizedCoachConfig.tester,
       entries: capped.map((e) => ({ seq: e.seq, role: e.role, text: e.text, at: e.at, atIso: e.atIso })),
     };
 
     if (!sentMetaRef.current || useBeacon) {
-      body.settings = {
-        lowVoice,
-        voiceName,
-        responseStyle,
-        vadPreset,
-        interruptionMode,
-        enabledToolIds,
-      };
+      body.settings = buildLiveSettings();
       body.client = typeof window === "undefined" ? {} : {
         userAgent: navigator.userAgent,
         language: navigator.language,
@@ -1152,7 +1204,16 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ id, name, args }),
+        body: JSON.stringify({
+          id,
+          name,
+          args,
+          sessionId: sessionIdRef.current,
+          context: {
+            mode,
+            coachConfig: normalizedCoachConfig,
+          },
+        }),
       });
 
       const payload = (await response.json().catch(() => null)) as
@@ -1283,6 +1344,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         setEnabledToolIds(getModeDefaultToolIds(initialMode, nextToolRegistry, payload.defaults?.tools?.enabledToolIdsByMode));
         setSearchSelectionPolicy(payload.defaults?.tools?.searchSelectionPolicy ?? "multi");
         setResponseStyle(payload.defaults?.responseStyle ?? "concise");
+        setCoachConfig(normalizeCoachConfig(payload.defaults?.coachConfig ?? DEFAULT_COACH_CONFIG));
         const initPreset = MODE_PRESETS[initialMode];
         setVoiceName(initialMode === "mona" ? initPreset.voiceName : (payload.defaults?.voiceName ?? initPreset.voiceName));
         setVadPreset(initialMode === "mona" ? initPreset.vadPreset : (payload.defaults?.vadPreset ?? initPreset.vadPreset));
@@ -1668,6 +1730,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           responseStyle,
           vadPreset,
           interruptionMode,
+          coachConfig: normalizedCoachConfig,
           systemPrompt,
           enabledToolIds,
         }),
@@ -1789,6 +1852,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             responseStyle,
             vadPreset,
             interruptionMode,
+            coachConfig: normalizedCoachConfig,
             resumeHandle: handle,
             systemPrompt,
             enabledToolIds,
@@ -1957,16 +2021,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         body: JSON.stringify({
           sessionId: currentSessionId,
           mode,
+          tester: normalizedCoachConfig.tester,
           startedAt,
           stoppedAt,
-          settings: {
-            lowVoice,
-            voiceName,
-            responseStyle,
-            vadPreset,
-            interruptionMode,
-            enabledToolIds,
-          },
+          settings: buildLiveSettings(),
           metrics: finalMetrics,
           client,
           logs: currentLogs.slice().reverse(),
@@ -2294,10 +2352,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                 </div>
               </fieldset>
 
-              <fieldset className="text-left">
-                <legend className="text-sm font-black text-slate-700">코치 말 끊기</legend>
-                <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-                  {(Object.keys(INTERRUPTION_MODE_LABEL) as InterruptionMode[]).map((im) => (
+	              <fieldset className="text-left">
+	                <legend className="text-sm font-black text-slate-700">코치 말 끊기</legend>
+	                <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+	                  {(Object.keys(INTERRUPTION_MODE_LABEL) as InterruptionMode[]).map((im) => (
                     <button
                       key={im}
                       type="button"
@@ -2310,11 +2368,102 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                       {INTERRUPTION_MODE_LABEL[im]}
                     </button>
                   ))}
-                </div>
-              </fieldset>
-            </div>
+	                </div>
+	              </fieldset>
+	            </div>
 
-            <label className="block text-left">
+	            {mode === "mona" ? (
+	              <>
+	                <div className="grid gap-3 sm:grid-cols-2">
+	                  <fieldset className="text-left">
+	                    <legend className="text-sm font-black text-slate-700">학습 비율</legend>
+	                    <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+	                      {(Object.keys(COACH_REVIEW_LABEL) as CoachReviewMode[]).map((reviewMode) => (
+	                        <button
+	                          key={reviewMode}
+	                          type="button"
+	                          onClick={() => updateCoachConfig({ reviewMode })}
+	                          disabled={settingsLocked}
+	                          className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+	                            normalizedCoachConfig.reviewMode === reviewMode ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
+	                          } disabled:cursor-not-allowed disabled:opacity-50`}
+	                        >
+	                          {COACH_REVIEW_LABEL[reviewMode]}
+	                        </button>
+	                      ))}
+	                    </div>
+	                  </fieldset>
+
+	                  <fieldset className="text-left">
+	                    <legend className="text-sm font-black text-slate-700">난이도</legend>
+	                    <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+	                      {(Object.keys(COACH_DIFFICULTY_LABEL) as CoachDifficulty[]).map((difficulty) => (
+	                        <button
+	                          key={difficulty}
+	                          type="button"
+	                          onClick={() => updateCoachConfig({ difficulty })}
+	                          disabled={settingsLocked}
+	                          className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+	                            normalizedCoachConfig.difficulty === difficulty ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
+	                          } disabled:cursor-not-allowed disabled:opacity-50`}
+	                        >
+	                          {COACH_DIFFICULTY_LABEL[difficulty]}
+	                        </button>
+	                      ))}
+	                    </div>
+	                  </fieldset>
+	                </div>
+
+	                <details className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-left">
+	                  <summary className="cursor-pointer text-sm font-black text-amber-950">테스트/고급</summary>
+	                  <div className="mt-3 grid gap-3">
+	                    <fieldset>
+	                      <legend className="text-sm font-black text-amber-950">세션 대상</legend>
+	                      <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-amber-200 bg-white/70 p-1">
+	                        {(Object.keys(COACH_TESTER_LABEL) as CoachTester[]).map((tester) => (
+	                          <button
+	                            key={tester}
+	                            type="button"
+	                            onClick={() => updateCoachConfig({ tester })}
+	                            disabled={settingsLocked}
+	                            className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+	                              normalizedCoachConfig.tester === tester ? "bg-amber-950 text-white" : "text-amber-900 hover:bg-white"
+	                            } disabled:cursor-not-allowed disabled:opacity-50`}
+	                          >
+	                            {COACH_TESTER_LABEL[tester]}
+	                          </button>
+	                        ))}
+	                      </div>
+	                    </fieldset>
+
+	                    <div className="grid gap-2 sm:grid-cols-2">
+	                      <label className="flex min-h-11 items-center gap-2 rounded-lg border border-amber-200 bg-white/70 px-3 text-sm font-bold text-amber-950">
+	                        <input
+	                          type="checkbox"
+	                          checked={normalizedCoachConfig.honorLiveRequests}
+	                          onChange={(event) => updateCoachConfig({ honorLiveRequests: event.target.checked })}
+	                          disabled={settingsLocked}
+	                          className="size-4 accent-amber-950"
+	                        />
+	                        요청 즉시 반영
+	                      </label>
+	                      <label className="flex min-h-11 items-center gap-2 rounded-lg border border-amber-200 bg-white/70 px-3 text-sm font-bold text-amber-950">
+	                        <input
+	                          type="checkbox"
+	                          checked={normalizedCoachConfig.emptyPraiseGuard}
+	                          onChange={(event) => updateCoachConfig({ emptyPraiseGuard: event.target.checked })}
+	                          disabled={settingsLocked}
+	                          className="size-4 accent-amber-950"
+	                        />
+	                        빈말 칭찬 방지
+	                      </label>
+	                    </div>
+	                  </div>
+	                </details>
+	              </>
+	            ) : null}
+
+	            <label className="block text-left">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-black text-slate-700">시작 프롬프트</span>
                 <button
