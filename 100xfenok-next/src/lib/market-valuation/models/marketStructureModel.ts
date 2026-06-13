@@ -24,6 +24,7 @@ interface RawMarketStructureIndexDoc {
   generated_at?: string;
   source_files?: string[];
   concentration?: RawConcentrationItem[];
+  benchmarkMatrix?: RawBenchmarkMatrix;
   liquidity?: RawLiquidityItem[];
   sentimentComponents?: {
     latestDate?: string | null;
@@ -31,6 +32,9 @@ interface RawMarketStructureIndexDoc {
     components?: RawSentimentComponent[];
   };
   aaii?: RawAaiiSummary;
+  creditRatings?: RawCreditRatings;
+  magnificent7?: RawMagnificent7;
+  membershipChanges?: RawMembershipChanges;
 }
 
 interface RawConcentrationItem {
@@ -70,6 +74,91 @@ interface RawAaiiSummary {
   bearish?: number | null;
   spread?: number | null;
   trend?: CompactTrendPoint[];
+}
+
+type MarketStructurePeriodMap = Record<string, number | null>;
+
+export interface MarketStructureBenchmarkRow {
+  id: string;
+  label: string;
+  price: MarketStructurePeriodMap;
+  eps: MarketStructurePeriodMap;
+  pe: MarketStructurePeriodMap;
+  pb: MarketStructurePeriodMap;
+  roe: MarketStructurePeriodMap;
+}
+
+interface RawBenchmarkMatrix {
+  generated?: string | null;
+  rows?: Array<Partial<MarketStructureBenchmarkRow>>;
+}
+
+export interface MarketStructureBenchmarkMatrix {
+  generated: string | null;
+  rows: MarketStructureBenchmarkRow[];
+}
+
+export interface MarketStructureCreditTable {
+  id: string;
+  rows: number | null;
+  bestRating: string | null;
+  worstRating: string | null;
+  medianSpread: number | null;
+}
+
+interface RawCreditRatings {
+  sourceDate?: string | null;
+  generatedAt?: string | null;
+  tableCount?: number | null;
+  tables?: Array<Partial<MarketStructureCreditTable>>;
+}
+
+export interface MarketStructureCreditRatings {
+  sourceDate: string | null;
+  generatedAt: string | null;
+  tableCount: number | null;
+  tables: MarketStructureCreditTable[];
+}
+
+export interface MarketStructureMag7Holding {
+  rank: number | null;
+  symbol: string | null;
+  company: string | null;
+  weight: number | null;
+  changePercent: number | null;
+}
+
+interface RawMagnificent7 {
+  updated?: string | null;
+  totalMarketCap?: number | null;
+  totalWeight?: number | null;
+  holdings?: Array<Partial<MarketStructureMag7Holding>>;
+}
+
+export interface MarketStructureMagnificent7 {
+  updated: string | null;
+  totalMarketCap: number | null;
+  totalWeight: number | null;
+  holdings: MarketStructureMag7Holding[];
+}
+
+export interface MarketStructureMembershipChange {
+  date: string | null;
+  index: string | null;
+  added: string[];
+  removed: string[];
+  previousCount: number | null;
+  currentCount: number | null;
+}
+
+interface RawMembershipChanges {
+  updated?: string | null;
+  recent?: Array<Partial<MarketStructureMembershipChange>>;
+}
+
+export interface MarketStructureMembershipChanges {
+  updated: string | null;
+  recent: MarketStructureMembershipChange[];
 }
 
 interface RawTgaPayload {
@@ -151,9 +240,13 @@ export interface MarketStructureAaiiModel extends MarketModel<Record<string, num
 export interface MarketStructureModel extends MarketModel<Record<string, number | string>> {
   generatedAt: string | null;
   concentration: RawConcentrationItem[];
+  benchmarkMatrix: MarketStructureBenchmarkMatrix;
   liquidity: MarketStructureLiquidityModel[];
   sentiment: MarketStructureSentimentModel[];
   aaii: MarketStructureAaiiModel | null;
+  creditRatings: MarketStructureCreditRatings;
+  magnificent7: MarketStructureMagnificent7;
+  membershipChanges: MarketStructureMembershipChanges;
 }
 
 const SUMMARY_SOURCE = "computed/market_structure_index.json";
@@ -200,9 +293,13 @@ export async function loadMarketStructureModel(): Promise<MarketStructureModel |
     }),
     generatedAt: doc.generated_at ?? null,
     concentration,
+    benchmarkMatrix: normalizeBenchmarkMatrix(doc.benchmarkMatrix),
     liquidity,
     sentiment,
     aaii,
+    creditRatings: normalizeCreditRatings(doc.creditRatings),
+    magnificent7: normalizeMagnificent7(doc.magnificent7),
+    membershipChanges: normalizeMembershipChanges(doc.membershipChanges),
     loadFull: async () => {
       const full = await Promise.all([
         ...liquidity.map((model) => model.loadFull?.() ?? Promise.resolve([])),
@@ -211,6 +308,82 @@ export async function loadMarketStructureModel(): Promise<MarketStructureModel |
       ]);
       return sortSeriesByDate(full.flat());
     },
+  };
+}
+
+function normalizePeriodMap(value: unknown): MarketStructurePeriodMap {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([key, entry]) => (finite(entry) || entry === null ? [[key, entry]] : [])),
+  );
+}
+
+function normalizeBenchmarkMatrix(raw: RawBenchmarkMatrix | undefined): MarketStructureBenchmarkMatrix {
+  return {
+    generated: raw?.generated ?? null,
+    rows: (raw?.rows ?? []).flatMap((row) => {
+      if (typeof row.id !== "string" || typeof row.label !== "string") return [];
+      return [{
+        id: row.id,
+        label: row.label,
+        price: normalizePeriodMap(row.price),
+        eps: normalizePeriodMap(row.eps),
+        pe: normalizePeriodMap(row.pe),
+        pb: normalizePeriodMap(row.pb),
+        roe: normalizePeriodMap(row.roe),
+      }];
+    }),
+  };
+}
+
+function normalizeCreditRatings(raw: RawCreditRatings | undefined): MarketStructureCreditRatings {
+  return {
+    sourceDate: raw?.sourceDate ?? null,
+    generatedAt: raw?.generatedAt ?? null,
+    tableCount: finite(raw?.tableCount) ? raw.tableCount : null,
+    tables: (raw?.tables ?? []).flatMap((table) => {
+      if (typeof table.id !== "string") return [];
+      return [{
+        id: table.id,
+        rows: finite(table.rows) ? table.rows : null,
+        bestRating: typeof table.bestRating === "string" ? table.bestRating : null,
+        worstRating: typeof table.worstRating === "string" ? table.worstRating : null,
+        medianSpread: finite(table.medianSpread) ? table.medianSpread : null,
+      }];
+    }),
+  };
+}
+
+function normalizeMagnificent7(raw: RawMagnificent7 | undefined): MarketStructureMagnificent7 {
+  return {
+    updated: raw?.updated ?? null,
+    totalMarketCap: finite(raw?.totalMarketCap) ? raw.totalMarketCap : null,
+    totalWeight: finite(raw?.totalWeight) ? raw.totalWeight : null,
+    holdings: (raw?.holdings ?? []).flatMap((holding) => {
+      const hasIdentity = typeof holding.symbol === "string" || typeof holding.company === "string";
+      if (!hasIdentity) return [];
+      return [{
+        rank: finite(holding.rank) ? holding.rank : null,
+        symbol: typeof holding.symbol === "string" ? holding.symbol : null,
+        company: typeof holding.company === "string" ? holding.company : null,
+        weight: finite(holding.weight) ? holding.weight : null,
+        changePercent: finite(holding.changePercent) ? holding.changePercent : null,
+      }];
+    }),
+  };
+}
+
+function normalizeMembershipChanges(raw: RawMembershipChanges | undefined): MarketStructureMembershipChanges {
+  return {
+    updated: raw?.updated ?? null,
+    recent: (raw?.recent ?? []).map((change) => ({
+      date: typeof change.date === "string" ? change.date : null,
+      index: typeof change.index === "string" ? change.index : null,
+      added: Array.isArray(change.added) ? change.added.filter((item): item is string => typeof item === "string") : [],
+      removed: Array.isArray(change.removed) ? change.removed.filter((item): item is string => typeof item === "string") : [],
+      previousCount: finite(change.previousCount) ? change.previousCount : null,
+      currentCount: finite(change.currentCount) ? change.currentCount : null,
+    })),
   };
 }
 

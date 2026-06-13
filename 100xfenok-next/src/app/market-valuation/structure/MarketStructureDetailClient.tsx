@@ -15,6 +15,10 @@ export interface MarketStructureSlotProps {
 }
 
 export interface MarketStructureDetailSlots {
+  benchmark?: (props: MarketStructureSlotProps) => ReactNode;
+  credit?: (props: MarketStructureSlotProps) => ReactNode;
+  mag7?: (props: MarketStructureSlotProps) => ReactNode;
+  membership?: (props: MarketStructureSlotProps) => ReactNode;
   concentration?: (props: MarketStructureSlotProps) => ReactNode;
   liquidity?: (props: MarketStructureSlotProps) => ReactNode;
   sentiment?: (props: MarketStructureSlotProps) => ReactNode;
@@ -167,7 +171,7 @@ export default function MarketStructureDetailClient({
           <p className="data-shell-kicker">Market Structure</p>
           <h1 className="data-shell-title">시장 구조 상세</h1>
           <p className="data-shell-desc">
-            유동성, 집중도, CNN 하위 심리와 AAII를 한 화면에서 보고, 패널별 MAX 범위에서 원천 깊이까지 확장합니다.
+            벤치마크 매트릭스, 신용 스프레드, Magnificent 7, 편입·제외 이벤트, 유동성, 집중도, CNN 하위 심리와 AAII까지 한 화면에서 확장합니다.
           </p>
         </div>
         <div className="data-shell-head-actions">
@@ -201,6 +205,58 @@ export default function MarketStructureDetailClient({
       {model && slotProps ? (
         <div className={cx("grid gap-4", state !== "ready" && "opacity-60")}>
           <SummaryStrip model={model} />
+
+          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+            <SlotShell id="benchmark" title="이익 × 멀티플 매트릭스" subtitle="7 benchmarks">
+              {slots.benchmark ? (
+                slots.benchmark(slotProps)
+              ) : (
+                <Placeholder>
+                  market-structure-benchmark 슬롯
+                  <br />
+                  props: {"{ model }"} · `model.benchmarkMatrix.rows` 전체 7개 벤치마크
+                </Placeholder>
+              )}
+            </SlotShell>
+
+            <SlotShell id="credit" title="신용등급 스프레드" subtitle="3 Damodaran tables">
+              {slots.credit ? (
+                slots.credit(slotProps)
+              ) : (
+                <Placeholder>
+                  market-structure-credit 슬롯
+                  <br />
+                  props: {"{ model }"} · `model.creditRatings.tables` 3개 테이블
+                </Placeholder>
+              )}
+            </SlotShell>
+          </div>
+
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+            <SlotShell id="mag7" title="Magnificent 7 리더십" subtitle="weight · market cap">
+              {slots.mag7 ? (
+                slots.mag7(slotProps)
+              ) : (
+                <Placeholder>
+                  market-structure-mag7 슬롯
+                  <br />
+                  props: {"{ model }"} · `model.magnificent7.holdings` 리더십 패널
+                </Placeholder>
+              )}
+            </SlotShell>
+
+            <SlotShell id="membership" title="지수 편입·제외" subtitle="membership changes">
+              {slots.membership ? (
+                slots.membership(slotProps)
+              ) : (
+                <Placeholder>
+                  market-structure-membership 슬롯
+                  <br />
+                  props: {"{ model }"} · `model.membershipChanges.recent` 이벤트 원장
+                </Placeholder>
+              )}
+            </SlotShell>
+          </div>
 
           <div className="grid min-w-0 gap-4 xl:grid-cols-2">
             <SlotShell id="liquidity" title="유동성" subtitle="TGA · stablecoins">
