@@ -2405,6 +2405,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           vadPreset={vadPreset}
           onVoiceChange={setVoiceName}
           onVadChange={setVadPreset}
+          settingsSlot={mode === "mona" ? (
+            <CoachConfigControls
+              config={normalizedCoachConfig}
+              locked={settingsLocked}
+              onUpdate={updateCoachConfig}
+              variant="winddown"
+            />
+          ) : undefined}
           onStart={() => void startSession()}
           onStop={() => void stopSession()}
         />
@@ -2626,96 +2634,13 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 	              </fieldset>
 	            </div>
 
-	            {mode === "mona" ? (
-	              <>
-	                <div className="grid gap-3 sm:grid-cols-2">
-	                  <fieldset className="text-left">
-	                    <legend className="text-sm font-black text-slate-700">학습 비율</legend>
-	                    <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-	                      {COACH_REVIEW_PRESETS.map((reviewMode) => (
-	                        <button
-	                          key={reviewMode}
-	                          type="button"
-	                          onClick={() => updateCoachConfig({ reviewMode })}
-	                          disabled={settingsLocked}
-	                          className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
-	                            normalizedCoachConfig.reviewMode === reviewMode ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
-	                          } disabled:cursor-not-allowed disabled:opacity-50`}
-	                        >
-	                          {COACH_REVIEW_LABEL[reviewMode]}
-	                        </button>
-	                      ))}
-	                    </div>
-	                  </fieldset>
-
-	                  <fieldset className="text-left">
-	                    <legend className="text-sm font-black text-slate-700">난이도</legend>
-	                    <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-	                      {(Object.keys(COACH_DIFFICULTY_LABEL) as CoachDifficulty[]).map((difficulty) => (
-	                        <button
-	                          key={difficulty}
-	                          type="button"
-	                          onClick={() => updateCoachConfig({ difficulty })}
-	                          disabled={settingsLocked}
-	                          className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
-	                            normalizedCoachConfig.difficulty === difficulty ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
-	                          } disabled:cursor-not-allowed disabled:opacity-50`}
-	                        >
-	                          {COACH_DIFFICULTY_LABEL[difficulty]}
-	                        </button>
-	                      ))}
-	                    </div>
-	                  </fieldset>
-	                </div>
-
-	                <details className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-left">
-	                  <summary className="cursor-pointer text-sm font-black text-amber-950">테스트/고급</summary>
-	                  <div className="mt-3 grid gap-3">
-	                    <fieldset>
-	                      <legend className="text-sm font-black text-amber-950">세션 대상</legend>
-	                      <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-amber-200 bg-white/70 p-1">
-	                        {(Object.keys(COACH_TESTER_LABEL) as CoachTester[]).map((tester) => (
-	                          <button
-	                            key={tester}
-	                            type="button"
-	                            onClick={() => updateCoachConfig({ tester })}
-	                            disabled={settingsLocked}
-	                            className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
-	                              normalizedCoachConfig.tester === tester ? "bg-amber-950 text-white" : "text-amber-900 hover:bg-white"
-	                            } disabled:cursor-not-allowed disabled:opacity-50`}
-	                          >
-	                            {COACH_TESTER_LABEL[tester]}
-	                          </button>
-	                        ))}
-	                      </div>
-	                    </fieldset>
-
-	                    <div className="grid gap-2 sm:grid-cols-2">
-	                      <label className="flex min-h-11 items-center gap-2 rounded-lg border border-amber-200 bg-white/70 px-3 text-sm font-bold text-amber-950">
-	                        <input
-	                          type="checkbox"
-	                          checked={normalizedCoachConfig.honorLiveRequests}
-	                          onChange={(event) => updateCoachConfig({ honorLiveRequests: event.target.checked })}
-	                          disabled={settingsLocked}
-	                          className="size-4 accent-amber-950"
-	                        />
-	                        요청 즉시 반영
-	                      </label>
-	                      <label className="flex min-h-11 items-center gap-2 rounded-lg border border-amber-200 bg-white/70 px-3 text-sm font-bold text-amber-950">
-	                        <input
-	                          type="checkbox"
-	                          checked={normalizedCoachConfig.emptyPraiseGuard}
-	                          onChange={(event) => updateCoachConfig({ emptyPraiseGuard: event.target.checked })}
-	                          disabled={settingsLocked}
-	                          className="size-4 accent-amber-950"
-	                        />
-	                        빈말 칭찬 방지
-	                      </label>
-	                    </div>
-	                  </div>
-	                </details>
-	              </>
-	            ) : null}
+		            {mode === "mona" ? (
+		              <CoachConfigControls
+		                config={normalizedCoachConfig}
+		                locked={settingsLocked}
+		                onUpdate={updateCoachConfig}
+		              />
+		            ) : null}
 
 	            <label className="block text-left">
               <div className="flex items-center justify-between gap-2">
@@ -2866,6 +2791,145 @@ function BuildVersionBadge({ onCopy }: { onCopy: () => void }) {
     >
       {BUILD_VERSION}
     </button>
+  );
+}
+
+function CoachConfigControls({
+  config,
+  locked,
+  onUpdate,
+  variant = "admin",
+}: {
+  config: CoachConfig;
+  locked: boolean;
+  onUpdate: (patch: Partial<CoachConfig>) => void;
+  variant?: "admin" | "winddown";
+}) {
+  const winddown = variant === "winddown";
+  const fieldLegendClass = winddown
+    ? "text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]"
+    : "text-sm font-black text-slate-700";
+  const grid3Class = winddown
+    ? "mt-3 grid grid-cols-3 gap-2"
+    : "mt-2 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1";
+  const grid2Class = winddown
+    ? "mt-3 grid grid-cols-2 gap-2"
+    : "mt-2 grid grid-cols-2 gap-2 rounded-lg border border-amber-200 bg-white/70 p-1";
+  const primaryButtonClass = (active: boolean) => winddown
+    ? `min-h-12 rounded-2xl border px-2 text-[12px] font-semibold transition active:scale-[0.97] ${
+      active
+        ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
+        : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+    } disabled:cursor-not-allowed disabled:opacity-50`
+    : `min-h-10 rounded-md px-2 text-xs font-black transition ${
+      active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
+    } disabled:cursor-not-allowed disabled:opacity-50`;
+  const testerButtonClass = (active: boolean) => winddown
+    ? `min-h-12 rounded-2xl border px-2 text-[12px] font-semibold transition active:scale-[0.97] ${
+      active
+        ? "border-[var(--wd-apricot)] bg-[var(--wd-apricot-soft)] text-[var(--wd-apricot)]"
+        : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+    } disabled:cursor-not-allowed disabled:opacity-50`
+    : `min-h-10 rounded-md px-2 text-xs font-black transition ${
+      active ? "bg-amber-950 text-white" : "text-amber-900 hover:bg-white"
+    } disabled:cursor-not-allowed disabled:opacity-50`;
+  const detailClass = winddown
+    ? "rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-bg)]/70 p-3 text-left"
+    : "rounded-lg border border-amber-200 bg-amber-50 p-3 text-left";
+  const summaryClass = winddown
+    ? "cursor-pointer text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-apricot)]"
+    : "cursor-pointer text-sm font-black text-amber-950";
+  const advancedLegendClass = winddown
+    ? "text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-apricot)]"
+    : "text-sm font-black text-amber-950";
+  const checkboxLabelClass = winddown
+    ? "flex min-h-12 items-center gap-2 rounded-2xl border border-[var(--wd-line)] px-3 text-[12px] font-semibold text-[var(--wd-ink)]"
+    : "flex min-h-11 items-center gap-2 rounded-lg border border-amber-200 bg-white/70 px-3 text-sm font-bold text-amber-950";
+  const checkboxClass = winddown ? "size-4 accent-[var(--wd-accent)]" : "size-4 accent-amber-950";
+
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <fieldset className="text-left">
+          <legend className={fieldLegendClass}>학습 비율</legend>
+          <div className={grid3Class}>
+            {COACH_REVIEW_PRESETS.map((reviewMode) => (
+              <button
+                key={reviewMode}
+                type="button"
+                onClick={() => onUpdate({ reviewMode })}
+                disabled={locked}
+                className={primaryButtonClass(config.reviewMode === reviewMode)}
+              >
+                {COACH_REVIEW_LABEL[reviewMode]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="text-left">
+          <legend className={fieldLegendClass}>난이도</legend>
+          <div className={grid3Class}>
+            {(Object.keys(COACH_DIFFICULTY_LABEL) as CoachDifficulty[]).map((difficulty) => (
+              <button
+                key={difficulty}
+                type="button"
+                onClick={() => onUpdate({ difficulty })}
+                disabled={locked}
+                className={primaryButtonClass(config.difficulty === difficulty)}
+              >
+                {COACH_DIFFICULTY_LABEL[difficulty]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+
+      <details className={detailClass}>
+        <summary className={summaryClass}>테스트/고급</summary>
+        <div className="mt-3 grid gap-3">
+          <fieldset>
+            <legend className={advancedLegendClass}>세션 대상</legend>
+            <div className={grid2Class}>
+              {(Object.keys(COACH_TESTER_LABEL) as CoachTester[]).map((tester) => (
+                <button
+                  key={tester}
+                  type="button"
+                  onClick={() => onUpdate({ tester })}
+                  disabled={locked}
+                  className={testerButtonClass(config.tester === tester)}
+                >
+                  {COACH_TESTER_LABEL[tester]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className={checkboxLabelClass}>
+              <input
+                type="checkbox"
+                checked={config.honorLiveRequests}
+                onChange={(event) => onUpdate({ honorLiveRequests: event.target.checked })}
+                disabled={locked}
+                className={checkboxClass}
+              />
+              요청 즉시 반영
+            </label>
+            <label className={checkboxLabelClass}>
+              <input
+                type="checkbox"
+                checked={config.emptyPraiseGuard}
+                onChange={(event) => onUpdate({ emptyPraiseGuard: event.target.checked })}
+                disabled={locked}
+                className={checkboxClass}
+              />
+              빈말 칭찬 방지
+            </label>
+          </div>
+        </div>
+      </details>
+    </>
   );
 }
 

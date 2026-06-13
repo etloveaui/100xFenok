@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 
 export type WindDownPhase = "boot" | "ready" | "connecting" | "live" | "stopped" | "blocked";
@@ -17,6 +18,7 @@ type Props = {
   vadPreset: string;
   onVoiceChange: (voice: string) => void;
   onVadChange: (preset: "relaxed" | "balanced") => void;
+  settingsSlot?: ReactNode;
   onStart: () => void;
   onStop: () => void;
 };
@@ -90,6 +92,7 @@ function studyPlanLine(): string {
 export default function MonaWindDown({
   phase, message, card, coachLine, errorText,
   voiceName, vadPreset, onVoiceChange, onVadChange,
+  settingsSlot,
   onStart, onStop,
 }: Props) {
   const [theme, setTheme] = useState<WindDownTheme>("light");
@@ -348,6 +351,12 @@ export default function MonaWindDown({
                 </button>
               ))}
             </div>
+
+            {settingsSlot ? (
+              <div className="mt-6">
+                {settingsSlot}
+              </div>
+            ) : null}
 
             <p className="mt-5 min-h-[18px] text-center text-[12px] text-[var(--wd-muted)]">
               {live ? "대화 중이라 다음 시작부터 적용돼" : "바로 적용돼"}
