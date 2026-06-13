@@ -25,6 +25,7 @@ const SETUP_FS_TIMEOUT_MS = 500;
 const MAX_SESSION_BYTES = 64 * 1024;
 const MAX_BEST3_ENTRIES = 500;
 const MAX_WEAK_NOTES = 200;
+const MAX_EXPRESSION_BANK_ENTRIES = 950;
 const EXPRESSION_BANK_THEMES = [
   "work",
   "family-friends",
@@ -120,6 +121,11 @@ export type ExpressionBankEntry = {
   theme: ExpressionBankTheme;
   register: "casual" | "neutral";
   sourceId: string;
+  difficulty?: 1 | 2 | 3;
+  wordCount?: number;
+  pattern?: string | null;
+  sibling?: { ko: string; en: string } | null;
+  variations?: { kind: string; ko: string; en: string }[];
 };
 
 export type StudySnapshot = {
@@ -159,6 +165,13 @@ export const DEFAULT_LESSON_CONFIG: LessonConfig = {
   advancedDay: false,
 };
 
+type ServerCoachReviewMode = "off" | "soft" | "hard";
+
+type ServerCoachConfig = LessonConfig & {
+  reviewMode: ServerCoachReviewMode;
+  reviewRatio: number;
+};
+
 export type LessonVariationKind = "negation" | "past" | "question" | "subject";
 
 export type LessonPlanItem = {
@@ -169,6 +182,7 @@ export type LessonPlanItem = {
   kind: "review" | "new";
   sibling: { ko: string; en: string } | null;
   variationKinds: LessonVariationKind[];
+  variations: { kind: LessonVariationKind; ko: string; en: string }[];
 };
 
 export type LessonPlan = {
@@ -248,12 +262,46 @@ function normalizeSessionId(value: unknown): string | null {
   return trimmed.replace(/[^A-Za-z0-9._-]/g, "-");
 }
 
+function clampFiniteNumber(value: unknown, fallback: number, min: number, max: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeServerReviewMode(value: unknown): ServerCoachReviewMode {
+  if (value === "off") return "off";
+  if (value === "hard") return "hard";
+  return "soft";
+}
+
+function fallbackReviewRatio(reviewMode: unknown): number {
+  if (reviewMode === "off") return 0;
+  if (reviewMode === "hard") return 1;
+  if (reviewMode === "new-first") return 0.15;
+  if (reviewMode === "review-first") return 0.55;
+  return 0.3;
+}
+
+function normalizeServerCoachConfig(value: unknown): ServerCoachConfig {
+  const input = isRecord(value) ? value : {};
+  const difficulty = input.difficulty === "easy" || input.difficulty === "challenge" ? input.difficulty : "normal";
+  const fallbackDifficultyCap = difficulty === "easy" ? 6 : difficulty === "challenge" ? 10 : DEFAULT_LESSON_CONFIG.difficultyCap;
+  return {
+    lessonSize: Math.max(1, Math.min(6, Math.round(clampFiniteNumber(input.lessonSize, DEFAULT_LESSON_CONFIG.lessonSize, 1, 6)))),
+    variationsPerItem: Math.max(0, Math.min(LESSON_VARIATION_ORDER.length, Math.round(clampFiniteNumber(input.variationsPerItem, DEFAULT_LESSON_CONFIG.variationsPerItem, 0, LESSON_VARIATION_ORDER.length)))),
+    difficultyCap: Math.max(4, Math.min(14, Math.round(clampFiniteNumber(input.difficultyCap, fallbackDifficultyCap, 4, 14)))),
+    advancedDay: input.advancedDay === true,
+    reviewMode: normalizeServerReviewMode(input.reviewMode),
+    reviewRatio: clampFiniteNumber(input.reviewRatio, fallbackReviewRatio(input.reviewMode), 0, 1),
+  };
+}
+
 function normalizeMonaStudyContext(context?: MonaStudyToolContext | null) {
   const coachConfig = isRecord(context?.coachConfig) ? context.coachConfig : {};
   const tester = coachConfig.tester === "owner" || context?.tester === "owner" ? "owner" : "mona";
   return {
     tester,
     sessionId: normalizeSessionId(context?.sessionId),
+    coachConfig: normalizeServerCoachConfig(coachConfig),
   };
 }
 
@@ -431,6 +479,39 @@ function normalizeWeakStore(value: unknown): WeakNote[] {
   return notes as WeakNote[];
 }
 
+function normalizeBankDifficulty(value: unknown): 1 | 2 | 3 | undefined {
+  return value === 1 || value === 2 || value === 3 ? value : undefined;
+}
+
+function normalizeBankWordCount(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : undefined;
+}
+
+function normalizeBankSibling(value: unknown): { ko: string; en: string } | null | undefined {
+  if (value === null) return null;
+  if (!isRecord(value)) return undefined;
+  const ko = factString(value.ko, 120);
+  const en = factString(value.en, 160);
+  return ko && en ? { ko, en } : undefined;
+}
+
+function normalizeBankVariations(value: unknown): { kind: string; ko: string; en: string }[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const variations = value
+    .filter(isRecord)
+    .map((item) => {
+      const kind = factString(item.kind, 24);
+      const ko = factString(item.ko, 120);
+      const en = factString(item.en, 160);
+      return kind && ko && en ? { kind, ko, en } : null;
+    })
+    .filter((item): item is { kind: string; ko: string; en: string } => Boolean(item))
+    .slice(0, 4);
+  return variations.length > 0 ? variations : undefined;
+}
+
 function normalizeExpressionBank(value: unknown): ExpressionBankEntry[] {
   if (!isRecord(value) || !Array.isArray(value.entries)) return [];
   const seen = new Set<string>();
@@ -453,8 +534,13 @@ function normalizeExpressionBank(value: unknown): ExpressionBankEntry[] {
       theme: raw.theme,
       register,
       sourceId,
+      difficulty: normalizeBankDifficulty(raw.difficulty),
+      wordCount: normalizeBankWordCount(raw.word_count),
+      pattern: factString(raw.pattern, 80),
+      sibling: normalizeBankSibling(raw.sibling),
+      variations: normalizeBankVariations(raw.variations),
     });
-    if (entries.length >= 500) break;
+    if (entries.length >= MAX_EXPRESSION_BANK_ENTRIES) break;
   }
   return entries;
 }
@@ -582,7 +668,13 @@ function findYesterdaySession(snapshot: StudySnapshot, date = snapshot.studyDate
     .sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
 }
 
-function isTotalReviewDay(snapshot: StudySnapshot, meta: ReviewMeta | null, studyDate: string): boolean {
+function isTotalReviewDay(
+  snapshot: StudySnapshot,
+  meta: ReviewMeta | null,
+  studyDate: string,
+  reviewMode: ServerCoachReviewMode = "hard",
+): boolean {
+  if (reviewMode !== "hard") return false;
   if (meta?.lastTotalReview == null) return snapshot.sessions.length >= 5;
   const lastReview = new Date(`${meta.lastTotalReview}T00:00:00.000Z`);
   const current = new Date(`${studyDate}T00:00:00.000Z`);
@@ -590,27 +682,73 @@ function isTotalReviewDay(snapshot: StudySnapshot, meta: ReviewMeta | null, stud
   return diffMs >= 7 * DAY_MS;
 }
 
-function pickWarmupPool(snapshot: StudySnapshot, studyDate: string): { best3Lines: Best3Item[]; weakLines: WeakNote[] } {
+function buildBankMetaMap(snapshot: StudySnapshot): Map<string, ExpressionBankEntry> {
+  return new Map(snapshot.expressionBank.map((entry) => [normalizeKey(entry.en), entry]));
+}
+
+function bankWordCount(entry: ExpressionBankEntry | null | undefined, fallbackEn: string): number {
+  return entry?.wordCount ?? lessonWordCount(fallbackEn);
+}
+
+function passesDePoisonGate(
+  entry: ExpressionBankEntry | null | undefined,
+  fallbackEn: string,
+  difficultyCap: number,
+  allowExplicitHardReview = false,
+): boolean {
+  if (bankWordCount(entry, fallbackEn) > difficultyCap) return false;
+  if (!allowExplicitHardReview && entry?.difficulty === 3) return false;
+  return true;
+}
+
+function capRecentSessionDominance<T>(
+  items: T[],
+  getSessionKey: (item: T) => string | null,
+  maxPerSession = 2,
+): T[] {
+  const counts = new Map<string, number>();
+  return items.filter((item) => {
+    const sessionKey = getSessionKey(item);
+    if (!sessionKey) return true;
+    const nextCount = (counts.get(sessionKey) ?? 0) + 1;
+    if (nextCount > maxPerSession) return false;
+    counts.set(sessionKey, nextCount);
+    return true;
+  });
+}
+
+function pickWarmupPool(
+  snapshot: StudySnapshot,
+  studyDate: string,
+  config: LessonConfig = DEFAULT_LESSON_CONFIG,
+): { best3Lines: Best3Item[]; weakLines: WeakNote[] } {
+  const bankMeta = buildBankMetaMap(snapshot);
   const overdueWeak = snapshot.weakNotes
+    .filter((n) => passesDePoisonGate(bankMeta.get(normalizeKey(n.correct)), n.correct, config.difficultyCap))
     .filter((n) => n.due == null || n.due <= studyDate)
-    .sort((a, b) => (b.missCount - a.missCount) || ((a.due ?? "0000-00-00") < (b.due ?? "0000-00-00") ? -1 : 1))
-    .slice(0, 3);
+    .sort((a, b) => (b.missCount - a.missCount) || ((a.due ?? "0000-00-00") < (b.due ?? "0000-00-00") ? -1 : 1));
+  const cappedWeak = capRecentSessionDominance(overdueWeak, (note) => note.sessions[0] ?? note.lastSeen ?? null).slice(0, 3);
 
   const dueGraduated = snapshot.best3
+    .filter((e) => passesDePoisonGate(bankMeta.get(normalizeKey(e.en)), e.en, config.difficultyCap))
     .filter((e) => e.due != null && e.due <= studyDate)
-    .sort((a, b) => (a.due ?? "9999-99-99").localeCompare(b.due ?? "9999-99-99"))
-    .slice(0, 3);
+    .sort((a, b) => (a.due ?? "9999-99-99").localeCompare(b.due ?? "9999-99-99"));
+  const cappedDueGraduated = capRecentSessionDominance(dueGraduated, (entry) => entry.sessions[0] ?? entry.firstSeen ?? null).slice(0, 3);
 
   const pickedKeys = new Set<string>();
-  for (const n of overdueWeak) pickedKeys.add(normalizeKey(n.correct));
-  for (const e of dueGraduated) pickedKeys.add(normalizeKey(e.en));
+  for (const n of cappedWeak) pickedKeys.add(normalizeKey(n.correct));
+  for (const e of cappedDueGraduated) pickedKeys.add(normalizeKey(e.en));
 
   const recentBest3 = snapshot.best3
+    .filter((e) => passesDePoisonGate(bankMeta.get(normalizeKey(e.en)), e.en, config.difficultyCap))
     .filter((e) => !pickedKeys.has(normalizeKey(e.en)))
     .sort((a, b) => (b.sessions[0] ?? b.firstSeen).localeCompare(a.sessions[0] ?? a.firstSeen));
 
-  const best3Lines = [...dueGraduated, ...recentBest3].slice(0, 5);
-  const weakLines = overdueWeak;
+  const best3Lines = capRecentSessionDominance(
+    [...cappedDueGraduated, ...recentBest3],
+    (entry) => entry.sessions[0] ?? entry.firstSeen ?? null,
+  ).slice(0, 5);
+  const weakLines = cappedWeak;
 
   return { best3Lines, weakLines };
 }
@@ -872,7 +1010,7 @@ async function saveStudySession(args: Record<string, unknown>, context?: MonaStu
   };
 
   const meta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
-  if (isTotalReviewDay(snapshot, meta, studyDate)) {
+  if (isTotalReviewDay(snapshot, meta, studyDate, toolContext.coachConfig.reviewMode)) {
     await writeJsonAtomic(MONA_REVIEW_META, { lastTotalReview: studyDate, updatedAt: new Date().toISOString() }).catch(() => {});
   }
 
@@ -935,8 +1073,14 @@ async function getStudyMemory(args: Record<string, unknown>) {
   };
 }
 
-function buildWeeklyItems(snapshot: StudySnapshot, requested: number, _weakBias: boolean) {
+function buildWeeklyItems(
+  snapshot: StudySnapshot,
+  requested: number,
+  _weakBias: boolean,
+  config: LessonConfig = DEFAULT_LESSON_CONFIG,
+) {
   const studyDate = snapshot.studyDate;
+  const bankMeta = buildBankMetaMap(snapshot);
   const sevenDaysAgo = (() => {
     const d = new Date(`${studyDate}T00:00:00.000Z`);
     d.setUTCDate(d.getUTCDate() - 7);
@@ -963,6 +1107,7 @@ function buildWeeklyItems(snapshot: StudySnapshot, requested: number, _weakBias:
   for (const entry of snapshot.best3) {
     const key = normalizeKey(entry.en);
     if (seen.has(key)) continue;
+    if (!passesDePoisonGate(bankMeta.get(key), entry.en, config.difficultyCap)) continue;
     seen.add(key);
     const item: PoolItem = { ko: entry.ko, en: entry.en, note: entry.note, source: "best3", sessions: entry.sessions, box: entry.box, due: entry.due };
     if (entry.sessions.some((d) => d >= sevenDaysAgo)) {
@@ -979,8 +1124,9 @@ function buildWeeklyItems(snapshot: StudySnapshot, requested: number, _weakBias:
   for (const note of snapshot.weakNotes) {
     const key = normalizeKey(note.correct);
     if (seen.has(key)) continue;
+    if (!passesDePoisonGate(bankMeta.get(key), note.correct, config.difficultyCap)) continue;
     seen.add(key);
-    const item: PoolItem = { ko: note.ko || note.correct, en: note.correct, note: note.note, source: "weak", missCount: note.missCount, due: note.due, box: note.box };
+    const item: PoolItem = { ko: note.ko || note.correct, en: note.correct, note: note.note, source: "weak", missCount: note.missCount, due: note.due, sessions: note.sessions, box: note.box };
     if (note.due == null || note.due <= studyDate) {
       t2.push(item);
     } else if (note.sessions.some((d) => d >= sevenDaysAgo)) {
@@ -1001,8 +1147,8 @@ function buildWeeklyItems(snapshot: StudySnapshot, requested: number, _weakBias:
 
   const t1Target = Math.ceil(0.5 * requested);
   const t2Target = Math.ceil(0.3 * requested);
-  const pickedT1 = t1.slice(0, t1Target);
-  const pickedT2 = t2.slice(0, t2Target);
+  const pickedT1 = capRecentSessionDominance(t1, (item) => item.sessions?.[0] ?? null).slice(0, t1Target);
+  const pickedT2 = capRecentSessionDominance(t2, (item) => item.sessions?.[0] ?? null).slice(0, t2Target);
   const usedKeys = new Set<string>();
   for (const item of [...pickedT1, ...pickedT2]) usedKeys.add(normalizeKey(item.en));
 
@@ -1043,13 +1189,14 @@ function buildWeeklyItems(snapshot: StudySnapshot, requested: number, _weakBias:
   }).slice(0, requested);
 }
 
-async function getWeeklyTestSet(args: Record<string, unknown>) {
+async function getWeeklyTestSet(args: Record<string, unknown>, context?: MonaStudyToolContext | null) {
   const snapshot = await getSnapshotForTurn();
+  const toolContext = normalizeMonaStudyContext(context);
   const requested = typeof args.count === "number" && Number.isFinite(args.count)
     ? Math.max(1, Math.min(50, Math.round(args.count)))
     : 30;
   const weakBias = args.weakBias !== false;
-  const items = buildWeeklyItems(snapshot, requested, weakBias);
+  const items = buildWeeklyItems(snapshot, requested, weakBias, toolContext.coachConfig);
   return {
     count: items.length,
     requested,
@@ -1069,7 +1216,7 @@ export async function executeMonaStudyToolFunction(
   if (name === "saveStudySession") return saveStudySession(args, context);
   if (name === "getYesterdaySession") return getYesterdaySession(args);
   if (name === "getStudyMemory") return getStudyMemory(args);
-  if (name === "getWeeklyTestSet") return getWeeklyTestSet(args);
+  if (name === "getWeeklyTestSet") return getWeeklyTestSet(args, context);
   return { error: "TOOL_HANDLER_MISSING" };
 }
 
@@ -1129,11 +1276,31 @@ function stableExpressionHash(value: string): number {
 
 const LESSON_VARIATION_ORDER: readonly LessonVariationKind[] = ["negation", "past", "question", "subject"];
 
+function toLessonVariationKind(value: string): LessonVariationKind | null {
+  return LESSON_VARIATION_ORDER.includes(value as LessonVariationKind)
+    ? value as LessonVariationKind
+    : null;
+}
+
+function pickLessonVariations(
+  item: ExpressionBankEntry,
+  fallbackKinds: readonly LessonVariationKind[],
+): { kind: LessonVariationKind; ko: string; en: string }[] {
+  const enriched = (item.variations ?? [])
+    .map((variation) => {
+      const kind = toLessonVariationKind(variation.kind);
+      return kind ? { kind, ko: variation.ko, en: variation.en } : null;
+    })
+    .filter((variation): variation is { kind: LessonVariationKind; ko: string; en: string } => Boolean(variation));
+  if (enriched.length > 0) return enriched.slice(0, fallbackKinds.length);
+  return [];
+}
+
 export function isLessonV2Enabled(): boolean {
   return (process.env.MONA_LESSON_V2 ?? "on") !== "off";
 }
 
-function normalizeLessonConfig(config?: LessonConfig): LessonConfig {
+function normalizeLessonConfig(config?: Partial<LessonConfig> | null): LessonConfig {
   return {
     lessonSize: Math.max(1, Math.min(6, Math.round(config?.lessonSize ?? DEFAULT_LESSON_CONFIG.lessonSize))),
     variationsPerItem: Math.max(0, Math.min(LESSON_VARIATION_ORDER.length, Math.round(config?.variationsPerItem ?? DEFAULT_LESSON_CONFIG.variationsPerItem))),
@@ -1171,14 +1338,15 @@ function sortLessonEntries(entries: ExpressionBankEntry[], studyDate: string, sa
 }
 
 function passesLessonLevelGate(entry: ExpressionBankEntry, difficultyCap: number): boolean {
-  return lessonWordCount(entry.en) <= difficultyCap && isLessonRegisterAllowed(entry);
+  return passesDePoisonGate(entry, entry.en, difficultyCap) && isLessonRegisterAllowed(entry);
 }
 
 export function pickLessonItemsV2(
   snapshot: StudySnapshot,
   studyDate: string,
   plan: WeekdayPlan,
-  config: LessonConfig,
+  config: Partial<LessonConfig>,
+  excludeKeys = new Set<string>(),
 ): ExpressionBankEntry[] {
   const resolvedConfig = normalizeLessonConfig(config);
   const theme = getLessonBankTheme(plan, resolvedConfig);
@@ -1186,7 +1354,12 @@ export function pickLessonItemsV2(
 
   const bank = Array.isArray(snapshot.expressionBank) ? snapshot.expressionBank : [];
   const primary = sortLessonEntries(
-    bank.filter((entry) => entry.theme === theme && passesLessonLevelGate(entry, resolvedConfig.difficultyCap)),
+    bank.filter((entry) => {
+      const key = normalizeKey(entry.en);
+      return !excludeKeys.has(key)
+        && entry.theme === theme
+        && passesLessonLevelGate(entry, resolvedConfig.difficultyCap);
+    }),
     studyDate,
   );
   const picked = primary.slice(0, resolvedConfig.lessonSize);
@@ -1194,10 +1367,87 @@ export function pickLessonItemsV2(
 
   const usedKeys = new Set(picked.map((entry) => normalizeKey(entry.en)));
   const fallback = sortLessonEntries(
-    bank.filter((entry) => entry.theme === "free" && !usedKeys.has(normalizeKey(entry.en)) && passesLessonLevelGate(entry, resolvedConfig.difficultyCap)),
+    bank.filter((entry) => {
+      const key = normalizeKey(entry.en);
+      return entry.theme === "free"
+        && !excludeKeys.has(key)
+        && !usedKeys.has(key)
+        && passesLessonLevelGate(entry, resolvedConfig.difficultyCap);
+    }),
     studyDate,
   );
   return [...picked, ...fallback.slice(0, resolvedConfig.lessonSize - picked.length)];
+}
+
+function copyBankMeta(
+  fallback: Omit<ExpressionBankEntry, "register" | "sourceId" | "theme"> & Partial<Pick<ExpressionBankEntry, "theme" | "register" | "sourceId">>,
+  meta: ExpressionBankEntry | undefined,
+): ExpressionBankEntry {
+  return {
+    ko: fallback.ko,
+    en: fallback.en,
+    note: fallback.note,
+    theme: meta?.theme ?? fallback.theme ?? "free",
+    register: meta?.register ?? fallback.register ?? "neutral",
+    sourceId: meta?.sourceId ?? fallback.sourceId ?? `review:${normalizeKey(fallback.en).slice(0, 40)}`,
+    difficulty: meta?.difficulty,
+    wordCount: meta?.wordCount,
+    pattern: meta?.pattern,
+    sibling: meta?.sibling,
+    variations: meta?.variations,
+  };
+}
+
+function pickReviewLessonItemsV2(
+  snapshot: StudySnapshot,
+  studyDate: string,
+  requested: number,
+  config: LessonConfig,
+): ExpressionBankEntry[] {
+  if (requested <= 0) return [];
+  const bankMeta = buildBankMetaMap(snapshot);
+  const candidates: Array<{ entry: ExpressionBankEntry; priority: number; sessionKey: string | null }> = [];
+
+  for (const note of snapshot.weakNotes) {
+    const key = normalizeKey(note.correct);
+    const meta = bankMeta.get(key);
+    if (!passesDePoisonGate(meta, note.correct, config.difficultyCap)) continue;
+    const duePriority = note.due == null || note.due <= studyDate ? 0 : 4;
+    candidates.push({
+      entry: copyBankMeta({ ko: note.ko || note.correct, en: note.correct, note: note.note }, meta),
+      priority: duePriority + Math.min(3, note.box ?? 1),
+      sessionKey: note.sessions[0] ?? note.lastSeen ?? null,
+    });
+  }
+
+  for (const item of snapshot.best3) {
+    const key = normalizeKey(item.en);
+    const meta = bankMeta.get(key);
+    if (!passesDePoisonGate(meta, item.en, config.difficultyCap)) continue;
+    const duePriority = item.due != null && item.due <= studyDate ? 0 : 5;
+    candidates.push({
+      entry: copyBankMeta({ ko: item.ko, en: item.en, note: item.note }, meta),
+      priority: duePriority + Math.min(3, item.box ?? 1),
+      sessionKey: item.sessions[0] ?? item.firstSeen ?? null,
+    });
+  }
+
+  const deduped = new Map<string, { entry: ExpressionBankEntry; priority: number; sessionKey: string | null }>();
+  for (const candidate of candidates) {
+    const key = normalizeKey(candidate.entry.en);
+    const current = deduped.get(key);
+    if (!current || candidate.priority < current.priority) deduped.set(key, candidate);
+  }
+
+  const sorted = [...deduped.values()].sort((a, b) => {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    return stableExpressionHash(`${studyDate}:review:${a.entry.en}`) - stableExpressionHash(`${studyDate}:review:${b.entry.en}`)
+      || a.entry.en.localeCompare(b.entry.en);
+  });
+
+  return capRecentSessionDominance(sorted, (item) => item.sessionKey)
+    .map((item) => item.entry)
+    .slice(0, requested);
 }
 
 function setLowestReviewBox(map: Map<string, number>, key: string, box: number) {
@@ -1224,6 +1474,7 @@ function pickLessonSibling(
   studyDate: string,
   itemKeys: Set<string>,
 ): { ko: string; en: string } | null {
+  if (item.sibling) return item.sibling;
   const itemKey = normalizeKey(item.en);
   const candidates = sortLessonEntries(
     (Array.isArray(snapshot.expressionBank) ? snapshot.expressionBank : []).filter((entry) => {
@@ -1245,16 +1496,30 @@ export function buildLessonPlan(
   snapshot: StudySnapshot,
   studyDate: string,
   plan: WeekdayPlan,
-  config?: LessonConfig,
+  config?: unknown,
 ): LessonPlan {
-  const resolvedConfig = normalizeLessonConfig(config);
-  const entries = pickLessonItemsV2(snapshot, studyDate, plan, resolvedConfig);
-  const itemKeys = new Set(entries.map((entry) => normalizeKey(entry.en)));
-  const reviewBoxMap = buildReviewBoxMap(snapshot, studyDate);
-  const reviewKey = entries
-    .map((entry) => ({ key: normalizeKey(entry.en), en: entry.en, box: reviewBoxMap.get(normalizeKey(entry.en)) }))
-    .filter((entry): entry is { key: string; en: string; box: number } => entry.box !== undefined)
-    .sort((a, b) => a.box - b.box || a.en.localeCompare(b.en))[0]?.key ?? null;
+  const coachConfig = normalizeServerCoachConfig(config);
+  const resolvedConfig = normalizeLessonConfig(coachConfig);
+  const softReviewCount = coachConfig.reviewMode === "soft"
+    ? Math.min(resolvedConfig.lessonSize, Math.round(coachConfig.reviewRatio * resolvedConfig.lessonSize))
+    : 0;
+  const reviewEntries = pickReviewLessonItemsV2(snapshot, studyDate, softReviewCount, resolvedConfig);
+  const reviewKeys = new Set(reviewEntries.map((entry) => normalizeKey(entry.en)));
+  const newNeed = Math.max(0, resolvedConfig.lessonSize - reviewEntries.length);
+  const newEntries = newNeed > 0
+    ? pickLessonItemsV2(
+      snapshot,
+      studyDate,
+      plan,
+      { ...resolvedConfig, lessonSize: newNeed },
+      reviewKeys,
+    )
+    : [];
+  const entries = [
+    ...reviewEntries.map((entry) => ({ entry, kind: "review" as const })),
+    ...newEntries.map((entry) => ({ entry, kind: "new" as const })),
+  ];
+  const itemKeys = new Set(entries.map(({ entry }) => normalizeKey(entry.en)));
   const variationKinds = LESSON_VARIATION_ORDER.slice(0, resolvedConfig.variationsPerItem);
   const theme = getLessonBankTheme(plan, resolvedConfig) ?? plan.theme;
 
@@ -1263,15 +1528,16 @@ export function buildLessonPlan(
     studyDate,
     theme,
     config: resolvedConfig,
-    items: entries.map((entry) => {
+    items: entries.map(({ entry, kind }) => {
       const key = normalizeKey(entry.en);
       const item: LessonPlanItem = {
         id: key,
         ko: entry.ko,
         en: entry.en,
-        kind: key === reviewKey ? "review" : "new",
+        kind,
         sibling: pickLessonSibling(snapshot, entry, studyDate, itemKeys),
         variationKinds: [...variationKinds],
+        variations: pickLessonVariations(entry, variationKinds),
       };
       if (entry.note) item.note = entry.note;
       return item;
@@ -1316,7 +1582,9 @@ function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
   const lines = lessonPlan.items.map((item, index) => {
     const note = item.note ? ` (${item.note})` : "";
     const sibling = item.sibling ? ` | 형제문장(어려워하면): ${item.sibling.ko} -> ${item.sibling.en}` : "";
-    const variations = item.variationKinds.length > 0 ? item.variationKinds.join("/") : "없음";
+    const variations = item.variations.length > 0
+      ? item.variations.map((variation) => `${variation.kind}: ${variation.ko} -> ${variation.en}`).join(" / ")
+      : item.variationKinds.length > 0 ? item.variationKinds.join("/") : "없음";
     return `문장${index + 1}: ${item.ko} -> ${item.en}${note}${sibling} | 변형: ${variations}`;
   });
 
@@ -1346,26 +1614,29 @@ function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
 }
 
 function buildLessonV2PacingRules(): string[] {
-  return MONA_PACING_RULES.map((rule) => rule.replace("오늘의 5문장 루프", "오늘 수업 루프"));
+  return MONA_PACING_RULES.map((rule) => rule
+    .replace("오늘의 5문장 루프", "오늘 수업 루프")
+    .replace("새로 만들지 마", "추가하지 마"));
 }
 
 export async function buildMonaCoachDynamicBlockV2(
   studyDate?: string,
   snapshot?: StudySnapshot | null,
-  config?: LessonConfig,
+  config?: unknown,
 ) {
   const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
   const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
+  const coachConfig = normalizeServerCoachConfig(config);
   const plan = getWeekdayPlan(resolvedDate);
   const reviewMeta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
-  const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate);
-  if (totalReview) return buildMonaCoachDynamicBlock(resolvedDate, resolvedSnapshot);
+  const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate, coachConfig.reviewMode);
+  if (totalReview) return buildMonaCoachDynamicBlock(resolvedDate, resolvedSnapshot, coachConfig);
 
   const effectivePlan = plan.weekday === "일요일" ? WEEKDAY_PLAN[6] : plan;
   const yesterday = findYesterdaySession(resolvedSnapshot, resolvedDate);
   const firstSession = resolvedSnapshot.sessions.length === 0;
-  const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate);
-  const lessonPlan = buildLessonPlan(resolvedSnapshot, resolvedDate, effectivePlan, config);
+  const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate, coachConfig);
+  const lessonPlan = buildLessonPlan(resolvedSnapshot, resolvedDate, effectivePlan, coachConfig);
 
   let streak = 0;
   {
@@ -1416,18 +1687,19 @@ export async function buildMonaCoachDynamicBlockV2(
   ].join("\n");
 }
 
-export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: StudySnapshot | null) {
+export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: StudySnapshot | null, config?: unknown) {
   const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
   const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
+  const coachConfig = normalizeServerCoachConfig(config);
   const plan = getWeekdayPlan(resolvedDate);
   const reviewMeta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
-  const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate);
+  const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate, coachConfig.reviewMode);
   const effectivePlan = !totalReview && plan.weekday === "일요일" ? WEEKDAY_PLAN[6] : plan;
   const yesterday = findYesterdaySession(resolvedSnapshot, resolvedDate);
-  const weekly = totalReview ? buildWeeklyItems(resolvedSnapshot, 30, true) : [];
+  const weekly = totalReview ? buildWeeklyItems(resolvedSnapshot, 30, true, coachConfig) : [];
   const firstSession = resolvedSnapshot.sessions.length === 0;
   const expressionCandidates = pickTodayExpressions(resolvedSnapshot, resolvedDate, effectivePlan);
-  const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate);
+  const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate, coachConfig);
 
   let streak = 0;
   {

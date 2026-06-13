@@ -1,5 +1,5 @@
 export type CoachTester = "mona" | "owner";
-export type CoachReviewMode = "new-first" | "balanced" | "review-first";
+export type CoachReviewMode = "new-first" | "balanced" | "review-first" | "soft" | "hard" | "off";
 export type CoachDifficulty = "easy" | "normal" | "challenge";
 
 export type CoachConfig = {
@@ -17,6 +17,9 @@ const REVIEW_RATIO_BY_MODE: Record<CoachReviewMode, number> = {
   "new-first": 0.15,
   balanced: 0.3,
   "review-first": 0.55,
+  soft: 0.3,
+  hard: 1,
+  off: 0,
 };
 
 const DIFFICULTY_CAP_BY_PRESET: Record<CoachDifficulty, number> = {
@@ -45,7 +48,14 @@ function pickTester(value: unknown): CoachTester {
 }
 
 function pickReviewMode(value: unknown): CoachReviewMode {
-  if (value === "new-first" || value === "balanced" || value === "review-first") return value;
+  if (
+    value === "new-first"
+    || value === "balanced"
+    || value === "review-first"
+    || value === "soft"
+    || value === "hard"
+    || value === "off"
+  ) return value;
   return DEFAULT_COACH_CONFIG.reviewMode;
 }
 

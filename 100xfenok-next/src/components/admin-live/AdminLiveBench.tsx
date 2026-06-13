@@ -228,7 +228,12 @@ const COACH_REVIEW_LABEL: Record<CoachReviewMode, string> = {
   "new-first": "새 문장 중심",
   balanced: "균형",
   "review-first": "복습 중심",
+  soft: "균형",
+  hard: "레거시 복습",
+  off: "복습 끔",
 };
+
+const COACH_REVIEW_PRESETS: CoachReviewMode[] = ["new-first", "balanced", "review-first"];
 
 const COACH_DIFFICULTY_LABEL: Record<CoachDifficulty, string> = {
   easy: "쉬움",
@@ -2378,7 +2383,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 	                  <fieldset className="text-left">
 	                    <legend className="text-sm font-black text-slate-700">학습 비율</legend>
 	                    <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-	                      {(Object.keys(COACH_REVIEW_LABEL) as CoachReviewMode[]).map((reviewMode) => (
+	                      {COACH_REVIEW_PRESETS.map((reviewMode) => (
 	                        <button
 	                          key={reviewMode}
 	                          type="button"

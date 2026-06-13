@@ -67,7 +67,11 @@ function normalizeTester(value: unknown): "mona" | "owner" {
 
 function normalizeCoachConfigForLog(value: unknown) {
   if (!isRecord(value)) return null;
-  const reviewMode = value.reviewMode === "new-first" || value.reviewMode === "review-first"
+  const reviewMode = value.reviewMode === "new-first"
+    || value.reviewMode === "review-first"
+    || value.reviewMode === "soft"
+    || value.reviewMode === "hard"
+    || value.reviewMode === "off"
     ? value.reviewMode
     : "balanced";
   const difficulty = value.difficulty === "easy" || value.difficulty === "challenge"
@@ -75,7 +79,7 @@ function normalizeCoachConfigForLog(value: unknown) {
     : "normal";
   const reviewRatio = typeof value.reviewRatio === "number" && Number.isFinite(value.reviewRatio)
     ? Math.min(1, Math.max(0, value.reviewRatio))
-    : reviewMode === "new-first" ? 0.15 : reviewMode === "review-first" ? 0.55 : 0.3;
+    : reviewMode === "off" ? 0 : reviewMode === "hard" ? 1 : reviewMode === "new-first" ? 0.15 : reviewMode === "review-first" ? 0.55 : 0.3;
   const difficultyCap = typeof value.difficultyCap === "number" && Number.isFinite(value.difficultyCap)
     ? Math.min(14, Math.max(4, value.difficultyCap))
     : difficulty === "easy" ? 6 : difficulty === "challenge" ? 10 : 8;

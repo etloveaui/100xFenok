@@ -247,8 +247,8 @@ export async function buildLiveSetup(
           weakNotes: [],
         };
     const dynamicBlock = isLessonV2Enabled()
-      ? await buildMonaCoachDynamicBlockV2(undefined, snapshot as any)
-      : await buildMonaCoachDynamicBlock(undefined, snapshot as any);
+      ? await buildMonaCoachDynamicBlockV2(undefined, snapshot as any, coachConfig)
+      : await buildMonaCoachDynamicBlock(undefined, snapshot as any, coachConfig);
     systemPrompt = prependDynamicBlock(
       `${buildCoachConfigBlock(coachConfig)}\n\n${dynamicBlock}`,
       systemPrompt,
