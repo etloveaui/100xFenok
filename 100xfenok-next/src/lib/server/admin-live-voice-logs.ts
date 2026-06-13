@@ -95,6 +95,29 @@ function normalizeCoachConfigForLog(value: unknown) {
   };
 }
 
+function normalizeCoachSessionStateForLog(value: unknown) {
+  if (!isRecord(value)) return null;
+  const sessionId = normalizeText(value.sessionId, 120);
+  const seenItemKeys = normalizeStringArray(value.seenItemKeys, 24);
+  const bufferedItemKeys = normalizeStringArray(value.bufferedItemKeys, 24);
+  const reviewCountActual = typeof value.reviewCountActual === "number" && Number.isFinite(value.reviewCountActual)
+    ? Math.max(0, Math.round(value.reviewCountActual))
+    : 0;
+  const newCountActual = typeof value.newCountActual === "number" && Number.isFinite(value.newCountActual)
+    ? Math.max(0, Math.round(value.newCountActual))
+    : 0;
+  return {
+    sessionId,
+    currentItemKey: normalizeText(value.currentItemKey, 160),
+    seenItemKeys,
+    bufferedItemKeys,
+    lastLearnerIntent: normalizeText(value.lastLearnerIntent, 40),
+    lastToolIntent: normalizeText(value.lastToolIntent, 40),
+    reviewCountActual,
+    newCountActual,
+  };
+}
+
 function normalizeSettings(value: unknown) {
   if (!isRecord(value)) return {};
   const base = pickPrimitiveObject(value, [
@@ -106,10 +129,15 @@ function normalizeSettings(value: unknown) {
     "tester",
   ]);
   const coachConfig = isRecord(value) ? normalizeCoachConfigForLog(value.coachConfig) : null;
+  const coachSessionState = normalizeCoachSessionStateForLog(value.coachSessionState);
   return {
     ...base,
     tester: coachConfig?.tester ?? normalizeTester(base.tester),
     ...(coachConfig ? { coachConfig } : {}),
+    ...(coachSessionState ? {
+      coachSessionState,
+      bufferedItemKeys: coachSessionState.bufferedItemKeys,
+    } : { bufferedItemKeys: normalizeStringArray(value.bufferedItemKeys, 24) }),
     enabledToolIds: normalizeStringArray(value.enabledToolIds),
   };
 }

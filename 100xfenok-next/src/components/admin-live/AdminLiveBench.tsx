@@ -23,6 +23,17 @@ type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 type LiveToolStatus = "available" | "locked" | "soon";
 type SearchSelectionPolicy = "single" | "multi";
 
+type CoachSessionState = {
+  sessionId: string | null;
+  currentItemKey: string | null;
+  seenItemKeys: string[];
+  bufferedItemKeys: string[];
+  lastLearnerIntent: string | null;
+  lastToolIntent: string | null;
+  reviewCountActual: number;
+  newCountActual: number;
+};
+
 type LiveToolMetadata = {
   id: string;
   label: string;
@@ -131,6 +142,7 @@ type SessionResponse = {
     vadPreset?: VadPreset;
     interruptionMode?: InterruptionMode;
     coachConfig?: CoachConfig;
+    coachSessionState?: CoachSessionState | null;
     enabledToolIds?: string[];
   };
 };
@@ -605,6 +617,63 @@ function buildPromptPreview(
   ].join("\n");
 }
 
+function normalizeCoachItemKey(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const key = value.trim().toLowerCase().replace(/\s+/g, " ");
+  return key ? key.slice(0, 160) : null;
+}
+
+function normalizeCoachKeyArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const keys: string[] = [];
+  for (const item of value) {
+    const key = normalizeCoachItemKey(item);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    keys.push(key);
+    if (keys.length >= 24) break;
+  }
+  return keys;
+}
+
+function normalizeCoachSessionState(value: unknown, fallbackSessionId: string | null): CoachSessionState | null {
+  if (!isRecord(value)) return fallbackSessionId ? {
+    sessionId: fallbackSessionId,
+    currentItemKey: null,
+    seenItemKeys: [],
+    bufferedItemKeys: [],
+    lastLearnerIntent: null,
+    lastToolIntent: null,
+    reviewCountActual: 0,
+    newCountActual: 0,
+  } : null;
+  return {
+    sessionId: typeof value.sessionId === "string" ? value.sessionId : fallbackSessionId,
+    currentItemKey: normalizeCoachItemKey(value.currentItemKey),
+    seenItemKeys: normalizeCoachKeyArray(value.seenItemKeys),
+    bufferedItemKeys: normalizeCoachKeyArray(value.bufferedItemKeys),
+    lastLearnerIntent: typeof value.lastLearnerIntent === "string" ? value.lastLearnerIntent.slice(0, 40) : null,
+    lastToolIntent: typeof value.lastToolIntent === "string" ? value.lastToolIntent.slice(0, 40) : null,
+    reviewCountActual: typeof value.reviewCountActual === "number" && Number.isFinite(value.reviewCountActual)
+      ? Math.max(0, Math.round(value.reviewCountActual))
+      : 0,
+    newCountActual: typeof value.newCountActual === "number" && Number.isFinite(value.newCountActual)
+      ? Math.max(0, Math.round(value.newCountActual))
+      : 0,
+  };
+}
+
+function detectCoachLearnerIntent(text: string): string | null {
+  const lower = text.toLowerCase();
+  if (/그만|끝|stop|done/.test(lower)) return "stop";
+  if (/쉬운|쉽게|too hard|easier|어려워/.test(lower)) return "easier";
+  if (/어려운|더 어렵|harder/.test(lower)) return "harder";
+  if (/다시|again|repeat/.test(lower)) return "again";
+  if (/새로운|새 문장|다음|더 해|더줘|더 줘|more|next|different/.test(lower)) return "new";
+  return null;
+}
+
 async function readSocketData(data: MessageEvent["data"]): Promise<string> {
   if (typeof data === "string") return data;
   if (data instanceof Blob) return data.text();
@@ -663,6 +732,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backoffRef = useRef(2500);
   const sessionIdRef = useRef<string | null>(null);
+  const coachSessionStateRef = useRef<CoachSessionState | null>(null);
   const kickoffSentRef = useRef(false);
   const resumeHandleRef = useRef<string | null>(null);
   const reconnectingRef = useRef(false);
@@ -724,7 +794,30 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     enabledToolIds,
     coachConfig: normalizedCoachConfig,
     tester: normalizedCoachConfig.tester,
+    coachSessionState: coachSessionStateRef.current,
+    bufferedItemKeys: coachSessionStateRef.current?.bufferedItemKeys ?? [],
   });
+
+  const patchCoachSessionState = (patch: Partial<CoachSessionState>) => {
+    if (mode !== "mona") return;
+    const current = coachSessionStateRef.current ?? normalizeCoachSessionState(null, sessionIdRef.current);
+    if (!current) return;
+    coachSessionStateRef.current = { ...current, ...patch };
+  };
+
+  const markCoachItemSeen = (key: string | null) => {
+    if (!key || mode !== "mona") return;
+    const current = coachSessionStateRef.current ?? normalizeCoachSessionState(null, sessionIdRef.current);
+    if (!current) return;
+    const alreadySeen = current.seenItemKeys.includes(key);
+    const fromBuffer = current.bufferedItemKeys.includes(key);
+    coachSessionStateRef.current = {
+      ...current,
+      currentItemKey: key,
+      seenItemKeys: alreadySeen ? current.seenItemKeys : [...current.seenItemKeys, key].slice(-24),
+      newCountActual: !alreadySeen && fromBuffer ? current.newCountActual + 1 : current.newCountActual,
+    };
+  };
 
   const mainMessage = useMemo(() => {
     if (metrics.lastError) return "연결이 막혔어요";
@@ -830,6 +923,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const appendTranscriptLog = (role: "user" | "bench", text: string) => {
     const cleanText = text.trim();
     if (!cleanText) return;
+    if (role === "user" && mode === "mona") {
+      const learnerIntent = detectCoachLearnerIntent(cleanText);
+      if (learnerIntent) patchCoachSessionState({ lastLearnerIntent: learnerIntent });
+    }
 
     setLogs((current) => {
       const first = current[0];
@@ -1199,6 +1296,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const name = typeof call.name === "string" ? call.name : "";
     const id = typeof call.id === "string" ? call.id : "";
     const args = call.args && typeof call.args === "object" ? call.args : {};
+    const toolIntent = typeof args.intent === "string" ? args.intent.slice(0, 40) : null;
+    if (toolIntent) patchCoachSessionState({ lastToolIntent: toolIntent });
 
     try {
       const response = await fetch("/api/admin/live/tool/", {
@@ -1272,6 +1371,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
               drillHint: typeof args.drillHint === "string" ? args.drillHint : undefined,
               updatedAt: Date.now(),
             });
+            markCoachItemSeen(normalizeCoachItemKey(typeof args.en === "string" ? args.en : ko));
             localResponses.push({ id, name: "showCard", response: { ok: true } });
           }
         } else {
@@ -1705,6 +1805,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     resumeCountRef.current = 0;
     audioFramesSentRef.current = 0;
     resumeReadyLoggedRef.current = false;
+    coachSessionStateRef.current = null;
     clearFlushTimer();
     persistPending();
     setCard(null);
@@ -1754,6 +1855,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const startedAt = Date.parse(session.startedAt);
       setSessionId(session.sessionId);
       sessionIdRef.current = session.sessionId;
+      coachSessionStateRef.current = normalizeCoachSessionState(session.settings?.coachSessionState, session.sessionId);
       setStartedAtMs(Number.isFinite(startedAt) ? startedAt : Date.now());
       addLog("system", `대화 토큰 준비 완료. 만료 ${new Date(session.expiresAt).toLocaleTimeString("ko-KR")}`);
       addLog("bench", `${session.profile.label}: ${session.profile.intent}`);
@@ -1870,6 +1972,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         const session = payload as SessionResponse;
         setSessionId(session.sessionId);
         sessionIdRef.current = session.sessionId;
+        coachSessionStateRef.current = normalizeCoachSessionState(session.settings?.coachSessionState, session.sessionId);
         setStartedAtMs(Date.parse(session.startedAt));
 
         closeSocket();
@@ -1994,6 +2097,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
 
     sessionIdRef.current = null;
+    coachSessionStateRef.current = null;
     resumeHandleRef.current = null;
   };
 
@@ -2061,6 +2165,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
     sessionIdRef.current = null;
+    coachSessionStateRef.current = null;
     resumeHandleRef.current = null;
     reconnectingRef.current = false;
     kickoffSentRef.current = false;

@@ -193,6 +193,28 @@ export type LessonPlan = {
   config: LessonConfig;
 };
 
+export type NextMaterialBufferItem = {
+  id: string;
+  ko: string;
+  en: string;
+  note: string | null;
+  difficulty: 1 | 2 | 3 | null;
+  wordCount: number;
+  sibling: { ko: string; en: string } | null;
+  variations: { kind: LessonVariationKind; ko: string; en: string }[];
+};
+
+export type CoachSessionState = {
+  sessionId: string | null;
+  currentItemKey: string | null;
+  seenItemKeys: string[];
+  bufferedItemKeys: string[];
+  lastLearnerIntent: string | null;
+  lastToolIntent: string | null;
+  reviewCountActual: number;
+  newCountActual: number;
+};
+
 const PLAN_THEME_TO_BANK_THEME: Record<WeekdayPlan["theme"], ExpressionBankTheme | null> = {
   복습: null,
   "회사·업무": "work",
@@ -1296,6 +1318,19 @@ function pickLessonVariations(
   return [];
 }
 
+function toBufferItem(entry: ExpressionBankEntry): NextMaterialBufferItem {
+  return {
+    id: normalizeKey(entry.en),
+    ko: entry.ko,
+    en: entry.en,
+    note: entry.note,
+    difficulty: entry.difficulty ?? null,
+    wordCount: bankWordCount(entry, entry.en),
+    sibling: entry.sibling ?? null,
+    variations: pickLessonVariations(entry, LESSON_VARIATION_ORDER),
+  };
+}
+
 export function isLessonV2Enabled(): boolean {
   return (process.env.MONA_LESSON_V2 ?? "on") !== "off";
 }
@@ -1545,6 +1580,55 @@ export function buildLessonPlan(
   };
 }
 
+function buildNextMaterialBuffer(
+  snapshot: StudySnapshot,
+  studyDate: string,
+  plan: WeekdayPlan,
+  config: LessonConfig,
+  lessonPlan: LessonPlan,
+): NextMaterialBufferItem[] {
+  const lessonKeys = new Set(lessonPlan.items.map((item) => item.id));
+  const priorStudyKeys = new Set<string>();
+  for (const item of snapshot.best3) priorStudyKeys.add(normalizeKey(item.en));
+  for (const item of snapshot.weakNotes) priorStudyKeys.add(normalizeKey(item.correct));
+  const excludedKeys = new Set([...lessonKeys, ...priorStudyKeys]);
+  const primary = pickLessonItemsV2(
+    snapshot,
+    studyDate,
+    plan,
+    { ...config, lessonSize: 6 },
+    excludedKeys,
+  );
+  if (primary.length >= 3) return primary.slice(0, 6).map(toBufferItem);
+
+  const fallbackExcluded = new Set([...lessonKeys, ...priorStudyKeys, ...primary.map((entry) => normalizeKey(entry.en))]);
+  const fallback = pickLessonItemsV2(
+    snapshot,
+    studyDate,
+    { ...WEEKDAY_PLAN[6] },
+    { ...config, lessonSize: 6 - primary.length },
+    fallbackExcluded,
+  );
+  return [...primary, ...fallback].slice(0, 6).map(toBufferItem);
+}
+
+function buildCoachSessionState(
+  sessionId: unknown,
+  lessonPlan: LessonPlan,
+  nextMaterialBuffer: NextMaterialBufferItem[],
+): CoachSessionState {
+  return {
+    sessionId: normalizeSessionId(sessionId),
+    currentItemKey: null,
+    seenItemKeys: lessonPlan.items.map((item) => item.id),
+    bufferedItemKeys: nextMaterialBuffer.map((item) => item.id),
+    lastLearnerIntent: null,
+    lastToolIntent: null,
+    reviewCountActual: lessonPlan.items.filter((item) => item.kind === "review").length,
+    newCountActual: lessonPlan.items.filter((item) => item.kind === "new").length,
+  };
+}
+
 function pickTodayExpressions(snapshot: StudySnapshot, studyDate: string, plan: WeekdayPlan): ExpressionBankEntry[] {
   const theme = PLAN_THEME_TO_BANK_THEME[plan.theme];
   if (!theme) return [];
@@ -1589,7 +1673,7 @@ function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
   });
 
   return [
-    `[7분 수업 - 기본문장 ${lessonPlan.items.length}개. 아래 LessonPlan에 있는 문장만 사용한다. 새 문장을 만들지 마]`,
+    `[7분 수업 - 기본문장 ${lessonPlan.items.length}개. 기본 루프는 아래 LessonPlan 문장으로 진행한다]`,
     ...lines,
     "",
     "[턴 규율]",
@@ -1613,6 +1697,19 @@ function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
   ];
 }
 
+function buildNextMaterialBufferSection(items: NextMaterialBufferItem[]): string[] {
+  if (items.length === 0) return [];
+  return [
+    "",
+    `[nextMaterialBuffer - 예비 새 문장 ${items.length}개. 모나가 "새로운거/더/다음"을 원할 때만 여기서 즉시 꺼낸다. 먼저 소개하지 마. 도구 호출 전에 이 버퍼를 우선 사용한다.]`,
+    ...items.map((item, index) => {
+      const note = item.note ? ` (${item.note})` : "";
+      const sibling = item.sibling ? ` | 쉬운 대체: ${item.sibling.ko} -> ${item.sibling.en}` : "";
+      return `buffer${index + 1} [key=${item.id}; words=${item.wordCount}; difficulty=${item.difficulty ?? "unknown"}]: ${item.ko} -> ${item.en}${note}${sibling}`;
+    }),
+  ];
+}
+
 function buildLessonV2PacingRules(): string[] {
   return MONA_PACING_RULES.map((rule) => rule
     .replace("오늘의 5문장 루프", "오늘 수업 루프")
@@ -1624,19 +1721,35 @@ export async function buildMonaCoachDynamicBlockV2(
   snapshot?: StudySnapshot | null,
   config?: unknown,
 ) {
+  return (await buildMonaCoachDynamicBlockV2WithState(studyDate, snapshot, config)).dynamicBlock;
+}
+
+export async function buildMonaCoachDynamicBlockV2WithState(
+  studyDate?: string,
+  snapshot?: StudySnapshot | null,
+  config?: unknown,
+  sessionId?: unknown,
+) {
   const resolvedDate = studyDate ?? getCanonicalMonaStudyDate();
   const resolvedSnapshot = snapshot ?? await prepareMonaStudySnapshot(resolvedDate);
   const coachConfig = normalizeServerCoachConfig(config);
   const plan = getWeekdayPlan(resolvedDate);
   const reviewMeta = await readJsonFile<ReviewMeta>(MONA_REVIEW_META, { lastTotalReview: null, updatedAt: "" }).catch(() => null);
   const totalReview = isTotalReviewDay(resolvedSnapshot, reviewMeta, resolvedDate, coachConfig.reviewMode);
-  if (totalReview) return buildMonaCoachDynamicBlock(resolvedDate, resolvedSnapshot, coachConfig);
+  if (totalReview) {
+    return {
+      dynamicBlock: await buildMonaCoachDynamicBlock(resolvedDate, resolvedSnapshot, coachConfig),
+      coachSessionState: null,
+    };
+  }
 
   const effectivePlan = plan.weekday === "일요일" ? WEEKDAY_PLAN[6] : plan;
   const yesterday = findYesterdaySession(resolvedSnapshot, resolvedDate);
   const firstSession = resolvedSnapshot.sessions.length === 0;
   const warmup = firstSession || !yesterday ? null : pickWarmupPool(resolvedSnapshot, resolvedDate, coachConfig);
   const lessonPlan = buildLessonPlan(resolvedSnapshot, resolvedDate, effectivePlan, coachConfig);
+  const nextMaterialBuffer = buildNextMaterialBuffer(resolvedSnapshot, resolvedDate, effectivePlan, coachConfig, lessonPlan);
+  const coachSessionState = buildCoachSessionState(sessionId, lessonPlan, nextMaterialBuffer);
 
   let streak = 0;
   {
@@ -1654,7 +1767,7 @@ export async function buildMonaCoachDynamicBlockV2(
     }
   }
 
-  return [
+  const dynamicBlock = [
     "[오늘 - 서버 확정값, 다시 계산하지 마]",
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${effectivePlan.theme} · 변동코너: ${effectivePlan.corner} · 연속: ${streak}일차`,
@@ -1673,6 +1786,14 @@ export async function buildMonaCoachDynamicBlockV2(
     ...buildProfileSection(resolvedSnapshot),
     "",
     ...buildLessonPlanSection(lessonPlan),
+    ...buildNextMaterialBufferSection(nextMaterialBuffer),
+    "",
+    "[세션 로컬 상태 - 로그에 남길 추적값]",
+    `sessionId: ${coachSessionState.sessionId ?? "pending"}`,
+    `currentItemKey: ${coachSessionState.currentItemKey ?? "null"}`,
+    `seenItemKeys: ${coachSessionState.seenItemKeys.join(", ") || "없음"}`,
+    `bufferedItemKeys: ${coachSessionState.bufferedItemKeys.join(", ") || "없음"}`,
+    `reviewCountActual: ${coachSessionState.reviewCountActual} · newCountActual: ${coachSessionState.newCountActual}`,
     "",
     "[진행 규칙 - 내부 페이싱]",
     ...buildLessonV2PacingRules(),
@@ -1685,6 +1806,7 @@ export async function buildMonaCoachDynamicBlockV2(
     "[도구]",
     "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
   ].join("\n");
+  return { dynamicBlock, coachSessionState };
 }
 
 export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: StudySnapshot | null, config?: unknown) {

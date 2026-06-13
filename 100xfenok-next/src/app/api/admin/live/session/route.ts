@@ -130,6 +130,7 @@ export async function POST(request: Request) {
   const enabledToolIds = normalizeRequestedToolIds(mode, body);
   const now = new Date();
   const apiKey = getGeminiApiKey();
+  const sessionId = `live-${mode}-${now.getTime().toString(36)}`;
 
   if (!apiKey) {
     return noStoreJson(
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
 
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
-  const setup = await buildLiveSetup(mode, {
+  const { setup, coachSessionState } = await buildLiveSetup(mode, {
     lowVoice,
     voiceName,
     responseStyle,
@@ -155,6 +156,7 @@ export async function POST(request: Request) {
     systemPrompt: body?.systemPrompt,
     enabledToolIds,
     coachConfig,
+    sessionId,
   });
   const tokenResponse = await fetch(GEMINI_AUTH_TOKEN_ENDPOINT, {
     method: "POST",
@@ -194,7 +196,6 @@ export async function POST(request: Request) {
     return noStoreJson({ error: "GEMINI_EPHEMERAL_TOKEN_EMPTY" }, 502);
   }
 
-  const sessionId = `live-${mode}-${now.getTime().toString(36)}`;
   registerLiveToolSessionContext({
     sessionId,
     mode,
@@ -223,6 +224,7 @@ export async function POST(request: Request) {
         interruptionMode,
         enabledToolIds,
         coachConfig,
+        coachSessionState,
       },
       token,
       expiresAt: typeof tokenPayload?.expireTime === "string" ? tokenPayload.expireTime : expireTime,
