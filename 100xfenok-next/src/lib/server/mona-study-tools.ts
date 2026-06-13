@@ -1919,9 +1919,6 @@ function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
     "BEST3를 모나에게 고르라고 하지 않는다. 모나가 실제로 잘 말한 문장을 네가 골라 saveStudySession(best3, reviewResults, weakMisses)을 조용히 호출한다.",
     "문장1 완료 시 saveStudySession을 한 번 조용히 호출한다. 중복 저장하지 않는다.",
     "마무리는 부드러운 한 문장. 저장했다는 말은 한 문장 이내로만.",
-    "",
-    "[CONTROL 규칙]",
-    "\"[CONTROL]\"로 시작하는 텍스트 입력은 모나의 말이 아니라 무대 지시다. 절대 소리 내어 읽거나 언급하지 말고 즉시 따른다.",
   ];
 }
 
@@ -1975,7 +1972,6 @@ function buildFlexibleCoachSections(coachConfig: ServerCoachConfig): string[] {
     "",
     "[가드레일]",
     "각 응답은 net-new로 한다. 직전 말을 길게 요약하지 않는다. 모나가 '그만/끝'이라고 하면 정확히 한 문장으로 닫는다.",
-    "\"[CONTROL]\" 또는 \"[coach_control]\"로 시작하는 텍스트는 무대 지시/힌트다. 절대 소리 내어 읽거나 언급하지 말고, 의미만 참고한다.",
   );
 
   if (coachConfig.freshMaterialEnabled === false) {
@@ -1983,6 +1979,16 @@ function buildFlexibleCoachSections(coachConfig: ServerCoachConfig): string[] {
   }
 
   return sections;
+}
+
+function buildSpokenOutputSafetySection(): string[] {
+  return [
+    "[발화 안전 규칙 - 최상위]",
+    "네가 소리 내어 말할 수 있는 것은 모나에게 직접 하는 한국어 코칭 말뿐이다.",
+    "라운드 이름, 카드 상태, 도구 이름, 대괄호 제어 토큰, 네 계획/평가/의도 문장은 절대 말하지 않는다.",
+    "화면 변경과 저장은 실제 도구 호출로만 조용히 수행한다. 행동을 설명하려는 순간 설명하지 말고 도구 호출만 한다.",
+    "",
+  ];
 }
 
 function buildLessonV2PacingRules(): string[] {
@@ -2043,6 +2049,7 @@ export async function buildMonaCoachDynamicBlockV2WithState(
   }
 
   const dynamicBlock = [
+    ...buildSpokenOutputSafetySection(),
     "[오늘 - 서버 확정값, 다시 계산하지 마]",
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${effectivePlan.theme} · 변동코너: ${effectivePlan.corner} · 연속: ${streak}일차`,
@@ -2062,20 +2069,13 @@ export async function buildMonaCoachDynamicBlockV2WithState(
     ...buildLessonPlanSection(lessonPlan),
     ...buildNextMaterialBufferSection(nextMaterialBuffer),
     "",
-    "[세션 로컬 상태 - 로그에 남길 추적값]",
-    `sessionId: ${coachSessionState.sessionId ?? "pending"}`,
-    `currentItemKey: ${coachSessionState.currentItemKey ?? "null"}`,
-    `seenItemKeys: ${coachSessionState.seenItemKeys.join(", ") || "없음"}`,
-    `bufferedItemKeys: ${coachSessionState.bufferedItemKeys.join(", ") || "없음"}`,
-    `reviewCountActual: ${coachSessionState.reviewCountActual} · newCountActual: ${coachSessionState.newCountActual}`,
-    "",
-    "[진행 규칙 - 내부 페이싱]",
+    "[진행 규칙]",
     ...buildLessonV2PacingRules(),
     "단계 번호를 말하지 마. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
     "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
     "",
-    "[표현 카드 - showCard]",
-    "문장을 다룰 때마다 showCard로 화면을 맞춘다: 모나가 시도하기 전 state=prompt(ko만) -> 교정을 들려준 뒤 state=reveal(ko+en+pron) -> 변형 드릴은 state=drill(ko+drillHint) -> 다음 문장으로 넘어갈 때 새로 호출. 카드 호출 사실은 입 밖에 내지 않는다.",
+    "[표현 카드 - 기계 전용]",
+    "문장을 다룰 때마다 실제 showCard 함수 호출로만 화면을 맞춘다. 도구명, 카드 상태명, 호출 계획은 말하지 않는다. 텍스트로 쓰면 화면은 바뀌지 않는다.",
     "",
     "[도구]",
     "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/requestLessonMaterial/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
@@ -2115,12 +2115,13 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
   }
 
   return [
+    ...buildSpokenOutputSafetySection(),
     "[오늘 - 서버 확정값, 다시 계산하지 마]",
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${totalReview ? "종합 복습" : effectivePlan.theme} · 변동코너: ${totalReview ? "전체 복습" : effectivePlan.corner} · 연속: ${streak}일차`,
     "",
     "[인사 규칙]",
-    "세션 시작 시 먼저 따뜻하게 인사한다. '안녕 모나야' 톤으로, 오늘 테마/연속 일수/어제 기억 중 두 가지를 짧게 언급한 뒤 바로 R1로 들어간다. 인사는 한 문장.",
+    "세션 시작 시 먼저 따뜻하게 인사한다. '안녕 모나야' 톤으로, 오늘 테마/연속 일수/어제 기억 중 두 가지를 짧게 언급한 뒤 바로 첫 문장으로 들어간다. 인사는 한 문장.",
     "",
     "[복습 재료]",
     firstSession || !yesterday
@@ -2139,23 +2140,23 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
         `${weekly.length}개로 본다. 새로 만들지 마. 부족하면 부족한 개수 그대로 진행해. 필요하면 getWeeklyTestSet을 호출해 같은 범위에서 다시 받아라.`,
       ]
       : [
-        "[세션 구조 - 같은 문장이 라운드마다 어려워지는 나선. 라운드 이름은 입 밖에 내지 마]",
-        "R1 도입: 오늘 표현 후보에서 3개 + 복습 재료에서 2개를 골라 오늘의 5문장으로 정한다. 하나씩: 영어로 들려주고 → 뜻을 짧게 → 낮게 따라 말하게.",
-        "R2 즉답: 같은 5문장을 한국어만 던지고 3초 안에 영어로 말하게 한다. 모나가 답할 때까지 기다리고 → 짧게 교정 → 진짜 쓰는 버전 → 따라 말하기. 막힌 문장은 다시 들려주고 한 번 더 즉답시킨다.",
-        "R3 변형: 같은 문장을 과거형/부정/질문/주어 바꾸기로 비틀어 즉답시킨다. 한 문장당 변형 1~2개만.",
-        `R4 코너(오늘: ${effectivePlan.corner}): 오늘 5문장이 자연스럽게 나오는 짧은 상황을 만들어 코너 방식대로 써먹게 한다.`,
-        "R5 마무리: 오늘 BEST3를 골라 세션 끝에 한 번 더 따라 말하게 한다.",
+        "[세션 구조 - 같은 문장이 점점 어려워지는 나선]",
+        "도입: 오늘 표현 후보에서 3개 + 복습 재료에서 2개를 골라 오늘의 5문장으로 정한다. 하나씩: 영어로 들려주고 → 뜻을 짧게 → 낮게 따라 말하게.",
+        "즉답: 같은 5문장을 한국어만 던지고 3초 안에 영어로 말하게 한다. 모나가 답할 때까지 기다리고 → 짧게 교정 → 진짜 쓰는 버전 → 따라 말하기. 막힌 문장은 다시 들려주고 한 번 더 즉답시킨다.",
+        "변형: 같은 문장을 과거형/부정/질문/주어 바꾸기로 비틀어 즉답시킨다. 한 문장당 변형 1~2개만.",
+        `상황 코너(오늘: ${effectivePlan.corner}): 오늘 5문장이 자연스럽게 나오는 짧은 상황을 만들어 코너 방식대로 써먹게 한다.`,
+        "마무리: 오늘 BEST3를 골라 세션 끝에 한 번 더 따라 말하게 한다.",
         "라운드가 오를수록 힌트를 줄인다. 잘하면 칭찬 한마디 후 바로 다음 난이도로. 주간 테스트를 새로 만들지 마.",
-        "체크포인트: R2 끝과 R4 끝에 saveStudySession 저장, R5에서 오늘 BEST3 최종 저장.",
+        "체크포인트: 중간과 상황 코너 끝에 saveStudySession 저장, 마무리에서 오늘 BEST3 최종 저장.",
       ]),
     "",
-    "[진행 규칙 - 내부 페이싱]",
+    "[진행 규칙]",
     ...MONA_PACING_RULES,
-    "단계 번호를 말하지 마. '이제 R2' 같은 말 금지. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
+    "단계 번호를 말하지 마. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
     "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
     "",
-    "[표현 카드 - showCard]",
-    "문장을 다룰 때마다 showCard로 화면을 맞춘다: 모나가 시도하기 전 state=prompt(ko만) → 교정을 들려준 뒤 state=reveal(ko+en+pron) → 변형 드릴은 state=drill(ko+drillHint) → 다음 문장으로 넘어갈 때 새로 호출. 카드 호출 사실은 입 밖에 내지 않는다.",
+    "[표현 카드 - 기계 전용]",
+    "문장을 다룰 때마다 실제 showCard 함수 호출로만 화면을 맞춘다. 도구명, 카드 상태명, 호출 계획은 말하지 않는다. 텍스트로 쓰면 화면은 바뀌지 않는다.",
     "",
     "[도구]",
     "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",

@@ -250,7 +250,7 @@ const LIVE_TOOL_DEFINITIONS = [
     description: "Mona Wind-Down BEST3/weak-note checkpoint",
     functionName: "showCard",
     instruction:
-      '화면 표현 카드 제어. 모나가 시도하기 전엔 state=prompt(ko만), 교정을 들려준 뒤 state=reveal(ko+en+pron), 변형 드릴은 state=drill(ko+drillHint), 카드 치울 땐 state=clear. 문장을 바꿀 때마다 호출해라. 호출 사실을 입 밖에 내지 마.',
+      '화면 표현 카드는 반드시 실제 function call showCard({...})로만 제어한다. "showCard", "state=prompt/reveal/drill/clear", 호출 계획, 카드 상태 설명을 절대 말로 출력하지 마. 모나가 시도하기 전엔 state=prompt(ko 필수), 교정 뒤엔 state=reveal(ko+en 필수), 변형 드릴은 state=drill(ko 필수, drillHint 선택), 카드 치울 땐 state=clear. 인자가 부족하면 INVALID_CARD로 실패한다.',
     declaration: {
       name: "showCard",
       description: "Control the on-screen expression card for Mona Wind-Down practice.",

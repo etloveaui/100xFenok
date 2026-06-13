@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
 import { BUILD_VERSION } from "@/generated/build-version";
+import { inspectAdminLiveModelOutput } from "@/lib/admin-live-output-safety";
 import {
   DEFAULT_COACH_CONFIG,
   normalizeCoachConfig,
@@ -184,6 +185,12 @@ type LiveFunctionCall = {
   args?: Record<string, unknown>;
 };
 
+type LiveFunctionResponse = {
+  id: string;
+  name: string;
+  response: unknown;
+};
+
 const PROFILE_FALLBACK: ReadinessResponse["profiles"] = [
   {
     id: "fenok",
@@ -327,6 +334,13 @@ const TOOL_REGISTRY_FALLBACK: LiveToolMetadata[] = [
     description: "New/easier/harder Mona material picker",
   },
   {
+    id: "mona-show-card",
+    label: "표현 카드",
+    category: "study",
+    status: "available",
+    description: "Mona Wind-Down screen expression card",
+  },
+  {
     id: "feno-data",
     label: "Feno Data",
     category: "data",
@@ -443,6 +457,8 @@ const LOG_ROLE_TEXT: Record<BenchLog["role"], string> = {
 
 const LIVE_OUTPUT_SAMPLE_RATE = 24_000;
 const MAX_LOG_ENTRIES = 24;
+const TOOL_FETCH_TIMEOUT_MS = 9_000;
+const TOOL_RESPONSE_WATCHDOG_MS = 12_000;
 const MIC_WORKLET_SOURCE = `
 class GeminiMicProcessor extends AudioWorkletProcessor {
   process(inputs) {
@@ -786,8 +802,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const scheduledSourcesRef = useRef<AudioBufferSourceNode[]>([]);
   const dropAudioUntilTurnCompleteRef = useRef(false);
   const dropAudioResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressModelOutputUntilTurnCompleteRef = useRef(false);
   const logSeqRef = useRef(0);
   const pendingRef = useRef<BenchLog[]>([]);
+  const pendingToolResponsesRef = useRef<LiveFunctionResponse[]>([]);
+  const answeredToolResponseIdsRef = useRef<Set<string>>(new Set());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backoffRef = useRef(2500);
   const sessionIdRef = useRef<string | null>(null);
@@ -884,13 +903,6 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     if (mode !== "mona" || !normalizedCoachConfig.honorLiveRequests) return;
     const hint = toCoachIntentHint(intent);
     if (!hint) return;
-    const socket = wsRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-    socket.send(JSON.stringify({
-      realtimeInput: {
-        text: `[coach_control] likely learner intent: ${hint}. Advisory only; infer from conversation and call requestLessonMaterial only if needed.`,
-      },
-    }));
     setMetrics((current) => ({
       ...current,
       clientIntentHint: hint,
@@ -1424,11 +1436,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const toolIntent = toLessonMaterialIntent(args.intent);
     if (toolIntent) patchCoachSessionState({ lastToolIntent: toolIntent });
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), TOOL_FETCH_TIMEOUT_MS);
     try {
       const response = await fetch("/api/admin/live/tool/", {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -1459,75 +1474,125 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         response: toolResponse,
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "TOOL_EXECUTION_FAILED";
+      const message = error instanceof Error && error.name === "AbortError"
+        ? "TOOL_CLIENT_TIMEOUT"
+        : error instanceof Error ? error.message : "TOOL_EXECUTION_FAILED";
       return {
         id,
         name,
         response: { error: message },
       };
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
-  const handleToolCall = (toolCall: unknown) => {
-    const socket = wsRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+  const toolResponseKey = (response: LiveFunctionResponse) => response.id || response.name;
 
+  const sendFunctionResponses = (responses: LiveFunctionResponse[], source: "batch" | "pending") => {
+    if (responses.length === 0) return;
+    const pendingKeys = new Set(pendingToolResponsesRef.current.map(toolResponseKey));
+    const unsent = responses.filter((response) => {
+      const key = toolResponseKey(response);
+      if (answeredToolResponseIdsRef.current.has(key)) return false;
+      if (pendingKeys.has(key)) return false;
+      return true;
+    });
+    if (unsent.length === 0) return;
+
+    const socket = wsRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      pendingToolResponsesRef.current.push(...unsent);
+      addLog("tool", `도구 응답 대기열 저장: ${unsent.map((item) => item.name || "unknown").join(", ")}`);
+      return;
+    }
+
+    socket.send(JSON.stringify({ toolResponse: { functionResponses: unsent } }));
+    unsent.forEach((response) => answeredToolResponseIdsRef.current.add(toolResponseKey(response)));
+    addLog("tool", `도구 응답 전송(${source}): ${unsent.map((item) => `${item.name || "unknown"}:${item.id || "-"}`).join(", ")}`);
+  };
+
+  const flushPendingToolResponses = () => {
+    const pending = pendingToolResponsesRef.current;
+    if (pending.length === 0) return;
+    pendingToolResponsesRef.current = [];
+    sendFunctionResponses(pending, "pending");
+  };
+
+  const resolveShowCardResponse = (call: LiveFunctionCall): LiveFunctionResponse => {
+    const id = typeof call.id === "string" ? call.id : "";
+    const args = call.args && typeof call.args === "object" ? call.args : {};
+    const state = typeof args.state === "string" ? args.state : "";
+    const ko = typeof args.ko === "string" ? args.ko : "";
+    const en = typeof args.en === "string" ? args.en : "";
+    const base = { id, name: "showCard" };
+
+    if (state === "clear") {
+      setCard(null);
+      addLog("tool", `showCard 적용: id=${id || "-"} state=clear`);
+      return { ...base, response: { ok: true } };
+    }
+
+    if (state !== "prompt" && state !== "reveal" && state !== "drill") {
+      addLog("tool", `showCard 거부: id=${id || "-"} reason=INVALID_STATE state=${state || "-"}`);
+      return { ...base, response: { ok: false, error: "INVALID_CARD", reason: "INVALID_STATE" } };
+    }
+
+    if (!ko) {
+      addLog("tool", `showCard 거부: id=${id || "-"} reason=MISSING_KO state=${state}`);
+      return { ...base, response: { ok: false, error: "INVALID_CARD", reason: "MISSING_KO" } };
+    }
+
+    if (state === "reveal" && !en) {
+      addLog("tool", `showCard 거부: id=${id || "-"} reason=MISSING_EN state=${state}`);
+      return { ...base, response: { ok: false, error: "INVALID_CARD", reason: "MISSING_EN" } };
+    }
+
+    setCard({
+      state,
+      ko,
+      en: en || undefined,
+      pron: typeof args.pron === "string" ? args.pron : undefined,
+      drillHint: typeof args.drillHint === "string" ? args.drillHint : undefined,
+      updatedAt: Date.now(),
+    });
+    markCoachItemSeen(normalizeCoachItemKey(en || ko));
+    addLog("tool", `showCard 적용: id=${id || "-"} state=${state} ko=${ko.slice(0, 40)}`);
+    return { ...base, response: { ok: true } };
+  };
+
+  const withToolWatchdog = (call: LiveFunctionCall, responsePromise: Promise<LiveFunctionResponse>) => {
+    const name = typeof call.name === "string" ? call.name : "";
+    const id = typeof call.id === "string" ? call.id : "";
+    return Promise.race([
+      responsePromise,
+      new Promise<LiveFunctionResponse>((resolve) => {
+        setTimeout(() => {
+          resolve({
+            id,
+            name,
+            response: { error: "TOOL_TIMEOUT", timeoutMs: TOOL_RESPONSE_WATCHDOG_MS },
+          });
+        }, TOOL_RESPONSE_WATCHDOG_MS);
+      }),
+    ]);
+  };
+
+  const handleToolCall = (toolCall: unknown) => {
     const functionCalls = (toolCall as { functionCalls?: unknown }).functionCalls;
     if (!Array.isArray(functionCalls) || functionCalls.length === 0) return;
 
-    addLog("tool", `도구 요청 ${functionCalls.length}개 수신`);
+    const calls = functionCalls as LiveFunctionCall[];
+    addLog("tool", `도구 요청 ${calls.length}개 수신: ${calls.map((call) => call.name || "unknown").join(", ")}`);
 
-    const localResponses: Array<{ id: string; name: string; response: unknown }> = [];
-    const remoteCalls: LiveFunctionCall[] = [];
-
-    for (const call of functionCalls as LiveFunctionCall[]) {
-      if (call.name === "showCard") {
-        const id = typeof call.id === "string" ? call.id : "";
-        const args = call.args && typeof call.args === "object" ? call.args : {};
-        const state = typeof args.state === "string" ? args.state : "";
-        if (state === "clear") {
-          setCard(null);
-          localResponses.push({ id, name: "showCard", response: { ok: true } });
-        } else if (state === "prompt" || state === "reveal" || state === "drill") {
-          const ko = typeof args.ko === "string" ? args.ko : "";
-          if (state === "prompt" && !ko) {
-            localResponses.push({ id, name: "showCard", response: { ok: false, error: "INVALID_CARD" } });
-          } else {
-            setCard({
-              state,
-              ko,
-              en: typeof args.en === "string" ? args.en : undefined,
-              pron: typeof args.pron === "string" ? args.pron : undefined,
-              drillHint: typeof args.drillHint === "string" ? args.drillHint : undefined,
-              updatedAt: Date.now(),
-            });
-            markCoachItemSeen(normalizeCoachItemKey(typeof args.en === "string" ? args.en : ko));
-            localResponses.push({ id, name: "showCard", response: { ok: true } });
-          }
-        } else {
-          const id = typeof call.id === "string" ? call.id : "";
-          localResponses.push({ id, name: "showCard", response: { ok: false, error: "INVALID_CARD" } });
-        }
-      } else {
-        remoteCalls.push(call);
-      }
-    }
-
-    if (localResponses.length > 0) {
-      socket.send(JSON.stringify({ toolResponse: { functionResponses: localResponses } }));
-    }
-
-    if (remoteCalls.length === 0) return;
-
-    void Promise.all(remoteCalls.map((call) => executeLiveToolCall(call)))
+    void Promise.all(calls.map((call) => {
+      const responsePromise = call.name === "showCard"
+        ? Promise.resolve(resolveShowCardResponse(call))
+        : executeLiveToolCall(call);
+      return withToolWatchdog(call, responsePromise);
+    }))
       .then((functionResponses) => {
-        if (socket.readyState !== WebSocket.OPEN) return;
-        socket.send(JSON.stringify({
-          toolResponse: {
-            functionResponses,
-          },
-        }));
-        addLog("tool", `도구 응답 전송: ${functionResponses.map((item) => item.name || "unknown").join(", ")}`);
+        sendFunctionResponses(functionResponses, "batch");
       })
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : "TOOL_RESPONSE_FAILED";
@@ -1546,6 +1611,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     playbackCursorRef.current = 0;
     audioChunkSeenRef.current = false;
     dropAudioUntilTurnCompleteRef.current = false;
+    suppressModelOutputUntilTurnCompleteRef.current = false;
+    pendingToolResponsesRef.current = [];
+    answeredToolResponseIdsRef.current.clear();
   };
 
   useEffect(() => {
@@ -1803,6 +1871,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       }
       const socket = wsRef.current;
       if (socket) {
+        flushPendingToolResponses();
         void beginAudioStream(socket).then(() => {
           if (mode === "mona" && !kickoffSentRef.current && !reconnectingRef.current) {
             kickoffSentRef.current = true;
@@ -1874,33 +1943,47 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       appendTranscriptLog("user", serverContent.inputTranscription.text);
     }
 
-    if (serverContent.outputTranscription?.text) {
-      if (!firstResponseSeenRef.current) {
-        firstResponseSeenRef.current = true;
-        const firstResponseMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
-        setMetrics((current) => ({
-          ...current,
-          firstResponseMs,
-        }));
+    if (serverContent.outputTranscription?.text && !suppressModelOutputUntilTurnCompleteRef.current) {
+      const safeOutput = inspectAdminLiveModelOutput(serverContent.outputTranscription.text);
+      if (safeOutput.blocked) {
+        suppressModelOutputUntilTurnCompleteRef.current = true;
+        dropAudioUntilTurnCompleteRef.current = true;
+        clearDropAudioTimeout();
+        flushPlayback();
+        addLog("system", `출력 안전필터 차단: ${safeOutput.reason ?? "UNSAFE_OUTPUT"}`);
+      } else if (safeOutput.text) {
+        if (!firstResponseSeenRef.current) {
+          firstResponseSeenRef.current = true;
+          const firstResponseMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
+          setMetrics((current) => ({
+            ...current,
+            firstResponseMs,
+          }));
+        }
+        appendTranscriptLog("bench", safeOutput.text);
       }
-      appendTranscriptLog("bench", serverContent.outputTranscription.text);
+    } else if (serverContent.outputTranscription?.text && suppressModelOutputUntilTurnCompleteRef.current) {
+      const safeOutput = inspectAdminLiveModelOutput(serverContent.outputTranscription.text);
+      if (safeOutput.blocked) {
+        dropAudioUntilTurnCompleteRef.current = true;
+      }
     }
 
     let hasAudio = false;
     serverContent.modelTurn?.parts?.forEach((part) => {
       const data = part.inlineData?.data;
       if (!data) return;
-      if (dropAudioUntilTurnCompleteRef.current) return;
+      if (dropAudioUntilTurnCompleteRef.current || suppressModelOutputUntilTurnCompleteRef.current) return;
       hasAudio = playOutputAudio(data, part.inlineData?.mimeType) || hasAudio;
     });
 
     if (hasAudio && !firstResponseSeenRef.current) {
-      firstResponseSeenRef.current = true;
-      const firstResponseMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
-      setMetrics((current) => ({
-        ...current,
-        firstResponseMs,
-      }));
+        firstResponseSeenRef.current = true;
+        const firstResponseMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
+        setMetrics((current) => ({
+          ...current,
+          firstResponseMs,
+        }));
     }
 
     if (hasAudio && !audioChunkSeenRef.current) {
@@ -1913,6 +1996,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       audioChunkSeenRef.current = false;
       clearDropAudioTimeout();
       dropAudioUntilTurnCompleteRef.current = false;
+      suppressModelOutputUntilTurnCompleteRef.current = false;
+      answeredToolResponseIdsRef.current.clear();
     }
   };
 

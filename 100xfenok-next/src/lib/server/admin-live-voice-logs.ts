@@ -11,6 +11,21 @@ const appendChains = new Map<string, Promise<void>>();
 
 type JsonRecord = Record<string, unknown>;
 
+const UNSAFE_BENCH_LOG_PATTERNS: Array<{ reason: string; pattern: RegExp }> = [
+  { reason: "CONTROL_TOKEN", pattern: /\[(?:CONTROL|coach_control)\]/i },
+  { reason: "SHOW_CARD_TOKEN", pattern: /\bshowCard\b/i },
+  { reason: "CARD_STATE_TOKEN", pattern: /\bstate\s*=\s*(?:prompt|reveal|drill|clear)\b/i },
+  { reason: "CARD_STATE_TOKEN", pattern: /\b(?:prompt|reveal|drill|clear)\s*상태/i },
+  { reason: "ROUND_LABEL", pattern: /\bR[1-5]\b/ },
+  { reason: "INTERNAL_PLAN", pattern: /(?:프롬프트 규칙을 지적|페르소나를 유지|자연스럽게 학습으로 유도|힌트를 제공|제공 방식.*불만|강력히 항의|실수를 인정|분위기를 전환|카드 상태가 바뀌지|기술적 문제를 인지|질문함|부드럽게 교정|자연스러운 표현인)/ },
+  { reason: "INTERNAL_PLAN", pattern: /(?:호출하여|호출한다|진행한다|유도한다|제시한다|유지한다|전환한다|저장한다|인정하고|사과한 후)/ },
+];
+
+function sanitizeBenchLogText(value: string | null): string | null {
+  if (!value) return null;
+  return UNSAFE_BENCH_LOG_PATTERNS.some((item) => item.pattern.test(value)) ? null : value;
+}
+
 function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -168,7 +183,8 @@ function normalizeLogEntries(value: unknown) {
     .filter(isRecord)
     .map((entry) => {
       const role = typeof entry.role === "string" && ROLE_SET.has(entry.role) ? entry.role : "system";
-      const text = normalizeText(entry.text);
+      const rawText = normalizeText(entry.text);
+      const text = role === "bench" ? sanitizeBenchLogText(rawText) : rawText;
       if (!text) return null;
       return {
         role,
@@ -188,7 +204,8 @@ function normalizeAppendEntries(value: unknown) {
     .map((entry) => {
       const seq = typeof entry.seq === "number" && Number.isFinite(entry.seq) ? entry.seq : null;
       const role = typeof entry.role === "string" && ROLE_SET.has(entry.role) ? entry.role : "system";
-      const text = normalizeText(entry.text);
+      const rawText = normalizeText(entry.text);
+      const text = role === "bench" ? sanitizeBenchLogText(rawText) : rawText;
       if (!text) return null;
       return { seq, role, text, at: normalizeText(entry.at, 80), atIso: normalizeIso(entry.atIso) };
     })
@@ -316,7 +333,9 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       .map((e) => ({
         seq: typeof e.seq === "number" && Number.isFinite(e.seq) ? e.seq : 0,
         role: typeof e.role === "string" && ROLE_SET.has(e.role) ? e.role : "system",
-        text: typeof e.text === "string" ? e.text : "",
+        text: typeof e.text === "string" && e.role === "bench"
+          ? sanitizeBenchLogText(e.text) ?? ""
+          : typeof e.text === "string" ? e.text : "",
         at: typeof e.at === "string" ? e.at : null,
         atIso: typeof e.atIso === "string" ? e.atIso : null,
       }))

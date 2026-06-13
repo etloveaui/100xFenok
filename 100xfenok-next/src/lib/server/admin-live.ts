@@ -79,6 +79,13 @@ const LIVE_VAD_PRESETS: Record<LiveVadPreset, {
   },
 };
 
+const MONA_SPOKEN_OUTPUT_CONTRACT = [
+  "[Spoken output contract - machine-only]",
+  "Your only spoken output is the Korean coaching talk you say directly to Mona.",
+  "Never voice round labels, card states, tool names, bracketed control tokens, or your own planning/evaluation/intent.",
+  "Execute screen/save actions silently through function calls only. If you would describe an action, perform the tool call instead and say nothing about it.",
+].join("\n");
+
 export const LIVE_PROFILES: Record<LiveBenchMode, LiveProfile> = {
   fenok: {
     id: "fenok",
@@ -181,14 +188,20 @@ function ensureLiveToolInstructions(systemPrompt: string, enabledToolIds: LiveTo
   return [systemPrompt, ...missingInstructions].join("\n");
 }
 
-function prependDynamicBlock(dynamicBlock: string, systemPrompt: string) {
+function prependDynamicBlock(dynamicBlock: string, systemPrompt: string, safetyTail?: string) {
   const maxLength = 7000;
   const block = dynamicBlock.trim();
-  if (!block) return systemPrompt.slice(0, maxLength);
+  const tail = safetyTail?.trim() ?? "";
   const separator = "\n\n";
-  const remaining = maxLength - block.length - separator.length;
-  if (remaining <= 0) return block.slice(0, maxLength);
-  return `${block}${separator}${systemPrompt.slice(0, remaining)}`;
+  const tailPart = tail ? `${separator}${tail}` : "";
+  const budget = maxLength - tailPart.length;
+  if (budget <= 0) return tail.slice(0, maxLength);
+  if (!block) return `${systemPrompt.slice(0, budget)}${tailPart}`;
+  const remaining = budget - block.length - separator.length;
+  const body = remaining <= 0
+    ? block.slice(0, budget)
+    : `${block}${separator}${systemPrompt.slice(0, remaining)}`;
+  return `${body}${tailPart}`;
 }
 
 function buildCoachConfigBlock(config: CoachConfig) {
@@ -259,6 +272,7 @@ export async function buildLiveSetup(
     systemPrompt = prependDynamicBlock(
       `${buildCoachConfigBlock(coachConfig)}\n\n${dynamicBlock}`,
       systemPrompt,
+      MONA_SPOKEN_OUTPUT_CONTRACT,
     );
     coachSessionState = dynamicResult.coachSessionState;
   }
@@ -268,6 +282,7 @@ export async function buildLiveSetup(
     model: GEMINI_LIVE_MODEL_RESOURCE,
     generationConfig: {
       responseModalities: ["AUDIO"],
+      thinkingConfig: mode === "mona" ? { thinkingLevel: "low" } : undefined,
       temperature: mode === "mona" ? 0.55 : 0.35,
       speechConfig: {
         voiceConfig: {

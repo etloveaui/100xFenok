@@ -13,6 +13,8 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = false;
 
+const TOOL_ROUTE_TIMEOUT_MS = 11_000;
+
 type ToolRequest = {
   id?: unknown;
   name?: unknown;
@@ -37,6 +39,15 @@ async function requireAdminSession() {
   return noStoreJson({ error: "ADMIN_SESSION_REQUIRED" }, 401);
 }
 
+async function withToolRouteTimeout<T>(operation: Promise<T>): Promise<T | { error: "TOOL_ROUTE_TIMEOUT"; timeoutMs: number }> {
+  return Promise.race([
+    operation,
+    new Promise<{ error: "TOOL_ROUTE_TIMEOUT"; timeoutMs: number }>((resolve) => {
+      setTimeout(() => resolve({ error: "TOOL_ROUTE_TIMEOUT", timeoutMs: TOOL_ROUTE_TIMEOUT_MS }), TOOL_ROUTE_TIMEOUT_MS);
+    }),
+  ]);
+}
+
 export async function POST(request: Request) {
   const blocked = await requireAdminSession();
   if (blocked) return blocked;
@@ -58,7 +69,7 @@ export async function POST(request: Request) {
       }
     : requestContext;
 
-  const result = await executeLiveToolFunction(name, args, context);
+  const result = await withToolRouteTimeout(executeLiveToolFunction(name, args, context));
   const status = "error" in result && result.error === "UNKNOWN_TOOL" ? 400 : 200;
   return noStoreJson({
     id,

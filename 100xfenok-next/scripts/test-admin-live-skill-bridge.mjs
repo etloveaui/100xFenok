@@ -345,6 +345,7 @@ async function main() {
         logs: [
           { role: "user", text: "오늘 저녁 뭐 먹지?", at: "오전 9:00:00" },
           { role: "bench", text: "가볍게 먹는 쪽이면 좋겠어요.", at: "오전 9:00:01" },
+          { role: "bench", text: "[CONTROL] showCard state=prompt 상태 유지", at: "오전 9:00:02" },
         ],
       },
     });
@@ -356,6 +357,8 @@ async function main() {
     const savedLog = JSON.parse(savedLogRaw);
     assert.equal(savedLog.mode, "fenok");
     assert.equal(savedLog.transcript[0].speaker, "user");
+    assert(!savedLogRaw.includes("[CONTROL]"));
+    assert(!savedLogRaw.includes("showCard"));
 
     const postSearchHealth = await bridgeRequest(bridgePort, "/health", { token: TEST_TOKEN });
     assert.equal(postSearchHealth.status, 200);
