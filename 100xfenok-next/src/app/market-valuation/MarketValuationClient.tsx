@@ -5,7 +5,6 @@ import TransitionLink from "@/components/TransitionLink";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type {
-  IndexMomentum,
   MarketBondPulse,
   MarketEventRisk,
   MarketIndexTrend,
@@ -15,7 +14,6 @@ import type {
   MarketStructurePulse,
   MarketTone,
   ValuationBand,
-  ValuationDriver,
 } from "@/lib/market-valuation/types";
 import {
   AnnualReturnsChartPanel,
@@ -137,6 +135,51 @@ function PanelShell({ title, subtitle, children }: { title: string; subtitle: st
       </header>
       {children}
     </section>
+  );
+}
+
+function MarketSection({
+  index,
+  title,
+  summary,
+  children,
+  muted = false,
+}: {
+  index: string;
+  title: string;
+  summary: string;
+  children: ReactNode;
+  muted?: boolean;
+}) {
+  return (
+    <section className={cx("grid gap-3", muted && "opacity-60")}>
+      <header className="flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-brand-interactive">{index}</p>
+          <h2 className="mt-1 text-xl font-black text-slate-950">{title}</h2>
+        </div>
+        <p className="max-w-xl text-sm font-semibold leading-6 text-slate-500">{summary}</p>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function StructureDetailEntry() {
+  return (
+    <TransitionLink
+      href="/market-valuation/structure"
+      className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_58%,#eef6ff_100%)] px-4 py-3 shadow-[0_10px_36px_-20px_rgba(15,23,42,0.28)] transition hover:border-brand-interactive hover:shadow-[0_14px_42px_-24px_rgba(27,115,211,0.42)]"
+    >
+      <span className="min-w-0">
+        <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-brand-interactive">Market Structure Detail</span>
+        <span className="mt-1 block text-base font-black text-slate-950">시장구조 상세로 이동</span>
+        <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">집중도, 벤치마크 매트릭스, 유동성, 심리 하위 지표를 더 크게 확인합니다.</span>
+      </span>
+      <span className="shrink-0 rounded-full border border-brand-interactive/30 bg-white px-3 py-2 text-xs font-black text-brand-interactive transition group-hover:bg-brand-interactive group-hover:text-white">
+        상세 보기
+      </span>
+    </TransitionLink>
   );
 }
 
@@ -495,16 +538,6 @@ function EventRiskPanel({ items }: { items: MarketEventRisk[] }) {
   );
 }
 
-function DriverBadge({ driver }: { driver: ValuationDriver | null }) {
-  if (!driver) return null;
-  return (
-    <div className={cx("mt-3 rounded-[1rem] border px-3 py-2", toneClass(driver.tone))}>
-      <p className="text-[11px] font-black uppercase tracking-[0.08em]">{driver.label}</p>
-      <p className="mt-1 text-[11px] font-semibold leading-5 opacity-80">{driver.detail}</p>
-    </div>
-  );
-}
-
 function MomentumCell({ label, value }: { label: string; value: number | null }) {
   const positive = value !== null && value >= 0;
   return (
@@ -513,24 +546,6 @@ function MomentumCell({ label, value }: { label: string; value: number | null })
       <p className={cx("orbitron mt-1 text-sm font-black tabular-nums", value === null ? "text-slate-300" : positive ? "text-emerald-600" : "text-rose-600")}>
         {fmtSignedPct(value)}
       </p>
-    </div>
-  );
-}
-
-function MomentumBlock({ momentum }: { momentum: IndexMomentum | null }) {
-  if (!momentum) return null;
-  return (
-    <div className="mt-3">
-      <p className="mb-1 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">YTD 분해</p>
-      <div className="grid grid-cols-3 gap-2">
-        <MomentumCell label="가격" value={momentum.price.ytd} />
-        <MomentumCell label="EPS" value={momentum.eps.ytd} />
-        <MomentumCell label="P/E" value={momentum.pe.ytd} />
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <MomentumCell label="P/B" value={momentum.pb.ytd} />
-        <MomentumCell label="ROE" value={momentum.roe.ytd} />
-      </div>
     </div>
   );
 }
@@ -609,9 +624,6 @@ export default function MarketValuationClient() {
               {sourceDate}
             </span>
           ) : null}
-          <TransitionLink href="/market-valuation/structure" className="data-shell-link">
-            시장 구조 상세
-          </TransitionLink>
           <TransitionLink href="/explore" className="data-shell-link">
             Explore
           </TransitionLink>
@@ -624,62 +636,66 @@ export default function MarketValuationClient() {
         </div>
       ) : null}
 
-      <MarketThermometer />
-
-      <div className={cx("grid gap-4", !dataReady && "opacity-60")}>
-        <MacroPulsePanel items={macroPulses} />
-        <PmiActivityChartPanel />
+      <MarketSection index="01 Overview" title="개요" summary="시장 체온과 가공 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
+        <MarketThermometer />
         <SignalPulsePanel items={signalPulses} />
-      </div>
+      </MarketSection>
 
-      <div className={cx("grid gap-4", !dataReady && "opacity-60")}>
+      <MarketSection index="02 Macro" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
+        <PmiActivityChartPanel />
+        <MacroPulsePanel items={macroPulses} />
+        <BondPulsePanel items={bondPulses} />
+      </MarketSection>
+
+      <MarketSection index="03 Valuation" title="밸류에이션" summary="ERP, Yardeni 모델, 지수별 멀티플 밴드를 한곳에 모았습니다." muted={!dataReady}>
         <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
           <ErpHistoryPanel />
-          <BondPulsePanel items={bondPulses} />
+          <YardeniOverlayChartPanel />
         </div>
-        <SentimentPulsePanel items={sentimentPulses} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {indices.map((index) => (
+            <section
+              key={index.id}
+              className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5"
+            >
+              <header className="flex items-end justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">{index.nameEn}</p>
+                  <h2 className="truncate text-lg font-black text-slate-950">{index.name}</h2>
+                </div>
+                <div className="text-right">
+                  <p className="orbitron text-lg font-black tabular-nums text-slate-900">
+                    {index.price === null ? "—" : index.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{index.date ?? "—"}</p>
+                </div>
+              </header>
+
+              <div className="mt-3 grid gap-2">
+                <ValuationRow label="Fwd P/E" band={index.pe} digits={1} />
+                <ValuationRow label="P/B" band={index.pb} digits={2} />
+                <div className="flex items-center justify-between rounded-[1rem] border border-slate-200 bg-white/70 px-3 py-2">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">ROE</span>
+                  <span className="orbitron text-lg font-black tabular-nums text-slate-900">
+                    {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
+                  </span>
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+      </MarketSection>
+
+      <MarketSection index="04 Structure & Sentiment" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
         <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
+        <StructureDetailEntry />
+        <SentimentPulsePanel items={sentimentPulses} />
+      </MarketSection>
+
+      <MarketSection index="05 Context" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
         <AnnualReturnsChartPanel />
-      </div>
-
-      <EventRiskPanel items={eventRisks} />
-
-      <div className={cx("grid gap-4 sm:grid-cols-2", !dataReady && "opacity-60")}>
-        {indices.map((index) => (
-          <section
-            key={index.id}
-            className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5"
-          >
-            <header className="flex items-end justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">{index.nameEn}</p>
-                <h2 className="truncate text-lg font-black tracking-tight text-slate-950">{index.name}</h2>
-              </div>
-              <div className="text-right">
-                <p className="orbitron text-lg font-black tabular-nums text-slate-900">
-                  {index.price === null ? "—" : index.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{index.date ?? "—"}</p>
-              </div>
-            </header>
-
-            <div className="mt-3 grid gap-2">
-              <ValuationRow label="Fwd P/E" band={index.pe} digits={1} />
-              <ValuationRow label="P/B" band={index.pb} digits={2} />
-              <div className="flex items-center justify-between rounded-[1rem] border border-slate-200 bg-white/70 px-3 py-2">
-                <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">ROE</span>
-                <span className="orbitron text-lg font-black tabular-nums text-slate-900">
-                  {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
-                </span>
-              </div>
-            </div>
-            <MomentumBlock momentum={index.momentum} />
-            <DriverBadge driver={index.driver} />
-          </section>
-        ))}
-      </div>
-
-      <YardeniOverlayChartPanel />
+        <EventRiskPanel items={eventRisks} />
+      </MarketSection>
 
       <p className="px-1 text-[11px] text-slate-400">
         역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). YTD 분해는 가격 변화가 EPS 개선인지 멀티플 확장/축소인지 보기 위한 가공 신호입니다.

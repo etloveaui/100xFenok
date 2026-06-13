@@ -139,6 +139,7 @@ export function ErpHistoryPanel() {
       ariaLabel="Damodaran 내재 ERP, 10Y 금리, S&P 500 연말값 추이"
       series={series}
       type="line"
+      sortLabels
       formatValue={erpFormat}
       ranges={[
         { id: "20Y", label: "20Y", count: 20 },
@@ -341,6 +342,7 @@ export function PmiActivityChartPanel() {
         ariaLabel="PMI, ISM, OECD CLI 활동 지표 시계열"
         series={series}
         type="line"
+        sortLabels
         formatValue={oneDecimal}
         ranges={[
           { id: "1Y", label: "1Y", count: 12 },

@@ -46,6 +46,12 @@ export interface MarketChartFrameProps {
   bare?: boolean;
   /** Fired on range change — lets a panel lazy-load raw depth when MAX is selected. */
   onRangeChange?: (rangeId: string) => void;
+  /**
+   * Sort the x-axis chronologically/lexically. Needed for date/year charts whose
+   * series have different coverage (e.g. ERP FCFE 2001+ vs DDM 1961+), where the
+   * first-seen label union would otherwise interleave out of order.
+   */
+  sortLabels?: boolean;
 }
 
 // Mirrors the engine palette so toggle chips match the rendered line colors.
@@ -80,11 +86,13 @@ function orderedLabels(series: readonly MarketChartSeries[]): string[] {
 function applyRange(
   series: readonly MarketChartSeries[],
   range: MarketChartRange | undefined,
+  sortLabels: boolean,
 ): readonly MarketChartSeries[] {
   if (!range?.count) return series;
   const labels = orderedLabels(series);
-  if (labels.length <= range.count) return series;
-  const kept = new Set(labels.slice(labels.length - range.count));
+  const ordered = sortLabels ? [...labels].sort((a, b) => a.localeCompare(b)) : labels;
+  if (ordered.length <= range.count) return series;
+  const kept = new Set(ordered.slice(ordered.length - range.count));
   return series.map((item) => ({
     ...item,
     points: item.points.filter((point) => kept.has(point.label)),
@@ -112,6 +120,7 @@ export function MarketChartFrame({
   footnote,
   bare = false,
   onRangeChange,
+  sortLabels = false,
 }: MarketChartFrameProps) {
   const [rangeId, setRangeId] = useState<string>(
     defaultRangeId ?? ranges[ranges.length - 1]?.id ?? "MAX",
@@ -132,11 +141,11 @@ export function MarketChartFrame({
 
   const renderedSeries = useMemo(
     () =>
-      applyRange(series, activeRange).map((item) => ({
+      applyRange(series, activeRange, sortLabels).map((item) => ({
         ...item,
         hidden: hiddenIds.has(item.id),
       })),
-    [series, activeRange, hiddenIds],
+    [series, activeRange, hiddenIds, sortLabels],
   );
 
   const toggleSeries = useCallback((id: string) => {
@@ -239,6 +248,7 @@ export function MarketChartFrame({
         ariaLabel={ariaLabel}
         heightClassName={heightClassName}
         showLegend={showLegend}
+        sortLabels={sortLabels}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}
         formatValue={fmt}

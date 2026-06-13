@@ -31,6 +31,15 @@
 .fnk-shell button{font-family:var(--font)}
 .fnk-shell svg{display:block}
 
+  /* #2 density — bake the owner's "125% zoom looks right" feel as the desktop default.
+   * Scoped to desktop >=1280px so the zoomed effective width stays >=1024px (the 2-col
+   * breakpoint) and mobile/tablet are untouched. `zoom` scales the whole shell uniformly,
+   * including the many hardcoded px font-sizes that a font-size bump alone cannot reach.
+   * Reversible: delete this block. [verify feel on desktop]. */
+@media (min-width:1280px){
+  .fnk-shell{zoom:1.25}
+}
+
   /* ───────────── LEFT RAIL (desktop) ───────────── */
 .fnk-shell .rail{position:fixed; top:0; left:0; bottom:0; width:var(--rail-w); background:var(--c-rail); border-right:1px solid var(--c-line); display:flex; flex-direction:column; z-index:40}
 .fnk-shell .rail-logo{display:flex; align-items:center; gap:var(--s2); height:var(--topbar-h); padding:0 var(--s5); font-size:17px; font-weight:700; letter-spacing:-.02em; border-bottom:1px solid var(--c-line)}
