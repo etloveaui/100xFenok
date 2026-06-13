@@ -470,6 +470,7 @@ const LIVE_OUTPUT_SAMPLE_RATE = 24_000;
 const MAX_LOG_ENTRIES = 24;
 const FINAL_APPEND_DRAIN_MAX_PASSES = 12;
 const FINAL_SAVE_KEEPALIVE_MAX_BYTES = 60_000;
+const FINAL_MARKER_MAX_ENTRIES = 120;
 const STOP_TRANSCRIPT_GRACE_MS = 800;
 const TOOL_FETCH_TIMEOUT_MS = 9_000;
 const TOOL_RESPONSE_WATCHDOG_MS = 12_000;
@@ -1316,6 +1317,17 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       if (pendingRef.current.length >= before) break;
     }
   };
+
+  const buildClientSnapshot = () => (typeof window === "undefined" ? {} : {
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    platform: navigator.platform,
+    screenWidth: window.screen.width,
+    screenHeight: window.screen.height,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+  });
 
   const requestWakeLock = async () => {
     if (typeof navigator === "undefined" || typeof document === "undefined") return;
@@ -2374,20 +2386,16 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   };
 
   const stopSession = async () => {
-    const currentSessionId = sessionId;
+    const currentSessionId = sessionIdRef.current ?? sessionId;
     const stoppedAt = new Date().toISOString();
-    if (sendAudioStreamEnd()) {
-      await new Promise((resolve) => window.setTimeout(resolve, STOP_TRANSCRIPT_GRACE_MS));
-    }
-
     const stopSeq = ++logSeqRef.current;
     const stopLog: BenchLog = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       seq: stopSeq,
       role: "system",
-      text: "대화를 멈췄어요",
+      text: "멈추기 버튼을 눌렀어요",
       at: nowLabel(),
-      atIso: new Date().toISOString(),
+      atIso: stoppedAt,
     };
     const finalMetrics: BenchMetrics = {
       ...metrics,
@@ -2400,33 +2408,124 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     pendingRef.current.push(stopLog);
     persistPending();
-    await drainPendingAppends();
     setStatus("stopped");
     setMetrics(finalMetrics);
     setLogs(currentLogs);
 
     if (currentSessionId) {
-      const saved = await saveConversationLog(currentSessionId, stoppedAt, fullSessionLogs, finalMetrics);
-      if (saved) {
-        pendingRef.current = [];
-        try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
+      void saveFinalMarker(currentSessionId, stoppedAt, fullSessionLogs, finalMetrics).catch(() => false);
+    }
+
+    let finalMarkerSaved = false;
+    let saved = false;
+    try {
+      if (sendAudioStreamEnd()) {
+        await new Promise((resolve) => window.setTimeout(resolve, STOP_TRANSCRIPT_GRACE_MS));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "STOP_GRACE_FAILED";
+      addLog("error", `종료 대기 실패: ${message}`);
+    } finally {
+      const finalSessionLogs = sessionLogsRef.current.slice();
+      if (currentSessionId) {
+        finalMarkerSaved = await saveFinalMarker(currentSessionId, stoppedAt, finalSessionLogs, finalMetrics).catch((error) => {
+          const message = error instanceof Error ? error.message : "FINAL_MARKER_SAVE_FAILED";
+          addLog("error", `종료 표시 저장 실패: ${message}`);
+          return false;
+        });
+        if (!finalMarkerSaved) {
+          try {
+            await drainPendingAppends();
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "FINAL_APPEND_DRAIN_FAILED";
+            addLog("error", `종료 로그 동기화 실패: ${message}`);
+          }
+        }
+        saved = await saveConversationLog(currentSessionId, stoppedAt, finalSessionLogs, finalMetrics);
+        if (saved || finalMarkerSaved) {
+          pendingRef.current = [];
+          try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
+        }
+
+        await fetch("/api/admin/live/session/", {
+          method: "DELETE",
+          cache: "no-store",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ sessionId: currentSessionId }),
+        }).catch(() => undefined);
       }
 
-      await fetch("/api/admin/live/session/", {
-        method: "DELETE",
+      resetRuntime();
+      sessionIdRef.current = null;
+      coachSessionStateRef.current = null;
+      resumeHandleRef.current = null;
+    }
+  };
+
+  const saveFinalMarker = async (
+    currentSessionId: string,
+    stoppedAt: string,
+    currentLogs: BenchLog[],
+    finalMetrics: BenchMetrics,
+  ): Promise<boolean> => {
+    const startedAt = startedAtMs ? new Date(startedAtMs).toISOString() : null;
+    const client = buildClientSnapshot();
+    let entries = currentLogs.slice(-FINAL_MARKER_MAX_ENTRIES).map((e) => ({
+      seq: e.seq,
+      role: e.role,
+      text: e.text,
+      at: e.at,
+      atIso: e.atIso,
+    }));
+    let body = "";
+
+    while (entries.length > 0) {
+      body = JSON.stringify({
+        op: "append",
+        final: true,
+        sessionId: currentSessionId,
+        mode,
+        tester: normalizedCoachConfig.tester,
+        startedAt,
+        stoppedAt,
+        settings: buildLiveSettings(),
+        metrics: finalMetrics,
+        client,
+        entries,
+      });
+      if (new TextEncoder().encode(body).length <= FINAL_SAVE_KEEPALIVE_MAX_BYTES || entries.length === 1) {
+        break;
+      }
+      entries = entries.slice(Math.floor(entries.length / 2));
+    }
+
+    try {
+      const blob = new Blob([body], { type: "application/json" });
+      if (navigator.sendBeacon?.("/api/admin/live/log/", blob)) {
+        return true;
+      }
+    } catch {
+      // Fall back to fetch below.
+    }
+
+    try {
+      const response = await fetch("/api/admin/live/log/", {
+        method: "POST",
+        keepalive: true,
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ sessionId: currentSessionId }),
-      }).catch(() => undefined);
+        body,
+      });
+      return response.ok;
+    } catch {
+      return false;
     }
-
-    resetRuntime();
-    sessionIdRef.current = null;
-    coachSessionStateRef.current = null;
-    resumeHandleRef.current = null;
   };
 
   const saveConversationLog = async (
@@ -2436,16 +2535,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     finalMetrics: BenchMetrics,
   ): Promise<boolean> => {
     const startedAt = startedAtMs ? new Date(startedAtMs).toISOString() : null;
-    const client = typeof window === "undefined" ? {} : {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform,
-      screenWidth: window.screen.width,
-      screenHeight: window.screen.height,
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
-      devicePixelRatio: window.devicePixelRatio,
-    };
+    const client = buildClientSnapshot();
 
     const body = JSON.stringify({
       sessionId: currentSessionId,
