@@ -6,9 +6,10 @@ import {
 } from "@/lib/server/admin-live-tools";
 import {
   buildMonaCoachDynamicBlock,
-  buildMonaCoachDynamicBlockV2,
+  buildMonaCoachDynamicBlockV2WithState,
   getCanonicalMonaStudyDate,
   isLessonV2Enabled,
+  type CoachSessionState,
 } from "@/lib/server/mona-study-tools";
 import { callMonaStudy } from "@/lib/server/admin-live-skill-bridge";
 import {
@@ -217,8 +218,9 @@ export async function buildLiveSetup(
     systemPrompt?: unknown;
     enabledToolIds?: unknown;
     coachConfig?: unknown;
+    sessionId?: unknown;
   },
-) {
+): Promise<{ setup: Record<string, unknown>; coachSessionState: CoachSessionState | null }> {
   const profile = LIVE_PROFILES[mode];
   const responseStyle = normalizeResponseStyle(options.responseStyle);
   const vadPreset = normalizeVadPreset(options.vadPreset, mode);
@@ -235,6 +237,7 @@ export async function buildLiveSetup(
     normalizeSystemPrompt(options.systemPrompt, mode, options.lowVoice, responseStyle, enabledToolIds),
     enabledToolIds,
   );
+  let coachSessionState: CoachSessionState | null = null;
   if (mode === "mona") {
     const bridgeResult = await callMonaStudy("prepareMonaStudySnapshot", {});
     const snapshot = (bridgeResult && !("error" in bridgeResult) && bridgeResult.payload)
@@ -246,13 +249,18 @@ export async function buildLiveSetup(
           best3: [],
           weakNotes: [],
         };
-    const dynamicBlock = isLessonV2Enabled()
-      ? await buildMonaCoachDynamicBlockV2(undefined, snapshot as any, coachConfig)
-      : await buildMonaCoachDynamicBlock(undefined, snapshot as any, coachConfig);
+    const dynamicResult = isLessonV2Enabled()
+      ? await buildMonaCoachDynamicBlockV2WithState(undefined, snapshot as any, coachConfig, options.sessionId)
+      : {
+          dynamicBlock: await buildMonaCoachDynamicBlock(undefined, snapshot as any, coachConfig),
+          coachSessionState: null,
+        };
+    const dynamicBlock = dynamicResult.dynamicBlock;
     systemPrompt = prependDynamicBlock(
       `${buildCoachConfigBlock(coachConfig)}\n\n${dynamicBlock}`,
       systemPrompt,
     );
+    coachSessionState = dynamicResult.coachSessionState;
   }
   const functionDeclarations = buildLiveToolDeclarations(enabledToolIds);
 
@@ -301,7 +309,7 @@ export async function buildLiveSetup(
     ];
   }
 
-  return setup;
+  return { setup, coachSessionState };
 }
 
 export function buildReadiness() {
