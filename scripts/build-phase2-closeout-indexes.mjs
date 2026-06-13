@@ -75,6 +75,7 @@ const MARKET_STRUCTURE_SOURCES = [
   "sentiment/aaii.json",
   "sentiment/cnn-components.json",
   "slickcharts/magnificent7.json",
+  "slickcharts/sp500-marketcap.json",
   "slickcharts/membership-changes.json",
   "slickcharts/sp500-analysis.json",
   "slickcharts/nasdaq100-analysis.json",
@@ -1218,6 +1219,7 @@ function buildBenchmarkMatrix(summaries) {
 function buildMarketStructureIndex() {
   const membership = readJson("slickcharts/membership-changes.json", {});
   const magnificent7 = readJson("slickcharts/magnificent7.json", {});
+  const sp500MarketCap = readJson("slickcharts/sp500-marketcap.json", {});
   const summaries = readJson("benchmarks/summaries.json", {});
   const changes = (Array.isArray(membership?.changes) ? membership.changes : [])
     .filter((row) => num(row.previousCount) !== 0)
@@ -1232,6 +1234,11 @@ function buildMarketStructureIndex() {
       currentCount: num(row.currentCount),
     }));
   const magHoldings = Array.isArray(magnificent7?.holdings) ? magnificent7.holdings : [];
+  const mag7IndexWeight = finite(magnificent7?.indexWeight)
+    ? magnificent7.indexWeight
+    : finite(magnificent7?.totalMarketCap) && finite(sp500MarketCap?.totalMarketCap) && sp500MarketCap.totalMarketCap > 0
+      ? round((magnificent7.totalMarketCap / sp500MarketCap.totalMarketCap) * 100, 1)
+      : null;
 
   return {
     schema_version: 1,
@@ -1244,6 +1251,7 @@ function buildMarketStructureIndex() {
     magnificent7: {
       updated: magnificent7?.updated ?? null,
       totalMarketCap: num(magnificent7?.totalMarketCap),
+      indexWeight: mag7IndexWeight,
       totalWeight: round(magHoldings.reduce((sum, row) => sum + (finite(row.weight) ? row.weight : 0), 0), 2),
       holdings: magHoldings.map((row) => ({
         rank: num(row.rank),

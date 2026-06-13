@@ -45,4 +45,8 @@ export interface MarketChartEngineProps {
   suggestedMax?: number;
   formatValue?: MarketChartValueFormatter;
   onHoverPoint?: (point: MarketChartHoverPoint | null) => void;
+  /** Left (y) axis unit title, e.g. "TGA ($B)". Rendered only when set. */
+  yAxisTitle?: string;
+  /** Right (y1) axis unit title for dual-axis charts, e.g. "Stablecoin ($B)". */
+  y1AxisTitle?: string;
 }

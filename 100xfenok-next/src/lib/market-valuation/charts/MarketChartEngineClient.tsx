@@ -132,15 +132,23 @@ function buildOptions({
   showLegend,
   suggestedMin,
   suggestedMax,
+  yAxisTitle,
+  y1AxisTitle,
 }: Required<Pick<MarketChartEngineProps, "ariaLabel" | "showLegend">> &
   Pick<
     MarketChartEngineProps,
-    "formatValue" | "onHoverPoint" | "suggestedMin" | "suggestedMax"
+    | "formatValue"
+    | "onHoverPoint"
+    | "suggestedMin"
+    | "suggestedMax"
+    | "yAxisTitle"
+    | "y1AxisTitle"
   > & {
     labels: readonly string[];
     series: readonly MarketChartSeries[];
   }): ChartOptions<MarketChartType> {
   const valueFormatter = formatValue ?? defaultFormatValue;
+  const axisTitleFont = { size: 10, weight: "bold" as const };
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -200,6 +208,9 @@ function buildOptions({
         suggestedMin,
         suggestedMax,
         grid: { color: "rgba(148, 163, 184, 0.22)" },
+        title: yAxisTitle
+          ? { display: true, text: yAxisTitle, color: "#64748b", font: axisTitleFont }
+          : undefined,
         ticks: {
           color: "#64748b",
           font: { size: 10, weight: "bold" },
@@ -212,6 +223,9 @@ function buildOptions({
         display: series.some((item) => item.yAxisId === "y1"),
         position: "right",
         grid: { drawOnChartArea: false },
+        title: y1AxisTitle
+          ? { display: true, text: y1AxisTitle, color: "#64748b", font: axisTitleFont }
+          : undefined,
         ticks: {
           color: "#64748b",
           font: { size: 10, weight: "bold" },
@@ -237,6 +251,8 @@ export function MarketChartEngineClient({
   suggestedMax,
   formatValue,
   onHoverPoint,
+  yAxisTitle,
+  y1AxisTitle,
 }: MarketChartEngineProps) {
   const visibleSeries = useMemo(
     () => series.filter((item) => item.points.length > 0),
@@ -261,6 +277,8 @@ export function MarketChartEngineClient({
         showLegend,
         suggestedMin,
         suggestedMax,
+        yAxisTitle,
+        y1AxisTitle,
       }),
     [
       ariaLabel,
@@ -271,6 +289,8 @@ export function MarketChartEngineClient({
       showLegend,
       suggestedMin,
       suggestedMax,
+      yAxisTitle,
+      y1AxisTitle,
     ],
   );
 

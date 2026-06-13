@@ -35,10 +35,10 @@ const compact: MarketChartValueFormatter = (value) =>
 const pct1: MarketChartValueFormatter = (value) =>
   value === null ? "—" : `${value.toFixed(1)}`;
 
-function depthFootnote(loading: boolean, full: boolean, reachable: number): string {
-  if (loading) return "원본 깊이 불러오는 중…";
-  if (full) return `원본 전체 ${reachable.toLocaleString("ko-KR")} 포인트`;
-  return "기본 요약 · MAX로 원본 깊이 확장";
+function depthFootnote(loading: boolean, full: boolean): string {
+  if (loading) return "전체 기간 불러오는 중…";
+  if (full) return "전체 기간 표시 중";
+  return "최근 추이 · MAX로 전체 기간 보기";
 }
 
 function LiquidityPanel({ model }: MarketStructureSlotProps) {
@@ -69,7 +69,6 @@ function LiquidityPanel({ model }: MarketStructureSlotProps) {
     [model, full, loading],
   );
 
-  const reachable = model.liquidity[0]?.meta.reachable_count ?? 0;
   return (
     <MarketChartFrame
       bare
@@ -77,9 +76,17 @@ function LiquidityPanel({ model }: MarketStructureSlotProps) {
       series={full ?? summary}
       type="line"
       sortLabels
+      ranges={[
+        { id: "6M", label: "6M", months: 6 },
+        { id: "1Y", label: "1Y", months: 12 },
+        { id: "MAX", label: "MAX" },
+      ]}
+      defaultRangeId="1Y"
       formatValue={compact}
+      yAxisTitle="TGA ($B)"
+      y1AxisTitle="Stablecoin ($B)"
       onRangeChange={onRangeChange}
-      footnote={depthFootnote(loading, full !== null, reachable)}
+      footnote={depthFootnote(loading, full !== null)}
     />
   );
 }
@@ -104,7 +111,6 @@ function SentimentPanel({ model }: MarketStructureSlotProps) {
     [model, full, loading],
   );
 
-  const reachable = model.sentiment[0]?.meta.reachable_count ?? 0;
   return (
     <MarketChartFrame
       bare
@@ -112,11 +118,17 @@ function SentimentPanel({ model }: MarketStructureSlotProps) {
       series={full ?? summary}
       type="line"
       sortLabels
+      ranges={[
+        { id: "1M", label: "1M", months: 1 },
+        { id: "3M", label: "3M", months: 3 },
+        { id: "MAX", label: "MAX" },
+      ]}
+      defaultRangeId="3M"
       suggestedMin={0}
       suggestedMax={100}
       formatValue={pct1}
       onRangeChange={onRangeChange}
-      footnote={depthFootnote(loading, full !== null, reachable)}
+      footnote={depthFootnote(loading, full !== null)}
     />
   );
 }
@@ -138,7 +150,6 @@ function AaiiPanel({ model }: MarketStructureSlotProps) {
     [model, full, loading],
   );
 
-  const reachable = model.aaii?.meta.reachable_count ?? 0;
   return (
     <MarketChartFrame
       bare
@@ -146,9 +157,15 @@ function AaiiPanel({ model }: MarketStructureSlotProps) {
       series={full ?? summary}
       type="line"
       sortLabels
+      ranges={[
+        { id: "1Y", label: "1Y", months: 12 },
+        { id: "5Y", label: "5Y", months: 60 },
+        { id: "MAX", label: "MAX" },
+      ]}
+      defaultRangeId="5Y"
       formatValue={pct1}
       onRangeChange={onRangeChange}
-      footnote={depthFootnote(loading, full !== null, reachable)}
+      footnote={depthFootnote(loading, full !== null)}
     />
   );
 }

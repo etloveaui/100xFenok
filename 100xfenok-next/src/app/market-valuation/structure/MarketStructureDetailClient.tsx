@@ -39,41 +39,44 @@ function fmt(value: number | null | undefined, digits = 1, suffix = ""): string 
     : "—";
 }
 
-function numberOrNull(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function fmtCount(value: number | null | undefined): string {
+function fmtUsdBillions(value: unknown): string {
   return typeof value === "number" && Number.isFinite(value)
-    ? value.toLocaleString("ko-KR")
+    ? `$${value.toFixed(0)}B`
     : "—";
 }
 
-function sumCounts(values: Array<number | null | undefined>): number {
-  return values.reduce<number>((sum, value) => (
-    typeof value === "number" && Number.isFinite(value) ? sum + value : sum
-  ), 0);
+function fmtSignedUsdBillions(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  const sign = value >= 0 ? "+" : "-";
+  return `${sign}$${Math.abs(value).toFixed(0)}B`;
 }
 
-function maxCount(values: Array<number | null | undefined>): number {
-  return values.reduce<number>((max, value) => (
-    typeof value === "number" && Number.isFinite(value) ? Math.max(max, value) : max
-  ), 0);
+function spreadTone(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  if (value > 0) return "강세우위";
+  if (value < 0) return "약세우위";
+  return "중립";
 }
 
-function rawDepthCount(model: MarketStructureModel): number {
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
   return (
-    sumCounts(model.liquidity.map((item) => item.meta.reachable_count))
-    + maxCount(model.sentiment.map((item) => item.meta.reachable_count))
-    + (model.aaii?.meta.reachable_count ?? 0)
-  );
-}
-
-function defaultDepthCount(model: MarketStructureModel): number {
-  return (
-    sumCounts(model.liquidity.map((item) => item.meta.default_visible_count))
-    + maxCount(model.sentiment.map((item) => item.meta.default_visible_count))
-    + (model.aaii?.meta.default_visible_count ?? 0)
+    <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
+      <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">{label}</p>
+      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">
+        {value}
+      </p>
+      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-slate-500">
+        {detail}
+      </p>
+    </div>
   );
 }
 
@@ -114,50 +117,31 @@ function Placeholder({ children }: { children: ReactNode }) {
 
 function SummaryStrip({ model }: { model: MarketStructureModel }) {
   const topConcentration = model.concentration[0] ?? null;
-  const weakSentiment = [...model.sentiment]
-    .sort((a, b) => (numberOrNull(a.latest.value) ?? 100) - (numberOrNull(b.latest.value) ?? 100))
-    .slice(0, 3);
-  const fullDepth = rawDepthCount(model);
-  const defaultVisible = defaultDepthCount(model);
+  const tga = model.liquidity.find((item) => item.id === "tga") ?? null;
+  const aaii = model.aaii;
 
   return (
     <div className="grid min-w-0 gap-3 md:grid-cols-4">
-      <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Raw Coverage</p>
-        <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">
-          {fmtCount(fullDepth)}
-        </p>
-        <p className="mt-1 break-words text-[11px] font-semibold leading-4 text-slate-500">
-          기본 요약 {fmtCount(defaultVisible)} · MAX는 원본 행으로 확장
-        </p>
-      </div>
-      <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Liquidity</p>
-        <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">
-          {model.liquidity.length}
-        </p>
-        <p className="mt-1 truncate text-[11px] font-semibold text-slate-500">
-          {model.liquidity.map((item) => item.label).join(" · ") || "—"}
-        </p>
-      </div>
-      <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Concentration</p>
-        <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">
-          {fmt(topConcentration?.top10Weight, 1, "%")}
-        </p>
-        <p className="mt-1 truncate text-[11px] font-semibold text-slate-500">
-          {topConcentration?.label ?? "—"} Top10
-        </p>
-      </div>
-      <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Weak Sentiment</p>
-        <p className="mt-2 min-w-0 break-words text-[11px] font-black leading-5 text-slate-700">
-          {weakSentiment.map((item) => `${item.label} ${fmt(numberOrNull(item.latest.value), 1)}`).join(" · ") || "—"}
-        </p>
-        <p className="mt-1 text-[11px] font-semibold text-slate-500">
-          {model.aaii?.latest.date ?? model.generatedAt ?? "—"}
-        </p>
-      </div>
+      <MetricCard
+        label="집중도"
+        value={fmt(topConcentration?.top10Weight, 1, "%")}
+        detail={`${topConcentration?.label ?? "S&P 500"} Top10`}
+      />
+      <MetricCard
+        label="Mag7"
+        value={fmt(model.magnificent7.indexWeight, 1, "%")}
+        detail="S&P 500 시총 대비"
+      />
+      <MetricCard
+        label="유동성"
+        value={fmtUsdBillions(tga?.latest.value)}
+        detail={`재무부 잔고 · 7일 ${fmtSignedUsdBillions(tga?.delta7d)}`}
+      />
+      <MetricCard
+        label="투자심리"
+        value={fmt(aaii?.spread, 1)}
+        detail={`AAII 강세-약세 · 강세 ${fmt(aaii?.bullish, 1)} / 약세 ${fmt(aaii?.bearish, 1)} · ${spreadTone(aaii?.spread)}`}
+      />
     </div>
   );
 }

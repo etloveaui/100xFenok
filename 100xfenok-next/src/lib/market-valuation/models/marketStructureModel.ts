@@ -131,6 +131,7 @@ export interface MarketStructureMag7Holding {
 interface RawMagnificent7 {
   updated?: string | null;
   totalMarketCap?: number | null;
+  indexWeight?: number | null;
   totalWeight?: number | null;
   holdings?: Array<Partial<MarketStructureMag7Holding>>;
 }
@@ -138,6 +139,7 @@ interface RawMagnificent7 {
 export interface MarketStructureMagnificent7 {
   updated: string | null;
   totalMarketCap: number | null;
+  indexWeight: number | null;
   totalWeight: number | null;
   holdings: MarketStructureMag7Holding[];
 }
@@ -358,6 +360,7 @@ function normalizeMagnificent7(raw: RawMagnificent7 | undefined): MarketStructur
   return {
     updated: raw?.updated ?? null,
     totalMarketCap: finite(raw?.totalMarketCap) ? raw.totalMarketCap : null,
+    indexWeight: finite(raw?.indexWeight) ? raw.indexWeight : null,
     totalWeight: finite(raw?.totalWeight) ? raw.totalWeight : null,
     holdings: (raw?.holdings ?? []).flatMap((holding) => {
       const hasIdentity = typeof holding.symbol === "string" || typeof holding.company === "string";

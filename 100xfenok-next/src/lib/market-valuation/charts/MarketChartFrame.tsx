@@ -22,8 +22,15 @@ import type {
 export interface MarketChartRange {
   id: string;
   label: string;
-  /** Trailing labels to show; omit = MAX (all reachable depth). */
+  /** Trailing labels to show; omit count+months = MAX (all reachable depth). */
   count?: number;
+  /**
+   * Window by elapsed months instead of label count. For charts whose x labels
+   * are ISO dates (liquidity, sentiment, AAII) and whose summary is downsampled,
+   * a trailing-N-labels window is meaningless — "1Y" must mean the last 12 months
+   * of dates, not the last 12 sampled points. Takes precedence over `count`.
+   */
+  months?: number;
 }
 
 export interface MarketChartFrameProps {
@@ -40,6 +47,10 @@ export interface MarketChartFrameProps {
   suggestedMin?: number;
   suggestedMax?: number;
   formatValue?: MarketChartValueFormatter;
+  /** Left (y) axis unit title, e.g. "TGA ($B)". */
+  yAxisTitle?: string;
+  /** Right (y1) axis unit title for dual-axis charts, e.g. "Stablecoin ($B)". */
+  y1AxisTitle?: string;
   /** Footnote shown when not hovering, e.g. source + default/reachable coverage. */
   footnote?: string;
   /** Drop the outer card chrome when embedded in a parent shell (e.g. SlotShell). */
@@ -83,12 +94,41 @@ function orderedLabels(series: readonly MarketChartSeries[]): string[] {
   return labels;
 }
 
+/**
+ * ISO date string `months` before an ISO `YYYY-MM-DD` anchor. Lexical order on
+ * ISO dates is chronological, so the windowed filter compares label strings
+ * directly — no Date parsing, no timezone edge cases.
+ */
+function isoMonthsBefore(iso: string, months: number): string {
+  const [y, m, d] = iso.split("-").map((part) => Number.parseInt(part, 10));
+  if (!Number.isFinite(y) || !Number.isFinite(m)) return iso;
+  const zeroBased = y * 12 + (m - 1) - months;
+  const ny = Math.floor(zeroBased / 12);
+  const nm = (((zeroBased % 12) + 12) % 12) + 1;
+  const dd = Number.isFinite(d) ? d : 1;
+  return `${ny}-${String(nm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+}
+
 function applyRange(
   series: readonly MarketChartSeries[],
   range: MarketChartRange | undefined,
   sortLabels: boolean,
 ): readonly MarketChartSeries[] {
-  if (!range?.count) return series;
+  if (!range) return series;
+  // Date-window mode (ISO-date charts): "1Y" = last 12 months of dates, robust
+  // to summary downsampling vs raw MAX depth. Takes precedence over count.
+  if (range.months != null) {
+    const labels = orderedLabels(series);
+    if (!labels.length) return series;
+    const latest = labels.reduce((a, b) => (a > b ? a : b));
+    const cutoff = isoMonthsBefore(latest, range.months);
+    return series.map((item) => ({
+      ...item,
+      points: item.points.filter((point) => point.label >= cutoff),
+    }));
+  }
+  // Count mode (year/month-cadence ledger charts): keep trailing-N labels.
+  if (!range.count) return series;
   const labels = orderedLabels(series);
   const ordered = sortLabels ? [...labels].sort((a, b) => a.localeCompare(b)) : labels;
   if (ordered.length <= range.count) return series;
@@ -117,6 +157,8 @@ export function MarketChartFrame({
   suggestedMin,
   suggestedMax,
   formatValue,
+  yAxisTitle,
+  y1AxisTitle,
   footnote,
   bare = false,
   onRangeChange,
@@ -251,6 +293,8 @@ export function MarketChartFrame({
         sortLabels={sortLabels}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}
+        yAxisTitle={yAxisTitle}
+        y1AxisTitle={y1AxisTitle}
         formatValue={fmt}
         onHoverPoint={setHover}
       />
