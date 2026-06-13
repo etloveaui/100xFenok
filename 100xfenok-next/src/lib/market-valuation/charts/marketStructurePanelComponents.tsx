@@ -76,6 +76,7 @@ function LiquidityPanel({ model }: MarketStructureSlotProps) {
       ariaLabel="유동성 추이 (TGA · 스테이블코인)"
       series={full ?? summary}
       type="line"
+      sortLabels
       formatValue={compact}
       onRangeChange={onRangeChange}
       footnote={depthFootnote(loading, full !== null, reachable)}
@@ -110,6 +111,7 @@ function SentimentPanel({ model }: MarketStructureSlotProps) {
       ariaLabel="CNN 하위 심리 추이 (7개 구성요소)"
       series={full ?? summary}
       type="line"
+      sortLabels
       suggestedMin={0}
       suggestedMax={100}
       formatValue={pct1}
@@ -143,6 +145,7 @@ function AaiiPanel({ model }: MarketStructureSlotProps) {
       ariaLabel="AAII Bull-Bear 스프레드 추이"
       series={full ?? summary}
       type="line"
+      sortLabels
       formatValue={pct1}
       onRangeChange={onRangeChange}
       footnote={depthFootnote(loading, full !== null, reachable)}
@@ -246,7 +249,7 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
         ))}
       </div>
       <div className="min-w-0 overflow-x-auto">
-        <table className="w-full min-w-[420px] border-collapse text-[12px]">
+        <table className="w-full min-w-[390px] border-collapse text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-400">
               <th className="py-2 pr-2 text-left">지수</th>

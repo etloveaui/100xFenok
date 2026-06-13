@@ -49,6 +49,34 @@ function fmtCount(value: number | null | undefined): string {
     : "—";
 }
 
+function sumCounts(values: Array<number | null | undefined>): number {
+  return values.reduce<number>((sum, value) => (
+    typeof value === "number" && Number.isFinite(value) ? sum + value : sum
+  ), 0);
+}
+
+function maxCount(values: Array<number | null | undefined>): number {
+  return values.reduce<number>((max, value) => (
+    typeof value === "number" && Number.isFinite(value) ? Math.max(max, value) : max
+  ), 0);
+}
+
+function rawDepthCount(model: MarketStructureModel): number {
+  return (
+    sumCounts(model.liquidity.map((item) => item.meta.reachable_count))
+    + maxCount(model.sentiment.map((item) => item.meta.reachable_count))
+    + (model.aaii?.meta.reachable_count ?? 0)
+  );
+}
+
+function defaultDepthCount(model: MarketStructureModel): number {
+  return (
+    sumCounts(model.liquidity.map((item) => item.meta.default_visible_count))
+    + maxCount(model.sentiment.map((item) => item.meta.default_visible_count))
+    + (model.aaii?.meta.default_visible_count ?? 0)
+  );
+}
+
 function SlotShell({
   id,
   title,
@@ -89,18 +117,18 @@ function SummaryStrip({ model }: { model: MarketStructureModel }) {
   const weakSentiment = [...model.sentiment]
     .sort((a, b) => (numberOrNull(a.latest.value) ?? 100) - (numberOrNull(b.latest.value) ?? 100))
     .slice(0, 3);
-  const fullDepth = model.meta.reachable_count;
-  const defaultVisible = model.meta.default_visible_count;
+  const fullDepth = rawDepthCount(model);
+  const defaultVisible = defaultDepthCount(model);
 
   return (
     <div className="grid min-w-0 gap-3 md:grid-cols-4">
       <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Coverage</p>
+        <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Raw Coverage</p>
         <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">
           {fmtCount(fullDepth)}
         </p>
-        <p className="mt-1 text-[11px] font-semibold text-slate-500">
-          기본 {fmtCount(defaultVisible)} · MAX는 raw depth 패널에서 확장
+        <p className="mt-1 break-words text-[11px] font-semibold leading-4 text-slate-500">
+          기본 요약 {fmtCount(defaultVisible)} · MAX는 원본 행으로 확장
         </p>
       </div>
       <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
