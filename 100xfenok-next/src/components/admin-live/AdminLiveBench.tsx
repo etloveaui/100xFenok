@@ -191,6 +191,17 @@ type LiveFunctionResponse = {
   response: unknown;
 };
 
+type RawServerContent = {
+  interrupted?: boolean;
+  generationComplete?: boolean;
+  waitingForInput?: boolean;
+  turnComplete?: boolean;
+  turnCompleteReason?: string;
+  inputTranscription?: { text?: string };
+  outputTranscription?: { text?: string };
+  modelTurn?: { parts?: Array<{ thought?: boolean; inlineData?: { data?: string; mimeType?: string } }> };
+};
+
 const PROFILE_FALLBACK: ReadinessResponse["profiles"] = [
   {
     id: "fenok",
@@ -777,7 +788,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const [voiceName, setVoiceName] = useState("Kore");
   const [responseStyle, setResponseStyle] = useState<ResponseStyle>("concise");
   const [vadPreset, setVadPreset] = useState<VadPreset>("balanced");
-  const [interruptionMode, setInterruptionMode] = useState<InterruptionMode>(initialMode === "mona" ? "no-interrupt" : "barge-in");
+  const [interruptionMode, setInterruptionMode] = useState<InterruptionMode>("barge-in");
   const [coachConfig, setCoachConfig] = useState<CoachConfig>(DEFAULT_COACH_CONFIG);
   const [systemPrompt, setSystemPrompt] = useState(PROFILE_FALLBACK[0].defaultSystemPrompt ?? "");
   const [promptEdited, setPromptEdited] = useState(false);
@@ -818,6 +829,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const resumeCountRef = useRef(0);
   const sentMetaRef = useRef(false);
   const audioFramesSentRef = useRef(0);
+  const lastAudioActivityLogFramesRef = useRef(0);
+  const lastAudioActivityLogMsRef = useRef<number | null>(null);
   const resumeReadyLoggedRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
@@ -1052,6 +1065,72 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     pendingRef.current.push(entry);
     persistPending();
     scheduleFlush();
+  };
+
+  const addRawLog = (event: string, fields: Record<string, string | number | boolean | null>) => {
+    const details = Object.entries(fields)
+      .map(([key, value]) => `${key}=${value === null ? "null" : String(value).replace(/\s+/g, "_").slice(0, 120)}`)
+      .join(" ");
+    addLog("system", `RAW ${event}${details ? ` ${details}` : ""}`);
+  };
+
+  const maybeLogAudioActivity = (force = false) => {
+    const frameCount = audioFramesSentRef.current;
+    if (frameCount <= 0) return;
+    const now = performance.now();
+    const previousFrames = lastAudioActivityLogFramesRef.current;
+    const previousMs = lastAudioActivityLogMsRef.current;
+    const frameDelta = frameCount - previousFrames;
+    const elapsedMs = previousMs === null ? Infinity : now - previousMs;
+    if (!force && frameDelta < 250 && elapsedMs < 5000) return;
+
+    addRawLog("audioActivity", {
+      framesSent: frameCount,
+      deltaFrames: Math.max(0, frameDelta),
+      sinceLastMs: Number.isFinite(elapsedMs) ? Math.round(elapsedMs) : null,
+    });
+    lastAudioActivityLogFramesRef.current = frameCount;
+    lastAudioActivityLogMsRef.current = now;
+  };
+
+  const logRawServerContent = (serverContent: RawServerContent) => {
+    const hasInputTranscription = Object.prototype.hasOwnProperty.call(serverContent, "inputTranscription");
+    const hasOutputTranscription = Object.prototype.hasOwnProperty.call(serverContent, "outputTranscription");
+    const inputText = typeof serverContent.inputTranscription?.text === "string"
+      ? serverContent.inputTranscription.text
+      : null;
+    const outputText = typeof serverContent.outputTranscription?.text === "string"
+      ? serverContent.outputTranscription.text
+      : null;
+    const parts = Array.isArray(serverContent.modelTurn?.parts) ? serverContent.modelTurn.parts : [];
+    const audioParts = parts.filter((part) => Boolean(part.inlineData?.data)).length;
+    const thoughtParts = parts.filter((part) => part.thought === true).length;
+    const shouldLog = Boolean(
+      serverContent.interrupted ||
+      serverContent.generationComplete ||
+      serverContent.waitingForInput ||
+      serverContent.turnComplete ||
+      hasInputTranscription ||
+      hasOutputTranscription ||
+      parts.length > 0,
+    );
+    if (!shouldLog) return;
+
+    addRawLog("serverContent", {
+      interrupted: serverContent.interrupted === true,
+      generationComplete: serverContent.generationComplete === true,
+      waitingForInput: serverContent.waitingForInput === true,
+      turnComplete: serverContent.turnComplete === true,
+      turnCompleteReason: serverContent.turnCompleteReason ?? null,
+      inputTx: hasInputTranscription ? "present" : "absent",
+      outputTx: hasOutputTranscription ? "present" : "absent",
+      inputLen: inputText?.length ?? 0,
+      outputLen: outputText?.length ?? 0,
+      modelParts: parts.length,
+      audioParts,
+      thoughtParts,
+      framesSent: audioFramesSentRef.current,
+    });
   };
 
   const appendTranscriptLog = (role: "user" | "bench", text: string) => {
@@ -1794,6 +1873,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       );
       lastAudioSentMsRef.current = performance.now();
       audioFramesSentRef.current += 1;
+      maybeLogAudioActivity();
     };
 
     if ("audioWorklet" in context) {
@@ -1910,19 +1990,13 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       return;
     }
 
-    const serverContent = payload.serverContent as
-      | {
-          interrupted?: boolean;
-          turnComplete?: boolean;
-          inputTranscription?: { text?: string };
-          outputTranscription?: { text?: string };
-          modelTurn?: { parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }> };
-        }
-      | undefined;
+    const serverContent = payload.serverContent as RawServerContent | undefined;
 
     if (!serverContent) return;
+    logRawServerContent(serverContent);
 
     if (serverContent.interrupted) {
+      maybeLogAudioActivity(true);
       dropAudioUntilTurnCompleteRef.current = true;
       clearDropAudioTimeout();
       dropAudioResetTimeoutRef.current = setTimeout(() => {
@@ -1935,6 +2009,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
 
     if (serverContent.inputTranscription?.text) {
+      maybeLogAudioActivity(true);
       const latency = lastAudioSentMsRef.current ? Math.round(performance.now() - lastAudioSentMsRef.current) : null;
       setMetrics((current) => ({
         ...current,
@@ -1992,6 +2067,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
 
     if (serverContent.turnComplete) {
+      maybeLogAudioActivity(true);
       setMetrics((current) => ({ ...current, turnCount: current.turnCount + 1 }));
       audioChunkSeenRef.current = false;
       clearDropAudioTimeout();
@@ -2019,6 +2095,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     kickoffSentRef.current = false;
     resumeCountRef.current = 0;
     audioFramesSentRef.current = 0;
+    lastAudioActivityLogFramesRef.current = 0;
+    lastAudioActivityLogMsRef.current = null;
     resumeReadyLoggedRef.current = false;
     coachSessionStateRef.current = null;
     clearFlushTimer();
@@ -2388,6 +2466,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     kickoffSentRef.current = false;
     resumeCountRef.current = 0;
     audioFramesSentRef.current = 0;
+    lastAudioActivityLogFramesRef.current = 0;
+    lastAudioActivityLogMsRef.current = null;
     resumeReadyLoggedRef.current = false;
     setStartedAtMs(null);
     setMetrics({
@@ -2495,6 +2575,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
               config={normalizedCoachConfig}
               locked={settingsLocked}
               onUpdate={updateCoachConfig}
+              interruptionMode={interruptionMode}
+              onInterruptionModeChange={setInterruptionMode}
               variant="winddown"
             />
           ) : undefined}
@@ -2535,7 +2617,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                   setVoiceName(preset.voiceName);
                   setVadPreset(preset.vadPreset);
                   setLowVoice(preset.lowVoice);
-                  setInterruptionMode(profile.id === "mona" ? "no-interrupt" : "barge-in");
+                  setInterruptionMode("barge-in");
                   setMetrics((current) => ({ ...current, lowVoice: preset.lowVoice }));
                   const nextEnabledToolIds = getModeDefaultToolIds(profile.id, toolRegistry);
                   setEnabledToolIds(nextEnabledToolIds);
@@ -2883,11 +2965,15 @@ function CoachConfigControls({
   config,
   locked,
   onUpdate,
+  interruptionMode,
+  onInterruptionModeChange,
   variant = "admin",
 }: {
   config: CoachConfig;
   locked: boolean;
   onUpdate: (patch: Partial<CoachConfig>) => void;
+  interruptionMode?: InterruptionMode;
+  onInterruptionModeChange?: (mode: InterruptionMode) => void;
   variant?: "admin" | "winddown";
 }) {
   const winddown = variant === "winddown";
@@ -2973,6 +3059,25 @@ function CoachConfigControls({
       <details className={detailClass}>
         <summary className={summaryClass}>테스트/고급</summary>
         <div className="mt-3 grid gap-3">
+          {interruptionMode && onInterruptionModeChange ? (
+            <fieldset>
+              <legend className={advancedLegendClass}>코치 말 끊기</legend>
+              <div className={grid2Class}>
+                {(Object.keys(INTERRUPTION_MODE_LABEL) as InterruptionMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => onInterruptionModeChange(mode)}
+                    disabled={locked}
+                    className={primaryButtonClass(interruptionMode === mode)}
+                  >
+                    {INTERRUPTION_MODE_LABEL[mode]}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
           <fieldset>
             <legend className={advancedLegendClass}>세션 대상</legend>
             <div className={grid2Class}>

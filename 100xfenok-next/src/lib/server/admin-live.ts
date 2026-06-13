@@ -10,6 +10,7 @@ import {
   getCanonicalMonaStudyDate,
   isLessonV2Enabled,
   type CoachSessionState,
+  type StudySnapshot,
 } from "@/lib/server/mona-study-tools";
 import { callMonaStudy } from "@/lib/server/admin-live-skill-bridge";
 import {
@@ -241,7 +242,7 @@ export async function buildLiveSetup(
   const vad = LIVE_VAD_PRESETS[vadPreset];
   const interruptionMode = options.interruptionMode === "no-interrupt" || options.interruptionMode === "barge-in"
     ? options.interruptionMode
-    : mode === "mona" ? "no-interrupt" : "barge-in";
+    : "barge-in";
   const resumeHandle = typeof options.resumeHandle === "string" && options.resumeHandle.length > 0 && options.resumeHandle.length <= 512
     ? options.resumeHandle
     : null;
@@ -253,19 +254,22 @@ export async function buildLiveSetup(
   let coachSessionState: CoachSessionState | null = null;
   if (mode === "mona") {
     const bridgeResult = await callMonaStudy("prepareMonaStudySnapshot", {});
-    const snapshot = (bridgeResult && !("error" in bridgeResult) && bridgeResult.payload)
-      ? (bridgeResult.payload as Record<string, unknown>)
+    const snapshot: StudySnapshot = (bridgeResult && !("error" in bridgeResult) && bridgeResult.payload)
+      ? (bridgeResult.payload as StudySnapshot)
       : {
           studyDate: getCanonicalMonaStudyDate(),
           loadedAt: new Date().toISOString(),
           sessions: [],
           best3: [],
           weakNotes: [],
+          learnerProfile: null,
+          curriculum: null,
+          expressionBank: [],
         };
     const dynamicResult = isLessonV2Enabled()
-      ? await buildMonaCoachDynamicBlockV2WithState(undefined, snapshot as any, coachConfig, options.sessionId)
+      ? await buildMonaCoachDynamicBlockV2WithState(undefined, snapshot, coachConfig, options.sessionId)
       : {
-          dynamicBlock: await buildMonaCoachDynamicBlock(undefined, snapshot as any, coachConfig),
+          dynamicBlock: await buildMonaCoachDynamicBlock(undefined, snapshot, coachConfig),
           coachSessionState: null,
         };
     const dynamicBlock = dynamicResult.dynamicBlock;
