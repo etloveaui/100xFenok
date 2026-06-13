@@ -158,100 +158,6 @@ const Renderer = (function() {
     `;
   }
 
-  function renderDepthLoading() {
-    if (!elements?.depthContainer) return;
-    elements.depthContainer.innerHTML = `
-      ${Array.from({ length: 3 }, () => `
-        <div class="bg-white rounded-xl p-5 shadow animate-pulse">
-          <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-          <div class="h-12 bg-gray-100 rounded mb-3"></div>
-          <div class="h-3 bg-gray-200 rounded w-4/5"></div>
-        </div>
-      `).join('')}
-    `;
-  }
-
-  function renderDepthCoverage(manifest) {
-    if (!elements?.depthContainer) return;
-    const totals = manifest?.totals || {};
-    const activeCategories = (manifest?.categories || []).filter(item => item.status === 'active');
-    const generated = manifest?.generatedIndexes || [];
-    const componentAsOf = manifest?.component_as_of?.computed_signals || [];
-    elements.depthContainer.innerHTML = `
-      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
-        <div class="flex items-start justify-between gap-3 mb-4">
-          <div class="min-w-0">
-            <h3 class="font-semibold text-gray-800">Mirror / Usage</h3>
-            <p class="text-xs text-gray-500 mt-1 break-words">${escapeHtml(manifest?.generated_at || '-')}</p>
-          </div>
-          <span class="px-2 py-1 rounded-full border text-xs font-bold ${manifest?.mirror_sync_status === 'ok' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
-            ${escapeHtml((manifest?.mirror_sync_status || 'unknown').toUpperCase())}
-          </span>
-        </div>
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          ${renderDepthMetric('root JSON', totals.rootJsonCount)}
-          ${renderDepthMetric('public JSON', totals.publicJsonCount)}
-          ${renderDepthMetric('direct fetch', totals.directDataFetchCount)}
-          ${renderDepthMetric('dynamic', totals.dynamicPatternCount)}
-        </div>
-      </article>
-      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
-        <h3 class="font-semibold text-gray-800 mb-3">Generated Indexes</h3>
-        <div class="space-y-2">
-          ${generated.map(item => `
-            <div class="rounded-lg border ${item.mirrored ? 'bg-green-50 border-green-100' : 'bg-yellow-50 border-yellow-100'} p-3">
-              <div class="flex items-center justify-between gap-3">
-                <code class="min-w-0 truncate text-xs font-semibold text-gray-700" title="${escapeHtml(item.path)}">${escapeHtml(item.path)}</code>
-                <span class="shrink-0 text-[10px] font-bold ${item.mirrored ? 'text-green-700' : 'text-yellow-700'}">${item.mirrored ? 'MIRROR' : 'CHECK'}</span>
-              </div>
-              <div class="mt-1 text-[11px] text-gray-500">${Formatters.formatNumber(item.sourceFiles?.length || 0, 0)} source files</div>
-            </div>
-          `).join('')}
-        </div>
-      </article>
-      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
-        <h3 class="font-semibold text-gray-800 mb-3">Active Categories</h3>
-        <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
-          ${activeCategories.map(item => `
-            <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
-              <div class="flex items-center justify-between gap-3">
-                <span class="font-semibold text-sm text-gray-800 truncate" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
-                <span class="text-[10px] font-bold text-gray-500">${Formatters.formatNumber(item.rootJsonCount, 0)} files</span>
-              </div>
-              <div class="mt-1 text-[11px] text-gray-500 break-words">${escapeHtml(item.usage || '')}</div>
-            </div>
-          `).join('')}
-        </div>
-        ${componentAsOf.length ? `
-          <div class="mt-3 flex flex-wrap gap-2">
-            ${componentAsOf.map(item => `
-              <span class="rounded-full border border-gray-200 bg-white px-2 py-1 text-[10px] font-bold text-gray-500">${escapeHtml(item.id)} · ${escapeHtml(item.asOf || '-')}</span>
-            `).join('')}
-          </div>
-        ` : ''}
-      </article>
-    `;
-  }
-
-  function renderDepthUnavailable(message) {
-    if (!elements?.depthContainer) return;
-    elements.depthContainer.innerHTML = `
-      <div class="xl:col-span-3 rounded-xl border border-yellow-200 bg-yellow-50 p-5 text-sm text-yellow-800">
-        <div class="font-semibold mb-1">데이터 깊이 커버리지 확인 불가</div>
-        <div class="break-words">${escapeHtml(message)}</div>
-      </div>
-    `;
-  }
-
-  function renderDepthMetric(label, value) {
-    return `
-      <div class="rounded-lg bg-gray-50 p-3">
-        <div class="text-xs text-gray-500">${escapeHtml(label)}</div>
-        <div class="text-lg font-semibold text-gray-900">${Formatters.formatNumber(value || 0, 0)}</div>
-      </div>
-    `;
-  }
-
   function renderOpsCard({ title, icon, description, items }) {
     const failed = items.filter(item => item.status === 'fail').length;
     const warn = items.filter(item => item.status === 'warn').length;
@@ -461,9 +367,6 @@ const Renderer = (function() {
     renderOpsLoading,
     renderOpsResults,
     renderOpsUnavailable,
-    renderDepthLoading,
-    renderDepthCoverage,
-    renderDepthUnavailable,
     renderDetails,
     hideDetails,
     updateTimestamp
