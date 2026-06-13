@@ -5,6 +5,10 @@ import {
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
 import { executeLiveToolFunction } from "@/lib/server/admin-live-tools";
+import {
+  getRegisteredLiveToolSessionContext,
+  resolveLiveToolSessionContext,
+} from "@/lib/server/admin-live-session-context";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -13,6 +17,8 @@ type ToolRequest = {
   id?: unknown;
   name?: unknown;
   args?: unknown;
+  sessionId?: unknown;
+  context?: unknown;
 };
 
 function noStoreJson(body: unknown, status = 200) {
@@ -39,8 +45,13 @@ export async function POST(request: Request) {
   const name = typeof body?.name === "string" ? body.name : "";
   const id = typeof body?.id === "string" ? body.id : "";
   const args = body?.args && typeof body.args === "object" ? body.args as Record<string, unknown> : {};
+  const context = getRegisteredLiveToolSessionContext(body?.sessionId)
+    ?? resolveLiveToolSessionContext({
+      ...(body?.context && typeof body.context === "object" && !Array.isArray(body.context) ? body.context : {}),
+      sessionId: body?.sessionId,
+    });
 
-  const result = await executeLiveToolFunction(name, args);
+  const result = await executeLiveToolFunction(name, args, context);
   const status = "error" in result && result.error === "UNKNOWN_TOOL" ? 400 : 200;
   return noStoreJson({
     id,

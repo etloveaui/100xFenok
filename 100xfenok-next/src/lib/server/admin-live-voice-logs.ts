@@ -61,17 +61,52 @@ function normalizeStringArray(value: unknown, maxItems = 24): string[] {
     .slice(0, maxItems);
 }
 
+function normalizeTester(value: unknown): "mona" | "owner" {
+  return value === "owner" ? "owner" : "mona";
+}
+
+function normalizeCoachConfigForLog(value: unknown) {
+  if (!isRecord(value)) return null;
+  const reviewMode = value.reviewMode === "new-first" || value.reviewMode === "review-first"
+    ? value.reviewMode
+    : "balanced";
+  const difficulty = value.difficulty === "easy" || value.difficulty === "challenge"
+    ? value.difficulty
+    : "normal";
+  const reviewRatio = typeof value.reviewRatio === "number" && Number.isFinite(value.reviewRatio)
+    ? Math.min(1, Math.max(0, value.reviewRatio))
+    : reviewMode === "new-first" ? 0.15 : reviewMode === "review-first" ? 0.55 : 0.3;
+  const difficultyCap = typeof value.difficultyCap === "number" && Number.isFinite(value.difficultyCap)
+    ? Math.min(14, Math.max(4, value.difficultyCap))
+    : difficulty === "easy" ? 6 : difficulty === "challenge" ? 10 : 8;
+  return {
+    tester: normalizeTester(value.tester),
+    reviewMode,
+    reviewRatio,
+    difficulty,
+    difficultyCap,
+    freshMaterialEnabled: value.freshMaterialEnabled !== false,
+    honorLiveRequests: value.honorLiveRequests !== false,
+    emptyPraiseGuard: value.emptyPraiseGuard !== false,
+  };
+}
+
 function normalizeSettings(value: unknown) {
+  if (!isRecord(value)) return {};
   const base = pickPrimitiveObject(value, [
     "lowVoice",
     "voiceName",
     "responseStyle",
     "vadPreset",
     "interruptionMode",
+    "tester",
   ]);
+  const coachConfig = isRecord(value) ? normalizeCoachConfigForLog(value.coachConfig) : null;
   return {
     ...base,
-    enabledToolIds: isRecord(value) ? normalizeStringArray(value.enabledToolIds) : [],
+    tester: coachConfig?.tester ?? normalizeTester(base.tester),
+    ...(coachConfig ? { coachConfig } : {}),
+    enabledToolIds: normalizeStringArray(value.enabledToolIds),
   };
 }
 
@@ -197,20 +232,23 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
   const sessionId = safeSegment(args.sessionId, `live-${mode}-${Date.now().toString(36)}`);
   const startedAt = normalizeIso(args.startedAt) ?? new Date().toISOString();
   const final = args.final === true;
+  const incomingSettings = normalizeSettings(args.settings);
+  const tester = args.tester === "owner" || (isRecord(incomingSettings) && incomingSettings.tester === "owner") ? "owner" : "mona";
 
   if (!hasAppendContent(args)) {
     return { error: "EMPTY_APPEND" };
   }
 
+  const logRoot = tester === "owner" ? path.join(VOICE_LOG_ROOT, "owner-test") : VOICE_LOG_ROOT;
   const filePath = path.join(
-    VOICE_LOG_ROOT,
+    logRoot,
     `${startedAt.slice(0, 10)}_${mode}_${sessionId}.json`,
   );
 
   const chainKey = filePath;
   const prev = appendChains.get(chainKey) ?? Promise.resolve();
   const current = prev.then(async () => {
-    await mkdir(VOICE_LOG_ROOT, { recursive: true });
+    await mkdir(logRoot, { recursive: true });
 
     let doc: Record<string, unknown> = {
       schemaVersion: 3,
@@ -276,7 +314,6 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       }));
 
     const now = new Date().toISOString();
-    const incomingSettings = normalizeSettings(args.settings);
     const incomingClient = normalizeClient(args.client);
     const incomingMetrics = pickPrimitiveObject(args.metrics, [
       "micPermission", "connectionState", "firstResponseMs", "sessionPostMs", "socketOpenMs",
@@ -299,6 +336,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       ...doc,
       schemaVersion: 3,
       mode,
+      tester,
       sessionId,
       startedAt: typeof doc.startedAt === "string" ? doc.startedAt : startedAt,
       stoppedAt: final ? resolveFinalStoppedAt(args.stoppedAt, doc.stoppedAt, normalized, now) : null,

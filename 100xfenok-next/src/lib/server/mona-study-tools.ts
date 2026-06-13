@@ -44,6 +44,12 @@ export const MONA_STUDY_TOOL_IDS = [
 
 type JsonRecord = Record<string, unknown>;
 
+type MonaStudyToolContext = {
+  tester?: unknown;
+  sessionId?: unknown;
+  coachConfig?: unknown;
+};
+
 type Best3Item = {
   ko: string;
   en: string;
@@ -233,6 +239,22 @@ function safeResolve(...parts: string[]): string | null {
   const relative = path.relative(MONA_ROOT, target);
   if (relative.startsWith("..")) return null;
   return target;
+}
+
+function normalizeSessionId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 120) return null;
+  return trimmed.replace(/[^A-Za-z0-9._-]/g, "-");
+}
+
+function normalizeMonaStudyContext(context?: MonaStudyToolContext | null) {
+  const coachConfig = isRecord(context?.coachConfig) ? context.coachConfig : {};
+  const tester = coachConfig.tester === "owner" || context?.tester === "owner" ? "owner" : "mona";
+  return {
+    tester,
+    sessionId: normalizeSessionId(context?.sessionId),
+  };
 }
 
 async function withTimeout<T>(promise: Promise<T>, fallback: T, timeoutMs: number): Promise<T> {
@@ -665,8 +687,9 @@ function updateWeakStore(entries: WeakNote[], incoming: WeakMiss[], studyDate: s
     .slice(0, MAX_WEAK_NOTES);
 }
 
-async function saveStudySession(args: Record<string, unknown>) {
+async function saveStudySession(args: Record<string, unknown>, context?: MonaStudyToolContext | null) {
   const studyDate = getCanonicalMonaStudyDate();
+  const toolContext = normalizeMonaStudyContext(context);
   if (args.date !== undefined && !validateStudyDate(args.date)) {
     return { error: "INVALID_DATE", studyDate, allowedPattern: DATE_PATTERN.source };
   }
@@ -674,7 +697,9 @@ async function saveStudySession(args: Record<string, unknown>) {
   if (!sessionPath) return { error: "INVALID_PATH" };
 
   const snapshot = await getSnapshotForTurn(studyDate);
-  const existing = snapshot.sessions.find((session) => session.date === studyDate) ?? null;
+  const existing = toolContext.tester === "owner"
+    ? null
+    : snapshot.sessions.find((session) => session.date === studyDate) ?? null;
   const incomingBest3 = normalizeBest3Items(args.best3);
   const incomingWeak = normalizeWeakMisses(args.weakMisses);
   const mergedSession: StudySession = {
@@ -685,6 +710,55 @@ async function saveStudySession(args: Record<string, unknown>) {
     summary: normalizeText(args.summary, 500) ?? existing?.summary ?? null,
     savedAt: new Date().toISOString(),
   };
+
+  if (toolContext.tester === "owner") {
+    const ownerPath = safeResolve("_owner-test", `${studyDate}.json`);
+    if (!ownerPath) return { error: "INVALID_OWNER_TEST_PATH", studyDate };
+    const existingOwner = await readJsonFile<JsonRecord>(ownerPath, {});
+    const previousCheckpoints = Array.isArray(existingOwner.checkpoints)
+      ? existingOwner.checkpoints.filter(isRecord).slice(-49)
+      : [];
+    const reviewResultsApplied = Array.isArray(args.reviewResults) ? args.reviewResults.length : 0;
+    const ownerPayload = {
+      schemaVersion: 1,
+      tester: "owner",
+      studyDate,
+      updatedAt: mergedSession.savedAt,
+      sessionId: toolContext.sessionId,
+      latestSession: mergedSession,
+      checkpoints: [
+        ...previousCheckpoints,
+        {
+          savedAt: mergedSession.savedAt,
+          sessionId: toolContext.sessionId,
+          theme: mergedSession.theme,
+          summary: mergedSession.summary,
+          best3: incomingBest3,
+          weakMisses: incomingWeak,
+          reviewResultsApplied,
+        },
+      ],
+    };
+    const writeResult = await writeJsonAtomic(ownerPath, ownerPayload);
+    if ("error" in writeResult) return { error: writeResult.error, studyDate };
+    return {
+      ok: true,
+      tester: "owner",
+      isolated: true,
+      studyDate,
+      requestedDate: validateStudyDate(args.date) ?? null,
+      ownerTestFile: path.relative(MONA_ROOT, ownerPath),
+      best3Saved: incomingBest3.length,
+      weakUpdated: incomingWeak.length,
+      reviewResultsApplied,
+      unmatched: [],
+      totals: {
+        best3: snapshot.best3.length,
+        weak: snapshot.weakNotes.length,
+      },
+      note: "테스트 모드로 저장했어. Mona 학습 데이터에는 반영하지 않았어.",
+    };
+  }
 
   const best3Store = updateBest3Store(snapshot.best3, incomingBest3, studyDate);
   const weakStore = updateWeakStore(snapshot.weakNotes, incomingWeak, studyDate, existing?.weakMisses ?? []);
@@ -987,8 +1061,12 @@ async function getWeeklyTestSet(args: Record<string, unknown>) {
   };
 }
 
-export async function executeMonaStudyToolFunction(name: string, args: Record<string, unknown>) {
-  if (name === "saveStudySession") return saveStudySession(args);
+export async function executeMonaStudyToolFunction(
+  name: string,
+  args: Record<string, unknown>,
+  context?: MonaStudyToolContext | null,
+) {
+  if (name === "saveStudySession") return saveStudySession(args, context);
   if (name === "getYesterdaySession") return getYesterdaySession(args);
   if (name === "getStudyMemory") return getStudyMemory(args);
   if (name === "getWeeklyTestSet") return getWeeklyTestSet(args);

@@ -10,6 +10,7 @@ import {
   callMonaStudy,
   isLiveSkillBridgeConfigured,
 } from "@/lib/server/admin-live-skill-bridge";
+import type { LiveToolSessionContext } from "@/lib/server/admin-live-session-context";
 
 export type LiveToolId =
   | "market-data"
@@ -953,7 +954,11 @@ async function getFenoTickerContext(args: Record<string, unknown>) {
   };
 }
 
-export async function executeLiveToolFunction(name: string, args: Record<string, unknown>) {
+export async function executeLiveToolFunction(
+  name: string,
+  args: Record<string, unknown>,
+  context?: LiveToolSessionContext,
+) {
   const tool = TOOL_BY_FUNCTION_NAME.get(name);
   if (!tool || tool.status !== "available") {
     return { error: "UNKNOWN_TOOL" };
@@ -965,7 +970,7 @@ export async function executeLiveToolFunction(name: string, args: Record<string,
     name === "getStudyMemory" ||
     name === "getWeeklyTestSet"
   ) {
-    const bridgeResult = await callMonaStudy(name, args);
+    const bridgeResult = await callMonaStudy(name, args, context);
     if (bridgeResult && !("error" in bridgeResult)) {
       return bridgeResult.payload as Record<string, unknown>;
     }

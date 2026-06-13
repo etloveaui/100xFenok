@@ -11,6 +11,10 @@ import {
   isLessonV2Enabled,
 } from "@/lib/server/mona-study-tools";
 import { callMonaStudy } from "@/lib/server/admin-live-skill-bridge";
+import {
+  normalizeCoachConfig,
+  type CoachConfig,
+} from "@/lib/admin-live-coach-config";
 
 export const GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
 export const GEMINI_LIVE_MODEL = "gemini-3.1-flash-live-preview";
@@ -186,6 +190,21 @@ function prependDynamicBlock(dynamicBlock: string, systemPrompt: string) {
   return `${block}${separator}${systemPrompt.slice(0, remaining)}`;
 }
 
+function buildCoachConfigBlock(config: CoachConfig) {
+  return [
+    "[CoachConfig - 서버 정규화값]",
+    `tester: ${config.tester}`,
+    `reviewMode: ${config.reviewMode} · reviewRatio: ${config.reviewRatio}`,
+    `difficulty: ${config.difficulty} · difficultyCap: ${config.difficultyCap}`,
+    `freshMaterialEnabled: ${config.freshMaterialEnabled}`,
+    `honorLiveRequests: ${config.honorLiveRequests}`,
+    `emptyPraiseGuard: ${config.emptyPraiseGuard}`,
+    config.tester === "owner"
+      ? "테스트 모드: 이 세션의 학습 저장은 Mona 실데이터가 아니라 owner-test 격리 저장소로만 간다."
+      : "학습 모드: 이 세션은 Mona 실학습 저장 대상이다.",
+  ].join("\n");
+}
+
 export async function buildLiveSetup(
   mode: LiveBenchMode,
   options: {
@@ -197,11 +216,13 @@ export async function buildLiveSetup(
     resumeHandle?: unknown;
     systemPrompt?: unknown;
     enabledToolIds?: unknown;
+    coachConfig?: unknown;
   },
 ) {
   const profile = LIVE_PROFILES[mode];
   const responseStyle = normalizeResponseStyle(options.responseStyle);
   const vadPreset = normalizeVadPreset(options.vadPreset, mode);
+  const coachConfig = normalizeCoachConfig(options.coachConfig);
   const vad = LIVE_VAD_PRESETS[vadPreset];
   const interruptionMode = options.interruptionMode === "no-interrupt" || options.interruptionMode === "barge-in"
     ? options.interruptionMode
@@ -225,10 +246,11 @@ export async function buildLiveSetup(
           best3: [],
           weakNotes: [],
         };
+    const dynamicBlock = isLessonV2Enabled()
+      ? await buildMonaCoachDynamicBlockV2(undefined, snapshot as any)
+      : await buildMonaCoachDynamicBlock(undefined, snapshot as any);
     systemPrompt = prependDynamicBlock(
-      isLessonV2Enabled()
-        ? await buildMonaCoachDynamicBlockV2(undefined, snapshot as any)
-        : await buildMonaCoachDynamicBlock(undefined, snapshot as any),
+      `${buildCoachConfigBlock(coachConfig)}\n\n${dynamicBlock}`,
       systemPrompt,
     );
   }

@@ -18,6 +18,12 @@ type BridgePayload = {
   type?: string;
 };
 
+type MonaStudyContext = {
+  sessionId?: string | null;
+  mode?: "fenok" | "mona";
+  coachConfig?: Record<string, unknown>;
+};
+
 const MAX_QUERY_LENGTH = 500;
 const DEFAULT_MAX_RESULTS = 5;
 const LIVE_SKILL_BRIDGE_TIMEOUT_MS = 8_000;
@@ -192,7 +198,11 @@ const VALID_MONA_STUDY_NAMES = new Set([
   "getWeeklyTestSet",
 ]);
 
-export async function callMonaStudy(name: string, args: Record<string, unknown>) {
+export async function callMonaStudy(
+  name: string,
+  args: Record<string, unknown>,
+  context?: MonaStudyContext | null,
+) {
   const config = getLiveSkillBridgeConfig();
   if (!config) {
     return {
@@ -223,7 +233,7 @@ export async function callMonaStudy(name: string, args: Record<string, unknown>)
         Accept: "application/json",
         Authorization: `Bearer ${config.token}`,
       },
-      body: JSON.stringify({ name, args }),
+      body: JSON.stringify({ name, args, context: context ?? null }),
     });
 
     const body = await readJsonOrText(response);
