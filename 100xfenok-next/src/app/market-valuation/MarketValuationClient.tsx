@@ -6,12 +6,9 @@ import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type {
   IndexMomentum,
-  MarketAnnualReturn,
   MarketBondPulse,
-  MarketErpInsight,
   MarketEventRisk,
   MarketIndexTrend,
-  MarketMacroDepth,
   MarketMacroPulse,
   MarketSentimentPulse,
   MarketSignalPulse,
@@ -20,7 +17,12 @@ import type {
   ValuationBand,
   ValuationDriver,
 } from "@/lib/market-valuation/types";
-import YardeniCard from "./YardeniCard";
+import {
+  AnnualReturnsChartPanel,
+  ErpHistoryPanel,
+  PmiActivityChartPanel,
+  YardeniOverlayChartPanel,
+} from "@/lib/market-valuation/charts/ledgerChartPanels";
 import { formatPercent } from "@/lib/dashboard/formatters";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -59,11 +61,6 @@ function fmtSignedPoint(value: number | null, digits = 1): string {
 
 function fmtPercentDecimal(value: number | null, digits = 1): string {
   return value === null ? "—" : formatPercent(value * 100, digits);
-}
-
-function fmtPercentPoint(value: number | null, digits = 1): string {
-  if (value === null) return "—";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
 }
 
 function toneClass(tone: MarketTone): string {
@@ -213,53 +210,6 @@ function MacroPulsePanel({ items }: { items: MarketMacroPulse[] }) {
   );
 }
 
-function MacroDepthPanel({ items }: { items: MarketMacroDepth[] }) {
-  return (
-    <PanelShell title="ISM 내부 확산" subtitle="activity-surveys depth">
-      {items.length === 0 ? (
-        <EmptyPanel label="ISM 세부 데이터 없음" />
-      ) : (
-        <div className="grid min-w-0 lg:grid-cols-2">
-          {items.map((item) => (
-            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-              <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.period ?? item.releaseDate ?? "—"}</p>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700">
-                    확장 {item.expansionCount}
-                  </span>
-                  <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-black text-rose-700">
-                    위축 {item.contractionCount}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-3 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
-                {item.components.map((component) => (
-                  <div key={component.id} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                    <div className="flex min-w-0 items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{component.label}</span>
-                      <span className={cx("h-1.5 w-1.5 shrink-0 rounded-full", toneDotClass(component.tone))} />
-                    </div>
-                    <div className="mt-1 flex min-w-0 items-baseline justify-between gap-2">
-                      <span className="orbitron text-base font-black tabular-nums text-slate-950">{fmt(component.value, 1)}</span>
-                      <span className={cx("text-[10px] font-black tabular-nums", component.delta1m === null ? "text-slate-300" : component.delta1m >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                        {fmtSignedPoint(component.delta1m)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
 function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
   return (
     <PanelShell title="유동성·리스크 신호" subtitle="computed signals">
@@ -279,50 +229,6 @@ function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
               <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.asOf ?? "—"}</p>
             </div>
           ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function ErpInsightPanel({ insight }: { insight: MarketErpInsight | null }) {
-  const history = insight?.historicalRows.map((point) => ({ date: point.year, value: point.value })) ?? [];
-  return (
-    <PanelShell title="Damodaran ERP" subtitle="US implied ERP history">
-      {!insight ? (
-        <EmptyPanel label="ERP 데이터 없음" />
-      ) : (
-        <div className="grid min-w-0 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">US Equity Risk Premium</p>
-            <div className="mt-2 flex min-w-0 flex-wrap items-end gap-2">
-              <span className="orbitron text-3xl font-black tabular-nums text-slate-950">{fmtPercentDecimal(insight.usErp, 2)}</span>
-              {insight.historicalPercentile !== null ? (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600">
-                  역사 {insight.historicalPercentile}%
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">
-              최신 역사값 {insight.latestHistoricalYear ?? "—"} {fmtPercentDecimal(insight.latestHistoricalErp, 2)} · 국가 ERP 테이블 {insight.countryCount}개는 보조 lookup
-            </p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{insight.sourceDate ?? "—"}</p>
-            <span className={cx("mt-3 inline-flex rounded-full border px-2 py-1 text-[10px] font-black", toneClass(insight.regimeTone))}>
-              {insight.regimeLabel}
-            </span>
-          </div>
-          <div className="min-w-0 border-t border-slate-100 px-4 py-3 lg:border-l lg:border-t-0">
-            <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">1960년 이후 ERP 레짐</p>
-              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">min/current/max</span>
-            </div>
-            <MiniTrend
-              points={history}
-              label="Damodaran US ERP"
-              formatValue={(value) => fmtPercentDecimal(value, 2)}
-              tone={insight.regimeTone}
-            />
-          </div>
         </div>
       )}
     </PanelShell>
@@ -350,86 +256,6 @@ function BondPulsePanel({ items }: { items: MarketBondPulse[] }) {
               </div>
             </div>
           ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function AnnualReturnsPanel({ items }: { items: MarketAnnualReturn[] }) {
-  const maxAbs = items.reduce((max, item) => Math.max(max, Math.abs(item.returnPct)), 0);
-  const latest = items[items.length - 1] ?? null;
-  const [activeYear, setActiveYear] = useState<number | null>(latest?.year ?? null);
-  const active = items.find((item) => item.year === activeYear) ?? latest;
-  const best = items.reduce<MarketAnnualReturn | null>(
-    (winner, item) => (!winner || item.returnPct > winner.returnPct ? item : winner),
-    null,
-  );
-  const worst = items.reduce<MarketAnnualReturn | null>(
-    (loser, item) => (!loser || item.returnPct < loser.returnPct ? item : loser),
-    null,
-  );
-  const ticks = items.filter((item, index) => index === 0 || index === items.length - 1 || item.year % 10 === 0);
-  return (
-    <PanelShell title="S&P 500 연도별 수익률" subtitle="SlickCharts annual returns">
-      {items.length === 0 || maxAbs === 0 ? (
-        <EmptyPanel label="연도별 수익률 데이터 없음" />
-      ) : (
-        <div className="min-w-0 px-4 py-3">
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="min-w-0 break-words text-xs font-semibold text-slate-500">
-              1926년 이후 연간 수익률을 한 줄로 봅니다. 막대 위쪽은 플러스, 아래쪽은 마이너스입니다.
-            </p>
-            {active ? (
-              <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", active.returnPct >= 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")}>
-                선택 {active.year} {fmtPercentPoint(active.returnPct)}
-              </span>
-            ) : null}
-          </div>
-          <div className="mt-2 flex min-w-0 flex-wrap gap-2 text-[10px] font-black tabular-nums text-slate-500">
-            {latest ? <span>최신 {latest.year} {fmtPercentPoint(latest.returnPct)}</span> : null}
-            {best ? <span className="text-emerald-600">최고 {best.year} {fmtPercentPoint(best.returnPct)}</span> : null}
-            {worst ? <span className="text-rose-600">최저 {worst.year} {fmtPercentPoint(worst.returnPct)}</span> : null}
-          </div>
-          <div className="mt-3 overflow-x-auto">
-            <div className="relative h-44 min-w-[760px] rounded-xl border border-slate-200 bg-slate-50">
-              <div className="absolute left-3 right-3 top-[46%] h-px bg-slate-300" />
-              {items.map((item, index) => {
-                const height = Math.max(2, (Math.abs(item.returnPct) / maxAbs) * 64);
-                const left = items.length <= 1 ? 50 : (index / (items.length - 1)) * 100;
-                const positive = item.returnPct >= 0;
-                return (
-                  <button
-                    key={item.year}
-                    type="button"
-                    title={`${item.year} ${fmtPercentPoint(item.returnPct)}`}
-                    aria-label={`${item.year}년 S&P 500 수익률 ${fmtPercentPoint(item.returnPct)}`}
-                    onMouseEnter={() => setActiveYear(item.year)}
-                    onFocus={() => setActiveYear(item.year)}
-                    onClick={() => setActiveYear(item.year)}
-                    onMouseLeave={() => setActiveYear(latest?.year ?? null)}
-                    className={cx("absolute w-1 -translate-x-1/2 rounded-full border-0 p-0 outline-none ring-brand-interactive/0 transition focus:w-1.5 focus:ring-2", positive ? "bg-emerald-500" : "bg-rose-500")}
-                    style={{
-                      left: `${left}%`,
-                      height: `${height}px`,
-                      ...(positive ? { bottom: "46%" } : { top: "46%" }),
-                    }}
-                  />
-                );
-              })}
-              <div className="absolute bottom-2 left-0 right-0 h-4 text-[9px] font-black tabular-nums text-slate-300">
-                {ticks.map((tick) => {
-                  const index = items.findIndex((item) => item.year === tick.year);
-                  const left = items.length <= 1 ? 50 : (index / (items.length - 1)) * 100;
-                  return (
-                    <span key={tick.year} className="absolute -translate-x-1/2" style={{ left: `${left}%` }}>
-                      {tick.year}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </PanelShell>
@@ -755,15 +581,12 @@ export default function MarketValuationClient() {
   const {
     indices,
     macroPulses,
-    macroDepths,
     signalPulses,
     sentimentPulses,
     eventRisks,
     indexTrends,
     structurePulses,
-    erpInsight,
     bondPulses,
-    sp500AnnualReturns,
     dataReady,
     failed,
     sourceDate,
@@ -786,6 +609,9 @@ export default function MarketValuationClient() {
               {sourceDate}
             </span>
           ) : null}
+          <TransitionLink href="/market-valuation/structure" className="data-shell-link">
+            시장 구조 상세
+          </TransitionLink>
           <TransitionLink href="/explore" className="data-shell-link">
             Explore
           </TransitionLink>
@@ -802,18 +628,18 @@ export default function MarketValuationClient() {
 
       <div className={cx("grid gap-4", !dataReady && "opacity-60")}>
         <MacroPulsePanel items={macroPulses} />
-        <MacroDepthPanel items={macroDepths} />
+        <PmiActivityChartPanel />
         <SignalPulsePanel items={signalPulses} />
       </div>
 
       <div className={cx("grid gap-4", !dataReady && "opacity-60")}>
         <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-          <ErpInsightPanel insight={erpInsight} />
+          <ErpHistoryPanel />
           <BondPulsePanel items={bondPulses} />
         </div>
         <SentimentPulsePanel items={sentimentPulses} />
         <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
-        <AnnualReturnsPanel items={sp500AnnualReturns} />
+        <AnnualReturnsChartPanel />
       </div>
 
       <EventRiskPanel items={eventRisks} />
@@ -853,7 +679,7 @@ export default function MarketValuationClient() {
         ))}
       </div>
 
-      <YardeniCard />
+      <YardeniOverlayChartPanel />
 
       <p className="px-1 text-[11px] text-slate-400">
         역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). YTD 분해는 가격 변화가 EPS 개선인지 멀티플 확장/축소인지 보기 위한 가공 신호입니다.

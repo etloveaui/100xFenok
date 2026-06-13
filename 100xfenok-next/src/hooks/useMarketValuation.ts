@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  loadMarketStructureModel,
+  marketStructurePulsesFromModel,
+} from "@/lib/market-valuation/models/marketStructureModel";
 import type {
   IndexMomentum,
   MarketAnnualReturn,
@@ -14,7 +18,6 @@ import type {
   MarketMacroPulse,
   MarketSentimentPulse,
   MarketSignalPulse,
-  MarketStructurePulse,
   MarketTone,
   MarketValuationResult,
   MomentumSet,
@@ -333,6 +336,8 @@ function sourceFromManifest(id: string, label: string, usage: string, manifest: 
 
 function latestActivity(doc: RawActivitySurveys | null, key: string): RawActivityRecord | null {
   const rows = doc?.datasets?.[key]?.records;
+  // A1 integration point: replace order-dependent latest selection with
+  // loaders.latestSeriesPoint()/date-sorted model output.
   return Array.isArray(rows) && rows.length > 0 ? rows[rows.length - 1] : null;
 }
 
@@ -347,12 +352,6 @@ function fmtNum(value: number | null, digits = 1): string {
 
 function fmtPctPoint(value: number | null, digits = 1): string {
   return value === null ? "—" : `${value.toFixed(digits)}%`;
-}
-
-function fmtSignedPct(value: number | null, digits = 1): string {
-  if (value === null) return "—";
-  const pct = value * 100;
-  return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;
 }
 
 function growthTone(value: number | null): MarketTone {
@@ -878,87 +877,6 @@ function buildIndexTrends(sp500: RawIndexPoint[] | null, nasdaq: RawIndexPoint[]
   ].filter((trend): trend is MarketIndexTrend => trend !== null);
 }
 
-function parsePercentString(value: unknown): number | null {
-  if (typeof value !== "string") return null;
-  const parsed = Number(value.replace("%", ""));
-  return Number.isFinite(parsed) ? parsed / 100 : null;
-}
-
-function structureTone(value: number | null): MarketTone {
-  if (value === null) return "slate";
-  if (value <= -0.15) return "rose";
-  if (value <= -0.05) return "amber";
-  return "slate";
-}
-
-function latestReturn(doc: RawSlickReturns | null): number | null {
-  const currentYear = new Date().getFullYear();
-  const row = doc?.returns?.find((item) => item.year === currentYear) ?? doc?.returns?.[0];
-  const value = row?.["return"];
-  return finite(value) ? value / 100 : null;
-}
-
-function concentration(doc: RawSlickHoldings | null, id: string, label: string): MarketStructurePulse | null {
-  const rows = Array.isArray(doc?.holdings) ? doc!.holdings! : [];
-  if (rows.length === 0) return null;
-  const top = rows.slice(0, 3);
-  const topWeight = top.reduce((sum, row) => sum + (finite(row.weight) ? row.weight! : 0), 0);
-  return {
-    id,
-    label,
-    valueLabel: `${topWeight.toFixed(1)}%`,
-    detail: top.map((row) => row.symbol ?? row.company ?? "—").join(" · "),
-    updated: doc?.updated ?? null,
-    tone: topWeight >= 35 ? "amber" : "slate",
-  };
-}
-
-function buildStructurePulses(params: {
-  sp500Holdings: RawSlickHoldings | null;
-  nasdaqHoldings: RawSlickHoldings | null;
-  sp500Drawdown: RawSlickDrawdown | null;
-  sp500Returns: RawSlickReturns | null;
-  nasdaqReturns: RawSlickReturns | null;
-}): MarketStructurePulse[] {
-  const drawdown = parsePercentString(params.sp500Drawdown?.current?.drawdown);
-  const sp500Return = latestReturn(params.sp500Returns);
-  const nasdaqReturn = latestReturn(params.nasdaqReturns);
-  return [
-    drawdown !== null
-      ? {
-          id: "sp500_drawdown",
-          label: "S&P 500 고점 대비",
-          valueLabel: fmtSignedPct(drawdown, 1),
-          detail: `ATH ${String(params.sp500Drawdown?.current?.allTimeHigh ?? "—")} · 현 ${String(params.sp500Drawdown?.current?.price ?? "—")}`,
-          updated: params.sp500Drawdown?.updated ?? null,
-          tone: structureTone(drawdown),
-        }
-      : null,
-    sp500Return !== null
-      ? {
-          id: "sp500_return",
-          label: "S&P 500 연간",
-          valueLabel: fmtSignedPct(sp500Return, 1),
-          detail: "Slickcharts yearly return",
-          updated: params.sp500Returns?.updated ?? null,
-          tone: sp500Return >= 0 ? "emerald" : "rose",
-        }
-      : null,
-    nasdaqReturn !== null
-      ? {
-          id: "nasdaq_return",
-          label: "NASDAQ 100 연간",
-          valueLabel: fmtSignedPct(nasdaqReturn, 1),
-          detail: "Slickcharts yearly return",
-          updated: params.nasdaqReturns?.updated ?? null,
-          tone: nasdaqReturn >= 0 ? "emerald" : "rose",
-        }
-      : null,
-    concentration(params.sp500Holdings, "sp500_concentration", "S&P 500 Top3 비중"),
-    concentration(params.nasdaqHoldings, "nasdaq_concentration", "NASDAQ 100 Top3 비중"),
-  ].filter((pulse): pulse is MarketStructurePulse => pulse !== null);
-}
-
 export function useMarketValuation(): MarketValuationResult {
   const [result, setResult] = useState<MarketValuationResult>(EMPTY);
   const isMountedRef = useRef(true);
@@ -990,6 +908,7 @@ export function useMarketValuation(): MarketValuationResult {
         sp500Returns,
         nasdaqReturns,
         economic,
+        marketStructureModel,
       ] = await Promise.all([
         fetchJson<RawUs>("/data/benchmarks/us.json"),
         fetchJson<RawSummaries>("/data/benchmarks/summaries.json"),
@@ -1013,6 +932,7 @@ export function useMarketValuation(): MarketValuationResult {
         fetchJson<RawSlickReturns>("/data/slickcharts/sp500-returns.json"),
         fetchJson<RawSlickReturns>("/data/slickcharts/nasdaq100-returns.json"),
         fetchJson<RawEconomicIndicators>("/data/global-scouter/indicators/economic.json"),
+        loadMarketStructureModel(),
       ]);
       if (!isMountedRef.current) return;
 
@@ -1069,7 +989,7 @@ export function useMarketValuation(): MarketValuationResult {
         sentimentPulses: buildSentimentPulses({ vix, fearGreed, aaii, move, putCall }),
         eventRisks: buildEventRisks(calendar, prevValues),
         indexTrends: buildIndexTrends(sp500Index, nasdaqIndex),
-        structurePulses: buildStructurePulses({ sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns }),
+        structurePulses: marketStructurePulsesFromModel(marketStructureModel, { sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns }),
         erpInsight: buildErpInsight(damodaran, historicalErp),
         bondPulses: buildBondPulses(economic),
         sp500AnnualReturns: buildAnnualReturns(sp500Returns),

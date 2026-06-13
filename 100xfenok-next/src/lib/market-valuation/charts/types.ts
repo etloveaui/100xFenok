@@ -1,0 +1,48 @@
+export type MarketChartType = "line" | "bar";
+
+export type MarketChartValueFormatter = (value: number | null) => string;
+
+export interface MarketChartPoint {
+  label: string;
+  value: number | null;
+  detail?: string;
+}
+
+export interface MarketChartSeries {
+  id: string;
+  label: string;
+  points: readonly MarketChartPoint[];
+  color?: string;
+  negativeColor?: string;
+  hidden?: boolean;
+  yAxisId?: "y" | "y1";
+  chartType?: MarketChartType;
+}
+
+export interface MarketChartHoverSeriesPoint {
+  seriesId: string;
+  seriesLabel: string;
+  value: number | null;
+  detail?: string;
+}
+
+export interface MarketChartHoverPoint {
+  label: string;
+  index: number;
+  points: MarketChartHoverSeriesPoint[];
+}
+
+export interface MarketChartEngineProps {
+  type?: MarketChartType;
+  series: readonly MarketChartSeries[];
+  ariaLabel: string;
+  className?: string;
+  heightClassName?: string;
+  emptyLabel?: string;
+  showLegend?: boolean;
+  sortLabels?: boolean;
+  suggestedMin?: number;
+  suggestedMax?: number;
+  formatValue?: MarketChartValueFormatter;
+  onHoverPoint?: (point: MarketChartHoverPoint | null) => void;
+}
