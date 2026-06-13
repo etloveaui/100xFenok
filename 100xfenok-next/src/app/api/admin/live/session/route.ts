@@ -51,6 +51,12 @@ function normalizeRequestedToolIds(mode: string, body: {
   return getDefaultLiveEnabledToolIds(mode);
 }
 
+function normalizeClientBuildVersion(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  return trimmed ? trimmed.slice(0, 80) : null;
+}
+
 async function requireAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
@@ -115,6 +121,7 @@ export async function POST(request: Request) {
         systemPrompt?: unknown;
         enabledToolIds?: unknown;
         coachConfig?: unknown;
+        clientBuildVersion?: unknown;
       }
     | null;
   const mode = normalizeLiveMode(body?.mode);
@@ -124,6 +131,7 @@ export async function POST(request: Request) {
   const vadPreset = normalizeVadPreset(body?.vadPreset, mode);
   const interruptionMode = body?.interruptionMode === "no-interrupt" ? "no-interrupt" : "barge-in";
   const coachConfig = normalizeCoachConfig(body?.coachConfig);
+  const clientBuildVersion = normalizeClientBuildVersion(body?.clientBuildVersion);
   const resumeHandle = typeof body?.resumeHandle === "string" && body.resumeHandle.length > 0 && body.resumeHandle.length <= 512
     ? body.resumeHandle
     : null;
@@ -220,6 +228,7 @@ export async function POST(request: Request) {
         sampleProbe: LIVE_PROFILES[mode].sampleProbe,
       },
       settings: {
+        ...(clientBuildVersion ? { clientBuildVersion } : {}),
         voiceName,
         responseStyle,
         vadPreset,

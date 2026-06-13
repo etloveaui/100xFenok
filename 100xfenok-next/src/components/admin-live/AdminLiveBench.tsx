@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
+import { BUILD_VERSION } from "@/generated/build-version";
 import {
   DEFAULT_COACH_CONFIG,
   normalizeCoachConfig,
@@ -153,6 +154,7 @@ type SessionResponse = {
     coachConfig?: CoachConfig;
     coachSessionState?: CoachSessionState | null;
     enabledToolIds?: string[];
+    clientBuildVersion?: string;
   };
 };
 
@@ -843,6 +845,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   };
 
   const buildLiveSettings = () => ({
+    clientBuildVersion: BUILD_VERSION,
     lowVoice,
     voiceName,
     responseStyle,
@@ -1964,6 +1967,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           vadPreset,
           interruptionMode,
           coachConfig: normalizedCoachConfig,
+          clientBuildVersion: BUILD_VERSION,
           systemPrompt,
           enabledToolIds,
         }),
@@ -2087,6 +2091,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             vadPreset,
             interruptionMode,
             coachConfig: normalizedCoachConfig,
+            clientBuildVersion: BUILD_VERSION,
             resumeHandle: handle,
             systemPrompt,
             enabledToolIds,
@@ -2327,6 +2332,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
   };
 
+  const copyBuildVersion = async () => {
+    try {
+      await navigator.clipboard?.writeText(BUILD_VERSION);
+    } catch {
+      // Best-effort diagnostic affordance only.
+    }
+  };
+
   const sendTextProbe = () => {
     const socket = wsRef.current;
     const text = textProbe.trim();
@@ -2381,24 +2394,28 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
               : "ready";
     const lastCoachLine = logs.find((entry) => entry.role === "bench")?.text ?? null;
     return (
-      <MonaWindDown
-        phase={phase}
-        message={mainMessage}
-        card={card}
-        coachLine={lastCoachLine}
-        errorText={metrics.lastError}
-        voiceName={voiceName}
-        vadPreset={vadPreset}
-        onVoiceChange={setVoiceName}
-        onVadChange={setVadPreset}
-        onStart={() => void startSession()}
-        onStop={() => void stopSession()}
-      />
+      <>
+        <MonaWindDown
+          phase={phase}
+          message={mainMessage}
+          card={card}
+          coachLine={lastCoachLine}
+          errorText={metrics.lastError}
+          voiceName={voiceName}
+          vadPreset={vadPreset}
+          onVoiceChange={setVoiceName}
+          onVadChange={setVadPreset}
+          onStart={() => void startSession()}
+          onStop={() => void stopSession()}
+        />
+        <BuildVersionBadge onCopy={copyBuildVersion} />
+      </>
     );
   }
 
   return (
     <main className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-5">
+      <BuildVersionBadge onCopy={copyBuildVersion} />
       <section className="mx-auto flex max-w-3xl flex-col gap-4">
         <header className="flex items-center justify-between gap-3">
           <div>
@@ -2835,6 +2852,20 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         </details>
       </section>
     </main>
+  );
+}
+
+function BuildVersionBadge({ onCopy }: { onCopy: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onCopy}
+      title="클라이언트 빌드 버전 복사"
+      aria-label={`클라이언트 빌드 버전 ${BUILD_VERSION}`}
+      className="fixed bottom-[max(env(safe-area-inset-bottom),0.75rem)] right-3 z-[80] rounded-md border border-slate-200/70 bg-white/75 px-2 py-1 text-[10px] font-semibold text-slate-400 shadow-sm backdrop-blur transition hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+    >
+      {BUILD_VERSION}
+    </button>
   );
 }
 

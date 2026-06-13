@@ -127,6 +127,7 @@ function normalizeSettings(value: unknown) {
     "vadPreset",
     "interruptionMode",
     "tester",
+    "clientBuildVersion",
   ]);
   const coachConfig = isRecord(value) ? normalizeCoachConfigForLog(value.coachConfig) : null;
   const coachSessionState = normalizeCoachSessionStateForLog(value.coachSessionState);
