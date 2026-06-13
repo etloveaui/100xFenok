@@ -468,6 +468,9 @@ const LOG_ROLE_TEXT: Record<BenchLog["role"], string> = {
 
 const LIVE_OUTPUT_SAMPLE_RATE = 24_000;
 const MAX_LOG_ENTRIES = 24;
+const FINAL_APPEND_DRAIN_MAX_PASSES = 12;
+const FINAL_SAVE_KEEPALIVE_MAX_BYTES = 60_000;
+const STOP_TRANSCRIPT_GRACE_MS = 800;
 const TOOL_FETCH_TIMEOUT_MS = 9_000;
 const TOOL_RESPONSE_WATCHDOG_MS = 12_000;
 const MIC_WORKLET_SOURCE = `
@@ -829,6 +832,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const statusRef = useRef<SessionStatus>("checking");
   const resumeCountRef = useRef(0);
   const sentMetaRef = useRef(false);
+  const audioStreamEndSentRef = useRef(false);
   const audioFramesSentRef = useRef(0);
   const lastAudioActivityLogFramesRef = useRef(0);
   const lastAudioActivityLogMsRef = useRef<number | null>(null);
@@ -1305,6 +1309,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     flushTimerRef.current = setTimeout(() => void flushAppends(), 2500);
   };
 
+  const drainPendingAppends = async () => {
+    for (let pass = 0; pass < FINAL_APPEND_DRAIN_MAX_PASSES && pendingRef.current.length > 0; pass += 1) {
+      const before = pendingRef.current.length;
+      await flushAppends();
+      if (pendingRef.current.length >= before) break;
+    }
+  };
+
   const requestWakeLock = async () => {
     if (typeof navigator === "undefined" || typeof document === "undefined") return;
     if (document.visibilityState !== "visible") return;
@@ -1496,15 +1508,27 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
   };
 
+  const sendAudioStreamEnd = (socket = wsRef.current) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN || audioStreamEndSentRef.current) return false;
+    try {
+      socket.send(JSON.stringify({ realtimeInput: { audioStreamEnd: true } }));
+      audioStreamEndSentRef.current = true;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const closeSocket = () => {
     const socket = wsRef.current;
     wsRef.current = null;
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ realtimeInput: { audioStreamEnd: true } }));
+      sendAudioStreamEnd(socket);
       socket.close(1000, "admin-live-stop");
     } else if (socket) {
       socket.close();
     }
+    audioStreamEndSentRef.current = false;
   };
 
   const executeLiveToolCall = async (call: LiveFunctionCall) => {
@@ -2158,6 +2182,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const socket = new WebSocket(websocketUrl);
       socket.binaryType = "arraybuffer";
       wsRef.current = socket;
+      audioStreamEndSentRef.current = false;
       setMetrics((current) => ({ ...current, connectionState: "socket-opening" }));
       socketTimeoutRef.current = setTimeout(() => {
         if (wsRef.current !== socket || socket.readyState === WebSocket.CLOSED) return;
@@ -2277,6 +2302,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         const socket = new WebSocket(websocketUrl);
         socket.binaryType = "arraybuffer";
         wsRef.current = socket;
+        audioStreamEndSentRef.current = false;
         setMetrics((current) => ({ ...current, connectionState: "socket-opening" }));
         socketTimeoutRef.current = setTimeout(() => {
           if (wsRef.current !== socket || socket.readyState === WebSocket.CLOSED) return;
@@ -2350,6 +2376,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const stopSession = async () => {
     const currentSessionId = sessionId;
     const stoppedAt = new Date().toISOString();
+    if (sendAudioStreamEnd()) {
+      await new Promise((resolve) => window.setTimeout(resolve, STOP_TRANSCRIPT_GRACE_MS));
+    }
+
     const stopSeq = ++logSeqRef.current;
     const stopLog: BenchLog = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -2370,13 +2400,18 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     pendingRef.current.push(stopLog);
     persistPending();
-    await flushAppends();
-    resetRuntime();
+    await drainPendingAppends();
     setStatus("stopped");
     setMetrics(finalMetrics);
     setLogs(currentLogs);
 
     if (currentSessionId) {
+      const saved = await saveConversationLog(currentSessionId, stoppedAt, fullSessionLogs, finalMetrics);
+      if (saved) {
+        pendingRef.current = [];
+        try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
+      }
+
       await fetch("/api/admin/live/session/", {
         method: "DELETE",
         cache: "no-store",
@@ -2386,13 +2421,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         },
         body: JSON.stringify({ sessionId: currentSessionId }),
       }).catch(() => undefined);
-
-      const saved = await saveConversationLog(currentSessionId, stoppedAt, fullSessionLogs, finalMetrics);
-      if (saved) {
-        try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
-      }
     }
 
+    resetRuntime();
     sessionIdRef.current = null;
     coachSessionStateRef.current = null;
     resumeHandleRef.current = null;
@@ -2416,25 +2447,29 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       devicePixelRatio: window.devicePixelRatio,
     };
 
+    const body = JSON.stringify({
+      sessionId: currentSessionId,
+      mode,
+      tester: normalizedCoachConfig.tester,
+      startedAt,
+      stoppedAt,
+      settings: buildLiveSettings(),
+      metrics: finalMetrics,
+      client,
+      logs: currentLogs,
+    });
+    const bodyBytes = new TextEncoder().encode(body).length;
+
     try {
       const response = await fetch("/api/admin/live/log/", {
         method: "POST",
+        keepalive: bodyBytes <= FINAL_SAVE_KEEPALIVE_MAX_BYTES,
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          sessionId: currentSessionId,
-          mode,
-          tester: normalizedCoachConfig.tester,
-          startedAt,
-          stoppedAt,
-          settings: buildLiveSettings(),
-          metrics: finalMetrics,
-          client,
-          logs: currentLogs,
-        }),
+        body,
       });
       const payload = (await response.json().catch(() => null)) as { error?: string; payload?: { file?: string } } | null;
       if (!response.ok) {
