@@ -2,9 +2,9 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const VOICE_LOG_ROOT = path.join(process.cwd(), "data", "voice-logs");
-const MAX_LOG_ENTRIES = 240;
+const MAX_LOG_ENTRIES = 10_000;
 const MAX_TEXT_LENGTH = 1400;
-const MAX_PAYLOAD_BYTES = 128 * 1024;
+const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024;
 const ROLE_SET = new Set(["system", "user", "bench", "tool", "error"]);
 
 const appendChains = new Map<string, Promise<void>>();
@@ -182,18 +182,20 @@ function normalizeLogEntries(value: unknown) {
   return value
     .filter(isRecord)
     .map((entry) => {
+      const seq = typeof entry.seq === "number" && Number.isFinite(entry.seq) ? entry.seq : null;
       const role = typeof entry.role === "string" && ROLE_SET.has(entry.role) ? entry.role : "system";
       const rawText = normalizeText(entry.text);
       const text = role === "bench" ? sanitizeBenchLogText(rawText) : rawText;
       if (!text) return null;
       return {
+        seq,
         role,
         text,
         at: normalizeText(entry.at, 80),
         atIso: normalizeIso(entry.atIso),
       };
     })
-    .filter((entry): entry is { role: string; text: string; at: string | null; atIso: string | null } => Boolean(entry))
+    .filter((entry): entry is { seq: number | null; role: string; text: string; at: string | null; atIso: string | null } => Boolean(entry))
     .slice(-MAX_LOG_ENTRIES);
 }
 
@@ -451,6 +453,7 @@ export async function saveAdminLiveConversationLog(args: Record<string, unknown>
   }
 
   const entries = logs.map((entry) => ({
+    seq: entry.seq,
     role: entry.role,
     text: entry.text,
     at: entry.at,

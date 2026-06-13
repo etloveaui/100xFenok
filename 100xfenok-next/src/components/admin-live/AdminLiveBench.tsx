@@ -805,6 +805,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const wakeLockRef = useRef<WakeLockHandle | null>(null);
   const runtimeRef = useRef<AudioRuntime | null>(null);
   const logsRef = useRef<BenchLog[]>([]);
+  const sessionLogsRef = useRef<BenchLog[]>([]);
   const startRequestMsRef = useRef<number | null>(null);
   const firstResponseSeenRef = useRef(false);
   const lastAudioSentMsRef = useRef<number | null>(null);
@@ -1062,6 +1063,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       atIso: new Date().toISOString(),
     };
     setLogs((current) => [entry, ...current].slice(0, MAX_LOG_ENTRIES));
+    sessionLogsRef.current.push(entry);
     pendingRef.current.push(entry);
     persistPending();
     scheduleFlush();
@@ -1144,35 +1146,32 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       }
     }
 
+    const seq = ++logSeqRef.current;
+    const entry: BenchLog = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      seq,
+      role,
+      text: cleanText,
+      at: nowLabel(),
+      atIso: new Date().toISOString(),
+    };
+    sessionLogsRef.current.push(entry);
+    pendingRef.current.push(entry);
+    persistPending();
+    scheduleFlush();
+
     setLogs((current) => {
       const first = current[0];
       if (first?.role === role) {
         const merged = {
           ...first,
           text: mergeTranscriptText(first.text, cleanText),
-          at: nowLabel(),
-          atIso: new Date().toISOString(),
+          at: entry.at,
+          atIso: entry.atIso,
         };
-        const pendingFirst = pendingRef.current[0];
-        if (pendingFirst && pendingFirst.role === role) {
-          pendingFirst.text = merged.text;
-          pendingFirst.at = merged.at;
-        }
         return [merged, ...current.slice(1)];
       }
 
-      const seq = ++logSeqRef.current;
-      const entry: BenchLog = {
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        seq,
-        role,
-        text: cleanText,
-        at: nowLabel(),
-        atIso: new Date().toISOString(),
-      };
-      pendingRef.current.push(entry);
-      persistPending();
-      scheduleFlush();
       return [entry, ...current].slice(0, MAX_LOG_ENTRIES);
     });
   };
@@ -2090,6 +2089,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     resetRuntime();
     void flushOrphanedPending();
     pendingRef.current = [];
+    sessionLogsRef.current = [];
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     kickoffSentRef.current = false;
@@ -2365,6 +2365,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       micPermission: "stopped",
       audioFramesSent: audioFramesSentRef.current,
     };
+    sessionLogsRef.current.push(stopLog);
+    const fullSessionLogs = sessionLogsRef.current.slice();
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     pendingRef.current.push(stopLog);
     persistPending();
@@ -2385,7 +2387,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         body: JSON.stringify({ sessionId: currentSessionId }),
       }).catch(() => undefined);
 
-      const saved = await saveConversationLog(currentSessionId, stoppedAt, currentLogs, finalMetrics);
+      const saved = await saveConversationLog(currentSessionId, stoppedAt, fullSessionLogs, finalMetrics);
       if (saved) {
         try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
       }
@@ -2431,7 +2433,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           settings: buildLiveSettings(),
           metrics: finalMetrics,
           client,
-          logs: currentLogs.slice().reverse(),
+          logs: currentLogs,
         }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: string; payload?: { file?: string } } | null;
@@ -2452,6 +2454,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const resetBench = () => {
     resetRuntime();
     pendingRef.current = [];
+    sessionLogsRef.current = [];
     sentMetaRef.current = false;
     logSeqRef.current = 0;
     clearFlushTimer();
@@ -3005,8 +3008,8 @@ function CoachConfigControls({
       active ? "bg-amber-950 text-white" : "text-amber-900 hover:bg-white"
     } disabled:cursor-not-allowed disabled:opacity-50`;
   const detailClass = winddown
-    ? "rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-bg)]/70 p-3 text-left"
-    : "rounded-lg border border-amber-200 bg-amber-50 p-3 text-left";
+    ? "mt-5 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-bg)]/70 p-3 text-left"
+    : "mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-left";
   const summaryClass = winddown
     ? "cursor-pointer text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-apricot)]"
     : "cursor-pointer text-sm font-black text-amber-950";

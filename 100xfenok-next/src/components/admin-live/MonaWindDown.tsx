@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 
@@ -95,22 +95,21 @@ export default function MonaWindDown({
   settingsSlot,
   onStart, onStop,
 }: Props) {
-  const [theme, setTheme] = useState<WindDownTheme>("light");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [prefsApplied, setPrefsApplied] = useState(false);
-
-  useEffect(() => {
+  const [theme, setTheme] = useState<WindDownTheme>(() => {
+    if (typeof window === "undefined") return "light";
     try {
       const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
-      if (saved === "dark" || saved === "light") setTheme(saved);
+      return saved === "dark" || saved === "light" ? saved : "light";
     } catch {
-      // storage unavailable — keep light
+      return "light";
     }
-  }, []);
+  });
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const prefsAppliedRef = useRef(false);
 
   useEffect(() => {
-    if (prefsApplied || phase === "boot") return;
-    setPrefsApplied(true);
+    if (prefsAppliedRef.current || phase === "boot") return;
+    prefsAppliedRef.current = true;
     try {
       const savedVoice = window.localStorage.getItem(VOICE_STORAGE_KEY);
       if (savedVoice && VOICE_CHOICES.some((choice) => choice.id === savedVoice)) onVoiceChange(savedVoice);
@@ -119,7 +118,7 @@ export default function MonaWindDown({
     } catch {
       // storage unavailable — keep presets
     }
-  }, [phase, prefsApplied, onVoiceChange, onVadChange]);
+  }, [phase, onVoiceChange, onVadChange]);
 
   const pickVoice = (id: string) => {
     onVoiceChange(id);
@@ -149,6 +148,10 @@ export default function MonaWindDown({
       }
       return next;
     });
+  };
+
+  const applySettings = () => {
+    setSheetOpen(false);
   };
 
   const planLine = useMemo(() => studyPlanLine(), []);
@@ -312,7 +315,14 @@ export default function MonaWindDown({
             className="wd-sheet-in relative rounded-t-[28px] border-t border-[var(--wd-line)] bg-[var(--wd-card)] px-7 pb-[max(env(safe-area-inset-bottom),24px)] pt-3"
             style={{ boxShadow: "0 -18px 48px -18px rgba(0,0,0,0.35)" }}
           >
-            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-[var(--wd-line)]" />
+            <button
+              type="button"
+              onClick={applySettings}
+              aria-label="설정 적용하고 닫기"
+              className="mx-auto flex min-h-8 w-20 items-center justify-center rounded-full transition active:scale-95"
+            >
+              <span aria-hidden className="h-1 w-10 rounded-full bg-[var(--wd-line)]" />
+            </button>
 
             <p className="mt-5 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">목소리</p>
             <div className="mt-3 flex gap-2">
@@ -361,6 +371,13 @@ export default function MonaWindDown({
             <p className="mt-5 min-h-[18px] text-center text-[12px] text-[var(--wd-muted)]">
               {live ? "대화 중이라 다음 시작부터 적용돼" : "바로 적용돼"}
             </p>
+            <button
+              type="button"
+              onClick={applySettings}
+              className="mt-4 min-h-12 w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-[14px] font-semibold text-white shadow-sm transition active:scale-[0.98]"
+            >
+              적용
+            </button>
           </div>
         </div>
       )}
