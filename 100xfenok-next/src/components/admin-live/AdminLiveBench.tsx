@@ -90,6 +90,8 @@ type BenchMetrics = {
   clientIntentHint: string | null;
   modelToolIntent: string | null;
   intentHintMatched: boolean | null;
+  noUserTurnWatchdogCount: number;
+  lastNoUserTurnMs: number | null;
 };
 
 type ReadinessResponse = {
@@ -189,6 +191,19 @@ type LiveFunctionResponse = {
   id: string;
   name: string;
   response: unknown;
+};
+
+type CoachTurnCardCommand = {
+  type?: unknown;
+  itemId?: unknown;
+  state?: unknown;
+  ko?: unknown;
+  en?: unknown;
+};
+
+type CoachTurnDirective = {
+  cardCommand?: unknown;
+  spokenGuidance?: unknown;
 };
 
 type RawServerContent = {
@@ -345,11 +360,11 @@ const TOOL_REGISTRY_FALLBACK: LiveToolMetadata[] = [
     description: "New/easier/harder Mona material picker",
   },
   {
-    id: "mona-show-card",
-    label: "표현 카드",
+    id: "mona-coach-turn",
+    label: "코치 턴",
     category: "study",
     status: "available",
-    description: "Mona Wind-Down screen expression card",
+    description: "Mona server-owned coach directive",
   },
   {
     id: "feno-data",
@@ -425,6 +440,8 @@ const EMPTY_METRICS: BenchMetrics = {
   clientIntentHint: null,
   modelToolIntent: null,
   intentHintMatched: null,
+  noUserTurnWatchdogCount: 0,
+  lastNoUserTurnMs: null,
 };
 
 const STATUS_TEXT: Record<SessionStatus, string> = {
@@ -474,6 +491,10 @@ const FINAL_MARKER_MAX_ENTRIES = 120;
 const STOP_TRANSCRIPT_GRACE_MS = 800;
 const TOOL_FETCH_TIMEOUT_MS = 9_000;
 const TOOL_RESPONSE_WATCHDOG_MS = 12_000;
+const TOOL_CANCELLATION_GRACE_MS = 160;
+const NO_USER_TURN_WATCHDOG_MS = 30_000;
+const SIDE_EFFECT_TOOL_NAMES = new Set(["saveStudySession"]);
+const HIDDEN_UI_TOOL_IDS = new Set(["mona-show-card"]);
 const MIC_WORKLET_SOURCE = `
 class GeminiMicProcessor extends AudioWorkletProcessor {
   process(inputs) {
@@ -618,6 +639,10 @@ function normalizeEnabledToolIds(value: unknown, registry: LiveToolMetadata[]): 
   return [...seen];
 }
 
+function getVisibleToolRegistry(registry: LiveToolMetadata[]): LiveToolMetadata[] {
+  return registry.filter((tool) => !HIDDEN_UI_TOOL_IDS.has(tool.id));
+}
+
 function getModeDefaultToolIds(
   mode: BenchMode,
   registry: LiveToolMetadata[],
@@ -760,8 +785,31 @@ function unwrapToolResult(response: unknown): Record<string, unknown> | null {
   return isRecord(result) ? result : null;
 }
 
+function unwrapCoachTurnDirective(response: unknown): CoachTurnDirective | null {
+  const result = unwrapToolResult(response);
+  if (result && ("spokenGuidance" in result || "cardCommand" in result)) return result;
+  if (isRecord(response) && ("spokenGuidance" in response || "cardCommand" in response)) return response;
+  return null;
+}
+
 function getLessonMaterialItems(result: Record<string, unknown>): Array<Record<string, unknown>> {
   return Array.isArray(result.items) ? result.items.filter(isRecord) : [];
+}
+
+function getToolCallCancellationIds(value: unknown): string[] {
+  if (!isRecord(value) || !Array.isArray(value.ids)) return [];
+  const seen = new Set<string>();
+  for (const item of value.ids) {
+    if (typeof item !== "string") continue;
+    const id = item.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+  }
+  return [...seen];
+}
+
+function waitForToolCancellationWindow() {
+  return new Promise((resolve) => setTimeout(resolve, TOOL_CANCELLATION_GRACE_MS));
 }
 
 async function readSocketData(data: MessageEvent["data"]): Promise<string> {
@@ -796,7 +844,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const [coachConfig, setCoachConfig] = useState<CoachConfig>(DEFAULT_COACH_CONFIG);
   const [systemPrompt, setSystemPrompt] = useState(PROFILE_FALLBACK[0].defaultSystemPrompt ?? "");
   const [promptEdited, setPromptEdited] = useState(false);
-  const [toolRegistry, setToolRegistry] = useState<LiveToolMetadata[]>(TOOL_REGISTRY_FALLBACK);
+  const [toolRegistry, setToolRegistry] = useState<LiveToolMetadata[]>(getVisibleToolRegistry(TOOL_REGISTRY_FALLBACK));
   const [enabledToolIds, setEnabledToolIds] = useState<string[]>([]);
   const [searchSelectionPolicy, setSearchSelectionPolicy] = useState<SearchSelectionPolicy>("multi");
   const [isSendingText, setIsSendingText] = useState(false);
@@ -808,6 +856,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const outputRef = useRef<AudioOutput | null>(null);
   const wakeLockRef = useRef<WakeLockHandle | null>(null);
   const runtimeRef = useRef<AudioRuntime | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
   const logsRef = useRef<BenchLog[]>([]);
   const sessionLogsRef = useRef<BenchLog[]>([]);
   const startRequestMsRef = useRef<number | null>(null);
@@ -823,10 +872,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const pendingRef = useRef<BenchLog[]>([]);
   const pendingToolResponsesRef = useRef<LiveFunctionResponse[]>([]);
   const answeredToolResponseIdsRef = useRef<Set<string>>(new Set());
+  const cancelledToolCallIdsRef = useRef<Set<string>>(new Set());
+  const activeToolControllersRef = useRef<Map<string, AbortController>>(new Map());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backoffRef = useRef(2500);
   const sessionIdRef = useRef<string | null>(null);
+  const logSessionIdRef = useRef<string | null>(null);
   const coachSessionStateRef = useRef<CoachSessionState | null>(null);
+  const finalCoachTurnBeaconSentRef = useRef(false);
   const kickoffSentRef = useRef(false);
   const resumeHandleRef = useRef<string | null>(null);
   const reconnectingRef = useRef(false);
@@ -838,13 +891,16 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const lastAudioActivityLogFramesRef = useRef(0);
   const lastAudioActivityLogMsRef = useRef<number | null>(null);
   const resumeReadyLoggedRef = useRef(false);
+  const noUserTurnWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userTurnSeenRef = useRef(false);
+  const noUserTurnHintLoggedRef = useRef(false);
   const isSecure = typeof window === "undefined" ? true : window.isSecureContext;
 
   const PENDING_LOG_KEY = "fenok.adminlive.pendinglog.v1";
 
   const persistPending = () => {
     try {
-      const sid = sessionIdRef.current;
+      const sid = logSessionIdRef.current ?? sessionIdRef.current;
       if (!sid || typeof localStorage === "undefined") return;
       if (pendingRef.current.length === 0) {
         localStorage.removeItem(PENDING_LOG_KEY);
@@ -882,8 +938,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     });
   };
 
+  const getCoachSessionKey = () => logSessionIdRef.current ?? sessionIdRef.current;
+
   const buildLiveSettings = () => ({
     clientBuildVersion: BUILD_VERSION,
+    conversationId: getCoachSessionKey(),
+    logSessionId: getCoachSessionKey(),
+    liveSessionId: sessionIdRef.current,
+    coachSessionKey: getCoachSessionKey(),
     lowVoice,
     voiceName,
     responseStyle,
@@ -896,25 +958,16 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     bufferedItemKeys: coachSessionStateRef.current?.bufferedItemKeys ?? [],
   });
 
-  const patchCoachSessionState = (patch: Partial<CoachSessionState>) => {
-    if (mode !== "mona") return;
-    const current = coachSessionStateRef.current ?? normalizeCoachSessionState(null, sessionIdRef.current);
-    if (!current) return;
-    coachSessionStateRef.current = { ...current, ...patch };
-  };
-
-  const markCoachItemSeen = (key: string | null) => {
-    if (!key || mode !== "mona") return;
-    const current = coachSessionStateRef.current ?? normalizeCoachSessionState(null, sessionIdRef.current);
-    if (!current) return;
-    const alreadySeen = current.seenItemKeys.includes(key);
-    const fromBuffer = current.bufferedItemKeys.includes(key);
-    coachSessionStateRef.current = {
-      ...current,
-      currentItemKey: key,
-      seenItemKeys: alreadySeen ? current.seenItemKeys : [...current.seenItemKeys, key].slice(-24),
-      bufferedItemKeys: fromBuffer ? current.bufferedItemKeys.filter((item) => item !== key) : current.bufferedItemKeys,
-      newCountActual: !alreadySeen && fromBuffer ? current.newCountActual + 1 : current.newCountActual,
+  const buildLiveToolContext = () => {
+    const coachSessionKey = getCoachSessionKey();
+    return {
+      mode,
+      coachSessionKey,
+      conversationId: coachSessionKey,
+      logSessionId: coachSessionKey,
+      liveSessionId: sessionIdRef.current,
+      coachConfig: normalizedCoachConfig,
+      coachSessionState: coachSessionStateRef.current,
     };
   };
 
@@ -955,20 +1008,37 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const result = unwrapToolResult(response);
     if (!result) return;
     patchLessonMaterialMetrics(result, toolIntent);
-    const firstItem = getLessonMaterialItems(result)[0];
-    const key = normalizeCoachItemKey(firstItem?.en ?? firstItem?.id);
-    if (!key) return;
-    const current = coachSessionStateRef.current ?? normalizeCoachSessionState(null, sessionIdRef.current);
-    if (!current) return;
-    const alreadySeen = current.seenItemKeys.includes(key);
-    const fromBuffer = current.bufferedItemKeys.includes(key);
-    coachSessionStateRef.current = {
-      ...current,
-      currentItemKey: key,
-      seenItemKeys: alreadySeen ? current.seenItemKeys : [...current.seenItemKeys, key].slice(-24),
-      bufferedItemKeys: fromBuffer ? current.bufferedItemKeys.filter((item) => item !== key) : current.bufferedItemKeys,
-      lastToolIntent: toolIntent,
-      newCountActual: !alreadySeen && toolIntent !== "again" ? current.newCountActual + 1 : current.newCountActual,
+  };
+
+  const isToolCallCancelled = (id: string | null) => Boolean(id && cancelledToolCallIdsRef.current.has(id));
+
+  const applyCoachTurnDirective = (directive: CoachTurnDirective | null) => {
+    if (mode !== "mona" || !directive) return null;
+    const cardCommand = isRecord(directive.cardCommand) ? directive.cardCommand as CoachTurnCardCommand : null;
+    const spokenGuidance = typeof directive.spokenGuidance === "string" ? directive.spokenGuidance.trim() : "";
+
+    if (cardCommand?.type === "showCard") {
+      const state = cardCommand.state;
+      const ko = typeof cardCommand.ko === "string" ? cardCommand.ko.trim() : "";
+      const en = typeof cardCommand.en === "string" ? cardCommand.en.trim() : "";
+      const itemId = typeof cardCommand.itemId === "string" ? cardCommand.itemId.trim() : "";
+
+      if ((state === "prompt" || state === "reveal" || state === "drill") && ko && (state !== "reveal" || en)) {
+        setCard({
+          state,
+          ko,
+          en: en || undefined,
+          updatedAt: Date.now(),
+        });
+        addLog("tool", `coachTurn 카드 적용: id=${itemId || "-"} state=${state}`);
+      } else {
+        addLog("tool", `coachTurn 카드 무시: id=${itemId || "-"} state=${typeof state === "string" ? state : "-"}`);
+      }
+    }
+
+    if (!spokenGuidance) return null;
+    return {
+      result: spokenGuidance,
     };
   };
 
@@ -1146,7 +1216,6 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     if (role === "user" && mode === "mona") {
       const learnerIntent = detectCoachLearnerIntent(cleanText);
       if (learnerIntent) {
-        patchCoachSessionState({ lastLearnerIntent: learnerIntent });
         sendCoachIntentHint(learnerIntent);
       }
     }
@@ -1210,9 +1279,40 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
   };
 
+  const clearNoUserTurnWatchdog = () => {
+    if (noUserTurnWatchdogRef.current) {
+      clearTimeout(noUserTurnWatchdogRef.current);
+      noUserTurnWatchdogRef.current = null;
+    }
+  };
+
+  const armNoUserTurnWatchdog = () => {
+    clearNoUserTurnWatchdog();
+    if (userTurnSeenRef.current || noUserTurnHintLoggedRef.current) return;
+    const armedAt = performance.now();
+    noUserTurnWatchdogRef.current = setTimeout(() => {
+      noUserTurnWatchdogRef.current = null;
+      if (userTurnSeenRef.current || noUserTurnHintLoggedRef.current || statusRef.current !== "listening") return;
+      const elapsedMs = Math.round(performance.now() - armedAt);
+      noUserTurnHintLoggedRef.current = true;
+      setMetrics((current) => ({
+        ...current,
+        noUserTurnWatchdogCount: current.noUserTurnWatchdogCount + 1,
+        lastNoUserTurnMs: elapsedMs,
+      }));
+      addRawLog("noUserTurnWatchdog", {
+        elapsedMs,
+        liveSessionId: sessionIdRef.current,
+        logSessionId: logSessionIdRef.current ?? sessionIdRef.current,
+        framesSent: audioFramesSentRef.current,
+      });
+      addLog("system", "마이크는 켜져 있어요. 말이 인식되지 않으면 한 문장만 다시 말해 주세요.");
+    }, NO_USER_TURN_WATCHDOG_MS);
+  };
+
   const flushAppends = async (useBeacon = false) => {
     clearFlushTimer();
-    const sid = sessionIdRef.current;
+    const sid = logSessionIdRef.current ?? sessionIdRef.current;
     if (!sid || pendingRef.current.length === 0) return;
 
     if (pendingRef.current.length > 600) {
@@ -1231,6 +1331,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     const body: Record<string, unknown> = {
       op: "append",
       sessionId: sid,
+      liveSessionId: sessionIdRef.current,
       mode,
       startedAt: startedAtMs ? new Date(startedAtMs).toISOString() : new Date().toISOString(),
       tester: normalizedCoachConfig.tester,
@@ -1306,8 +1407,47 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   };
 
   const scheduleFlush = () => {
-    if (flushTimerRef.current || !sessionIdRef.current) return;
+    if (flushTimerRef.current || !(logSessionIdRef.current ?? sessionIdRef.current)) return;
     flushTimerRef.current = setTimeout(() => void flushAppends(), 2500);
+  };
+
+  const sendFinalCoachTurnBeacon = () => {
+    if (mode !== "mona") return false;
+    if (finalCoachTurnBeaconSentRef.current) return false;
+    const currentStatus = statusRef.current;
+    if (currentStatus !== "connecting" && currentStatus !== "listening") return false;
+    if (!sessionIdRef.current || !getCoachSessionKey()) return false;
+
+    finalCoachTurnBeaconSentRef.current = true;
+    const body = JSON.stringify({
+      id: `final-coach-turn-${Date.now()}`,
+      name: "coachTurn",
+      args: { attemptText: "그만" },
+      sessionId: sessionIdRef.current,
+      context: buildLiveToolContext(),
+    });
+
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      try {
+        const blob = new Blob([body], { type: "application/json" });
+        if (navigator.sendBeacon("/api/admin/live/tool/", blob)) return true;
+      } catch {
+        // Fall back to keepalive fetch below.
+      }
+    }
+
+    void fetch("/api/admin/live/tool/", {
+      method: "POST",
+      keepalive: true,
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body,
+    }).catch(() => undefined);
+    return true;
   };
 
   const drainPendingAppends = async () => {
@@ -1432,18 +1572,24 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
   };
 
-  const stopAudioRuntime = () => {
+  const stopAudioRuntime = ({ stopStream = true }: { stopStream?: boolean } = {}) => {
     flushPlayback();
-    releaseWakeLock();
+    clearNoUserTurnWatchdog();
+    if (stopStream) releaseWakeLock();
     const runtime = runtimeRef.current;
     runtimeRef.current = null;
     const output = outputRef.current;
-    outputRef.current = null;
 
     if (!runtime) {
-      if (output) {
+      if (stopStream && output) {
+        outputRef.current = null;
         output.gain.disconnect();
         void output.context.close().catch(() => undefined);
+      }
+      if (stopStream && micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((track) => track.stop());
+        micStreamRef.current = null;
+        setMetrics((current) => ({ ...current, micPermission: "stopped" }));
       }
       return;
     }
@@ -1451,10 +1597,18 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     runtime.processor.disconnect();
     runtime.source.disconnect();
     runtime.inputMonitorGain.disconnect();
-    runtime.outputGain.disconnect();
-    runtime.stream.getTracks().forEach((track) => track.stop());
-    void runtime.context.close().catch(() => undefined);
-    setMetrics((current) => ({ ...current, micPermission: "stopped" }));
+    if (stopStream) {
+      runtime.outputGain.disconnect();
+      runtime.stream.getTracks().forEach((track) => track.stop());
+      const micStream = micStreamRef.current;
+      micStreamRef.current = null;
+      if (micStream && micStream !== runtime.stream) {
+        micStream.getTracks().forEach((track) => track.stop());
+      }
+      outputRef.current = null;
+      void runtime.context.close().catch(() => undefined);
+      setMetrics((current) => ({ ...current, micPermission: "stopped" }));
+    }
   };
 
   const flushPlayback = () => {
@@ -1543,14 +1697,25 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     audioStreamEndSentRef.current = false;
   };
 
-  const executeLiveToolCall = async (call: LiveFunctionCall) => {
+  const executeLiveToolCall = async (call: LiveFunctionCall): Promise<LiveFunctionResponse | null> => {
     const name = typeof call.name === "string" ? call.name : "";
     const id = typeof call.id === "string" ? call.id : "";
     const args = call.args && typeof call.args === "object" ? call.args : {};
+    if (isToolCallCancelled(id)) {
+      addLog("tool", `취소된 도구 실행 생략: ${name || "unknown"}:${id || "-"}`);
+      return null;
+    }
+    if (id && SIDE_EFFECT_TOOL_NAMES.has(name)) {
+      await waitForToolCancellationWindow();
+      if (isToolCallCancelled(id)) {
+        addLog("tool", `취소된 도구 실행 생략: ${name}:${id}`);
+        return null;
+      }
+    }
     const toolIntent = toLessonMaterialIntent(args.intent);
-    if (toolIntent) patchCoachSessionState({ lastToolIntent: toolIntent });
 
     const controller = new AbortController();
+    if (id) activeToolControllersRef.current.set(id, controller);
     const timeout = setTimeout(() => controller.abort(), TOOL_FETCH_TIMEOUT_MS);
     try {
       const response = await fetch("/api/admin/live/tool/", {
@@ -1567,11 +1732,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           name,
           args,
           sessionId: sessionIdRef.current,
-          context: {
-            mode,
-            coachConfig: normalizedCoachConfig,
-            coachSessionState: coachSessionStateRef.current,
-          },
+          context: buildLiveToolContext(),
         }),
       });
 
@@ -1579,15 +1740,26 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         | { response?: unknown }
         | null;
       const toolResponse = payload?.response ?? { error: `TOOL_HTTP_${response.status}` };
+      if (isToolCallCancelled(id)) {
+        addLog("tool", `취소된 도구 응답 폐기: ${name || "unknown"}:${id || "-"}`);
+        return null;
+      }
       if (name === "requestLessonMaterial") {
         applyLessonMaterialToolResult(toolResponse, toolIntent);
       }
+      const coachTurnToolResponse = name === "coachTurn"
+        ? applyCoachTurnDirective(unwrapCoachTurnDirective(toolResponse))
+        : null;
       return {
         id,
         name,
-        response: toolResponse,
+        response: coachTurnToolResponse ?? toolResponse,
       };
     } catch (error) {
+      if (isToolCallCancelled(id)) {
+        addLog("tool", `취소된 도구 중단: ${name || "unknown"}:${id || "-"}`);
+        return null;
+      }
       const message = error instanceof Error && error.name === "AbortError"
         ? "TOOL_CLIENT_TIMEOUT"
         : error instanceof Error ? error.message : "TOOL_EXECUTION_FAILED";
@@ -1598,6 +1770,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       };
     } finally {
       clearTimeout(timeout);
+      if (id) activeToolControllersRef.current.delete(id);
     }
   };
 
@@ -1605,8 +1778,13 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
   const sendFunctionResponses = (responses: LiveFunctionResponse[], source: "batch" | "pending") => {
     if (responses.length === 0) return;
+    const activeResponses = responses.filter((response) => !isToolCallCancelled(response.id));
+    if (activeResponses.length !== responses.length) {
+      addLog("tool", `취소된 도구 응답 전송 생략: ${responses.length - activeResponses.length}개`);
+    }
+    if (activeResponses.length === 0) return;
     const pendingKeys = new Set(pendingToolResponsesRef.current.map(toolResponseKey));
-    const unsent = responses.filter((response) => {
+    const unsent = activeResponses.filter((response) => {
       const key = toolResponseKey(response);
       if (answeredToolResponseIdsRef.current.has(key)) return false;
       if (pendingKeys.has(key)) return false;
@@ -1670,18 +1848,21 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       drillHint: typeof args.drillHint === "string" ? args.drillHint : undefined,
       updatedAt: Date.now(),
     });
-    markCoachItemSeen(normalizeCoachItemKey(en || ko));
     addLog("tool", `showCard 적용: id=${id || "-"} state=${state} ko=${ko.slice(0, 40)}`);
     return { ...base, response: { ok: true } };
   };
 
-  const withToolWatchdog = (call: LiveFunctionCall, responsePromise: Promise<LiveFunctionResponse>) => {
+  const withToolWatchdog = (call: LiveFunctionCall, responsePromise: Promise<LiveFunctionResponse | null>) => {
     const name = typeof call.name === "string" ? call.name : "";
     const id = typeof call.id === "string" ? call.id : "";
     return Promise.race([
       responsePromise,
-      new Promise<LiveFunctionResponse>((resolve) => {
+      new Promise<LiveFunctionResponse | null>((resolve) => {
         setTimeout(() => {
+          if (isToolCallCancelled(id)) {
+            resolve(null);
+            return;
+          }
           resolve({
             id,
             name,
@@ -1700,13 +1881,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     addLog("tool", `도구 요청 ${calls.length}개 수신: ${calls.map((call) => call.name || "unknown").join(", ")}`);
 
     void Promise.all(calls.map((call) => {
+      if (isToolCallCancelled(typeof call.id === "string" ? call.id : "")) return Promise.resolve(null);
       const responsePromise = call.name === "showCard"
         ? Promise.resolve(resolveShowCardResponse(call))
         : executeLiveToolCall(call);
       return withToolWatchdog(call, responsePromise);
     }))
       .then((functionResponses) => {
-        sendFunctionResponses(functionResponses, "batch");
+        sendFunctionResponses(functionResponses.filter((response): response is LiveFunctionResponse => Boolean(response)), "batch");
       })
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : "TOOL_RESPONSE_FAILED";
@@ -1714,11 +1896,25 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       });
   };
 
+  const handleToolCallCancellation = (toolCallCancellation: unknown) => {
+    const ids = getToolCallCancellationIds(toolCallCancellation);
+    if (ids.length === 0) return;
+    const cancelledIds = new Set(ids);
+    ids.forEach((id) => {
+      cancelledToolCallIdsRef.current.add(id);
+      const controller = activeToolControllersRef.current.get(id);
+      if (controller) controller.abort();
+    });
+    pendingToolResponsesRef.current = pendingToolResponsesRef.current.filter((response) => !cancelledIds.has(response.id));
+    addLog("tool", `도구 취소 수신: ${ids.join(", ")}`);
+  };
+
   const resetRuntime = () => {
     clearSocketTimeout();
     closeSocket();
     stopAudioRuntime();
     clearDropAudioTimeout();
+    clearNoUserTurnWatchdog();
     firstResponseSeenRef.current = false;
     lastAudioSentMsRef.current = null;
     startRequestMsRef.current = null;
@@ -1728,6 +1924,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     suppressModelOutputUntilTurnCompleteRef.current = false;
     pendingToolResponsesRef.current = [];
     answeredToolResponseIdsRef.current.clear();
+    cancelledToolCallIdsRef.current.clear();
+    activeToolControllersRef.current.forEach((controller) => controller.abort());
+    activeToolControllersRef.current.clear();
   };
 
   useEffect(() => {
@@ -1754,9 +1953,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         setReadiness(payload.readiness);
         setProfiles(payload.profiles.length ? payload.profiles : PROFILE_FALLBACK);
         setVoices(payload.voices?.length ? payload.voices : VOICE_FALLBACK);
-        const nextToolRegistry = payload.defaults?.tools?.registry?.length
+        const nextToolRegistryRaw = payload.defaults?.tools?.registry?.length
           ? payload.defaults.tools.registry
           : TOOL_REGISTRY_FALLBACK;
+        const nextToolRegistry = getVisibleToolRegistry(nextToolRegistryRaw);
         setToolRegistry(nextToolRegistry);
         setEnabledToolIds(getModeDefaultToolIds(initialMode, nextToolRegistry, payload.defaults?.tools?.enabledToolIdsByMode));
         setSearchSelectionPolicy(payload.defaults?.tools?.searchSelectionPolicy ?? "multi");
@@ -1831,9 +2031,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   }, [status]);
 
   useEffect(() => {
-    const handlePageHide = () => void flushAppends(true);
+    const handlePageHide = () => {
+      sendFinalCoachTurnBeacon();
+      void flushAppends(true);
+    };
     const handleVisibilityHidden = () => {
-      if (document.visibilityState === "hidden") void flushAppends(true);
+      if (document.visibilityState !== "hidden") return;
+      sendFinalCoachTurnBeacon();
+      void flushAppends(true);
     };
 
     window.addEventListener("pagehide", handlePageHide);
@@ -1842,7 +2047,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       window.removeEventListener("pagehide", handlePageHide);
       document.removeEventListener("visibilitychange", handleVisibilityHidden);
     };
-  }, [sessionId, mode, lowVoice, voiceName, responseStyle, vadPreset, interruptionMode, enabledToolIds, metrics]);
+  }, [sessionId, mode, lowVoice, voiceName, responseStyle, vadPreset, interruptionMode, enabledToolIds, metrics, normalizedCoachConfig]);
 
   useEffect(() => {
     return () => {
@@ -1850,6 +2055,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       void flushAppends(true);
       clearSocketTimeout();
       clearDropAudioTimeout();
+      clearNoUserTurnWatchdog();
       const socket = wsRef.current;
       wsRef.current = null;
       if (socket) {
@@ -1880,6 +2086,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         runtime.outputGain.disconnect();
         runtime.stream.getTracks().forEach((track) => track.stop());
         void runtime.context.close().catch(() => undefined);
+      }
+      const micStream = micStreamRef.current;
+      micStreamRef.current = null;
+      if (micStream && micStream !== runtime?.stream) {
+        micStream.getTracks().forEach((track) => track.stop());
       }
       const output = outputRef.current;
       outputRef.current = null;
@@ -1938,9 +2149,18 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     return processor;
   };
 
-  const beginAudioStream = async (socket: WebSocket) => {
+  const getMicStreamForSession = async ({ resume }: { resume: boolean }) => {
+    const existing = micStreamRef.current;
+    if (existing?.getAudioTracks().some((track) => track.readyState === "live")) {
+      return existing;
+    }
+    micStreamRef.current = null;
+
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error("MIC_UNSUPPORTED");
+    }
+    if (resume) {
+      throw new Error("MIC_STREAM_UNAVAILABLE_FOR_RESUME");
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -1951,6 +2171,12 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         channelCount: 1,
       },
     });
+    micStreamRef.current = stream;
+    return stream;
+  };
+
+  const beginAudioStream = async (socket: WebSocket, options: { resume?: boolean } = {}) => {
+    const stream = await getMicStreamForSession({ resume: options.resume === true });
     const output = await ensureAudioOutput();
     const context = output.context;
     await context.resume();
@@ -1969,6 +2195,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     setMetrics((current) => ({ ...current, micPermission: "active", connectionState: "live" }));
     setStatus("listening");
     addLog("system", "마이크가 켜졌어요. 이제 말하면 됩니다.");
+    armNoUserTurnWatchdog();
   };
 
   const handleServerMessage = (payload: Record<string, unknown>) => {
@@ -1976,27 +2203,39 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       clearSocketTimeout();
       const setupDoneMs = startRequestMsRef.current ? Math.round(performance.now() - startRequestMsRef.current) : null;
       setMetrics((current) => ({ ...current, setupDoneMs }));
-      if (reconnectingRef.current) {
+      const wasReconnecting = reconnectingRef.current;
+      if (wasReconnecting) {
         addLog("system", "다시 연결됐어요. 이어서 진행해.");
         resumeCountRef.current += 1;
         setMetrics((current) => ({ ...current, resumeCount: resumeCountRef.current }));
-        reconnectingRef.current = false;
       } else {
         addLog("system", "연결됐어요. 코치가 먼저 인사할 거예요.");
       }
       const socket = wsRef.current;
       if (socket) {
         flushPendingToolResponses();
-        void beginAudioStream(socket).then(() => {
-          if (mode === "mona" && !kickoffSentRef.current && !reconnectingRef.current) {
+        void beginAudioStream(socket, { resume: wasReconnecting }).then(() => {
+          if (wasReconnecting) {
+            reconnectingRef.current = false;
+            return;
+          }
+          if (mode === "mona" && !kickoffSentRef.current) {
             kickoffSentRef.current = true;
             socket.send(JSON.stringify({ realtimeInput: { text: "시작" } }));
           }
         }).catch((error: unknown) => {
           const message = error instanceof Error ? error.message : "MIC_START_FAILED";
-          setStatus("ready");
-          setLastError(message);
-          addLog("error", message);
+          reconnectingRef.current = false;
+          if (wasReconnecting) {
+            stopAudioRuntime();
+            setStatus("stopped");
+            setLastError(`다시 연결 실패: ${message}`);
+            addLog("error", `다시 연결 실패: ${message}`);
+          } else {
+            setStatus("ready");
+            setLastError(message);
+            addLog("error", message);
+          }
         });
       }
       return;
@@ -2004,6 +2243,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
     if ("toolCall" in payload) {
       handleToolCall(payload.toolCall);
+      return;
+    }
+
+    if ("toolCallCancellation" in payload) {
+      handleToolCallCancellation(payload.toolCallCancellation);
       return;
     }
 
@@ -2044,6 +2288,8 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     }
 
     if (serverContent.inputTranscription?.text) {
+      userTurnSeenRef.current = true;
+      clearNoUserTurnWatchdog();
       maybeLogAudioActivity(true);
       const latency = lastAudioSentMsRef.current ? Math.round(performance.now() - lastAudioSentMsRef.current) : null;
       setMetrics((current) => ({
@@ -2124,9 +2370,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
     resetRuntime();
     void flushOrphanedPending();
+    logSessionIdRef.current = null;
     pendingRef.current = [];
     sessionLogsRef.current = [];
     sentMetaRef.current = false;
+    finalCoachTurnBeaconSentRef.current = false;
     logSeqRef.current = 0;
     kickoffSentRef.current = false;
     resumeCountRef.current = 0;
@@ -2134,6 +2382,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     lastAudioActivityLogFramesRef.current = 0;
     lastAudioActivityLogMsRef.current = null;
     resumeReadyLoggedRef.current = false;
+    userTurnSeenRef.current = false;
+    noUserTurnHintLoggedRef.current = false;
+    clearNoUserTurnWatchdog();
     coachSessionStateRef.current = null;
     clearFlushTimer();
     persistPending();
@@ -2185,6 +2436,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       const startedAt = Date.parse(session.startedAt);
       setSessionId(session.sessionId);
       sessionIdRef.current = session.sessionId;
+      logSessionIdRef.current = session.sessionId;
       coachSessionStateRef.current = normalizeCoachSessionState(session.settings?.coachSessionState, session.sessionId);
       setStartedAtMs(Number.isFinite(startedAt) ? startedAt : Date.now());
       addLog("system", `대화 토큰 준비 완료. 만료 ${new Date(session.expiresAt).toLocaleTimeString("ko-KR")}`);
@@ -2236,13 +2488,17 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
       socket.onclose = (event) => {
         clearSocketTimeout();
-        stopAudioRuntime();
+        const shouldResume = event.code !== 1000
+          && statusRef.current === "listening"
+          && Boolean(resumeHandleRef.current)
+          && !reconnectingRef.current;
+        stopAudioRuntime({ stopStream: !shouldResume });
         setMetrics((current) => ({
           ...current,
           connectionState: current.connectionState === "error" ? "error" : "closed",
         }));
         if (event.code !== 1000) {
-          if (statusRef.current === "listening" && resumeHandleRef.current && !reconnectingRef.current) {
+          if (shouldResume) {
             void resumeSession();
           } else {
             const reason = event.reason ? `: ${event.reason}` : "";
@@ -2304,11 +2560,12 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         const session = payload as SessionResponse;
         setSessionId(session.sessionId);
         sessionIdRef.current = session.sessionId;
+        logSessionIdRef.current = logSessionIdRef.current ?? session.sessionId;
         coachSessionStateRef.current = normalizeCoachSessionState(session.settings?.coachSessionState, session.sessionId);
         setStartedAtMs(Date.parse(session.startedAt));
 
         closeSocket();
-        stopAudioRuntime();
+        stopAudioRuntime({ stopStream: false });
 
         const websocketUrl = `${session.websocketEndpoint}?access_token=${encodeURIComponent(session.token)}`;
         const socket = new WebSocket(websocketUrl);
@@ -2345,6 +2602,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         };
         socket.onerror = () => {
           clearSocketTimeout();
+          stopAudioRuntime();
           setStatus("stopped");
           setLastError("다시 연결 오류");
           addLog("error", "다시 연결 오류");
@@ -2352,18 +2610,26 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         };
         socket.onclose = (event) => {
           clearSocketTimeout();
-          stopAudioRuntime();
+          const shouldResume = event.code !== 1000
+            && statusRef.current === "listening"
+            && Boolean(resumeHandleRef.current)
+            && !reconnectingRef.current;
+          stopAudioRuntime({ stopStream: !shouldResume });
           setMetrics((current) => ({
             ...current,
             connectionState: current.connectionState === "error" ? "error" : "closed",
           }));
           if (event.code !== 1000) {
-            const message = `다시 연결 종료 ${event.code}`;
-            setStatus("stopped");
-            setLastError(message);
-            addLog("error", message);
+            if (shouldResume) {
+              void resumeSession();
+            } else {
+              const message = `다시 연결 종료 ${event.code}`;
+              setStatus("stopped");
+              setLastError(message);
+              addLog("error", message);
+            }
           }
-          reconnectingRef.current = false;
+          if (!shouldResume) reconnectingRef.current = false;
         };
 
         return true;
@@ -2378,6 +2644,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
     const success = await doResume(1);
     if (!success) {
+      stopAudioRuntime();
       setStatus("stopped");
       setLastError("연결을 잃었어요. 다시 시작해 주세요.");
       addLog("error", "연결을 잃었어요. 다시 시작해 주세요.");
@@ -2386,7 +2653,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   };
 
   const stopSession = async () => {
-    const currentSessionId = sessionIdRef.current ?? sessionId;
+    sendFinalCoachTurnBeacon();
+    const currentLiveSessionId = sessionIdRef.current ?? sessionId;
+    const currentLogSessionId = logSessionIdRef.current ?? currentLiveSessionId;
     const stoppedAt = new Date().toISOString();
     const stopSeq = ++logSeqRef.current;
     const stopLog: BenchLog = {
@@ -2404,17 +2673,18 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       audioFramesSent: audioFramesSentRef.current,
     };
     sessionLogsRef.current.push(stopLog);
-    const fullSessionLogs = sessionLogsRef.current.slice();
     const currentLogs = [stopLog, ...logsRef.current].slice(0, MAX_LOG_ENTRIES);
     pendingRef.current.push(stopLog);
     persistPending();
+    try {
+      await flushAppends();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "STOP_APPEND_FLUSH_FAILED";
+      addLog("error", `종료 로그 선저장 실패: ${message}`);
+    }
     setStatus("stopped");
     setMetrics(finalMetrics);
     setLogs(currentLogs);
-
-    if (currentSessionId) {
-      void saveFinalMarker(currentSessionId, stoppedAt, fullSessionLogs, finalMetrics).catch(() => false);
-    }
 
     let finalMarkerSaved = false;
     let saved = false;
@@ -2427,39 +2697,41 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       addLog("error", `종료 대기 실패: ${message}`);
     } finally {
       const finalSessionLogs = sessionLogsRef.current.slice();
-      if (currentSessionId) {
-        finalMarkerSaved = await saveFinalMarker(currentSessionId, stoppedAt, finalSessionLogs, finalMetrics).catch((error) => {
+      if (currentLogSessionId) {
+        try {
+          await drainPendingAppends();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "FINAL_APPEND_DRAIN_FAILED";
+          addLog("error", `종료 로그 동기화 실패: ${message}`);
+        }
+
+        finalMarkerSaved = await saveFinalMarker(currentLogSessionId, stoppedAt, finalSessionLogs, finalMetrics).catch((error) => {
           const message = error instanceof Error ? error.message : "FINAL_MARKER_SAVE_FAILED";
           addLog("error", `종료 표시 저장 실패: ${message}`);
           return false;
         });
-        if (!finalMarkerSaved) {
-          try {
-            await drainPendingAppends();
-          } catch (error) {
-            const message = error instanceof Error ? error.message : "FINAL_APPEND_DRAIN_FAILED";
-            addLog("error", `종료 로그 동기화 실패: ${message}`);
-          }
-        }
-        saved = await saveConversationLog(currentSessionId, stoppedAt, finalSessionLogs, finalMetrics);
+        saved = await saveConversationLog(currentLogSessionId, stoppedAt, finalSessionLogs, finalMetrics);
         if (saved || finalMarkerSaved) {
           pendingRef.current = [];
           try { localStorage.removeItem(PENDING_LOG_KEY); } catch {}
         }
 
-        await fetch("/api/admin/live/session/", {
-          method: "DELETE",
-          cache: "no-store",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ sessionId: currentSessionId }),
-        }).catch(() => undefined);
+        if (currentLiveSessionId) {
+          await fetch("/api/admin/live/session/", {
+            method: "DELETE",
+            cache: "no-store",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ sessionId: currentLiveSessionId }),
+          }).catch(() => undefined);
+        }
       }
 
       resetRuntime();
       sessionIdRef.current = null;
+      logSessionIdRef.current = null;
       coachSessionStateRef.current = null;
       resumeHandleRef.current = null;
     }
@@ -2487,6 +2759,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         op: "append",
         final: true,
         sessionId: currentSessionId,
+        liveSessionId: sessionIdRef.current,
         mode,
         tester: normalizedCoachConfig.tester,
         startedAt,
@@ -2539,6 +2812,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
 
     const body = JSON.stringify({
       sessionId: currentSessionId,
+      liveSessionId: sessionIdRef.current,
       mode,
       tester: normalizedCoachConfig.tester,
       startedAt,
@@ -2581,6 +2855,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     pendingRef.current = [];
     sessionLogsRef.current = [];
     sentMetaRef.current = false;
+    finalCoachTurnBeaconSentRef.current = false;
     logSeqRef.current = 0;
     clearFlushTimer();
     persistPending();
@@ -2588,6 +2863,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     setStatus(readiness?.status === "BLOCKED" ? "blocked" : "ready");
     setSessionId(null);
     sessionIdRef.current = null;
+    logSessionIdRef.current = null;
     coachSessionStateRef.current = null;
     resumeHandleRef.current = null;
     reconnectingRef.current = false;
@@ -2597,6 +2873,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     lastAudioActivityLogFramesRef.current = 0;
     lastAudioActivityLogMsRef.current = null;
     resumeReadyLoggedRef.current = false;
+    userTurnSeenRef.current = false;
+    noUserTurnHintLoggedRef.current = false;
+    clearNoUserTurnWatchdog();
     setStartedAtMs(null);
     setMetrics({
       ...EMPTY_METRICS,
