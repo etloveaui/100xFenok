@@ -196,6 +196,7 @@ const VALID_MONA_STUDY_NAMES = new Set([
   "getYesterdaySession",
   "getStudyMemory",
   "getWeeklyTestSet",
+  "requestLessonMaterial",
 ]);
 
 export async function callMonaStudy(

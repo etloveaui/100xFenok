@@ -2,13 +2,13 @@ import { getTickerQuote } from "@/lib/server/ticker";
 import { readPublicAssetText } from "@/lib/server/public-assets";
 import {
   MONA_STUDY_TOOL_IDS,
-  requestLessonMaterial,
 } from "@/lib/server/mona-study-tools";
+import { executeMonaStudyRepositoryTool } from "@/lib/server/mona-study-repository";
+import { executeCoachTurn } from "@/lib/server/mona-coach/coach-turn";
 import {
   LIVE_SKILL_BRIDGE_TOKEN_ENV,
   LIVE_SKILL_BRIDGE_URL_ENV,
   callLiveSkillBridge,
-  callMonaStudy,
   isLiveSkillBridgeConfigured,
 } from "@/lib/server/admin-live-skill-bridge";
 import type { LiveToolSessionContext } from "@/lib/server/admin-live-session-context";
@@ -26,7 +26,8 @@ export type LiveToolId =
   | "mona-memory"
   | "mona-weekly-test"
   | "mona-lesson-material"
-  | "mona-show-card";
+  | "mona-show-card"
+  | "mona-coach-turn";
 export type LiveToolCategory = "data" | "search" | "vision" | "dialog-mode" | "study";
 export type LiveToolStatus = "available" | "locked" | "soon";
 
@@ -284,6 +285,35 @@ const LIVE_TOOL_DEFINITIONS = [
     },
   },
   {
+    id: "mona-coach-turn",
+    label: "코치 턴",
+    category: "study",
+    status: "available",
+    description: "Server-owned coaching brain: per-turn intent, attempt eval, target lock, next card",
+    functionName: "coachTurn",
+    instruction:
+      "Tool: coachTurn({attemptText}). Call this on EVERY Mona utterance, passing her recognized words verbatim as attemptText (empty string at session start). Then OBEY the returned directive exactly: speak only its spokenGuidance, show only its cardCommand, and praise ONLY when mayPraise is true. Never invent the correction, the target, the next sentence, or praise — those come only from coachTurn. coachTurn is the single source of truth for the lesson; other study tools are subordinate.",
+    declaration: {
+      name: "coachTurn",
+      description: "Run one Mona coaching turn. ALWAYS call when Mona speaks. Returns the authoritative next move: cardCommand, spokenGuidance, mayPraise, nextExpectedState.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          attemptText: {
+            type: "STRING",
+            description: "Mona's recognized words this turn, verbatim (even if garbled). Empty string at session start.",
+          },
+          intent: {
+            type: "STRING",
+            description: "Optional explicit learner request when unambiguous.",
+            enum: ["next_material", "easier", "harder", "switch_theme", "repeat_prompt", "repeat_target", "stop"],
+          },
+        },
+        required: ["attemptText"],
+      },
+    },
+  },
+  {
     id: "feno-data",
     label: "Feno Data",
     category: "data",
@@ -466,7 +496,7 @@ export const DEFAULT_LIVE_ENABLED_TOOL_IDS: LiveToolId[] = [];
 
 export function getDefaultLiveEnabledToolIds(mode: string): LiveToolId[] {
   if (mode === "fenok") return ["feno-data"];
-  return mode === "mona" ? [...MONA_STUDY_TOOL_IDS, "mona-show-card"] : [];
+  return mode === "mona" ? [...MONA_STUDY_TOOL_IDS, "mona-coach-turn"] : [];
 }
 
 export function getLiveToolMetadata(): LiveToolMetadata[] {
@@ -1000,17 +1030,10 @@ export async function executeLiveToolFunction(
     name === "saveStudySession" ||
     name === "getYesterdaySession" ||
     name === "getStudyMemory" ||
-    name === "getWeeklyTestSet"
+    name === "getWeeklyTestSet" ||
+    name === "requestLessonMaterial"
   ) {
-    const bridgeResult = await callMonaStudy(name, args, context);
-    if (bridgeResult && !("error" in bridgeResult)) {
-      return bridgeResult.payload as Record<string, unknown>;
-    }
-    return bridgeResult;
-  }
-
-  if (name === "requestLessonMaterial") {
-    return requestLessonMaterial(args, context);
+    return executeMonaStudyRepositoryTool(name, args, context);
   }
 
   if (name === "getTickerSnapshot") {
@@ -1031,6 +1054,10 @@ export async function executeLiveToolFunction(
 
   if (name === "searchKakaoWeb") {
     return callLiveSkillBridge("kakao-search", args);
+  }
+
+  if (name === "coachTurn") {
+    return executeCoachTurn(args, context);
   }
 
   if (name === "showCard") {
