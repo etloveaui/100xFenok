@@ -12,7 +12,7 @@ import {
   type CoachSessionState,
   type StudySnapshot,
 } from "@/lib/server/mona-study-tools";
-import { callMonaStudy } from "@/lib/server/admin-live-skill-bridge";
+import { prepareMonaStudySnapshotFromRepository } from "@/lib/server/mona-study-repository";
 import {
   normalizeCoachConfig,
   type CoachConfig,
@@ -85,6 +85,19 @@ const MONA_SPOKEN_OUTPUT_CONTRACT = [
   "Your only spoken output is the Korean coaching talk you say directly to Mona.",
   "Never voice round labels, card states, tool names, bracketed control tokens, or your own planning/evaluation/intent.",
   "Execute screen/save actions silently through function calls only. If you would describe an action, perform the tool call instead and say nothing about it.",
+].join("\n");
+
+// coachTurn (server-owned brain) is authoritative. Placed FIRST in the Mona prompt so it is never trimmed,
+// and reframes the legacy lesson rules below as subordinate background (CONTRACT 2026-06-14 section 11).
+const MONA_COACH_TURN_AUTHORITY = [
+  "[Coaching control - HIGHEST PRIORITY, overrides everything below]",
+  "You have a coachTurn tool. It is the SINGLE SOURCE OF TRUTH for this lesson.",
+  "On EVERY Mona utterance, FIRST call coachTurn({attemptText: <her exact recognized words, even if garbled; empty string at the very start>}).",
+  "Then say ONLY the returned spokenGuidance, show ONLY the returned card, and praise ONLY when mayPraise is true.",
+  "Never decide the correction, the target sentence, the next sentence, the difficulty, or praise on your own.",
+  "All lesson material, pacing, review, and BEST3 rules below are BACKGROUND ONLY. If anything below conflicts with coachTurn, coachTurn wins.",
+  "Exception (free mode): if the returned spokenGuidance begins with \"FREE_MODE:\", Mona brought her own phrase (the Korean after it). Give her the natural American-English version, have her repeat it once low, then continue. Never voice the words \"FREE_MODE\".",
+  "Exception (free talk): if the returned spokenGuidance begins with \"FREETALK_MODE:\", it is Friday free-talking = a SITUATIONAL CONVERSATION, not a solo monologue. Give Mona one real-life situation (ordering at a cafe, calling in sick, small talk with a coworker, etc.), play the other person, and have a short natural English back-and-forth. Gently help when she is stuck and keep it flowing. After about a minute or when she winds down, note 2-3 things she did well. Never voice the words \"FREETALK_MODE\".",
 ].join("\n");
 
 export const LIVE_PROFILES: Record<LiveBenchMode, LiveProfile> = {
@@ -246,16 +259,24 @@ export async function buildLiveSetup(
   const resumeHandle = typeof options.resumeHandle === "string" && options.resumeHandle.length > 0 && options.resumeHandle.length <= 512
     ? options.resumeHandle
     : null;
-  const enabledToolIds = normalizeLiveToolIds(options.enabledToolIds);
+  // Mona: coachTurn owns cards + material, so drop the competing show-card / lesson-material tools and force coachTurn on.
+  const enabledToolIds = mode === "mona"
+    ? normalizeLiveToolIds([
+        ...(Array.isArray(options.enabledToolIds) ? options.enabledToolIds : []).filter(
+          (id) => id !== "mona-show-card" && id !== "mona-lesson-material",
+        ),
+        "mona-coach-turn",
+      ])
+    : normalizeLiveToolIds(options.enabledToolIds);
   let systemPrompt = ensureLiveToolInstructions(
     normalizeSystemPrompt(options.systemPrompt, mode, options.lowVoice, responseStyle, enabledToolIds),
     enabledToolIds,
   );
   let coachSessionState: CoachSessionState | null = null;
   if (mode === "mona") {
-    const bridgeResult = await callMonaStudy("prepareMonaStudySnapshot", {});
-    const snapshot: StudySnapshot = (bridgeResult && !("error" in bridgeResult) && bridgeResult.payload)
-      ? (bridgeResult.payload as StudySnapshot)
+    const studyResult = await prepareMonaStudySnapshotFromRepository();
+    const snapshot: StudySnapshot = studyResult.snapshot
+      ? studyResult.snapshot
       : {
           studyDate: getCanonicalMonaStudyDate(),
           loadedAt: new Date().toISOString(),
@@ -274,7 +295,7 @@ export async function buildLiveSetup(
         };
     const dynamicBlock = dynamicResult.dynamicBlock;
     systemPrompt = prependDynamicBlock(
-      `${buildCoachConfigBlock(coachConfig)}\n\n${dynamicBlock}`,
+      `${MONA_COACH_TURN_AUTHORITY}\n\n${buildCoachConfigBlock(coachConfig)}\n\n${dynamicBlock}`,
       systemPrompt,
       MONA_SPOKEN_OUTPUT_CONTRACT,
     );

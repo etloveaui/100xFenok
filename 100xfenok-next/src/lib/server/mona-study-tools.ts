@@ -41,7 +41,6 @@ export const MONA_STUDY_TOOL_IDS = [
   "mona-yesterday",
   "mona-memory",
   "mona-weekly-test",
-  "mona-lesson-material",
 ] as const;
 
 type JsonRecord = Record<string, unknown>;
@@ -57,6 +56,7 @@ type Best3Item = {
   ko: string;
   en: string;
   note: string | null;
+  acceptedAlternatives?: string[];
 };
 
 type WeakMiss = {
@@ -289,6 +289,17 @@ function getWeekdayPlan(studyDate: string) {
   return WEEKDAY_PLAN[index] ?? WEEKDAY_PLAN[0];
 }
 
+// Weekday -> curriculum bank theme, for coachTurn scheduling (CONTRACT section 8/9 curriculum).
+// null on review days (Sunday); coachTurn then relies on SRS due + "free" items.
+export function getMonaLessonThemeForDate(studyDate: string): ExpressionBankTheme | null {
+  return PLAN_THEME_TO_BANK_THEME[getWeekdayPlan(studyDate).theme] ?? null;
+}
+
+// Weekday corner (신규+섀도잉 / 빨모쌤·유튜브 데이 / 프리토킹 / 자유 / 주간 테스트), for coachTurn session mode.
+export function getMonaCornerForDate(studyDate: string): string {
+  return getWeekdayPlan(studyDate).corner;
+}
+
 function safeResolve(...parts: string[]): string | null {
   const target = path.resolve(MONA_ROOT, ...parts);
   if (target !== MONA_ROOT && !target.startsWith(`${MONA_ROOT}${path.sep}`)) {
@@ -437,6 +448,22 @@ function enqueueDistillAfterSuccessfulWrite(
     });
 }
 
+function normalizeAlternatives(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of value) {
+    const text = normalizeText(item, 220);
+    if (!text) continue;
+    const key = normalizeKey(text);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(text);
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+
 function normalizeBest3Items(value: unknown): Best3Item[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
@@ -449,7 +476,7 @@ function normalizeBest3Items(value: unknown): Best3Item[] {
     const key = normalizeKey(en);
     if (seen.has(key)) continue;
     seen.add(key);
-    items.push({ ko, en, note: normalizeText(item.note, 180) });
+    items.push({ ko, en, note: normalizeText(item.note, 180), acceptedAlternatives: normalizeAlternatives(item.acceptedAlternatives) });
     if (items.length >= 3) break;
   }
   return items;
@@ -824,13 +851,19 @@ function pickWarmupPool(
 }
 
 function mergeBest3(existing: Best3Item[], incoming: Best3Item[]) {
-  const seen = new Set<string>();
-  return [...incoming, ...existing].filter((item) => {
+  const byKey = new Map<string, Best3Item>();
+  for (const item of [...incoming, ...existing]) {
     const key = normalizeKey(item.en);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 3);
+    if (!key) continue;
+    const prior = byKey.get(key);
+    if (!prior) {
+      byKey.set(key, { ...item, acceptedAlternatives: [...(item.acceptedAlternatives ?? [])] });
+      continue;
+    }
+    // union accepted alternatives across existing + incoming for the same expression (B-A persistence)
+    prior.acceptedAlternatives = [...new Set([...(prior.acceptedAlternatives ?? []), ...(item.acceptedAlternatives ?? [])])];
+  }
+  return [...byKey.values()].slice(0, 3);
 }
 
 function mergeWeak(existing: WeakMiss[], incoming: WeakMiss[]) {
@@ -1287,6 +1320,7 @@ export async function executeMonaStudyToolFunction(
   if (name === "getYesterdaySession") return getYesterdaySession(args);
   if (name === "getStudyMemory") return getStudyMemory(args);
   if (name === "getWeeklyTestSet") return getWeeklyTestSet(args, context);
+  if (name === "requestLessonMaterial") return requestLessonMaterial(args, context);
   return { error: "TOOL_HANDLER_MISSING" };
 }
 
@@ -1305,20 +1339,6 @@ function formatWeak(items: WeakMiss[] | WeakNote[]) {
     }).join("\n")
     : "없음";
 }
-
-export const MONA_PACING_RULES: readonly string[] = [
-  "한 턴에 하나만 질문한다. 절대 Q1/Q2/Q3을 한 번에 쏟아내지 마.",
-  "모나가 답할 때까지 기다린다. 끼어들거나 조기 종료하지 마.",
-  "프리토킹 중엔 끼어들지 말고 끝난 뒤 피드백 2~3개만 준다.",
-  "코너 하나당 최소 3~4회 캐치볼을 주고받은 뒤 다음으로 넘어간다.",
-  "코너가 끝나고 모나가 '끝/그만'이라고 할 때까지 마무리 말을 하지 마.",
-  "말이 겹쳐서 네 말이 끊겼으면, 사과나 처음부터 다시 말하기 없이 끊긴 문장을 그 지점부터 이어서 완성한다.",
-  "'잘했어/완벽해'를 반복하지 마. 감탄은 매번 다른 표현으로(오 그거 자연스러웠어 / 방금 리듬 좋았는데 / 그 발음 어제보다 늘었어 등) 하고, 칭찬에는 반드시 구체적 근거 한 가지를 붙인다.",
-  "모든 문장을 평가하지 마. 확실하게 들린 것만 짚고, 발음 평가가 불확실하면 평가 대신 한 번 더 따라하게 한다.",
-  "한 문장당 모나가 최소 2번 소리 내게 한다. 다음 문장으로 넘어가기 전에 '다음 갈까?' 하고 한 박자 묻는다. 빨리 끝내는 것은 목표가 아니다.",
-  "오늘의 5문장 루프와 무관한 자유 질문을 새로 만들지 마. 잡담이 생기면 한 문장으로 받아주고 바로 현재 라운드로 복귀한다.",
-  "한 세션 안에서 같은 문장의 정답 버전은 하나로 고정한다. 처음 알려준 교정을 도중에 바꾸지 마.",
-];
 
 function buildProfileSection(snapshot: StudySnapshot): string[] {
   const profile = snapshot.learnerProfile;
@@ -1713,24 +1733,6 @@ function pickReviewLessonItemsV2(
     .slice(0, requested);
 }
 
-function setLowestReviewBox(map: Map<string, number>, key: string, box: number) {
-  const current = map.get(key);
-  if (current === undefined || box < current) map.set(key, box);
-}
-
-function buildReviewBoxMap(snapshot: StudySnapshot, studyDate: string): Map<string, number> {
-  const map = new Map<string, number>();
-  for (const note of snapshot.weakNotes ?? []) {
-    setLowestReviewBox(map, normalizeKey(note.correct), note.box ?? 1);
-  }
-  for (const item of snapshot.best3 ?? []) {
-    if (item.due != null && item.due <= studyDate) {
-      setLowestReviewBox(map, normalizeKey(item.en), item.box ?? 1);
-    }
-  }
-  return map;
-}
-
 function pickLessonSibling(
   snapshot: StudySnapshot,
   item: ExpressionBankEntry,
@@ -1876,7 +1878,7 @@ function pickTodayExpressions(snapshot: StudySnapshot, studyDate: string, plan: 
 }
 
 function buildExpressionBankSection(entries: ExpressionBankEntry[]): string[] {
-  const header = "[오늘 표현 후보 - 빨모쌤 검증 표현, 이 중에서 골라 ②를 진행]";
+  const header = "[오늘 표현 후보 참고 - 빨모쌤 검증 표현, coachTurn 입력 배경]";
   const lines: string[] = [];
   let charCount = header.length;
   for (const entry of entries.slice(0, 5)) {
@@ -1888,51 +1890,6 @@ function buildExpressionBankSection(entries: ExpressionBankEntry[]): string[] {
     charCount += line.length + 1;
   }
   return lines.length > 0 ? ["", header, ...lines] : [];
-}
-
-function buildLessonPlanSection(lessonPlan: LessonPlan): string[] {
-  const lines = lessonPlan.items.map((item, index) => {
-    const note = item.note ? ` (${item.note})` : "";
-    const sibling = item.sibling ? ` | 형제문장(어려워하면): ${item.sibling.ko} -> ${item.sibling.en}` : "";
-    const variations = item.variations.length > 0
-      ? item.variations.map((variation) => `${variation.kind}: ${variation.ko} -> ${variation.en}`).join(" / ")
-      : item.variationKinds.length > 0 ? item.variationKinds.join("/") : "없음";
-    return `문장${index + 1}: ${item.ko} -> ${item.en}${note}${sibling} | 변형: ${variations}`;
-  });
-
-  return [
-    `[7분 수업 - 기본문장 ${lessonPlan.items.length}개. 기본 루프는 아래 LessonPlan 문장으로 진행한다]`,
-    ...lines,
-    "",
-    "[턴 규율]",
-    "한 번에 한국어 프롬프트 하나만 말하고 멈춘다. 모나가 대답할 때까지 기다린다.",
-    "모나가 시도하면: 구체적 칭찬 1개 + 교정 최대 1개 -> 자연스러운 버전 들려주기 -> 따라 말하게.",
-    `그 다음 변형 ${lessonPlan.config.variationsPerItem}개를 하나씩: 변형 프롬프트 -> 멈추고 기다리기 -> 교정. 같은 영어 문장을 그대로 두 번 묻지 않는다.`,
-    "모나가 \"몰라/help/pass\"라고 하기 전에는 정답 영어를 먼저 말하지 않는다.",
-    "",
-    "[어렵다 신호]",
-    "모나가 \"어려워/쉬운 것부터/힘들어/기억 안 나\" 류의 말을 하면: 한 문장으로 인정하고, 그 문장은 오늘 포기한다.",
-    "weakMisses로 조용히 저장하고, 형제문장으로 즉시 전환한다. 성공 한 번을 받은 뒤에만 진행한다.",
-    "어렵다는 신호를 받은 문장을 다시 드릴하지 않는다.",
-    "",
-    "[종료]",
-    "BEST3를 모나에게 고르라고 하지 않는다. 모나가 실제로 잘 말한 문장을 네가 골라 saveStudySession(best3, reviewResults, weakMisses)을 조용히 호출한다.",
-    "문장1 완료 시 saveStudySession을 한 번 조용히 호출한다. 중복 저장하지 않는다.",
-    "마무리는 부드러운 한 문장. 저장했다는 말은 한 문장 이내로만.",
-  ];
-}
-
-function buildNextMaterialBufferSection(items: NextMaterialBufferItem[]): string[] {
-  if (items.length === 0) return [];
-  return [
-    "",
-    `[nextMaterialBuffer - 예비 새 문장 ${items.length}개. 모나가 "새로운거/더/다음"을 원할 때만 여기서 즉시 꺼낸다. 먼저 소개하지 마. plain new/more/next는 requestLessonMaterial 호출 전에 이 버퍼를 우선 사용한다.]`,
-    ...items.map((item, index) => {
-      const note = item.note ? ` (${item.note})` : "";
-      const sibling = item.sibling ? ` | 쉬운 대체: ${item.sibling.ko} -> ${item.sibling.en}` : "";
-      return `buffer${index + 1} [key=${item.id}; words=${item.wordCount}; difficulty=${item.difficulty ?? "unknown"}]: ${item.ko} -> ${item.en}${note}${sibling}`;
-    }),
-  ];
 }
 
 function buildFlexibleCoachSections(coachConfig: ServerCoachConfig): string[] {
@@ -1949,8 +1906,8 @@ function buildFlexibleCoachSections(coachConfig: ServerCoachConfig): string[] {
       "",
       "[대화 루프 - 요청 즉시 반영]",
       "Mona may ask for new / easier / harder / again / a different topic, or to stop, at ANY time, and may move freely between these.",
-      "Honor her request immediately: plain new/more/next는 nextMaterialBuffer에서 먼저 꺼내고, 버퍼가 비었거나 쉬운거/어려운거/다시/딴 주제/서버 dedup 확인이 필요하면 requestLessonMaterial을 호출한다.",
-      "Never refuse a request for new or easier material. requestLessonMaterial이 items=[]를 반환하면 버퍼를 쓰거나 현재 문장을 한 번만 쉽게 바꿔 계속한다.",
+      "Honor her request by calling coachTurn with Mona's latest utterance and following coachTurn.spokenGuidance. Do not invent a separate material flow.",
+      "Never refuse a request for new or easier material. If coachTurn keeps the current item, simplify only the next spoken prompt and wait.",
     );
   }
 
@@ -1975,7 +1932,7 @@ function buildFlexibleCoachSections(coachConfig: ServerCoachConfig): string[] {
   );
 
   if (coachConfig.freshMaterialEnabled === false) {
-    sections.push("freshMaterialEnabled=false: requestLessonMaterial 도구를 쓰지 말고 현재 버퍼/수업 문장 안에서만 단순화한다.");
+    sections.push("freshMaterialEnabled=false: coachTurn still owns the next turn; do not invent fresh material outside its directive.");
   }
 
   return sections;
@@ -1989,12 +1946,6 @@ function buildSpokenOutputSafetySection(): string[] {
     "화면 변경과 저장은 실제 도구 호출로만 조용히 수행한다. 행동을 설명하려는 순간 설명하지 말고 도구 호출만 한다.",
     "",
   ];
-}
-
-function buildLessonV2PacingRules(): string[] {
-  return MONA_PACING_RULES.map((rule) => rule
-    .replace("오늘의 5문장 루프", "오늘 수업 루프")
-    .replace("새로 만들지 마", "추가하지 마"));
 }
 
 export async function buildMonaCoachDynamicBlockV2(
@@ -2066,19 +2017,11 @@ export async function buildMonaCoachDynamicBlockV2WithState(
       ].join("\n"),
     ...buildProfileSection(resolvedSnapshot),
     "",
-    ...buildLessonPlanSection(lessonPlan),
-    ...buildNextMaterialBufferSection(nextMaterialBuffer),
-    "",
-    "[진행 규칙]",
-    ...buildLessonV2PacingRules(),
-    "단계 번호를 말하지 마. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
-    "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
-    "",
-    "[표현 카드 - 기계 전용]",
-    "문장을 다룰 때마다 실제 showCard 함수 호출로만 화면을 맞춘다. 도구명, 카드 상태명, 호출 계획은 말하지 않는다. 텍스트로 쓰면 화면은 바뀌지 않는다.",
+    "[트리거]",
+    "'시작/go/오늘꺼'가 오면 메뉴 설명 없이 따뜻한 한 문장으로 열고 바로 첫 coachTurn을 부른다. 단계 번호나 코너 이름을 말하지 마.",
     "",
     "[도구]",
-    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/requestLessonMaterial/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
+    "coachTurn + saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet only. coachTurn을 매 턴 반드시 호출한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
   ].join("\n");
   return { dynamicBlock, coachSessionState };
 }
@@ -2120,45 +2063,34 @@ export async function buildMonaCoachDynamicBlock(studyDate?: string, snapshot?: 
     `날짜: ${resolvedDate} (Asia/Seoul, 04:00 cutoff) · 요일: ${plan.weekday}`,
     `테마: ${totalReview ? "종합 복습" : effectivePlan.theme} · 변동코너: ${totalReview ? "전체 복습" : effectivePlan.corner} · 연속: ${streak}일차`,
     "",
-    "[인사 규칙]",
-    "세션 시작 시 먼저 따뜻하게 인사한다. '안녕 모나야' 톤으로, 오늘 테마/연속 일수/어제 기억 중 두 가지를 짧게 언급한 뒤 바로 첫 문장으로 들어간다. 인사는 한 문장.",
+    ...buildFlexibleCoachSections(coachConfig),
     "",
     "[복습 재료]",
     firstSession || !yesterday
-      ? "첫 세션이야. 워밍업 ①은 건너뛰고 바로 오늘 표현 ②부터 가."
+      ? "첫 세션이야. 워밍업은 참고 배경이 없으니 coachTurn 첫 결과만 따른다."
       : [
         `어제 날짜: ${yesterday.date}`,
         `최근 BEST3:\n${formatBest3(warmup?.best3Lines ?? resolvedSnapshot.best3.slice(0, 5))}`,
         `약점노트:\n${formatWeak(warmup?.weakLines ?? resolvedSnapshot.weakNotes.slice(0, 3))}`,
+        "위 복습 재료는 참고 배경이다. 다음 질문/카드/새 문장 선택은 coachTurn 결과만 따른다.",
       ].join("\n"),
     ...buildProfileSection(resolvedSnapshot),
     ...buildExpressionBankSection(expressionCandidates),
     "",
     ...(totalReview
       ? [
-        "[종합 복습]",
-        `${weekly.length}개로 본다. 새로 만들지 마. 부족하면 부족한 개수 그대로 진행해. 필요하면 getWeeklyTestSet을 호출해 같은 범위에서 다시 받아라.`,
+        "[종합 복습 참고]",
+        `${weekly.length}개 후보가 있다. 새 별도 라운드 규칙을 만들지 말고 참고 배경으로만 둔다. 필요하면 getWeeklyTestSet을 호출해 같은 범위를 다시 받되, 실제 다음 턴은 coachTurn 결과만 따른다.`,
       ]
       : [
-        "[세션 구조 - 같은 문장이 점점 어려워지는 나선]",
-        "도입: 오늘 표현 후보에서 3개 + 복습 재료에서 2개를 골라 오늘의 5문장으로 정한다. 하나씩: 영어로 들려주고 → 뜻을 짧게 → 낮게 따라 말하게.",
-        "즉답: 같은 5문장을 한국어만 던지고 3초 안에 영어로 말하게 한다. 모나가 답할 때까지 기다리고 → 짧게 교정 → 진짜 쓰는 버전 → 따라 말하기. 막힌 문장은 다시 들려주고 한 번 더 즉답시킨다.",
-        "변형: 같은 문장을 과거형/부정/질문/주어 바꾸기로 비틀어 즉답시킨다. 한 문장당 변형 1~2개만.",
-        `상황 코너(오늘: ${effectivePlan.corner}): 오늘 5문장이 자연스럽게 나오는 짧은 상황을 만들어 코너 방식대로 써먹게 한다.`,
-        "마무리: 오늘 BEST3를 골라 세션 끝에 한 번 더 따라 말하게 한다.",
-        "라운드가 오를수록 힌트를 줄인다. 잘하면 칭찬 한마디 후 바로 다음 난이도로. 주간 테스트를 새로 만들지 마.",
-        "체크포인트: 중간과 상황 코너 끝에 saveStudySession 저장, 마무리에서 오늘 BEST3 최종 저장.",
+        "[오늘 표현 후보 참고]",
+        `오늘 테마는 ${effectivePlan.theme}, 변동코너는 ${effectivePlan.corner}다. 아래 후보와 복습 재료는 참고 배경일 뿐이고, 고정 문장 루프를 새로 만들지 않는다.`,
       ]),
     "",
-    "[진행 규칙]",
-    ...MONA_PACING_RULES,
-    "단계 번호를 말하지 마. 어느 코너 할지 묻지 말고 네가 조용히 진행해.",
-    "트리거 '시작/go/오늘꺼'가 오면 메뉴 설명 없이 바로 시작한다. 모나가 바꾸자고 할 때만 방향을 바꾼다.",
-    "",
-    "[표현 카드 - 기계 전용]",
-    "문장을 다룰 때마다 실제 showCard 함수 호출로만 화면을 맞춘다. 도구명, 카드 상태명, 호출 계획은 말하지 않는다. 텍스트로 쓰면 화면은 바뀌지 않는다.",
+    "[트리거]",
+    "'시작/go/오늘꺼'가 오면 메뉴 설명 없이 따뜻한 한 문장으로 열고 바로 첫 coachTurn을 부른다. 단계 번호나 코너 이름을 말하지 마.",
     "",
     "[도구]",
-    "saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet/showCard만 사용한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
+    "coachTurn + saveStudySession/getYesterdaySession/getStudyMemory/getWeeklyTestSet only. coachTurn을 매 턴 반드시 호출한다. 시장/검색/포트폴리오/Cortex 도구는 이 프로파일에 없다.",
   ].join("\n");
 }

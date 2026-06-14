@@ -7,6 +7,7 @@ import type { CoachSessionState } from "@/lib/server/mona-study-tools";
 
 export type LiveToolSessionContext = {
   sessionId: string | null;
+  coachSessionKey?: string | null;
   mode: "fenok" | "mona";
   coachConfig: CoachConfig;
   coachSessionState?: CoachSessionState | null;
@@ -80,6 +81,7 @@ export function registerLiveToolSessionContext(context: LiveToolSessionContext) 
   if (!context.sessionId) return;
   sessionContexts.set(context.sessionId, {
     ...context,
+    coachSessionKey: context.coachSessionKey ?? context.sessionId,
     registeredAt: Date.now(),
   });
   pruneSessionContexts();
@@ -88,16 +90,32 @@ export function registerLiveToolSessionContext(context: LiveToolSessionContext) 
 export function resolveLiveToolSessionContext(value: unknown): LiveToolSessionContext {
   const input = isRecord(value) ? value : {};
   const sessionId = normalizeSessionId(input.sessionId);
+  const coachSessionStateInput = isRecord(input.coachSessionState) ? input.coachSessionState : null;
+  const coachSessionKey = normalizeSessionId(input.coachSessionKey)
+    ?? normalizeSessionId(input.logSessionId)
+    ?? normalizeSessionId(input.conversationId)
+    ?? normalizeSessionId(coachSessionStateInput?.sessionId)
+    ?? sessionId;
   if (sessionId && sessionContexts.has(sessionId)) {
     const stored = sessionContexts.get(sessionId);
-    if (stored) return stored;
+    if (stored) {
+      return {
+        ...stored,
+        coachSessionKey: coachSessionKey ?? stored.coachSessionKey ?? stored.sessionId,
+        coachConfig: normalizeCoachConfig(input.coachConfig ?? stored.coachConfig ?? DEFAULT_COACH_CONFIG),
+        coachSessionState: normalizeCoachSessionState(input.coachSessionState, coachSessionKey ?? sessionId)
+          ?? stored.coachSessionState
+          ?? null,
+      };
+    }
   }
 
   return {
     sessionId,
+    coachSessionKey,
     mode: normalizeMode(input.mode),
     coachConfig: normalizeCoachConfig(input.coachConfig ?? DEFAULT_COACH_CONFIG),
-    coachSessionState: normalizeCoachSessionState(input.coachSessionState, sessionId),
+    coachSessionState: normalizeCoachSessionState(input.coachSessionState, coachSessionKey ?? sessionId),
   };
 }
 

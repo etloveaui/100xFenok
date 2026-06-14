@@ -8,6 +8,7 @@ import { join, resolve } from "node:path";
 import {
   executeMonaStudyToolFunction,
   prepareMonaStudySnapshot,
+  requestLessonMaterial,
 } from "../src/lib/server/mona-study-tools.ts";
 import {
   appendAdminLiveConversationLog,
@@ -36,6 +37,7 @@ const VALID_STUDY_NAMES = new Set([
   "getYesterdaySession",
   "getStudyMemory",
   "getWeeklyTestSet",
+  "requestLessonMaterial",
 ]);
 const VALID_FENO_PROVIDERS = new Set(["auto", "tavily", "brave"]);
 const VALID_NAVER_TYPES = new Set([
@@ -435,6 +437,9 @@ async function handleStudy(body) {
   if (name === "prepareMonaStudySnapshot") {
     const studyDate = typeof args.studyDate === "string" ? args.studyDate : undefined;
     return prepareMonaStudySnapshot(studyDate);
+  }
+  if (name === "requestLessonMaterial") {
+    return requestLessonMaterial(args, context ?? {});
   }
   return executeMonaStudyToolFunction(name, args, context ?? {});
 }

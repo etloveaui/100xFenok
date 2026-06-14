@@ -143,6 +143,9 @@ function normalizeSettings(value: unknown) {
     "interruptionMode",
     "tester",
     "clientBuildVersion",
+    "conversationId",
+    "logSessionId",
+    "liveSessionId",
   ]);
   const coachConfig = isRecord(value) ? normalizeCoachConfigForLog(value.coachConfig) : null;
   const coachSessionState = normalizeCoachSessionStateForLog(value.coachSessionState);
@@ -375,7 +378,7 @@ export async function appendAdminLiveConversationLog(args: Record<string, unknow
       "audioFramesSent", "sessionDurationSec", "lowVoice", "lastError", "rating", "resumeCount",
       "appendFailureCount", "lastAppendError", "lessonMaterialToolCalls", "lessonMaterialLastReturnedCount",
       "lessonMaterialLastLatencyMs", "lessonMaterialLastSource", "clientIntentHint", "modelToolIntent",
-      "intentHintMatched",
+      "intentHintMatched", "noUserTurnWatchdogCount", "lastNoUserTurnMs",
     ]);
 
     const mergedSettings = Object.keys(incomingSettings).length > 0

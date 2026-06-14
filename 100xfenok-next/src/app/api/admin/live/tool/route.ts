@@ -64,6 +64,7 @@ export async function POST(request: Request) {
   const context = registeredContext
     ? {
         ...registeredContext,
+        coachSessionKey: requestContext.coachSessionKey ?? registeredContext.coachSessionKey ?? registeredContext.sessionId,
         coachConfig: requestContext.coachConfig,
         coachSessionState: requestContext.coachSessionState ?? registeredContext.coachSessionState ?? null,
       }
