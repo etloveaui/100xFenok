@@ -21,7 +21,6 @@ const DataLabUI = (function() {
     Renderer.init({
       summaryContainer: document.getElementById('summary-container'),
       opsContainer: document.getElementById('ops-container'),
-      depthContainer: document.getElementById('depth-container'),
       cardsContainer: document.getElementById('cards-container'),
       detailsPanel: document.getElementById('details-panel'),
       timestampEl: document.getElementById('last-updated')
@@ -30,7 +29,6 @@ const DataLabUI = (function() {
     // Show loading state
     Renderer.renderLoading();
     Renderer.renderOpsLoading();
-    Renderer.renderDepthLoading();
 
     // Subscribe to state changes
     setupStateSubscriptions();
@@ -38,7 +36,6 @@ const DataLabUI = (function() {
     // Load data
     try {
       await loadAllData();
-      loadDepthCoverage();
       runOpsChecks();
       const loadTime = Math.round(performance.now() - startTime);
       StateManager.set('loadTime', loadTime);
@@ -166,26 +163,6 @@ const DataLabUI = (function() {
   }
 
   /**
-   * Load generated data usage/depth coverage proof.
-   */
-  async function loadDepthCoverage() {
-    try {
-      const basePath = window.ManifestLoader?.getBasePath?.() || '';
-      const response = await fetch(`${basePath}/data/admin/data-usage-manifest.json`, {
-        headers: { 'Accept': 'application/json' }
-      });
-      if (!response.ok) {
-        throw new Error(`data-usage-manifest returned ${response.status}`);
-      }
-      const manifest = await response.json();
-      Renderer.renderDepthCoverage(manifest);
-    } catch (error) {
-      console.warn('[DataLab] Depth coverage unavailable:', error);
-      Renderer.renderDepthUnavailable(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  /**
    * Show folder details
    * @param {string} folderName
    */
@@ -213,7 +190,6 @@ const DataLabUI = (function() {
       lastUpdated: state.lastUpdated,
       health: state.health,
       ops: window.OpsConsole?.getLastResults?.() || null,
-      depth: 'data/admin/data-usage-manifest.json',
       cache: {
         manifest: ManifestLoader.getCacheStats(),
         data: CacheManager.getStats()
