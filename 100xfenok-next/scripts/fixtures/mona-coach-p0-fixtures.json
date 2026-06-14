@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "description": "P0 replay fixture suite for the owner-approved Mona coach FSM redesign contract. Fixtures reference local voice-log evidence by session and seq; raw private transcript payloads are not copied into this file.",
+  "sessionRoot": "data/voice-logs",
+  "fixtures": [
+    {
+      "id": "mqd9fg8p-target-lock-no-contradiction",
+      "session": "2026-06-14_mona_live-mona-mqd9fg8p.json",
+      "contractRefs": [
+        "mqd9fg8p:seq113/223/356/471"
+      ],
+      "assertions": [
+        {
+          "id": "cats-dogs-not-overwritten-at-first-acceptance",
+          "type": "forbid_after_user",
+          "afterUserSeq": 113,
+          "forbidden": [
+            "heavily",
+            "훨씬 자연스러워"
+          ]
+        },
+        {
+          "id": "complaint-does-not-deny-prior-teaching",
+          "type": "forbid_after_user",
+          "afterUserSeq": 223,
+          "forbidden": [
+            "그 표현보다는",
+            "처음에 그렇게 알려준 건 아니었어",
+            "더 자연스럽"
+          ]
+        },
+        {
+          "id": "target-lock-does-not-reverse-to-heavily",
+          "type": "forbid_after_user",
+          "afterUserSeq": 356,
+          "forbidden": [
+            "heavily가 진짜 자연스러운",
+            "raining heavily"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mq9fyv3r-accepted-alternative-cats-and-dogs",
+      "session": "2026-06-11_mona_live-mona-mq9fyv3r.json",
+      "contractRefs": [
+        "mq9fyv3r:seq39/69/72"
+      ],
+      "assertions": [
+        {
+          "id": "accepted-cats-dogs-not-corrected-to-heavily-39",
+          "type": "forbid_after_user",
+          "afterUserSeq": 39,
+          "forbidden": [
+            "heavily",
+            "더 자연스"
+          ]
+        },
+        {
+          "id": "accepted-cats-dogs-not-corrected-to-heavily-69",
+          "type": "forbid_after_user",
+          "afterUserSeq": 69,
+          "forbidden": [
+            "heavily",
+            "더 자연스"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mqd9rh0u-no-praise-on-wrong-like-lacks",
+      "session": "2026-06-14_mona_live-mona-mqd9rh0u.json",
+      "contractRefs": [
+        "mqd9rh0u:seq999/1077/1257/1271/2593/2600"
+      ],
+      "assertions": [
+        {
+          "id": "it-lacks-me-not-praised-999",
+          "type": "no_praise_after_user",
+          "afterUserSeq": 999
+        },
+        {
+          "id": "it-lacks-me-no-soft-praise-999",
+          "type": "forbid_after_user",
+          "afterUserSeq": 999,
+          "forbidden": [
+            "오, 잘"
+          ]
+        },
+        {
+          "id": "it-lacks-me-not-praised-1077",
+          "type": "no_praise_after_user",
+          "afterUserSeq": 1077
+        },
+        {
+          "id": "does-it-like-you-not-praised-1257",
+          "type": "no_praise_after_user",
+          "afterUserSeq": 1257
+        },
+        {
+          "id": "thats-not-like-not-praised-2593",
+          "type": "no_praise_after_user",
+          "afterUserSeq": 2593
+        }
+      ]
+    },
+    {
+      "id": "mqd9j9d5-no-praise-no-premature-close",
+      "session": "2026-06-14_mona_live-mona-mqd9j9d5.json",
+      "contractRefs": [
+        "mqd9j9d5:seq303/305-324",
+        "mqd9j9d5:seq1263/1295/1336/1383"
+      ],
+      "assertions": [
+        {
+          "id": "bad-past-tense-not-praised",
+          "type": "no_praise_after_user",
+          "afterUserSeq": 303
+        },
+        {
+          "id": "bad-past-tense-no-soft-praise",
+          "type": "forbid_after_user",
+          "afterUserSeq": 303,
+          "forbidden": [
+            "그렇지",
+            "잘 바꿨어"
+          ]
+        },
+        {
+          "id": "practice-attempt-does-not-close",
+          "type": "no_closing_after_user",
+          "afterUserSeq": 1263
+        },
+        {
+          "id": "next-request-stays-active",
+          "type": "require_tool_after_user",
+          "afterUserSeq": 1383,
+          "roles": [
+            "tool"
+          ],
+          "required": [
+            "showCard 적용"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mqda33ma-repeat-exact-prompt",
+      "session": "2026-06-14_mona_live-mona-mqda33ma.json",
+      "contractRefs": [
+        "mqda33ma:seq2944/3001"
+      ],
+      "assertions": [
+        {
+          "id": "question-repeat-must-include-exact-english-prompt",
+          "type": "require_after_user",
+          "afterUserSeq": 2944,
+          "required": [
+            "Was it like that?"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mqdg0nv7-one-coach-block-per-utterance",
+      "session": "2026-06-14_mona_live-mona-mqdg0nv7.json",
+      "contractRefs": [
+        "mqdg0nv7:seq87/104/176/128/200/269"
+      ],
+      "assertions": [
+        {
+          "id": "one-next-card-block-after-one-user-utterance",
+          "type": "max_phrase_count_after_user",
+          "afterUserSeq": 87,
+          "phrase": "좋아, 다음 문장 가자",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "id": "mqcilcyq-control-tokens-never-spoken",
+      "session": "owner-test/2026-06-13_mona_live-mona-mqcilcyq.json",
+      "contractRefs": [
+        "mqcilcyq"
+      ],
+      "assertions": [
+        {
+          "id": "control-tokens-not-in-coach-speech",
+          "type": "forbid_spoken_tokens",
+          "forbidden": [
+            "[CONTROL]",
+            "showCard",
+            "state=prompt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mqdg1qgu-positive-next-switch",
+      "session": "owner-test/2026-06-14_mona_live-mona-mqdg1qgu.json",
+      "contractRefs": [
+        "mqdg1qgu"
+      ],
+      "assertions": [
+        {
+          "id": "next-request-switches-card-immediately",
+          "type": "require_tool_after_user",
+          "afterUserSeq": 176,
+          "roles": [
+            "tool"
+          ],
+          "required": [
+            "showCard 적용",
+            "ko=대충 이런 느낌이야."
+          ]
+        },
+        {
+          "id": "positive-next-switch-does-not-close",
+          "type": "no_closing_after_user",
+          "afterUserSeq": 176
+        }
+      ]
+    }
+  ]
+}

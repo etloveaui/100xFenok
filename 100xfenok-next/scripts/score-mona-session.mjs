@@ -3,30 +3,21 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const filePath = process.argv[2];
+const args = process.argv.slice(2);
+const fixtureFlagIndex = args.findIndex((arg) => arg === "--fixtures" || arg === "--fixture");
+const fixturePath = fixtureFlagIndex >= 0 ? args[fixtureFlagIndex + 1] : null;
+const filePath = fixtureFlagIndex >= 0 ? null : args[0];
 
-if (!filePath || filePath === "-h" || filePath === "--help") {
-  console.error("Usage: node scripts/score-mona-session.mjs data/voice-logs/<session>.json");
-  process.exit(filePath ? 0 : 2);
+if ((!filePath && !fixturePath) || args.includes("-h") || args.includes("--help")) {
+  console.error("Usage:");
+  console.error("  node scripts/score-mona-session.mjs data/voice-logs/<session>.json");
+  console.error("  node scripts/score-mona-session.mjs --fixtures scripts/fixtures/<suite>.json");
+  process.exit(args.length > 0 ? 0 : 2);
 }
 
-const absolutePath = path.resolve(process.cwd(), filePath);
-let raw;
-try {
-  raw = fs.readFileSync(absolutePath, "utf8");
-} catch (error) {
-  console.error(`Unable to read log file: ${absolutePath}`);
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-}
-
-let session;
-try {
-  session = JSON.parse(raw);
-} catch (error) {
-  console.error(`Unable to parse JSON log file: ${absolutePath}`);
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
+if (fixtureFlagIndex >= 0 && !fixturePath) {
+  console.error("Missing path after --fixtures");
+  process.exit(2);
 }
 
 const NEW_MATERIAL_PATTERNS = [
@@ -106,53 +97,291 @@ const GARBLED_PATTERNS = [
   /\banything grown\b/i,
 ];
 
-const entries = normalizeEntries(session);
-const turns = buildTurns(entries);
-const metrics = asObject(session.metrics);
-const settings = asObject(session.settings);
-const state = asObject(
-  session.coachSessionState ??
-    settings.coachSessionState ??
-    metrics.coachSessionState ??
-    metrics.sessionState,
-);
-const telemetry = collectTelemetry(metrics, settings, state);
-const preV3 = telemetry.phase6Keys.length === 0;
+if (fixturePath) {
+  const fixtureReport = scoreFixtureSuite(fixturePath);
+  console.log(JSON.stringify(fixtureReport, null, 2));
+  process.exit(fixtureReport.overall.pass ? 0 : 1);
+}
 
-const gates = [
-  scoreNewMaterialGate(entries, telemetry, preV3),
-  scoreDifficultyGate(entries, telemetry, preV3),
-  scoreEmptyPraiseGuardGate(entries, turns, telemetry, preV3),
-  scoreReviewHijackGate(entries, telemetry, preV3),
-  scoreClosingGate(entries, turns, preV3),
-];
-
-const scoredGates = gates.filter((gate) => gate.status === "scored");
-const failedGates = scoredGates.filter((gate) => !gate.pass);
-const naGates = gates.filter((gate) => gate.status !== "scored");
-
-const scorecard = {
-  meta: {
-    file: path.relative(process.cwd(), absolutePath),
-    sessionId: session.sessionId ?? session.id ?? null,
-    mode: session.mode ?? null,
-    schemaVersion: session.schemaVersion ?? null,
-    logCount: Array.isArray(session.logs) ? session.logs.length : 0,
-    transcriptCount: Array.isArray(session.transcript) ? session.transcript.length : 0,
-    phase6TelemetryPresent: !preV3,
-    phase6Keys: telemetry.phase6Keys,
-  },
-  overall: {
-    pass: failedGates.length === 0,
-    status: scoredGates.length === 0 ? "n/a" : failedGates.length === 0 ? "pass" : "fail",
-    scored: scoredGates.length,
-    failed: failedGates.length,
-    na: naGates.length,
-  },
-  gates,
-};
-
+const scorecard = scoreSessionFile(filePath);
 console.log(JSON.stringify(scorecard, null, 2));
+process.exit(scorecard.overall.status === "fail" ? 1 : 0);
+
+function loadJsonFile(targetPath, label) {
+  const absolutePath = path.resolve(process.cwd(), targetPath);
+  let raw;
+  try {
+    raw = fs.readFileSync(absolutePath, "utf8");
+  } catch (error) {
+    console.error(`Unable to read ${label}: ${absolutePath}`);
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+
+  try {
+    return {
+      absolutePath,
+      value: JSON.parse(raw),
+    };
+  } catch (error) {
+    console.error(`Unable to parse JSON ${label}: ${absolutePath}`);
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+}
+
+function scoreSessionFile(targetPath) {
+  const { absolutePath, value: session } = loadJsonFile(targetPath, "log file");
+  const entries = normalizeEntries(session);
+  const turns = buildTurns(entries);
+  const metrics = asObject(session.metrics);
+  const settings = asObject(session.settings);
+  const state = asObject(
+    session.coachSessionState ??
+      settings.coachSessionState ??
+      metrics.coachSessionState ??
+      metrics.sessionState,
+  );
+  const telemetry = collectTelemetry(metrics, settings, state);
+  const preV3 = telemetry.phase6Keys.length === 0;
+
+  const gates = [
+    scoreNewMaterialGate(entries, telemetry, preV3),
+    scoreDifficultyGate(entries, telemetry, preV3),
+    scoreEmptyPraiseGuardGate(entries, turns, telemetry, preV3),
+    scoreReviewHijackGate(entries, telemetry, preV3),
+    scoreClosingGate(entries, turns, preV3),
+  ];
+
+  const scoredGates = gates.filter((gate) => gate.status === "scored");
+  const failedGates = scoredGates.filter((gate) => !gate.pass);
+  const naGates = gates.filter((gate) => gate.status !== "scored");
+
+  return {
+    meta: {
+      file: path.relative(process.cwd(), absolutePath),
+      sessionId: session.sessionId ?? session.id ?? null,
+      mode: session.mode ?? null,
+      schemaVersion: session.schemaVersion ?? null,
+      logCount: Array.isArray(session.logs) ? session.logs.length : 0,
+      transcriptCount: Array.isArray(session.transcript) ? session.transcript.length : 0,
+      phase6TelemetryPresent: !preV3,
+      phase6Keys: telemetry.phase6Keys,
+    },
+    overall: {
+      pass: failedGates.length === 0,
+      status: scoredGates.length === 0 ? "n/a" : failedGates.length === 0 ? "pass" : "fail",
+      scored: scoredGates.length,
+      failed: failedGates.length,
+      na: naGates.length,
+    },
+    gates,
+  };
+}
+
+function scoreFixtureSuite(targetPath) {
+  const { absolutePath, value: suite } = loadJsonFile(targetPath, "fixture file");
+  const fixtures = Array.isArray(suite.fixtures) ? suite.fixtures : [];
+  const sessionRoot = typeof suite.sessionRoot === "string" && suite.sessionRoot.trim()
+    ? suite.sessionRoot
+    : "data/voice-logs";
+
+  const fixtureResults = fixtures.map((fixture) => scoreFixture(fixture, sessionRoot));
+  const assertionResults = fixtureResults.flatMap((fixture) => fixture.assertions);
+  const failedAssertions = assertionResults.filter((assertion) => !assertion.pass);
+  const missingFixtures = fixtureResults.filter((fixture) => fixture.status === "missing");
+
+  return {
+    meta: {
+      file: path.relative(process.cwd(), absolutePath),
+      schemaVersion: suite.schemaVersion ?? null,
+      description: suite.description ?? null,
+      fixtureCount: fixtureResults.length,
+      assertionCount: assertionResults.length,
+    },
+    overall: {
+      pass: fixtureResults.length > 0 && failedAssertions.length === 0 && missingFixtures.length === 0,
+      status: fixtureResults.length === 0
+        ? "n/a"
+        : failedAssertions.length === 0 && missingFixtures.length === 0
+          ? "pass"
+          : "fail",
+      fixtures: fixtureResults.length,
+      assertions: assertionResults.length,
+      failed: failedAssertions.length,
+      missing: missingFixtures.length,
+    },
+    fixtures: fixtureResults,
+  };
+}
+
+function scoreFixture(fixture, sessionRoot) {
+  const sessionPath = resolveFixtureSessionPath(fixture, sessionRoot);
+  if (!sessionPath) {
+    return {
+      id: fixture.id ?? "unnamed",
+      session: fixture.session ?? null,
+      status: "missing",
+      assertions: [
+        {
+          id: "session-file",
+          type: "session-file",
+          pass: false,
+          evidence: [`Unable to resolve session fixture: ${fixture.session ?? "(missing session)"}`],
+          seqRefs: [],
+        },
+      ],
+    };
+  }
+
+  const { value: session } = loadJsonFile(sessionPath, `fixture session ${fixture.id ?? ""}`.trim());
+  const entries = normalizeEntries(session);
+  const assertions = Array.isArray(fixture.assertions)
+    ? fixture.assertions.map((assertion) => scoreFixtureAssertion(assertion, entries))
+    : [];
+
+  return {
+    id: fixture.id ?? "unnamed",
+    session: path.relative(process.cwd(), sessionPath),
+    contractRefs: Array.isArray(fixture.contractRefs) ? fixture.contractRefs : [],
+    status: assertions.every((assertion) => assertion.pass) ? "pass" : "fail",
+    assertions,
+  };
+}
+
+function resolveFixtureSessionPath(fixture, sessionRoot) {
+  if (!fixture || typeof fixture.session !== "string") return null;
+  const candidates = [];
+  if (path.isAbsolute(fixture.session)) candidates.push(fixture.session);
+  candidates.push(path.resolve(process.cwd(), fixture.session));
+  candidates.push(path.resolve(process.cwd(), sessionRoot, fixture.session));
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function scoreFixtureAssertion(assertion, entries) {
+  const windowEntries = fixtureWindowEntries(entries, assertion);
+  const roleEntries = filterFixtureRoles(windowEntries, assertion.roles);
+  const text = buildFixtureSearchText(roleEntries);
+  const base = {
+    id: assertion.id ?? `${assertion.type ?? "assertion"}:${assertion.afterUserSeq ?? "session"}`,
+    type: assertion.type ?? "unknown",
+    seqRefs: uniqueSeqs(roleEntries),
+  };
+
+  if (assertion.type === "no_praise_after_user") {
+    const praiseEntries = roleEntries.filter((entry) => containsAny(entry.text, PRAISE_PATTERNS));
+    return {
+      ...base,
+      pass: praiseEntries.length === 0,
+      evidence: [
+        `afterUserSeq=${assertion.afterUserSeq}`,
+        `praiseRefs=${praiseEntries.map((entry) => entry.seq).join(",") || "none"}`,
+      ],
+      seqRefs: uniqueSeqs([...windowEntries.filter((entry) => entry.seq === assertion.afterUserSeq), ...praiseEntries]),
+    };
+  }
+
+  if (assertion.type === "no_closing_after_user") {
+    const closingEntries = roleEntries.filter((entry) => containsAny(entry.text, CLOSING_PATTERNS));
+    return {
+      ...base,
+      pass: closingEntries.length === 0,
+      evidence: [
+        `afterUserSeq=${assertion.afterUserSeq}`,
+        `closingRefs=${closingEntries.map((entry) => entry.seq).join(",") || "none"}`,
+      ],
+      seqRefs: uniqueSeqs([...windowEntries.filter((entry) => entry.seq === assertion.afterUserSeq), ...closingEntries]),
+    };
+  }
+
+  if (assertion.type === "forbid_after_user" || assertion.type === "forbid_spoken_tokens") {
+    const forbidden = stringArray(assertion.forbidden ?? assertion.tokens);
+    const hits = forbidden.filter((needle) => includesNeedle(text, needle));
+    return {
+      ...base,
+      pass: hits.length === 0,
+      evidence: [
+        assertion.afterUserSeq === undefined ? "scope=session" : `afterUserSeq=${assertion.afterUserSeq}`,
+        `forbiddenHits=${hits.join("|") || "none"}`,
+      ],
+    };
+  }
+
+  if (assertion.type === "require_after_user" || assertion.type === "require_tool_after_user") {
+    const required = stringArray(assertion.required ?? assertion.contains);
+    const missing = required.filter((needle) => !includesNeedle(text, needle));
+    return {
+      ...base,
+      pass: required.length > 0 && missing.length === 0,
+      evidence: [
+        `afterUserSeq=${assertion.afterUserSeq}`,
+        `missing=${missing.join("|") || "none"}`,
+      ],
+    };
+  }
+
+  if (assertion.type === "max_phrase_count_after_user") {
+    const phrase = String(assertion.phrase ?? "");
+    const count = phrase ? countNeedleOccurrences(text, phrase) : 0;
+    const max = Number.isFinite(Number(assertion.max)) ? Number(assertion.max) : 1;
+    return {
+      ...base,
+      pass: phrase.length > 0 && count <= max,
+      evidence: [
+        `afterUserSeq=${assertion.afterUserSeq}`,
+        `phrase=${phrase}`,
+        `count=${count}`,
+        `max=${max}`,
+      ],
+    };
+  }
+
+  return {
+    ...base,
+    pass: false,
+    evidence: [`Unknown assertion type: ${assertion.type ?? "(missing)"}`],
+  };
+}
+
+function fixtureWindowEntries(entries, assertion) {
+  if (assertion.afterUserSeq === undefined || assertion.afterUserSeq === null) return entries;
+  const startIndex = entries.findIndex((entry) => sameSeq(entry.seq, assertion.afterUserSeq));
+  if (startIndex < 0) return [];
+  const result = [];
+  for (let index = startIndex; index < entries.length; index += 1) {
+    const entry = entries[index];
+    if (index !== startIndex && assertion.untilNextUser !== false && entry.role === "user") break;
+    result.push(entry);
+  }
+  return result;
+}
+
+function filterFixtureRoles(entries, roles) {
+  const roleSet = new Set(Array.isArray(roles) && roles.length > 0 ? roles : ["coach"]);
+  return entries.filter((entry) => roleSet.has(entry.role));
+}
+
+function buildFixtureSearchText(entries) {
+  const spacedText = entries.map((entry) => entry.text).join(" ").replace(/\s+/g, " ").trim();
+  const joinedFragments = [];
+  let currentRole = null;
+  let currentText = "";
+
+  for (const entry of entries) {
+    if (entry.role !== currentRole) {
+      if (currentText) joinedFragments.push(currentText);
+      currentRole = entry.role;
+      currentText = "";
+    }
+    currentText += String(entry.text ?? "");
+  }
+  if (currentText) joinedFragments.push(currentText);
+
+  return [spacedText, ...joinedFragments].join("\n");
+}
 
 function normalizeEntries(log) {
   if (Array.isArray(log.logs) && log.logs.length > 0) {
@@ -311,7 +540,8 @@ function collectTelemetry(metricSource, settingSource, stateSource) {
     seenItemKeys,
     requestLessonMaterialEnabled:
       includesString(settingSource.enabledToolIds, "requestLessonMaterial") ||
-      includesString(settingSource.enabledToolIds, "mona-request-lesson-material"),
+      includesString(settingSource.enabledToolIds, "mona-request-lesson-material") ||
+      includesString(settingSource.enabledToolIds, "mona-lesson-material"),
   };
 }
 
@@ -326,7 +556,10 @@ function scoreNewMaterialGate(normalizedEntries, data, isPreV3) {
 
   const toolRefs = requests.flatMap((request) =>
     entriesAfterUntilNextUser(normalizedEntries, request).filter(
-      (entry) => entry.role === "tool" && /requestLessonMaterial/i.test(entry.text) && /new|more|next|material|새|다음|더/i.test(entry.text),
+      (entry) =>
+        entry.role === "tool" &&
+        /requestLessonMaterial|mona-lesson-material/i.test(entry.text) &&
+        /new|more|next|material|새|다음|더/i.test(entry.text),
     ),
   );
   const intentValues = [
@@ -376,7 +609,7 @@ function scoreDifficultyGate(normalizedEntries, data, isPreV3) {
     entriesAfterUntilNextUser(normalizedEntries, entry).filter(
       (candidate) =>
         candidate.role === "tool" &&
-        /requestLessonMaterial/i.test(candidate.text) &&
+        /requestLessonMaterial|mona-lesson-material/i.test(candidate.text) &&
         /easy|hard|difficulty|쉬|어려/i.test(candidate.text),
     ),
   );
@@ -632,6 +865,39 @@ function asObject(value) {
 
 function includesString(values, needle) {
   return Array.isArray(values) && values.some((value) => String(value).includes(needle));
+}
+
+function includesNeedle(text, needle) {
+  const haystack = String(text ?? "").toLowerCase();
+  const target = String(needle ?? "").toLowerCase();
+  if (haystack.includes(target)) return true;
+  return normalizeNeedleSearch(haystack).includes(normalizeNeedleSearch(target));
+}
+
+function stringArray(value) {
+  return Array.isArray(value) ? value.map((entry) => String(entry)).filter(Boolean) : [];
+}
+
+function countNeedleOccurrences(text, needle) {
+  const normalizedText = String(text ?? "").toLowerCase();
+  const normalizedNeedle = String(needle ?? "").toLowerCase();
+  if (!normalizedNeedle) return 0;
+  let count = 0;
+  let index = 0;
+  while (true) {
+    const nextIndex = normalizedText.indexOf(normalizedNeedle, index);
+    if (nextIndex < 0) return count;
+    count += 1;
+    index = nextIndex + normalizedNeedle.length;
+  }
+}
+
+function sameSeq(left, right) {
+  return String(left) === String(right);
+}
+
+function normalizeNeedleSearch(value) {
+  return String(value ?? "").toLowerCase().replace(/['"`“”‘’\s]+/g, "");
 }
 
 function uniqueSeqs(values) {
