@@ -240,6 +240,13 @@ export function classifyMonaLearnerIntent(input: {
   if (/(그만|끝|멈춰|종료|\bstop\b|\bdone\b|\bquit\b|\bfinish\b)/i.test(raw)) return "stop";
   if (/(뭐라고|질문이 뭐|안 들|못 들|다시 질문|repeat the question|what was the question)/i.test(raw)) return "repeat_prompt";
   if (/(다시 말|한 번 더|따라|repeat that|say it again)/i.test(raw)) return "repeat_target";
+  if (
+    input.current &&
+    (
+      /(영어|english).*(안\s*보|보여|문장|카드|정답|답|뭐|어떻게|어케)/i.test(raw) ||
+      /(안\s*보|보여).*(영어|english|문장|카드|정답|답)/i.test(raw)
+    )
+  ) return "repeat_target";
   if (/(앞 문장 넘어가|다음 거|다음거|새로운|새 문장|딴 거|넘어가|next one|move on|another one)/i.test(raw)) return "next_material";
   if (/(쉬운|쉽게|너무 어려|easier|simpler|too hard)/i.test(raw)) return "easier";
   if (/(어려운|어렵게|너무 쉬|harder|more difficult|too easy)/i.test(raw)) return "harder";

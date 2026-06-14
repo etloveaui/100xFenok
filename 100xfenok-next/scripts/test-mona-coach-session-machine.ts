@@ -122,6 +122,24 @@ function testRepeatPromptReturnsExactPrompt() {
   assert.equal(result.saveReviewDelta.type, "none");
 }
 
+function testShowEnglishRequestRevealsTarget() {
+  // mqdunt24: "왜 영어 안 보여 줘?" is a UI/answer request, not a learner attempt.
+  const result = runMonaCoachTurn({
+    snapshot,
+    state: baseState(rainCats),
+    learnerTranscript: "왜 영어 안 보여 줘?",
+  });
+
+  assert.equal(result.intent, "repeat_target");
+  assert.equal(result.mayPraise, false);
+  assert.equal(result.spokenGuidance, rainCats.enCanonical);
+  assert.equal(result.cardCommand?.type, "showCard");
+  assert.equal(result.cardCommand?.state, "reveal");
+  assert.equal(result.cardCommand?.ko, rainCats.ko);
+  assert.equal(result.cardCommand?.en, rainCats.enCanonical);
+  assert.equal(result.saveReviewDelta.type, "none");
+}
+
 function testNextSwitchesCard() {
   const result = runMonaCoachTurn({
     snapshot,
@@ -225,6 +243,7 @@ const tests = [
   testFreeTalkModeNoDrilling,
   testChallengeKeepsTargetLocked,
   testRepeatPromptReturnsExactPrompt,
+  testShowEnglishRequestRevealsTarget,
   testNextSwitchesCard,
   testBringOwnEntersFreeMode,
   testItLacksMeIsWrongNoPraise,

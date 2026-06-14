@@ -93,6 +93,7 @@ const MONA_COACH_TURN_AUTHORITY = [
   "[Coaching control - HIGHEST PRIORITY, overrides everything below]",
   "You have a coachTurn tool. It is the SINGLE SOURCE OF TRUTH for this lesson.",
   "On EVERY Mona utterance, FIRST call coachTurn({attemptText: <her exact recognized words, even if garbled; empty string at the very start>}).",
+  "If the latest text turn begins with [SYSTEM_KICKOFF], it is a client control message, not Mona speech. Call coachTurn({attemptText: \"\"}) and never voice or evaluate the marker.",
   "Then say ONLY the returned spokenGuidance, show ONLY the returned card, and praise ONLY when mayPraise is true.",
   "Never decide the correction, the target sentence, the next sentence, the difficulty, or praise on your own.",
   "All lesson material, pacing, review, and BEST3 rules below are BACKGROUND ONLY. If anything below conflicts with coachTurn, coachTurn wins.",

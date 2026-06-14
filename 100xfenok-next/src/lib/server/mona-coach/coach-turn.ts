@@ -58,6 +58,19 @@ function pickString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function textLength(value: unknown): number {
+  return typeof value === "string" ? value.trim().length : 0;
+}
+
+function logCoachTurnArgs(args: Record<string, unknown>, sessionId: string) {
+  console.info("[mona-coach] coachTurn args", {
+    sessionId,
+    attemptTextLen: textLength(args.attemptText),
+    rawUtteranceLen: textLength(args.rawUtterance),
+    hasIntent: typeof args.intent === "string" && args.intent.trim().length > 0,
+  });
+}
+
 function isDue(due: string | null | undefined, studyDate: string): boolean {
   if (!due) return false;
   return due <= studyDate;
@@ -314,6 +327,7 @@ export async function executeCoachTurn(
   const sessionId = pickString(context?.coachSessionKey ?? null)
     ?? pickString(context?.sessionId ?? null)
     ?? "anon";
+  logCoachTurnArgs(args, sessionId);
   const learnerTranscript = pickString(args.attemptText) ?? pickString(args.rawUtterance) ?? "";
   const toolCmd = normalizeCoachToolCommand(args);
 

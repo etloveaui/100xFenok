@@ -147,6 +147,12 @@ if (inputHash === storedHash) {
 
 ## Change Log
 
+### 2026-06-14: Mona coach v3 — empty-attemptText guard + English-reveal classifier
+- Live owner smoke (mqdunt24) showed the English sentence never revealing on the card. Root cause split in two: the deployed build lacked the "show English" intent classifier, and the live model could fire `coachTurn` with empty/garbled `attemptText`.
+- Server FSM (`session-machine.ts`): added a classifier so an English-card/answer request maps to `repeat_target` -> reveal card carrying `en`.
+- Client Option C (`AdminLiveBench.tsx` + `lib/admin-live/coach-turn-args.ts`): client caches final input transcripts (monotonic id, consume-once guard) and patches an empty/mismatched `coachTurn` `attemptText` via `resolveCoachTurnArgsForTranscript`, so the server grades Mona's actual recognized words instead of a blank attempt. Sanitized telemetry (override/skip reason + lengths) logged for the next smoke.
+- Reference: `data/voice-logs/owner-test/2026-06-14_mona_live-mona-mqdunt24.json`
+
 > Details: `docs/CHANGELOG.md`
 
 ### 2026-01-21: Momentum Dashboard Syntax Error Fix (ROOT CAUSE)

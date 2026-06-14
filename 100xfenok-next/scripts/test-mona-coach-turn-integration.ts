@@ -4,6 +4,7 @@ import {
   __resetCoachSessionsForTest,
   __seedCoachSessionForTest,
 } from "../src/lib/server/mona-coach/coach-turn";
+import { resolveCoachTurnArgsForTranscript } from "../src/lib/admin-live/coach-turn-args";
 import {
   createMonaCoachState,
   type MonaCoachItem,
@@ -27,6 +28,35 @@ const item: MonaCoachItem = {
 };
 const snapshot: MonaCoachSnapshot = { version: "test", items: [item] };
 const ctx = { sessionId: "integration-1" } as unknown as Parameters<typeof executeCoachTurn>[1];
+
+async function testResolvedTranscriptRevealsEnglishCard() {
+  __resetCoachSessionsForTest();
+  const sessionId = "integration-reveal";
+  const revealCtx = { sessionId } as unknown as Parameters<typeof executeCoachTurn>[1];
+  const state = createMonaCoachState({
+    sessionId,
+    studyDate: "2026-06-14",
+    snapshotVersion: "test",
+    current: item,
+  });
+  __seedCoachSessionForTest(sessionId, state, snapshot);
+
+  const resolved = resolveCoachTurnArgsForTranscript(
+    { attemptText: "" },
+    {
+      pendingFinalTranscripts: [{ inputTurnId: 1, text: "왜 영어 안 보여 줘?" }],
+      lastConsumedInputTurnId: null,
+    },
+  );
+  const result = await executeCoachTurn(resolved.args, revealCtx);
+
+  assert.equal(resolved.didOverride, true, "empty model attempt is patched from transcript");
+  assert.equal(resolved.consumeInputTurnId, 1, "patched transcript is consumed exactly once");
+  assert.equal(result.intent, "repeat_target", "English-card request is classified as target repeat");
+  assert.equal(result.cardCommand?.state, "reveal", "English-card request reveals the target");
+  assert.equal(result.cardCommand?.en, item.enCanonical, "reveal card includes English");
+  assert.equal(result.spokenGuidance, item.enCanonical, "spoken guidance is the target sentence");
+}
 
 async function run() {
   __resetCoachSessionsForTest();
@@ -54,7 +84,9 @@ async function run() {
   assert.equal(bring.intent, "bring_own", "free-input classified");
   assert.ok(typeof bring.spokenGuidance === "string" && bring.spokenGuidance.startsWith("FREE_MODE:"), "free-input enters FREE_MODE");
 
-  console.log("mona coach-turn integration tests passed: 3");
+  await testResolvedTranscriptRevealsEnglishCard();
+
+  console.log("mona coach-turn integration tests passed: 4");
 }
 
 run().catch((error) => {

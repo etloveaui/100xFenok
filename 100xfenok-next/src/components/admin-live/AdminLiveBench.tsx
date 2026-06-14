@@ -5,6 +5,10 @@ import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWi
 import { BUILD_VERSION } from "@/generated/build-version";
 import { inspectAdminLiveModelOutput } from "@/lib/admin-live-output-safety";
 import {
+  resolveCoachTurnArgsForTranscript,
+  type CoachTurnTranscriptEntry,
+} from "@/lib/admin-live/coach-turn-args";
+import {
   DEFAULT_COACH_CONFIG,
   normalizeCoachConfig,
   type CoachConfig,
@@ -495,6 +499,7 @@ const TOOL_CANCELLATION_GRACE_MS = 160;
 const NO_USER_TURN_WATCHDOG_MS = 30_000;
 const SIDE_EFFECT_TOOL_NAMES = new Set(["saveStudySession"]);
 const HIDDEN_UI_TOOL_IDS = new Set(["mona-show-card"]);
+const MONA_KICKOFF_TEXT = "[SYSTEM_KICKOFF] Begin Mona lesson. Call coachTurn with attemptText=\"\". This is not Mona speech.";
 const MIC_WORKLET_SOURCE = `
 class GeminiMicProcessor extends AudioWorkletProcessor {
   process(inputs) {
@@ -877,6 +882,14 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backoffRef = useRef(2500);
   const sessionIdRef = useRef<string | null>(null);
+  // Option C: cache final input transcripts so a coachTurn with empty/garbled model attemptText
+  // can be patched with Mona's actual recognized words. Monotonic id + consume-once guard
+  // (see resolveCoachTurnArgsForTranscript) prevents stale/double-advance of the coach FSM.
+  const coachTurnTranscriptRef = useRef<{
+    pendingFinalTranscripts: CoachTurnTranscriptEntry[];
+    lastConsumedInputTurnId: number | null;
+  }>({ pendingFinalTranscripts: [], lastConsumedInputTurnId: null });
+  const coachInputTurnIdRef = useRef(0);
   const logSessionIdRef = useRef<string | null>(null);
   const coachSessionStateRef = useRef<CoachSessionState | null>(null);
   const finalCoachTurnBeaconSentRef = useRef(false);
@@ -1700,7 +1713,27 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
   const executeLiveToolCall = async (call: LiveFunctionCall): Promise<LiveFunctionResponse | null> => {
     const name = typeof call.name === "string" ? call.name : "";
     const id = typeof call.id === "string" ? call.id : "";
-    const args = call.args && typeof call.args === "object" ? call.args : {};
+    let args: Record<string, unknown> = call.args && typeof call.args === "object"
+      ? (call.args as Record<string, unknown>)
+      : {};
+    // Option C: when the model fires coachTurn without forwarding Mona's actual words,
+    // patch attemptText from the latest unconsumed final transcript so the server FSM grades
+    // the right utterance instead of seeing a blank attempt (which would stay stuck on prompt).
+    if (mode === "mona" && name === "coachTurn") {
+      const resolved = resolveCoachTurnArgsForTranscript(args, coachTurnTranscriptRef.current);
+      args = resolved.args;
+      if (resolved.consumeInputTurnId !== null) {
+        const consumedId = resolved.consumeInputTurnId;
+        coachTurnTranscriptRef.current.lastConsumedInputTurnId = consumedId;
+        coachTurnTranscriptRef.current.pendingFinalTranscripts =
+          coachTurnTranscriptRef.current.pendingFinalTranscripts.filter((e) => e.inputTurnId > consumedId);
+      }
+      const t = resolved.telemetry;
+      addLog(
+        "tool",
+        `coachTurn arg ${resolved.didOverride ? "override" : "keep"}: reason=${resolved.overrideReason ?? resolved.skippedReason ?? "-"} mLen=${t.modelAttemptTextLen} tLen=${t.transcriptTextLen} turnId=${t.inputTurnId ?? "-"}`,
+      );
+    }
     if (isToolCallCancelled(id)) {
       addLog("tool", `취소된 도구 실행 생략: ${name || "unknown"}:${id || "-"}`);
       return null;
@@ -2221,7 +2254,17 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           }
           if (mode === "mona" && !kickoffSentRef.current) {
             kickoffSentRef.current = true;
-            socket.send(JSON.stringify({ realtimeInput: { text: "시작" } }));
+            socket.send(JSON.stringify({
+              clientContent: {
+                turns: [
+                  {
+                    role: "user",
+                    parts: [{ text: MONA_KICKOFF_TEXT }],
+                  },
+                ],
+                turnComplete: true,
+              },
+            }));
           }
         }).catch((error: unknown) => {
           const message = error instanceof Error ? error.message : "MIC_START_FAILED";
@@ -2297,6 +2340,16 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         transcriptLatencyMs: latency ?? current.transcriptLatencyMs,
       }));
       appendTranscriptLog("user", serverContent.inputTranscription.text);
+      if (mode === "mona") {
+        const recognized = serverContent.inputTranscription.text;
+        if (recognized.trim()) {
+          const inputTurnId = ++coachInputTurnIdRef.current;
+          const queue = coachTurnTranscriptRef.current.pendingFinalTranscripts;
+          queue.push({ inputTurnId, text: recognized, atMs: Date.now() });
+          // bound memory: keep only the most recent few unconsumed entries
+          if (queue.length > 5) queue.splice(0, queue.length - 5);
+        }
+      }
     }
 
     if (serverContent.outputTranscription?.text && !suppressModelOutputUntilTurnCompleteRef.current) {
