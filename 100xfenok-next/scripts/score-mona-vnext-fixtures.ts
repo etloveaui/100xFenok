@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import {
   MONA_VNEXT_BASELINE_FIXTURES,
   MONA_VNEXT_FAILURE_FIXTURES,
@@ -11,12 +9,6 @@ type CheckResult = {
   ok: boolean;
   detail: string;
 };
-
-const appRoot = process.cwd();
-
-function readFixtureLog(fixture: MonaVnextFixture): string {
-  return readFileSync(path.join(appRoot, fixture.logPath), "utf8");
-}
 
 function includesAll(text: string, needles: string[]) {
   return needles.every((needle) => text.includes(needle));
@@ -93,8 +85,8 @@ function scoreFailure(fixture: MonaVnextFixture, text: string): CheckResult {
 }
 
 const results = [
-  ...MONA_VNEXT_BASELINE_FIXTURES.map((fixture) => scoreBaseline(fixture, readFixtureLog(fixture))),
-  ...MONA_VNEXT_FAILURE_FIXTURES.map((fixture) => scoreFailure(fixture, readFixtureLog(fixture))),
+  ...MONA_VNEXT_BASELINE_FIXTURES.map((fixture) => scoreBaseline(fixture, fixture.replayText)),
+  ...MONA_VNEXT_FAILURE_FIXTURES.map((fixture) => scoreFailure(fixture, fixture.replayText)),
 ];
 
 for (const result of results) {
