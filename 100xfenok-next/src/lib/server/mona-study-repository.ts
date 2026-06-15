@@ -27,6 +27,7 @@ export type MonaStudyRepositoryContext = {
   coachConfig?: Record<string, unknown>;
   coachSessionState?: unknown;
   tester?: unknown;
+  noPersist?: boolean;
 };
 
 export type MonaStudyRepository = {
@@ -105,5 +106,15 @@ export async function executeMonaStudyRepositoryTool(
   args: Record<string, unknown>,
   context?: MonaStudyRepositoryContext | null,
 ) {
+  if (context?.noPersist && name === "saveStudySession") {
+    return {
+      ok: true,
+      skipped: true,
+      noPersist: true,
+      studyName: name,
+      source: "no-persist-guard",
+      note: "saveStudySession skipped by no-persist context.",
+    };
+  }
   return getMonaStudyRepository().executeTool(name, args, context);
 }

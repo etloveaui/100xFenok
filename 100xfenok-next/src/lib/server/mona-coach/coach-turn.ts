@@ -293,6 +293,7 @@ function dedupeBest3(items: Array<{ ko: string; en: string; alt?: string | null 
 // Persist accumulated attempts into the existing Leitner SRS (best3 / weak-notes box+due) via saveStudySession.
 // Owner-test isolation is preserved through the context tester flag. Best-effort: never breaks the live turn.
 async function commitPendingSrs(pending: PendingSrs, context?: LiveToolSessionContext | null) {
+  if (context?.noPersist) return;
   if (!pending.reviewResults.length && !pending.best3.length && !pending.weakMisses.length) return;
   const repoContext: MonaStudyRepositoryContext = {
     sessionId: context?.sessionId ?? undefined,
@@ -300,6 +301,7 @@ async function commitPendingSrs(pending: PendingSrs, context?: LiveToolSessionCo
     coachConfig: context?.coachConfig as unknown as Record<string, unknown> | undefined,
     coachSessionState: context?.coachSessionState ?? undefined,
     tester: (context?.coachConfig as { tester?: unknown } | undefined)?.tester,
+    noPersist: context?.noPersist,
   };
   try {
     await executeMonaStudyRepositoryTool(

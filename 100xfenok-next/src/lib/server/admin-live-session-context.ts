@@ -11,6 +11,7 @@ export type LiveToolSessionContext = {
   mode: "fenok" | "mona";
   coachConfig: CoachConfig;
   coachSessionState?: CoachSessionState | null;
+  noPersist?: boolean;
 };
 
 const MAX_CONTEXTS = 40;
@@ -49,6 +50,10 @@ function normalizeKeyArray(value: unknown): string[] {
     if (keys.length >= 48) break;
   }
   return keys;
+}
+
+function normalizeNoPersist(value: unknown): boolean | undefined {
+  return value === true ? true : undefined;
 }
 
 function normalizeCoachSessionState(value: unknown, fallbackSessionId: string | null): CoachSessionState | null {
@@ -106,6 +111,7 @@ export function resolveLiveToolSessionContext(value: unknown): LiveToolSessionCo
         coachSessionState: normalizeCoachSessionState(input.coachSessionState, coachSessionKey ?? sessionId)
           ?? stored.coachSessionState
           ?? null,
+        noPersist: normalizeNoPersist(input.noPersist) ?? stored.noPersist,
       };
     }
   }
@@ -116,6 +122,7 @@ export function resolveLiveToolSessionContext(value: unknown): LiveToolSessionCo
     mode: normalizeMode(input.mode),
     coachConfig: normalizeCoachConfig(input.coachConfig ?? DEFAULT_COACH_CONFIG),
     coachSessionState: normalizeCoachSessionState(input.coachSessionState, coachSessionKey ?? sessionId),
+    noPersist: normalizeNoPersist(input.noPersist),
   };
 }
 

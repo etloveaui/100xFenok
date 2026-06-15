@@ -10,6 +10,7 @@ import {
   type MonaCoachItem,
   type MonaCoachSnapshot,
 } from "../src/lib/server/mona-coach/session-machine";
+import { executeMonaStudyRepositoryTool } from "../src/lib/server/mona-study-repository";
 
 // Integration test for the coachTurn glue (executeCoachTurn -> facade -> serialized directive).
 // Seeds the session so no repository/disk load happens; drives turns that do NOT trigger an SRS write.
@@ -58,6 +59,27 @@ async function testResolvedTranscriptRevealsEnglishCard() {
   assert.equal(result.spokenGuidance, item.enCanonical, "spoken guidance is the target sentence");
 }
 
+async function testNoPersistSkipsStudySave() {
+  const result = await executeMonaStudyRepositoryTool(
+    "saveStudySession",
+    {
+      best3: [{ ko: "테스트", en: "test" }],
+      weakMisses: [],
+      reviewResults: [{ en: "test", result: "correct" }],
+    },
+    {
+      sessionId: "integration-no-persist",
+      tester: "owner",
+      noPersist: true,
+    },
+  );
+
+  assert.equal(result.ok, true, "no-persist save returns ok");
+  assert.equal(result.skipped, true, "no-persist save is skipped");
+  assert.equal(result.noPersist, true, "no-persist marker is returned");
+  assert.equal(result.source, "no-persist-guard", "repository guard stops before bridge/local sink");
+}
+
 async function run() {
   __resetCoachSessionsForTest();
   const state = createMonaCoachState({
@@ -85,8 +107,9 @@ async function run() {
   assert.ok(typeof bring.spokenGuidance === "string" && bring.spokenGuidance.startsWith("FREE_MODE:"), "free-input enters FREE_MODE");
 
   await testResolvedTranscriptRevealsEnglishCard();
+  await testNoPersistSkipsStudySave();
 
-  console.log("mona coach-turn integration tests passed: 4");
+  console.log("mona coach-turn integration tests passed: 5");
 }
 
 run().catch((error) => {

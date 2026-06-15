@@ -50,6 +50,7 @@ type MonaStudyToolContext = {
   sessionId?: unknown;
   coachConfig?: unknown;
   coachSessionState?: unknown;
+  noPersist?: unknown;
 };
 
 type Best3Item = {
@@ -383,6 +384,7 @@ function normalizeMonaStudyContext(context?: MonaStudyToolContext | null) {
     sessionId: normalizeSessionId(context?.sessionId),
     coachConfig: normalizeServerCoachConfig(coachConfig),
     coachSessionState: normalizeCoachSessionState(context?.coachSessionState),
+    noPersist: context?.noPersist === true,
   };
 }
 
@@ -931,6 +933,15 @@ function updateWeakStore(entries: WeakNote[], incoming: WeakMiss[], studyDate: s
 async function saveStudySession(args: Record<string, unknown>, context?: MonaStudyToolContext | null) {
   const studyDate = getCanonicalMonaStudyDate();
   const toolContext = normalizeMonaStudyContext(context);
+  if (toolContext.noPersist) {
+    return {
+      ok: true,
+      skipped: true,
+      noPersist: true,
+      studyDate,
+      note: "saveStudySession skipped by no-persist context.",
+    };
+  }
   if (args.date !== undefined && !validateStudyDate(args.date)) {
     return { error: "INVALID_DATE", studyDate, allowedPattern: DATE_PATTERN.source };
   }
