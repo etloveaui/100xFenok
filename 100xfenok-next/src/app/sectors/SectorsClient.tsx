@@ -53,6 +53,29 @@ function SectionCard({
   );
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-16px_rgba(15,23,42,0.18)]">
+      <div className="h-3 w-32 animate-pulse rounded-full bg-slate-200" />
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div
+            key={index}
+            className="h-10 animate-pulse rounded-lg bg-slate-100"
+            style={{ animationDelay: `${index * 70}ms` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const valuationHelp = {
+  pe: "Fwd P/E: 향후 12개월 예상 이익 대비 주가 배수",
+  pb: "P/B: 장부가 대비 주가 배수",
+  roe: "ROE: 자기자본이익률",
+} as const;
+
 export default function SectorsClient() {
   const { rows, dataReady, failedSources, updatedAt } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
@@ -76,7 +99,7 @@ export default function SectorsClient() {
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">Sector Intelligence</p>
+          <p className="data-shell-kicker">섹터 인텔리전스</p>
           <h1 className="data-shell-title">섹터 히트맵</h1>
           <p className="data-shell-desc">
             11개 미국 업종의 다기간 성과를 한눈에. 업종 순환, 강·약 순위, 섹터 ETF를 비교합니다.
@@ -101,13 +124,11 @@ export default function SectorsClient() {
       </section>
 
       {isMuted ? (
-        <div className="rounded-[1.2rem] border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
-          섹터 데이터를 불러오는 중입니다.
-        </div>
+        <LoadingSkeleton />
       ) : null}
 
       {/* Heatmap */}
-      <SectionCard kicker="Momentum Heatmap" title="업종 × 기간 성과" className={isMuted ? "opacity-60" : undefined}>
+      <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과" className={isMuted ? "opacity-60" : undefined}>
         <p className="mb-3 text-xs text-slate-500">
           열 머리글을 누르면 해당 기간 기준으로 정렬됩니다. 초록=강세 · 빨강=약세, 진할수록 강합니다.
         </p>
@@ -115,7 +136,7 @@ export default function SectorsClient() {
           <table className="w-full min-w-[640px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+                <th className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                   업종
                 </th>
                 <th className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">당일</th>
@@ -150,7 +171,7 @@ export default function SectorsClient() {
                 const state = getMarketStateMeta(row.marketState);
                 return (
                   <tr key={row.key}>
-                    <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left">
+                    <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                       <span className="block text-sm font-black text-slate-950">{row.name}</span>
                       <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">{row.etf}</span>
                     </th>
@@ -192,16 +213,16 @@ export default function SectorsClient() {
 
       {/* Leaders / Laggards */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <SectionCard kicker="Leaders" title={`강세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
+        <SectionCard kicker="강세 리더" title={`강세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
           <RankList rows={leaders} window={sortWindow} tone="up" />
         </SectionCard>
-        <SectionCard kicker="Laggards" title={`약세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
+        <SectionCard kicker="약세 업종" title={`약세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
           <RankList rows={laggards} window={sortWindow} tone="down" />
         </SectionCard>
       </div>
 
       {/* ETF comparison */}
-      <SectionCard kicker="Sector ETFs" title="섹터 ETF 비교">
+      <SectionCard kicker="섹터 ETF" title="섹터 ETF 비교">
         {etfRows.length === 0 ? (
           <p className="text-sm text-slate-500">ETF 데이터를 불러오지 못했습니다.</p>
         ) : (
@@ -209,7 +230,7 @@ export default function SectorsClient() {
             <table className="w-full min-w-[680px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
-                  <th className="px-2 py-2 text-left">ETF</th>
+                  <th className="sticky left-0 z-10 bg-white px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">ETF</th>
                   <th className="px-2 py-2 text-right">1M</th>
                   <th className="px-2 py-2 text-right">YTD</th>
                   <th className="px-2 py-2 text-right">1Y</th>
@@ -224,7 +245,7 @@ export default function SectorsClient() {
                   const etf = row.etfInfo!;
                   return (
                     <tr key={row.key} className="border-b border-slate-100 last:border-0">
-                      <td className="px-2 py-2 text-left">
+                      <td className="sticky left-0 z-10 bg-white px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                         <span className="text-sm font-black text-slate-950">{row.etf}</span>
                         <span className="ml-2 text-xs font-semibold text-slate-500">{row.name}</span>
                       </td>
@@ -252,15 +273,21 @@ export default function SectorsClient() {
       </SectionCard>
 
       {/* Sector valuation */}
-      <SectionCard kicker="Valuation" title="섹터 밸류에이션">
+      <SectionCard kicker="밸류에이션" title="섹터 밸류에이션">
         <div className="-mx-1 overflow-x-auto px-1">
           <table className="w-full min-w-[420px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
                 <th className="px-2 py-2 text-left">업종</th>
-                <th className="px-2 py-2 text-right">Fwd P/E</th>
-                <th className="px-2 py-2 text-right">P/B</th>
-                <th className="px-2 py-2 text-right">ROE</th>
+                <th className="px-2 py-2 text-right">
+                  <abbr title={valuationHelp.pe} className="cursor-help no-underline">Fwd P/E</abbr>
+                </th>
+                <th className="px-2 py-2 text-right">
+                  <abbr title={valuationHelp.pb} className="cursor-help no-underline">P/B</abbr>
+                </th>
+                <th className="px-2 py-2 text-right">
+                  <abbr title={valuationHelp.roe} className="cursor-help no-underline">ROE</abbr>
+                </th>
               </tr>
             </thead>
             <tbody>

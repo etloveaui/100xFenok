@@ -2,13 +2,22 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import { sectorLabelKo } from "@/lib/design/sectorMap";
+import { CANONICAL_SECTORS, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 
 type SectorHistory = { quarters: string[]; series: Record<string, number[]> };
 
+const canonicalSectorSet = new Set<string>(CANONICAL_SECTORS);
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function sectorDisplayLabel(sector: string): string {
+  if (canonicalSectorSet.has(sector)) {
+    return sectorLabelKo(sector as CanonicalSector);
+  }
+  return sector || "기타";
 }
 
 function normalizeSectorHistory(value: unknown): SectorHistory | null {
@@ -80,7 +89,7 @@ export default function SmartMoneyPanel() {
         {rows.map((r) => (
           <div key={r.sector} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
             <p className="truncate text-[10px] font-black text-slate-500">
-              {sectorLabelKo(r.sector as CanonicalSector)}
+              {sectorDisplayLabel(r.sector)}
             </p>
             <div className="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
               <span className="orbitron shrink-0 text-sm font-black tabular-nums text-slate-950">

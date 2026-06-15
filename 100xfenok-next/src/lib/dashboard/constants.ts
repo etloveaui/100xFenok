@@ -11,7 +11,7 @@ export const CLIENT_FETCH_TIMEOUT_MS = 2500;
 export const FOCUS_REFRESH_STALE_MS = 3 * 60 * 1000;
 
 export const SECTOR_DEFINITIONS: SectorDefinition[] = [
-  { key: 'information_technology', etf: 'XLK', name: 'Tech', fallback: 0.0234 },
+  { key: 'information_technology', etf: 'XLK', name: '정보기술', fallback: 0.0234 },
   { key: 'financials', etf: 'XLF', name: '금융', fallback: 0.0156 },
   { key: 'health_care', etf: 'XLV', name: '헬스케어', fallback: 0.0089 },
   { key: 'energy', etf: 'XLE', name: '에너지', fallback: -0.0123 },
