@@ -10,14 +10,15 @@ export type CoachTurnTranscriptState = {
 };
 
 export type CoachTurnArgOverrideReason =
-  | "empty-model-attempt"
-  | "model-transcript-mismatch";
+  | "empty-model-attempt";
 
 export type CoachTurnArgSkippedReason =
   | "no-pending-final-transcript"
   | "blank-final-transcript"
   | "stale-or-consumed-transcript"
-  | "model-attempt-kept";
+  | "model-attempt-kept"
+  | "model-transcript-mismatch-kept"
+  | "control-intent-kept";
 
 export type CoachTurnArgTelemetry = {
   inputTurnId: number | null;
@@ -39,6 +40,12 @@ export type ResolveCoachTurnArgsResult = {
 
 function normalizedText(value: unknown): string {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+}
+
+const CONTROL_INTENTS = new Set(["next_material", "easier", "harder", "switch_theme", "stop"]);
+
+function hasControlIntent(args: Record<string, unknown>): boolean {
+  return typeof args.intent === "string" && CONTROL_INTENTS.has(args.intent.trim());
 }
 
 function result(input: {
@@ -112,6 +119,19 @@ export function resolveCoachTurnArgsForTranscript(
   const transcriptText = normalizedText(transcript.text);
   const consumeInputTurnId = transcript.inputTurnId;
 
+  if (hasControlIntent(originalArgs)) {
+    return result({
+      args: originalArgs,
+      inputTurnId: consumeInputTurnId,
+      didOverride: false,
+      overrideReason: null,
+      skippedReason: "control-intent-kept",
+      consumeInputTurnId,
+      modelAttemptText,
+      transcriptText,
+    });
+  }
+
   if (!transcriptText) {
     return result({
       args: originalArgs,
@@ -140,11 +160,11 @@ export function resolveCoachTurnArgsForTranscript(
 
   if (modelAttemptText !== transcriptText) {
     return result({
-      args: { ...originalArgs, attemptText: transcriptText },
+      args: originalArgs,
       inputTurnId: consumeInputTurnId,
-      didOverride: true,
-      overrideReason: "model-transcript-mismatch",
-      skippedReason: null,
+      didOverride: false,
+      overrideReason: null,
+      skippedReason: "model-transcript-mismatch-kept",
       consumeInputTurnId,
       modelAttemptText,
       transcriptText,

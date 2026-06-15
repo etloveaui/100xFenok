@@ -890,6 +890,9 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     lastConsumedInputTurnId: number | null;
   }>({ pendingFinalTranscripts: [], lastConsumedInputTurnId: null });
   const coachInputTurnIdRef = useRef(0);
+  // Latest input-transcription text for the in-progress turn; flushed into the FIFO as ONE final
+  // entry on turnComplete so partial/provisional fragments never enter the coachTurn queue.
+  const pendingCoachTranscriptRef = useRef("");
   const logSessionIdRef = useRef<string | null>(null);
   const coachSessionStateRef = useRef<CoachSessionState | null>(null);
   const finalCoachTurnBeaconSentRef = useRef(false);
@@ -1716,9 +1719,19 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     let args: Record<string, unknown> = call.args && typeof call.args === "object"
       ? (call.args as Record<string, unknown>)
       : {};
-    // Option C: when the model fires coachTurn without forwarding Mona's actual words,
-    // patch attemptText from the latest unconsumed final transcript so the server FSM grades
-    // the right utterance instead of seeing a blank attempt (which would stay stuck on prompt).
+    if (isToolCallCancelled(id)) {
+      addLog("tool", `취소된 도구 실행 생략: ${name || "unknown"}:${id || "-"}`);
+      return null;
+    }
+    if (id && SIDE_EFFECT_TOOL_NAMES.has(name)) {
+      await waitForToolCancellationWindow();
+      if (isToolCallCancelled(id)) {
+        addLog("tool", `취소된 도구 실행 생략: ${name}:${id}`);
+        return null;
+      }
+    }
+    // Option C: patch coachTurn attemptText from Mona's actual recognized words ONLY after all
+    // cancellation guards above, so a cancelled coachTurn never consumes a final transcript.
     if (mode === "mona" && name === "coachTurn") {
       const resolved = resolveCoachTurnArgsForTranscript(args, coachTurnTranscriptRef.current);
       args = resolved.args;
@@ -1733,17 +1746,6 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         "tool",
         `coachTurn arg ${resolved.didOverride ? "override" : "keep"}: reason=${resolved.overrideReason ?? resolved.skippedReason ?? "-"} mLen=${t.modelAttemptTextLen} tLen=${t.transcriptTextLen} turnId=${t.inputTurnId ?? "-"}`,
       );
-    }
-    if (isToolCallCancelled(id)) {
-      addLog("tool", `취소된 도구 실행 생략: ${name || "unknown"}:${id || "-"}`);
-      return null;
-    }
-    if (id && SIDE_EFFECT_TOOL_NAMES.has(name)) {
-      await waitForToolCancellationWindow();
-      if (isToolCallCancelled(id)) {
-        addLog("tool", `취소된 도구 실행 생략: ${name}:${id}`);
-        return null;
-      }
     }
     const toolIntent = toLessonMaterialIntent(args.intent);
 
@@ -1960,6 +1962,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     cancelledToolCallIdsRef.current.clear();
     activeToolControllersRef.current.forEach((controller) => controller.abort());
     activeToolControllersRef.current.clear();
+    // Clear the coachTurn transcript FIFO so a new/reset session never patches a coachTurn
+    // (including the SYSTEM_KICKOFF call) with a stale utterance from a previous session.
+    coachTurnTranscriptRef.current = { pendingFinalTranscripts: [], lastConsumedInputTurnId: null };
+    coachInputTurnIdRef.current = 0;
+    pendingCoachTranscriptRef.current = "";
   };
 
   useEffect(() => {
@@ -2254,6 +2261,11 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           }
           if (mode === "mona" && !kickoffSentRef.current) {
             kickoffSentRef.current = true;
+            // New lesson kickoff: guarantee an empty transcript FIFO so the kickoff coachTurn
+            // (attemptText="") can never be patched with a stale utterance from a prior session.
+            coachTurnTranscriptRef.current = { pendingFinalTranscripts: [], lastConsumedInputTurnId: null };
+            coachInputTurnIdRef.current = 0;
+            pendingCoachTranscriptRef.current = "";
             socket.send(JSON.stringify({
               clientContent: {
                 turns: [
@@ -2341,14 +2353,10 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       }));
       appendTranscriptLog("user", serverContent.inputTranscription.text);
       if (mode === "mona") {
+        // Native-audio input transcription is cumulative for the in-progress turn; keep the latest
+        // and enqueue it once on turnComplete, so partial fragments never enter the coachTurn FIFO.
         const recognized = serverContent.inputTranscription.text;
-        if (recognized.trim()) {
-          const inputTurnId = ++coachInputTurnIdRef.current;
-          const queue = coachTurnTranscriptRef.current.pendingFinalTranscripts;
-          queue.push({ inputTurnId, text: recognized, atMs: Date.now() });
-          // bound memory: keep only the most recent few unconsumed entries
-          if (queue.length > 5) queue.splice(0, queue.length - 5);
-        }
+        if (recognized.trim()) pendingCoachTranscriptRef.current = recognized;
       }
     }
 
@@ -2408,6 +2416,17 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       dropAudioUntilTurnCompleteRef.current = false;
       suppressModelOutputUntilTurnCompleteRef.current = false;
       answeredToolResponseIdsRef.current.clear();
+      if (mode === "mona") {
+        // Enqueue the completed turn's final transcript as ONE FIFO entry (monotonic id).
+        const finalText = pendingCoachTranscriptRef.current.trim();
+        pendingCoachTranscriptRef.current = "";
+        if (finalText) {
+          const inputTurnId = ++coachInputTurnIdRef.current;
+          const queue = coachTurnTranscriptRef.current.pendingFinalTranscripts;
+          queue.push({ inputTurnId, text: finalText, atMs: Date.now() });
+          if (queue.length > 5) queue.splice(0, queue.length - 5);
+        }
+      }
     }
   };
 

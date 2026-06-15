@@ -38,25 +38,45 @@ function testConsumedTranscriptDoesNotReplay() {
   assert.equal(resolved.telemetry.inputTurnId, null);
 }
 
-function testMismatchPrefersFinalTranscript() {
+function testMismatchKeepsModelAttemptAndConsumesTranscript() {
   const resolved = resolveCoachTurnArgsForTranscript(
-    { attemptText: "Buena, ¿cómo estamos?" },
+    { attemptText: "I need at least 10." },
     {
-      pendingFinalTranscripts: [{ inputTurnId: 2, text: "영어 왜 안 보여주냐고?" }],
+      pendingFinalTranscripts: [{ inputTurnId: 2, text: "Buena, ¿cómo estamos?" }],
       lastConsumedInputTurnId: 1,
     },
   );
 
-  assert.equal(resolved.args.attemptText, "영어 왜 안 보여주냐고?");
-  assert.equal(resolved.didOverride, true);
-  assert.equal(resolved.overrideReason, "model-transcript-mismatch");
+  assert.equal(resolved.args.attemptText, "I need at least 10.");
+  assert.equal(resolved.didOverride, false);
+  assert.equal(resolved.overrideReason, null);
+  assert.equal(resolved.skippedReason, "model-transcript-mismatch-kept");
   assert.equal(resolved.consumeInputTurnId, 2);
+}
+
+function testControlIntentKeepsArgsAndConsumesTranscript() {
+  const resolved = resolveCoachTurnArgsForTranscript(
+    { attemptText: "", intent: "next_material" },
+    {
+      pendingFinalTranscripts: [{ inputTurnId: 3, text: "다음 거" }],
+      lastConsumedInputTurnId: 2,
+    },
+  );
+
+  assert.equal(resolved.args.attemptText, "");
+  assert.equal(resolved.args.intent, "next_material");
+  assert.equal(resolved.didOverride, false);
+  assert.equal(resolved.overrideReason, null);
+  assert.equal(resolved.skippedReason, "control-intent-kept");
+  assert.equal(resolved.consumeInputTurnId, 3);
+  assert.equal(resolved.telemetry.inputTurnId, 3);
 }
 
 const tests = [
   testEmptyModelAttemptUsesPendingTranscript,
   testConsumedTranscriptDoesNotReplay,
-  testMismatchPrefersFinalTranscript,
+  testMismatchKeepsModelAttemptAndConsumesTranscript,
+  testControlIntentKeepsArgsAndConsumesTranscript,
 ];
 
 for (const test of tests) {
