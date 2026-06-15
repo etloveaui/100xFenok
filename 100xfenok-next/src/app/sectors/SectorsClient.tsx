@@ -4,7 +4,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import TransitionLink from "@/components/TransitionLink";
 import { useSectorData } from "@/hooks/useSectorData";
-import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow } from "@/lib/sectors/types";
+import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorValuationBand } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -13,6 +13,11 @@ function cx(...parts: Array<string | false | undefined>) {
 
 function pct(value: number | null | undefined, digits = 1): string {
   return typeof value !== "number" || !Number.isFinite(value) ? "—" : formatSignedPercentDecimal(value, digits);
+}
+
+function pp(value: number | null | undefined, digits = 1): string {
+  const formatted = pct(value, digits);
+  return formatted === "—" ? formatted : formatted.replace("%", "%p");
 }
 
 /** Continuous green/red heat scale over a momentum fraction. */
@@ -76,8 +81,52 @@ const valuationHelp = {
   roe: "ROE: 자기자본이익률",
 } as const;
 
+function valuationTone(percentile: number | null | undefined): { label: string; className: string } {
+  if (typeof percentile !== "number" || !Number.isFinite(percentile)) {
+    return { label: "범위 없음", className: "bg-slate-100 text-slate-500" };
+  }
+  if (percentile <= 0.25) return { label: "저평가권", className: "bg-emerald-50 text-emerald-700" };
+  if (percentile >= 0.75) return { label: "고평가권", className: "bg-rose-50 text-rose-700" };
+  return { label: "평균권", className: "bg-slate-100 text-slate-600" };
+}
+
+function PeBandGauge({ value, band }: { value: number | null; band: SectorValuationBand | null }) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return <span className="orbitron text-sm font-bold text-slate-400">—</span>;
+  }
+  if (!band) {
+    return <span className="orbitron text-sm font-bold text-slate-900">{value.toFixed(1)}</span>;
+  }
+  const span = band.max - band.min;
+  const position = span > 0 ? Math.min(100, Math.max(0, ((value - band.min) / span) * 100)) : 50;
+  const percentile = Math.round(band.percentile * 100);
+  const tone = valuationTone(band.percentile);
+  return (
+    <div
+      className="ml-auto w-full max-w-[190px]"
+      title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
+    >
+      <div className="mb-1 flex items-center justify-end gap-2">
+        <span className="orbitron text-sm font-black tabular-nums text-slate-950">{value.toFixed(1)}</span>
+        <span className={cx("rounded-full px-2 py-0.5 text-[10px] font-black", tone.className)}>{tone.label}</span>
+      </div>
+      <div className="relative h-2 rounded-full bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200">
+        <span
+          className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-navy shadow"
+          style={{ left: `${position}%` }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[9px] font-bold text-slate-400">
+        <span>{band.min.toFixed(1)}</span>
+        <span>{percentile}%</span>
+        <span>{band.max.toFixed(1)}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function SectorsClient() {
-  const { rows, dataReady, failedSources, updatedAt } = useSectorData();
+  const { rows, benchmarkMomentum, dataReady, failedSources, updatedAt } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
 
   const sorted = useMemo(
@@ -94,6 +143,7 @@ export default function SectorsClient() {
   const isMuted = !dataReady;
   const benchmarksFailed = failedSources.includes("benchmarks");
   const dateLabel = updatedAt ? updatedAt.slice(0, 10) : null;
+  const marketThreeMonth = benchmarkMomentum?.["3m"] ?? null;
 
   return (
     <div className="data-shell-page">
@@ -167,13 +217,50 @@ export default function SectorsClient() {
               </tr>
             </thead>
             <tbody>
+              {benchmarkMomentum ? (
+                <tr className="border-b border-slate-200">
+                  <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                    <span className="block text-sm font-black text-slate-950">S&amp;P 500</span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">시장 기준선</span>
+                  </th>
+                  <td className="px-2 py-1.5 text-right text-xs font-black text-slate-400">기준</td>
+                  {MOMENTUM_WINDOWS.map((window) => {
+                    const value = benchmarkMomentum[window.key];
+                    return (
+                      <td key={window.key} className="px-1 py-1.5">
+                        <div
+                          className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
+                          style={heatStyle(value)}
+                        >
+                          {pct(value, 1)}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ) : null}
               {sorted.map((row) => {
                 const state = getMarketStateMeta(row.marketState);
+                const relativeThreeMonth =
+                  typeof row.momentum["3m"] === "number" && typeof marketThreeMonth === "number"
+                    ? row.momentum["3m"] - marketThreeMonth
+                    : null;
                 return (
                   <tr key={row.key}>
                     <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                       <span className="block text-sm font-black text-slate-950">{row.name}</span>
                       <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">{row.etf}</span>
+                      {relativeThreeMonth !== null ? (
+                        <span
+                          className={cx(
+                            "ml-2 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-black",
+                            relativeThreeMonth >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700",
+                          )}
+                          title="3개월 S&P 500 대비 성과"
+                        >
+                          S&amp;P {pp(relativeThreeMonth, 1)}
+                        </span>
+                      ) : null}
                     </th>
                     <td className="px-2 py-1.5 text-right">
                       {row.dayChange === null ? (
@@ -275,7 +362,7 @@ export default function SectorsClient() {
       {/* Sector valuation */}
       <SectionCard kicker="밸류에이션" title="섹터 밸류에이션">
         <div className="-mx-1 overflow-x-auto px-1">
-          <table className="w-full min-w-[420px] text-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
                 <th className="px-2 py-2 text-left">업종</th>
@@ -302,7 +389,9 @@ export default function SectorsClient() {
                         <span className="text-sm font-bold text-slate-900">{row.name}</span>
                         <span className="ml-2 text-xs font-semibold text-slate-400">{row.etf}</span>
                       </td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-900">{typeof v.pe === "number" && Number.isFinite(v.pe) ? v.pe.toFixed(1) : "—"}</td>
+                      <td className="px-2 py-2 text-right">
+                        <PeBandGauge value={v.pe} band={v.peBand} />
+                      </td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{typeof v.pb === "number" && Number.isFinite(v.pb) ? v.pb.toFixed(2) : "—"}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-600">{typeof v.roe === "number" && Number.isFinite(v.roe) ? formatPercent(v.roe * 100, 1) : "—"}</td>
                     </tr>

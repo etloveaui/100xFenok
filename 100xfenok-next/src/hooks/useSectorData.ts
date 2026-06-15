@@ -7,6 +7,7 @@ import type {
   SectorDataResult,
   SectorEtfInfo,
   SectorMomentum,
+  SectorValuationBand,
   MomentumWindow,
 } from "@/lib/sectors/types";
 
@@ -79,9 +80,28 @@ function buildEtfInfo(raw: RawEtf | undefined): SectorEtfInfo | null {
   };
 }
 
+function buildPeBand(points: UsSectorPoint[] | undefined, latest: number | null): SectorValuationBand | null {
+  if (latest === null || !Array.isArray(points)) return null;
+  const values = points
+    .map((point) => num(point.best_pe_ratio))
+    .filter((value): value is number => value !== null && value > 0);
+  if (values.length < 2) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return null;
+  const belowOrEqual = sorted.filter((value) => value <= latest).length;
+  return {
+    min,
+    max,
+    percentile: Math.min(1, Math.max(0, (belowOrEqual - 1) / (sorted.length - 1))),
+  };
+}
+
 export function useSectorData(): SectorDataResult {
   const [result, setResult] = useState<SectorDataResult>({
     rows: [],
+    benchmarkMomentum: null,
     dataReady: false,
     failedSources: [],
     updatedAt: null,
@@ -118,6 +138,10 @@ export function useSectorData(): SectorDataResult {
       if (!etfs?.etfs) failed.push("etfs");
       if (!usSectors?.sections) failed.push("us_sectors");
 
+      const benchmarkMomentum: SectorMomentum | null = benchmarks?.momentum?.sp500
+        ? Object.fromEntries(MOMENTUM_KEYS.map((key) => [key, num(benchmarks.momentum?.sp500?.[key])]))
+        : null;
+
       const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
         const rawMomentum = benchmarks?.momentum?.[sector.key];
         const momentum: SectorMomentum = {};
@@ -134,6 +158,7 @@ export function useSectorData(): SectorDataResult {
 
         const valData = usSectors?.sections?.[sector.key]?.data;
         const valLatest = Array.isArray(valData) && valData.length > 0 ? valData[valData.length - 1] : null;
+        const pe = num(valLatest?.best_pe_ratio);
 
         return {
           key: sector.key,
@@ -145,7 +170,7 @@ export function useSectorData(): SectorDataResult {
           marketState,
           etfInfo: buildEtfInfo(etfs?.etfs?.[sector.etf]),
           valuation: valLatest
-            ? { pe: num(valLatest.best_pe_ratio), pb: num(valLatest.px_to_book_ratio), roe: num(valLatest.roe) }
+            ? { pe, pb: num(valLatest.px_to_book_ratio), roe: num(valLatest.roe), peBand: buildPeBand(valData, pe) }
             : null,
         };
       });
@@ -154,7 +179,7 @@ export function useSectorData(): SectorDataResult {
       const updatedAt = benchmarks?.metadata?.generated ?? null;
 
       if (!isMountedRef.current) return;
-      setResult({ rows, dataReady, failedSources: failed, updatedAt });
+      setResult({ rows, benchmarkMomentum, dataReady, failedSources: failed, updatedAt });
     } finally {
       inFlightRef.current = false;
     }

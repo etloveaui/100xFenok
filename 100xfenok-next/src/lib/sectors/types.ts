@@ -58,10 +58,19 @@ export interface SectorValuation {
   pb: number | null;
   /** ROE (fraction). */
   roe: number | null;
+  /** Forward P/E location within the historical sector series. */
+  peBand: SectorValuationBand | null;
+}
+
+export interface SectorValuationBand {
+  min: number;
+  max: number;
+  percentile: number;
 }
 
 export interface SectorDataResult {
   rows: SectorRow[];
+  benchmarkMomentum: SectorMomentum | null;
   dataReady: boolean;
   /** Source ids that fell back (e.g. "benchmarks", "etfs", "ticker:XLK"). */
   failedSources: string[];
