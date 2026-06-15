@@ -38,11 +38,18 @@ function getDurationSec(doc: LogDoc) {
 
 function countPromptIds(events: Array<Record<string, unknown>>) {
   const counts = new Map<string, number>();
+  const seen = new Set<string>();
   for (const event of events) {
     const detail = event.detail;
     if (!detail || typeof detail !== "object" || Array.isArray(detail)) continue;
     const promptId = getString((detail as Record<string, unknown>).promptId);
     if (!promptId) continue;
+    const turnSeq = (detail as Record<string, unknown>).turnSeq;
+    const dedupeKey = typeof turnSeq === "number" && Number.isFinite(turnSeq)
+      ? `${turnSeq}:${promptId}`
+      : `${getString(event.atIso)}:${promptId}:${getString(event.message)}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
     counts.set(promptId, (counts.get(promptId) ?? 0) + 1);
   }
   return counts;

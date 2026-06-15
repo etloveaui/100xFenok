@@ -90,7 +90,7 @@ export default function MonaVoiceCoachApp() {
         sttDrift: evaluation.sttDrift,
       },
     };
-    persistEvent(event);
+    setEvents((current) => appendEvent(current, event));
     void fetch("/api/mona-vnext/log/", {
       method: "POST",
       cache: "no-store",
@@ -126,7 +126,7 @@ export default function MonaVoiceCoachApp() {
 
     lessonStateRef.current = nextLesson;
     setLessonState(nextLesson);
-  }, [persistEvent]);
+  }, []);
 
   const live = useGeminiLiveSession({
     settings: DEFAULT_SETTINGS,
