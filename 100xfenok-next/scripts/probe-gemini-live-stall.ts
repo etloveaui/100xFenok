@@ -9,14 +9,20 @@ import {
   GEMINI_AUTH_TOKEN_ENDPOINT,
   GEMINI_LIVE_MODEL_RESOURCE,
   GEMINI_LIVE_WS_ENDPOINT,
+  buildLiveSetup,
   getGeminiApiKey,
 } from "../src/lib/server/admin-live";
-import { buildLiveToolDeclarations } from "../src/lib/server/admin-live-tools";
+import { resolveCoachTurnArgsForTranscript, type CoachTurnArgTelemetry, type CoachTurnTranscriptEntry } from "../src/lib/admin-live/coach-turn-args";
+import { DEFAULT_COACH_CONFIG } from "../src/lib/admin-live-coach-config";
+import { buildLiveToolDeclarations, executeLiveToolFunction } from "../src/lib/server/admin-live-tools";
+import type { LiveToolSessionContext } from "../src/lib/server/admin-live-session-context";
 
 type ActivityMode = "no-interrupt" | "barge-in";
+type ProbeScenario = "coach-flow" | "stall-debug";
 
 type ProbeOptions = {
   allowLive: boolean;
+  scenario: ProbeScenario;
   firstText: string;
   postText: string;
   postWav: string | null;
@@ -38,6 +44,7 @@ type TimelineEvent = {
 
 type JsonRecord = Record<string, unknown>;
 
+const MONA_KICKOFF_TEXT = "[SYSTEM_KICKOFF] Begin Mona lesson. Call coachTurn with attemptText=\"\". This is not Mona speech.";
 const DEFAULT_FIRST_TEXT = "시작. 오늘 표현은 '최소한 10개는 필요해.'로 카드부터 보여주고, 내가 따라 말하게 해줘.";
 const DEFAULT_POST_TEXT = "따라 했어. I need at least ten.";
 const DEFAULT_POST_TTS_VOICE = "Samantha";
@@ -47,6 +54,7 @@ const execFile = promisify(execFileCallback);
 function parseArgs(argv: string[]): ProbeOptions {
   const options: ProbeOptions = {
     allowLive: process.env.ALLOW_LIVE_GEMINI_PROBE === "1",
+    scenario: "coach-flow",
     firstText: DEFAULT_FIRST_TEXT,
     postText: DEFAULT_POST_TEXT,
     postWav: null,
@@ -64,6 +72,16 @@ function parseArgs(argv: string[]): ProbeOptions {
     const next = argv[i + 1];
     if (arg === "--allow-live") {
       options.allowLive = true;
+    } else if (arg === "--coach-flow") {
+      options.scenario = "coach-flow";
+    } else if (arg === "--stall-debug") {
+      options.scenario = "stall-debug";
+    } else if (arg === "--scenario" && next) {
+      if (next !== "coach-flow" && next !== "stall-debug") {
+        throw new Error("--scenario must be coach-flow or stall-debug");
+      }
+      options.scenario = next;
+      i += 1;
     } else if (arg === "--first-text" && next) {
       options.firstText = next;
       i += 1;
@@ -123,12 +141,15 @@ function printUsage() {
     "  ALLOW_LIVE_GEMINI_PROBE=1 npm run probe:live-stall -- [options]",
     "",
     "Options:",
+    "  --scenario <name>       coach-flow (default) or stall-debug.",
+    "  --coach-flow            Use real Mona coach setup + kickoff + coachTurn telemetry.",
+    "  --stall-debug           Use the legacy minimal showCard setup for stall isolation.",
     "  --post-wav <path>        Send real 16kHz PCM WAV after the post-tool utterance.",
     "  --post-tts-text <text>   Synthesize a macOS TTS WAV, then send it as post audio.",
     `  --post-tts-voice <name>  macOS say voice for --post-tts-text. Default ${DEFAULT_POST_TTS_VOICE}.`,
     "  --post-tts-wav <path>    Persist synthesized TTS WAV at this path.",
     "  --post-text <text>       Text fallback when --post-wav is omitted.",
-    "  --first-text <text>      Initial text intended to trigger showCard.",
+    "  --first-text <text>      Initial text for --stall-debug. coach-flow uses SYSTEM_KICKOFF.",
     "  --post-quiet-ms <ms>     Quiet time after post-tool output before post input. Default 1200.",
     "  --post-wait-ms <ms>      Wait after post input for transcription/response. Default 55000.",
     "  --pre-post-timeout-ms <ms> Give up if no post-tool utterance arrives. Default 90000.",
@@ -138,6 +159,18 @@ function printUsage() {
     `  External Gemini calls are blocked unless ALLOW_LIVE_GEMINI_PROBE=1 or --allow-live is set.`,
   ].join("\n"));
 }
+
+type ProbeRunContext = {
+  scenario: ProbeScenario;
+  sessionId: string;
+  toolContext: LiveToolSessionContext;
+  pendingFinalTranscripts: CoachTurnTranscriptEntry[];
+  lastConsumedInputTurnId: number | null;
+  currentPendingTranscript: string;
+  nextInputTurnId: number;
+  coachTurnArgTelemetry: CoachTurnArgTelemetry[];
+  coachTurnDirectives: unknown[];
+};
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -248,15 +281,35 @@ function buildMinimalProbeSetup(activityMode: ActivityMode): Record<string, unkn
   };
 }
 
-async function mintEphemeralToken(activityMode: ActivityMode) {
+async function buildProbeSetup(scenario: ProbeScenario, activityMode: ActivityMode, sessionId: string) {
+  if (scenario === "stall-debug") return buildMinimalProbeSetup(activityMode);
+
+  const coachConfig = {
+    ...DEFAULT_COACH_CONFIG,
+    tester: "owner" as const,
+  };
+  const { setup } = await buildLiveSetup("mona", {
+    lowVoice: true,
+    voiceName: "Achernar",
+    responseStyle: "concise",
+    vadPreset: "relaxed",
+    interruptionMode: activityMode,
+    enabledToolIds: ["mona-coach-turn"],
+    coachConfig,
+    sessionId,
+  });
+  return setup;
+}
+
+async function mintEphemeralToken(activityMode: ActivityMode, scenario: ProbeScenario) {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
     return { error: "MISSING_GEMINI_API_KEY", missingEnv: GEMINI_API_KEY_ENV };
   }
 
   const now = new Date();
-  const sessionId = `probe-live-mona-${now.getTime().toString(36)}-${activityMode}`;
-  const setup = buildMinimalProbeSetup(activityMode);
+  const sessionId = `probe-live-mona-${now.getTime().toString(36)}-${scenario}-${activityMode}`;
+  const setup = await buildProbeSetup(scenario, activityMode, sessionId);
 
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
@@ -310,25 +363,80 @@ async function mintEphemeralToken(activityMode: ActivityMode) {
   };
 }
 
-function toolResponseFor(call: unknown) {
+function buildProbeRunContext(scenario: ProbeScenario, sessionId: string): ProbeRunContext {
+  const coachConfig = {
+    ...DEFAULT_COACH_CONFIG,
+    tester: "owner" as const,
+  };
+  return {
+    scenario,
+    sessionId,
+    toolContext: {
+      sessionId,
+      coachSessionKey: sessionId,
+      mode: scenario === "coach-flow" ? "mona" : "fenok",
+      coachConfig,
+      coachSessionState: null,
+      noPersist: true,
+    },
+    pendingFinalTranscripts: [],
+    lastConsumedInputTurnId: null,
+    currentPendingTranscript: "",
+    nextInputTurnId: 0,
+    coachTurnArgTelemetry: [],
+    coachTurnDirectives: [],
+  };
+}
+
+function extractSpokenGuidance(value: unknown): string {
+  if (!isRecord(value)) return "";
+  const direct = typeof value.spokenGuidance === "string" ? value.spokenGuidance.trim() : "";
+  if (direct) return direct;
+  const result = getRecord(value, "result");
+  return typeof result?.spokenGuidance === "string" ? result.spokenGuidance.trim() : "";
+}
+
+async function toolResponseFor(call: unknown, context: ProbeRunContext) {
   const record = isRecord(call) ? call : {};
   const id = typeof record.id === "string" ? record.id : "";
   const name = typeof record.name === "string" ? record.name : "";
+  const rawArgs = record.args && typeof record.args === "object" ? record.args as Record<string, unknown> : {};
+  let args = rawArgs;
+
+  if (context.scenario === "coach-flow" && name === "coachTurn") {
+    const resolved = resolveCoachTurnArgsForTranscript(args, {
+      pendingFinalTranscripts: context.pendingFinalTranscripts,
+      lastConsumedInputTurnId: context.lastConsumedInputTurnId,
+      currentPendingTranscript: context.currentPendingTranscript,
+    });
+    args = resolved.args;
+    if (resolved.consumeInputTurnId !== null) {
+      const consumedId = resolved.consumeInputTurnId;
+      context.lastConsumedInputTurnId = consumedId;
+      context.pendingFinalTranscripts = context.pendingFinalTranscripts
+        .filter((entry) => entry.inputTurnId > consumedId);
+    }
+    if (resolved.consumedCurrentPending) {
+      context.currentPendingTranscript = "";
+    }
+    context.coachTurnArgTelemetry.push(resolved.telemetry);
+  }
+
   if (name === "showCard") {
     return { id, name, response: { ok: true, source: "probe-harness" } };
   }
-  if (name === "getYesterdaySession") {
-    return {
-      id,
-      name,
-      response: {
-        ok: true,
-        source: "probe-harness",
-        session: null,
-        best3: [],
-        weakNotes: [],
-      },
-    };
+  if (context.scenario === "coach-flow") {
+    const result = await executeLiveToolFunction(name, args, context.toolContext);
+    if (name === "coachTurn") {
+      context.coachTurnDirectives.push(result);
+      const spokenGuidance = extractSpokenGuidance(result);
+      return {
+        id,
+        name,
+        response: spokenGuidance ? { result: spokenGuidance } : { result },
+      };
+    }
+    return { id, name, response: { result } };
   }
   return { id, name, response: { ok: true, source: "probe-harness", skipped: true } };
 }
@@ -416,7 +524,7 @@ async function sendAudio(socket: WebSocket, timeline: TimelineEvent[], startedAt
 async function runOne(activityMode: ActivityMode, options: ProbeOptions) {
   const timeline: TimelineEvent[] = [];
   const startedAt = Date.now();
-  const tokenResult = await mintEphemeralToken(activityMode);
+  const tokenResult = await mintEphemeralToken(activityMode, options.scenario);
   if ("error" in tokenResult) {
     return {
       activityMode,
@@ -427,6 +535,8 @@ async function runOne(activityMode: ActivityMode, options: ProbeOptions) {
   }
 
   const socket = new WebSocket(`${GEMINI_LIVE_WS_ENDPOINT}?access_token=${encodeURIComponent(tokenResult.token)}`);
+  socket.binaryType = "arraybuffer";
+  const runContext = buildProbeRunContext(options.scenario, tokenResult.sessionId);
   let sawSetupComplete = false;
   let sawToolCall = false;
   let sentPostInput = false;
@@ -497,6 +607,8 @@ async function runOne(activityMode: ActivityMode, options: ProbeOptions) {
 
     socket.addEventListener("open", () => {
       pushEvent(timeline, startedAt, "local", "wsOpen", { activityMode });
+      socket.send(JSON.stringify({ setup: tokenResult.setup }));
+      pushEvent(timeline, startedAt, "out", "setup", { summary: summarizeSetup(tokenResult.setup) });
     });
 
     socket.addEventListener("error", (event) => {
@@ -519,21 +631,47 @@ async function runOne(activityMode: ActivityMode, options: ProbeOptions) {
       const payloadRecord = isRecord(payload) ? payload : {};
       if (payloadRecord.setupComplete && !sawSetupComplete) {
         sawSetupComplete = true;
-        socket.send(JSON.stringify({ realtimeInput: { text: options.firstText } }));
-        pushEvent(timeline, startedAt, "out", "firstText", { text: options.firstText });
+        if (options.scenario === "coach-flow") {
+          socket.send(JSON.stringify({
+            clientContent: {
+              turns: [
+                {
+                  role: "user",
+                  parts: [{ text: MONA_KICKOFF_TEXT }],
+                },
+              ],
+              turnComplete: true,
+            },
+          }));
+          pushEvent(timeline, startedAt, "out", "kickoffClientContent", { text: MONA_KICKOFF_TEXT });
+        } else {
+          socket.send(JSON.stringify({ realtimeInput: { text: options.firstText } }));
+          pushEvent(timeline, startedAt, "out", "firstText", { text: options.firstText });
+        }
       }
 
       const toolCall = getRecord(payloadRecord, "toolCall");
       const toolCalls = toolCall?.functionCalls;
       if (Array.isArray(toolCalls) && toolCalls.length > 0) {
         sawToolCall = true;
-        const functionResponses = toolCalls.map(toolResponseFor);
-        socket.send(JSON.stringify({ toolResponse: { functionResponses } }));
-        pushEvent(timeline, startedAt, "out", "toolResponse", { functionResponses });
+        void Promise.all(toolCalls.map((call) => toolResponseFor(call, runContext)))
+          .then((functionResponses) => {
+            socket.send(JSON.stringify({ toolResponse: { functionResponses } }));
+            pushEvent(timeline, startedAt, "out", "toolResponse", { functionResponses });
+          })
+          .catch((error: unknown) => {
+            pushEvent(timeline, startedAt, "local", "toolResponseError", {
+              message: error instanceof Error ? error.message : String(error),
+            });
+          });
       }
 
       const serverContent = getRecord(payloadRecord, "serverContent");
       const outputTranscription = getRecord(serverContent, "outputTranscription");
+      const inputTranscription = getRecord(serverContent, "inputTranscription");
+      if (typeof inputTranscription?.text === "string") {
+        runContext.currentPendingTranscript = inputTranscription.text;
+      }
       if (sawToolCall && !sentPostInput && typeof outputTranscription?.text === "string") {
         postToolOutputSeen = true;
         if (postInputTimer) clearTimeout(postInputTimer);
@@ -542,10 +680,24 @@ async function runOne(activityMode: ActivityMode, options: ProbeOptions) {
       if (sawToolCall && postToolOutputSeen && !sentPostInput && serverContent?.turnComplete) {
         sendPostInput();
       }
+      if (serverContent?.turnComplete && runContext.currentPendingTranscript.trim()) {
+        runContext.nextInputTurnId += 1;
+        runContext.pendingFinalTranscripts.push({
+          inputTurnId: runContext.nextInputTurnId,
+          text: runContext.currentPendingTranscript,
+          atMs: Date.now() - startedAt,
+        });
+        runContext.currentPendingTranscript = "";
+      }
     });
   });
 
-  return finish;
+  return finish.then((result) => ({
+    ...result,
+    noPersist: runContext.toolContext.noPersist === true,
+    coachTurnArgTelemetry: runContext.coachTurnArgTelemetry,
+    coachTurnDirectives: runContext.coachTurnDirectives,
+  }));
 }
 
 function summarizeSetup(setup: Record<string, unknown>) {
@@ -570,6 +722,7 @@ function summarizeSetup(setup: Record<string, unknown>) {
     thinkingConfig: generationConfig?.thinkingConfig,
     responseModalities: generationConfig?.responseModalities,
     hasInputAudioTranscription: Boolean(setup.inputAudioTranscription),
+    hasOutputAudioTranscription: Boolean(setup.outputAudioTranscription),
     functionDeclarations,
   };
 }
@@ -588,6 +741,7 @@ function summarizeBehavior(timeline: TimelineEvent[]) {
     outputTranscriptionAfterPostInput: postInputFrames.some((event) => event.tag === "outputTranscription"),
     modelTurnAfterPostInput: postInputFrames.some((event) => event.tag === "modelTurn"),
     generationCompleteAfterPostInput: postInputFrames.some((event) => event.tag === "generationComplete"),
+    toolResponseCount: timeline.filter((event) => event.direction === "out" && event.tag === "toolResponse").length,
   };
 }
 
@@ -620,8 +774,10 @@ async function main() {
   const report = {
     createdAt: new Date().toISOString(),
     script: "scripts/probe-gemini-live-stall.ts",
+    scenario: options.scenario,
     postInputPath: options.postTtsText ? "tts-wav" : preparedPostWav ? "audio-wav" : "text-fallback",
     options: {
+      scenario: options.scenario,
       firstText: options.firstText,
       postText: preparedPostWav ? null : options.postText,
       postWav: preparedPostWav,
@@ -646,7 +802,9 @@ async function main() {
     return {
       activityMode: run.activityMode,
       blocked: Boolean(run.blocked),
+      noPersist: "noPersist" in run ? run.noPersist : undefined,
       summary: run.summary,
+      coachTurnArgTelemetry: "coachTurnArgTelemetry" in run ? run.coachTurnArgTelemetry : undefined,
       tokenError: tokenResult?.error,
       providerStatus: tokenResult && "providerStatus" in tokenResult ? tokenResult.providerStatus : undefined,
     };
