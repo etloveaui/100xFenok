@@ -200,15 +200,14 @@
 
   /* 13F */
 .fnk-shell .f13-grid{display:grid; grid-template-columns:1fr; gap:1px; background:var(--c-line-2)}
-.fnk-shell .f13{background:var(--c-panel); display:flex; align-items:center; gap:var(--s3); padding:14px var(--panel-pad); transition:.12s; cursor:pointer}
+.fnk-shell .f13{min-width:0; background:var(--c-panel); display:flex; align-items:center; gap:var(--s3); padding:14px var(--panel-pad); transition:.12s; cursor:pointer}
 .fnk-shell .f13:hover{background:var(--c-surface-2)}
 .fnk-shell .f13 .badge{flex:none; font-size:11px; font-weight:700; padding:5px 10px; border-radius:var(--r-pill); white-space:nowrap}
-.fnk-shell .f13 .body .meta{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .fnk-shell .badge.buy{background:var(--c-up-soft); color:var(--c-up)} .fnk-shell .badge.sell{background:var(--c-down-soft); color:var(--c-down)} .fnk-shell .badge.new{background:var(--c-brand-soft); color:var(--c-brand)}
 .fnk-shell .f13 .body{flex:1; min-width:0}
-.fnk-shell .f13 .body .tkr{font-size:17px; font-weight:700}
-.fnk-shell .f13 .body .meta{font-size:12px; color:var(--c-ink-3); margin-top:1px}
-.fnk-shell .f13 .amt{font-size:17px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums}
+.fnk-shell .f13 .body .tkr{display:block; font-size:17px; font-weight:700; line-height:1.25}
+.fnk-shell .f13 .body .meta{display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--c-ink-3); margin-top:1px}
+.fnk-shell .f13 .amt{flex:none; font-size:17px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
 
 .fnk-shell .f13-wrap{margin-top:var(--s4)}
 
@@ -331,6 +330,11 @@
   .fnk-shell .signalbar .sb-grid{grid-template-columns:1fr}
   .fnk-shell .ti-bars{grid-template-columns:1fr}
   .fnk-shell .f13-grid{grid-template-columns:1fr}
+  .fnk-shell .f13-wrap .panel-h{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:2px var(--s2)}
+  .fnk-shell .f13-wrap .panel-h h2{min-width:0; line-height:1.25}
+  .fnk-shell .f13-wrap .panel-h .desc{grid-column:1; min-width:0; overflow:hidden; text-overflow:ellipsis}
+  .fnk-shell .f13-wrap .panel-h .act{grid-column:2; grid-row:1 / span 2; justify-self:end; margin-left:0; min-height:36px; padding:4px 0 4px var(--s2)}
+  .fnk-shell .f13{align-items:center}
   .fnk-shell .mv-split{grid-template-columns:1fr}
   .fnk-shell .mv-split .mv-col + .mv-col{border-top:1px solid var(--c-line-2)}
   }

@@ -347,6 +347,108 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
   }
 }
 
+const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
+  basic: ["marketCap", "per", "dividendYield", "return12m"],
+  action: ["marketCap", "guruHolders", "return12m", "dividendYield"],
+  value: ["per", "peForward", "pbr", "roe"],
+  estimate: ["forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1"],
+  momentum: ["growthRate", "momentum1m", "momentum6m", "momentum12m"],
+  dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y"],
+  guru: ["guruHolders", "per", "peForward", "return12m"],
+};
+
+function columnLabel(key: ScreenerSortKey): string {
+  return COLUMNS.find((column) => column.key === key)?.label ?? key;
+}
+
+function MobileMetric({ stock, metricKey }: { stock: ScreenerStock; metricKey: ScreenerSortKey }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+      <span className="block truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">
+        {columnLabel(metricKey)}
+      </span>
+      <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
+        {renderCell(stock, metricKey)}
+      </span>
+    </div>
+  );
+}
+
+function MobileStockCard({
+  stock,
+  expanded,
+  detailId,
+  preset,
+  onToggle,
+}: {
+  stock: ScreenerStock;
+  expanded: boolean;
+  detailId: string;
+  preset: ColumnPreset;
+  onToggle: () => void;
+}) {
+  const lowEvidence = stock.lowEvidence === true;
+  const confidence = confidenceText(stock.confidenceLabel);
+  const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
+  const actionTitle = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
+  const metrics = MOBILE_PRESET_KEYS[preset];
+  return (
+    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={detailId}
+        onClick={onToggle}
+        className="flex w-full min-w-0 items-start gap-3 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+      >
+        <span className="mt-1 w-4 shrink-0 text-center text-xs font-black text-slate-400" aria-hidden="true">
+          {expanded ? "-" : "+"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="text-base font-black text-slate-950">{stock.ticker}</span>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">
+              {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
+            </span>
+            <span
+              className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}
+              title={actionTitle}
+            >
+              {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
+            </span>
+          </span>
+          <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700">{stock.name}</span>
+          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-slate-400">
+            {stock.sector || "섹터 미정"}
+            {stock.actionReasons?.[0] ? ` · ${stock.actionReasons[0]}` : ""}
+          </span>
+        </span>
+        <span className="shrink-0 text-right">
+          <span className="orbitron block text-sm font-black tabular-nums text-slate-950">
+            {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
+          </span>
+          <span className="orbitron mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+            {fmtMarketCap(stock.marketCap)}
+          </span>
+          <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+            {fmtSignedPct(stock.return12m)}
+          </span>
+        </span>
+      </button>
+      <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+        {metrics.map((metricKey) => (
+          <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} />
+        ))}
+      </div>
+      {expanded ? (
+        <div id={detailId}>
+          <StockDetailPanel ticker={stock.ticker} />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
 export default function ScreenerClient({ initialSearch = "" }: { initialSearch?: string }) {
   const { stocks: rawStocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
@@ -411,6 +513,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
@@ -526,6 +629,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   }
 
   const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || profitableOnly || bandFilter || actionFilter);
+  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || bandFilter || actionFilter);
 
   return (
     <div className="data-shell-page">
@@ -599,80 +703,89 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 최대</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={perMax}
-              onChange={(event) => setPerMax(event.target.value)}
-              placeholder="예: 20"
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">FY+1 PER 최대</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={forwardPerMax}
-              onChange={(event) => setForwardPerMax(event.target.value)}
-              placeholder="예: 25"
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">매출+1 최소</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={revenueGrowthMin}
-              onChange={(event) => setRevenueGrowthMin(event.target.value)}
-              placeholder="예: 10"
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">EPS+1 최소</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={epsGrowthMin}
-              onChange={(event) => setEpsGrowthMin(event.target.value)}
-              placeholder="예: 10"
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 밴드</span>
-            <select
-              value={bandFilter}
-              onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            >
-              <option value="">전체 밴드</option>
-              <option value="cheap">저평가 (하위 25%)</option>
-              <option value="fair">적정 (중간 50%)</option>
-              <option value="rich">고평가 (상위 25%)</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">액션</span>
-            <select
-              value={actionFilter}
-              onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            >
-              <option value="">전체 액션</option>
-              <option value="smart_money">구루/13F 주목</option>
-              <option value="value_momentum">저평가+모멘텀</option>
-              <option value="index_core">지수 핵심</option>
-              <option value="income">배당 점검</option>
-              <option value="momentum">모멘텀 리더</option>
-              <option value="watch">관찰</option>
-            </select>
-          </label>
+          <div className={filtersOpen ? "contents" : "hidden md:contents"}>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 최대</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={perMax}
+                onChange={(event) => setPerMax(event.target.value)}
+                placeholder="예: 20"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">FY+1 PER 최대</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={forwardPerMax}
+                onChange={(event) => setForwardPerMax(event.target.value)}
+                placeholder="예: 25"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">매출+1 최소</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={revenueGrowthMin}
+                onChange={(event) => setRevenueGrowthMin(event.target.value)}
+                placeholder="예: 10"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">EPS+1 최소</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={epsGrowthMin}
+                onChange={(event) => setEpsGrowthMin(event.target.value)}
+                placeholder="예: 10"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 밴드</span>
+              <select
+                value={bandFilter}
+                onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              >
+                <option value="">전체 밴드</option>
+                <option value="cheap">저평가 (하위 25%)</option>
+                <option value="fair">적정 (중간 50%)</option>
+                <option value="rich">고평가 (상위 25%)</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">액션</span>
+              <select
+                value={actionFilter}
+                onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              >
+                <option value="">전체 액션</option>
+                <option value="smart_money">구루/13F 주목</option>
+                <option value="value_momentum">저평가+모멘텀</option>
+                <option value="index_core">지수 핵심</option>
+                <option value="income">배당 점검</option>
+                <option value="momentum">모멘텀 리더</option>
+                <option value="watch">관찰</option>
+              </select>
+            </label>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((value) => !value)}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 md:hidden"
+        >
+          {filtersOpen ? "고급 필터 접기" : advancedFiltersActive ? "고급 필터 적용 중" : "고급 필터 열기"}
+        </button>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
             <input
@@ -720,92 +833,116 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         ))}
       </div>
 
-      {/* Table */}
+      {/* Results */}
       <section className={cx("rounded-[1.5rem] border border-slate-200 bg-white p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
-        <div className="-mx-1 overflow-x-auto px-1">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
-                {activeColumns.map((column) => {
-                  const active = column.key === sortKey;
-                  return (
-                    <th
-                      key={column.key}
-                      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
-                      className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleSort(column.key)}
-                        className={cx(
-                          "inline-flex items-center gap-1 transition hover:text-slate-900",
-                          column.align === "right" && "flex-row-reverse",
-                          active && "text-brand-interactive",
-                        )}
-                      >
-                        {column.label}
-                        <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
-                      </button>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map((stock) => {
-                const expanded = expandedTicker === stock.ticker;
-                const detailId = `screener-detail-${stock.ticker}`;
-                return (
-                <Fragment key={stock.ticker}>
-                  <tr
-                    onClick={() =>
-                      setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
-                    }
-                    className="cursor-pointer border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
-                  >
-                    {activeColumns.map((column) => (
-                      <td
+        <div className="space-y-3 md:hidden">
+          {pageRows.map((stock) => {
+            const expanded = expandedTicker === stock.ticker;
+            const detailId = `screener-mobile-detail-${stock.ticker}`;
+            return (
+              <MobileStockCard
+                key={stock.ticker}
+                stock={stock}
+                expanded={expanded}
+                detailId={detailId}
+                preset={preset}
+                onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
+              />
+            );
+          })}
+          {dataReady && pageRows.length === 0 ? (
+            <div className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
+              조건에 맞는 종목이 없습니다.
+            </div>
+          ) : null}
+        </div>
+
+        <div className="hidden md:block">
+          <div className="-mx-1 overflow-x-auto px-1">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+                  {activeColumns.map((column) => {
+                    const active = column.key === sortKey;
+                    return (
+                      <th
                         key={column.key}
+                        aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
                         className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
                       >
-                        {column.key === "ticker" ? (
-                          <button
-                            type="button"
-                            aria-expanded={expanded}
-                            aria-controls={detailId}
-                            aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
-                            }}
-                            className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-slate-950 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-                          >
-                            <span className="w-3 text-center text-[10px] text-slate-400" aria-hidden="true">{expanded ? "-" : "+"}</span>
-                            <span className="truncate">{stock.ticker}</span>
-                          </button>
-                        ) : renderCell(stock, column.key)}
-                      </td>
-                    ))}
-                  </tr>
-                  {expanded ? (
-                    <tr id={detailId}>
-                      <td colSpan={activeColumns.length} className="p-0">
-                        <StockDetailPanel ticker={stock.ticker} />
-                      </td>
-                    </tr>
-                  ) : null}
-                </Fragment>
-                );
-              })}
-              {dataReady && pageRows.length === 0 ? (
-                <tr>
-                  <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
-                    조건에 맞는 종목이 없습니다.
-                  </td>
+                        <button
+                          type="button"
+                          onClick={() => toggleSort(column.key)}
+                          className={cx(
+                            "inline-flex items-center gap-1 transition hover:text-slate-900",
+                            column.align === "right" && "flex-row-reverse",
+                            active && "text-brand-interactive",
+                          )}
+                        >
+                          {column.label}
+                          <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                        </button>
+                      </th>
+                    );
+                  })}
                 </tr>
-              ) : null}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pageRows.map((stock) => {
+                  const expanded = expandedTicker === stock.ticker;
+                  const detailId = `screener-detail-${stock.ticker}`;
+                  return (
+                  <Fragment key={stock.ticker}>
+                    <tr
+                      onClick={() =>
+                        setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
+                      }
+                      className="cursor-pointer border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
+                    >
+                      {activeColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
+                        >
+                          {column.key === "ticker" ? (
+                            <button
+                              type="button"
+                              aria-expanded={expanded}
+                              aria-controls={detailId}
+                              aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
+                              }}
+                              className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-slate-950 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                            >
+                              <span className="w-3 text-center text-[10px] text-slate-400" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                              <span className="truncate">{stock.ticker}</span>
+                            </button>
+                          ) : renderCell(stock, column.key)}
+                        </td>
+                      ))}
+                    </tr>
+                    {expanded ? (
+                      <tr id={detailId}>
+                        <td colSpan={activeColumns.length} className="p-0">
+                          <StockDetailPanel ticker={stock.ticker} />
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
+                  );
+                })}
+                {dataReady && pageRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
+                      조건에 맞는 종목이 없습니다.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
