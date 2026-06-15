@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
+import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
 import { BUILD_VERSION } from "@/generated/build-version";
 import { inspectAdminLiveModelOutput } from "@/lib/admin-live-output-safety";
 import {
@@ -3062,14 +3063,19 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
           onVoiceChange={setVoiceName}
           onVadChange={setVadPreset}
           settingsSlot={mode === "mona" ? (
-            <CoachConfigControls
-              config={normalizedCoachConfig}
-              locked={settingsLocked}
-              onUpdate={updateCoachConfig}
-              interruptionMode={interruptionMode}
-              onInterruptionModeChange={setInterruptionMode}
-              variant="winddown"
-            />
+            <>
+              <CoachConfigControls
+                config={normalizedCoachConfig}
+                locked={settingsLocked}
+                onUpdate={updateCoachConfig}
+                interruptionMode={interruptionMode}
+                onInterruptionModeChange={setInterruptionMode}
+                variant="winddown"
+              />
+              {normalizedCoachConfig.tester === "owner" ? (
+                <MonaVnextEntry locked={settingsLocked} />
+              ) : null}
+            </>
           ) : undefined}
           onStart={() => void startSession()}
           onStop={() => void stopSession()}
