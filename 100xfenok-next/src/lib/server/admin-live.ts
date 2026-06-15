@@ -137,7 +137,10 @@ export const LIVE_PROFILES: Record<LiveBenchMode, LiveProfile> = {
       "비슷한 표현이 두 개 나오면 설명 대신 상황 두세 개로 차이를 보여준다.",
     ],
     sampleProbe: "시작",
-    languageHints: ["en-US", "ko-KR"],
+    // KO-first: Mona mostly speaks Korean (requests + thinking aloud); EN-first made the
+    // native-audio STT mishear Korean as Indonesian/Spanish/German (smoke mqemm0x5). English
+    // repeat targets are phonetically clear enough to still resolve under en-US fallback.
+    languageHints: ["ko-KR", "en-US"],
   },
 };
 

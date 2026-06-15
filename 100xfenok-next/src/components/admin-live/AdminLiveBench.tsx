@@ -245,7 +245,8 @@ const PROFILE_FALLBACK: ReadinessResponse["profiles"] = [
     intent: "자기 전 영어 발화 코치입니다. 아는 단어로 문장 조립을 반복 연습시킵니다.",
     constraints: ["자기 전 low voice", "한→영 즉답", "BEST3와 약점 노트 저장"],
     sampleProbe: "시작",
-    languageHints: ["en-US", "ko-KR"],
+    // KO-first fallback to match the server Mona profile (Korean mis-recognition fix).
+    languageHints: ["ko-KR", "en-US"],
     defaultSystemPrompt: [
       "Profile: Wind-Down",
       "Intent: 자기 전 영어 발화 코치입니다.",
@@ -1733,7 +1734,13 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     // Option C: patch coachTurn attemptText from Mona's actual recognized words ONLY after all
     // cancellation guards above, so a cancelled coachTurn never consumes a final transcript.
     if (mode === "mona" && name === "coachTurn") {
-      const resolved = resolveCoachTurnArgsForTranscript(args, coachTurnTranscriptRef.current);
+      // Prefer the CURRENT turn's pending transcript (this utterance) over the finalized FIFO,
+      // because a coachTurn often arrives before turnComplete flushes the buffer — using the FIFO
+      // alone graded the PREVIOUS utterance (one-turn lag).
+      const resolved = resolveCoachTurnArgsForTranscript(args, {
+        ...coachTurnTranscriptRef.current,
+        currentPendingTranscript: pendingCoachTranscriptRef.current,
+      });
       args = resolved.args;
       if (resolved.consumeInputTurnId !== null) {
         const consumedId = resolved.consumeInputTurnId;
@@ -1741,10 +1748,15 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
         coachTurnTranscriptRef.current.pendingFinalTranscripts =
           coachTurnTranscriptRef.current.pendingFinalTranscripts.filter((e) => e.inputTurnId > consumedId);
       }
+      if (resolved.consumedCurrentPending) {
+        // The current-turn transcript was used here; clear the buffer so the later turnComplete
+        // does not enqueue the same text again.
+        pendingCoachTranscriptRef.current = "";
+      }
       const t = resolved.telemetry;
       addLog(
         "tool",
-        `coachTurn arg ${resolved.didOverride ? "override" : "keep"}: reason=${resolved.overrideReason ?? resolved.skippedReason ?? "-"} mLen=${t.modelAttemptTextLen} tLen=${t.transcriptTextLen} turnId=${t.inputTurnId ?? "-"}`,
+        `coachTurn arg ${resolved.didOverride ? "override" : "keep"}: reason=${resolved.overrideReason ?? resolved.skippedReason ?? "-"} src=${t.source} mLen=${t.modelAttemptTextLen} tLen=${t.transcriptTextLen} turnId=${t.inputTurnId ?? "-"}`,
       );
     }
     const toolIntent = toLessonMaterialIntent(args.intent);

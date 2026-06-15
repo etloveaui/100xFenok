@@ -16,7 +16,10 @@ function testEmptyModelAttemptUsesPendingTranscript() {
   assert.equal(resolved.overrideReason, "empty-model-attempt");
   assert.equal(resolved.skippedReason, null);
   assert.equal(resolved.consumeInputTurnId, 1);
+  assert.equal(resolved.consumedCurrentPending, false);
+  assert.equal(resolved.telemetry.source, "finalized-fifo");
   assert.equal(resolved.telemetry.inputTurnId, 1);
+  assert.equal(resolved.telemetry.consumedCurrentPending, false);
   assert.equal(resolved.telemetry.modelAttemptTextLen, 0);
   assert.equal(resolved.telemetry.transcriptTextLen, "왜 영어 안 보여 줘?".length);
 }
@@ -35,6 +38,8 @@ function testConsumedTranscriptDoesNotReplay() {
   assert.equal(resolved.overrideReason, null);
   assert.equal(resolved.skippedReason, "stale-or-consumed-transcript");
   assert.equal(resolved.consumeInputTurnId, null);
+  assert.equal(resolved.consumedCurrentPending, false);
+  assert.equal(resolved.telemetry.source, "none");
   assert.equal(resolved.telemetry.inputTurnId, null);
 }
 
@@ -52,6 +57,8 @@ function testMismatchKeepsModelAttemptAndConsumesTranscript() {
   assert.equal(resolved.overrideReason, null);
   assert.equal(resolved.skippedReason, "model-transcript-mismatch-kept");
   assert.equal(resolved.consumeInputTurnId, 2);
+  assert.equal(resolved.consumedCurrentPending, false);
+  assert.equal(resolved.telemetry.source, "finalized-fifo");
 }
 
 function testControlIntentKeepsArgsAndConsumesTranscript() {
@@ -69,7 +76,31 @@ function testControlIntentKeepsArgsAndConsumesTranscript() {
   assert.equal(resolved.overrideReason, null);
   assert.equal(resolved.skippedReason, "control-intent-kept");
   assert.equal(resolved.consumeInputTurnId, 3);
+  assert.equal(resolved.consumedCurrentPending, false);
+  assert.equal(resolved.telemetry.source, "finalized-fifo");
   assert.equal(resolved.telemetry.inputTurnId, 3);
+}
+
+function testCurrentPendingTranscriptWinsBeforeTurnComplete() {
+  const resolved = resolveCoachTurnArgsForTranscript(
+    { attemptText: "" },
+    {
+      pendingFinalTranscripts: [{ inputTurnId: 4, text: "istri ini" }],
+      lastConsumedInputTurnId: 3,
+      currentPendingTranscript: "It's still raining.",
+    },
+  );
+
+  assert.equal(resolved.args.attemptText, "It's still raining.");
+  assert.equal(resolved.didOverride, true);
+  assert.equal(resolved.overrideReason, "empty-model-attempt");
+  assert.equal(resolved.skippedReason, null);
+  assert.equal(resolved.consumeInputTurnId, null);
+  assert.equal(resolved.consumedCurrentPending, true);
+  assert.equal(resolved.telemetry.source, "current-pending");
+  assert.equal(resolved.telemetry.inputTurnId, null);
+  assert.equal(resolved.telemetry.consumedCurrentPending, true);
+  assert.equal(resolved.telemetry.transcriptTextLen, "It's still raining.".length);
 }
 
 const tests = [
@@ -77,6 +108,7 @@ const tests = [
   testConsumedTranscriptDoesNotReplay,
   testMismatchKeepsModelAttemptAndConsumesTranscript,
   testControlIntentKeepsArgsAndConsumesTranscript,
+  testCurrentPendingTranscriptWinsBeforeTurnComplete,
 ];
 
 for (const test of tests) {
