@@ -258,6 +258,49 @@
   - `not_yet_used` 520개 필드는 기본 DOM에 전체 덤프하지 않고, 사용자가 해당 상태를 선택할 때만 페이지 단위로 렌더.
   - `internalSource`는 기본 비공개, Debug toggle에서만 표시.
 - `admin/data-lab/*`
+
+## 추가: 스크리너 FY+1~FY+3 추정치 전면 노출
+
+### 범위
+- 대상: `/screener` 추정치 preset, `stock_action_summary.json`, field-usage manifest, deterministic interpretation.
+- 목적: 이미 `stock_action_index.json`에 있던 FY+2/FY+3 추정치를 summary/UI에서 잘라내지 않고, 데이터 업데이트 시 자동으로 화면과 해석에 반영되게 한다.
+
+### 변경 요약
+- `scripts/build-phase2-closeout-indexes.mjs`
+  - FY horizon을 `fy1/fy2/fy3` 공통 루프로 정리.
+  - compact `stock_action_summary.json`에 FY+2/FY+3 PER, EPS, 매출 성장, EPS 성장, GPM, OPM, ROE 필드를 추가.
+  - coverage도 FY+1~FY+3와 forward EPS까지 세도록 확장.
+- `100xfenok-next/src/app/screener/ScreenerClient.tsx`
+  - `estimate` preset에서 FY+1/FY+2/FY+3 값을 모두 표시.
+  - 모바일 estimate 카드도 같은 FY+1~3 지표를 노출.
+- `100xfenok-next/src/lib/screener/types.ts`
+  - FY+2/FY+3 sort key와 stock 필드를 추가.
+- `100xfenok-next/src/lib/screener/deterministicRules.ts`
+  - FY+1~3 평균 매출/EPS 성장률, 예상 PER 하락 흐름, 평균 ROE를 이용하는 `3년 성장 가시성` 자동 해석 규칙을 추가.
+- `scripts/generate-stock-field-usage-manifest.mjs`
+  - 압축 tuple summary의 `fields` 계약을 풀어 `rows[].forwardPeFy2` 같은 가상 필드로 추적.
+  - 압축 배열이 `rows[][]`로만 잡혀 실제 UI 컬럼 사용이 가려지는 문제를 보정.
+- `docs/planning/DESIGN_feno_stock_lens_20260616.md`
+  - 최신 manifest 수치와 압축 summary 추적 규칙을 반영.
+
+### 실측
+- `stock_action_summary.json`: `fields_len` 33, `row0_len` 33.
+- FY+2/FY+3 coverage:
+  - FY+2 forward PER 1,029 / forward EPS 1,041 / 매출 성장 1,030 / EPS 성장 1,041 / ROE 1,035.
+  - FY+3 forward PER 1,024 / forward EPS 1,031 / 매출 성장 1,020 / EPS 성장 1,031 / ROE 1,026.
+- stock field usage manifest:
+  - parsed files 2,744.
+  - schema-level fields 901.
+  - status split: `not_yet_used` 510, `visually_rendered` 232, `metadata` 145, `interpreted` 14.
+  - `rows[].forwardPeFy1~3`, `rows[].revenueGrowthFy1~3`, `rows[].epsGrowthFy1~3`, `rows[].roeFy1~3`가 `interpreted`로 분류됨.
+
+### 검증 상태
+- `node scripts/build-phase2-closeout-indexes.mjs` 통과.
+- `node scripts/generate-stock-field-usage-manifest.mjs` 통과.
+- root/public `stock_action_summary.json` mirror 동일.
+- root/public `stock-field-usage-manifest.json` mirror 동일.
+- `npx eslint src/app/screener/ScreenerClient.tsx src/lib/screener/types.ts src/lib/screener/deterministicRules.ts` 통과.
+- `npx tsc --noEmit --incremental false` 통과.
   - public Data Lab과 동일한 `index.html`, `dashboard.js`, `renderer.js`로 legacy mirror 동기화.
 
 ### 검증 상태

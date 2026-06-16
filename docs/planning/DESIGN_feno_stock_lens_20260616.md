@@ -45,11 +45,14 @@ Implemented inventory:
 - Generator: `node scripts/generate-stock-field-usage-manifest.mjs`
 - Internal manifest: `data/admin/stock-field-usage-manifest.json`
 - Public mirror: `100xfenok-next/public/data/admin/stock-field-usage-manifest.json`
-- Current scan: 2,744 parsed files, 883 schema-level fields, 490KB manifest
-- Current status split: `not_yet_used` 520, `visually_rendered` 219,
-  `metadata` 143, `interpreted` 1
+- Current scan: 2,744 parsed files, 901 schema-level fields, 513KB manifest
+- Current status split: `not_yet_used` 510, `visually_rendered` 232,
+  `metadata` 145, `interpreted` 14
 - Dynamic maps such as ticker/date/investor keyed objects are normalized to `*`
   so the manifest remains schema-level, not per-symbol/per-date noise.
+- Compressed tuple payloads such as `computed/stock_action_summary.json` must
+  be expanded through their `fields` contract into virtual paths like
+  `rows[].forwardPeFy2`; otherwise data usage reports hide real UI columns.
 - Source/vendor names may appear only in `internalSource` or developer/admin
   context. User-facing labels must use `productLabel` or Feno/function language.
 
@@ -70,6 +73,9 @@ Admin audit UI:
 - `stock_lens_full`: per-symbol full profile for professional depth.
 - `stock_lens_summary`: lightweight list/search profile.
 - `stock_field_usage_manifest`: field-level usage and omission map.
+- `stock_action_summary`: compact list payload; FY+1/FY+2/FY+3 estimate and
+  profitability fields are included for list views without client-fetching every
+  per-symbol detail file.
 - deterministic rules first; LLM narrative can be added later as a layer over
   bounded numeric facts and rule outputs.
 
