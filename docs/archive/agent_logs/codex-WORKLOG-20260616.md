@@ -50,3 +50,52 @@
 - [ ] 배포 후 실제 `/market`에서 정상 데이터/일시 실패 상태를 한 번 더 확인.
 - [ ] home 외 다른 legacy 정적 페이지도 `sync-static-overrides`에 남아 있는 임시 패치가 SSOT로 승격 가능한지 점검.
 - [ ] 스크리너 모바일 깨짐/가독성 점검으로 이어가기.
+
+## 추가: 데이터 충실성 / 모바일 차트 / root 홈 로딩
+
+### 범위
+- 대상: Next root 홈(`/`), 스크리너/종목 상세의 재무 차트와 수익성 추정치.
+- 사용자 확인 포인트:
+  - 모바일 종목 상세에서 PER/매출/EPS 차트 정렬이 어긋나 보임.
+  - 수익성 카드의 `매출총이익률` FY+1/FY+2/FY+3이 비어 보임.
+  - 실제 불편했던 로딩은 `/market` legacy가 아니라 root 홈의 Market Regime 영역.
+
+### 실측
+- detail JSON 총량: `data/global-scouter/stocks/detail/*.json` 1,066개, `100xfenok-next/public/data/global-scouter/stocks/detail/*.json` 1,066개.
+- `profitability_estimates.gross_margin`은 비어 있지만 `income_statement_estimates.gross_profit / revenue`로 계산 가능한 값:
+  - 964개 티커.
+  - 2,866개 FY 값.
+  - NVDA 예: FY+1 74.5447%, FY+2 72.9863%, FY+3 71.5532%.
+- 추가 계산 가능 누락:
+  - `net_margin`: 3개 티커 / 5개 FY 값.
+  - `roe`: 7개 티커 / 11개 FY 값.
+  - `roa`: 24개 티커 / 34개 FY 값.
+  - `operating_margin`: 추가 계산 가능 누락 없음.
+
+### 변경 요약
+- `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
+  - `deriveProfitabilityEstimates`를 추가해 기존 추정값을 우선 사용하고, 누락값은 원천 추정치에서 자동 계산.
+  - `Sparkline`과 `PerBandChart`의 SVG 좌표계를 `300px viewBox`와 동일 좌우 패딩으로 통일.
+  - PER 밴드 값 라벨은 현재값과 마지막 추정치 중심으로 줄여 모바일 겹침을 완화.
+- `100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx`
+  - 수익성 카드가 `profitability_estimates` 원본만 보지 않고 자동 보강된 추정치를 사용.
+  - 매출총이익률뿐 아니라 순이익률/ROE/ROA의 계산 가능 누락도 같은 경로로 보강.
+- `100xfenok-next/src/hooks/useDashboardData.ts`
+  - root 홈 데이터 빌드 중 예외가 나도 `loading` skeleton에 갇히지 않도록 fallback source 전체를 실패 상태로 전환.
+- `100xfenok-next/src/lib/dashboard/freshness-labels.ts`
+  - freshness timestamp가 예외적으로 문자열이 아니어도 라벨 렌더가 TypeError로 죽지 않게 방어.
+- `100xfenok-next/src/lib/server/admin-live-tools.ts`
+  - CCH/live-tool의 `feno-data` 상세 응답도 수익성 추정치 자동 보강을 사용.
+  - overview 하이라이트에 `grossMarginFy1`을 추가하고, 기존 `operatingMarginFy1`/`roeFy1`도 보강 경로를 타도록 변경.
+
+### 검증 상태
+- 데이터 감사: Node 스크립트로 전체 1,066개 detail JSON 계산 가능 누락 수 확인.
+- 의존성: 사용자 승인 후 `npm ci` 완료. `npm audit` 기준 14개 취약점 경고(1 low, 7 moderate, 6 high)는 확인만 했고 자동 수정은 하지 않음.
+- 정적 검사: `npm run lint -- src/app/screener/StockDetailPanel.tsx 'src/app/stock/[ticker]/StockDetailClient.tsx' src/hooks/useDashboardData.ts src/lib/dashboard/freshness-labels.ts src/lib/server/admin-live-tools.ts` 통과.
+- 타입 검사: `npm run build:version` 후 `npx tsc -p tsconfig.json --noEmit --pretty false --incremental false` 통과.
+- 빌드: `NEXT_BUILD_TARGET=runtime npx next build --webpack` 통과.
+- 런타임 HTTP: `next start -p 3107` 후 `/` 200, `/stock/NVDA/` 200, `/data/global-scouter/stocks/detail/NVDA.json` 200 확인.
+- 모바일 브라우저: `playwright-core` + 시스템 Chrome으로 390x844 viewport 확인.
+  - root 홈: `MARKET REGIME` 실제 콘텐츠 렌더, skeleton 없음, page/console error 없음.
+  - NVDA 통계 탭: `매출총이익률` 및 `추정 FY+1 74.5%` 노출, SVG chart `viewBox` 확인, page/console error 없음.
+  - 스크린샷: `/tmp/100x-home-mobile-data-fidelity.png`, `/tmp/100x-nvda-statistics-mobile-data-fidelity.png`.
