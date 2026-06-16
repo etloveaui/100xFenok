@@ -15,13 +15,20 @@ const CADENCE_LABELS: Record<
   quarterly: { full: "분기", compact: "분" },
 };
 
-function dateParts(value: string) {
-  const iso = value.slice(0, 10);
+function normalizeFreshnessValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value === null || value === undefined) return "";
+  return String(value);
+}
+
+function dateParts(value: unknown) {
+  const text = normalizeFreshnessValue(value);
+  const iso = text.slice(0, 10);
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) {
     return {
-      iso: value,
-      md: value,
+      iso: text,
+      md: text,
     };
   }
   const [, , month, day] = match;
@@ -31,10 +38,11 @@ function dateParts(value: string) {
   };
 }
 
-function quarterParts(value: string) {
-  const parsed = new Date(value);
+function quarterParts(value: unknown) {
+  const text = normalizeFreshnessValue(value);
+  const parsed = new Date(text);
   if (Number.isNaN(parsed.getTime())) {
-    return { full: value, compact: value };
+    return { full: text, compact: text };
   }
   const year = parsed.getUTCFullYear();
   const quarter = Math.floor(parsed.getUTCMonth() / 3) + 1;

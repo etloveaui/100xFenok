@@ -60,6 +60,7 @@ const FENO_SCOUTER_ETF_PATH = "/data/global-scouter/raw/etfs_m_etfs.json";
 const FENO_COMPUTED_SIGNALS_PATH = "/data/computed/signals.json";
 const FENO_13F_BY_TICKER_PATH = "/data/sec-13f/by_ticker.json";
 const FENO_13F_SUMMARY_PATH = "/data/sec-13f/summary.json";
+const FENO_ESTIMATE_KEYS = ["fy1", "fy2", "fy3"] as const;
 const FENO_DETAIL_SECTIONS = [
   "overview",
   "valuation",
@@ -708,6 +709,48 @@ function pickEstimateNumber(detail: JsonRecord | null, blockKey: string, metricK
   return getNumber(metric?.[yearKey]);
 }
 
+function pickProfitabilityEstimateNumber(detail: JsonRecord | null, metricKey: string, yearKey: string) {
+  const existing = pickEstimateNumber(detail, "profitability_estimates", metricKey, yearKey);
+  if (existing !== null) return existing;
+
+  const ratioSources: Record<string, [string, string, string, string]> = {
+    gross_margin: ["income_statement_estimates", "gross_profit", "income_statement_estimates", "revenue"],
+    operating_margin: ["income_statement_estimates", "operating_income", "income_statement_estimates", "revenue"],
+    net_margin: ["income_statement_estimates", "net_income", "income_statement_estimates", "revenue"],
+    roe: ["income_statement_estimates", "net_income", "scale_estimates", "total_equity"],
+    roa: ["income_statement_estimates", "net_income", "scale_estimates", "total_assets"],
+  };
+  const source = ratioSources[metricKey];
+  if (!source) return null;
+  const [numeratorBlock, numeratorMetric, denominatorBlock, denominatorMetric] = source;
+  const numerator = pickEstimateNumber(detail, numeratorBlock, numeratorMetric, yearKey);
+  const denominator = pickEstimateNumber(detail, denominatorBlock, denominatorMetric, yearKey);
+  return numerator !== null && denominator !== null && denominator !== 0
+    ? (numerator / denominator) * 100
+    : null;
+}
+
+function buildProfitabilityEstimateBlock(detail: JsonRecord | null) {
+  const source = pickObject(pick(detail, "profitability_estimates"));
+  const metrics = ["gross_margin", "operating_margin", "net_margin", "roe", "roa"];
+  const next: JsonRecord = source ? { ...source } : {};
+
+  metrics.forEach((metricKey) => {
+    const existing = pickObject(source?.[metricKey]);
+    const metric: JsonRecord = existing ? { ...existing } : {};
+    FENO_ESTIMATE_KEYS.forEach((yearKey) => {
+      if (getNumber(metric[yearKey]) !== null) return;
+      const derived = pickProfitabilityEstimateNumber(detail, metricKey, yearKey);
+      metric[yearKey] = derived;
+    });
+    if (existing || Object.values(metric).some((value) => getNumber(value) !== null)) {
+      next[metricKey] = metric;
+    }
+  });
+
+  return Object.keys(next).length > 0 ? next : null;
+}
+
 function buildScouterDetail(detailRaw: unknown, section: FenoDetailSection) {
   const detail = pickObject(detailRaw);
   if (!detail) return null;
@@ -721,8 +764,9 @@ function buildScouterDetail(detailRaw: unknown, section: FenoDetailSection) {
         pbrFy1: pickEstimateNumber(detail, "valuation_estimates", "pbr", "fy1"),
         revenueGrowthFy1: pickEstimateNumber(detail, "growth_estimates", "revenue_growth", "fy1"),
         epsGrowthFy1: pickEstimateNumber(detail, "growth_estimates", "eps_growth", "fy1"),
-        operatingMarginFy1: pickEstimateNumber(detail, "profitability_estimates", "operating_margin", "fy1"),
-        roeFy1: pickEstimateNumber(detail, "profitability_estimates", "roe", "fy1"),
+        grossMarginFy1: pickProfitabilityEstimateNumber(detail, "gross_margin", "fy1"),
+        operatingMarginFy1: pickProfitabilityEstimateNumber(detail, "operating_margin", "fy1"),
+        roeFy1: pickProfitabilityEstimateNumber(detail, "roe", "fy1"),
         epsFy1: pickEstimateNumber(detail, "per_share_estimates", "eps", "fy1"),
         epsFy2: pickEstimateNumber(detail, "per_share_estimates", "eps", "fy2"),
       }),
@@ -749,7 +793,7 @@ function buildScouterDetail(detailRaw: unknown, section: FenoDetailSection) {
     return compactObject({
       years: pickArray(detail.years),
       profitability: pickEstimateBlock(detail, "profitability"),
-      profitabilityEstimates: pickEstimateBlock(detail, "profitability_estimates"),
+      profitabilityEstimates: buildProfitabilityEstimateBlock(detail),
     });
   }
 

@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 
-type MaybeNumber = number | null | undefined;
-type NumberSeries = MaybeNumber[];
+export type MaybeNumber = number | null | undefined;
+export type NumberSeries = MaybeNumber[];
+export type EstimateSeries = { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
+const ESTIMATE_KEYS = ["fy1", "fy2", "fy3"] as const;
+const CHART_WIDTH = 300;
+const CHART_PAD_L = 44;
+const CHART_PAD_R = 30;
 
 interface WeeklyPoint {
   date?: string;
@@ -57,6 +62,7 @@ export interface DetailData {
   };
   per_share?: { eps?: NumberSeries };
   cash_flow?: { cfo?: NumberSeries; capex?: NumberSeries; fcf?: NumberSeries };
+  scale_estimates?: Record<string, Record<string, MaybeNumber>>;
   profitability?: {
     gross_margin?: NumberSeries;
     operating_margin?: NumberSeries;
@@ -162,7 +168,6 @@ function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
 
-type EstimateSeries = { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
 type FiscalPoint = { label: string; value: number; index: number; estimate?: boolean };
 
 function normalizeEstimates(estimates?: MaybeNumber | EstimateSeries): EstimateSeries {
@@ -180,11 +185,7 @@ function buildFiscalPoints(years: string[], data: NumberSeries | null | undefine
       index,
     }))
     .filter((point): point is FiscalPoint => isFiniteNumber(point.value));
-  const estimateLabels = [
-    ["fy1", "FY+1"],
-    ["fy2", "FY+2"],
-    ["fy3", "FY+3"],
-  ] as const;
+  const estimateLabels = ESTIMATE_KEYS.map((key, index) => [key, `FY+${index + 1}`] as const);
   const estimatePoints: FiscalPoint[] = [];
   estimateLabels.forEach(([key, label]) => {
     const value = normalizeEstimates(estimates)[key];
@@ -196,6 +197,40 @@ function buildFiscalPoints(years: string[], data: NumberSeries | null | undefine
   return {
     labels: [...labels, ...estimatePoints.map((point) => point.label)],
     points,
+  };
+}
+
+function deriveRatioEstimates(
+  existing: Record<string, MaybeNumber> | undefined,
+  numerator: Record<string, MaybeNumber> | undefined,
+  denominator: Record<string, MaybeNumber> | undefined,
+): EstimateSeries | null {
+  const next: EstimateSeries = {};
+  for (const key of ESTIMATE_KEYS) {
+    const existingValue = existing?.[key];
+    if (isFiniteNumber(existingValue)) {
+      next[key] = existingValue;
+      continue;
+    }
+    const numeratorValue = numerator?.[key];
+    const denominatorValue = denominator?.[key];
+    next[key] = isFiniteNumber(numeratorValue) && isFiniteNumber(denominatorValue) && denominatorValue !== 0
+      ? (numeratorValue / denominatorValue) * 100
+      : null;
+  }
+  return Object.values(next).some(isFiniteNumber) ? next : null;
+}
+
+export function deriveProfitabilityEstimates(detail: DetailData): Record<string, EstimateSeries | null> {
+  const income = detail.income_statement_estimates;
+  const scale = detail.scale_estimates;
+  const existing = detail.profitability_estimates;
+  return {
+    gross_margin: deriveRatioEstimates(existing?.gross_margin, income?.gross_profit, income?.revenue),
+    operating_margin: deriveRatioEstimates(existing?.operating_margin, income?.operating_income, income?.revenue),
+    net_margin: deriveRatioEstimates(existing?.net_margin, income?.net_income, income?.revenue),
+    roe: deriveRatioEstimates(existing?.roe, income?.net_income, scale?.total_equity),
+    roa: deriveRatioEstimates(existing?.roa, income?.net_income, scale?.total_assets),
   };
 }
 
@@ -464,15 +499,16 @@ export function Sparkline({
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const width = 220;
-  const height = 82;
-  const padX = 6;
-  const padT = 8;
-  const padB = 17;
-  const plotW = width - padX * 2;
+  const width = CHART_WIDTH;
+  const height = 96;
+  const padL = CHART_PAD_L;
+  const padR = CHART_PAD_R;
+  const padT = 10;
+  const padB = 22;
+  const plotW = width - padL - padR;
   const plotH = height - padT - padB;
   const xDenominator = Math.max(labels.length - 1, 1);
-  const toX = (index: number) => padX + (index / xDenominator) * plotW;
+  const toX = (index: number) => padL + (index / xDenominator) * plotW;
   const toY = (value: number) => padT + plotH - ((value - min) / range) * plotH;
 
   const actualLine = actualPoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ");
@@ -480,7 +516,7 @@ export function Sparkline({
   const labelPoints = [currentPoint, estimatePoints[estimatePoints.length - 1] ?? firstEstimatePoint].filter(Boolean) as FiscalPoint[];
 
   return (
-    <svg width={width} height={height} className="max-w-full overflow-visible" role="img" aria-label="FY별 추이 차트">
+    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="block w-full max-w-full overflow-visible" role="img" aria-label="FY별 추이 차트">
       <polyline points={actualLine} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       {firstEstimatePoint && currentPoint ? (
         <line
@@ -571,10 +607,10 @@ export function PerBandChart({
   yMin -= yPad;
   yMax += yPad;
 
-  const w = 300;
+  const w = CHART_WIDTH;
   const h = 132;
-  const padL = 44;
-  const padR = 30;
+  const padL = CHART_PAD_L;
+  const padR = CHART_PAD_R;
   const padT = 12;
   const padB = 30;
   const plotW = w - padL - padR;
@@ -597,10 +633,14 @@ export function PerBandChart({
   const hasForward = Boolean(forwardPoint);
   const forwardX = forwardPoint ? toX(forwardPoint.index) : 0;
   const forwardY = forwardPoint ? toY(forwardPoint.value) : 0;
+  const valueLabelPoints = [
+    currentPoint,
+    forwardPoints[forwardPoints.length - 1] ?? forwardPoint,
+  ].filter(Boolean) as FiscalPoint[];
 
   return (
     <div>
-      <svg width={w} height={h} className="max-w-full overflow-visible" role="img" aria-label="FY별 PER 밴드 차트">
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="block w-full max-w-full overflow-visible" role="img" aria-label="FY별 PER 밴드 차트">
         {/* Shaded band */}
         {bands && (
           <>
@@ -720,17 +760,20 @@ export function PerBandChart({
               >
                 <title>{`${point.label} PER ${point.value.toFixed(1)}x`}</title>
               </circle>
-              <text
-                x={x}
-                y={Math.max(9, y - 10)}
-                textAnchor="middle"
-                className="text-[9px] font-black fill-slate-600"
-              >
-                {point.value.toFixed(1)}
-              </text>
             </g>
           );
         })}
+        {valueLabelPoints.map((point) => (
+          <text
+            key={`per-label-${point.label}`}
+            x={toX(point.index)}
+            y={Math.max(9, toY(point.value) - 10)}
+            textAnchor="middle"
+            className="text-[9px] font-black fill-slate-600"
+          >
+            {point.value.toFixed(1)}
+          </text>
+        ))}
 
         {/* X-axis labels */}
         {periodLabels.map((label, index) => (

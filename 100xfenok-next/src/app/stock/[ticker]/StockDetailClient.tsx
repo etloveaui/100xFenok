@@ -13,6 +13,7 @@ import {
   RawFinancialDepth,
   SlickChartsDepth,
   fmtLarge,
+  deriveProfitabilityEstimates,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
@@ -523,6 +524,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const years: string[] = Array.isArray(detail?.years) ? detail.years : [];
   const rowPerBand = validAnalyzerPerBand(row);
   const detailPerBands = validDetailPerBands(detail?.per_bands);
+  const profitabilityEstimates = detail ? deriveProfitabilityEstimates(detail) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -678,11 +680,11 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                     <div>
                       <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
                       <div className="space-y-3">
-                        <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.gross_margin)} color="#14b8a6" years={years} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.operating_margin)} color="#06b6d4" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.net_margin)} color="#6366f1" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={estimateSeries(detail.profitability_estimates?.roe)} color="#8b5cf6" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={estimateSeries(detail.profitability_estimates?.roa)} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={profitabilityEstimates?.gross_margin} color="#14b8a6" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={profitabilityEstimates?.operating_margin} color="#06b6d4" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={profitabilityEstimates?.net_margin} color="#6366f1" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={profitabilityEstimates?.roe} color="#8b5cf6" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
                       </div>
                       {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
                         <p className="mt-2 text-[10px] font-semibold text-slate-400">

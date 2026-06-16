@@ -38,6 +38,10 @@ async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): P
   }
 }
 
+function fallbackSourceIds(): DashboardSourceId[] {
+  return Object.keys(DEFAULT_DASHBOARD.freshness) as DashboardSourceId[];
+}
+
 export function useDashboardData() {
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(DEFAULT_DASHBOARD);
   const [dataReady, setDataReady] = useState(false);
@@ -137,6 +141,12 @@ export function useDashboardData() {
         setDataReady(false);
       } else {
         setDashboard((prev) => ({ ...prev, freshness: nextSnapshot.freshness }));
+      }
+    } catch {
+      if (isMountedRef.current) {
+        setDashboard(DEFAULT_DASHBOARD);
+        setFailedSources(fallbackSourceIds());
+        setDataReady(false);
       }
     } finally {
       loadInFlightRef.current = false;
