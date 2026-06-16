@@ -165,6 +165,26 @@ export interface ConvictionData {
   by_investor: Record<string, ConvictionPosition[]>;
 }
 
+export interface ConvictionEntry {
+  investor: string;
+  ticker: string;
+  weight: number;
+  value: number;
+  signal: string;
+}
+
+export interface ConvictionEntriesData {
+  metadata: {
+    quarter: string;
+    high_conviction_new_count: number;
+    top_conviction_hold_count: number;
+    current_cohort_investors: number;
+    excluded_stale_investors?: string[];
+  };
+  high_conviction_new: ConvictionEntry[];
+  top_conviction_hold: ConvictionEntry[];
+}
+
 export interface ConsensusMetadata {
   total_investors: number;
   tickers_count: number;
@@ -183,6 +203,19 @@ export interface ConsensusTicker {
 export interface ConsensusData {
   metadata: ConsensusMetadata;
   consensus: Record<string, ConsensusTicker>;
+}
+
+export interface EnhancedConsensusTicker {
+  ticker: string;
+  equity_score: number;
+  equity_holders: number;
+  total_holders: number;
+  classes_held: string[];
+}
+
+export interface EnhancedConsensusData {
+  metadata: ConsensusMetadata;
+  enhanced_consensus: Record<string, EnhancedConsensusTicker>;
 }
 
 export interface SummaryInvestor {
@@ -204,6 +237,19 @@ export interface SummaryData {
     latest_quarter?: string;
     total_investors?: number;
     total_tickers?: number;
+    enrichment_coverage?: {
+      sector?: number;
+      industry?: number;
+      market_cap?: number;
+      price_at_filing?: number;
+      return_since_filing?: number;
+    };
+    enrichment_backfill?: {
+      generated_at?: string;
+      total_holdings?: number;
+      profile_hit_rows?: number;
+      profile_miss_rows?: number;
+    };
   };
   investors: Record<string, SummaryInvestor>;
   top_stocks: Array<{
@@ -216,14 +262,29 @@ export interface SummaryData {
 export interface ByTickerEntry {
   holders: string[];
   total_shares: number;
+  total_market_value?: number;
   holder_details: Array<{
     investor: string;
     shares: number;
+    market_value?: number;
     weight: number;
+    classes_held?: string[];
+    position_types?: string[];
   }>;
 }
 
 export type ByTickerData = Record<string, ByTickerEntry>;
+
+export interface SectorHoldingsEntry {
+  investors: string[];
+  avg_weight: number;
+  top_holdings: string[];
+}
+
+export type SectorHoldingsData = Record<
+  string,
+  SectorHoldingsEntry | { source_mix?: Record<string, number> } | undefined
+>;
 
 export interface InvestorHolding {
   ticker: string | null;
@@ -284,8 +345,10 @@ export interface InvestorData {
 
 export interface SuperInvestorsDataResult {
   consensus: ConsensusData | null;
+  enhancedConsensus: EnhancedConsensusData | null;
   summary: SummaryData | null;
   byTicker: ByTickerData | null;
+  bySector: SectorHoldingsData | null;
   dataReady: boolean;
   failed: boolean;
   quarter: string | null;

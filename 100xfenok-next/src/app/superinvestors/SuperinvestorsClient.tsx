@@ -4,15 +4,17 @@ import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import TransitionLink from "@/components/TransitionLink";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
-import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
+import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
 import type {
   SuperInvestorsTab,
   ConsensusTicker,
+  EnhancedConsensusTicker,
   SummaryInvestor,
   InvestorHolding,
   InvestorFiling,
+  SectorHoldingsEntry,
   TradesRankingData,
   TradesRankingRow,
   TurnoverData,
@@ -156,6 +158,16 @@ function fmtWeight(value: number | null | undefined): string {
   return `${(value * 100).toFixed(2)}%`;
 }
 
+function fmtPct(value: number | null | undefined, digits = 1): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
+function fmtScore(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return `${Math.round(value * 100)}`;
+}
+
 function uniqueHolders(holdersList: string[]): string[] {
   const seen = new Set<string>();
   return holdersList.filter((h) => {
@@ -181,6 +193,17 @@ function sortConsensus(rows: ConsensusTicker[], dir: "asc" | "desc") {
   });
 }
 
+function isSectorEntry(value: unknown): value is SectorHoldingsEntry {
+  return !!value && typeof value === "object" && Array.isArray((value as SectorHoldingsEntry).top_holdings);
+}
+
+function classSummary(entry: EnhancedConsensusTicker | undefined): string {
+  if (!entry) return "—";
+  const extra = Math.max(0, entry.total_holders - entry.equity_holders);
+  if (extra > 0) return `${entry.equity_holders}/${entry.total_holders}`;
+  return `${entry.equity_holders}`;
+}
+
 function EmptyState({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="rounded-[1.2rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
@@ -198,7 +221,9 @@ function SkeletonRows({ count = 6 }: { count?: number }) {
           <td className="px-3 py-3"><div className="h-4 w-8 rounded bg-slate-200" /></td>
           <td className="px-3 py-3"><div className="h-4 w-20 rounded bg-slate-200" /></td>
           <td className="px-3 py-3"><div className="h-4 w-12 rounded bg-slate-200" /></td>
+          <td className="px-3 py-3"><div className="h-4 w-16 rounded bg-slate-200" /></td>
           <td className="px-3 py-3"><div className="h-4 w-40 rounded bg-slate-200" /></td>
+          <td className="px-3 py-3"><div className="h-4 w-16 rounded bg-slate-200" /></td>
         </tr>
       ))}
     </>
@@ -574,7 +599,7 @@ export default function SuperinvestorsClient({
   initialSearch?: string;
   initialGuru?: string | null;
 }) {
-  const { consensus, summary, byTicker, dataReady, failed, quarter, excludedStale } = use13FData();
+  const { consensus, enhancedConsensus, summary, byTicker, bySector, dataReady, failed, quarter, excludedStale } = use13FData();
   const [tab, setTab] = useState<SuperInvestorsTab>(initialTab ?? "consensus");
   const [search, setSearch] = useState(initialSearch);
   const [group, setGroup] = useState("");
@@ -631,6 +656,23 @@ export default function SuperinvestorsClient({
     return byTicker[key] ?? null;
   }, [byTicker, search]);
 
+  const byTickerEnhanced = useMemo(() => {
+    if (!enhancedConsensus || !search.trim()) return null;
+    const key = search.trim().toUpperCase();
+    return enhancedConsensus.enhanced_consensus?.[key] ?? null;
+  }, [enhancedConsensus, search]);
+
+  const sectorRows = useMemo(() => {
+    if (!bySector) return [];
+    return Object.entries(bySector)
+      .filter(([sector, entry]) => sector !== "_meta" && isSectorEntry(entry))
+      .map(([sector, entry]) => ({ sector, ...(entry as SectorHoldingsEntry) }))
+      .sort((a, b) => b.avg_weight - a.avg_weight)
+      .slice(0, 8);
+  }, [bySector]);
+
+  const coverage = summary?.metadata?.enrichment_coverage ?? null;
+
   const pageCount = Math.max(1, Math.ceil(consensusRows.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = consensusRows.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
@@ -674,16 +716,16 @@ export default function SuperinvestorsClient({
   }, []);
 
   const quarterLabel = quarter ? `${quarter} 기준` : null;
-  const delayLabel = "13F 공시는 분기 종료 후 최대 45일 지연됩니다";
+  const delayLabel = "기관 공시는 분기 종료 후 최대 45일 지연됩니다";
 
   return (
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">13F Superinvestors</p>
-          <h1 className="data-shell-title">구루 보유 현황</h1>
+          <p className="data-shell-kicker">기관 공시 인텔리전스</p>
+          <h1 className="data-shell-title">거장 보유 현황</h1>
           <p className="data-shell-desc">
-            워런 버핏, 세스 클라먼 등 30개 슈퍼인베스터의 13F 보유 데이터를 탐색합니다.
+            분기 공시로 공개되는 주요 투자자의 보유·매매·집중도를 함께 탐색합니다.
           </p>
         </div>
         <div className="data-shell-head-actions">
@@ -704,7 +746,7 @@ export default function SuperinvestorsClient({
 
       {failed ? (
         <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-          13F 데이터를 불러오지 못했습니다. /data/sec-13f 경로를 확인해 주세요.
+          기관 공시 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
 
@@ -780,6 +822,44 @@ export default function SuperinvestorsClient({
             </div>
           ) : null}
 
+          {sectorRows.length > 0 ? (
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-black tracking-tight text-slate-900">섹터 정렬</h2>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                    최신 공시 보유를 섹터별로 묶어 어느 영역에 거장 자금이 모이는지 봅니다.
+                  </p>
+                </div>
+                {coverage ? (
+                  <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-black text-slate-500">
+                    보강률 섹터 {fmtPct(coverage.sector, 0)} · 가격 {fmtPct(coverage.price_at_filing, 0)}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {sectorRows.map((row) => {
+                  const canonicalSector = resolveSector(row.sector);
+                  return (
+                    <div key={row.sector} className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-[11px] font-black text-slate-800">
+                          {sectorLabelKo(canonicalSector)}
+                        </span>
+                        <span className="orbitron tabular-nums text-[11px] font-black text-brand-interactive">
+                          {fmtPct(row.avg_weight)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                        {row.investors.filter(Boolean).length}명 보유 · 대표 {row.top_holdings.slice(0, 3).join(", ")}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <label className="flex min-w-[220px] flex-col gap-1">
               <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">티커 검색</span>
@@ -802,13 +882,14 @@ export default function SuperinvestorsClient({
 
           <div className={cx("rounded-[1.5rem] border border-slate-200 bg-white p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[600px] text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
                     <th className="px-3 py-2 text-left">#</th>
                     <th className="px-3 py-2 text-left">티커</th>
-                    <th className="px-3 py-2 text-right">보유 구루</th>
-                    <th className="px-3 py-2 text-left">구루 목록</th>
+                    <th className="px-3 py-2 text-right">보유자</th>
+                    <th className="px-3 py-2 text-right">주식 기준</th>
+                    <th className="px-3 py-2 text-left">보유자 목록</th>
                     <th className="px-3 py-2 text-right">액션</th>
                   </tr>
                 </thead>
@@ -817,7 +898,7 @@ export default function SuperinvestorsClient({
                     <SkeletonRows count={6} />
                   ) : pageRows.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 py-8 text-center">
+                      <td colSpan={6} className="px-3 py-8 text-center">
                         <EmptyState title="결과가 없습니다" desc="검색어를 바꾸거나 필터를 초기화해 보세요." />
                       </td>
                     </tr>
@@ -825,6 +906,7 @@ export default function SuperinvestorsClient({
                     pageRows.map((row, idx) => {
                       const rank = safePage * PAGE_SIZE + idx + 1;
                       const holders = uniqueHolders(row.holders_list);
+                      const enhanced = enhancedConsensus?.enhanced_consensus?.[row.ticker];
                       return (
                         <tr key={row.ticker} className="border-b border-slate-100 last:border-b-0">
                           <td className="px-3 py-3">
@@ -837,6 +919,28 @@ export default function SuperinvestorsClient({
                             <span className="orbitron tabular-nums text-base font-black text-brand-interactive">
                               {holders.length}
                             </span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            {enhanced ? (
+                              <div className="ml-auto max-w-[120px]">
+                                <div className="flex items-center justify-end gap-2">
+                                  <span className="orbitron tabular-nums text-xs font-black text-slate-900">
+                                    {classSummary(enhanced)}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-400">
+                                    {fmtScore(enhanced.equity_score)}
+                                  </span>
+                                </div>
+                                <div className="mt-1 h-1.5 rounded-full bg-slate-100">
+                                  <div
+                                    className="h-1.5 rounded-full bg-brand-interactive"
+                                    style={{ width: `${Math.max(0, Math.min(1, enhanced.equity_score)) * 100}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-xs font-bold text-slate-300">—</span>
+                            )}
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex flex-wrap gap-1">
@@ -1040,32 +1144,41 @@ export default function SuperinvestorsClient({
             ) : !byTickerEntry ? (
               <EmptyState
                 title={`${search.trim().toUpperCase()} 데이터 없음`}
-                desc="by_ticker.json에 해당 종목이 없거나, 13F 보유 구루가 없습니다."
+                desc="해당 종목의 공시 보유 데이터가 아직 없습니다."
               />
             ) : byTickerEntry.holder_details.length === 0 ? (
               <EmptyState
-                title={`${search.trim().toUpperCase()}에 보유 구루가 없습니다`}
-                desc="현재 코호트에서 이 종목을 보유한 구루가 없습니다."
+                title={`${search.trim().toUpperCase()}에 보유자가 없습니다`}
+                desc="현재 공시 코호트에서 이 종목을 보유한 투자자가 없습니다."
               />
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black tracking-tight text-slate-950">
-                    {search.trim().toUpperCase()}
-                  </h2>
+                  <div>
+                    <h2 className="text-xl font-black tracking-tight text-slate-950">
+                      {search.trim().toUpperCase()}
+                    </h2>
+                    {byTickerEnhanced ? (
+                      <p className="mt-1 text-[10px] font-bold text-slate-400">
+                        주식 기준 {byTickerEnhanced.equity_holders}/{byTickerEnhanced.total_holders}명 · 확신 점수 {fmtScore(byTickerEnhanced.equity_score)}
+                      </p>
+                    ) : null}
+                  </div>
                   <span className="text-sm font-bold text-slate-500">
-                    보유 구루{" "}
+                    보유자{" "}
                     <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
                   </span>
                 </div>
                 <div className="-mx-1 overflow-x-auto px-1">
-                  <table className="w-full min-w-[480px] text-sm">
+                  <table className="w-full min-w-[720px] text-sm">
                     <thead>
                       <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
-                        <th className="px-3 py-2 text-left">구루</th>
+                        <th className="px-3 py-2 text-left">보유자</th>
                         <th className="px-3 py-2 text-right">비중</th>
+                        <th className="px-3 py-2 text-right">평가액</th>
                         <th className="px-3 py-2 text-right">주식수</th>
                         <th className="px-3 py-2 text-right">전체 비중</th>
+                        <th className="px-3 py-2 text-left">보유 구분</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1080,12 +1193,32 @@ export default function SuperinvestorsClient({
                               <span className="orbitron tabular-nums font-bold text-slate-900">{fmtWeight(h.weight)}</span>
                             </td>
                             <td className="px-3 py-3 text-right">
+                              <span className="orbitron tabular-nums text-slate-700">{fmtAum(h.market_value)}</span>
+                            </td>
+                            <td className="px-3 py-3 text-right">
                               <span className="orbitron tabular-nums text-slate-700">{fmtShares(h.shares)}</span>
                             </td>
                             <td className="px-3 py-3 text-right">
                               <span className="orbitron tabular-nums text-slate-500">
                                 {((h.shares / (byTickerEntry.total_shares || 1)) * 100).toFixed(1)}%
                               </span>
+                            </td>
+                            <td className="px-3 py-3">
+                              <div className="flex max-w-[180px] flex-wrap gap-1">
+                                {(h.classes_held ?? []).slice(0, 2).map((item) => (
+                                  <span key={item} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-600">
+                                    {item}
+                                  </span>
+                                ))}
+                                {(h.position_types ?? []).map((item) => (
+                                  <span key={item} className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700">
+                                    {item}
+                                  </span>
+                                ))}
+                                {!(h.classes_held?.length || h.position_types?.length) ? (
+                                  <span className="text-[10px] font-bold text-slate-300">—</span>
+                                ) : null}
+                              </div>
                             </td>
                           </tr>
                         ))}

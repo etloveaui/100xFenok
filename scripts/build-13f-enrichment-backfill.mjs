@@ -398,6 +398,7 @@ for (const file of investorFiles) {
 }
 
 const coverage = collectCoverage(investorDocs);
+const bySector = buildBySector(investorDocs);
 for (const doc of investorDocs) {
   const id = doc.__id;
   delete doc.__id;
@@ -431,7 +432,7 @@ summary.metadata = {
   },
 };
 writeRootAndPublic("data/sec-13f/summary.json", summary);
-writeRootAndPublic("data/sec-13f/by_sector.json", buildBySector(investorDocs));
+writeRootAndPublic("data/sec-13f/by_sector.json", bySector);
 
 console.log(
   `13f_enrichment_backfill: holdings=${coverage.total_holdings} ` +

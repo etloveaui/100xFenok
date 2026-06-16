@@ -9,8 +9,8 @@ interface Props {
 }
 
 export const metadata: Metadata = {
-  title: "13F Superinvestors | 100xFenok",
-  description: "30개 슈퍼인베스터의 13F 보유 데이터를 탐색합니다. 컨센서스, 구루 포트폴리오, 종목별 보유 현황.",
+  title: "기관 공시 인텔리전스 | 100xFenok",
+  description: "주요 투자자의 분기 공시 보유, 매매, 집중도, 종목별 보유 현황을 탐색합니다.",
 };
 
 const plexKr = IBM_Plex_Sans_KR({

@@ -7,6 +7,8 @@ import type {
   NewPositionsData,
   HhiData,
   ConvictionData,
+  ConvictionEntriesData,
+  ConvictionEntry,
   BuyingPressureRow,
   ConvictionPosition,
   TradesRankingData,
@@ -74,6 +76,18 @@ function loadConviction(): Promise<ConvictionData | null> {
     .then((d) => { cvCache = d; return d; })
     .catch(() => { cvPromise = null; return null; });
   return cvPromise;
+}
+
+let ceCache: ConvictionEntriesData | null = null;
+let cePromise: Promise<ConvictionEntriesData | null> | null = null;
+function loadConvictionEntries(): Promise<ConvictionEntriesData | null> {
+  if (ceCache) return Promise.resolve(ceCache);
+  if (cePromise) return cePromise;
+  cePromise = fetch("/data/sec-13f/analytics/conviction_entries.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { ceCache = d; return d; })
+    .catch(() => { cePromise = null; return null; });
+  return cePromise;
 }
 
 // ---------------------------------------------------------------------------
@@ -362,6 +376,58 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
   );
 }
 
+function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
+  const rows = useMemo(() => {
+    return [...(data.high_conviction_new ?? [])]
+      .sort((a, b) => b.weight - a.weight || b.value - a.value)
+      .slice(0, 12);
+  }, [data]);
+
+  return (
+    <div>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[420px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <th className="px-2 py-1.5 text-left">투자자</th>
+              <th className="px-2 py-1.5 text-left">종목</th>
+              <th className="px-2 py-1.5 text-right">포트 비중</th>
+              <th className="px-2 py-1.5 text-right">평가액</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r: ConvictionEntry) => (
+              <tr key={`${r.investor}-${r.ticker}`} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5">
+                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                </td>
+                <td className="px-2 py-1.5">
+                  {isTicker(r.ticker) ? (
+                    <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
+                      {r.ticker}
+                    </TransitionLink>
+                  ) : (
+                    <span className="font-bold text-slate-800">{r.ticker}</span>
+                  )}
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
+                </td>
+                <td className="px-2 py-1.5 text-right">
+                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{fmtUSD(r.value)}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+        {data.metadata.quarter} · 새로 편입되면서 바로 큰 비중이 된 포지션 {data.metadata.high_conviction_new_count}건 중 상위 12개
+      </p>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Card 4: 집중도 (HHI)
 // ---------------------------------------------------------------------------
@@ -428,28 +494,29 @@ export default function InsightsTab() {
   const [np, setNp] = useState<NewPositionsData | null>(null);
   const [hhi, setHhi] = useState<HhiData | null>(null);
   const [cv, setCv] = useState<ConvictionData | null>(null);
+  const [ce, setCe] = useState<ConvictionEntriesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction()]).then(([bpR, trR, npR, hhiR, cvR]) => {
+    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction(), loadConvictionEntries()]).then(([bpR, trR, npR, hhiR, cvR, ceR]) => {
       if (cancelled) return;
-      const anyData = bpR || trR || npR || hhiR || cvR;
+      const anyData = bpR || trR || npR || hhiR || cvR || ceR;
       if (!anyData) { setFailed(true); }
-      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR);
+      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR); setCe(ceR);
       setLoading(false);
     });
     return () => { cancelled = true; };
   }, []);
 
-  const quarterLabel = bp?.metadata.quarter ?? np?.metadata.quarter ?? hhi?.metadata.quarter ?? "";
+  const quarterLabel = bp?.metadata.quarter ?? np?.metadata.quarter ?? hhi?.metadata.quarter ?? ce?.metadata.quarter ?? "";
 
   if (failed) {
     return (
-      <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-        인사이트 데이터를 불러오지 못했습니다. /data/sec-13f/analytics/ 경로를 확인해 주세요.
-      </div>
+        <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+          기관 공시 인사이트 데이터를 불러오지 못했습니다.
+        </div>
     );
   }
 
@@ -464,7 +531,7 @@ export default function InsightsTab() {
               {quarterLabel} 기준
             </span>
           ) : null}
-          <span className="text-[10px] font-bold text-slate-400">13F 공시는 분기 종료 후 최대 45일 지연됩니다</span>
+          <span className="text-[10px] font-bold text-slate-400">기관 공시는 분기 종료 후 최대 45일 지연됩니다</span>
         </div>
       </div>
 
@@ -491,6 +558,12 @@ export default function InsightsTab() {
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">신규 편입 빅베팅</h3>
               <p className="mb-3 text-[10px] font-semibold text-slate-400">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
               {np ? <NewPositionsCard data={np} /> : <SkeletonCard />}
+            </div>
+
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+              <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">고확신 신규 편입</h3>
+              <p className="mb-3 text-[10px] font-semibold text-slate-400">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
+              {ce ? <HighConvictionNewCard data={ce} /> : <SkeletonCard />}
             </div>
 
             {/* 3. 확신 베팅 */}

@@ -294,7 +294,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
         <Line data={data as ChartData<"line">} options={options} />
       </div>
       <p className="mt-1 text-center text-[10px] font-semibold text-slate-400">
-        13F 보고 롱 포지션을 분기말 매수·무리밸런싱 보유로 가정한 추정 (지수 100 = 첫 분기말, 배당 조정)
+        분기 공시 롱 포지션을 분기말 매수·무리밸런싱 보유로 가정한 추정 (지수 100 = 첫 분기말, 배당 조정)
       </p>
     </div>
   );

@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   ConsensusData,
+  EnhancedConsensusData,
   SummaryData,
   ByTickerData,
+  SectorHoldingsData,
   InvestorData,
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
@@ -27,8 +29,10 @@ async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<
 
 const EMPTY: SuperInvestorsDataResult = {
   consensus: null,
+  enhancedConsensus: null,
   summary: null,
   byTicker: null,
+  bySector: null,
   dataReady: false,
   failed: false,
   quarter: null,
@@ -43,10 +47,12 @@ export function use13FData(): SuperInvestorsDataResult {
     isMountedRef.current = true;
 
     void (async () => {
-      const [consensus, summary, byTicker] = await Promise.all([
+      const [consensus, summary, byTicker, enhancedConsensus, bySector] = await Promise.all([
         fetchJson<ConsensusData>("/data/sec-13f/analytics/consensus.json"),
         fetchJson<SummaryData>("/data/sec-13f/summary.json"),
         fetchJson<ByTickerData>("/data/sec-13f/by_ticker.json"),
+        fetchJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json"),
+        fetchJson<SectorHoldingsData>("/data/sec-13f/by_sector.json"),
       ]);
 
       if (!isMountedRef.current) return;
@@ -61,8 +67,10 @@ export function use13FData(): SuperInvestorsDataResult {
 
       setResult({
         consensus,
+        enhancedConsensus,
         summary,
         byTicker,
+        bySector,
         dataReady: true,
         failed: false,
         quarter: consensus?.metadata?.quarter ?? null,
