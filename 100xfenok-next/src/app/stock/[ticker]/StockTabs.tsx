@@ -24,25 +24,6 @@ function clamp(value: number, min = 0, max = 100): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function fmtUSD(value: unknown): string {
-  const v = finiteNumber(value);
-  if (v === null) return "—";
-  const abs = Math.abs(v);
-  if (abs >= 1_000_000_000_000) return `$${(v / 1_000_000_000_000).toFixed(2)}T`;
-  if (abs >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(2)}B`;
-  if (abs >= 1_000_000) return `$${(v / 1_000_000).toFixed(0)}M`;
-  return `$${Math.round(v).toLocaleString()}`;
-}
-
-function fmtKRW(value: unknown): string {
-  const v = finiteNumber(value);
-  if (v === null) return "—";
-  const abs = Math.abs(v);
-  if (abs >= 1_000_000_000_000) return `${(v / 1_000_000_000_000).toFixed(2)}조`;
-  if (abs >= 100_000_000) return `${(v / 100_000_000).toFixed(0)}억`;
-  return `${Math.round(v).toLocaleString()}`;
-}
-
 function fmtNum(value: unknown, decimals = 1): string {
   const v = finiteNumber(value);
   if (v === null) return "—";
@@ -60,18 +41,74 @@ function fmtSignedPct(value: unknown, isFraction = true): string {
   return formatSignedPercent(value, { digits: 1, fraction: isFraction });
 }
 
-function fmtFixed(value: unknown, digits: number): string {
-  const v = finiteNumber(value);
-  return v === null ? "—" : v.toFixed(digits);
+const ZERO_DECIMAL_CURRENCIES = new Set(["KRW", "JPY", "TWD", "VND", "IDR"]);
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$",
+  KRW: "₩",
+  JPY: "¥",
+  HKD: "HK$",
+  TWD: "NT$",
+  CNY: "CN¥",
+  EUR: "€",
+  GBP: "£",
+};
+
+function normalizeCurrency(currency: unknown): string {
+  return typeof currency === "string" && /^[A-Z]{3}$/.test(currency.trim().toUpperCase())
+    ? currency.trim().toUpperCase()
+    : "USD";
 }
 
-function fmtDollar(value: unknown, digits: number): string {
+function defaultCurrencyDigits(currency: string): number {
+  return ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2;
+}
+
+export function formatMoney(value: unknown, currency: unknown = "USD", digits?: number): string {
   const v = finiteNumber(value);
-  return v === null ? "—" : `$${v.toFixed(digits)}`;
+  if (v === null) return "—";
+  const code = normalizeCurrency(currency);
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: digits ?? defaultCurrencyDigits(code),
+    }).format(v);
+  } catch {
+    const symbol = CURRENCY_SYMBOLS[code] ?? `${code} `;
+    return `${symbol}${v.toLocaleString(undefined, { maximumFractionDigits: digits ?? defaultCurrencyDigits(code) })}`;
+  }
 }
 
 function getCurrencyFn(currency: string) {
-  return currency === "KRW" || currency === "JPY" ? fmtKRW : fmtUSD;
+  return (value: unknown) => formatCompactMoney(value, currency);
+}
+
+export function formatCompactMoney(value: unknown, currency: unknown = "USD"): string {
+  const v = finiteNumber(value);
+  if (v === null) return "—";
+  const code = normalizeCurrency(currency);
+  if (code === "KRW") {
+    const abs = Math.abs(v);
+    const prefix = v < 0 ? "-" : "";
+    const n = Math.abs(v);
+    if (abs >= 1_000_000_000_000) return `${prefix}₩${(n / 1_000_000_000_000).toFixed(n >= 10_000_000_000_000 ? 0 : 2)}조`;
+    if (abs >= 100_000_000) return `${prefix}₩${(n / 100_000_000).toFixed(n >= 1_000_000_000 ? 0 : 1)}억`;
+    return `${prefix}₩${Math.round(n).toLocaleString()}`;
+  }
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      notation: "compact",
+      compactDisplay: "short",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 1,
+    }).format(v);
+  } catch {
+    const symbol = CURRENCY_SYMBOLS[code] ?? `${code} `;
+    return `${symbol}${fmtNum(v, 1)}`;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -192,15 +229,13 @@ function FinancialsTab({ data }: { data: YfData }) {
 
   const fmtFin = (v: number | null | undefined) => {
     if (v == null) return "—";
-    if (currency === "KRW" || currency === "JPY") return fmtKRW(v);
-    return fmtUSD(v);
+    return formatCompactMoney(v, currency);
   };
 
   const fmtEps = (value: number | null | undefined) => {
     const v = finiteNumber(value);
     if (v === null) return "—";
-    if (currency === "KRW" || currency === "JPY") return Math.round(v).toLocaleString();
-    return `$${v.toFixed(2)}`;
+    return formatMoney(v, currency);
   };
 
   return (
@@ -417,6 +452,7 @@ function OwnershipTab({ data }: { data: YfData }) {
 // ---------------------------------------------------------------------------
 
 function EstimatesTab({ data }: { data: YfData }) {
+  const infoCurrency = normalizeCurrency(data.info?.currency ?? "USD");
   const targets = data.analyst_price_targets ?? {};
   const earnings = (data.earnings_estimate ?? []) as any[];
   const revenue = (data.revenue_estimate ?? []) as any[];
@@ -439,10 +475,10 @@ function EstimatesTab({ data }: { data: YfData }) {
         <div>
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 목표가</h3>
           <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-              <span>Low {fmtDollar(targetLow, 0)}</span>
-              <span>Mean {fmtDollar(targetMean, 0)}</span>
-              <span>High {fmtDollar(targetHigh, 0)}</span>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500">
+              <span>Low {formatMoney(targetLow, infoCurrency)}</span>
+              <span>Mean {formatMoney(targetMean, infoCurrency)}</span>
+              <span>High {formatMoney(targetHigh, infoCurrency)}</span>
             </div>
             <div className="relative mt-2 h-3 rounded-full bg-slate-100">
               {targetPct !== null ? (
@@ -456,7 +492,7 @@ function EstimatesTab({ data }: { data: YfData }) {
               ) : null}
             </div>
             <p className="mt-1 text-center text-[10px] font-bold text-slate-500">
-              현재가 {fmtDollar(targetCurrent, 2)} · 중간값 {fmtDollar(targetMedian, 0)}
+              현재가 {formatMoney(targetCurrent, infoCurrency)} · 중간값 {formatMoney(targetMedian, infoCurrency)}
             </p>
           </div>
         </div>
@@ -481,12 +517,13 @@ function EstimatesTab({ data }: { data: YfData }) {
                 <tbody>
                   {earnings.map((e: any) => {
                     const growth = finiteNumber(e.growth);
+                    const rowCurrency = normalizeCurrency(e.currency ?? infoCurrency);
                     return (
                       <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
                         <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[e._index] ?? e._index}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{fmtDollar(e.avg, 2)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtDollar(e.low, 2)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtDollar(e.high, 2)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
                         <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
@@ -516,12 +553,13 @@ function EstimatesTab({ data }: { data: YfData }) {
                 <tbody>
                   {revenue.map((r: any) => {
                     const growth = finiteNumber(r.growth);
+                    const rowCurrency = normalizeCurrency(r.currency ?? infoCurrency);
                     return (
                       <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
                         <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[r._index] ?? r._index}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{fmtNum(r.avg, 1)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.low, 1)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{fmtNum(r.high, 1)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
                         <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
@@ -585,22 +623,21 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
   if (low === null || high === null || current === null || high <= low) return null;
 
   const pct = clamp(((current - low) / (high - low)) * 100);
-  const isUsd = (info.currency ?? "USD") === "USD";
-  const fmtBound = (v: number) =>
-    isUsd ? `$${v.toFixed(0)}` : `${Math.round(v).toLocaleString()} ${info.currency}`;
+  const currency = normalizeCurrency(info.currency ?? "USD");
+  const fmtBound = (v: number) => (Math.abs(v) >= 100_000 ? formatCompactMoney(v, currency) : formatMoney(v, currency, 0));
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3">
       <p className="text-[10px] font-bold text-slate-500 mb-1">52주 범위</p>
       <div className="flex items-center gap-2">
-        <span className="text-[10px] orbitron font-semibold text-slate-500">{fmtBound(low)}</span>
+        <span className="max-w-[5.5rem] truncate text-[10px] orbitron font-semibold text-slate-500">{fmtBound(low)}</span>
         <div className="relative h-2 flex-1 rounded-full bg-slate-100">
           <div
             className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
             style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
           />
         </div>
-        <span className="text-[10px] orbitron font-semibold text-slate-500">{fmtBound(high)}</span>
+        <span className="max-w-[5.5rem] truncate text-[10px] orbitron font-semibold text-slate-500">{fmtBound(high)}</span>
       </div>
       <p className="mt-1 text-center text-[10px] font-bold text-slate-600">
         52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
@@ -832,7 +869,7 @@ export function buildThreeSecondSummary(
   if (g !== null) {
     fun.push(g > 0.05 ? `내년 EPS ${(g * 100).toFixed(0)}% 성장 전망` : g < 0 ? "내년 이익 감소 전망" : "내년 이익 정체 전망");
   }
-  const scores = computeSummaryScores(data, perBand);
+  const scores = computeSummaryScores(data, perBand, industry);
   if (scores.length) {
     const total = scores.reduce((s, a) => s + a.total, 0);
     const score = scores.reduce((s, a) => s + a.score, 0);

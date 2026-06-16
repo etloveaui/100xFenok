@@ -15,7 +15,7 @@ import {
   fmtLarge,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
-import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench } from "./StockTabs";
+import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
@@ -140,7 +140,6 @@ function lastFinite(data: NumberSeries | null | undefined): number | null {
   return values.length > 0 ? values[values.length - 1] : null;
 }
 
-function fmtPrice(n: number): string { return `$${n.toFixed(2)}`; }
 function fmtMcap(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}T`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}B`;
@@ -372,6 +371,13 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
 
 function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ticker: string }) {
   const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any } | null>(null);
+  const tradeInvestorName = (value: any) => {
+    if (typeof value === "string") return value;
+    if (typeof value?.name === "string") return value.name;
+    if (typeof value?.id === "string") return value.id;
+    return null;
+  };
+  const tradeAmount = (value: unknown) => formatCompactMoney(value, "USD");
 
   useEffect(() => {
     let cancelled = false;
@@ -408,13 +414,15 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
       <div className="mb-3 flex flex-wrap gap-2">
         {tradesChip?.bought ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-emerald-700">
-            최근 분기 구루 순매수 {fmtLarge(tradesChip.bought.amount)} ({tradesChip.bought.investors_count}명)
+            최근 분기 구루 순매수 {isFiniteNumber(tradesChip.bought.rank) ? `#${tradesChip.bought.rank} · ` : ""}{tradeAmount(tradesChip.bought.amount)} ({tradesChip.bought.investors_count}명)
             {tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}명` : ""}
+            {tradeInvestorName(tradesChip.bought.top_investor) ? ` · 대표 ${tradeInvestorName(tradesChip.bought.top_investor)}` : ""}
           </span>
         ) : tradesChip?.sold ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-rose-700">
-            최근 분기 구루 순매도 {fmtLarge(tradesChip.sold.amount)} ({tradesChip.sold.investors_count}명)
+            최근 분기 구루 순매도 {isFiniteNumber(tradesChip.sold.rank) ? `#${tradesChip.sold.rank} · ` : ""}{tradeAmount(tradesChip.sold.amount)} ({tradesChip.sold.investors_count}명)
             {tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}명` : ""}
+            {tradeInvestorName(tradesChip.sold.top_investor) ? ` · 대표 ${tradeInvestorName(tradesChip.sold.top_investor)}` : ""}
           </span>
         ) : null}
       </div>
@@ -456,11 +464,19 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
 // MetricWithSpark
 // ---------------------------------------------------------------------------
 
-function MetricWithSpark({ label, value, data, estimates, color, years, formatValue = (n) => n.toFixed(1) }: {
-  label: string; value: string; data: NumberSeries; estimates?: Record<string, MaybeNumber> | null; color: string; years: string[]; formatValue?: (n: number) => string;
+function MetricWithSpark({ label, value, data, estimates, color, years, benchmark, formatValue = (n) => n.toFixed(1) }: {
+  label: string;
+  value: string;
+  data: NumberSeries;
+  estimates?: Record<string, MaybeNumber> | null;
+  color: string;
+  years: string[];
+  benchmark?: { label: string; value: MaybeNumber } | null;
+  formatValue?: (n: number) => string;
 }) {
   const nextEstimateKey = ["fy1", "fy2", "fy3"].find((key) => isFiniteNumber(estimates?.[key])) ?? null;
   const nextEstimate = nextEstimateKey ? estimates?.[nextEstimateKey] : null;
+  const benchValue = isFiniteNumber(benchmark?.value) ? benchmark.value : null;
   return (
     <div className="rounded-xl border border-slate-200 p-3">
       <div className="flex items-center justify-between">
@@ -468,9 +484,12 @@ function MetricWithSpark({ label, value, data, estimates, color, years, formatVa
         <span className="orbitron tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
       {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} years={years} estimates={estimates ?? undefined} formatValue={formatValue} /></div> : null}
-      {isFiniteNumber(nextEstimate) ? (
-        <div className="mt-1 text-[9px] font-black tabular-nums text-slate-400">
-          추정 {ESTIMATE_LABELS[nextEstimateKey!] ?? nextEstimateKey!.toUpperCase()} {formatValue(nextEstimate)}
+      {(isFiniteNumber(nextEstimate) || benchValue !== null) ? (
+        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-black tabular-nums text-slate-400">
+          {isFiniteNumber(nextEstimate) ? (
+            <span>추정 {ESTIMATE_LABELS[nextEstimateKey!] ?? nextEstimateKey!.toUpperCase()} {formatValue(nextEstimate)}</span>
+          ) : null}
+          {benchValue !== null ? <span>{benchmark?.label ?? "산업"} {formatValue(benchValue)}</span> : null}
         </div>
       ) : null}
     </div>
@@ -537,6 +556,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
     () => resolveIndustryBench(benchDoc, yfData?.info?.industry),
     [benchDoc, yfData],
   );
+  const benchPct = (value: MaybeNumber) => (isFiniteNumber(value) ? value * 100 : null);
 
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
@@ -564,7 +584,19 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   }
 
   const displayName = row?.companyName ?? symbol;
-  const priceText = isFiniteNumber(row?.price) ? fmtPrice(row.price) : "—";
+  const displayCurrency = typeof yfData?.info?.currency === "string" ? yfData.info.currency : "USD";
+  const yfCurrentPrice = isFiniteNumber(yfData?.info?.currentPrice) ? yfData.info.currentPrice : null;
+  const analyzerPrice = isFiniteNumber(row?.price) ? row.price : null;
+  const displayPrice = yfCurrentPrice ?? analyzerPrice;
+  const priceText = displayPrice !== null ? formatMoney(displayPrice, displayCurrency) : "—";
+  const hasSlickChartsTicker = !symbol.includes(".");
+  const yfMarketCap = isFiniteNumber(yfData?.info?.marketCap) ? yfData.info.marketCap : null;
+  const marketCapText = yfMarketCap !== null
+    ? formatCompactMoney(yfMarketCap, displayCurrency)
+    : isFiniteNumber(row?.marketCap)
+      ? fmtMcap(row.marketCap)
+      : "—";
+  const marketCapLabel = yfMarketCap !== null ? "시가총액" : "시가총액(USD)";
   const returnText = isFiniteNumber(row?.return12m) ? fmtPct(row.return12m) : null;
   const returnUp = (row?.return12m ?? 0) >= 0;
 
@@ -647,11 +679,16 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                       <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
                       <div className="space-y-3">
                         <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.gross_margin)} color="#14b8a6" years={years} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.operating_margin)} color="#06b6d4" years={years} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.net_margin)} color="#6366f1" years={years} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={estimateSeries(detail.profitability_estimates?.roe)} color="#8b5cf6" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.operating_margin)} color="#06b6d4" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={estimateSeries(detail.profitability_estimates?.net_margin)} color="#6366f1" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={estimateSeries(detail.profitability_estimates?.roe)} color="#8b5cf6" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
                         <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={estimateSeries(detail.profitability_estimates?.roa)} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
                       </div>
+                      {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
+                        <p className="mt-2 text-[10px] font-semibold text-slate-400">
+                          다모다란 산업 자본비용 {fmtWholePct(industryBench.cost_of_capital * 100)}
+                        </p>
+                      ) : null}
                     </div>
                     <div>
                       <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
@@ -663,7 +700,13 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   </div>
                 </SectionCard>
                 <SectionCard title="가격·수익률·배당">
-                  <SlickChartsDepth ticker={symbol} showUnavailable />
+                  {hasSlickChartsTicker ? (
+                    <SlickChartsDepth ticker={symbol} showUnavailable />
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
+                      SlickCharts per-stock 데이터는 미국 티커 중심으로 수집됩니다.
+                    </div>
+                  )}
                 </SectionCard>
               </>
             ) : null}
@@ -788,8 +831,8 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             {row && !rowLoading ? (
               <div className="space-y-2 border-t border-slate-100 pt-3">
                 {/* scouter rows carry null price/ratios for non-US listings */}
-                <KV label="현재가" value={row.price != null ? fmtPrice(row.price) : "—"} />
-                <KV label="시가총액" value={row.marketCap != null ? fmtMcap(row.marketCap) : "—"} />
+                <KV label="현재가" value={priceText} />
+                <KV label={marketCapLabel} value={marketCapText} />
                 <KV label="PER" value={isFiniteNumber(row.per) ? row.per.toFixed(1) : "—"} />
                 <KV label="PBR" value={isFiniteNumber(row.pbr) ? row.pbr.toFixed(2) : "—"} />
                 <KV label="배당률" value={isFiniteNumber(row.dividendYield) ? fmtDivYield(row.dividendYield) : "—"} />
@@ -831,7 +874,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                     { label: "FY+1 매출 성장", value: fmtWholeSignedPct(detail.growth_estimates?.revenue_growth?.fy1) },
                     { label: "FY+1 EPS 성장", value: fmtWholeSignedPct(detail.growth_estimates?.eps_growth?.fy1) },
                     { label: "최근 매출", value: fmtLarge(lastFinite(numberSeries(detail.income_statement?.revenue))) },
-                    { label: "최근 EPS", value: isFiniteNumber(lastFinite(numberSeries(detail.per_share?.eps))) ? `$${(lastFinite(numberSeries(detail.per_share?.eps)) as number).toFixed(2)}` : "—" },
+                    { label: "최근 EPS", value: formatMoney(lastFinite(numberSeries(detail.per_share?.eps)), displayCurrency) },
                   ].map((item) => (
                     <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
