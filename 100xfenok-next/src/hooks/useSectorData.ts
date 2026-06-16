@@ -7,6 +7,7 @@ import type {
   SectorDataResult,
   SectorEtfInfo,
   SectorMomentum,
+  SectorSmartMoney,
   SectorValuationBand,
   MomentumWindow,
 } from "@/lib/sectors/types";
@@ -39,12 +40,35 @@ interface TickerQuote {
   marketState?: string;
 }
 interface UsSectorPoint {
+  date?: string;
   best_pe_ratio?: number;
   px_to_book_ratio?: number;
   roe?: number;
 }
 interface UsSectorsPayload {
+  metadata?: { generated?: string; version?: string; source?: string };
   sections?: Record<string, { data?: UsSectorPoint[] } | undefined>;
+}
+interface SectorHistory {
+  quarters?: string[];
+  series?: Record<string, number[] | undefined>;
+}
+interface PortfolioViewsPayload {
+  metadata?: {
+    quarter?: string;
+    generated_at?: string;
+    cohort_count?: number;
+    disclaimer?: string;
+  };
+  total?: { sector_history?: SectorHistory };
+}
+interface BySectorEntry {
+  avg_weight?: number;
+  top_holdings?: string[];
+}
+interface BySectorPayload {
+  _meta?: unknown;
+  [sector: string]: BySectorEntry | unknown;
 }
 
 // HTTP cache intentional: static /data/*.json has Cache-Control max-age=300;
@@ -98,6 +122,77 @@ function buildPeBand(points: UsSectorPoint[] | undefined, latest: number | null)
   };
 }
 
+function normalizeSectorName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, "_");
+}
+
+const SECTOR_KEY_ALIASES: Record<string, string> = {
+  technology: "information_technology",
+  information_technology: "information_technology",
+  healthcare: "health_care",
+  health_care: "health_care",
+};
+
+function toSectorKey(value: string): string {
+  const normalized = normalizeSectorName(value);
+  return SECTOR_KEY_ALIASES[normalized] ?? normalized;
+}
+
+function buildSmartMoneyMap(
+  portfolioViews: PortfolioViewsPayload | null,
+  bySector: BySectorPayload | null,
+): Record<string, SectorSmartMoney> {
+  const result: Record<string, SectorSmartMoney> = {};
+  const history = portfolioViews?.total?.sector_history;
+  const quarters = Array.isArray(history?.quarters) ? history.quarters : [];
+  const series = history?.series && typeof history.series === "object" ? history.series : {};
+  const latestIndex = Math.max(0, quarters.length - 1);
+  const backIndex = Math.max(0, quarters.length - 5);
+
+  for (const [sectorLabel, values] of Object.entries(series)) {
+    if (!Array.isArray(values) || values.length === 0) continue;
+    const key = toSectorKey(sectorLabel);
+    const latest = num(values[latestIndex]);
+    const back = num(values[backIndex]);
+    result[key] = {
+      sectorLabel,
+      weight: latest,
+      delta4q: latest !== null && back !== null ? latest - back : null,
+      avgHoldingWeight: null,
+      topHoldings: [],
+    };
+  }
+
+  if (bySector && typeof bySector === "object") {
+    for (const [sectorLabel, raw] of Object.entries(bySector)) {
+      if (sectorLabel === "_meta" || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+      const entry = raw as BySectorEntry;
+      const key = toSectorKey(sectorLabel);
+      const prev = result[key] ?? {
+        sectorLabel,
+        weight: null,
+        delta4q: null,
+        avgHoldingWeight: null,
+        topHoldings: [],
+      };
+      result[key] = {
+        ...prev,
+        avgHoldingWeight: num(entry.avg_weight),
+        topHoldings: Array.isArray(entry.top_holdings)
+          ? entry.top_holdings.filter((item): item is string => typeof item === "string" && item.trim().length > 0).slice(0, 5)
+          : [],
+      };
+    }
+  }
+
+  return result;
+}
+
 export function useSectorData(): SectorDataResult {
   const [result, setResult] = useState<SectorDataResult>({
     rows: [],
@@ -105,6 +200,18 @@ export function useSectorData(): SectorDataResult {
     dataReady: false,
     failedSources: [],
     updatedAt: null,
+    sourceMeta: {
+      benchmarksGenerated: null,
+      valuationGenerated: null,
+      valuationSource: null,
+      valuationVersion: null,
+      valuationLatestDate: null,
+      smartMoneyQuarter: null,
+      smartMoneyGeneratedAt: null,
+      smartMoneyCohortCount: null,
+      smartMoneyDisclaimer: null,
+      etfMissing: [],
+    },
   });
   const inFlightRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -114,10 +221,12 @@ export function useSectorData(): SectorDataResult {
     inFlightRef.current = true;
     try {
       const etfSymbols = SECTOR_DEFINITIONS.map((sector) => sector.etf);
-      const [benchmarks, etfs, usSectors, tickerSettled] = await Promise.all([
+      const [benchmarks, etfs, usSectors, portfolioViews, bySector, tickerSettled] = await Promise.all([
         fetchJson<BenchmarksMomentumPayload>("/data/benchmarks/summaries.json"),
         fetchJson<EtfsPayload>("/data/global-scouter/etfs/index.json"),
         fetchJson<UsSectorsPayload>("/data/benchmarks/us_sectors.json"),
+        fetchJson<PortfolioViewsPayload>("/data/sec-13f/analytics/portfolio_views.json"),
+        fetchJson<BySectorPayload>("/data/sec-13f/by_sector.json"),
         Promise.allSettled(
           etfSymbols.map(async (symbol) => ({
             symbol,
@@ -137,10 +246,14 @@ export function useSectorData(): SectorDataResult {
       if (!benchmarks?.momentum) failed.push("benchmarks");
       if (!etfs?.etfs) failed.push("etfs");
       if (!usSectors?.sections) failed.push("us_sectors");
+      if (!portfolioViews?.total?.sector_history) failed.push("portfolio_views");
+      if (!bySector) failed.push("by_sector");
 
       const benchmarkMomentum: SectorMomentum | null = benchmarks?.momentum?.sp500
         ? Object.fromEntries(MOMENTUM_KEYS.map((key) => [key, num(benchmarks.momentum?.sp500?.[key])]))
         : null;
+      const smartMoneyMap = buildSmartMoneyMap(portfolioViews, bySector);
+      let valuationLatestDate: string | null = null;
 
       const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
         const rawMomentum = benchmarks?.momentum?.[sector.key];
@@ -159,6 +272,10 @@ export function useSectorData(): SectorDataResult {
         const valData = usSectors?.sections?.[sector.key]?.data;
         const valLatest = Array.isArray(valData) && valData.length > 0 ? valData[valData.length - 1] : null;
         const pe = num(valLatest?.best_pe_ratio);
+        if (typeof valLatest?.date === "string" && (!valuationLatestDate || valLatest.date > valuationLatestDate)) {
+          valuationLatestDate = valLatest.date;
+        }
+        const etfInfo = buildEtfInfo(etfs?.etfs?.[sector.etf]);
 
         return {
           key: sector.key,
@@ -168,18 +285,31 @@ export function useSectorData(): SectorDataResult {
           dayChange: changePercent === null ? null : changePercent / 100,
           price: num(quote?.price),
           marketState,
-          etfInfo: buildEtfInfo(etfs?.etfs?.[sector.etf]),
+          etfInfo,
           valuation: valLatest
             ? { pe, pb: num(valLatest.px_to_book_ratio), roe: num(valLatest.roe), peBand: buildPeBand(valData, pe) }
             : null,
+          smartMoney: smartMoneyMap[sector.key] ?? null,
         };
       });
 
       const dataReady = Boolean(benchmarks?.momentum) || Boolean(etfs?.etfs);
       const updatedAt = benchmarks?.metadata?.generated ?? null;
+      const sourceMeta = {
+        benchmarksGenerated: updatedAt,
+        valuationGenerated: usSectors?.metadata?.generated ?? null,
+        valuationSource: usSectors?.metadata?.source ?? null,
+        valuationVersion: usSectors?.metadata?.version ?? null,
+        valuationLatestDate,
+        smartMoneyQuarter: portfolioViews?.metadata?.quarter ?? null,
+        smartMoneyGeneratedAt: portfolioViews?.metadata?.generated_at ?? null,
+        smartMoneyCohortCount: num(portfolioViews?.metadata?.cohort_count),
+        smartMoneyDisclaimer: portfolioViews?.metadata?.disclaimer ?? null,
+        etfMissing: rows.filter((row) => !row.etfInfo).map((row) => row.etf),
+      };
 
       if (!isMountedRef.current) return;
-      setResult({ rows, benchmarkMomentum, dataReady, failedSources: failed, updatedAt });
+      setResult({ rows, benchmarkMomentum, dataReady, failedSources: failed, updatedAt, sourceMeta });
     } finally {
       inFlightRef.current = false;
     }

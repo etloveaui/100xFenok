@@ -35,6 +35,14 @@ export interface SectorEtfInfo {
   expenseRatio: number | null;
 }
 
+export interface SectorSmartMoney {
+  sectorLabel: string;
+  weight: number | null;
+  delta4q: number | null;
+  avgHoldingWeight: number | null;
+  topHoldings: string[];
+}
+
 export interface SectorRow {
   key: string;
   etf: string;
@@ -49,6 +57,8 @@ export interface SectorRow {
   etfInfo: SectorEtfInfo | null;
   /** Sector-index valuation (us_sectors.json latest: Fwd P/E, P/B, ROE). */
   valuation: SectorValuation | null;
+  /** 13F sector allocation and top holdings from portfolio_views/by_sector. */
+  smartMoney: SectorSmartMoney | null;
 }
 
 export interface SectorValuation {
@@ -76,4 +86,18 @@ export interface SectorDataResult {
   failedSources: string[];
   /** benchmarks generated timestamp, or null. */
   updatedAt: string | null;
+  sourceMeta: SectorSourceMeta;
+}
+
+export interface SectorSourceMeta {
+  benchmarksGenerated: string | null;
+  valuationGenerated: string | null;
+  valuationSource: string | null;
+  valuationVersion: string | null;
+  valuationLatestDate: string | null;
+  smartMoneyQuarter: string | null;
+  smartMoneyGeneratedAt: string | null;
+  smartMoneyCohortCount: number | null;
+  smartMoneyDisclaimer: string | null;
+  etfMissing: string[];
 }

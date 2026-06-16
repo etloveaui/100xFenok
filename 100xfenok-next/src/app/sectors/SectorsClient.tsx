@@ -4,7 +4,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import TransitionLink from "@/components/TransitionLink";
 import { useSectorData } from "@/hooks/useSectorData";
-import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorValuationBand } from "@/lib/sectors/types";
+import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorSourceMeta, type SectorValuationBand } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -18,6 +18,29 @@ function pct(value: number | null | undefined, digits = 1): string {
 function pp(value: number | null | undefined, digits = 1): string {
   const formatted = pct(value, digits);
   return formatted === "—" ? formatted : formatted.replace("%", "%p");
+}
+
+type MobileView = "heatmap" | "etf" | "valuation" | "guru";
+
+const MOBILE_VIEWS: ReadonlyArray<{ key: MobileView; label: string }> = [
+  { key: "heatmap", label: "흐름" },
+  { key: "etf", label: "ETF" },
+  { key: "valuation", label: "밸류" },
+  { key: "guru", label: "구루" },
+];
+
+function dateOnly(value: string | null | undefined): string | null {
+  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
+}
+
+function metricTone(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "text-slate-400";
+  return value >= 0 ? "text-emerald-600" : "text-rose-600";
+}
+
+function mobilePanelClass(active: boolean, display = "block"): string {
+  if (display === "grid") return active ? "grid" : "hidden md:grid";
+  return active ? "block" : "hidden md:block";
 }
 
 /** Continuous green/red heat scale over a momentum fraction. */
@@ -125,9 +148,196 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
   );
 }
 
+function SourceLine({ sourceMeta }: { sourceMeta: SectorSourceMeta }) {
+  const parts = [
+    sourceMeta.benchmarksGenerated ? `모멘텀 ${dateOnly(sourceMeta.benchmarksGenerated)}` : null,
+    sourceMeta.valuationLatestDate ? `밸류 ${sourceMeta.valuationLatestDate}` : null,
+    sourceMeta.smartMoneyQuarter ? `13F ${sourceMeta.smartMoneyQuarter}` : null,
+  ].filter(Boolean);
+  return <span>{parts.length > 0 ? parts.join(" · ") : "소스 확인 중"}</span>;
+}
+
+function MobileViewSwitch({
+  value,
+  onChange,
+}: {
+  value: MobileView;
+  onChange: (next: MobileView) => void;
+}) {
+  return (
+    <div className="md:hidden">
+      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
+        {MOBILE_VIEWS.map((view) => {
+          const active = view.key === value;
+          return (
+            <button
+              key={view.key}
+              type="button"
+              onClick={() => onChange(view.key)}
+              className={cx(
+                "min-h-10 rounded-xl px-2 text-[11px] font-black transition",
+                active ? "bg-brand-navy text-white" : "text-slate-500 hover:bg-slate-50",
+              )}
+            >
+              {view.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SectorPulse({
+  leader,
+  laggard,
+  beatCount,
+  totalCount,
+  activeWindowLabel,
+  activeWindowKey,
+  cheapest,
+  richest,
+  smartLeader,
+  smartDeltaLeader,
+  sourceMeta,
+}: {
+  leader: SectorRow | undefined;
+  laggard: SectorRow | undefined;
+  beatCount: number | null;
+  totalCount: number;
+  activeWindowLabel: string;
+  activeWindowKey: MomentumWindow;
+  cheapest: SectorRow | null;
+  richest: SectorRow | null;
+  smartLeader: SectorRow | null;
+  smartDeltaLeader: SectorRow | null;
+  sourceMeta: SectorSourceMeta;
+}) {
+  const leaderValue = leader?.momentum ? leader.momentum[activeWindowKey] : null;
+  const laggardValue = laggard?.momentum ? laggard.momentum[activeWindowKey] : null;
+  return (
+    <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{activeWindowLabel} 주도</p>
+        <p className="mt-1 text-sm font-black text-slate-950">
+          {leader ? `${leader.name} ${pct(leaderValue, 1)}` : "데이터 없음"}
+        </p>
+        <p className="mt-0.5 text-[11px] font-bold text-slate-500">
+          약세 {laggard ? `${laggard.name} ${pct(laggardValue, 1)}` : "—"}
+        </p>
+      </div>
+      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">시장 대비</p>
+        <p className="mt-1 text-sm font-black text-slate-950">
+          {beatCount === null ? "S&P 기준 없음" : `${beatCount}/${totalCount}개 섹터가 S&P 상회`}
+        </p>
+        <p className="mt-0.5 text-[11px] font-bold text-slate-500"><SourceLine sourceMeta={sourceMeta} /></p>
+      </div>
+      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">밸류 위치</p>
+        <p className="mt-1 text-sm font-black text-slate-950">
+          저평가 {cheapest ? cheapest.name : "—"} · 고평가 {richest ? richest.name : "—"}
+        </p>
+        <p className="mt-0.5 text-[11px] font-bold text-slate-500">
+          {sourceMeta.valuationSource ?? "valuation source"} {sourceMeta.valuationLatestDate ?? ""}
+        </p>
+      </div>
+      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">13F 포지셔닝</p>
+        <p className="mt-1 text-sm font-black text-slate-950">
+          {smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "13F 없음"}
+        </p>
+        <p className="mt-0.5 text-[11px] font-bold text-slate-500">
+          증가 {smartDeltaLeader?.smartMoney ? `${smartDeltaLeader.name} ${pp(smartDeltaLeader.smartMoney.delta4q, 1)}` : "—"}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function SectorMomentumCard({
+  row,
+  windowKey,
+  benchmarkValue,
+}: {
+  row: SectorRow;
+  windowKey: MomentumWindow;
+  benchmarkValue: number | null;
+}) {
+  const value = row.momentum[windowKey];
+  const relative = typeof value === "number" && typeof benchmarkValue === "number" ? value - benchmarkValue : null;
+  const tone = valuationTone(row.valuation?.peBand?.percentile);
+  return (
+    <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black text-slate-950">{row.name}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{row.etf}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className={cx("orbitron text-base font-black tabular-nums", metricTone(value))}>{pct(value, 1)}</p>
+          <p className={cx("orbitron text-[10px] font-bold tabular-nums", metricTone(relative))}>S&P {pp(relative, 1)}</p>
+        </div>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
+        <span className="rounded-lg bg-white px-2 py-1">당일 {pct(row.dayChange, 2)}</span>
+        <span className="rounded-lg bg-white px-2 py-1">{tone.label}</span>
+        <span className="rounded-lg bg-white px-2 py-1">13F {pct(row.smartMoney?.weight, 1)}</span>
+      </div>
+    </article>
+  );
+}
+
+function EtfMobileCard({ row }: { row: SectorRow }) {
+  const etf = row.etfInfo;
+  return (
+    <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black text-slate-950">{row.etf}</p>
+          <p className="truncate text-[11px] font-bold text-slate-500">{row.name}</p>
+        </div>
+        <p className={cx("orbitron shrink-0 text-base font-black tabular-nums", metricTone(etf?.returns["1m"]))}>
+          {pct(etf?.returns["1m"], 1)}
+        </p>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
+        <span className="rounded-lg bg-white px-2 py-1">YTD {pct(etf?.returns.ytd, 1)}</span>
+        <span className="rounded-lg bg-white px-2 py-1">1Y {pct(etf?.returns["1y"], 1)}</span>
+        <span className="rounded-lg bg-white px-2 py-1">3Y {pct(etf?.cagr["3y"], 1)}</span>
+        <span className="rounded-lg bg-white px-2 py-1">Beta {typeof etf?.beta === "number" ? etf.beta.toFixed(2) : "—"}</span>
+        <span className="rounded-lg bg-white px-2 py-1">보수 {typeof etf?.expenseRatio === "number" ? formatPercent(etf.expenseRatio * 100, 2) : "—"}</span>
+        <span className="rounded-lg bg-white px-2 py-1">{etf ? "추적 중" : "ETF 없음"}</span>
+      </div>
+    </article>
+  );
+}
+
+function ValuationMobileCard({ row }: { row: SectorRow }) {
+  const value = row.valuation;
+  const tone = valuationTone(value?.peBand?.percentile);
+  return (
+    <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black text-slate-950">{row.name}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{row.etf}</p>
+        </div>
+        <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", tone.className)}>{tone.label}</span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
+        <span className="rounded-lg bg-white px-2 py-1">Fwd P/E {typeof value?.pe === "number" ? value.pe.toFixed(1) : "—"}</span>
+        <span className="rounded-lg bg-white px-2 py-1">P/B {typeof value?.pb === "number" ? value.pb.toFixed(2) : "—"}</span>
+        <span className="rounded-lg bg-white px-2 py-1">ROE {typeof value?.roe === "number" ? formatPercent(value.roe * 100, 1) : "—"}</span>
+      </div>
+    </article>
+  );
+}
+
 export default function SectorsClient() {
-  const { rows, benchmarkMomentum, dataReady, failedSources, updatedAt } = useSectorData();
+  const { rows, benchmarkMomentum, dataReady, failedSources, updatedAt, sourceMeta } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
+  const [mobileView, setMobileView] = useState<MobileView>("heatmap");
 
   const sorted = useMemo(
     () =>
@@ -139,11 +349,32 @@ export default function SectorsClient() {
   const leaders = sorted.slice(0, 3);
   const laggards = sorted.filter((row) => row.momentum[sortWindow] !== null).slice(-3).reverse();
   const etfRows = useMemo(() => rows.filter((row) => row.etfInfo), [rows]);
+  const valuationRows = useMemo(() => rows.filter((row) => row.valuation), [rows]);
+  const activeWindowLabel = MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label ?? sortWindow;
 
   const isMuted = !dataReady;
   const benchmarksFailed = failedSources.includes("benchmarks");
   const dateLabel = updatedAt ? updatedAt.slice(0, 10) : null;
+  const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
   const marketThreeMonth = benchmarkMomentum?.["3m"] ?? null;
+  const beatCount =
+    typeof activeBenchmark === "number"
+      ? rows.filter((row) => typeof row.momentum[sortWindow] === "number" && (row.momentum[sortWindow] ?? -Infinity) > activeBenchmark).length
+      : null;
+  const valuationWithBands = valuationRows.filter((row) => typeof row.valuation?.peBand?.percentile === "number");
+  const cheapest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => (a.valuation!.peBand!.percentile - b.valuation!.peBand!.percentile))[0] : null;
+  const richest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => (b.valuation!.peBand!.percentile - a.valuation!.peBand!.percentile))[0] : null;
+  const smartRows = rows.filter((row) => row.smartMoney);
+  const smartLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.weight ?? -Infinity) - (a.smartMoney?.weight ?? -Infinity))[0] : null;
+  const smartDeltaLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.delta4q ?? -Infinity) - (a.smartMoney?.delta4q ?? -Infinity))[0] : null;
+  const headerDesc =
+    dataReady && leaders[0] && laggards[0]
+      ? `${dateLabel ?? "최신"} 기준 ${activeWindowLabel} 리더는 ${leaders[0].name} ${pct(leaders[0].momentum[sortWindow], 1)}, 약세는 ${laggards[0].name} ${pct(laggards[0].momentum[sortWindow], 1)}입니다.`
+      : "섹터 데이터를 불러오는 중입니다.";
+  const etfCoverageText =
+    sourceMeta.etfMissing.length > 0
+      ? `ETF 상세 미수록: ${sourceMeta.etfMissing.join(", ")}`
+      : `${etfRows.length}개 섹터 ETF 상세 추적 중`;
 
   return (
     <div className="data-shell-page">
@@ -152,7 +383,7 @@ export default function SectorsClient() {
           <p className="data-shell-kicker">섹터 인텔리전스</p>
           <h1 className="data-shell-title">섹터 히트맵</h1>
           <p className="data-shell-desc">
-            11개 미국 업종의 다기간 성과를 한눈에. 업종 순환, 강·약 순위, 섹터 ETF를 비교합니다.
+            {headerDesc}
           </p>
         </div>
         <div className="data-shell-head-actions">
@@ -167,6 +398,12 @@ export default function SectorsClient() {
               {dateLabel}
             </span>
           ) : null}
+          <span className="hidden sm:inline-flex">
+            <span className="data-shell-pill">
+              <span />
+              <SourceLine sourceMeta={sourceMeta} />
+            </span>
+          </span>
           <TransitionLink href="/" className="data-shell-link">
             홈
           </TransitionLink>
@@ -177,12 +414,34 @@ export default function SectorsClient() {
         <LoadingSkeleton />
       ) : null}
 
+      <MobileViewSwitch value={mobileView} onChange={setMobileView} />
+
+      <SectorPulse
+        leader={leaders[0]}
+        laggard={laggards[0]}
+        beatCount={beatCount}
+        totalCount={rows.length}
+        activeWindowLabel={activeWindowLabel}
+        activeWindowKey={sortWindow}
+        cheapest={cheapest}
+        richest={richest}
+        smartLeader={smartLeader}
+        smartDeltaLeader={smartDeltaLeader}
+        sourceMeta={sourceMeta}
+      />
+
       {/* Heatmap */}
+      <div className={mobilePanelClass(mobileView === "heatmap")}>
       <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과" className={isMuted ? "opacity-60" : undefined}>
         <p className="mb-3 text-xs text-slate-500">
-          열 머리글을 누르면 해당 기간 기준으로 정렬됩니다. 초록=강세 · 빨강=약세, 진할수록 강합니다.
+          {beatCount === null ? "S&P 500 기준선을 불러오는 중입니다." : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
         </p>
-        <div className="-mx-1 overflow-x-auto px-1">
+        <div className="grid gap-2 md:hidden">
+          {sorted.map((row) => (
+            <SectorMomentumCard key={row.key} row={row} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
+          ))}
+        </div>
+        <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
           <table className="w-full min-w-[640px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
@@ -297,9 +556,10 @@ export default function SectorsClient() {
           </table>
         </div>
       </SectionCard>
+      </div>
 
       {/* Leaders / Laggards */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={cx(mobilePanelClass(mobileView === "heatmap", "grid"), "gap-4 sm:grid-cols-2")}>
         <SectionCard kicker="강세 리더" title={`강세 업종 · ${MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label}`}>
           <RankList rows={leaders} window={sortWindow} tone="up" />
         </SectionCard>
@@ -309,11 +569,18 @@ export default function SectorsClient() {
       </div>
 
       {/* ETF comparison */}
+      <div className={mobilePanelClass(mobileView === "etf")}>
       <SectionCard kicker="섹터 ETF" title="섹터 ETF 비교">
         {etfRows.length === 0 ? (
           <p className="text-sm text-slate-500">ETF 데이터를 불러오지 못했습니다.</p>
         ) : (
-          <div className="-mx-1 overflow-x-auto px-1">
+          <>
+          <div className="grid gap-2 md:hidden">
+            {rows.map((row) => (
+              <EtfMobileCard key={row.key} row={row} />
+            ))}
+          </div>
+          <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
             <table className="w-full min-w-[680px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -353,15 +620,23 @@ export default function SectorsClient() {
               </tbody>
             </table>
           </div>
+          </>
         )}
         <p className="mt-3 text-[11px] text-slate-400">
-          XLC(커뮤니케이션) · XLRE(부동산)는 추적 ETF 미수록 — 히트맵 성과만 표시됩니다.
+          {etfCoverageText}
         </p>
       </SectionCard>
+      </div>
 
       {/* Sector valuation */}
+      <div className={mobilePanelClass(mobileView === "valuation")}>
       <SectionCard kicker="밸류에이션" title="섹터 밸류에이션">
-        <div className="-mx-1 overflow-x-auto px-1">
+        <div className="grid gap-2 md:hidden">
+          {valuationRows.map((row) => (
+            <ValuationMobileCard key={row.key} row={row} />
+          ))}
+        </div>
+        <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -401,10 +676,13 @@ export default function SectorsClient() {
           </table>
         </div>
         <p className="mt-3 text-[11px] text-slate-400">
-          업종 지수 밸류에이션 (Bloomberg). 시장 전체 밸류는 <strong>시장 밸류에이션</strong> 페이지 참고.
+          {sourceMeta.valuationSource ?? "업종 지수 밸류에이션"} · {sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "날짜 확인 중"}
         </p>
       </SectionCard>
-      <SmartMoneyPanel />
+      </div>
+      <div className={mobilePanelClass(mobileView === "guru")}>
+        <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
+      </div>
 
     </div>
   );
