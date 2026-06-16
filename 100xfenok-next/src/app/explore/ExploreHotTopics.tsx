@@ -132,7 +132,7 @@ export default function ExploreHotTopics() {
           </TransitionLink>
         ))}
       </div>
-      <div className="panel-foot">13F 공시는 분기 종료 후 최대 45일 지연됩니다 · 데이터: SEC 13F</div>
+      <div className="panel-foot">기관 공시는 분기 종료 후 최대 45일 지연될 수 있습니다</div>
     </section>
   );
 }

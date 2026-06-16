@@ -25,16 +25,25 @@ interface MoverSide {
 
 interface DiscoveryDoc {
   generated_at?: string;
+  source_files?: {
+    gainers?: { updated?: string | null };
+    losers?: { updated?: string | null };
+    universe?: { updated?: string | null; uniqueCount?: number | null };
+    stocks_analyzer?: { generated_at?: string | null; source_date?: string | null; count?: number | null };
+    slick_index?: { generated_at?: string | null; count?: number | null };
+  };
   movers?: {
     gainers?: MoverSide;
     losers?: MoverSide;
   };
   returns?: {
+    asOf?: string | null;
     best1y?: DiscoveryRow[];
     worst1y?: DiscoveryRow[];
     best3y?: DiscoveryRow[];
   };
   dividends?: {
+    asOf?: string | null;
     highYield?: DiscoveryRow[];
     highTtm?: DiscoveryRow[];
   };
@@ -80,6 +89,10 @@ function fmtDividendYield(value: number | null | undefined): string {
 
 function fmtDollars(value: number | null | undefined): string {
   return isFiniteNumber(value) ? `$${value.toFixed(2)}` : "—";
+}
+
+function datePart(value: string | null | undefined): string | null {
+  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
 }
 
 function RowList({
@@ -135,7 +148,23 @@ export default function SlickchartsDiscoveryCard() {
   const worst1y = doc?.returns?.worst1y ?? [];
   const highYield = doc?.dividends?.highYield ?? [];
   const highTtm = doc?.dividends?.highTtm ?? [];
-  const asOf = doc?.movers?.gainers?.date ?? doc?.generated_at?.slice(0, 10) ?? null;
+  const moverAsOf = doc?.movers?.gainers?.date ?? doc?.movers?.losers?.date ?? datePart(doc?.source_files?.gainers?.updated) ?? datePart(doc?.generated_at);
+  const returnsAsOf = doc?.returns?.asOf ?? datePart(doc?.source_files?.slick_index?.generated_at) ?? datePart(doc?.generated_at);
+  const dividendsAsOf = doc?.dividends?.asOf
+    ?? doc?.source_files?.stocks_analyzer?.source_date
+    ?? datePart(doc?.source_files?.stocks_analyzer?.generated_at)
+    ?? datePart(doc?.generated_at);
+  const tabAsOf: Record<DiscoveryTab, string | null> = {
+    movers: moverAsOf,
+    returns: returnsAsOf,
+    dividends: dividendsAsOf,
+  };
+  const tabLabel: Record<DiscoveryTab, string> = {
+    movers: "무버",
+    returns: "수익률",
+    dividends: "배당",
+  };
+  const asOf = `${tabLabel[tab]} ${tabAsOf[tab] ?? "—"}`;
 
   if (!doc) {
     return (
@@ -155,7 +184,7 @@ export default function SlickchartsDiscoveryCard() {
     <section className="panel">
       <div className="panel-h">
         <h2>수익률 리더보드</h2>
-        <span className="desc">{asOf ?? "—"} · {doc.universe?.uniqueCount ?? "—"}개 유니버스</span>
+        <span className="desc">{asOf} · {doc.universe?.uniqueCount ?? "—"}개 유니버스</span>
         <div className="seg" style={{ marginLeft: "auto" }}>
           {[
             ["movers", "무버"],
@@ -208,7 +237,7 @@ export default function SlickchartsDiscoveryCard() {
         </div>
       ) : null}
 
-      <div className="panel-foot">원본 gainers/losers 히스토리는 약 5.7MB라 summary index만 로드합니다 · 데이터: SlickCharts</div>
+      <div className="panel-foot">원본 무버 히스토리는 약 5.7MB라 요약 인덱스만 로드합니다</div>
     </section>
   );
 }

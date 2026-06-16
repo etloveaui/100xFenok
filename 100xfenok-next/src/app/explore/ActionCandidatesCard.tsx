@@ -178,7 +178,7 @@ export default function ActionCandidatesCard() {
           </TransitionLink>
         ))}
       </div>
-      <div className="panel-foot">YF 분기 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 데이터: SlickCharts · SEC 13F · YF · computed stock_action_summary</div>
+      <div className="panel-foot">분기말 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 가격·수익률·기관 동향·자동 계산 점수 반영</div>
     </section>
   );
 }

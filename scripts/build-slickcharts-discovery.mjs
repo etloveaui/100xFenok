@@ -36,6 +36,10 @@ function finite(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function datePart(value) {
+  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
+}
+
 function stockMaps(analyzer) {
   const rows = Array.isArray(analyzer?.data) ? analyzer.data : [];
   const map = new Map();
@@ -144,6 +148,11 @@ function main() {
       gainers: { updated: gainers.updated ?? null, bytes: fs.statSync(PATHS.gainers).size },
       losers: { updated: losers.updated ?? null, bytes: fs.statSync(PATHS.losers).size },
       universe: { updated: universe.updated ?? null, uniqueCount: universe.uniqueCount ?? null },
+      stocks_analyzer: {
+        generated_at: analyzer.generated_at ?? null,
+        source_date: analyzer.source_date ?? null,
+        count: analyzer.count ?? null,
+      },
       slick_index: { generated_at: slickIndex.generated_at ?? null, count: slickIndex.count ?? null },
     },
     movers: {
@@ -151,11 +160,13 @@ function main() {
       losers: latestMoverSide(losers, "losers", analyzerMap),
     },
     returns: {
+      asOf: datePart(slickIndex.generated_at),
       best1y: rankedFromSlickIndex({ slickIndex, analyzerMap, key: "ret1y" }),
       worst1y: rankedFromSlickIndex({ slickIndex, analyzerMap, key: "ret1y", desc: false }),
       best3y: rankedFromSlickIndex({ slickIndex, analyzerMap, key: "ret3y" }),
     },
     dividends: {
+      asOf: analyzer.source_date ?? datePart(analyzer.generated_at),
       highYield: rankedFromAnalyzer({ analyzerMap, key: "dividendYield" }),
       highTtm: rankedFromSlickIndex({ slickIndex, analyzerMap, key: "dividendTtm" }),
     },

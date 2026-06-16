@@ -53,7 +53,7 @@ export default function ExplorePage() {
           <ExploreHotTopics />
         </div>
 
-        <p className="data-cap">데이터: Global Scouter · Benchmarks · Calendar · SEC 13F · SlickCharts · Computed signals</p>
+        <p className="data-cap">데이터: 시장 신호 · 밸류에이션 · 일정 · 기관 동향 · 종목 리더보드 · 계산 지표</p>
       </AppShell>
     </div>
   );
