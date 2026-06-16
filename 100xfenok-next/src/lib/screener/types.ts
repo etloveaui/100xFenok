@@ -47,6 +47,14 @@ export interface ScreenerStock {
   forwardEpsFy1?: number | null;
   revenueGrowthFy1?: number | null;
   epsGrowthFy1?: number | null;
+  forwardPeFy2?: number | null;
+  forwardEpsFy2?: number | null;
+  revenueGrowthFy2?: number | null;
+  epsGrowthFy2?: number | null;
+  forwardPeFy3?: number | null;
+  forwardEpsFy3?: number | null;
+  revenueGrowthFy3?: number | null;
+  epsGrowthFy3?: number | null;
   dividendTtm: number | null;
   ret1y: number | null;
   ret3y: number | null;
@@ -54,6 +62,12 @@ export interface ScreenerStock {
   operatingMarginFy1?: number | null;
   roeFy1?: number | null;
   grossMarginFy1?: number | null;
+  operatingMarginFy2?: number | null;
+  roeFy2?: number | null;
+  grossMarginFy2?: number | null;
+  operatingMarginFy3?: number | null;
+  roeFy3?: number | null;
+  grossMarginFy3?: number | null;
 }
 
 export type ScreenerSortKey =
@@ -83,6 +97,14 @@ export type ScreenerSortKey =
   | "forwardEpsFy1"
   | "revenueGrowthFy1"
   | "epsGrowthFy1"
+  | "forwardPeFy2"
+  | "forwardEpsFy2"
+  | "revenueGrowthFy2"
+  | "epsGrowthFy2"
+  | "forwardPeFy3"
+  | "forwardEpsFy3"
+  | "revenueGrowthFy3"
+  | "epsGrowthFy3"
   | "dividendTtm"
   | "ret1y"
   | "ret3y"
@@ -91,7 +113,13 @@ export type ScreenerSortKey =
   | "guruHolders"
   | "operatingMarginFy1"
   | "roeFy1"
-  | "grossMarginFy1";
+  | "grossMarginFy1"
+  | "operatingMarginFy2"
+  | "roeFy2"
+  | "grossMarginFy2"
+  | "operatingMarginFy3"
+  | "roeFy3"
+  | "grossMarginFy3";
 
 export type SortDir = "asc" | "desc";
 

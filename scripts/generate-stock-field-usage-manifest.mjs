@@ -294,6 +294,22 @@ function walkValue(value, prefix, fields, fileRel, depth = 0) {
   });
 }
 
+function walkStockActionSummary(value, fields, fileRel) {
+  const fieldNames = Array.isArray(value?.fields) ? value.fields.filter((field) => typeof field === "string") : [];
+  const rows = Array.isArray(value?.rows) ? value.rows : [];
+  const topLevel = Object.fromEntries(Object.entries(value).filter(([key]) => key !== "rows"));
+
+  walkValue(topLevel, "", fields, fileRel);
+  addField(fields, "rows[]", rows, fileRel);
+
+  for (const row of rows) {
+    if (!Array.isArray(row)) continue;
+    fieldNames.forEach((fieldName, index) => {
+      walkValue(row[index] ?? null, `rows[].${fieldName}`, fields, fileRel);
+    });
+  }
+}
+
 function sourceFiles() {
   return SOURCE_DIRS.flatMap((dir) =>
     walkFiles(dir, (file) => /\.(ts|tsx|js|jsx|mjs)$/.test(file))
@@ -376,7 +392,11 @@ function summarizeDataset(dataset, codeHitsForPath) {
     const json = readJson(file);
     if (json === null) continue;
     parsedFiles += 1;
-    walkValue(json, "", fields, rel);
+    if (rel === "computed/stock_action_summary.json") {
+      walkStockActionSummary(json, fields, rel);
+    } else {
+      walkValue(json, "", fields, rel);
+    }
   }
   const fieldRows = [...fields.values()].map((field) => {
     const codeHits = codeHitsForPath(field.path);

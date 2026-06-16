@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-16T08:08:45.299Z",
+  "generated_at": "2026-06-16T09:23:24.330Z",
   "product_language_rule": "User-facing surfaces use Feno/function labels; source/vendor names stay in internal provenance/admin/debug/docs.",
   "status_definitions": {
     "interpreted": "Observed in deterministic or future interpretation code paths.",
@@ -12,13 +12,13 @@
   "totals": {
     "fileCount": 2744,
     "parsedFileCount": 2744,
-    "scannedBytes": 188601008,
-    "fieldCount": 883,
+    "scannedBytes": 188685110,
+    "fieldCount": 901,
     "statusCounts": {
-      "not_yet_used": 520,
-      "visually_rendered": 219,
-      "metadata": 143,
-      "interpreted": 1
+      "not_yet_used": 510,
+      "visually_rendered": 232,
+      "metadata": 145,
+      "interpreted": 14
     }
   },
   "dataset_summaries": [
@@ -83,13 +83,13 @@
       "internalSource": "computed",
       "fileCount": 2,
       "parsedFileCount": 2,
-      "scannedBytes": 4155913,
-      "fieldCount": 88,
+      "scannedBytes": 4240015,
+      "fieldCount": 106,
       "statusCounts": {
-        "not_yet_used": 61,
-        "visually_rendered": 21,
-        "metadata": 5,
-        "interpreted": 1
+        "not_yet_used": 51,
+        "visually_rendered": 34,
+        "metadata": 7,
+        "interpreted": 14
       }
     }
   ],
@@ -12356,6 +12356,12 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/app/explore/SlickchartsDiscoveryCard.tsx",
+              "tokens": [
+                "_index"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/app/market-valuation/MarketValuationClient.tsx",
               "tokens": [
                 "_index"
@@ -12363,12 +12369,6 @@
             },
             {
               "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
-              "tokens": [
-                "_index"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
               "tokens": [
                 "_index"
               ]
@@ -16321,13 +16321,13 @@
       "internalSource": "computed",
       "fileCount": 2,
       "parsedFileCount": 2,
-      "scannedBytes": 4155913,
-      "fieldCount": 88,
+      "scannedBytes": 4240015,
+      "fieldCount": 106,
       "statusCounts": {
-        "not_yet_used": 61,
-        "visually_rendered": 21,
-        "metadata": 5,
-        "interpreted": 1
+        "not_yet_used": 51,
+        "visually_rendered": 34,
+        "metadata": 7,
+        "interpreted": 14
       },
       "fields": [
         {
@@ -16738,6 +16738,21 @@
           ]
         },
         {
+          "path": "coverage.estimate_fy1_forward_eps_count",
+          "status": "not_yet_used",
+          "presenceCount": 2,
+          "valueKinds": [
+            "number"
+          ],
+          "sampleValues": [
+            "1043"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
+          ]
+        },
+        {
           "path": "coverage.estimate_fy1_forward_pe_count",
           "status": "not_yet_used",
           "presenceCount": 2,
@@ -16768,14 +16783,14 @@
           ]
         },
         {
-          "path": "coverage.estimate_snapshot_count",
+          "path": "coverage.estimate_fy2_eps_growth_count",
           "status": "not_yet_used",
           "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "1043"
+            "1041"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16783,143 +16798,14 @@
           ]
         },
         {
-          "path": "coverage.family_coverage[]",
-          "status": "not_yet_used",
-          "presenceCount": 1,
-          "valueKinds": [
-            "array"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_index.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "family_coverage"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.family_coverage[].eligibleCount",
-          "status": "not_yet_used",
-          "presenceCount": 6,
-          "valueKinds": [
-            "number"
-          ],
-          "sampleValues": [
-            "1053",
-            "1045"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_index.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "eligibleCount"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.family_coverage[].family",
-          "status": "visually_rendered",
-          "presenceCount": 6,
-          "valueKinds": [
-            "string"
-          ],
-          "sampleValues": [
-            "valuation",
-            "momentum_revision"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_index.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "100xfenok-next/src/components/admin-live/MonaWindDown.tsx",
-              "tokens": [
-                "family"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
-              "tokens": [
-                "family"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/mona-study-tools.ts",
-              "tokens": [
-                "family"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "family"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.family_coverage[].presentCount",
-          "status": "not_yet_used",
-          "presenceCount": 6,
-          "valueKinds": [
-            "number"
-          ],
-          "sampleValues": [
-            "1053",
-            "1045"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_index.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "presentCount"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.family_coverage[].presentRatio",
-          "status": "not_yet_used",
-          "presenceCount": 6,
-          "valueKinds": [
-            "number"
-          ],
-          "sampleValues": [
-            "1",
-            "0.6515"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_index.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "presentRatio"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.guru_ticker_count",
+          "path": "coverage.estimate_fy2_forward_eps_count",
           "status": "not_yet_used",
           "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "843"
+            "1041"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16927,14 +16813,14 @@
           ]
         },
         {
-          "path": "coverage.indexed_stock_count",
+          "path": "coverage.estimate_fy2_forward_pe_count",
           "status": "not_yet_used",
           "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "1066"
+            "1029"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16942,14 +16828,14 @@
           ]
         },
         {
-          "path": "coverage.low_evidence_count",
+          "path": "coverage.estimate_fy2_revenue_growth_count",
           "status": "not_yet_used",
           "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "24"
+            "1030"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16957,78 +16843,14 @@
           ]
         },
         {
-          "path": "coverage.market_scope_counts.asia",
+          "path": "coverage.estimate_fy3_eps_growth_count",
           "status": "not_yet_used",
           "presenceCount": 1,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "91"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_summary.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "asia"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.market_scope_counts.korea",
-          "status": "not_yet_used",
-          "presenceCount": 1,
-          "valueKinds": [
-            "number"
-          ],
-          "sampleValues": [
-            "338"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_summary.json"
-          ],
-          "consumerHits": [
-            {
-              "file": "100xfenok-next/src/hooks/useMarketValuation.ts",
-              "tokens": [
-                "korea"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "korea"
-              ]
-            }
-          ]
-        },
-        {
-          "path": "coverage.market_scope_counts.us",
-          "status": "not_yet_used",
-          "presenceCount": 1,
-          "valueKinds": [
-            "number"
-          ],
-          "sampleValues": [
-            "637"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_summary.json"
-          ]
-        },
-        {
-          "path": "coverage.profitability_estimate_snapshot_count",
-          "status": "not_yet_used",
-          "presenceCount": 1,
-          "valueKinds": [
-            "number"
-          ],
-          "sampleValues": [
-            "1042"
+            "1031"
           ],
           "sampleFiles": [
             "computed/stock_action_summary.json"
@@ -17084,7 +16906,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-16T07:46:58.926Z"
+            "2026-06-16T09:12:04.380Z"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -17132,7 +16954,7 @@
         {
           "path": "rows[].actionBucket",
           "status": "visually_rendered",
-          "presenceCount": 16,
+          "presenceCount": 1082,
           "valueKinds": [
             "string"
           ],
@@ -17141,7 +16963,8 @@
             "income"
           ],
           "sampleFiles": [
-            "computed/stock_action_index.json"
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
           ],
           "consumerHits": [
             {
@@ -17173,7 +16996,7 @@
         {
           "path": "rows[].actionLabel",
           "status": "visually_rendered",
-          "presenceCount": 16,
+          "presenceCount": 1082,
           "valueKinds": [
             "string"
           ],
@@ -17182,7 +17005,8 @@
             "배당 점검"
           ],
           "sampleFiles": [
-            "computed/stock_action_index.json"
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
           ],
           "consumerHits": [
             {
@@ -17214,7 +17038,7 @@
         {
           "path": "rows[].actionReasons[]",
           "status": "visually_rendered",
-          "presenceCount": 78,
+          "presenceCount": 3276,
           "valueKinds": [
             "array",
             "string"
@@ -17224,7 +17048,8 @@
             "12M 318.4%"
           ],
           "sampleFiles": [
-            "computed/stock_action_index.json"
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
           ],
           "consumerHits": [
             {
@@ -17256,7 +17081,7 @@
         {
           "path": "rows[].actionScore",
           "status": "interpreted",
-          "presenceCount": 16,
+          "presenceCount": 1082,
           "valueKinds": [
             "number"
           ],
@@ -17265,7 +17090,8 @@
             "75.64"
           ],
           "sampleFiles": [
-            "computed/stock_action_index.json"
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
           ],
           "consumerHits": [
             {
@@ -17320,7 +17146,7 @@
         {
           "path": "rows[].company",
           "status": "not_yet_used",
-          "presenceCount": 16,
+          "presenceCount": 1082,
           "valueKinds": [
             "string"
           ],
@@ -17329,21 +17155,24 @@
             "서진시스템"
           ],
           "sampleFiles": [
-            "computed/stock_action_index.json"
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
           ]
         },
         {
           "path": "rows[].confidenceLabel",
           "status": "visually_rendered",
-          "presenceCount": 16,
+          "presenceCount": 1082,
           "valueKinds": [
             "string"
           ],
           "sampleValues": [
-            "high"
+            "high",
+            "medium"
           ],
           "sampleFiles": [
-            "computed/stock_action_index.json"
+            "computed/stock_action_index.json",
+            "computed/stock_action_summary.json"
           ],
           "consumerHits": [
             {
@@ -17765,35 +17594,1050 @@
           ]
         },
         {
-          "path": "rows[][]",
-          "status": "not_yet_used",
-          "presenceCount": 256,
+          "path": "rows[].epsGrowthFy1",
+          "status": "interpreted",
+          "presenceCount": 1066,
           "valueKinds": [
-            "array",
-            "boolean",
             "null",
-            "number",
+            "number"
+          ],
+          "sampleValues": [
+            "323.58",
+            "155.21"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "epsGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "epsGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "epsGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
+              "tokens": [
+                "epsGrowthFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].epsGrowthFy2",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "10.32",
+            "321.01"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "epsGrowthFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "epsGrowthFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "epsGrowthFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "epsGrowthFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].epsGrowthFy3",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "19.97",
+            "-39.55"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "epsGrowthFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "epsGrowthFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "epsGrowthFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "epsGrowthFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].forwardEpsFy1",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "2435",
+            "994"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "forwardEpsFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "forwardEpsFy1"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "forwardEpsFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].forwardEpsFy2",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "2686",
+            "4185"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "forwardEpsFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "forwardEpsFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "forwardEpsFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].forwardEpsFy3",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "3223",
+            "2529"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "forwardEpsFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "forwardEpsFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "forwardEpsFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].forwardPeFy1",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "20.1",
+            "75.56"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "forwardPeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "forwardPeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "forwardPeFy1"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "forwardPeFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].forwardPeFy2",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "18.22",
+            "17.95"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "forwardPeFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "forwardPeFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "forwardPeFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "forwardPeFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].forwardPeFy3",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "15.19",
+            "29.69"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "forwardPeFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "forwardPeFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "forwardPeFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "forwardPeFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].grossMarginFy1",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "19.05",
+            "18.89"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "grossMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "grossMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
+              "tokens": [
+                "grossMarginFy1"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "grossMarginFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].grossMarginFy2",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "19.37",
+            "22.94"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "grossMarginFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "grossMarginFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "grossMarginFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].grossMarginFy3",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "20.04",
+            "20.01"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "grossMarginFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "grossMarginFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "grossMarginFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].guruHolders",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "19",
+            "14"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
+              "tokens": [
+                "guruHolders"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "guruHolders"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "guruHolders"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "guruHolders"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].lowEvidence",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "boolean"
+          ],
+          "sampleValues": [
+            "false",
+            "true"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
+              "tokens": [
+                "lowEvidence"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "lowEvidence"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "lowEvidence"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "lowEvidence"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].marketScope",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "string"
+          ],
+          "sampleValues": [
+            "korea",
+            "us"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
+              "tokens": [
+                "marketScope"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "marketScope"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].operatingMarginFy1",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "14.03",
+            "10.12"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "operatingMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "operatingMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "operatingMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
+              "tokens": [
+                "operatingMarginFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].operatingMarginFy2",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "14.64",
+            "15.21"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "operatingMarginFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "operatingMarginFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "operatingMarginFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].operatingMarginFy3",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "15.54",
+            "12.91"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "operatingMarginFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "operatingMarginFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "operatingMarginFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].return12m",
+          "status": "visually_rendered",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "3.183760683760684",
+            "2.610576923076923"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
+              "tokens": [
+                "return12m"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/explore/MyWatchlistStrip.tsx",
+              "tokens": [
+                "return12m"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "return12m"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx",
+              "tokens": [
+                "return12m"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].revenueGrowthFy1",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "46.48",
+            "69.18"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "revenueGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "revenueGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "revenueGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
+              "tokens": [
+                "revenueGrowthFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].revenueGrowthFy2",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "15.05",
+            "35.72"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "revenueGrowthFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "revenueGrowthFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "revenueGrowthFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "revenueGrowthFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].revenueGrowthFy3",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "8.5",
+            "10.7"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "revenueGrowthFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "revenueGrowthFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "revenueGrowthFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "revenueGrowthFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].roeFy1",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "33.41",
+            "8.3"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "roeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "roeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "roeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
+              "tokens": [
+                "roeFy1"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].roeFy2",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "26.95",
+            "30.43"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "roeFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "roeFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "roeFy2"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "roeFy2"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].roeFy3",
+          "status": "interpreted",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "null",
+            "number"
+          ],
+          "sampleValues": [
+            "24.58",
+            "15.53"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "roeFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "tokens": [
+                "roeFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "tokens": [
+                "roeFy3"
+              ]
+            },
+            {
+              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "tokens": [
+                "roeFy3"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].sector",
+          "status": "metadata",
+          "presenceCount": 1066,
+          "valueKinds": [
+            "string"
+          ],
+          "sampleValues": [
+            "반도체",
+            "IT하드웨어"
+          ],
+          "sampleFiles": [
+            "computed/stock_action_summary.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/admin/design-gallery/page.tsx",
+              "tokens": [
+                "sector"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
+              "tokens": [
+                "sector"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/explore/SlickchartsDiscoveryCard.tsx",
+              "tokens": [
+                "sector"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/app/screener/ScreenerClient.tsx",
+              "tokens": [
+                "sector"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "rows[].symbol",
+          "status": "metadata",
+          "presenceCount": 1066,
+          "valueKinds": [
             "string"
           ],
           "sampleValues": [
             "067310.KQ",
-            "하나마이크론"
-          ],
-          "sampleFiles": [
-            "computed/stock_action_summary.json"
-          ]
-        },
-        {
-          "path": "rows[][][]",
-          "status": "not_yet_used",
-          "presenceCount": 48,
-          "valueKinds": [
-            "array",
-            "string"
-          ],
-          "sampleValues": [
-            "PER 밴드 10%",
-            "12M 318.4%"
+            "178320.KQ"
           ],
           "sampleFiles": [
             "computed/stock_action_summary.json"
@@ -18469,7 +19313,7 @@
         },
         {
           "path": "source_file",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "string"
@@ -18481,6 +19325,12 @@
             "computed/stock_action_summary.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/explore/SlickchartsDiscoveryCard.tsx",
+              "tokens": [
+                "source_file"
+              ]
+            },
             {
               "file": "100xfenok-next/src/lib/market-valuation/models/loaders.ts",
               "tokens": [
@@ -18498,18 +19348,12 @@
               "tokens": [
                 "source_file"
               ]
-            },
-            {
-              "file": "scripts/build-slickcharts-discovery.mjs",
-              "tokens": [
-                "source_file"
-              ]
             }
           ]
         },
         {
           "path": "source_files[]",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 15,
           "valueKinds": [
             "array",
@@ -18524,6 +19368,12 @@
           ],
           "consumerHits": [
             {
+              "file": "100xfenok-next/src/app/explore/SlickchartsDiscoveryCard.tsx",
+              "tokens": [
+                "source_files"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/market-valuation/models/loaders.ts",
               "tokens": [
                 "source_files"
@@ -18537,12 +19387,6 @@
             },
             {
               "file": "scripts/build-phase2-closeout-indexes.mjs",
-              "tokens": [
-                "source_files"
-              ]
-            },
-            {
-              "file": "scripts/build-slickcharts-discovery.mjs",
               "tokens": [
                 "source_files"
               ]

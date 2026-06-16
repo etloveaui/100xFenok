@@ -89,6 +89,8 @@ const GENERATED_OUTPUTS = [
   "computed/market_structure_index.json",
 ];
 
+const ESTIMATE_HORIZONS = ["fy1", "fy2", "fy3"];
+
 const CATEGORY_USAGE = {
   admin: "Admin proof layer and notification caches",
   benchmarks: "market valuation, sector momentum, thermometer decomposition",
@@ -1013,13 +1015,22 @@ function buildStockActionIndex() {
       conviction_name_only_count: convictions.nameOnlyCount,
       quarter_close_ticker_count: quarterCloses.meta.tickers,
       estimate_snapshot_count: actionRows.filter((row) => row.estimateSnapshot !== null).length,
-      estimate_fy1_forward_pe_count: actionRows.filter((row) => finite(row.estimateSnapshot?.forwardPe?.fy1)).length,
-      estimate_fy1_revenue_growth_count: actionRows.filter((row) => finite(row.estimateSnapshot?.revenueGrowth?.fy1)).length,
-      estimate_fy1_eps_growth_count: actionRows.filter((row) => finite(row.estimateSnapshot?.epsGrowth?.fy1)).length,
+      ...Object.fromEntries(
+        ESTIMATE_HORIZONS.flatMap((horizon) => [
+          [`estimate_${horizon}_forward_pe_count`, actionRows.filter((row) => finite(row.estimateSnapshot?.forwardPe?.[horizon])).length],
+          [`estimate_${horizon}_forward_eps_count`, actionRows.filter((row) => finite(row.estimateSnapshot?.forwardEps?.[horizon])).length],
+          [`estimate_${horizon}_revenue_growth_count`, actionRows.filter((row) => finite(row.estimateSnapshot?.revenueGrowth?.[horizon])).length],
+          [`estimate_${horizon}_eps_growth_count`, actionRows.filter((row) => finite(row.estimateSnapshot?.epsGrowth?.[horizon])).length],
+        ]),
+      ),
       profitability_estimate_snapshot_count: actionRows.filter((row) => row.profitabilitySnapshot !== null).length,
-      profitability_fy1_gross_margin_count: actionRows.filter((row) => finite(row.profitabilitySnapshot?.grossMargin?.fy1)).length,
-      profitability_fy1_operating_margin_count: actionRows.filter((row) => finite(row.profitabilitySnapshot?.operatingMargin?.fy1)).length,
-      profitability_fy1_roe_count: actionRows.filter((row) => finite(row.profitabilitySnapshot?.roe?.fy1)).length,
+      ...Object.fromEntries(
+        ESTIMATE_HORIZONS.flatMap((horizon) => [
+          [`profitability_${horizon}_gross_margin_count`, actionRows.filter((row) => finite(row.profitabilitySnapshot?.grossMargin?.[horizon])).length],
+          [`profitability_${horizon}_operating_margin_count`, actionRows.filter((row) => finite(row.profitabilitySnapshot?.operatingMargin?.[horizon])).length],
+          [`profitability_${horizon}_roe_count`, actionRows.filter((row) => finite(row.profitabilitySnapshot?.roe?.[horizon])).length],
+        ]),
+      ),
       sector_smart_money_count: sectorSmartMoney.size,
       sector_smart_money_joined_count: actionRows.filter((row) => row.sectorSmartMoney != null).length,
       market_scope_counts: countBy(actionRows, "marketScope"),
@@ -1060,6 +1071,20 @@ function buildStockActionSummary(stockActionIndex) {
     "grossMarginFy1",
     "operatingMarginFy1",
     "roeFy1",
+    "forwardPeFy2",
+    "forwardEpsFy2",
+    "revenueGrowthFy2",
+    "epsGrowthFy2",
+    "grossMarginFy2",
+    "operatingMarginFy2",
+    "roeFy2",
+    "forwardPeFy3",
+    "forwardEpsFy3",
+    "revenueGrowthFy3",
+    "epsGrowthFy3",
+    "grossMarginFy3",
+    "operatingMarginFy3",
+    "roeFy3",
   ];
   return {
     schema_version: 1,
@@ -1076,13 +1101,22 @@ function buildStockActionSummary(stockActionIndex) {
       conviction_matched_count: stockActionIndex.coverage?.conviction_matched_count ?? null,
       quarter_close_ticker_count: stockActionIndex.coverage?.quarter_close_ticker_count ?? null,
       estimate_snapshot_count: stockActionIndex.coverage?.estimate_snapshot_count ?? null,
-      estimate_fy1_forward_pe_count: stockActionIndex.coverage?.estimate_fy1_forward_pe_count ?? null,
-      estimate_fy1_revenue_growth_count: stockActionIndex.coverage?.estimate_fy1_revenue_growth_count ?? null,
-      estimate_fy1_eps_growth_count: stockActionIndex.coverage?.estimate_fy1_eps_growth_count ?? null,
+      ...Object.fromEntries(
+        ESTIMATE_HORIZONS.flatMap((horizon) => [
+          [`estimate_${horizon}_forward_pe_count`, stockActionIndex.coverage?.[`estimate_${horizon}_forward_pe_count`] ?? null],
+          [`estimate_${horizon}_forward_eps_count`, stockActionIndex.coverage?.[`estimate_${horizon}_forward_eps_count`] ?? null],
+          [`estimate_${horizon}_revenue_growth_count`, stockActionIndex.coverage?.[`estimate_${horizon}_revenue_growth_count`] ?? null],
+          [`estimate_${horizon}_eps_growth_count`, stockActionIndex.coverage?.[`estimate_${horizon}_eps_growth_count`] ?? null],
+        ]),
+      ),
       profitability_estimate_snapshot_count: stockActionIndex.coverage?.profitability_estimate_snapshot_count ?? null,
-      profitability_fy1_gross_margin_count: stockActionIndex.coverage?.profitability_fy1_gross_margin_count ?? null,
-      profitability_fy1_operating_margin_count: stockActionIndex.coverage?.profitability_fy1_operating_margin_count ?? null,
-      profitability_fy1_roe_count: stockActionIndex.coverage?.profitability_fy1_roe_count ?? null,
+      ...Object.fromEntries(
+        ESTIMATE_HORIZONS.flatMap((horizon) => [
+          [`profitability_${horizon}_gross_margin_count`, stockActionIndex.coverage?.[`profitability_${horizon}_gross_margin_count`] ?? null],
+          [`profitability_${horizon}_operating_margin_count`, stockActionIndex.coverage?.[`profitability_${horizon}_operating_margin_count`] ?? null],
+          [`profitability_${horizon}_roe_count`, stockActionIndex.coverage?.[`profitability_${horizon}_roe_count`] ?? null],
+        ]),
+      ),
       market_scope_counts: stockActionIndex.coverage?.market_scope_counts ?? {},
       bucket_counts: stockActionIndex.coverage?.bucket_counts ?? {},
       confidence_counts: stockActionIndex.coverage?.confidence_counts ?? {},
@@ -1108,6 +1142,20 @@ function buildStockActionSummary(stockActionIndex) {
       row.profitabilitySnapshot?.grossMargin?.fy1 ?? null,
       row.profitabilitySnapshot?.operatingMargin?.fy1 ?? null,
       row.profitabilitySnapshot?.roe?.fy1 ?? null,
+      row.estimateSnapshot?.forwardPe?.fy2 ?? null,
+      row.estimateSnapshot?.forwardEps?.fy2 ?? null,
+      row.estimateSnapshot?.revenueGrowth?.fy2 ?? null,
+      row.estimateSnapshot?.epsGrowth?.fy2 ?? null,
+      row.profitabilitySnapshot?.grossMargin?.fy2 ?? null,
+      row.profitabilitySnapshot?.operatingMargin?.fy2 ?? null,
+      row.profitabilitySnapshot?.roe?.fy2 ?? null,
+      row.estimateSnapshot?.forwardPe?.fy3 ?? null,
+      row.estimateSnapshot?.forwardEps?.fy3 ?? null,
+      row.estimateSnapshot?.revenueGrowth?.fy3 ?? null,
+      row.estimateSnapshot?.epsGrowth?.fy3 ?? null,
+      row.profitabilitySnapshot?.grossMargin?.fy3 ?? null,
+      row.profitabilitySnapshot?.operatingMargin?.fy3 ?? null,
+      row.profitabilitySnapshot?.roe?.fy3 ?? null,
     ]),
   };
 }

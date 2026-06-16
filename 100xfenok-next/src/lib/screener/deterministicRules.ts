@@ -6,22 +6,66 @@ export interface InterpretationResult {
   text: string;
 }
 
+function validNumbers(values: Array<number | null | undefined>): number[] {
+  return values.filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+}
+
+function average(values: number[]): number | null {
+  if (values.length === 0) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function nonIncreasing(values: number[]): boolean {
+  if (values.length < 2) return false;
+  return values.every((value, index) => index === 0 || value <= values[index - 1]);
+}
+
 export function interpretStockMetrics(stock: ScreenerStock): InterpretationResult {
   const pe = stock.peForward ?? stock.per ?? null;
   const roe = stock.roeFy1 ?? (stock.roe ? stock.roe * 100 : null);
   const opm = stock.operatingMarginFy1 ?? (stock.opm ? stock.opm * 100 : null);
   const epsGrowth = stock.epsGrowthFy1 ?? null;
   const revenueGrowth = stock.revenueGrowthFy1 ?? null;
+  const forwardPeSeries = validNumbers([stock.forwardPeFy1, stock.forwardPeFy2, stock.forwardPeFy3]);
+  const epsGrowthSeries = validNumbers([stock.epsGrowthFy1, stock.epsGrowthFy2, stock.epsGrowthFy3]);
+  const revenueGrowthSeries = validNumbers([stock.revenueGrowthFy1, stock.revenueGrowthFy2, stock.revenueGrowthFy3]);
+  const roeSeries = validNumbers([stock.roeFy1, stock.roeFy2, stock.roeFy3]);
+  const avgEpsGrowth = average(epsGrowthSeries);
+  const avgRevenueGrowth = average(revenueGrowthSeries);
+  const avgRoe = average(roeSeries);
   const divYield = stock.dividendYield ? stock.dividendYield * 100 : null;
   const return12m = stock.return12m ? stock.return12m * 100 : null;
   const momentum3m = stock.momentum3m ? stock.momentum3m * 100 : null;
 
   // 1. Underpriced Compounding Growth (저평가 우량 성장주)
   if (pe !== null && pe > 0 && pe < 22 && roe !== null && roe >= 15 && epsGrowth !== null && epsGrowth >= 15) {
+    const multiYearText =
+      avgRevenueGrowth !== null && avgEpsGrowth !== null
+        ? ` FY+1~3 평균 매출 성장률 ${avgRevenueGrowth.toFixed(1)}%, EPS 성장률 ${avgEpsGrowth.toFixed(1)}%도 같이 확인됩니다.`
+        : "";
     return {
       badge: "저평가 우량 성장주",
       badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      text: `예상 PER ${pe.toFixed(1)}배, FY+1 ROE ${roe.toFixed(1)}%, 예상 EPS 성장률 ${epsGrowth.toFixed(1)}%가 함께 잡힙니다. Feno 기준으로는 밸류 부담이 과하지 않은 성장·수익성 조합으로 먼저 읽을 수 있습니다.`,
+      text: `예상 PER ${pe.toFixed(1)}배, FY+1 ROE ${roe.toFixed(1)}%, 예상 EPS 성장률 ${epsGrowth.toFixed(1)}%가 함께 잡힙니다.${multiYearText} Feno 기준으로는 밸류 부담이 과하지 않은 성장·수익성 조합으로 먼저 읽을 수 있습니다.`,
+    };
+  }
+
+  // 2. Multi-year growth visibility (3년 성장 가시성)
+  if (
+    avgEpsGrowth !== null &&
+    avgEpsGrowth >= 10 &&
+    avgRevenueGrowth !== null &&
+    avgRevenueGrowth >= 5 &&
+    epsGrowthSeries.filter((value) => value > 0).length >= 2 &&
+    revenueGrowthSeries.filter((value) => value > 0).length >= 2 &&
+    (forwardPeSeries.length < 2 || nonIncreasing(forwardPeSeries))
+  ) {
+    const peTrend = forwardPeSeries.length >= 2 ? `예상 PER이 ${forwardPeSeries[0].toFixed(1)}배에서 ${forwardPeSeries.at(-1)?.toFixed(1)}배로 낮아지는 흐름이고, ` : "";
+    const roeText = avgRoe !== null ? `평균 ROE ${avgRoe.toFixed(1)}%까지 같이 보입니다.` : "수익성은 별도 확인이 필요합니다.";
+    return {
+      badge: "3년 성장 가시성",
+      badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      text: `${peTrend}FY+1~3 평균 매출 성장률 ${avgRevenueGrowth.toFixed(1)}%, EPS 성장률 ${avgEpsGrowth.toFixed(1)}%입니다. 단년 기저효과보다 3년 추정치가 이어지는지를 먼저 읽는 구간이며, ${roeText}`,
     };
   }
 

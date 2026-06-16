@@ -23,9 +23,23 @@ interface ActionRow {
   forwardEpsFy1?: number | null;
   revenueGrowthFy1?: number | null;
   epsGrowthFy1?: number | null;
+  forwardPeFy2?: number | null;
+  forwardEpsFy2?: number | null;
+  revenueGrowthFy2?: number | null;
+  epsGrowthFy2?: number | null;
+  forwardPeFy3?: number | null;
+  forwardEpsFy3?: number | null;
+  revenueGrowthFy3?: number | null;
+  epsGrowthFy3?: number | null;
   grossMarginFy1?: number | null;
   operatingMarginFy1?: number | null;
   roeFy1?: number | null;
+  grossMarginFy2?: number | null;
+  operatingMarginFy2?: number | null;
+  roeFy2?: number | null;
+  grossMarginFy3?: number | null;
+  operatingMarginFy3?: number | null;
+  roeFy3?: number | null;
 }
 interface ActionSummaryDoc {
   fields?: string[];
@@ -39,25 +53,43 @@ function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): Actio
     const index = fields.indexOf(key);
     return index >= 0 ? row[index] : undefined;
   };
+  const numberValue = (key: string): number | null => {
+    const raw = value(key);
+    return typeof raw === "number" ? raw : null;
+  };
   const symbol = value("symbol");
   if (typeof symbol !== "string" || symbol.length === 0) return null;
   const actionReasons = value("actionReasons");
   return {
     symbol,
-    actionScore: typeof value("actionScore") === "number" ? value("actionScore") as number : null,
+    actionScore: numberValue("actionScore"),
     confidenceLabel: typeof value("confidenceLabel") === "string" ? value("confidenceLabel") as string : null,
     actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
     actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
     actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
     lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
-    guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
-    forwardPeFy1: typeof value("forwardPeFy1") === "number" ? value("forwardPeFy1") as number : null,
-    forwardEpsFy1: typeof value("forwardEpsFy1") === "number" ? value("forwardEpsFy1") as number : null,
-    revenueGrowthFy1: typeof value("revenueGrowthFy1") === "number" ? value("revenueGrowthFy1") as number : null,
-    epsGrowthFy1: typeof value("epsGrowthFy1") === "number" ? value("epsGrowthFy1") as number : null,
-    grossMarginFy1: typeof value("grossMarginFy1") === "number" ? value("grossMarginFy1") as number : null,
-    operatingMarginFy1: typeof value("operatingMarginFy1") === "number" ? value("operatingMarginFy1") as number : null,
-    roeFy1: typeof value("roeFy1") === "number" ? value("roeFy1") as number : null,
+    guruHolders: numberValue("guruHolders"),
+    forwardPeFy1: numberValue("forwardPeFy1"),
+    forwardEpsFy1: numberValue("forwardEpsFy1"),
+    revenueGrowthFy1: numberValue("revenueGrowthFy1"),
+    epsGrowthFy1: numberValue("epsGrowthFy1"),
+    grossMarginFy1: numberValue("grossMarginFy1"),
+    operatingMarginFy1: numberValue("operatingMarginFy1"),
+    roeFy1: numberValue("roeFy1"),
+    forwardPeFy2: numberValue("forwardPeFy2"),
+    forwardEpsFy2: numberValue("forwardEpsFy2"),
+    revenueGrowthFy2: numberValue("revenueGrowthFy2"),
+    epsGrowthFy2: numberValue("epsGrowthFy2"),
+    grossMarginFy2: numberValue("grossMarginFy2"),
+    operatingMarginFy2: numberValue("operatingMarginFy2"),
+    roeFy2: numberValue("roeFy2"),
+    forwardPeFy3: numberValue("forwardPeFy3"),
+    forwardEpsFy3: numberValue("forwardEpsFy3"),
+    revenueGrowthFy3: numberValue("revenueGrowthFy3"),
+    epsGrowthFy3: numberValue("epsGrowthFy3"),
+    grossMarginFy3: numberValue("grossMarginFy3"),
+    operatingMarginFy3: numberValue("operatingMarginFy3"),
+    roeFy3: numberValue("roeFy3"),
   };
 }
 
@@ -102,6 +134,20 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "roeFy1", label: "FY+1 ROE", align: "right" },
   { key: "operatingMarginFy1", label: "FY+1 OPM", align: "right" },
   { key: "grossMarginFy1", label: "FY+1 GPM", align: "right" },
+  { key: "forwardPeFy2", label: "FY+2 PER", align: "right" },
+  { key: "forwardEpsFy2", label: "FY+2 EPS", align: "right" },
+  { key: "revenueGrowthFy2", label: "매출+2", align: "right" },
+  { key: "epsGrowthFy2", label: "EPS+2", align: "right" },
+  { key: "roeFy2", label: "FY+2 ROE", align: "right" },
+  { key: "operatingMarginFy2", label: "FY+2 OPM", align: "right" },
+  { key: "grossMarginFy2", label: "FY+2 GPM", align: "right" },
+  { key: "forwardPeFy3", label: "FY+3 PER", align: "right" },
+  { key: "forwardEpsFy3", label: "FY+3 EPS", align: "right" },
+  { key: "revenueGrowthFy3", label: "매출+3", align: "right" },
+  { key: "epsGrowthFy3", label: "EPS+3", align: "right" },
+  { key: "roeFy3", label: "FY+3 ROE", align: "right" },
+  { key: "operatingMarginFy3", label: "FY+3 OPM", align: "right" },
+  { key: "grossMarginFy3", label: "FY+3 GPM", align: "right" },
   { key: "dividendTtm", label: "Div TTM", align: "right" },
   { key: "ret1y", label: "1Y", align: "right" },
   { key: "ret3y", label: "3Y", align: "right" },
@@ -114,7 +160,35 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
   action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
-  estimate: ["ticker", "actionScore", "name", "sector", "forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1", "roeFy1", "operatingMarginFy1", "grossMarginFy1", "perBandCurrent", "marketCap"],
+  estimate: [
+    "ticker",
+    "actionScore",
+    "name",
+    "sector",
+    "forwardPeFy1",
+    "forwardPeFy2",
+    "forwardPeFy3",
+    "forwardEpsFy1",
+    "forwardEpsFy2",
+    "forwardEpsFy3",
+    "revenueGrowthFy1",
+    "revenueGrowthFy2",
+    "revenueGrowthFy3",
+    "epsGrowthFy1",
+    "epsGrowthFy2",
+    "epsGrowthFy3",
+    "roeFy1",
+    "roeFy2",
+    "roeFy3",
+    "operatingMarginFy1",
+    "operatingMarginFy2",
+    "operatingMarginFy3",
+    "grossMarginFy1",
+    "grossMarginFy2",
+    "grossMarginFy3",
+    "perBandCurrent",
+    "marketCap",
+  ],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m"],
@@ -330,11 +404,17 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
     case "momentum12m":
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
     case "roeFy1":
-      return <span className="orbitron tabular-nums text-slate-900">{stock.roeFy1 == null ? "—" : `${stock.roeFy1.toFixed(1)}%`}</span>;
+    case "roeFy2":
+    case "roeFy3":
+      return <span className="orbitron tabular-nums text-slate-900">{stock[key] == null ? "—" : `${stock[key].toFixed(1)}%`}</span>;
     case "operatingMarginFy1":
-      return <span className="orbitron tabular-nums text-slate-700">{stock.operatingMarginFy1 == null ? "—" : `${stock.operatingMarginFy1.toFixed(1)}%`}</span>;
+    case "operatingMarginFy2":
+    case "operatingMarginFy3":
+      return <span className="orbitron tabular-nums text-slate-700">{stock[key] == null ? "—" : `${stock[key].toFixed(1)}%`}</span>;
     case "grossMarginFy1":
-      return <span className="orbitron tabular-nums text-slate-700">{stock.grossMarginFy1 == null ? "—" : `${stock.grossMarginFy1.toFixed(1)}%`}</span>;
+    case "grossMarginFy2":
+    case "grossMarginFy3":
+      return <span className="orbitron tabular-nums text-slate-700">{stock[key] == null ? "—" : `${stock[key].toFixed(1)}%`}</span>;
     case "guruHolders":
       return stock.guruHolders != null ? (
         <span className="orbitron tabular-nums font-bold text-violet-700">{stock.guruHolders}</span>
@@ -350,13 +430,20 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
     case "epsForward":
       return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
     case "forwardPeFy1":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.forwardPeFy1 ?? null, 1)}</span>;
+    case "forwardPeFy2":
+    case "forwardPeFy3":
+      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock[key] ?? null, 1)}</span>;
     case "forwardEpsFy1":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.forwardEpsFy1 ?? null)}</span>;
+    case "forwardEpsFy2":
+    case "forwardEpsFy3":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock[key] ?? null)}</span>;
     case "revenueGrowthFy1":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.revenueGrowthFy1 ?? null))}>{fmtSignedPctPoint(stock.revenueGrowthFy1 ?? null)}</span>;
+    case "revenueGrowthFy2":
+    case "revenueGrowthFy3":
     case "epsGrowthFy1":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.epsGrowthFy1 ?? null))}>{fmtSignedPctPoint(stock.epsGrowthFy1 ?? null)}</span>;
+    case "epsGrowthFy2":
+    case "epsGrowthFy3":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock[key] ?? null))}>{fmtSignedPctPoint(stock[key] ?? null)}</span>;
     case "dividendTtm":
       return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
     case "ret1y":
@@ -374,7 +461,29 @@ const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["marketCap", "per", "dividendYield", "return12m"],
   action: ["marketCap", "guruHolders", "return12m", "dividendYield"],
   value: ["per", "peForward", "pbr", "perBandCurrent", "roe", "opm"],
-  estimate: ["forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1", "roeFy1", "operatingMarginFy1", "grossMarginFy1"],
+  estimate: [
+    "forwardPeFy1",
+    "forwardPeFy2",
+    "forwardPeFy3",
+    "forwardEpsFy1",
+    "forwardEpsFy2",
+    "forwardEpsFy3",
+    "revenueGrowthFy1",
+    "revenueGrowthFy2",
+    "revenueGrowthFy3",
+    "epsGrowthFy1",
+    "epsGrowthFy2",
+    "epsGrowthFy3",
+    "roeFy1",
+    "roeFy2",
+    "roeFy3",
+    "operatingMarginFy1",
+    "operatingMarginFy2",
+    "operatingMarginFy3",
+    "grossMarginFy1",
+    "grossMarginFy2",
+    "grossMarginFy3",
+  ],
   momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m"],
   dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y"],
   guru: ["guruHolders", "per", "peForward", "return12m"],
@@ -552,6 +661,20 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         grossMarginFy1: action?.grossMarginFy1 ?? null,
         operatingMarginFy1: action?.operatingMarginFy1 ?? null,
         roeFy1: action?.roeFy1 ?? null,
+        forwardPeFy2: action?.forwardPeFy2 ?? null,
+        forwardEpsFy2: action?.forwardEpsFy2 ?? null,
+        revenueGrowthFy2: action?.revenueGrowthFy2 ?? null,
+        epsGrowthFy2: action?.epsGrowthFy2 ?? null,
+        grossMarginFy2: action?.grossMarginFy2 ?? null,
+        operatingMarginFy2: action?.operatingMarginFy2 ?? null,
+        roeFy2: action?.roeFy2 ?? null,
+        forwardPeFy3: action?.forwardPeFy3 ?? null,
+        forwardEpsFy3: action?.forwardEpsFy3 ?? null,
+        revenueGrowthFy3: action?.revenueGrowthFy3 ?? null,
+        epsGrowthFy3: action?.epsGrowthFy3 ?? null,
+        grossMarginFy3: action?.grossMarginFy3 ?? null,
+        operatingMarginFy3: action?.operatingMarginFy3 ?? null,
+        roeFy3: action?.roeFy3 ?? null,
       };
     });
   }, [rawStocks, guruMap, actionMap]);
