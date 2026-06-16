@@ -99,3 +99,109 @@
   - root 홈: `MARKET REGIME` 실제 콘텐츠 렌더, skeleton 없음, page/console error 없음.
   - NVDA 통계 탭: `매출총이익률` 및 `추정 FY+1 74.5%` 노출, SVG chart `viewBox` 확인, page/console error 없음.
   - 스크린샷: `/tmp/100x-home-mobile-data-fidelity.png`, `/tmp/100x-nvda-statistics-mobile-data-fidelity.png`.
+
+## 추가: 스크리너 데이터 충실성 / 모바일 가독성
+
+### 범위
+- 대상: Next 스크리너(`/screener`)의 요약 데이터, 컬럼/필터 노출, 모바일 카드 렌더링.
+- 사용자 지시:
+  - 스크리너는 데이터 충실성을 우선한다.
+  - 우측/Antigravity 조사를 적극 활용하되, 계획과 구현은 비판 검토 후 확정한다.
+
+### 우측 조사 반영
+- `fh-20260616-091-ag-b311f41d`: 우측 감사에서 미노출/오용 데이터로 `momentum3m`, `ret3y`, `ret5y`, `dividendTtm`, FY+1 수익성 추정치, 모바일 `PerBandBar` 폭 문제를 지적.
+- `fh-20260616-092-ag-2a8ff84e`: 우측이 직접 패치한 모바일 compact cell, `momentum3m`, 배당/ROE 필터 방향은 반영.
+- 단, 우측의 브라우저 런타임 상세 JSON 전체 순회 방식은 제외.
+  - 이유: `/screener` 초기 로딩에서 1,066개 `detail/*.json` fetch를 추가하면 root/home에서 문제 삼았던 로딩 취약성을 다시 만들 수 있다.
+  - 최종 방향: 생성 스크립트가 detail JSON을 읽어 `stock_action_summary.json`에 FY+1 수익성 필드를 포함한다.
+
+### 실측
+- 스크리너 대상 종목: 1,066개.
+- `stock_action_summary.json`: 207,076 bytes로 250KB 계약 한도 이내.
+- FY+1 수익성 보강 coverage:
+  - `profitability_estimate_snapshot_count`: 1,042개.
+  - `profitability_fy1_gross_margin_count`: 964개.
+  - `profitability_fy1_operating_margin_count`: 1,031개.
+  - `profitability_fy1_roe_count`: 1,036개.
+- NVDA 예시:
+  - `forwardPeFy1`: 23.02.
+  - `forwardEpsFy1`: 8.91.
+  - `revenueGrowthFy1`: 82.03.
+  - `epsGrowthFy1`: 82.02.
+  - `grossMarginFy1`: 74.54.
+  - `operatingMarginFy1`: 66.12.
+  - `roeFy1`: 84.27.
+
+### 변경 요약
+- `scripts/build-phase2-closeout-indexes.mjs`
+  - detail JSON cache를 추가해 생성 단계에서 티커별 상세 데이터를 1회만 읽도록 변경.
+  - `profitability_estimates` 원본을 우선 사용하고, 누락 시 `income_statement_estimates`/`scale_estimates`에서 FY+1~FY+3 수익성 비율을 자동 계산.
+  - `stock_action_index.json`에 `profitabilitySnapshot`을 추가하고, compact summary에는 `grossMarginFy1`, `operatingMarginFy1`, `roeFy1`만 노출.
+  - summary byte 계산을 실제 UTF-8 byte 기준으로 수정.
+- `100xfenok-next/src/app/screener/ScreenerClient.tsx`
+  - FY+1 GPM/OPM/ROE 컬럼과 모바일 estimate preset을 추가.
+  - `momentum3m` 컬럼을 노출하고, 기존 `growthRate` 라벨은 `3M 성장`으로 명확화.
+  - 배당률 최소, FY+1 ROE 최소, 3Y/5Y 수익률 최소 필터를 추가.
+  - 모바일 카드에서 `PER밴드`와 `actionScore`는 compact text/pill로 렌더링해 가로 overflow를 줄임.
+  - FY+1 매출/EPS 성장률이 이미 percent point인 값을 다시 100배 하던 표시 오류를 수정.
+  - `localStorage` preset 초기화는 hydration mismatch가 나지 않도록 mount 이후 적용.
+- `100xfenok-next/src/lib/screener/types.ts`
+  - FY+1 GPM/OPM/ROE 필드와 sort key 타입을 추가.
+- `docs/planning/CONTRACT_stock_action_score_v0_3_20260613.md`
+  - compact summary 튜플 계약과 G4 검증 항목에 FY+1 수익성 필드를 반영.
+
+### 검증 상태
+- 데이터 생성: `node scripts/build-phase2-closeout-indexes.mjs` 통과.
+- JSON 계약 확인:
+  - root/public `stock_action_summary.json` mirror 동일.
+  - row 1,066개, summary 207,076 bytes, FY+1 수익성 필드 포함 확인.
+- 정적 검사:
+  - `npm run lint -- src/app/screener/ScreenerClient.tsx src/lib/screener/types.ts` 통과.
+  - `npx tsc -p tsconfig.json --noEmit --pretty false --incremental false` 통과.
+  - `git diff --check` 통과.
+- 빌드:
+  - `NEXT_BUILD_TARGET=runtime npx next build --webpack` 통과.
+- 모바일 브라우저:
+  - `localhost:3108/screener`에서 360px/390px viewport 확인.
+  - estimate/value/momentum preset 모두 `scrollWidth == viewportWidth`.
+  - estimate preset에서 NVDA FY+1 PER/EPS, 매출+1 `+82.0%`, EPS+1 `+82.0%`, FY+1 ROE/OPM/GPM 노출.
+  - value preset에서 compact `PER밴드 35.4x (적정 44%)` 노출.
+  - momentum preset에서 `3M 성장`과 `3M 모멘텀`이 함께 노출.
+  - 스크린샷: `/tmp/100x-screener-mobile-360-estimate-final.png`, `/tmp/100x-screener-mobile-360-value-final.png`, `/tmp/100x-screener-mobile-360-momentum-final.png`, `/tmp/100x-screener-mobile-390-estimate-final.png`, `/tmp/100x-screener-mobile-390-value-final.png`, `/tmp/100x-screener-mobile-390-momentum-final.png`.
+
+### 남은 확인
+- 실제 배포 URL 반영 여부는 아직 확인하지 않음. 이번 변경은 로컬 생성/빌드/브라우저 검증까지 완료했고, commit/push/merge/deploy는 별도 승인 필요.
+
+## 추가: Feno Stock Lens 제품 언어 계약
+
+### 범위
+- 대상: 스크리너/종목 상세의 사용자-facing 문구와 향후 Feno Stock Lens 개발 규칙.
+- 사용자 지시:
+  - 산출물에는 원천/벤더 이름을 브랜드처럼 내세우지 않는다.
+  - 개발 중 필요한 규칙은 문서화해서 이후 작업자가 참고 가능하게 한다.
+
+### 변경 요약
+- `docs/planning/DESIGN_feno_stock_lens_20260616.md`
+  - 사용자-facing 제품 언어와 내부 provenance/debug/admin 언어를 분리하는 계약을 추가.
+  - 모든 필드는 먼저 인벤토리하고, 숨기거나 제외할 경우 사유를 남기는 사용 규칙을 문서화.
+  - `stock_lens_full`, `stock_lens_summary`, `stock_field_usage_manifest`, deterministic interpretation, LLM layer의 개발 순서를 정리.
+- `100xfenok-next/src/app/screener/ScreenerClient.tsx`
+  - 화면 하단 데이터 설명에서 원천명을 기능명으로 교체.
+  - 액션 필터의 `구루/13F 주목`을 `기관/고수 주목`으로 교체.
+- `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
+  - 상세 패널의 source-branded 히스토리 문구를 `가격·배당 히스토리`로 교체.
+  - 기관 보유 섹션명을 source jargon 대신 `기관 공시 보유`로 교체.
+- `100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx`
+  - 스크리너 상세에서 공유하는 히스토리 컴포넌트명을 기능명 기준으로 갱신.
+- `scripts/build-phase2-closeout-indexes.mjs`
+  - 생성되는 액션 사유와 bucket label에서 `13F` source jargon을 `기관 공시`/`기관/고수` 제품 언어로 교체.
+- `100xfenok-next/src/lib/screener/deterministicRules.ts`
+  - 우측이 추가한 자동 해석 엔진의 표현을 단정적 판단이 아니라 Feno 기준의 읽는 법/확인 포인트로 낮춤.
+
+### 검증 상태
+- `node scripts/build-phase2-closeout-indexes.mjs` 재실행 완료.
+- `stock_action_summary.json` root/public 모두 원천명 노출 검색 결과 없음.
+- `npm run lint -- src/app/screener/ScreenerClient.tsx src/app/screener/StockDetailPanel.tsx src/lib/screener/types.ts src/lib/screener/deterministicRules.ts` 통과.
+- `npx tsc -p tsconfig.json --noEmit --pretty false --incremental false` 통과.
+- `git diff --check` 통과.
+- 넓은 앱 검색 결과, 기존 Explore/Market/Sectors/Superinvestors에는 이전 source-branded 문구가 아직 남아 있음. 이번 변경 범위는 스크리너/종목 상세 신규 표면 정리까지이며, 전체 사이트 제품 언어 정리는 별도 cleanup 필요.
