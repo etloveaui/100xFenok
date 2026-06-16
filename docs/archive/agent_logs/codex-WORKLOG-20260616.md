@@ -274,3 +274,74 @@
   - 기본 모드에서는 내부 source path 비노출 확인.
   - Debug 모드에서만 내부 source path 표시 확인.
 - Playwright/브라우저 자동화는 이 worktree에 dependency가 없어 [not verified].
+
+## 추가: Explore 수익률 리더보드 기준일/summary 자동화 보정
+
+### 확인 결과
+- `/explore`의 `수익률 리더보드` 카드는 `data/slickcharts/discovery-summary.json`을 읽는다.
+- 기존 화면 상단 기준일은 활성 탭과 무관하게 `movers.gainers.date`를 우선 표시했다.
+- 로컬 실측 기준 summary의 무버 원천은 `2026-06-08`, 수익률 원천 `slick_index`는 `2026-06-14`, 배당/종목 analyzer 원천은 `2026-06-12`였다.
+- `discovery-summary.json`은 `stocks_analyzer`, `slick_index`, `universe`가 갱신되어도 자동 재생성 체인에 묶여 있지 않았다.
+
+### 변경 요약
+- `scripts/build-slickcharts-discovery.mjs`
+  - `source_files.stocks_analyzer` 메타를 추가.
+  - `returns.asOf`, `dividends.asOf`를 생성해서 탭별 기준일 표시가 가능하게 함.
+- `100xfenok-next/src/app/explore/SlickchartsDiscoveryCard.tsx`
+  - 상단 작은 날짜 배지를 활성 탭 기준으로 변경.
+  - `무버 2026-06-08`, `수익률 2026-06-14`, `배당 2026-06-12`처럼 원천별 기준일이 다르게 보이도록 조정.
+  - 공개 footer에서 외부 소스 브랜드명을 제거하고 제품 중립 문구로 정리.
+- `100xfenok-next/src/app/explore/page.tsx`, `ExploreHotTopics.tsx`, `ActionCandidatesCard.tsx`
+  - 탐색 페이지 하단/카드 footer의 외부 소스명 노출을 제품 언어로 정리.
+- `.github/workflows/build-stocks-analyzer.yml`
+  - analyzer/slick index 재생성 뒤 `node scripts/build-slickcharts-discovery.mjs`를 실행.
+  - root/public `discovery-summary.json`을 commit 대상에 포함.
+- `.github/workflows/slickcharts-daily.yml`, `slickcharts-history.yml`, `slickcharts-monthly.yml`, `slickcharts-weekly.yml`
+  - 관련 원천 갱신 뒤 Explore discovery summary를 같이 재생성하도록 연결.
+
+### 검증 상태
+- `node scripts/build-slickcharts-discovery.mjs` 통과.
+- `jq empty data/slickcharts/discovery-summary.json 100xfenok-next/public/data/slickcharts/discovery-summary.json` 통과.
+- root/public `discovery-summary.json` parity `cmp_exit=0`.
+- `node --check scripts/build-slickcharts-discovery.mjs` 통과.
+- `npm run lint -- src/app/explore/SlickchartsDiscoveryCard.tsx` 통과.
+- `npm run lint -- src/app/explore/SlickchartsDiscoveryCard.tsx src/app/explore/page.tsx src/app/explore/ExploreHotTopics.tsx src/app/explore/ActionCandidatesCard.tsx` 통과.
+- `npx tsc -p tsconfig.json --noEmit --pretty false --incremental false` 통과.
+- `/explore` 소스 공개 표면의 외부 소스명 검색 0건:
+  - `Global Scouter|SlickCharts|SEC 13F|Yahoo|야후|YF|computed stock_action_summary`
+- 로컬 dev 서버 확인:
+  - `http://127.0.0.1:4180/explore/` 200.
+  - `/data/slickcharts/discovery-summary.json` 기준 `returns.asOf=2026-06-14`, `dividends.asOf=2026-06-12`, `movers.gainers.date=2026-06-08`.
+- `git diff --check` 통과.
+- GitHub Actions run log는 아직 확인하지 않아, 무버 daily workflow가 2026-06-08 이후 왜 갱신 커밋을 만들지 않았는지는 [not verified].
+
+## 추가: SlickCharts Daily 무버 갱신 정지 원인 확인 및 mortgage 누적 경로 수정
+
+### 확인 결과
+- `SlickCharts Daily` workflow는 `2026-06-09`부터 `2026-06-15`까지 매일 실행됐지만 모두 failure였다.
+- 실패 step은 매일 동일하게 `Run Mortgage scraper`였다.
+- `gainers-scraper.py`, `losers-scraper.py`는 실패 run 안에서도 먼저 성공했다.
+  - 예: `2026-06-15` run에서 gainers 342개, losers 161개 작성 후 mortgage 단계에서 실패.
+- workflow가 mortgage 단계에서 종료되면서 `Sync public mirror`와 `Commit and push changes`까지 도달하지 못했고, 그래서 무버 원천 변경분도 6/8 이후 커밋되지 않았다.
+- 실패 로그:
+  - `TypeError: prune_old_entries() takes 1 positional argument but 2 were given`
+  - 위치: `scripts/scrapers/mortgage-scraper.py`
+
+### 변경 요약
+- `scripts/scrapers/mortgage-scraper.py`
+  - `prune_old_entries(existing_history, args.retention_days)` 직접 호출 제거.
+  - `build_cumulative_payload(rates, existing_history, data_key="rates", source="slickcharts", retention_days=args.retention_days)` 형태로 공용 cumulative API와 맞춤.
+  - 미사용 `prune_old_entries` import 제거.
+
+### 검증 상태
+- `gh run list --workflow "SlickCharts Daily" --limit 10`로 6/9~6/15 failure, 6/8 success 확인.
+- `gh run view 27544123896 --log-failed`로 mortgage TypeError 확인.
+- `python -m py_compile` 통과:
+  - `gainers-scraper.py`, `losers-scraper.py`, `treasury-scraper.py`, `currency-scraper.py`, `mortgage-scraper.py`, `scraper_utils.py`
+- fixture smoke 통과:
+  - mock mortgage HTML 6개 rate로 cumulative output 1 entry 생성.
+- live smoke 통과:
+  - `python scripts/scrapers/mortgage-scraper.py --cumulative --output /tmp/mortgage-live-smoke.json --pretty`
+  - 결과: `2026-06-16`, count 6.
+- `SlickCharts Daily` workflow state는 GitHub API 기준 `active`.
+- `2026-06-16` scheduled run은 2026-06-16 08:48 UTC 기준 Actions 목록에 아직 보이지 않아 [not verified].
