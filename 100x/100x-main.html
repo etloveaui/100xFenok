@@ -107,6 +107,121 @@
             let archiveFilenames = [];
             let totalPages = 0;
             let currentPage = 1;
+            let initializeRunId = 0;
+            let archiveRunId = 0;
+            const FETCH_TIMEOUT_MS = 8000;
+            const RETRY_DELAYS_MS = [350, 900];
+            const TAG_COLOR_ALLOWLIST = new Set(['blue', 'slate', 'gray', 'red', 'orange', 'amber', 'yellow', 'green', 'emerald', 'teal', 'cyan', 'sky', 'indigo', 'violet', 'purple', 'pink', 'rose']);
+
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            function escapeHTML(value) {
+                return String(value ?? '').replace(/[&<>"']/g, char => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[char]);
+            }
+
+            async function fetchJsonWithRetry(url, label, timeoutMs = FETCH_TIMEOUT_MS) {
+                let lastError = null;
+                for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+                    try {
+                        const response = await fetch(url, {
+                            signal: controller.signal,
+                            cache: attempt === 0 ? 'default' : 'reload'
+                        });
+                        if (!response.ok) {
+                            throw new Error(`${label} HTTP ${response.status}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        lastError = error;
+                        if (attempt < RETRY_DELAYS_MS.length) {
+                            await sleep(RETRY_DELAYS_MS[attempt]);
+                        }
+                    } finally {
+                        clearTimeout(timeoutId);
+                    }
+                }
+                throw lastError || new Error(`${label} 로드 실패`);
+            }
+
+            function normalizeKeywords(keywords) {
+                if (!Array.isArray(keywords)) {
+                    return [{ name: 'Market Wrap', color: 'blue' }];
+                }
+                const normalized = keywords
+                    .map(tag => {
+                        const name = typeof tag?.name === 'string' && tag.name.trim() ? tag.name.trim() : null;
+                        const color = typeof tag?.color === 'string' && TAG_COLOR_ALLOWLIST.has(tag.color) ? tag.color : 'blue';
+                        return name ? { name, color } : null;
+                    })
+                    .filter(Boolean);
+                return normalized.length > 0 ? normalized : [{ name: 'Market Wrap', color: 'blue' }];
+            }
+
+            function normalizeReport(raw, filename) {
+                if (!raw || typeof raw !== 'object') {
+                    return null;
+                }
+                const title = typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : filename;
+                const path = typeof raw.path === 'string' && raw.path.trim() ? raw.path.trim() : '';
+                if (!path) {
+                    return null;
+                }
+                return {
+                    title,
+                    path,
+                    date: typeof raw.date === 'string' ? raw.date : '',
+                    summary: typeof raw.summary === 'string' ? raw.summary : '',
+                    keywords: normalizeKeywords(raw.keywords)
+                };
+            }
+
+            function renderTagHTML(keywords) {
+                return keywords
+                    .map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${escapeHTML(tag.name)}</span>`)
+                    .join('');
+            }
+
+            function renderPartialNotice(loadedCount, requestedCount) {
+                if (loadedCount >= requestedCount) {
+                    return '';
+                }
+                return `
+                    <div class="col-span-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">
+                        일부 리포트 데이터가 늦게 도착해 ${loadedCount}/${requestedCount}개만 표시합니다.
+                    </div>`;
+            }
+
+            function renderStatusPanel(title, message, tone = 'amber') {
+                const toneClass = tone === 'red'
+                    ? 'border-red-200 bg-red-50 text-red-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700';
+                return `
+                    <div class="col-span-full rounded-xl border ${toneClass} p-5 text-center">
+                        <p class="font-bold">${escapeHTML(title)}</p>
+                        <p class="mt-2 text-sm">${escapeHTML(message)}</p>
+                        <button type="button" data-retry="market-wrap" class="mt-4 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">다시 불러오기</button>
+                    </div>`;
+            }
+
+            function bindRetryButtons() {
+                document.querySelectorAll('[data-retry="market-wrap"]').forEach(button => {
+                    if (button.dataset.bound) return;
+                    button.dataset.bound = 'true';
+                    button.addEventListener('click', () => {
+                        initialize();
+                    });
+                });
+            }
 
             // --- 헬퍼 함수: 날짜 파싱 ---
             function parseDate(dateString) {
@@ -133,57 +248,87 @@
                 return dateString; 
             }
 
+            async function loadMetadata(filename) {
+                const raw = await fetchJsonWithRetry(`${METADATA_PATH}${filename}`, `메타데이터 ${filename}`, 6500);
+                const report = normalizeReport(raw, filename);
+                if (!report) {
+                    throw new Error(`메타데이터 형식 오류: ${filename}`);
+                }
+                return report;
+            }
+
             // --- 데이터 로딩 및 초기 렌더링 ---
             async function initialize() {
+                const runId = ++initializeRunId;
+                featuredGrid.innerHTML = '<div class="loader"></div>';
+                archiveGrid.innerHTML = '<div class="flex justify-center items-center w-full"><div class="loader"></div></div>';
+                paginationContainer.innerHTML = '';
                 try {
-                    const response = await fetch(INDEX_PATH);
-                    if (!response.ok) throw new Error(`인덱스 파일(${INDEX_PATH})을 불러올 수 없습니다.`);
-                    
-                    reportIndex = await response.json();
+                    const loadedIndex = await fetchJsonWithRetry(INDEX_PATH, '리포트 인덱스');
+                    if (runId !== initializeRunId) return;
+                    if (!Array.isArray(loadedIndex)) {
+                        throw new Error(`인덱스 형식 오류: ${INDEX_PATH}`);
+                    }
+
+                    reportIndex = loadedIndex.filter(filename => typeof filename === 'string' && filename.trim().length > 0);
+                    if (reportIndex.length === 0) {
+                        throw new Error('리포트 인덱스가 비어 있습니다.');
+                    }
                     
                     featuredFilenames = reportIndex.slice(0, 3);
                     archiveFilenames = reportIndex.slice(3);
                     totalPages = Math.ceil(archiveFilenames.length / ITEMS_PER_PAGE);
 
-                    await renderFeatured(featuredFilenames);
-                    await showArchivePage(1);
+                    await renderFeatured(featuredFilenames, runId);
+                    await showArchivePage(1, runId);
 
                 } catch (error) {
+                    if (runId !== initializeRunId) return;
                     console.error("초기화 실패:", error);
-                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">리포트 목록을 불러오는 데 실패했습니다.</p>`;
-                    archiveGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">아카이브를 불러오는 데 실패했습니다.</p>`;
+                    featuredGrid.innerHTML = renderStatusPanel('리포트 목록을 불러오지 못했습니다.', '네트워크나 데이터 파일이 늦게 도착했습니다. 잠시 후 다시 시도해 주세요.', 'red');
+                    archiveGrid.innerHTML = renderStatusPanel('아카이브를 불러오지 못했습니다.', '페이지를 새로고침하지 않아도 아래 버튼으로 다시 시도할 수 있습니다.', 'red');
+                    bindRetryButtons();
                 }
             }
 
             // --- 추천 리포트 렌더링  <img src="../favicon_ver5.png" alt="Report visual" class="rounded-lg object-cover w-full h-full"> ---
-            async function renderFeatured(filenames) {
+            async function renderFeatured(filenames, runId = initializeRunId) {
                 if (!featuredGrid || filenames.length === 0) {
                     if(featuredGrid) featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트가 없습니다.</p>';
                     return;
                 }
 
                 try {
-                    const requests = filenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
-                    const reports = await Promise.all(requests);
+                    const settled = await Promise.allSettled(filenames.map(loadMetadata));
+                    if (runId !== initializeRunId) return;
+                    const reports = settled
+                        .filter(result => result.status === 'fulfilled')
+                        .map(result => result.value);
                     const [latest, second, third] = reports;
 
-                    let featuredHTML = '';
+                    if (reports.length === 0) {
+                        featuredGrid.innerHTML = renderStatusPanel('추천 리포트를 불러오지 못했습니다.', '메타데이터가 아직 도착하지 않았습니다.', 'red');
+                        bindRetryButtons();
+                        return;
+                    }
+
+                    let featuredHTML = renderPartialNotice(reports.length, filenames.length);
                     
                     if (latest) {
-                        const tagsHTML = latest.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        const tagsHTML = renderTagHTML(latest.keywords);
                         featuredHTML += `
                             <div class="lg:col-span-12 bg-white rounded-2xl p-8 card-shadow card-hover flex flex-col md:flex-row items-center gap-8">
                                 <div class="md:w-2/3">
                                     <div class="flex items-center gap-4 mb-3">
                                        <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">최신 리포트</span>
-                                       <div class="text-sm text-slate-500">${latest.date}</div>
+                                       <div class="text-sm text-slate-500">${escapeHTML(latest.date || parseDate(latest.date) || '날짜 미정')}</div>
                                     </div>
                                     <h2 class="text-3xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
-                                        <a href="#" data-path="${latest.path}">${latest.title}</a>
+                                        <a href="#" data-path="${escapeHTML(latest.path)}">${escapeHTML(latest.title)}</a>
                                     </h2>
-                                    <p class="text-slate-600 text-base leading-relaxed mb-5">${latest.summary}</p>
+                                    <p class="text-slate-600 text-base leading-relaxed mb-5">${escapeHTML(latest.summary || '요약 데이터가 아직 준비되지 않았습니다.')}</p>
                                     <div class="flex flex-wrap gap-2 mb-6">${tagsHTML}</div>
-                                    <a href="#" data-path="${latest.path}" class="bg-slate-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors inline-flex items-center">
+                                    <a href="#" data-path="${escapeHTML(latest.path)}" class="bg-slate-800 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors inline-flex items-center">
                                         리포트 전체 보기<i class="fas fa-arrow-right ml-2"></i>
                                     </a>
                                 </div>
@@ -193,39 +338,47 @@
                             </div>`;
                     }
                     if (second) {
-                        const tagsHTML = second.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        const tagsHTML = renderTagHTML(second.keywords);
+                        const secondarySpanClass = third ? 'lg:col-span-6' : 'lg:col-span-12';
                         featuredHTML += `
-                            <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
-                                <div class="text-sm text-slate-500 mb-2">${second.date}</div>
+                            <div class="${secondarySpanClass} bg-white rounded-2xl p-8 card-shadow card-hover">
+                                <div class="text-sm text-slate-500 mb-2">${escapeHTML(second.date || parseDate(second.date) || '날짜 미정')}</div>
                                 <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
-                                    <a href="#" data-path="${second.path}">${second.title}</a>
+                                    <a href="#" data-path="${escapeHTML(second.path)}">${escapeHTML(second.title)}</a>
                                 </h3>
-                                <p class="text-slate-600 text-sm leading-relaxed mb-4">${second.summary}</p>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">${escapeHTML(second.summary || '요약 데이터가 아직 준비되지 않았습니다.')}</p>
                                 <div class="flex flex-wrap gap-2">${tagsHTML}</div>
                             </div>`;
                     }
                     if (third) {
-                         const tagsHTML = third.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                         const tagsHTML = renderTagHTML(third.keywords);
                         featuredHTML += `
                             <div class="lg:col-span-6 bg-white rounded-2xl p-8 card-shadow card-hover">
-                                <div class="text-sm text-slate-500 mb-2">${third.date}</div>
+                                <div class="text-sm text-slate-500 mb-2">${escapeHTML(third.date || parseDate(third.date) || '날짜 미정')}</div>
                                 <h3 class="text-2xl font-bold text-slate-900 mb-3 hover:text-blue-700 transition-colors">
-                                    <a href="#" data-path="${third.path}">${third.title}</a>
+                                    <a href="#" data-path="${escapeHTML(third.path)}">${escapeHTML(third.title)}</a>
                                 </h3>
-                                <p class="text-slate-600 text-sm leading-relaxed mb-4">${third.summary}</p>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">${escapeHTML(third.summary || '요약 데이터가 아직 준비되지 않았습니다.')}</p>
                                 <div class="flex flex-wrap gap-2">${tagsHTML}</div>
                             </div>`;
                     }
                     
+                    if (!featuredHTML) {
+                        featuredGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center">추천 리포트를 준비 중입니다.</p>';
+                        return;
+                    }
                     featuredGrid.innerHTML = featuredHTML;
                 } catch (error) {
+                    if (runId !== initializeRunId) return;
                     console.error("추천 리포트 렌더링 실패:", error);
-                    featuredGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">추천 리포트를 불러오는 데 실패했습니다.</p>`;
+                    featuredGrid.innerHTML = renderStatusPanel('추천 리포트를 불러오지 못했습니다.', '일시적인 데이터 지연일 수 있습니다.', 'red');
+                    bindRetryButtons();
                 }
             }
 
             // --- 아카이브 페이지 렌더링 ---
-            async function showArchivePage(page) {
+            async function showArchivePage(page, runId = initializeRunId) {
+                const localArchiveRunId = ++archiveRunId;
                 currentPage = page;
                 const startIndex = (page - 1) * ITEMS_PER_PAGE;
                 const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -240,33 +393,51 @@
                 }
 
                 try {
-                    const requests = pageFilenames.map(filename => fetch(`${METADATA_PATH}${filename}`).then(res => res.json()));
-                    const reports = await Promise.all(requests);
+                    const settled = await Promise.allSettled(pageFilenames.map(loadMetadata));
+                    if (runId !== initializeRunId || localArchiveRunId !== archiveRunId) return;
+                    const reports = settled
+                        .filter(result => result.status === 'fulfilled')
+                        .map(result => result.value);
 
-                    let archiveHTML = '';
+                    if (reports.length === 0) {
+                        archiveGrid.innerHTML = renderStatusPanel('표시할 리포트가 없습니다.', '이 페이지의 메타데이터가 아직 준비되지 않았습니다.', 'amber');
+                        renderPaginationControls();
+                        bindRetryButtons();
+                        return;
+                    }
+
+                    let archiveHTML = renderPartialNotice(reports.length, pageFilenames.length);
                     reports.forEach(report => {
-                        const tagsHTML = report.keywords.map(tag => `<span class="tag bg-${tag.color}-100 text-${tag.color}-800">${tag.name}</span>`).join('');
+                        const tagsHTML = renderTagHTML(report.keywords);
                         const displayDate = parseDate(report.date);
 
                         // [수정] 카드 크기 고정을 위해 고정 높이(h-64)와 flex 구조 사용
                         archiveHTML += `
                             <div class="bg-white rounded-lg p-6 card-shadow card-hover flex flex-col w-full h-64">
                                 <div>
-                                    <p class="text-sm text-slate-500 mb-2">${displayDate}</p>
-                                    <h3 class="text-lg font-bold text-slate-800">${report.title}</h3>
+                                    <p class="text-sm text-slate-500 mb-2">${escapeHTML(displayDate || '날짜 미정')}</p>
+                                    <h3 class="text-lg font-bold text-slate-800">${escapeHTML(report.title)}</h3>
                                 </div>
                                 <div class="flex-grow"></div>
                                 <div>
                                     <div class="flex flex-wrap gap-2 mt-4">${tagsHTML}</div>
-                                    <a href="#" data-path="${report.path}" class="text-blue-600 hover:text-blue-800 font-semibold mt-4 inline-block">리포트 보기 →</a>
+                                    <a href="#" data-path="${escapeHTML(report.path)}" class="text-blue-600 hover:text-blue-800 font-semibold mt-4 inline-block">리포트 보기 →</a>
                                 </div>
                             </div>`;
                     });
+                    if (!archiveHTML) {
+                        archiveGrid.innerHTML = renderStatusPanel('표시할 리포트가 없습니다.', '이 페이지의 메타데이터가 아직 준비되지 않았습니다.', 'amber');
+                        renderPaginationControls();
+                        bindRetryButtons();
+                        return;
+                    }
                     archiveGrid.innerHTML = archiveHTML;
 
                 } catch (error) {
+                    if (runId !== initializeRunId || localArchiveRunId !== archiveRunId) return;
                     console.error(`아카이브 페이지 ${page} 렌더링 실패:`, error);
-                    archiveGrid.innerHTML = `<p class="w-full text-center text-red-500">아카이브를 불러오는 데 실패했습니다.</p>`;
+                    archiveGrid.innerHTML = renderStatusPanel('아카이브를 불러오지 못했습니다.', '데이터 지연이 계속되면 다시 불러오기를 눌러 주세요.', 'red');
+                    bindRetryButtons();
                 }
                 
                 renderPaginationControls();
@@ -315,8 +486,15 @@
                     a.addEventListener('click', e => {
                         e.preventDefault();
                         const path = a.dataset.path;
-                        const urlParams = new URLSearchParams(path.split('?')[1]);
-                        const finalPath = urlParams.get('path');
+                        let finalPath = null;
+                        if (path) {
+                            try {
+                                const parsed = new URL(path, window.location.origin);
+                                finalPath = parsed.searchParams.get('path') || path;
+                            } catch (error) {
+                                finalPath = path;
+                            }
+                        }
                         
                         if (window.parent && typeof window.parent.loadPage === 'function') {
                             window.parent.loadPage(finalPath);
