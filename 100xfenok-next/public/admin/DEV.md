@@ -147,6 +147,19 @@ if (inputHash === storedHash) {
 
 ## Change Log
 
+### 2026-06-15: Option C hardening + one-turn transcript-lag fix + KO-first STT
+- Adversarial re-audit (Codex) of the Option C empty-attemptText patch found 5 latent risks; hardened all: empty-only override (on mismatch KEEP the model args instead of regressing to bad STT), clear transcript FIFO on resetRuntime + before SYSTEM_KICKOFF, move the helper consume after all cancellation guards, and flush the buffered transcript only on turnComplete. Control intents (`next_material`/`easier`/`harder`/`switch_theme`/`stop`) skip override.
+- Owner smoke (`mqemm0x5`, hardened build) confirmed the English card reveals, but telemetry exposed a one-turn transcript lag: `mLen` matched the current utterance while `tLen` matched the previous one, because the client enqueued transcripts only on `turnComplete` though `coachTurn` usually arrives first. Fixed: the client now passes the current turn's pending transcript and the helper prefers a non-blank `currentPendingTranscript` over the finalized FIFO (`consumedCurrentPending` + `source=current-pending|finalized-fifo|none` telemetry).
+- STT: the Mona profile `languageHints` were `en-US,ko-KR`, which made native-audio mis-hear Korean as Indonesian/Spanish/German; switched to `ko-KR,en-US` (server + client fallback). English repeats stay clear under the en-US fallback. Real Korean-STT quality must be confirmed on the owner device mic.
+- Added a TTS-injection smoke harness (`probe-gemini-live-stall.ts --post-tts-text`, macOS say -> PCM16 16k). It currently carries only `mona-show-card` + a minimal setup, so it does NOT yet exercise the full `coachTurn` flow and an initial run returned `events=0`/`sawSetupComplete=false`; extending it to the real coach setup is pending (Codex). Owner device mic remains the acceptance gate.
+- Commits: `7f8e18386` (lag + KO-first STT), `e649f03ac` (TTS harness). Earlier this series: `dc0cd5e2` (Option C), `425c26ec8` (hardening).
+
+### 2026-06-14: Mona coach v3 — empty-attemptText guard + English-reveal classifier
+- Live owner smoke (mqdunt24) showed the English sentence never revealing on the card. Root cause split in two: the deployed build lacked the "show English" intent classifier, and the live model could fire `coachTurn` with empty/garbled `attemptText`.
+- Server FSM (`session-machine.ts`): added a classifier so an English-card/answer request maps to `repeat_target` -> reveal card carrying `en`.
+- Client Option C (`AdminLiveBench.tsx` + `lib/admin-live/coach-turn-args.ts`): client caches final input transcripts (monotonic id, consume-once guard) and patches an empty/mismatched `coachTurn` `attemptText` via `resolveCoachTurnArgsForTranscript`, so the server grades Mona's actual recognized words instead of a blank attempt. Sanitized telemetry (override/skip reason + lengths) logged for the next smoke.
+- Reference: `data/voice-logs/owner-test/2026-06-14_mona_live-mona-mqdunt24.json`
+
 > Details: `docs/CHANGELOG.md`
 
 ### 2026-01-21: Momentum Dashboard Syntax Error Fix (ROOT CAUSE)

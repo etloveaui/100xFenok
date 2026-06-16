@@ -100,33 +100,6 @@ const OpsConsole = (function() {
       failAfterDays: 3
     },
     {
-      label: 'Stock action index',
-      path: '/data/computed/stock_action_index.json',
-      datePath: 'generated_at',
-      minCountPath: 'coverage.indexed_stock_count',
-      minCount: 1000,
-      warnAfterDays: 7,
-      failAfterDays: 14
-    },
-    {
-      label: 'Market structure index',
-      path: '/data/computed/market_structure_index.json',
-      datePath: 'generated_at',
-      minCountPath: 'source_files',
-      minCount: 10,
-      warnAfterDays: 7,
-      failAfterDays: 14
-    },
-    {
-      label: 'Data usage manifest',
-      path: '/data/admin/data-usage-manifest.json',
-      datePath: 'generated_at',
-      minCountPath: 'totals.rootJsonCount',
-      minCount: 2500,
-      warnAfterDays: 7,
-      failAfterDays: 14
-    },
-    {
       label: 'Fear & Greed',
       path: '/data/sentiment/cnn-fear-greed.json',
       datePath: '',
@@ -535,11 +508,7 @@ const OpsConsole = (function() {
     }
 
     const rawCount = getByPath(payload, check.minCountPath);
-    const count = Array.isArray(rawCount)
-      ? rawCount.length
-      : typeof rawCount === 'number'
-        ? rawCount
-        : Number(rawCount);
+    const count = typeof rawCount === 'number' ? rawCount : Number(rawCount);
 
     if (!Number.isFinite(count)) {
       return {
