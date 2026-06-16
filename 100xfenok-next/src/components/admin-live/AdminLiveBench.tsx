@@ -3072,9 +3072,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                 onInterruptionModeChange={setInterruptionMode}
                 variant="winddown"
               />
-              {normalizedCoachConfig.tester === "owner" ? (
-                <MonaVnextEntry locked={settingsLocked} />
-              ) : null}
+              <MonaVnextEntry locked={settingsLocked} />
             </>
           ) : undefined}
           onStart={() => void startSession()}

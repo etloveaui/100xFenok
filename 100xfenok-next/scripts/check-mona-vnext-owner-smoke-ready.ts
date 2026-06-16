@@ -54,7 +54,11 @@ function walkTextFiles(relDir: string) {
 function checkSourceInvariants(): Check[] {
   const winddown = readRel("src/app/winddown/page.tsx");
   const winddownVnext = readRel("src/app/winddown-vnext/page.tsx");
+  const adminLiveBench = readRel("src/components/admin-live/AdminLiveBench.tsx");
   const liveSetup = readRel("src/features/mona-vnext/server/liveSetup.ts");
+  const vnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
+    && adminLiveBench.includes("<MonaVnextEntry locked={settingsLocked} />")
+    && !/normalizedCoachConfig\.tester === "owner"\s*\?\s*\(\s*<MonaVnextEntry/.test(adminLiveBench);
   const vnextFiles = [
     ...walkTextFiles("src/features/mona-vnext"),
     ...walkTextFiles("src/app/api/mona-vnext"),
@@ -84,6 +88,11 @@ function checkSourceInvariants(): Check[] {
       "vnext-no-admin-core",
       winddownVnext.includes("MonaVoiceCoachApp") && !winddownVnext.includes("AdminLiveBench") ? "PASS" : "FAIL",
       "/winddown-vnext renders MonaVoiceCoachApp without AdminLiveBench import",
+    ),
+    check(
+      "settings-vnext-entry",
+      vnextEntryInSettings ? "PASS" : "FAIL",
+      "/winddown Mona settings renders MonaVnextEntry without owner-tester visibility gate",
     ),
     check(
       "vnext-no-production-write-path",
