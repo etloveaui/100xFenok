@@ -9,8 +9,30 @@
 
 const Renderer = (function() {
 
+  const STOCK_FIELD_PAGE_SIZE = 40;
+  const STOCK_FIELD_STATUS_ORDER = ['visually_rendered', 'interpreted', 'metadata', 'not_yet_used'];
+  const STOCK_FIELD_STATUS_LABELS = {
+    visually_rendered: '화면 사용',
+    interpreted: '해석 사용',
+    metadata: '메타',
+    not_yet_used: '미사용'
+  };
+  const STOCK_FIELD_STATUS_STYLES = {
+    visually_rendered: 'bg-green-100 text-green-700 border-green-200',
+    interpreted: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    metadata: 'bg-slate-100 text-slate-600 border-slate-200',
+    not_yet_used: 'bg-amber-100 text-amber-700 border-amber-200'
+  };
+
   // DOM element references
   let elements = null;
+  let stockFieldManifest = null;
+  let stockFieldView = {
+    status: 'visually_rendered',
+    datasetId: 'all',
+    page: 0,
+    debug: false
+  };
 
   /**
    * Initialize renderer with DOM references
@@ -252,6 +274,287 @@ const Renderer = (function() {
     `;
   }
 
+  function renderStockFieldLoading() {
+    if (!elements?.stockFieldContainer) return;
+    elements.stockFieldContainer.innerHTML = `
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        ${Array.from({ length: 4 }, () => `
+          <div class="bg-white rounded-xl p-5 shadow animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-10 bg-gray-100 rounded mb-3"></div>
+            <div class="h-3 bg-gray-200 rounded w-4/5"></div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderStockFieldManifest(manifest) {
+    if (!elements?.stockFieldContainer) return;
+    if (manifest) {
+      stockFieldManifest = manifest;
+    }
+    if (!stockFieldManifest) {
+      renderStockFieldUnavailable('stock field manifest is empty');
+      return;
+    }
+
+    const totals = stockFieldManifest.totals || {};
+    const datasets = stockFieldManifest.datasets || [];
+    const rows = getStockFieldRows();
+    const pageCount = Math.max(1, Math.ceil(rows.length / STOCK_FIELD_PAGE_SIZE));
+    stockFieldView.page = Math.min(Math.max(0, stockFieldView.page), pageCount - 1);
+    const offset = stockFieldView.page * STOCK_FIELD_PAGE_SIZE;
+    const pageRows = rows.slice(offset, offset + STOCK_FIELD_PAGE_SIZE);
+
+    elements.stockFieldContainer.innerHTML = `
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        ${renderStockFieldTotalCard('파일', totals.parsedFileCount, 'parsed')}
+        ${renderStockFieldTotalCard('필드', totals.fieldCount, 'schema')}
+        ${renderStockFieldTotalCard('화면 사용', totals.statusCounts?.visually_rendered, 'rendered')}
+        ${renderStockFieldTotalCard('미사용', totals.statusCounts?.not_yet_used, 'backlog')}
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+        ${datasets.map(renderStockDatasetCard).join('')}
+      </div>
+
+      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <h3 class="font-semibold text-gray-800">필드 맵</h3>
+            <p class="mt-1 text-xs text-gray-500">${escapeHtml(stockFieldManifest.generated_at || '-')}</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            ${STOCK_FIELD_STATUS_ORDER.map(renderStockStatusButton).join('')}
+            <button
+              type="button"
+              onclick="DataLabUI.toggleStockFieldDebug()"
+              class="rounded-lg border px-3 py-1.5 text-xs font-bold ${stockFieldView.debug ? 'border-slate-700 bg-slate-800 text-white' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}"
+            >
+              Debug
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          ${renderStockDatasetButton('all', '전체')}
+          ${datasets.map(dataset => renderStockDatasetButton(dataset.id, dataset.productLabel || dataset.id)).join('')}
+        </div>
+
+        <div class="mt-4 overflow-x-auto rounded-xl border border-gray-100">
+          <div class="min-w-[720px]">
+            <div class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_90px_120px] gap-0 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              <div>데이터셋</div>
+              <div>필드</div>
+              <div class="text-right">등장</div>
+              <div class="text-right">상태</div>
+            </div>
+            <div class="divide-y divide-gray-100">
+              ${pageRows.length ? pageRows.map(renderStockFieldRow).join('') : renderStockFieldEmpty()}
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="text-xs text-gray-500">
+            ${Formatters.formatNumber(rows.length, 0)} fields · ${Formatters.formatNumber(stockFieldView.page + 1, 0)} / ${Formatters.formatNumber(pageCount, 0)}
+          </div>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              onclick="DataLabUI.setStockFieldPage(${Math.max(0, stockFieldView.page - 1)})"
+              class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50 ${stockFieldView.page <= 0 ? 'opacity-40 pointer-events-none' : ''}"
+            >
+              이전
+            </button>
+            <button
+              type="button"
+              onclick="DataLabUI.setStockFieldPage(${Math.min(pageCount - 1, stockFieldView.page + 1)})"
+              class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50 ${stockFieldView.page >= pageCount - 1 ? 'opacity-40 pointer-events-none' : ''}"
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderStockFieldUnavailable(message) {
+    if (!elements?.stockFieldContainer) return;
+    elements.stockFieldContainer.innerHTML = `
+      <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-5 text-sm text-yellow-800">
+        <div class="font-semibold mb-1">종목 필드 사용현황 확인 불가</div>
+        <div class="break-words">${escapeHtml(message)}</div>
+      </div>
+    `;
+  }
+
+  function renderStockFieldTotalCard(label, value, code) {
+    return `
+      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-400">${escapeHtml(code)}</div>
+            <h3 class="mt-1 text-sm font-semibold text-gray-700">${escapeHtml(label)}</h3>
+          </div>
+          <div class="text-2xl font-black text-slate-900">${Formatters.formatNumber(value || 0, 0)}</div>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderStockDatasetCard(dataset) {
+    const counts = dataset.statusCounts || {};
+    return `
+      <article class="bg-white rounded-xl p-4 shadow border border-gray-100">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="truncate text-sm font-black text-gray-800" title="${escapeHtml(dataset.productLabel || dataset.id)}">${escapeHtml(dataset.productLabel || dataset.id)}</h3>
+            <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">${escapeHtml(dataset.id)}</p>
+          </div>
+          <span class="rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-500">
+            ${Formatters.formatNumber(dataset.fieldCount || 0, 0)}
+          </span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+          ${renderMiniCount('화면', counts.visually_rendered)}
+          ${renderMiniCount('해석', counts.interpreted)}
+          ${renderMiniCount('메타', counts.metadata)}
+          ${renderMiniCount('미사용', counts.not_yet_used)}
+        </div>
+        ${stockFieldView.debug ? `<div class="mt-3 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-500 break-words">${escapeHtml(dataset.internalSource || '-')}</div>` : ''}
+      </article>
+    `;
+  }
+
+  function renderMiniCount(label, value) {
+    return `
+      <div class="rounded-lg bg-gray-50 px-2 py-1.5">
+        <span class="text-gray-400">${escapeHtml(label)}</span>
+        <span class="float-right font-bold text-gray-700">${Formatters.formatNumber(value || 0, 0)}</span>
+      </div>
+    `;
+  }
+
+  function renderStockStatusButton(status) {
+    const active = stockFieldView.status === status;
+    const count = stockFieldManifest?.totals?.statusCounts?.[status] || 0;
+    return `
+      <button
+        type="button"
+        onclick="DataLabUI.setStockFieldStatus('${escapeJs(status)}')"
+        class="rounded-lg border px-3 py-1.5 text-xs font-bold ${active ? stockStatusStyle(status) : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}"
+      >
+        ${escapeHtml(STOCK_FIELD_STATUS_LABELS[status] || status)}
+        <span class="ml-1 opacity-75">${Formatters.formatNumber(count, 0)}</span>
+      </button>
+    `;
+  }
+
+  function renderStockDatasetButton(datasetId, label) {
+    const active = stockFieldView.datasetId === datasetId;
+    return `
+      <button
+        type="button"
+        onclick="DataLabUI.setStockFieldDataset('${escapeJs(datasetId)}')"
+        class="rounded-lg border px-3 py-1.5 text-xs font-bold ${active ? 'border-slate-800 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}"
+      >
+        ${escapeHtml(label)}
+      </button>
+    `;
+  }
+
+  function renderStockFieldRow(row) {
+    const hits = row.consumerHits || [];
+    const debugLines = stockFieldView.debug ? `
+      <div class="mt-2 space-y-1 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-500">
+        ${row.sampleFiles?.length ? `<div>sample: ${escapeHtml(row.sampleFiles.join(', '))}</div>` : ''}
+        ${hits.length ? `<div>hits: ${escapeHtml(hits.map(hit => `${hit.file} [${(hit.tokens || []).join(',')}]`).join(' · '))}</div>` : ''}
+      </div>
+    ` : '';
+
+    return `
+      <div class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_90px_120px] gap-0 px-3 py-3 text-sm">
+        <div class="min-w-0 pr-3">
+          <div class="truncate font-semibold text-gray-800" title="${escapeHtml(row.datasetLabel)}">${escapeHtml(row.datasetLabel)}</div>
+          <div class="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">${escapeHtml(row.datasetId)}</div>
+        </div>
+        <div class="min-w-0 pr-3">
+          <code class="break-words text-xs font-semibold text-slate-700">${escapeHtml(row.path)}</code>
+          <div class="mt-1 flex flex-wrap gap-1">
+            ${(row.valueKinds || []).map(kind => `<span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">${escapeHtml(kind)}</span>`).join('')}
+            ${hits.length ? `<span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">${Formatters.formatNumber(hits.length, 0)} hit</span>` : ''}
+          </div>
+          ${debugLines}
+        </div>
+        <div class="text-right font-bold text-gray-700">${Formatters.formatNumber(row.presenceCount || 0, 0)}</div>
+        <div class="text-right">
+          <span class="inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${stockStatusStyle(row.status)}">
+            ${escapeHtml(STOCK_FIELD_STATUS_LABELS[row.status] || row.status)}
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStockFieldEmpty() {
+    return `
+      <div class="px-3 py-8 text-center text-sm font-semibold text-gray-400">
+        표시할 필드가 없습니다.
+      </div>
+    `;
+  }
+
+  function getStockFieldRows() {
+    const datasets = stockFieldManifest?.datasets || [];
+    const rows = [];
+    datasets.forEach(dataset => {
+      if (stockFieldView.datasetId !== 'all' && dataset.id !== stockFieldView.datasetId) return;
+      (dataset.fields || []).forEach(field => {
+        if (field.status !== stockFieldView.status) return;
+        rows.push({
+          ...field,
+          datasetId: dataset.id,
+          datasetLabel: dataset.productLabel || dataset.id,
+          internalSource: dataset.internalSource
+        });
+      });
+    });
+    return rows.sort((a, b) => {
+      if (a.datasetId !== b.datasetId) return a.datasetId.localeCompare(b.datasetId);
+      return a.path.localeCompare(b.path);
+    });
+  }
+
+  function setStockFieldStatus(status) {
+    if (!STOCK_FIELD_STATUS_ORDER.includes(status)) return;
+    stockFieldView = { ...stockFieldView, status, page: 0 };
+    renderStockFieldManifest();
+  }
+
+  function setStockFieldDataset(datasetId) {
+    const datasetIds = new Set(['all', ...(stockFieldManifest?.datasets || []).map(item => item.id)]);
+    if (!datasetIds.has(datasetId)) return;
+    stockFieldView = { ...stockFieldView, datasetId, page: 0 };
+    renderStockFieldManifest();
+  }
+
+  function setStockFieldPage(page) {
+    stockFieldView = { ...stockFieldView, page: Number.isFinite(Number(page)) ? Number(page) : 0 };
+    renderStockFieldManifest();
+  }
+
+  function toggleStockFieldDebug() {
+    stockFieldView = { ...stockFieldView, debug: !stockFieldView.debug };
+    renderStockFieldManifest();
+  }
+
+  function stockStatusStyle(status) {
+    return STOCK_FIELD_STATUS_STYLES[status] || 'bg-gray-100 text-gray-600 border-gray-200';
+  }
+
   function renderOpsCard({ title, icon, description, items }) {
     const failed = items.filter(item => item.status === 'fail').length;
     const warn = items.filter(item => item.status === 'warn').length;
@@ -452,6 +755,10 @@ const Renderer = (function() {
       .replace(/'/g, '&#039;');
   }
 
+  function escapeJs(value) {
+    return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
   return {
     init,
     renderSummary,
@@ -464,6 +771,13 @@ const Renderer = (function() {
     renderDepthLoading,
     renderDepthCoverage,
     renderDepthUnavailable,
+    renderStockFieldLoading,
+    renderStockFieldManifest,
+    renderStockFieldUnavailable,
+    setStockFieldStatus,
+    setStockFieldDataset,
+    setStockFieldPage,
+    toggleStockFieldDebug,
     renderDetails,
     hideDetails,
     updateTimestamp

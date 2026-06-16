@@ -21,6 +21,8 @@ const DataLabUI = (function() {
     Renderer.init({
       summaryContainer: document.getElementById('summary-container'),
       opsContainer: document.getElementById('ops-container'),
+      depthContainer: document.getElementById('depth-container'),
+      stockFieldContainer: document.getElementById('stock-field-container'),
       cardsContainer: document.getElementById('cards-container'),
       detailsPanel: document.getElementById('details-panel'),
       timestampEl: document.getElementById('last-updated')
@@ -29,6 +31,8 @@ const DataLabUI = (function() {
     // Show loading state
     Renderer.renderLoading();
     Renderer.renderOpsLoading();
+    Renderer.renderDepthLoading();
+    Renderer.renderStockFieldLoading();
 
     // Subscribe to state changes
     setupStateSubscriptions();
@@ -36,6 +40,8 @@ const DataLabUI = (function() {
     // Load data
     try {
       await loadAllData();
+      loadDepthCoverage();
+      loadStockFieldManifest();
       runOpsChecks();
       const loadTime = Math.round(performance.now() - startTime);
       StateManager.set('loadTime', loadTime);
@@ -163,6 +169,46 @@ const DataLabUI = (function() {
   }
 
   /**
+   * Load generated data usage/depth coverage proof.
+   */
+  async function loadDepthCoverage() {
+    try {
+      const basePath = window.ManifestLoader?.getBasePath?.() || '';
+      const response = await fetch(`${basePath}/data/admin/data-usage-manifest.json`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error(`data-usage-manifest returned ${response.status}`);
+      }
+      const manifest = await response.json();
+      Renderer.renderDepthCoverage(manifest);
+    } catch (error) {
+      console.warn('[DataLab] Depth coverage unavailable:', error);
+      Renderer.renderDepthUnavailable(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /**
+   * Load stock field usage manifest for Feno Stock Lens audit.
+   */
+  async function loadStockFieldManifest() {
+    try {
+      const basePath = window.ManifestLoader?.getBasePath?.() || '';
+      const response = await fetch(`${basePath}/data/admin/stock-field-usage-manifest.json`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error(`stock-field-usage-manifest returned ${response.status}`);
+      }
+      const manifest = await response.json();
+      Renderer.renderStockFieldManifest(manifest);
+    } catch (error) {
+      console.warn('[DataLab] Stock field manifest unavailable:', error);
+      Renderer.renderStockFieldUnavailable(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /**
    * Show folder details
    * @param {string} folderName
    */
@@ -175,6 +221,22 @@ const DataLabUI = (function() {
    */
   function closeDetails() {
     StateManager.closeDetails();
+  }
+
+  function setStockFieldStatus(status) {
+    Renderer.setStockFieldStatus(status);
+  }
+
+  function setStockFieldDataset(datasetId) {
+    Renderer.setStockFieldDataset(datasetId);
+  }
+
+  function setStockFieldPage(page) {
+    Renderer.setStockFieldPage(page);
+  }
+
+  function toggleStockFieldDebug() {
+    Renderer.toggleStockFieldDebug();
   }
 
   /**
@@ -190,6 +252,8 @@ const DataLabUI = (function() {
       lastUpdated: state.lastUpdated,
       health: state.health,
       ops: window.OpsConsole?.getLastResults?.() || null,
+      depth: 'data/admin/data-usage-manifest.json',
+      stockFieldManifest: 'data/admin/stock-field-usage-manifest.json',
       cache: {
         manifest: ManifestLoader.getCacheStats(),
         data: CacheManager.getStats()
@@ -216,6 +280,10 @@ const DataLabUI = (function() {
     closeDetails,
     getStats,
     runOpsChecks,
+    setStockFieldStatus,
+    setStockFieldDataset,
+    setStockFieldPage,
+    toggleStockFieldDebug,
     debug
   };
 })();

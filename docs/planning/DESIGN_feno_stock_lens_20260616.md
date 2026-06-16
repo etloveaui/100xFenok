@@ -53,6 +53,18 @@ Implemented inventory:
 - Source/vendor names may appear only in `internalSource` or developer/admin
   context. User-facing labels must use `productLabel` or Feno/function language.
 
+Admin audit UI:
+
+- Route: `/admin/data-lab`
+- Static embed: `admin/data-lab/index.html` and
+  `100xfenok-next/public/admin/data-lab/index.html`
+- The stock field audit renders summary cards first, then paginated status and
+  dataset filters.
+- `not_yet_used` fields are not dumped into the DOM by default; they render only
+  when the backlog status filter is selected.
+- `internalSource` paths are hidden by default and appear only behind the admin
+  Debug toggle.
+
 ## Architecture Direction
 
 - `stock_lens_full`: per-symbol full profile for professional depth.

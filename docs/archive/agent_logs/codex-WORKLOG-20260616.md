@@ -240,3 +240,37 @@
 - `node --check scripts/generate-stock-field-usage-manifest.mjs` 통과.
 - `node scripts/generate-stock-field-usage-manifest.mjs` 통과.
 - 우측 비판 반영: output bloat, generic-key false positive, status taxonomy over-conflation 대응 완료.
+
+## 추가: Data Lab 종목 필드 감사 UI
+
+### 범위
+- 대상: `/admin/data-lab`에 임베드되는 정적 Data Lab.
+- 목적: 방금 생성한 `stock-field-usage-manifest.json`을 실제로 확인 가능한 admin 화면에 연결.
+
+### 변경 요약
+- `100xfenok-next/public/admin/data-lab/index.html`
+  - `종목 필드 사용현황` 섹션을 추가.
+- `100xfenok-next/public/admin/data-lab/app/dashboard.js`
+  - `/data/admin/stock-field-usage-manifest.json` fetch를 추가.
+  - 상태 필터, 데이터셋 필터, 페이지 이동, Debug toggle API를 노출.
+- `100xfenok-next/public/admin/data-lab/app/renderer.js`
+  - 요약 카드, 데이터셋별 카운트, 상태 탭, 데이터셋 필터, 40개 단위 페이지 렌더링을 추가.
+  - `not_yet_used` 520개 필드는 기본 DOM에 전체 덤프하지 않고, 사용자가 해당 상태를 선택할 때만 페이지 단위로 렌더.
+  - `internalSource`는 기본 비공개, Debug toggle에서만 표시.
+- `admin/data-lab/*`
+  - public Data Lab과 동일한 `index.html`, `dashboard.js`, `renderer.js`로 legacy mirror 동기화.
+
+### 검증 상태
+- `node --check` 통과:
+  - `admin/data-lab/app/dashboard.js`
+  - `admin/data-lab/app/renderer.js`
+  - `100xfenok-next/public/admin/data-lab/app/dashboard.js`
+  - `100xfenok-next/public/admin/data-lab/app/renderer.js`
+- 로컬 HTTP 확인:
+  - `http://127.0.0.1:4178/admin/data-lab/index.html` 200
+  - `http://127.0.0.1:4178/data/admin/stock-field-usage-manifest.json` 200
+- Node VM renderer smoke 통과:
+  - 총 883필드/미사용 520필드 표시 확인.
+  - 기본 모드에서는 내부 source path 비노출 확인.
+  - Debug 모드에서만 내부 source path 표시 확인.
+- Playwright/브라우저 자동화는 이 worktree에 dependency가 없어 [not verified].
