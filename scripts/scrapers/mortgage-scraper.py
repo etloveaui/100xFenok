@@ -24,7 +24,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scraper_utils import (
     fetch_html,
     load_existing_history,
-    prune_old_entries,
     build_cumulative_payload,
     write_cumulative_output,
     add_cumulative_args,
@@ -120,12 +119,12 @@ def main() -> None:
     # Cumulative mode support
     if args.cumulative:
         existing_history = load_existing_history(args.output)
-        pruned_history = prune_old_entries(existing_history, args.retention_days)
         payload = build_cumulative_payload(
-            data=rates,
+            rates,
+            existing_history,
             data_key="rates",
-            existing_history=pruned_history,
-            source="slickcharts"
+            source="slickcharts",
+            retention_days=args.retention_days,
         )
         write_cumulative_output(payload, args.output, pretty=args.pretty)
         print(f"Wrote cumulative mortgage rates to {args.output} ({len(payload['history'])} entries)")
