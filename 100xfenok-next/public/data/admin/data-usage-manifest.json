@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-16T13:45:18.689Z",
+  "generated_at": "2026-06-16T14:03:36.857Z",
   "totals": {
     "rootJsonCount": 2857,
     "publicJsonCount": 2910,
     "mirroredRootJsonCount": 2856,
     "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 54,
-    "directDataFetchCount": 99,
+    "directDataFetchCount": 101,
     "dynamicPatternCount": 4
   },
   "mirror_sync_status": "partial",
@@ -200,7 +200,7 @@
       "category": "sec-13f",
       "rootJsonCount": 48,
       "publicJsonCount": 47,
-      "directFetchCount": 15,
+      "directFetchCount": 17,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 4,
       "status": "active",
@@ -599,10 +599,24 @@
       ]
     },
     {
+      "dataPath": "sec-13f/analytics/conviction_entries.json",
+      "category": "sec-13f",
+      "consumers": [
+        "100xfenok-next/src/app/superinvestors/InsightsTab.tsx"
+      ]
+    },
+    {
       "dataPath": "sec-13f/analytics/conviction.json",
       "category": "sec-13f",
       "consumers": [
         "100xfenok-next/src/app/superinvestors/InsightsTab.tsx"
+      ]
+    },
+    {
+      "dataPath": "sec-13f/analytics/enhanced_consensus.json",
+      "category": "sec-13f",
+      "consumers": [
+        "100xfenok-next/src/hooks/use13FData.ts"
       ]
     },
     {
@@ -673,6 +687,7 @@
       "consumers": [
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
+        "100xfenok-next/src/hooks/use13FData.ts",
         "100xfenok-next/src/hooks/useSectorData.ts"
       ]
     },
