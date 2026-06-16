@@ -206,11 +206,11 @@ Depth-2 plan locked by measured coverage and peer/agent cross-check:
 
 Implemented in `100xfenok-next`:
 
-- `/stock/[ticker]` overview now has a `리비전·원재무 깊이` section between
+- `/stock/[ticker]` overview now has a `리비전·실적·추정 원자료` section between
   financial trends and profitability/growth. It reads only the already-fetched
   Global Scouter detail payload.
 - Screener expanded rows now reuse the same on-demand detail fetch and show
-  compact `리비전·컨센서스` plus `원재무 깊이` blocks. The main screener list
+  compact `리비전·컨센서스` plus `실적·추정 원자료` blocks. The main screener list
   still fetches only `stocks_analyzer.json`.
 - `eps_consensus.weekly.fy_plus_1/2/3` is used for the freshest EPS consensus
   readout and 1-week change. `weekly_revision_history.weekly_consensus_revision`

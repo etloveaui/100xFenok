@@ -273,8 +273,15 @@ function MiniBarChart({
           const s = shape(bar.value);
           const barColor = isFiniteNumber(bar.value) && bar.value < 0 ? "#f43f5e" : color;
           const label = `${bar.label}${bar.estimate ? " 추정" : ""} ${isFiniteNumber(bar.value) ? formatValue(bar.value) : "—"}`;
+          const tooltipTop = s ? Math.max(0, s.top - 18) : 0;
           return (
-            <div key={bar.key} className="relative h-full flex-1" title={label} aria-label={label}>
+            <div
+              key={bar.key}
+              className="group relative h-full flex-1 outline-none"
+              title={label}
+              aria-label={label}
+              tabIndex={0}
+            >
               {s ? (
                 <div
                   className="absolute left-0 right-0 rounded-sm"
@@ -286,6 +293,12 @@ function MiniBarChart({
                   }}
                 />
               ) : null}
+              <span
+                className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black tabular-nums text-slate-700 opacity-0 shadow-sm transition-opacity group-focus:opacity-100 group-hover:opacity-100"
+                style={{ top: `${tooltipTop}%` }}
+              >
+                {label}
+              </span>
             </div>
           );
         })}

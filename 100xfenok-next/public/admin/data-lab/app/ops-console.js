@@ -456,7 +456,7 @@ const OpsConsole = (function() {
         firstLine(run.display_title || run.name),
         `run=${run.id}`,
         `sha=${shortSha(run.head_sha)}`,
-        headMatches ? 'main HEAD matched' : `main HEAD is ${shortSha(mainSha) || 'unknown'}`,
+        headMatches ? 'latest main deployed' : `deploy is behind main HEAD ${shortSha(mainSha) || 'unknown'}`,
         formatAge(run.updated_at || run.created_at)
       ].filter(Boolean).join(' · ')
     };
@@ -508,7 +508,7 @@ const OpsConsole = (function() {
         label: check.label,
         status,
         code: ageDays <= 0 ? 'today' : `${ageDays}d`,
-        detail: `${formatDatePath(check)}=${formatDateValue(rawDate)} · warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d${countDetail}`
+        detail: `${formatDatePath(check)}=${formatDateValue(rawDate)} · stale warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d${countDetail}`
       };
     } catch (error) {
       return {

@@ -561,12 +561,12 @@ const Renderer = (function() {
     const skipped = items.filter(item => item.status === 'skip').length;
     const allSkipped = items.length > 0 && skipped === items.length;
     const badge = failed > 0
-      ? { text: 'FAIL', cls: 'bg-red-100 text-red-700 border-red-200' }
+      ? { text: `FAIL ${failed}`, cls: 'bg-red-100 text-red-700 border-red-200' }
       : warn > 0
-        ? { text: 'WARN', cls: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
+        ? { text: `WARN ${warn}`, cls: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
         : allSkipped
           ? { text: 'SKIP', cls: 'bg-gray-100 text-gray-600 border-gray-200' }
-          : { text: 'PASS', cls: 'bg-green-100 text-green-700 border-green-200' };
+        : { text: 'PASS', cls: 'bg-green-100 text-green-700 border-green-200' };
 
     return `
       <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
@@ -583,6 +583,7 @@ const Renderer = (function() {
         <div class="space-y-2">
           ${items.map(renderOpsItem).join('')}
         </div>
+        ${warn > 0 && failed === 0 ? `<div class="mt-3 rounded-lg border border-yellow-100 bg-yellow-50 px-3 py-2 text-[11px] font-medium text-yellow-800">WARN은 실패가 아니라 최신성·배포 SHA·외부 API 응답을 다시 확인하라는 점검 알림입니다. FAIL이 없으면 서비스 차단 상태는 아닙니다.</div>` : ''}
         ${skipped > 0 ? `<div class="text-[11px] text-gray-400 mt-3">${skipped} skipped outside target runtime</div>` : ''}
       </article>
     `;

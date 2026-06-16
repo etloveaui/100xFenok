@@ -516,6 +516,17 @@ export function Sparkline({
   const actualLine = actualPoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ");
   const currentPoint = actualPoints[actualPoints.length - 1] ?? null;
   const labelPoints = [currentPoint, estimatePoints[estimatePoints.length - 1] ?? firstEstimatePoint].filter(Boolean) as FiscalPoint[];
+  const valueLabelPlacement = (point: FiscalPoint) => {
+    const x = toX(point.index);
+    const y = toY(point.value);
+    const nearRight = x > width - padR - 12;
+    const nearTop = y < padT + 14;
+    return {
+      x: nearRight ? x - 6 : x + 6,
+      y: nearTop ? y + 14 : y - 10,
+      anchor: nearRight ? "end" : "start",
+    } as const;
+  };
 
   return (
     <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="block w-full max-w-full overflow-visible" role="img" aria-label="FY별 추이 차트">
@@ -559,17 +570,24 @@ export function Sparkline({
           </circle>
         );
       })}
-      {labelPoints.map((point) => (
-        <text
-          key={`label-${point.label}`}
-          x={toX(point.index)}
-          y={Math.max(9, toY(point.value) - 7)}
-          textAnchor="middle"
-          className="text-[8px] font-black fill-slate-500"
-        >
-          {formatValue(point.value)}
-        </text>
-      ))}
+      {labelPoints.map((point) => {
+        const placement = valueLabelPlacement(point);
+        return (
+          <text
+            key={`label-${point.label}`}
+            x={placement.x}
+            y={placement.y}
+            textAnchor={placement.anchor}
+            className="text-[8px] font-black fill-slate-500"
+            paintOrder="stroke"
+            stroke="white"
+            strokeWidth={3}
+            strokeLinejoin="round"
+          >
+            {formatValue(point.value)}
+          </text>
+        );
+      })}
       {labels.map((label, index) => (
         <text key={label} x={toX(index)} y={height - 3} textAnchor="middle" className="text-[8px] font-black fill-slate-400">
           {label}
@@ -639,6 +657,17 @@ export function PerBandChart({
     currentPoint,
     forwardPoints[forwardPoints.length - 1] ?? forwardPoint,
   ].filter(Boolean) as FiscalPoint[];
+  const perValueLabelPlacement = (point: FiscalPoint) => {
+    const x = toX(point.index);
+    const y = toY(point.value);
+    const nearRight = x > w - padR - 12;
+    const nearTop = y < padT + 14;
+    return {
+      x: nearRight ? x - 6 : x,
+      y: nearTop ? y + 14 : y - 10,
+      anchor: nearRight ? "end" : "middle",
+    } as const;
+  };
 
   return (
     <div>
@@ -683,11 +712,16 @@ export function PerBandChart({
               strokeDasharray="4,2"
             />
             <text
-              x={padL + plotW + 4}
-              y={toY(bands.avg_8y) + 3}
+              x={padL + 4}
+              y={Math.max(9, toY(bands.avg_8y) - 5)}
+              textAnchor="start"
               className="text-[8px] font-black fill-slate-500"
+              paintOrder="stroke"
+              stroke="white"
+              strokeWidth={3}
+              strokeLinejoin="round"
             >
-              avg {bands.avg_8y.toFixed(1)}
+              avg
             </text>
           </>
         )}
@@ -765,17 +799,24 @@ export function PerBandChart({
             </g>
           );
         })}
-        {valueLabelPoints.map((point) => (
-          <text
-            key={`per-label-${point.label}`}
-            x={toX(point.index)}
-            y={Math.max(9, toY(point.value) - 10)}
-            textAnchor="middle"
-            className="text-[9px] font-black fill-slate-600"
-          >
-            {point.value.toFixed(1)}
-          </text>
-        ))}
+        {valueLabelPoints.map((point) => {
+          const placement = perValueLabelPlacement(point);
+          return (
+            <text
+              key={`per-label-${point.label}`}
+              x={placement.x}
+              y={placement.y}
+              textAnchor={placement.anchor}
+              className="text-[9px] font-black fill-slate-600"
+              paintOrder="stroke"
+              stroke="white"
+              strokeWidth={3}
+              strokeLinejoin="round"
+            >
+              {point.value.toFixed(1)}
+            </text>
+          );
+        })}
 
         {/* X-axis labels */}
         {periodLabels.map((label, index) => (
@@ -928,8 +969,8 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">원재무 깊이</h4>
-        <span className="text-[10px] font-bold text-slate-400">FY-4 ~ FY+3 canonical</span>
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">실적·추정 원자료</h4>
+        <span className="text-[10px] font-bold text-slate-400">FY-4 ~ FY+3 표준화 데이터</span>
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
         <table className="w-full min-w-[720px] text-[10px]">
