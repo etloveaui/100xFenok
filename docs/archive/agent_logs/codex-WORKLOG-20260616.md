@@ -205,3 +205,38 @@
 - `npx tsc -p tsconfig.json --noEmit --pretty false --incremental false` 통과.
 - `git diff --check` 통과.
 - 넓은 앱 검색 결과, 기존 Explore/Market/Sectors/Superinvestors에는 이전 source-branded 문구가 아직 남아 있음. 이번 변경 범위는 스크리너/종목 상세 신규 표면 정리까지이며, 전체 사이트 제품 언어 정리는 별도 cleanup 필요.
+
+## 추가: Feno Stock Lens 필드 사용현황 manifest
+
+### 범위
+- 대상: 종목 상세/스크리너 확장 전에 필요한 데이터 충실성 기반.
+- 목적: 원천 JSON에 존재하는 필드를 먼저 세고, 화면/해석/메타/미사용 상태를 자동 분류해서 이후 UI와 해석 엔진이 “있는 데이터를 빠뜨리지 않게” 만드는 것.
+
+### 변경 요약
+- `scripts/generate-stock-field-usage-manifest.mjs`
+  - 종목 상세, 가격·배당 히스토리, 기관 공시·고수 보유, 가격·재무 보조 데이터, Feno 통합 스코어·요약 데이터를 스캔하는 manifest 생성기를 추가.
+  - ticker/date/investor keyed map은 `*`로 정규화해 per-symbol/per-date 노이즈 대신 schema-level 필드로 기록.
+  - 범용 토큰(`date`, `value`, `price`, `name`, `shares`, `weight` 등)은 코드 사용 판정에서 제외해 false positive를 줄임.
+  - 상태 분류는 `interpreted`, `visually_rendered`, `metadata`, `not_yet_used` 중심으로 정리.
+- `data/admin/stock-field-usage-manifest.json`
+  - 내부/admin용 필드 사용현황 manifest 생성.
+- `100xfenok-next/public/data/admin/stock-field-usage-manifest.json`
+  - 동일 manifest의 public mirror 생성. 일반 페이지가 자동 fetch하지 않는 admin/data 기반 파일.
+- `docs/planning/DESIGN_feno_stock_lens_20260616.md`
+  - manifest 생성 명령, 산출물 경로, 현재 필드 수/상태 분포, 동적 키 정규화 규칙을 추가.
+
+### 생성 결과
+- 명령: `node scripts/generate-stock-field-usage-manifest.mjs`
+- parsed files: 2,744
+- schema-level fields: 883
+- manifest size: 490,439 bytes
+- status counts:
+  - `not_yet_used`: 520
+  - `visually_rendered`: 219
+  - `metadata`: 143
+  - `interpreted`: 1
+
+### 검증 상태
+- `node --check scripts/generate-stock-field-usage-manifest.mjs` 통과.
+- `node scripts/generate-stock-field-usage-manifest.mjs` 통과.
+- 우측 비판 반영: output bloat, generic-key false positive, status taxonomy over-conflation 대응 완료.

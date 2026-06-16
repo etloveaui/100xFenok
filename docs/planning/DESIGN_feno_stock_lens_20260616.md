@@ -34,11 +34,24 @@ The default path is not "omit"; it is:
 
 Every field should be assigned one of:
 
-- `used`: rendered or calculated in a product surface
 - `interpreted`: consumed by deterministic or LLM-assisted interpretation
-- `raw_visible`: available in expert/raw detail
+- `visually_rendered`: rendered directly in UI tables, cards, charts, or text surfaces
+- `metadata`: structural/provenance fields used for identity, grouping, freshness, or traceability
 - `not_yet_used`: inventoried but awaiting UX or interpretation mapping
 - `deprecated_with_reason`: intentionally excluded with rationale
+
+Implemented inventory:
+
+- Generator: `node scripts/generate-stock-field-usage-manifest.mjs`
+- Internal manifest: `data/admin/stock-field-usage-manifest.json`
+- Public mirror: `100xfenok-next/public/data/admin/stock-field-usage-manifest.json`
+- Current scan: 2,744 parsed files, 883 schema-level fields, 490KB manifest
+- Current status split: `not_yet_used` 520, `visually_rendered` 219,
+  `metadata` 143, `interpreted` 1
+- Dynamic maps such as ticker/date/investor keyed objects are normalized to `*`
+  so the manifest remains schema-level, not per-symbol/per-date noise.
+- Source/vendor names may appear only in `internalSource` or developer/admin
+  context. User-facing labels must use `productLabel` or Feno/function language.
 
 ## Architecture Direction
 
