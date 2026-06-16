@@ -23,6 +23,9 @@ interface ActionRow {
   forwardEpsFy1?: number | null;
   revenueGrowthFy1?: number | null;
   epsGrowthFy1?: number | null;
+  grossMarginFy1?: number | null;
+  operatingMarginFy1?: number | null;
+  roeFy1?: number | null;
 }
 interface ActionSummaryDoc {
   fields?: string[];
@@ -52,6 +55,9 @@ function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): Actio
     forwardEpsFy1: typeof value("forwardEpsFy1") === "number" ? value("forwardEpsFy1") as number : null,
     revenueGrowthFy1: typeof value("revenueGrowthFy1") === "number" ? value("revenueGrowthFy1") as number : null,
     epsGrowthFy1: typeof value("epsGrowthFy1") === "number" ? value("epsGrowthFy1") as number : null,
+    grossMarginFy1: typeof value("grossMarginFy1") === "number" ? value("grossMarginFy1") as number : null,
+    operatingMarginFy1: typeof value("operatingMarginFy1") === "number" ? value("operatingMarginFy1") as number : null,
+    roeFy1: typeof value("roeFy1") === "number" ? value("roeFy1") as number : null,
   };
 }
 
@@ -79,8 +85,9 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "roe", label: "ROE", align: "right" },
   { key: "opm", label: "OPM", align: "right" },
   { key: "eps", label: "EPS", align: "right" },
-  { key: "growthRate", label: "3M", align: "right" },
+  { key: "growthRate", label: "3M 성장", align: "right" },
   { key: "momentum1m", label: "1M", align: "right" },
+  { key: "momentum3m", label: "3M 모멘텀", align: "right" },
   { key: "momentum6m", label: "6M", align: "right" },
   { key: "momentum12m", label: "12M", align: "right" },
   { key: "rank", label: "Rank", align: "right" },
@@ -92,6 +99,9 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "forwardEpsFy1", label: "FY+1 EPS", align: "right" },
   { key: "revenueGrowthFy1", label: "매출+1", align: "right" },
   { key: "epsGrowthFy1", label: "EPS+1", align: "right" },
+  { key: "roeFy1", label: "FY+1 ROE", align: "right" },
+  { key: "operatingMarginFy1", label: "FY+1 OPM", align: "right" },
+  { key: "grossMarginFy1", label: "FY+1 GPM", align: "right" },
   { key: "dividendTtm", label: "Div TTM", align: "right" },
   { key: "ret1y", label: "1Y", align: "right" },
   { key: "ret3y", label: "3Y", align: "right" },
@@ -104,8 +114,8 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
   action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
-  estimate: ["ticker", "actionScore", "name", "sector", "forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1", "perBandCurrent", "marketCap"],
-  momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum6m", "momentum12m", "rank"],
+  estimate: ["ticker", "actionScore", "name", "sector", "forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1", "roeFy1", "operatingMarginFy1", "grossMarginFy1", "perBandCurrent", "marketCap"],
+  momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m"],
 };
@@ -135,6 +145,11 @@ function fmtNum(value: number | null, digits = 2): string {
 }
 function fmtSignedPct(value: number | null): string {
   return value === null ? "—" : formatSignedPercentDecimal(value, 1);
+}
+function fmtSignedPctPoint(value: number | null): string {
+  if (value === null) return "—";
+  const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
+  return `${prefix}${Math.abs(value).toFixed(1)}%`;
 }
 function fmtYield(value: number | null): string {
   return value === null ? "—" : formatPercent(value * 100, 2);
@@ -308,10 +323,18 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.growthRate))}>{fmtSignedPct(stock.growthRate)}</span>;
     case "momentum1m":
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum1m))}>{fmtSignedPct(stock.momentum1m)}</span>;
+    case "momentum3m":
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum3m))}>{fmtSignedPct(stock.momentum3m)}</span>;
     case "momentum6m":
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
     case "momentum12m":
       return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
+    case "roeFy1":
+      return <span className="orbitron tabular-nums text-slate-900">{stock.roeFy1 == null ? "—" : `${stock.roeFy1.toFixed(1)}%`}</span>;
+    case "operatingMarginFy1":
+      return <span className="orbitron tabular-nums text-slate-700">{stock.operatingMarginFy1 == null ? "—" : `${stock.operatingMarginFy1.toFixed(1)}%`}</span>;
+    case "grossMarginFy1":
+      return <span className="orbitron tabular-nums text-slate-700">{stock.grossMarginFy1 == null ? "—" : `${stock.grossMarginFy1.toFixed(1)}%`}</span>;
     case "guruHolders":
       return stock.guruHolders != null ? (
         <span className="orbitron tabular-nums font-bold text-violet-700">{stock.guruHolders}</span>
@@ -331,9 +354,9 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
     case "forwardEpsFy1":
       return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.forwardEpsFy1 ?? null)}</span>;
     case "revenueGrowthFy1":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.revenueGrowthFy1 ?? null))}>{fmtSignedPct(stock.revenueGrowthFy1 ?? null)}</span>;
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.revenueGrowthFy1 ?? null))}>{fmtSignedPctPoint(stock.revenueGrowthFy1 ?? null)}</span>;
     case "epsGrowthFy1":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.epsGrowthFy1 ?? null))}>{fmtSignedPct(stock.epsGrowthFy1 ?? null)}</span>;
+      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.epsGrowthFy1 ?? null))}>{fmtSignedPctPoint(stock.epsGrowthFy1 ?? null)}</span>;
     case "dividendTtm":
       return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
     case "ret1y":
@@ -350,15 +373,42 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
 const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["marketCap", "per", "dividendYield", "return12m"],
   action: ["marketCap", "guruHolders", "return12m", "dividendYield"],
-  value: ["per", "peForward", "pbr", "roe"],
-  estimate: ["forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1"],
-  momentum: ["growthRate", "momentum1m", "momentum6m", "momentum12m"],
+  value: ["per", "peForward", "pbr", "perBandCurrent", "roe", "opm"],
+  estimate: ["forwardPeFy1", "forwardEpsFy1", "revenueGrowthFy1", "epsGrowthFy1", "roeFy1", "operatingMarginFy1", "grossMarginFy1"],
+  momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m"],
   dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y"],
   guru: ["guruHolders", "per", "peForward", "return12m"],
 };
 
 function columnLabel(key: ScreenerSortKey): string {
   return COLUMNS.find((column) => column.key === key)?.label ?? key;
+}
+
+function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode {
+  switch (key) {
+    case "perBandCurrent": {
+      const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
+      if (!band) return <span className="text-slate-300">—</span>;
+      const [safeCurrent, safeMin, safeMax] = band;
+      const pct = bandPct(safeCurrent, safeMin, safeMax);
+      const label = bandLabel(pct);
+      return (
+        <span className="orbitron font-black text-slate-800 text-[10px] truncate">
+          {safeCurrent.toFixed(1)}x ({label} {Math.round(pct * 100)}%)
+        </span>
+      );
+    }
+    case "actionScore": {
+      const lowEvidence = stock.lowEvidence === true;
+      return (
+        <span className={cx("rounded-full border px-1.5 py-0.5 text-[9px] font-black shrink-0 truncate", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
+          {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
+        </span>
+      );
+    }
+    default:
+      return renderCell(stock, key);
+  }
 }
 
 function MobileMetric({ stock, metricKey }: { stock: ScreenerStock; metricKey: ScreenerSortKey }) {
@@ -368,7 +418,7 @@ function MobileMetric({ stock, metricKey }: { stock: ScreenerStock; metricKey: S
         {columnLabel(metricKey)}
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
-        {renderCell(stock, metricKey)}
+        {renderMobileCell(stock, metricKey)}
       </span>
     </div>
   );
@@ -442,7 +492,7 @@ function MobileStockCard({
       </div>
       {expanded ? (
         <div id={detailId}>
-          <StockDetailPanel ticker={stock.ticker} />
+          <StockDetailPanel ticker={stock.ticker} stock={stock} />
         </div>
       ) : null}
     </article>
@@ -499,6 +549,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         forwardEpsFy1: action?.forwardEpsFy1 ?? s.epsForward ?? null,
         revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
         epsGrowthFy1: action?.epsGrowthFy1 ?? null,
+        grossMarginFy1: action?.grossMarginFy1 ?? null,
+        operatingMarginFy1: action?.operatingMarginFy1 ?? null,
+        roeFy1: action?.roeFy1 ?? null,
       };
     });
   }, [rawStocks, guruMap, actionMap]);
@@ -510,6 +563,10 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [forwardPerMax, setForwardPerMax] = useState("");
   const [revenueGrowthMin, setRevenueGrowthMin] = useState("");
   const [epsGrowthMin, setEpsGrowthMin] = useState("");
+  const [dividendYieldMin, setDividendYieldMin] = useState("");
+  const [roeFy1Min, setRoeFy1Min] = useState("");
+  const [ret3yMin, setRet3yMin] = useState("");
+  const [ret5yMin, setRet5yMin] = useState("");
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>("");
@@ -526,11 +583,21 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     setExpandedTicker(initialSearch || null);
   }
 
-  const [preset, setPreset] = useState<ColumnPreset>(() => {
-    if (typeof window === "undefined") return "basic";
+  const [preset, setPreset] = useState<ColumnPreset>("basic");
+
+  useEffect(() => {
     const saved = localStorage.getItem("screener-preset") as ColumnPreset | null;
-    return saved && PRESET_KEYS[saved] ? saved : "basic";
-  });
+    if (!saved || !PRESET_KEYS[saved]) return;
+    const frame = window.requestAnimationFrame(() => {
+      setPreset(saved);
+      setSortKey((current) => {
+        if (PRESET_KEYS[saved].includes(current)) return current;
+        setSortDir("desc");
+        return "marketCap";
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const activeColumns = useMemo(() => {
     const keys = new Set(PRESET_KEYS[preset]);
@@ -558,6 +625,15 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     const revenueGrowthMinValid = revenueGrowthMinValue !== null && !Number.isNaN(revenueGrowthMinValue);
     const epsGrowthMinValue = epsGrowthMin.trim() === "" ? null : Number(epsGrowthMin);
     const epsGrowthMinValid = epsGrowthMinValue !== null && !Number.isNaN(epsGrowthMinValue);
+    const dividendYieldMinValue = dividendYieldMin.trim() === "" ? null : Number(dividendYieldMin);
+    const dividendYieldMinValid = dividendYieldMinValue !== null && !Number.isNaN(dividendYieldMinValue);
+    const roeFy1MinValue = roeFy1Min.trim() === "" ? null : Number(roeFy1Min);
+    const roeFy1MinValid = roeFy1MinValue !== null && !Number.isNaN(roeFy1MinValue);
+    const ret3yMinValue = ret3yMin.trim() === "" ? null : Number(ret3yMin);
+    const ret3yMinValid = ret3yMinValue !== null && !Number.isNaN(ret3yMinValue);
+    const ret5yMinValue = ret5yMin.trim() === "" ? null : Number(ret5yMin);
+    const ret5yMinValid = ret5yMinValue !== null && !Number.isNaN(ret5yMinValue);
+
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
         return false;
@@ -570,6 +646,11 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       if (forwardPerMaxValid && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > (forwardPerMaxValue as number))) return false;
       if (revenueGrowthMinValid && ((stock.revenueGrowthFy1 ?? null) === null || (stock.revenueGrowthFy1 as number) < (revenueGrowthMinValue as number))) return false;
       if (epsGrowthMinValid && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < (epsGrowthMinValue as number))) return false;
+      if (dividendYieldMinValid && (stock.dividendYield === null || (stock.dividendYield * 100) < (dividendYieldMinValue as number))) return false;
+      if (roeFy1MinValid && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < (roeFy1MinValue as number))) return false;
+      if (ret3yMinValid && (stock.ret3y === null || (stock.ret3y * 100) < (ret3yMinValue as number))) return false;
+      if (ret5yMinValid && (stock.ret5y === null || (stock.ret5y * 100) < (ret5yMinValue as number))) return false;
+
       if (bandFilter) {
         const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
         if (!band) return false;
@@ -580,7 +661,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, profitableOnly, bandFilter, actionFilter]);
+  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, profitableOnly, bandFilter, actionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -594,7 +675,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -623,13 +704,17 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     setForwardPerMax("");
     setRevenueGrowthMin("");
     setEpsGrowthMin("");
+    setDividendYieldMin("");
+    setRoeFy1Min("");
+    setRet3yMin("");
+    setRet5yMin("");
     setProfitableOnly(false);
     setBandFilter("");
     setActionFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || profitableOnly || bandFilter || actionFilter);
-  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || bandFilter || actionFilter);
+  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || profitableOnly || bandFilter || actionFilter);
+  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || bandFilter || actionFilter);
 
   return (
     <div className="data-shell-page">
@@ -749,6 +834,50 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">배당률 최소 (%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={dividendYieldMin}
+                onChange={(event) => setDividendYieldMin(event.target.value)}
+                placeholder="예: 3"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">FY+1 ROE 최소 (%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={roeFy1Min}
+                onChange={(event) => setRoeFy1Min(event.target.value)}
+                placeholder="예: 15"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">3Y 수익률 최소 (%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={ret3yMin}
+                onChange={(event) => setRet3yMin(event.target.value)}
+                placeholder="예: 20"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">5Y 수익률 최소 (%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={ret5yMin}
+                onChange={(event) => setRet5yMin(event.target.value)}
+                placeholder="예: 50"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
               <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 밴드</span>
               <select
                 value={bandFilter}
@@ -769,7 +898,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                 className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
               >
                 <option value="">전체 액션</option>
-                <option value="smart_money">구루/13F 주목</option>
+                <option value="smart_money">기관/고수 주목</option>
                 <option value="value_momentum">저평가+모멘텀</option>
                 <option value="index_core">지수 핵심</option>
                 <option value="income">배당 점검</option>
@@ -926,7 +1055,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                     {expanded ? (
                       <tr id={detailId}>
                         <td colSpan={activeColumns.length} className="p-0">
-                          <StockDetailPanel ticker={stock.ticker} />
+                          <StockDetailPanel ticker={stock.ticker} stock={stock} />
                         </td>
                       </tr>
                     ) : null}
@@ -972,7 +1101,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       </section>
 
       <p className="px-1 text-[11px] text-slate-400">
-        데이터: Global Scouter · SlickCharts · SEC 13F · YF quarter closes · computed stock action index. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
+        데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · 통합 스코어. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
     </div>
   );

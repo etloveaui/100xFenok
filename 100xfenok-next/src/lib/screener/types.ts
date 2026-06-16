@@ -51,6 +51,9 @@ export interface ScreenerStock {
   ret1y: number | null;
   ret3y: number | null;
   ret5y: number | null;
+  operatingMarginFy1?: number | null;
+  roeFy1?: number | null;
+  grossMarginFy1?: number | null;
 }
 
 export type ScreenerSortKey =
@@ -85,7 +88,10 @@ export type ScreenerSortKey =
   | "ret3y"
   | "ret5y"
   | "actionScore"
-  | "guruHolders";
+  | "guruHolders"
+  | "operatingMarginFy1"
+  | "roeFy1"
+  | "grossMarginFy1";
 
 export type SortDir = "asc" | "desc";
 

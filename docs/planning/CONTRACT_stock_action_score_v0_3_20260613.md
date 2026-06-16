@@ -229,6 +229,9 @@ Each summary row is an array tuple in this exact `fields` order:
 - `forwardEpsFy1`
 - `revenueGrowthFy1`
 - `epsGrowthFy1`
+- `grossMarginFy1`
+- `operatingMarginFy1`
+- `roeFy1`
 
 The tuple shape is intentional: it keeps the generated summary under the
 250KB product-list budget while preserving explicit field names at top level.
@@ -243,8 +246,12 @@ Track E extends data depth without changing the action-score formula:
 - Global Scouter detail files are included as stock-action source inputs.
 - Full rows receive an `estimateSnapshot` object for FY+1~FY+3 valuation,
   EPS, revenue-growth, and EPS-growth estimates.
+- Full rows receive a `profitabilitySnapshot` object for FY+1~FY+3 gross
+  margin, operating margin, and ROE estimates. Missing gross margin values are
+  derived from Global Scouter estimate revenue and gross-profit inputs.
 - The slim summary exposes only FY+1 fields needed by Screener list filters:
-  `forwardPeFy1`, `forwardEpsFy1`, `revenueGrowthFy1`, `epsGrowthFy1`.
+  `forwardPeFy1`, `forwardEpsFy1`, `revenueGrowthFy1`, `epsGrowthFy1`,
+  `grossMarginFy1`, `operatingMarginFy1`, `roeFy1`.
 - Summary budget remains `<= 250KB`.
 
 Track H and U do not change scoring. They consume adjacent generated indexes:
@@ -269,6 +276,8 @@ Required low-resource checks before push:
 - summary file target: `data/computed/stock_action_summary.json <= 250KB`
 - estimate summary target: FY+1 estimate fields present for rows with available
   Global Scouter estimate snapshots
+- profitability summary target: FY+1 profitability estimate fields present for
+  rows with available Global Scouter estimate snapshots
 - income bucket distribution target: roughly 15-25% of indexed rows
 - product fetch audit: Screener and Explore action candidates fetch summary,
   not full `stock_action_index.json`

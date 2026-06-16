@@ -266,9 +266,30 @@ function estimateNum(block, metric, key) {
   return num(value);
 }
 
+const detailCache = new Map();
+
+function stockDetail(symbol) {
+  if (!symbol) return null;
+  const key = String(symbol).trim().toUpperCase();
+  if (!detailCache.has(key)) {
+    const detail = readJson(`global-scouter/stocks/detail/${key}.json`, null);
+    detailCache.set(key, detail && typeof detail === "object" ? detail : null);
+  }
+  return detailCache.get(key);
+}
+
+function ratioEstimateNum(existingBlock, metric, numeratorBlock, numeratorMetric, denominatorBlock, denominatorMetric, key) {
+  const existing = estimateNum(existingBlock, metric, key);
+  if (existing !== null) return round(existing, 2);
+  const numerator = estimateNum(numeratorBlock, numeratorMetric, key);
+  const denominator = estimateNum(denominatorBlock, denominatorMetric, key);
+  if (numerator === null || denominator === null || denominator === 0) return null;
+  return round((numerator / denominator) * 100, 2);
+}
+
 function stockEstimateSnapshot(symbol) {
   if (!symbol) return null;
-  const detail = readJson(`global-scouter/stocks/detail/${symbol}.json`, null);
+  const detail = stockDetail(symbol);
   if (!detail || typeof detail !== "object") return null;
   const snapshot = {
     forwardPe: {
@@ -290,6 +311,31 @@ function stockEstimateSnapshot(symbol) {
       fy1: estimateNum(detail.growth_estimates, "eps_growth", "fy1"),
       fy2: estimateNum(detail.growth_estimates, "eps_growth", "fy2"),
       fy3: estimateNum(detail.growth_estimates, "eps_growth", "fy3"),
+    },
+  };
+  const hasValue = Object.values(snapshot).some((group) => Object.values(group).some((value) => value !== null));
+  return hasValue ? snapshot : null;
+}
+
+function stockProfitabilityEstimateSnapshot(symbol) {
+  if (!symbol) return null;
+  const detail = stockDetail(symbol);
+  if (!detail || typeof detail !== "object") return null;
+  const snapshot = {
+    grossMargin: {
+      fy1: ratioEstimateNum(detail.profitability_estimates, "gross_margin", detail.income_statement_estimates, "gross_profit", detail.income_statement_estimates, "revenue", "fy1"),
+      fy2: ratioEstimateNum(detail.profitability_estimates, "gross_margin", detail.income_statement_estimates, "gross_profit", detail.income_statement_estimates, "revenue", "fy2"),
+      fy3: ratioEstimateNum(detail.profitability_estimates, "gross_margin", detail.income_statement_estimates, "gross_profit", detail.income_statement_estimates, "revenue", "fy3"),
+    },
+    operatingMargin: {
+      fy1: ratioEstimateNum(detail.profitability_estimates, "operating_margin", detail.income_statement_estimates, "operating_income", detail.income_statement_estimates, "revenue", "fy1"),
+      fy2: ratioEstimateNum(detail.profitability_estimates, "operating_margin", detail.income_statement_estimates, "operating_income", detail.income_statement_estimates, "revenue", "fy2"),
+      fy3: ratioEstimateNum(detail.profitability_estimates, "operating_margin", detail.income_statement_estimates, "operating_income", detail.income_statement_estimates, "revenue", "fy3"),
+    },
+    roe: {
+      fy1: ratioEstimateNum(detail.profitability_estimates, "roe", detail.income_statement_estimates, "net_income", detail.scale_estimates, "total_equity", "fy1"),
+      fy2: ratioEstimateNum(detail.profitability_estimates, "roe", detail.income_statement_estimates, "net_income", detail.scale_estimates, "total_equity", "fy2"),
+      fy3: ratioEstimateNum(detail.profitability_estimates, "roe", detail.income_statement_estimates, "net_income", detail.scale_estimates, "total_equity", "fy3"),
     },
   };
   const hasValue = Object.values(snapshot).some((group) => Object.values(group).some((value) => value !== null));
@@ -684,18 +730,18 @@ function smartMoneyFamily(context) {
     const equityHolders = num(consensus?.equity_holders ?? consensus?.equityHolders);
     const totalHolders = num(consensus?.total_holders ?? consensus?.totalHolders);
     if (finite(equityHolders) && finite(totalHolders) && totalHolders > equityHolders) {
-      reasons.push(`13F 주식 ${equityHolders}명 · 옵션/클래스 포함 ${totalHolders}명`);
+      reasons.push(`기관 공시 주식 ${equityHolders}명 · 옵션/클래스 포함 ${totalHolders}명`);
     } else if (guru >= 5) {
-      reasons.push(`구루 ${guru}명`);
+      reasons.push(`고수 보유 ${guru}명`);
     }
   }
   if (finite(consensus?.equity_score)) {
     score += consensus.equity_score * 8;
-    if (consensus.equity_score >= 0.5) reasons.push(`13F 컨센서스 ${consensus.equity_score.toFixed(2)}`);
+    if (consensus.equity_score >= 0.5) reasons.push(`기관 공시 컨센서스 ${consensus.equity_score.toFixed(2)}`);
   }
   if (conviction) {
     score += Math.min(7, conviction.count * 2 + (conviction.maxWeight ?? 0) * 50);
-    reasons.push(`고확신 13F ${conviction.count}건`);
+    reasons.push(`고확신 기관 공시 ${conviction.count}건`);
   }
   return actionFamily("smart_money", {
     eligible,
@@ -710,7 +756,7 @@ function sectorSmartMoneyFamily(context) {
   const eligible = context.canonicalSector !== "Other" && sector != null;
   const present = eligible && finite(sector.investorCount);
   const score = present ? Math.min(5, sector.investorCount / 8 + (sector.avgWeight ?? 0) * 50) : 0;
-  const reason = present ? `13F 섹터 ${context.canonicalSector} ${sector.investorCount}명` : null;
+  const reason = present ? `섹터 기관 관심 ${context.canonicalSector} ${sector.investorCount}명` : null;
   return actionFamily("sector_smart_money", { eligible, present, score, reason });
 }
 
@@ -764,7 +810,7 @@ function selectActionBucket(families, summary) {
 
   const candidates = [];
   if (p.smart_money >= thresholds.smart_money.minSmartMoneyPct && coverage >= thresholds.smart_money.minCoverageRatio) {
-    candidates.push({ bucket: "smart_money", label: "구루/13F 주목", strength: p.smart_money });
+    candidates.push({ bucket: "smart_money", label: "기관/고수 주목", strength: p.smart_money });
   }
   if (
     p.valuation >= thresholds.value_momentum.minValuationPct &&
@@ -806,7 +852,7 @@ function actionFrom(stock, context) {
   const equityHolders = num(context.consensus?.equity_holders ?? context.consensus?.equityHolders);
   const totalHolders = num(context.consensus?.total_holders ?? context.consensus?.totalHolders);
   if (finite(equityHolders) && finite(totalHolders) && totalHolders > equityHolders) {
-    const smartReason = `13F 주식 ${equityHolders}명 · 옵션/클래스 포함 ${totalHolders}명`;
+    const smartReason = `기관 공시 주식 ${equityHolders}명 · 옵션/클래스 포함 ${totalHolders}명`;
     reasons = [smartReason, ...reasons.filter((reason) => reason !== smartReason)];
   }
   if (summary.lowEvidence) reasons.push("증거 부족");
@@ -861,6 +907,7 @@ function buildStockActionIndex() {
       const marketScope = marketScopeFromMarket(normalized.market);
       const canonicalSector = canonicalSectorFromScouter(stock.sector);
       const estimateSnapshot = stockEstimateSnapshot(symbol);
+      const profitabilitySnapshot = stockProfitabilityEstimateSnapshot(symbol);
       const context = {
         marketScope,
         canonicalSector,
@@ -910,6 +957,7 @@ function buildStockActionIndex() {
         conviction: context.conviction,
         sectorSmartMoney: context.sectorSmartMoney,
         estimateSnapshot,
+        profitabilitySnapshot,
         revision: context.revision,
         slickReturn: context.returnHistory,
         dividendHistory: context.dividendHistory,
@@ -968,6 +1016,10 @@ function buildStockActionIndex() {
       estimate_fy1_forward_pe_count: actionRows.filter((row) => finite(row.estimateSnapshot?.forwardPe?.fy1)).length,
       estimate_fy1_revenue_growth_count: actionRows.filter((row) => finite(row.estimateSnapshot?.revenueGrowth?.fy1)).length,
       estimate_fy1_eps_growth_count: actionRows.filter((row) => finite(row.estimateSnapshot?.epsGrowth?.fy1)).length,
+      profitability_estimate_snapshot_count: actionRows.filter((row) => row.profitabilitySnapshot !== null).length,
+      profitability_fy1_gross_margin_count: actionRows.filter((row) => finite(row.profitabilitySnapshot?.grossMargin?.fy1)).length,
+      profitability_fy1_operating_margin_count: actionRows.filter((row) => finite(row.profitabilitySnapshot?.operatingMargin?.fy1)).length,
+      profitability_fy1_roe_count: actionRows.filter((row) => finite(row.profitabilitySnapshot?.roe?.fy1)).length,
       sector_smart_money_count: sectorSmartMoney.size,
       sector_smart_money_joined_count: actionRows.filter((row) => row.sectorSmartMoney != null).length,
       market_scope_counts: countBy(actionRows, "marketScope"),
@@ -1005,6 +1057,9 @@ function buildStockActionSummary(stockActionIndex) {
     "forwardEpsFy1",
     "revenueGrowthFy1",
     "epsGrowthFy1",
+    "grossMarginFy1",
+    "operatingMarginFy1",
+    "roeFy1",
   ];
   return {
     schema_version: 1,
@@ -1024,6 +1079,10 @@ function buildStockActionSummary(stockActionIndex) {
       estimate_fy1_forward_pe_count: stockActionIndex.coverage?.estimate_fy1_forward_pe_count ?? null,
       estimate_fy1_revenue_growth_count: stockActionIndex.coverage?.estimate_fy1_revenue_growth_count ?? null,
       estimate_fy1_eps_growth_count: stockActionIndex.coverage?.estimate_fy1_eps_growth_count ?? null,
+      profitability_estimate_snapshot_count: stockActionIndex.coverage?.profitability_estimate_snapshot_count ?? null,
+      profitability_fy1_gross_margin_count: stockActionIndex.coverage?.profitability_fy1_gross_margin_count ?? null,
+      profitability_fy1_operating_margin_count: stockActionIndex.coverage?.profitability_fy1_operating_margin_count ?? null,
+      profitability_fy1_roe_count: stockActionIndex.coverage?.profitability_fy1_roe_count ?? null,
       market_scope_counts: stockActionIndex.coverage?.market_scope_counts ?? {},
       bucket_counts: stockActionIndex.coverage?.bucket_counts ?? {},
       confidence_counts: stockActionIndex.coverage?.confidence_counts ?? {},
@@ -1046,6 +1105,9 @@ function buildStockActionSummary(stockActionIndex) {
       row.estimateSnapshot?.forwardEps?.fy1 ?? null,
       row.estimateSnapshot?.revenueGrowth?.fy1 ?? null,
       row.estimateSnapshot?.epsGrowth?.fy1 ?? null,
+      row.profitabilitySnapshot?.grossMargin?.fy1 ?? null,
+      row.profitabilitySnapshot?.operatingMargin?.fy1 ?? null,
+      row.profitabilitySnapshot?.roe?.fy1 ?? null,
     ]),
   };
 }
@@ -1364,7 +1426,7 @@ function main() {
   console.log(JSON.stringify({
     generated_at: stockActionIndex.generated_at,
     stock_action_rows: stockActionIndex.rows.length,
-    stock_action_summary_bytes: JSON.stringify(stockActionSummary).length + 1,
+    stock_action_summary_bytes: Buffer.byteLength(`${JSON.stringify(stockActionSummary)}\n`, "utf8"),
     market_structure_sources: marketStructureIndex.source_files.length,
     usage_root_json: usageManifest.totals.rootJsonCount,
     usage_direct_fetches: usageManifest.totals.directDataFetchCount,

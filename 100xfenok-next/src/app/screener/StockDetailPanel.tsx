@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
+import type { ScreenerStock } from "@/lib/screener/types";
+import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 
 export type MaybeNumber = number | null | undefined;
 export type NumberSeries = MaybeNumber[];
@@ -1021,7 +1023,7 @@ function SlickMetricCard({ label, value, delta }: { label: string; value: string
   );
 }
 
-export function SlickChartsDepth({
+export function PriceDividendHistoryDepth({
   ticker,
   compact = false,
   showUnavailable = false,
@@ -1035,7 +1037,7 @@ export function SlickChartsDepth({
   if (loading) {
     return (
       <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-sm font-semibold text-slate-500">
-        SlickCharts 데이터 확인 중…
+        가격·배당 히스토리 확인 중…
       </div>
     );
   }
@@ -1043,7 +1045,7 @@ export function SlickChartsDepth({
   if (!data) {
     return showUnavailable ? (
       <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
-        SlickCharts per-stock 데이터가 아직 수집되지 않은 티커입니다.
+        가격·배당 히스토리가 아직 수집되지 않은 티커입니다.
       </div>
     ) : null;
   }
@@ -1101,9 +1103,9 @@ export function SlickChartsDepth({
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
       <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">SlickCharts 히스토리</h4>
+        <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">가격·배당 히스토리</h4>
         <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
-          {latestMetric?.date ?? data.updated?.slice(0, 10) ?? "—"} · 529-stock universe
+          {latestMetric?.date ?? data.updated?.slice(0, 10) ?? "—"} · 529개 종목 기준
         </span>
       </div>
 
@@ -1178,10 +1180,12 @@ export function StockDetailBody({
   detail,
   f13Entries,
   ticker,
+  stock,
 }: {
   detail: DetailData;
   f13Entries: F13Entry[] | null;
   ticker?: string;
+  stock?: ScreenerStock;
 }) {
   const revenue = detail.income_statement?.revenue ?? [];
   const eps = detail.per_share?.eps ?? [];
@@ -1192,8 +1196,25 @@ export function StockDetailBody({
   const latestRevenue = lastFinite(revenue);
   const latestEps = lastFinite(eps);
 
+  const interpretation = stock ? interpretStockMetrics(stock) : null;
+
   return (
     <>
+      {interpretation ? (
+        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
+              Feno 자동 해석
+            </span>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black leading-none ${interpretation.badgeClass}`}>
+              {interpretation.badge}
+            </span>
+          </div>
+          <p className="text-xs font-semibold leading-relaxed text-slate-700">
+            {interpretation.text}
+          </p>
+        </div>
+      ) : null}
       <div className="grid gap-5 sm:grid-cols-3">
         {/* PER Band Chart */}
         <div>
@@ -1260,7 +1281,7 @@ export function StockDetailBody({
         </div>
       </div>
 
-      {ticker ? <SlickChartsDepth ticker={ticker} compact /> : null}
+      {ticker ? <PriceDividendHistoryDepth ticker={ticker} compact /> : null}
       <RevisionPulse detail={detail} compact />
       <RawFinancialDepth detail={detail} compact />
 
@@ -1268,7 +1289,7 @@ export function StockDetailBody({
       {f13Entries && f13Entries.length > 0 ? (
         <div className="mt-4">
           <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
-            13F 보유 구루
+            기관 공시 보유
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {f13Entries.map((e) => (
@@ -1286,7 +1307,7 @@ export function StockDetailBody({
   );
 }
 
-export default function StockDetailPanel({ ticker }: { ticker: string }) {
+export default function StockDetailPanel({ ticker, stock }: { ticker: string; stock?: ScreenerStock }) {
   const { detail, loading } = useStockDetail(ticker);
   const f13Entries = use13FData(ticker);
 
@@ -1319,7 +1340,7 @@ export default function StockDetailPanel({ ticker }: { ticker: string }) {
           전체 화면 →
         </TransitionLink>
       </div>
-      <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} />
+      <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
     </div>
   );
 }

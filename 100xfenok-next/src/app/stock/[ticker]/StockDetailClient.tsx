@@ -11,7 +11,7 @@ import {
   PerBandChart,
   RevisionPulse,
   RawFinancialDepth,
-  SlickChartsDepth,
+  PriceDividendHistoryDepth,
   fmtLarge,
   deriveProfitabilityEstimates,
 } from "@/app/screener/StockDetailPanel";
@@ -703,7 +703,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </SectionCard>
                 <SectionCard title="가격·수익률·배당">
                   {hasSlickChartsTicker ? (
-                    <SlickChartsDepth ticker={symbol} showUnavailable />
+                    <PriceDividendHistoryDepth ticker={symbol} showUnavailable />
                   ) : (
                     <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
                       SlickCharts per-stock 데이터는 미국 티커 중심으로 수집됩니다.
