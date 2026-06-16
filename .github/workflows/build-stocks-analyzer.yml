@@ -90,10 +90,11 @@ jobs:
             100xfenok-next/public/data/sec-13f/summary.json \
             100xfenok-next/public/data/sec-13f/analytics/consensus.json \
             100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json \
-            100xfenok-next/public/data/sec-13f/investors/*.json \
             100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json \
             100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json \
             100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json
+          find 100xfenok-next/public/data/sec-13f/investors \
+            -maxdepth 1 -name '*.json' ! -name 'griffin.json' -print0 | xargs -0 git add
           git diff --staged --quiet || git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
           git pull --rebase origin main
           git push
