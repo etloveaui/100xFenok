@@ -8,6 +8,8 @@ import type {
   StockAnalyzerRecord,
   StockAnalyzerTab,
 } from "@/lib/stock-analyzer/types";
+import type { ScreenerStock } from "@/lib/screener/types";
+import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import { useStockAnalyzerStore } from "@/features/stock-analyzer/store/use-stock-analyzer-store";
 
 const StockAnalyzerCharts = dynamic(
@@ -44,6 +46,77 @@ function formatNumber(value: number | undefined, maximumFractionDigits = 1): str
 function formatPercent(value: number | undefined): string {
   if (value === undefined || Number.isNaN(value)) return "-";
   return `${(value * 100).toFixed(2)}%`;
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function stringOrEmpty(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function toScreenerStock(record: StockAnalyzerRecord): ScreenerStock {
+  return {
+    ticker: record.symbol,
+    name: record.companyName,
+    exchange: stringOrEmpty(record.industry),
+    sector: stringOrEmpty(record.sector),
+    country: stringOrEmpty(record.country),
+    price: numberOrNull(record.price),
+    marketCap: numberOrNull(record.marketCap),
+    per: numberOrNull(record.per),
+    pbr: numberOrNull(record.pbr),
+    dividendYield: numberOrNull(record.dividendYield),
+    return12m: numberOrNull(record.return12m),
+    roe: numberOrNull(record.roe),
+    opm: numberOrNull(record.opm),
+    eps: numberOrNull(record.eps),
+    growthRate: numberOrNull(record.growthRate),
+    momentum1m: numberOrNull(record.momentum1m),
+    momentum3m: numberOrNull(record.momentum3m),
+    momentum6m: numberOrNull(record.momentum6m),
+    momentum12m: numberOrNull(record.momentum12m),
+    rank: numberOrNull(record.rank),
+    perBandCurrent: numberOrNull(record.perBandCurrent),
+    perBandMin: numberOrNull(record.perBandMin),
+    perBandAvg: numberOrNull(record.perBandAvg),
+    perBandMax: numberOrNull(record.perBandMax),
+    peForward: numberOrNull(record.peForward),
+    epsForward: numberOrNull(record.epsForward),
+    dividendTtm: numberOrNull(record.dividendTtm),
+    ret1y: numberOrNull(record.ret1y),
+    ret3y: numberOrNull(record.ret3y),
+    ret5y: numberOrNull(record.ret5y),
+    guruHolders: numberOrNull(record.guruHolders),
+    actionScore: numberOrNull(record.actionScore),
+    confidenceLabel: record.confidenceLabel ?? null,
+    actionLabel: record.actionLabel ?? null,
+    actionBucket: record.actionBucket ?? null,
+    actionReasons: record.actionReasons ?? [],
+    lowEvidence: record.lowEvidence ?? null,
+    forwardPeFy1: numberOrNull(record.forwardPeFy1),
+    forwardEpsFy1: numberOrNull(record.forwardEpsFy1),
+    revenueGrowthFy1: numberOrNull(record.revenueGrowthFy1),
+    epsGrowthFy1: numberOrNull(record.epsGrowthFy1),
+    forwardPeFy2: numberOrNull(record.forwardPeFy2),
+    forwardEpsFy2: numberOrNull(record.forwardEpsFy2),
+    revenueGrowthFy2: numberOrNull(record.revenueGrowthFy2),
+    epsGrowthFy2: numberOrNull(record.epsGrowthFy2),
+    forwardPeFy3: numberOrNull(record.forwardPeFy3),
+    forwardEpsFy3: numberOrNull(record.forwardEpsFy3),
+    revenueGrowthFy3: numberOrNull(record.revenueGrowthFy3),
+    epsGrowthFy3: numberOrNull(record.epsGrowthFy3),
+    grossMarginFy1: numberOrNull(record.grossMarginFy1),
+    operatingMarginFy1: numberOrNull(record.operatingMarginFy1),
+    roeFy1: numberOrNull(record.roeFy1),
+    grossMarginFy2: numberOrNull(record.grossMarginFy2),
+    operatingMarginFy2: numberOrNull(record.operatingMarginFy2),
+    roeFy2: numberOrNull(record.roeFy2),
+    grossMarginFy3: numberOrNull(record.grossMarginFy3),
+    operatingMarginFy3: numberOrNull(record.operatingMarginFy3),
+    roeFy3: numberOrNull(record.roeFy3),
+  };
 }
 
 function getTabDescription(tab: StockAnalyzerTab): string {
@@ -132,6 +205,10 @@ export function StockAnalyzerDashboard() {
   const selectedRecord = useMemo(() => {
     return findSelectedRecord(dashboard.filteredRecords, dashboard.selectedSymbol);
   }, [dashboard.filteredRecords, dashboard.selectedSymbol]);
+
+  const selectedInterpretation = useMemo(() => {
+    return selectedRecord ? interpretStockMetrics(toScreenerStock(selectedRecord)) : null;
+  }, [selectedRecord]);
 
   const averageGrowth = useMemo(() => {
     const values = dashboard.filteredRecords
@@ -534,10 +611,20 @@ export function StockAnalyzerDashboard() {
                   <p className="font-bold text-blue-700">{formatNumber(selectedRecord.per, 2)}</p>
                 </div>
               </div>
+              {selectedInterpretation ? (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <span className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-black ${selectedInterpretation.badgeClass}`}>
+                    {selectedInterpretation.badge}
+                  </span>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                    {selectedInterpretation.text}
+                  </p>
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="mt-3 text-sm text-slate-500">
-              테이블 행 또는 모바일 카드를 선택하면 스냅샷이 표시됩니다.
+              테이블 행 또는 모바일 카드를 선택하면 스냅샷과 자동 지표 해석이 표시됩니다.
             </p>
           )}
         </article>

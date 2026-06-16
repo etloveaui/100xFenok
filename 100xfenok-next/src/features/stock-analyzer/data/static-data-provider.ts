@@ -11,6 +11,45 @@ interface DatasetResponse {
   data?: JsonRecord[];
 }
 
+interface ActionSummaryResponse {
+  fields?: string[];
+  rows?: Array<JsonRecord | unknown[]>;
+}
+
+type ActionSummaryRow = Pick<
+  StockAnalyzerRecord,
+  | "symbol"
+  | "actionScore"
+  | "confidenceLabel"
+  | "actionLabel"
+  | "actionBucket"
+  | "actionReasons"
+  | "lowEvidence"
+  | "guruHolders"
+  | "return12m"
+  | "forwardPeFy1"
+  | "forwardEpsFy1"
+  | "revenueGrowthFy1"
+  | "epsGrowthFy1"
+  | "grossMarginFy1"
+  | "operatingMarginFy1"
+  | "roeFy1"
+  | "forwardPeFy2"
+  | "forwardEpsFy2"
+  | "revenueGrowthFy2"
+  | "epsGrowthFy2"
+  | "grossMarginFy2"
+  | "operatingMarginFy2"
+  | "roeFy2"
+  | "forwardPeFy3"
+  | "forwardEpsFy3"
+  | "revenueGrowthFy3"
+  | "epsGrowthFy3"
+  | "grossMarginFy3"
+  | "operatingMarginFy3"
+  | "roeFy3"
+>;
+
 function parseNumber(value: JsonValue): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -39,6 +78,10 @@ function normalizeString(value: JsonValue): string {
   return "";
 }
 
+function isPlainRecord(value: unknown): value is JsonRecord {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
 async function fetchDataset(
   path: string,
   context?: StockAnalyzerDataProviderContext,
@@ -56,6 +99,103 @@ async function fetchDataset(
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
+function readActionValue(row: JsonRecord | unknown[], fields: string[], key: string): unknown {
+  if (Array.isArray(row)) {
+    const index = fields.indexOf(key);
+    return index >= 0 ? row[index] : undefined;
+  }
+  return row[key];
+}
+
+function actionNumber(row: JsonRecord | unknown[], fields: string[], key: string): number | null {
+  const value = readActionValue(row, fields, key);
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function actionString(row: JsonRecord | unknown[], fields: string[], key: string): string | null {
+  const value = readActionValue(row, fields, key);
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function actionBoolean(row: JsonRecord | unknown[], fields: string[], key: string): boolean | null {
+  const value = readActionValue(row, fields, key);
+  return typeof value === "boolean" ? value : null;
+}
+
+function actionReasons(row: JsonRecord | unknown[], fields: string[]): string[] {
+  const value = readActionValue(row, fields, "actionReasons");
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function normalizeActionSummaryRow(
+  row: JsonRecord | unknown[],
+  fields: string[],
+): ActionSummaryRow | null {
+  if (!Array.isArray(row) && !isPlainRecord(row)) return null;
+  const symbolValue = readActionValue(row, fields, "symbol");
+  const symbol = typeof symbolValue === "string" ? symbolValue.trim().toUpperCase() : "";
+  if (!symbol) return null;
+
+  return {
+    symbol,
+    actionScore: actionNumber(row, fields, "actionScore"),
+    confidenceLabel: actionString(row, fields, "confidenceLabel"),
+    actionLabel: actionString(row, fields, "actionLabel"),
+    actionBucket: actionString(row, fields, "actionBucket"),
+    actionReasons: actionReasons(row, fields),
+    lowEvidence: actionBoolean(row, fields, "lowEvidence"),
+    guruHolders: actionNumber(row, fields, "guruHolders"),
+    return12m: actionNumber(row, fields, "return12m") ?? undefined,
+    forwardPeFy1: actionNumber(row, fields, "forwardPeFy1"),
+    forwardEpsFy1: actionNumber(row, fields, "forwardEpsFy1"),
+    revenueGrowthFy1: actionNumber(row, fields, "revenueGrowthFy1"),
+    epsGrowthFy1: actionNumber(row, fields, "epsGrowthFy1"),
+    grossMarginFy1: actionNumber(row, fields, "grossMarginFy1"),
+    operatingMarginFy1: actionNumber(row, fields, "operatingMarginFy1"),
+    roeFy1: actionNumber(row, fields, "roeFy1"),
+    forwardPeFy2: actionNumber(row, fields, "forwardPeFy2"),
+    forwardEpsFy2: actionNumber(row, fields, "forwardEpsFy2"),
+    revenueGrowthFy2: actionNumber(row, fields, "revenueGrowthFy2"),
+    epsGrowthFy2: actionNumber(row, fields, "epsGrowthFy2"),
+    grossMarginFy2: actionNumber(row, fields, "grossMarginFy2"),
+    operatingMarginFy2: actionNumber(row, fields, "operatingMarginFy2"),
+    roeFy2: actionNumber(row, fields, "roeFy2"),
+    forwardPeFy3: actionNumber(row, fields, "forwardPeFy3"),
+    forwardEpsFy3: actionNumber(row, fields, "forwardEpsFy3"),
+    revenueGrowthFy3: actionNumber(row, fields, "revenueGrowthFy3"),
+    epsGrowthFy3: actionNumber(row, fields, "epsGrowthFy3"),
+    grossMarginFy3: actionNumber(row, fields, "grossMarginFy3"),
+    operatingMarginFy3: actionNumber(row, fields, "operatingMarginFy3"),
+    roeFy3: actionNumber(row, fields, "roeFy3"),
+  };
+}
+
+async function fetchActionSummaryMap(
+  context?: StockAnalyzerDataProviderContext,
+): Promise<Map<string, ActionSummaryRow>> {
+  try {
+    const response = await fetch("/data/computed/stock_action_summary.json", {
+      signal: context?.signal,
+      cache: "no-store",
+    });
+    if (!response.ok) return new Map();
+
+    const payload = (await response.json()) as ActionSummaryResponse;
+    const fields = Array.isArray(payload.fields) ? payload.fields : [];
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    const map = new Map<string, ActionSummaryRow>();
+
+    for (const row of rows) {
+      const normalized = normalizeActionSummaryRow(row, fields);
+      if (normalized) map.set(normalized.symbol, normalized);
+    }
+
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
 export class StaticStockAnalyzerDataProvider
   implements StockAnalyzerDataProvider<StockAnalyzerRecord>
 {
@@ -71,15 +211,19 @@ export class StaticStockAnalyzerDataProvider
   async load(
     context?: StockAnalyzerDataProviderContext,
   ): Promise<StockAnalyzerRecord[]> {
-    const rows = await fetchDataset(
-      "/data/global-scouter/core/stocks_analyzer.json",
-      context,
-    );
+    const [rows, actionMap] = await Promise.all([
+      fetchDataset(
+        "/data/global-scouter/core/stocks_analyzer.json",
+        context,
+      ),
+      fetchActionSummaryMap(context),
+    ]);
 
     const parsed = rows
       .map((row) => {
         const symbol = normalizeString(row.symbol).toUpperCase();
         if (!symbol) return null;
+        const action = actionMap.get(symbol);
 
         return {
           symbol,
@@ -88,12 +232,16 @@ export class StaticStockAnalyzerDataProvider
           sector:
             normalizeString(row.sector) || normalizeString(row.WI26),
           industry: normalizeString(row.industry) || normalizeString(row.Exchange),
+          country: normalizeString(row.country),
+          price: parseNumber(row.price),
           marketCap: parseNumber(row.marketCap) ?? parseNumber(row["(USD mn)"]),
           growthRate: parseNumber(row.growthRate) ?? parseNumber(row["3 M"]),
           eps: parseNumber(row.eps) ?? parseNumber(row["EPS (Oct-25)"]),
           per: parseNumber(row.per) ?? parseNumber(row["PER (Fwd)"]),
           rank: parseNumber(row.rank) ?? parseNumber(row["PER+PBR"]),
           pbr: parseNumber(row.pbr) ?? parseNumber(row["PBR (Fwd)"]),
+          dividendYield: parseNumber(row.dividendYield),
+          return12m: parseNumber(row.return12m) ?? action?.return12m,
           roe: parseNumber(row.roe) ?? parseNumber(row["ROE (Fwd)"]),
           opm: parseNumber(row.opm) ?? parseNumber(row["OPM (Fwd)"]),
           momentum1m:
@@ -104,6 +252,44 @@ export class StaticStockAnalyzerDataProvider
             parseNumber(row.momentum6m) ?? parseNumber(row["6 M"]),
           momentum12m:
             parseNumber(row.momentum12m) ?? parseNumber(row["12 M"]),
+          perBandCurrent: parseNumber(row.perBandCurrent),
+          perBandMin: parseNumber(row.perBandMin),
+          perBandAvg: parseNumber(row.perBandAvg),
+          perBandMax: parseNumber(row.perBandMax),
+          peForward: parseNumber(row.peForward),
+          epsForward: parseNumber(row.epsForward),
+          dividendTtm: parseNumber(row.dividendTtm),
+          ret1y: parseNumber(row.ret1y),
+          ret3y: parseNumber(row.ret3y),
+          ret5y: parseNumber(row.ret5y),
+          guruHolders: action?.guruHolders ?? null,
+          actionScore: action?.actionScore ?? null,
+          confidenceLabel: action?.confidenceLabel ?? null,
+          actionLabel: action?.actionLabel ?? null,
+          actionBucket: action?.actionBucket ?? null,
+          actionReasons: action?.actionReasons ?? [],
+          lowEvidence: action?.lowEvidence ?? null,
+          forwardPeFy1: action?.forwardPeFy1 ?? parseNumber(row.peForward) ?? null,
+          forwardEpsFy1: action?.forwardEpsFy1 ?? parseNumber(row.epsForward) ?? null,
+          revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
+          epsGrowthFy1: action?.epsGrowthFy1 ?? null,
+          grossMarginFy1: action?.grossMarginFy1 ?? null,
+          operatingMarginFy1: action?.operatingMarginFy1 ?? null,
+          roeFy1: action?.roeFy1 ?? null,
+          forwardPeFy2: action?.forwardPeFy2 ?? null,
+          forwardEpsFy2: action?.forwardEpsFy2 ?? null,
+          revenueGrowthFy2: action?.revenueGrowthFy2 ?? null,
+          epsGrowthFy2: action?.epsGrowthFy2 ?? null,
+          grossMarginFy2: action?.grossMarginFy2 ?? null,
+          operatingMarginFy2: action?.operatingMarginFy2 ?? null,
+          roeFy2: action?.roeFy2 ?? null,
+          forwardPeFy3: action?.forwardPeFy3 ?? null,
+          forwardEpsFy3: action?.forwardEpsFy3 ?? null,
+          revenueGrowthFy3: action?.revenueGrowthFy3 ?? null,
+          epsGrowthFy3: action?.epsGrowthFy3 ?? null,
+          grossMarginFy3: action?.grossMarginFy3 ?? null,
+          operatingMarginFy3: action?.operatingMarginFy3 ?? null,
+          roeFy3: action?.roeFy3 ?? null,
         } satisfies StockAnalyzerRecord;
       })
       .filter((row) => row !== null)
