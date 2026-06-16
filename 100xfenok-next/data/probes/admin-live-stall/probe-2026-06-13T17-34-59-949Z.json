@@ -1,0 +1,141 @@
+{
+  "createdAt": "2026-06-13T17:38:02.046Z",
+  "script": "scripts/probe-gemini-live-stall.ts",
+  "postInputPath": "text-fallback",
+  "options": {
+    "firstText": "시작. 오늘 표현은 '최소한 10개는 필요해.'로 카드부터 보여주고, 내가 따라 말하게 해줘.",
+    "postText": "따라 했어. I need at least ten.",
+    "postWav": null,
+    "postQuietMs": 1200,
+    "postWaitMs": 8000,
+    "prePostTimeoutMs": 90000
+  },
+  "runs": [
+    {
+      "activityMode": "no-interrupt",
+      "timeline": [
+        {
+          "tMs": 1164,
+          "direction": "local",
+          "tag": "wsOpen",
+          "payload": {
+            "activityMode": "no-interrupt"
+          }
+        },
+        {
+          "tMs": 91085,
+          "direction": "local",
+          "tag": "prePostTimeout",
+          "payload": {
+            "reason": "no-post-tool-utterance",
+            "timeoutMs": 90000
+          }
+        },
+        {
+          "tMs": 91168,
+          "direction": "local",
+          "tag": "wsClose",
+          "payload": {}
+        }
+      ],
+      "token": {
+        "sessionId": "probe-live-mona-mqcmyd7x-no-interrupt",
+        "expiresAt": "2026-06-13T18:04:59.949Z",
+        "setupSummary": {
+          "model": "models/gemini-3.1-flash-live-preview",
+          "activityHandling": "NO_INTERRUPTION",
+          "automaticActivityDetection": {
+            "disabled": false,
+            "startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
+            "endOfSpeechSensitivity": "END_SENSITIVITY_LOW",
+            "prefixPaddingMs": 300,
+            "silenceDurationMs": 1200
+          },
+          "thinkingConfig": {
+            "thinkingLevel": "low"
+          },
+          "responseModalities": [
+            "AUDIO"
+          ],
+          "hasInputAudioTranscription": true,
+          "functionDeclarations": [
+            "showCard"
+          ]
+        },
+        "postInputAtMs": null,
+        "timeoutReason": "no-post-tool-utterance"
+      },
+      "summary": {
+        "sawSetupComplete": false,
+        "sawToolCall": false,
+        "sawToolResponse": false,
+        "postInputTag": null,
+        "turnCompleteAfterTool": false,
+        "inputTranscriptionAfterPostInput": false,
+        "outputTranscriptionAfterPostInput": false,
+        "modelTurnAfterPostInput": false,
+        "generationCompleteAfterPostInput": false
+      }
+    },
+    {
+      "activityMode": "barge-in",
+      "timeline": [
+        {
+          "tMs": 1079,
+          "direction": "local",
+          "tag": "wsOpen",
+          "payload": {
+            "activityMode": "barge-in"
+          }
+        },
+        {
+          "tMs": 91011,
+          "direction": "local",
+          "tag": "prePostTimeout",
+          "payload": {
+            "reason": "no-post-tool-utterance",
+            "timeoutMs": 90000
+          }
+        }
+      ],
+      "token": {
+        "sessionId": "probe-live-mona-mqcn0bi3-barge-in",
+        "expiresAt": "2026-06-13T18:06:31.035Z",
+        "setupSummary": {
+          "model": "models/gemini-3.1-flash-live-preview",
+          "activityHandling": "START_OF_ACTIVITY_INTERRUPTS",
+          "automaticActivityDetection": {
+            "disabled": false,
+            "startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
+            "endOfSpeechSensitivity": "END_SENSITIVITY_LOW",
+            "prefixPaddingMs": 300,
+            "silenceDurationMs": 1200
+          },
+          "thinkingConfig": {
+            "thinkingLevel": "low"
+          },
+          "responseModalities": [
+            "AUDIO"
+          ],
+          "hasInputAudioTranscription": true,
+          "functionDeclarations": [
+            "showCard"
+          ]
+        },
+        "postInputAtMs": null,
+        "timeoutReason": "no-post-tool-utterance"
+      },
+      "summary": {
+        "sawSetupComplete": false,
+        "sawToolCall": false,
+        "sawToolResponse": false,
+        "postInputTag": null,
+        "turnCompleteAfterTool": false,
+        "inputTranscriptionAfterPostInput": false,
+        "outputTranscriptionAfterPostInput": false,
+        "modelTurnAfterPostInput": false,
+        "generationCompleteAfterPostInput": false
+      }
+    }
+  ]
+}

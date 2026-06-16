@@ -1,0 +1,144 @@
+{
+  "createdAt": "2026-06-15T03:59:53.415Z",
+  "script": "scripts/probe-gemini-live-stall.ts",
+  "postInputPath": "tts-wav",
+  "options": {
+    "firstText": "시작",
+    "postText": null,
+    "postWav": "data/probes/admin-live-stall/tts-2026-06-15T03-56-51-308Z.wav",
+    "postTtsText": "최소한 열 개는 필요해",
+    "postTtsVoice": "Yuna",
+    "postTtsWav": "data/probes/admin-live-stall/tts-2026-06-15T03-56-51-308Z.wav",
+    "postQuietMs": 1500,
+    "postWaitMs": 40000,
+    "prePostTimeoutMs": 90000
+  },
+  "runs": [
+    {
+      "activityMode": "no-interrupt",
+      "timeline": [
+        {
+          "tMs": 481,
+          "direction": "local",
+          "tag": "wsOpen",
+          "payload": {
+            "activityMode": "no-interrupt"
+          }
+        },
+        {
+          "tMs": 90424,
+          "direction": "local",
+          "tag": "prePostTimeout",
+          "payload": {
+            "reason": "no-post-tool-utterance",
+            "timeoutMs": 90000
+          }
+        },
+        {
+          "tMs": 90483,
+          "direction": "local",
+          "tag": "wsClose",
+          "payload": {}
+        }
+      ],
+      "token": {
+        "sessionId": "probe-live-mona-mqeoly24-no-interrupt",
+        "expiresAt": "2026-06-15T04:26:52.012Z",
+        "setupSummary": {
+          "model": "models/gemini-3.1-flash-live-preview",
+          "activityHandling": "NO_INTERRUPTION",
+          "automaticActivityDetection": {
+            "disabled": false,
+            "startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
+            "endOfSpeechSensitivity": "END_SENSITIVITY_LOW",
+            "prefixPaddingMs": 300,
+            "silenceDurationMs": 1200
+          },
+          "thinkingConfig": {
+            "thinkingLevel": "low"
+          },
+          "responseModalities": [
+            "AUDIO"
+          ],
+          "hasInputAudioTranscription": true,
+          "functionDeclarations": [
+            "showCard"
+          ]
+        },
+        "postInputAtMs": null,
+        "timeoutReason": "no-post-tool-utterance"
+      },
+      "summary": {
+        "sawSetupComplete": false,
+        "sawToolCall": false,
+        "sawToolResponse": false,
+        "postInputTag": null,
+        "turnCompleteAfterTool": false,
+        "inputTranscriptionAfterPostInput": false,
+        "outputTranscriptionAfterPostInput": false,
+        "modelTurnAfterPostInput": false,
+        "generationCompleteAfterPostInput": false
+      }
+    },
+    {
+      "activityMode": "barge-in",
+      "timeline": [
+        {
+          "tMs": 1029,
+          "direction": "local",
+          "tag": "wsOpen",
+          "payload": {
+            "activityMode": "barge-in"
+          }
+        },
+        {
+          "tMs": 90978,
+          "direction": "local",
+          "tag": "prePostTimeout",
+          "payload": {
+            "reason": "no-post-tool-utterance",
+            "timeoutMs": 90000
+          }
+        }
+      ],
+      "token": {
+        "sessionId": "probe-live-mona-mqeonvtw-barge-in",
+        "expiresAt": "2026-06-15T04:28:22.436Z",
+        "setupSummary": {
+          "model": "models/gemini-3.1-flash-live-preview",
+          "activityHandling": "START_OF_ACTIVITY_INTERRUPTS",
+          "automaticActivityDetection": {
+            "disabled": false,
+            "startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
+            "endOfSpeechSensitivity": "END_SENSITIVITY_LOW",
+            "prefixPaddingMs": 300,
+            "silenceDurationMs": 1200
+          },
+          "thinkingConfig": {
+            "thinkingLevel": "low"
+          },
+          "responseModalities": [
+            "AUDIO"
+          ],
+          "hasInputAudioTranscription": true,
+          "functionDeclarations": [
+            "showCard"
+          ]
+        },
+        "postInputAtMs": null,
+        "timeoutReason": "no-post-tool-utterance"
+      },
+      "summary": {
+        "sawSetupComplete": false,
+        "sawToolCall": false,
+        "sawToolResponse": false,
+        "postInputTag": null,
+        "turnCompleteAfterTool": false,
+        "inputTranscriptionAfterPostInput": false,
+        "outputTranscriptionAfterPostInput": false,
+        "modelTurnAfterPostInput": false,
+        "generationCompleteAfterPostInput": false
+      }
+    }
+  ]
+}
