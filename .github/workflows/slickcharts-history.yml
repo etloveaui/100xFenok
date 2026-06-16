@@ -246,6 +246,9 @@ jobs:
             --split-dividends data/slickcharts/ \
             --retention-days 365
 
+      - name: Build Explore discovery summary
+        run: node scripts/build-slickcharts-discovery.mjs
+
       - name: Sync public mirror
         run: |
           mkdir -p 100xfenok-next/public/data/slickcharts

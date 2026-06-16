@@ -250,6 +250,9 @@ jobs:
         run: |
           python scripts/scrapers/membership-tracker.py --quiet
 
+      - name: Build Explore discovery summary
+        run: node scripts/build-slickcharts-discovery.mjs
+
       - name: Sync public mirror
         run: |
           mkdir -p 100xfenok-next/public/data/slickcharts

@@ -86,6 +86,9 @@ jobs:
             --output data/slickcharts/mortgage.json \
             --pretty --cumulative
 
+      - name: Build Explore discovery summary
+        run: node scripts/build-slickcharts-discovery.mjs
+
       - name: Sync public mirror
         run: |
           mkdir -p 100xfenok-next/public/data/slickcharts

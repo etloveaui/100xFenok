@@ -41,6 +41,9 @@ jobs:
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
 
+      - name: Build Explore discovery summary
+        run: node scripts/build-slickcharts-discovery.mjs
+
       - name: Build calendar previous-release values (FRED)
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
@@ -73,10 +76,12 @@ jobs:
             data/sec-13f/analytics/guru_holders_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
+            data/slickcharts/discovery-summary.json \
             data/calendar/prev-values.json \
             100xfenok-next/public/data/calendar/prev-values.json \
             100xfenok-next/public/data/global-scouter/core/revision_movers.json \
             100xfenok-next/public/data/damodaran/industry_benchmarks.json \
+            100xfenok-next/public/data/slickcharts/discovery-summary.json \
             100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \
             100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
             100xfenok-next/public/data/global-scouter/core/slick_index.json \
