@@ -37,7 +37,7 @@ def decode_svelte_data(data: list) -> object:
         if index == -1:
             return None
         if not isinstance(index, int) or index < 0 or index >= len(data):
-            return index
+            raise ValueError(f"devalue reference out of range: {index!r}")
         if index in seen:
             return seen[index]
         raw = data[index]
@@ -67,13 +67,17 @@ def decode_svelte_data(data: list) -> object:
 
 
 def extract_node(payload: dict) -> dict:
-    for node in reversed(payload.get("nodes") or []):
+    candidates = []
+    nodes = payload.get("nodes") or []
+    for node in nodes:
         data = node.get("data") if isinstance(node, dict) else None
         if isinstance(data, list) and data:
             decoded = decode_svelte_data(data)
             if isinstance(decoded, dict) and "financialData" in decoded:
-                return decoded
-    raise ValueError("financialData node not found")
+                candidates.append(decoded)
+    if not candidates:
+        raise ValueError(f"financialData node not found in {len(nodes)} nodes")
+    return candidates[-1]
 
 
 def normalize_statement(ticker: str, statement: str, decoded: dict) -> dict:

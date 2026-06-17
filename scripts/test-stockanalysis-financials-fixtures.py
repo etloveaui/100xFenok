@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
-"""Fixture smoke checks for the StockAnalysis financial statement probe."""
+"""Fixture invariant checks for the StockAnalysis financial statement probe."""
 
 from __future__ import annotations
 
 import importlib.util
-import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PROBE_PATH = ROOT / "scripts" / "probe-stockanalysis-financials.py"
-FIXTURE_PATH = ROOT / "scripts" / "fixtures" / "stockanalysis" / "aapl_income_annual__data.fixture.json"
+FIXTURE_DIR = ROOT / "scripts" / "fixtures" / "stockanalysis"
+
+FIXTURE_CASES = [
+    ("aapl", "income", "annual", 30, 5),
+    ("aapl", "balance_sheet", "annual", 30, 5),
+    ("aapl", "cash_flow", "annual", 30, 5),
+    ("aapl", "ratios", "annual", 30, 5),
+    ("aapl", "income", "quarterly", 30, 12),
+    ("aapl", "balance_sheet", "quarterly", 30, 12),
+    ("aapl", "cash_flow", "quarterly", 30, 12),
+    ("aapl", "ratios", "quarterly", 30, 12),
+    ("jpm", "balance_sheet", "annual", 30, 5),
+]
 
 
 def load_probe_module():
@@ -22,33 +33,55 @@ def load_probe_module():
     return module
 
 
-def assert_equal(actual, expected, label: str) -> None:
-    if actual != expected:
-        raise AssertionError(f"{label}: expected {expected!r}, got {actual!r}")
+def fixture_path(ticker: str, statement: str, period: str) -> Path:
+    return FIXTURE_DIR / f"{ticker}_{statement}_{period}__data.fixture.json"
+
+
+def assert_true(value: bool, label: str) -> None:
+    if not value:
+        raise AssertionError(label)
+
+
+def assert_descending_periods(periods: list[str], label: str) -> None:
+    assert_true(periods, f"{label}: periods missing")
+    ttm_count = periods.count("TTM")
+    assert_true(ttm_count <= 1, f"{label}: TTM appears more than once")
+    if ttm_count:
+        assert_true(periods[0] == "TTM", f"{label}: TTM must be the first period")
+    dated = [period for period in periods if period != "TTM"]
+    assert_true(dated == sorted(dated, reverse=True), f"{label}: dated periods are not descending")
 
 
 def main() -> None:
     probe = load_probe_module()
-    payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
-    decoded = probe.extract_node(payload)
-    normalized = probe.normalize_statement("AAPL", "income", decoded)
 
-    assert_equal(normalized["ticker"], "AAPL", "ticker")
-    assert_equal(normalized["statement"], "Income Statement", "statement")
-    assert_equal(normalized["period"], "annual", "period")
-    assert_equal(normalized["periods"], ["2025-09-27", "2024-09-28"], "periods")
-    assert_equal(normalized["fiscal_years"], [2025, 2024], "fiscal years")
-    assert_equal(normalized["field_count"], 2, "field count")
+    for ticker, statement, expected_period, min_fields, min_periods in FIXTURE_CASES:
+        path = fixture_path(ticker, statement, expected_period)
+        assert_true(path.exists(), f"{path.name}: fixture missing")
 
-    rows = {row["field"]: row for row in normalized["rows"]}
-    assert_equal(rows["revenue"]["values"], [391035000000, 383285000000], "revenue values")
-    assert_equal(rows["netIncome"]["values"], [93736000000, 96995000000], "net income values")
+        normalized = probe.load_fixture_statement(ticker, statement, path)
+        label = path.name
+        periods = normalized.get("periods") or []
+        rows = normalized.get("rows") or []
 
-    fixture_probe = probe.build_fixture_probe("aapl", "income", FIXTURE_PATH)
-    assert_equal(fixture_probe["summary"]["income"]["period_count"], 2, "fixture summary period count")
-    assert_equal(fixture_probe["summary"]["income"]["sample_fields"], ["revenue", "netIncome"], "fixture summary fields")
+        assert_true(normalized["ticker"] == ticker.upper(), f"{label}: ticker mismatch")
+        assert_true(normalized["period"] == expected_period, f"{label}: period mismatch")
+        assert_true(normalized["field_count"] >= min_fields, f"{label}: field_count below floor")
+        assert_true(len(periods) >= min_periods, f"{label}: period_count below floor")
+        assert_descending_periods(periods, label)
 
-    print("PASS stockanalysis financial fixture smoke")
+        for row in rows:
+            field = row.get("field")
+            values = row.get("values")
+            assert_true(isinstance(values, list), f"{label}:{field}: values is not a list")
+            assert_true(len(values) == len(periods), f"{label}:{field}: values length does not match periods")
+
+        fixture_probe = probe.build_fixture_probe(ticker, statement, path)
+        summary = fixture_probe["summary"][statement]
+        assert_true(summary["field_count"] == normalized["field_count"], f"{label}: summary field_count mismatch")
+        assert_true(summary["period_count"] == len(periods), f"{label}: summary period_count mismatch")
+
+    print(f"PASS stockanalysis financial fixture invariants ({len(FIXTURE_CASES)} fixtures)")
 
 
 if __name__ == "__main__":
