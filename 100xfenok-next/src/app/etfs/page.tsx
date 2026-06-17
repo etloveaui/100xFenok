@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
+import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
 
 export const metadata: Metadata = {
   title: "ETF 유니버스 | 100xFenok",
@@ -32,6 +33,10 @@ export default function EtfsPage() {
             </div>
           </div>
         </section>
+
+        <div style={{ marginTop: "var(--s4)" }}>
+          <EtfSurfaceSnapshotCard />
+        </div>
 
         <div style={{ marginTop: "var(--s4)" }}>
           <EtfUniverseCard limit={80} showOpenLink={false} />

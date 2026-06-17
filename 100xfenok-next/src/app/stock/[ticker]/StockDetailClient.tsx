@@ -22,6 +22,7 @@ import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loa
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
+import TickerSurfaceEventsCard from "./TickerSurfaceEventsCard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -767,6 +768,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             {activeStockTab === "etf" ? (
               <div className="stock-summary-stack">
                 <MarketFactsDepth ticker={symbol} compact />
+                <TickerSurfaceEventsCard ticker={symbol} assetKind="etf" compact />
               </div>
             ) : null}
             <div className="stock-main-stack">
@@ -1032,6 +1034,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             />
           ) : null}
           <MarketFactsDepth ticker={symbol} compact />
+          <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
       </div>
 
       {activeStockTab !== "overview" ? renderStockDataTab() : (

@@ -108,7 +108,7 @@ const NAV: Array<{ id: ShellPage; label: string; href: string; icon: ReactNode }
 ];
 
 // Mobile slots are real shell pages only (no dead "더보기" sheet yet).
-const TAB_IDS: ShellPage[] = ["explore", "market", "sectors", "screener", "superinvestors", "portfolio"];
+const TAB_IDS: ShellPage[] = ["explore", "market", "sectors", "etfs", "screener", "superinvestors", "portfolio"];
 
 interface TapeItem {
   label: string;
