@@ -62,6 +62,7 @@ type JsonFileEntry = {
 
 type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
 type JsonRecord = Record<string, unknown>;
+export type StockanalysisAssetKind = "etfs" | "stocks";
 
 async function readJson<T>(filePath: string, schema: z.ZodType<T>): Promise<T> {
   const raw = await readPublicDataFile(filePath);
@@ -104,6 +105,18 @@ async function readOptionalJsonRecord(filePath: string): Promise<JsonRecord | nu
   } catch {
     return null;
   }
+}
+
+export function normalizeStockanalysisAssetKind(value: string): StockanalysisAssetKind | null {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "etfs" || normalized === "stocks") return normalized;
+  return null;
+}
+
+export function normalizeStockanalysisTicker(value: string): string | null {
+  const normalized = value.trim().toUpperCase();
+  if (!/^[A-Z0-9][A-Z0-9.-]{0,19}$/.test(normalized)) return null;
+  return normalized;
 }
 
 function toPublicPath(filePath: string): string | null {
@@ -587,6 +600,14 @@ export async function getStockanalysisManifest() {
         }
       : null,
   };
+}
+
+export async function getStockanalysisAsset(
+  assetKind: StockanalysisAssetKind,
+  ticker: string,
+) {
+  const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${ticker}.json`);
+  return readOptionalJsonRecord(assetPath);
 }
 
 export async function getDamodaranManifest() {
