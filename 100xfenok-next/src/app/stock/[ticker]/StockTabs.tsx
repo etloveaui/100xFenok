@@ -165,11 +165,14 @@ function FinancialsTab({ data }: { data: YfData }) {
   type RowDef = [string, string];
   const incomeRows: RowDef[] = [
     ["Total Revenue", "매출"],
+    ["Cost Of Revenue", "매출원가"],
     ["Gross Profit", "매출총이익"],
+    ["Operating Expense", "영업비용"],
     ["Operating Income", "영업이익"],
     ["Net Income", "순이익"],
     ["Diluted EPS", "희석 EPS"],
     ["EBITDA", "EBITDA"],
+    ["Research And Development", "R&D"],
   ];
   const balanceRows: RowDef[] = [
     ["Total Assets", "총자산"],
@@ -177,11 +180,22 @@ function FinancialsTab({ data }: { data: YfData }) {
     ["Stockholders Equity", "자본"],
     ["Total Debt", "총차입금"],
     ["Cash And Cash Equivalents", "현금성자산"],
+    ["Cash Cash Equivalents And Short Term Investments", "현금+단기투자"],
+    ["Net Debt", "순차입금"],
+    ["Current Assets", "유동자산"],
+    ["Current Liabilities", "유동부채"],
+    ["Working Capital", "운전자본"],
+    ["Invested Capital", "투하자본"],
+    ["Ordinary Shares Number", "보통주식수"],
   ];
   const cashRows: RowDef[] = [
     ["Operating Cash Flow", "영업CF"],
+    ["Investing Cash Flow", "투자CF"],
+    ["Financing Cash Flow", "재무CF"],
     ["Free Cash Flow", "FCF"],
     ["Capital Expenditure", "CAPEX"],
+    ["Issuance Of Debt", "차입 발행"],
+    ["Repayment Of Debt", "차입 상환"],
     ["Cash Dividends Paid", "배당지급"],
     ["Repurchase Of Capital Stock", "자사주매입"],
   ];
@@ -261,7 +275,7 @@ function FinancialsTab({ data }: { data: YfData }) {
       </div>
       <div>
         <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">재무상태표</h3>
-        {renderTable(balanceRows, balanceData, fmtFin)}
+        {renderTable(balanceRows, balanceData, (v, eng) => (eng === "Ordinary Shares Number" ? fmtNum(v, 1) : fmtFin(v)))}
       </div>
       <div>
         <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">현금흐름표</h3>
@@ -313,7 +327,13 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
   const info = data.info ?? {};
 
   const isFractionKey = (k: string) =>
-    ["returnOnEquity", "returnOnAssets", "profitMargins", "grossMargins", "operatingMargins", "dividendYield", "payoutRatio", "fiveYearAvgDividendYield", "heldPercentInsiders", "heldPercentInstitutions"].includes(k);
+    ["returnOnEquity", "returnOnAssets", "profitMargins", "grossMargins", "operatingMargins", "ebitdaMargins", "revenueGrowth", "earningsGrowth", "payoutRatio", "heldPercentInsiders", "heldPercentInstitutions"].includes(k);
+  const isPercentPointKey = (k: string) =>
+    ["dividendYield", "fiveYearAvgDividendYield", "fiftyTwoWeekChangePercent"].includes(k);
+  const isMoneyKey = (k: string) =>
+    ["marketCap", "enterpriseValue", "totalRevenue", "ebitda", "totalCash", "totalDebt", "freeCashflow", "bookValue", "totalCashPerShare"].includes(k);
+  const isCountKey = (k: string) =>
+    ["averageVolume", "averageVolume10days", "sharesOutstanding", "floatShares", "fullTimeEmployees"].includes(k);
 
   const sections: Array<{ title: string; items: Array<[string, string]> }> = [
     {
@@ -321,7 +341,8 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
       items: [
         ["trailingPE", "Trailing P/E"], ["forwardPE", "Forward P/E"],
         ["priceToBook", "P/B"], ["pegRatio", "PEG"],
-        ["enterpriseToEbitda", "EV/EBITDA"],
+        ["enterpriseToRevenue", "EV/매출"], ["enterpriseToEbitda", "EV/EBITDA"],
+        ["bookValue", "주당 장부가"], ["enterpriseValue", "EV"],
       ],
     },
     {
@@ -329,15 +350,16 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
       items: [
         ["returnOnEquity", "ROE"], ["returnOnAssets", "ROA"],
         ["profitMargins", "순이익률"], ["grossMargins", "매출총이익률"],
-        ["operatingMargins", "영업이익률"],
+        ["operatingMargins", "영업이익률"], ["ebitdaMargins", "EBITDA 마진"],
+        ["revenueGrowth", "매출 성장"], ["earningsGrowth", "이익 성장"],
       ],
     },
     {
       title: "재무건전성",
       items: [
         ["currentRatio", "유동비율"], ["debtToEquity", "부채비율(%)"],
-        ["totalCash", "현금"], ["totalDebt", "총부채"],
-        ["freeCashflow", "FCF"],
+        ["totalCash", "현금"], ["totalCashPerShare", "주당 현금"],
+        ["totalDebt", "총부채"], ["freeCashflow", "FCF"],
       ],
     },
     {
@@ -345,6 +367,16 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
       items: [
         ["dividendYield", "배당수익률"], ["payoutRatio", "배당성향"],
         ["fiveYearAvgDividendYield", "5년 평균 배당률"],
+      ],
+    },
+    {
+      title: "거래·규모",
+      items: [
+        ["marketCap", "시가총액"], ["totalRevenue", "매출"],
+        ["ebitda", "EBITDA"], ["averageVolume", "평균 거래량"],
+        ["averageVolume10days", "10일 거래량"], ["sharesOutstanding", "발행주식"],
+        ["floatShares", "유통주식"], ["fiftyTwoWeekChangePercent", "52주 수익률"],
+        ["beta", "베타"], ["fullTimeEmployees", "직원수"],
       ],
     },
   ];
@@ -367,7 +399,9 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
                 if (v === null) return null;
                 let display: string;
                 if (isFractionKey(k)) display = fmtPct(v, true);
-                else if (["totalCash", "totalDebt", "freeCashflow"].includes(k)) display = fmt(v);
+                else if (isPercentPointKey(k)) display = k === "fiftyTwoWeekChangePercent" ? fmtSignedPct(v, false) : fmtPct(v, false);
+                else if (isMoneyKey(k)) display = fmt(v);
+                else if (isCountKey(k)) display = v.toLocaleString(undefined, { maximumFractionDigits: 0 });
                 else display = v.toFixed(2);
                 return <KV key={k} label={label} value={display} />;
               })}
@@ -386,15 +420,17 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
 function OwnershipTab({ data }: { data: YfData }) {
   const mh = data.major_holders ?? {};
   const ih = (data.institutional_holders ?? []) as any[];
+  const currency = data.info?.currency ?? "USD";
 
   return (
     <div className="space-y-5">
       {/* Major holders summary */}
       <div>
         <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">주요 보유 현황</h3>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-4">
           {[
             ["기관 보유율", fmtPct(mh.institutionsPercentHeld, true)],
+            ["유통주 기관 보유", fmtPct(mh.institutionsFloatPercentHeld, true)],
             ["내부자 보유율", fmtPct(mh.insidersPercentHeld, true)],
             ["기관 수", finiteNumber(mh.institutionsCount)?.toLocaleString() ?? "—"],
           ].map(([label, value]) => (
@@ -411,13 +447,15 @@ function OwnershipTab({ data }: { data: YfData }) {
         <div>
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">기관 보유 TOP 10</h3>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[450px] text-xs">
+            <table className="w-full min-w-[640px] text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
                   <th className="px-2 py-1.5 text-left">Holder</th>
                   <th className="px-2 py-1.5 text-right">지분율</th>
                   <th className="px-2 py-1.5 text-right">Shares</th>
+                  <th className="px-2 py-1.5 text-right">평가액</th>
                   <th className="px-2 py-1.5 text-right">증감</th>
+                  <th className="px-2 py-1.5 text-right">보고일</th>
                 </tr>
               </thead>
               <tbody>
@@ -425,6 +463,7 @@ function OwnershipTab({ data }: { data: YfData }) {
                   // yf pctChange is a fraction (-0.0086 = -0.86%)
                   const pctHeld = finiteNumber(h.pctHeld);
                   const shares = finiteNumber(h.Shares);
+                  const value = finiteNumber(h.Value);
                   const pctChangeRaw = finiteNumber(h.pctChange);
                   const pctChange = pctChangeRaw !== null ? pctChangeRaw * 100 : null;
                   return (
@@ -432,9 +471,11 @@ function OwnershipTab({ data }: { data: YfData }) {
                       <td className="px-2 py-1.5 max-w-[180px] truncate text-[10px] font-bold text-slate-700">{h.Holder}</td>
                       <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
                       <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
+                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
                       <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-400"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
+                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[10px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
                     </tr>
                   );
                 })}
@@ -504,13 +545,15 @@ function EstimatesTab({ data }: { data: YfData }) {
           <div>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">EPS 추정치</h3>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full text-xs">
+              <table className="w-full min-w-[560px] text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="px-2 py-1.5 text-left" />
                     <th className="px-2 py-1.5 text-right">Avg</th>
                     <th className="px-2 py-1.5 text-right">Low</th>
                     <th className="px-2 py-1.5 text-right">High</th>
+                    <th className="px-2 py-1.5 text-right">전년</th>
+                    <th className="px-2 py-1.5 text-right">분석가</th>
                     <th className="px-2 py-1.5 text-right">성장률</th>
                   </tr>
                 </thead>
@@ -524,6 +567,8 @@ function EstimatesTab({ data }: { data: YfData }) {
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
                         <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
@@ -540,13 +585,15 @@ function EstimatesTab({ data }: { data: YfData }) {
           <div>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">매출 추정치</h3>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full text-xs">
+              <table className="w-full min-w-[580px] text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="px-2 py-1.5 text-left" />
                     <th className="px-2 py-1.5 text-right">Avg</th>
                     <th className="px-2 py-1.5 text-right">Low</th>
                     <th className="px-2 py-1.5 text-right">High</th>
+                    <th className="px-2 py-1.5 text-right">전년</th>
+                    <th className="px-2 py-1.5 text-right">분석가</th>
                     <th className="px-2 py-1.5 text-right">성장률</th>
                   </tr>
                 </thead>
@@ -560,6 +607,8 @@ function EstimatesTab({ data }: { data: YfData }) {
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
                         <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>

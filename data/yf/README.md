@@ -1,16 +1,17 @@
 # Yahoo Finance Data
 
 > **Source**: Yahoo Finance
-> **Update**: Daily / on-demand
+> **Update**: Weekly / on-demand
 > **Files**: 1,100
-> **Version**: 1.0.0
+> **Version**: 2.0.0 fetch contract (existing files may remain v1 until the next refresh)
 
 ---
 
 ## Overview
 
-Yahoo Finance payloads backfill ticker-level market and statement context for
-Stock, Screener, Portfolio, and ETF surfaces.
+Yahoo Finance payloads backfill ticker-level quote, market, statement,
+ownership, analyst, event, and history context for Stock, Screener, Portfolio,
+and ETF surfaces.
 
 The fetch universe is broader than `global-scouter/stocks/detail/`:
 
@@ -38,19 +39,42 @@ yf/
 
 ```json
 {
+  "schema_version": "yf-finance/v2",
   "ticker": "AAPL",
   "fetched_at": "2026-06-12T...",
+  "profile": "full",
   "data": {
     "info": {},
+    "fast_info": {},
     "income_statement": {},
     "balance_sheet": {},
-    "cash_flow": {}
+    "cash_flow": {},
+    "institutional_holders": [],
+    "mutualfund_holders": [],
+    "insider_transactions": [],
+    "earnings_dates": [],
+    "sec_filings": [],
+    "history_1y": []
   }
 }
 ```
 
 ETF payloads may have sparse statement blocks, but the file still counts as
 coverage when Yahoo returns a usable quote/info payload.
+
+### Fetch Profiles
+
+- `core`: legacy compact payload for quote, holders, analyst targets,
+  recommendations, dividends, and curated financial statements.
+- `full`: `core` plus bounded extra depth: `fast_info`, actions/splits,
+  recommendation summary, upgrades/downgrades, earnings calendar/history,
+  EPS/revision/growth estimates, sustainability, mutual-fund holders,
+  insider rows, SEC filing links, news, and one-year daily history.
+- `--include-options`: targeted-only option-chain sample, off by default.
+- `--include-shares-full`: targeted/full backfill for share-count history,
+  used for buyback/dilution modeling after runtime validation.
+- `--max-age-hours`: optional local fresh-file skip guard to reduce duplicate
+  Yahoo requests during manual reruns.
 
 ## finance/_summary.json
 
@@ -60,6 +84,10 @@ coverage when Yahoo returns a usable quote/info payload.
   "count": 1098,
   "ok": 1098,
   "failed": 0,
+  "skipped": 0,
+  "profile": "full",
+  "include_options": false,
+  "include_shares_full": false,
   "errors": []
 }
 ```

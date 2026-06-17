@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 """
-yf Finance Engine v1 — field-selected batch fetch for the global-scouter universe.
+yf Finance Engine v2 — field-selected batch fetch for the global-scouter universe.
 
-Capacity strategy (gate-approved): do NOT duplicate full statements (scouter
-detail already carries annual financials + estimates). Keep only yf-unique
-value: holders, 52wk/info stats, analyst targets, dividends history, and a
-curated set of statement line items (annual 4y + quarterly 5q), compact JSON.
-Target: ~15-20KB/ticker, ~20MB total for 1066.
+Capacity strategy: keep the existing compact statement core, then add bounded
+Yahoo-only depth in `--profile full` so Stock Lens can expose everything useful
+without making a weekly 1,100-ticker batch unbounded. Options chains stay behind
+an explicit flag because they are expiry-heavy and rate-limit sensitive.
 
 Usage:
-  python3 scripts/fetch-yf-finance.py                  # full universe
+  python3 scripts/fetch-yf-finance.py                  # full universe, full profile
+  python3 scripts/fetch-yf-finance.py --profile core   # legacy compact profile
   python3 scripts/fetch-yf-finance.py --limit 30       # first 30
   python3 scripts/fetch-yf-finance.py --shard 0/4      # shard i of n
   python3 scripts/fetch-yf-finance.py --tickers AAPL,005930.KS
+  python3 scripts/fetch-yf-finance.py --include-options --tickers AAPL
 
 Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 """
 
 import argparse
+from datetime import datetime, timezone
 import json
+from numbers import Number
 import re
 import sys
 import time
@@ -33,7 +36,7 @@ DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "c
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 
-SCHEMA_VERSION = "yf-finance/v1"
+SCHEMA_VERSION = "yf-finance/v2"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 MAJOR_ETFS = {
     "SPY", "QQQ", "DIA", "IWM", "VOO", "VTI",
@@ -46,6 +49,17 @@ ANNUAL_PERIODS = 4
 QUARTERLY_PERIODS = 5
 DIVIDEND_ENTRIES = 40  # ~10y of quarterly payments
 INSTITUTIONAL_TOP = 10
+MUTUALFUND_TOP = 10
+INSIDER_TOP = 30
+RECOMMENDATION_ENTRIES = 24
+UPGRADES_ENTRIES = 30
+EARNINGS_DATES_ENTRIES = 12
+SEC_FILINGS_ENTRIES = 20
+NEWS_ENTRIES = 12
+HISTORY_ENTRIES = 260  # ~1y daily bars
+OPTION_EXPIRIES = 2
+OPTION_ROWS = 40
+SHARES_FULL_ENTRIES = 48
 
 INFO_KEYS = [
     # identity
@@ -103,6 +117,45 @@ def _iso(value):
         return str(value)
 
 
+def clean_value(value):
+    """Convert pandas/numpy scalars into JSON-stable primitives."""
+    if value is None:
+        return None
+    try:
+        if value != value:  # NaN guard
+            return None
+    except Exception:
+        pass
+    if hasattr(value, "strftime"):
+        return _iso(value)
+    if hasattr(value, "item"):
+        try:
+            value = value.item()
+        except Exception:
+            pass
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, Number):
+        return float(value)
+    if isinstance(value, (str, int)):
+        return value
+    if isinstance(value, dict):
+        return clean_dict(value)
+    if isinstance(value, (list, tuple)):
+        out = [clean_value(v) for v in value]
+        return [v for v in out if v is not None]
+    return str(value)
+
+
+def clean_dict(values):
+    out = {}
+    for key, value in dict(values).items():
+        clean = clean_value(value)
+        if clean is not None:
+            out[str(key)] = clean
+    return out or None
+
+
 def curated_statement(df, items, periods):
     """Last N period columns x curated row items -> {date: {item: value}}."""
     if df is None or getattr(df, "empty", True):
@@ -121,36 +174,122 @@ def curated_statement(df, items, periods):
     return out or None
 
 
-def holders_records(df, top):
-    """institutional_holders DataFrame -> list of plain row dicts."""
+def df_records(df, max_rows=None, recent=False):
+    """DataFrame -> list of JSON-stable row dicts with `_index`."""
     if df is None or getattr(df, "empty", True):
         return None
     records = []
-    for _, row in df.head(top).iterrows():
-        rec = {}
+    if max_rows and recent:
+        rows = df.tail(max_rows)
+    elif max_rows:
+        rows = df.head(max_rows)
+    else:
+        rows = df
+    for idx, row in rows.iterrows():
+        rec = {"_index": _iso(idx) if hasattr(idx, "strftime") else str(idx)}
         for key, val in row.items():
-            if val is None or val != val:
-                continue
-            rec[str(key)] = _iso(val) if hasattr(val, "strftime") else (
-                float(val) if isinstance(val, (int, float)) and not isinstance(val, bool) else str(val)
-            )
+            clean = clean_value(val)
+            if clean is not None:
+                rec[str(key)] = clean
         records.append(rec)
     return records or None
 
 
-def small_df(df):
+def holders_records(df, top):
+    """institutional_holders DataFrame -> list of plain row dicts."""
+    return df_records(df, top)
+
+
+def small_df(df, max_rows=None):
     """Small DataFrame (recommendations / estimates) -> records, stringified."""
+    return df_records(df, max_rows)
+
+
+def small_series(series, max_items=None):
+    if series is None or getattr(series, "empty", True):
+        return None
+    values = series.tail(max_items) if max_items else series
+    out = {}
+    for key, value in values.items():
+        clean = clean_value(value)
+        if clean is not None:
+            out[_iso(key) if hasattr(key, "strftime") else str(key)] = clean
+    return out or None
+
+
+def compact_history(df, max_rows=HISTORY_ENTRIES):
     if df is None or getattr(df, "empty", True):
         return None
+    rows = df.tail(max_rows)
     out = []
-    for idx, row in df.iterrows():
-        rec = {"_index": _iso(idx) if hasattr(idx, "strftime") else str(idx)}
-        for key, val in row.items():
-            if val is None or val != val:
-                continue
-            rec[str(key)] = float(val) if isinstance(val, (int, float)) and not isinstance(val, bool) else str(val)
-        out.append(rec)
+    for idx, row in rows.iterrows():
+        rec = {"date": _iso(idx)}
+        for key in ("Open", "High", "Low", "Close", "Volume", "Dividends", "Stock Splits"):
+            if key in row:
+                clean = clean_value(row[key])
+                if clean is not None:
+                    rec[key] = clean
+        if len(rec) > 1:
+            out.append(rec)
     return out or None
+
+
+def news_records(items, max_items=NEWS_ENTRIES):
+    if not isinstance(items, list):
+        return None
+    out = []
+    for item in items[:max_items]:
+        if not isinstance(item, dict):
+            continue
+        rec = {}
+        for key in ("title", "publisher", "providerPublishTime", "link", "type", "relatedTickers"):
+            if key in item:
+                clean = clean_value(item[key])
+                if clean is not None:
+                    rec[key] = clean
+        if rec:
+            out.append(rec)
+    return out or None
+
+
+def sec_filings_records(items, max_items=SEC_FILINGS_ENTRIES):
+    if isinstance(items, dict):
+        for key in ("filings", "data", "items"):
+            nested = items.get(key)
+            if isinstance(nested, list):
+                items = nested
+                break
+        else:
+            items = list(items.values())
+    if not isinstance(items, list):
+        return None
+    out = []
+    for item in items[:max_items]:
+        if isinstance(item, dict):
+            clean = clean_dict(item)
+            if clean:
+                out.append(clean)
+    return out or None
+
+
+def option_chain_records(ticker_obj):
+    expiries = list(getattr(ticker_obj, "options", []) or [])[:OPTION_EXPIRIES]
+    if not expiries:
+        return None
+    out = []
+    for expiry in expiries:
+        chain = ticker_obj.option_chain(expiry)
+        out.append({
+            "expiry": expiry,
+            "calls": df_records(chain.calls, OPTION_ROWS),
+            "puts": df_records(chain.puts, OPTION_ROWS),
+        })
+    return out or None
+
+
+def shares_full_records(ticker_obj):
+    series = ticker_obj.get_shares_full()
+    return small_series(series, SHARES_FULL_ENTRIES)
 
 
 def safe(fn, default=None):
@@ -171,7 +310,7 @@ def yahoo_symbol(ticker):
     return ticker
 
 
-def fetch_ticker(ticker):
+def fetch_ticker(ticker, profile="full", include_options=False, include_shares_full=False):
     start = time.perf_counter()
     t = yf.Ticker(yahoo_symbol(ticker))
     data = {}
@@ -185,7 +324,7 @@ def fetch_ticker(ticker):
     data["institutional_holders"] = safe(lambda: holders_records(t.institutional_holders, INSTITUTIONAL_TOP))
 
     data["analyst_price_targets"] = safe(lambda: dict(t.analyst_price_targets) or None)
-    data["recommendations"] = safe(lambda: small_df(t.recommendations))
+    data["recommendations"] = safe(lambda: small_df(t.recommendations, RECOMMENDATION_ENTRIES))
     data["earnings_estimate"] = safe(lambda: small_df(t.earnings_estimate))
     data["revenue_estimate"] = safe(lambda: small_df(t.revenue_estimate))
 
@@ -200,15 +339,46 @@ def fetch_ticker(ticker):
     data["cash_flow"] = safe(lambda: curated_statement(t.cashflow, CASHFLOW_ITEMS, ANNUAL_PERIODS))
     data["quarterly_cash_flow"] = safe(lambda: curated_statement(t.quarterly_cashflow, CASHFLOW_ITEMS, QUARTERLY_PERIODS))
 
+    if profile == "full":
+        data["fast_info"] = safe(lambda: clean_dict(dict(t.fast_info)))
+        data["actions"] = safe(lambda: df_records(t.actions, DIVIDEND_ENTRIES, recent=True))
+        data["splits"] = safe(lambda: small_series(t.splits, DIVIDEND_ENTRIES))
+        data["capital_gains"] = safe(lambda: small_series(t.capital_gains, DIVIDEND_ENTRIES))
+        data["recommendations_summary"] = safe(lambda: small_df(t.recommendations_summary))
+        data["upgrades_downgrades"] = safe(lambda: small_df(t.upgrades_downgrades, UPGRADES_ENTRIES))
+        data["earnings_dates"] = safe(lambda: small_df(t.earnings_dates, EARNINGS_DATES_ENTRIES))
+        data["earnings_history"] = safe(lambda: small_df(t.earnings_history))
+        data["eps_trend"] = safe(lambda: small_df(t.eps_trend))
+        data["eps_revisions"] = safe(lambda: small_df(t.eps_revisions))
+        data["growth_estimates"] = safe(lambda: small_df(t.growth_estimates))
+        data["sustainability"] = safe(lambda: small_df(t.sustainability))
+        data["mutualfund_holders"] = safe(lambda: df_records(t.mutualfund_holders, MUTUALFUND_TOP))
+        data["insider_transactions"] = safe(lambda: df_records(t.insider_transactions, INSIDER_TOP))
+        data["insider_purchases"] = safe(lambda: df_records(t.insider_purchases, INSIDER_TOP))
+        data["insider_roster_holders"] = safe(lambda: df_records(t.insider_roster_holders, INSIDER_TOP))
+        data["sec_filings"] = safe(lambda: sec_filings_records(t.sec_filings))
+        data["news"] = safe(lambda: news_records(t.news))
+        data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
+
+    if include_options:
+        data["options"] = safe(lambda: option_chain_records(t))
+    if include_shares_full:
+        data["shares_full"] = safe(lambda: shares_full_records(t))
+
     latency_ms = round((time.perf_counter() - start) * 1000)
     return data, latency_ms
 
 
-def fetch_with_retry(ticker, retries=2, backoffs=(5, 20)):
+def fetch_with_retry(ticker, profile="full", include_options=False, include_shares_full=False, retries=2, backoffs=(5, 20)):
     last_err = None
     for attempt in range(retries + 1):
         try:
-            data, latency_ms = fetch_ticker(ticker)
+            data, latency_ms = fetch_ticker(
+                ticker,
+                profile=profile,
+                include_options=include_options,
+                include_shares_full=include_shares_full,
+            )
             # treat fully-empty payload as failure (likely rate-limited)
             if any(v is not None for v in data.values()):
                 return data, latency_ms, None
@@ -259,12 +429,41 @@ def load_universe(stocks_only=False):
     return sorted(t for t in tickers if SYMBOL_RE.match(t))
 
 
+def usable_existing_payload(path):
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+    data = payload.get("data")
+    if not isinstance(data, dict) or not any(value is not None for value in data.values()):
+        return None
+    return payload
+
+
+def is_fresh_payload(payload, max_age_hours):
+    if max_age_hours <= 0:
+        return False
+    fetched_at = payload.get("fetched_at")
+    if not isinstance(fetched_at, str):
+        return False
+    try:
+        fetched = datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    age_hours = (datetime.now(timezone.utc) - fetched.astimezone(timezone.utc)).total_seconds() / 3600
+    return age_hours < max_age_hours
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="legacy mode: global-scouter stock detail only")
+    parser.add_argument("--profile", choices=("core", "full"), default="full", help="core=legacy compact fields, full=bounded extra Yahoo-only depth")
+    parser.add_argument("--include-options", action="store_true", help="fetch first option expiries; use targeted tickers only")
+    parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
+    parser.add_argument("--max-age-hours", type=float, default=0, help="skip usable local payloads fetched within N hours")
     parser.add_argument("--sleep", type=float, default=0.8)
     args = parser.parse_args()
 
@@ -287,15 +486,27 @@ def main():
     total_start = time.perf_counter()
 
     for idx, ticker in enumerate(tickers, 1):
-        data, latency_ms, error = fetch_with_retry(ticker)
+        out_path = OUT_DIR / f"{ticker}.json"
+        existing = usable_existing_payload(out_path)
+        if existing and is_fresh_payload(existing, args.max_age_hours):
+            print(f"[{idx}/{len(tickers)}] {ticker} SKIP fresh local payload", flush=True)
+            results.append({"ticker": ticker, "latency_ms": 0, "error": None, "skipped": True})
+            continue
+
+        data, latency_ms, error = fetch_with_retry(
+            ticker,
+            profile=args.profile,
+            include_options=args.include_options,
+            include_shares_full=args.include_shares_full,
+        )
         if error is None:
             payload = {
                 "schema_version": SCHEMA_VERSION,
                 "ticker": ticker,
                 "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "profile": args.profile,
                 "data": data,
             }
-            out_path = OUT_DIR / f"{ticker}.json"
             out_path.write_text(
                 json.dumps(payload, separators=(",", ":"), default=str),
                 encoding="utf-8",
@@ -304,7 +515,7 @@ def main():
             print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
         else:
             print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
-        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error})
+        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False})
         time.sleep(args.sleep)
 
     total_s = round(time.perf_counter() - total_start, 1)
@@ -316,8 +527,12 @@ def main():
         "count": len(tickers),
         "ok": len(ok),
         "failed": len(errors),
+        "skipped": len([r for r in results if r.get("skipped")]),
         "total_seconds": total_s,
         "avg_latency_ms": round(sum(r["latency_ms"] for r in ok) / len(ok)) if ok else 0,
+        "profile": args.profile,
+        "include_options": args.include_options,
+        "include_shares_full": args.include_shares_full,
         "errors": errors,
     }
     (OUT_DIR / "_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")

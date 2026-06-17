@@ -17,7 +17,7 @@ import runpy
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 FETCHER = ROOT / "scripts" / "fetch-yf-finance.py"
-SCHEMA_VERSION = "yf-finance/v1"
+SCHEMA_VERSION = "yf-finance/v2"
 
 
 def usable_payload(path: Path) -> bool:
@@ -48,6 +48,7 @@ def main() -> None:
         "count": len(tickers),
         "ok": ok,
         "failed": len(errors),
+        "skipped": 0,
         "total_seconds": 0,
         "avg_latency_ms": 0,
         "source": "local-file-rebuild",

@@ -1,5 +1,5 @@
-# yf Finance Engine v1 — field-selected batch fetch (global-scouter universe)
-# Weekly cron + manual dispatch with limit/shard for staged rollout.
+# yf Finance Engine v2 — bounded Yahoo Finance depth for the stock lens.
+# Weekly cron + manual dispatch with profile/limit/shard for staged rollout.
 # Output: data/yf/finance/{TICKER}.json + public mirror.
 
 name: Fetch YF Finance Data
@@ -22,11 +22,27 @@ on:
         description: 'Seconds between tickers'
         required: false
         default: '0.8'
+      profile:
+        description: 'Fetch profile: core or full'
+        required: false
+        default: 'full'
+      max_age_hours:
+        description: 'Skip usable local payloads newer than N hours (0 = disabled)'
+        required: false
+        default: '0'
+      include_options:
+        description: 'Fetch first option expiries (targeted runs only)'
+        required: false
+        default: 'false'
+      include_shares_full:
+        description: 'Fetch share-count history sample'
+        required: false
+        default: 'false'
 
 jobs:
   fetch-yf-finance:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
 
@@ -43,10 +59,16 @@ jobs:
           INPUT_LIMIT: ${{ github.event.inputs.limit }}
           INPUT_SHARD: ${{ github.event.inputs.shard }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
+          INPUT_PROFILE: ${{ github.event.inputs.profile }}
+          INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours }}
+          INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options }}
+          INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full }}
         run: |
-          ARGS=""
+          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
           if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
+          if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
+          if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
           python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
 
       - name: Rebuild local coverage summary

@@ -22,7 +22,7 @@
 | [sentiment/](sentiment/README.md) | 13 | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
 | [slickcharts/](slickcharts/README.md) | 568 | Daily/Weekly/Monthly | SlickCharts.com |
 | [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
-| [yf/](yf/README.md) | 1,100 | Daily / on-demand | Yahoo Finance |
+| [yf/](yf/README.md) | 1,100 | Weekly / on-demand | Yahoo Finance |
 
 ---
 
@@ -72,6 +72,7 @@
 - 1,098 finance payloads plus `_summary.json` and `quarter_closes.json`
 - Universe includes stock detail symbols, scouter ETFs, sector/major ETFs, and portfolio symbols
 - `_summary.json` is rebuilt from local files so stale fetch failures do not hide available data
+- v2 fetch contract adds bounded quote, holder, analyst, filing/news, event, insider, mutual-fund, and 1Y history blocks; option chains and share-count history are explicit backfill flags until runtime validated
 
 ---
 

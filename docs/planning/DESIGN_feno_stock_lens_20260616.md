@@ -45,9 +45,9 @@ Implemented inventory:
 - Generator: `node scripts/generate-stock-field-usage-manifest.mjs`
 - Internal manifest: `data/admin/stock-field-usage-manifest.json`
 - Public mirror: `100xfenok-next/public/data/admin/stock-field-usage-manifest.json`
-- Current scan: 2,744 parsed files, 901 schema-level fields, 513KB manifest
-- Current status split: `not_yet_used` 510, `visually_rendered` 232,
-  `metadata` 145, `interpreted` 14
+- Current scan: 2,744 parsed files, 901 schema-level fields, 525KB manifest
+- Current status split: `not_yet_used` 430, `visually_rendered` 313,
+  `metadata` 145, `interpreted` 13
 - Dynamic maps such as ticker/date/investor keyed objects are normalized to `*`
   so the manifest remains schema-level, not per-symbol/per-date noise.
 - Compressed tuple payloads such as `computed/stock_action_summary.json` must
@@ -78,6 +78,60 @@ Admin audit UI:
   per-symbol detail file.
 - deterministic rules first; LLM narrative can be added later as a layer over
   bounded numeric facts and rule outputs.
+
+## 2026-06-17 Data-First Expansion Track
+
+The next stock-lens work stays data-first. Portfolio personalization remains a
+later product layer; current priority is to collect and expose the widest useful
+stock/index/institutional dataset already available to the platform.
+
+Yahoo Finance / ticker finance:
+
+- Fetcher: `scripts/fetch-yf-finance.py`
+- Contract: `yf-finance/v2`
+- Default full profile extends compact v1 with bounded blocks for `fast_info`,
+  actions/splits, recommendations summary, upgrades/downgrades, earnings dates,
+  earnings history, EPS trend/revisions, growth estimates, sustainability,
+  mutual-fund holders, insider rows, SEC filing links, news, and 1Y daily
+  history.
+- Heavy expansion remains opt-in until runtime validated:
+  `--include-options` for option chains and `--include-shares-full` for
+  buyback/dilution share-count history.
+- `--max-age-hours` is available for manual reruns so recent usable local
+  payloads can be skipped instead of re-querying Yahoo.
+
+SlickCharts / index and public list data:
+
+- Do not duplicate already collected return/performance/yield pages.
+- Confirmed expansion candidates from live page discovery:
+  - `/companies`: largest listed companies by market cap.
+  - `/nyse`: NYSE composite/list coverage if table structure is stable.
+  - `/sp500-vs-nasdaq100`: index overlap/common-only/only-in-one comparison.
+  - `/market-movers`: daily index mover context, if freshness and table fields
+    remain stable.
+  - ARK ETF holdings pages such as `/etf/ark-invest/ARKK`: daily ETF holdings
+    reference; prefer official ARK files if easier to automate cleanly.
+- SlickCharts 13F-style investor pages are reference-only for validation and
+  freshness checks, not canonical holdings SSOT.
+
+SEC 13F / institutional filings:
+
+- Canonical source remains the CCH `sec-13f` converter against SEC EDGAR.
+- Next converter expansion should add passive benchmark managers after CIK
+  verification:
+  - BlackRock Inc. candidate CIK: `0002012383`
+  - Vanguard Group Inc. candidate CIK: `0000102909`
+- The 100x site consumes the generated `data/sec-13f/` files; if the converter
+  adds investors or analytics, update `data/sec-13f/README.md`,
+  `schema.json`, `data/manifest.json`, and public mirrors in the same slice.
+
+Exposure rule for this track:
+
+- New fields should first land in canonical/public data files.
+- Then expose them in the stock detail professional/raw tables, data lab, or a
+  deterministic interpretation card.
+- The field usage manifest must be regenerated after UI or interpretation
+  surfaces consume additional fields.
 
 ## Development Sequence
 

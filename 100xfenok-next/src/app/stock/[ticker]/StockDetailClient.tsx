@@ -899,7 +899,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-4">
                   {[
-                    ["재무", "매출·FCF·원재무"],
+                    ["재무", "매출·FCF·원자료"],
                     ["통계", "밸류·수익성"],
                     ["추정치", "FY+1~3·리비전"],
                     ["보유기관", "13F 구루"],

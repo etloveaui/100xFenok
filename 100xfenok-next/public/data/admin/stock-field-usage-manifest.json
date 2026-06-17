@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-16T09:23:24.330Z",
+  "generated_at": "2026-06-17T01:57:35.134Z",
   "product_language_rule": "User-facing surfaces use Feno/function labels; source/vendor names stay in internal provenance/admin/debug/docs.",
   "status_definitions": {
     "interpreted": "Observed in deterministic or future interpretation code paths.",
@@ -12,13 +12,13 @@
   "totals": {
     "fileCount": 2744,
     "parsedFileCount": 2744,
-    "scannedBytes": 188685110,
+    "scannedBytes": 189047731,
     "fieldCount": 901,
     "statusCounts": {
-      "not_yet_used": 510,
-      "visually_rendered": 232,
+      "not_yet_used": 430,
+      "visually_rendered": 313,
       "metadata": 145,
-      "interpreted": 14
+      "interpreted": 13
     }
   },
   "dataset_summaries": [
@@ -55,11 +55,11 @@
       "internalSource": "sec-13f",
       "fileCount": 47,
       "parsedFileCount": 47,
-      "scannedBytes": 86356505,
+      "scannedBytes": 86688792,
       "fieldCount": 438,
       "statusCounts": {
-        "not_yet_used": 252,
-        "visually_rendered": 57,
+        "not_yet_used": 243,
+        "visually_rendered": 66,
         "metadata": 129
       }
     },
@@ -72,8 +72,8 @@
       "scannedBytes": 15607564,
       "fieldCount": 234,
       "statusCounts": {
-        "not_yet_used": 120,
-        "visually_rendered": 106,
+        "not_yet_used": 50,
+        "visually_rendered": 176,
         "metadata": 8
       }
     },
@@ -83,13 +83,13 @@
       "internalSource": "computed",
       "fileCount": 2,
       "parsedFileCount": 2,
-      "scannedBytes": 4240015,
+      "scannedBytes": 4270349,
       "fieldCount": 106,
       "statusCounts": {
-        "not_yet_used": 51,
-        "visually_rendered": 34,
+        "not_yet_used": 50,
+        "visually_rendered": 36,
         "metadata": 7,
-        "interpreted": 14
+        "interpreted": 13
       }
     }
   ],
@@ -2652,11 +2652,11 @@
       "internalSource": "sec-13f",
       "fileCount": 47,
       "parsedFileCount": 47,
-      "scannedBytes": 86356505,
+      "scannedBytes": 86688792,
       "fieldCount": 438,
       "statusCounts": {
-        "not_yet_used": 252,
-        "visually_rendered": 57,
+        "not_yet_used": 243,
+        "visually_rendered": 66,
         "metadata": 129
       },
       "fields": [
@@ -2681,7 +2681,7 @@
           ],
           "sampleValues": [
             "0.0152",
-            "0.0119"
+            "0.0118"
           ],
           "sampleFiles": [
             "sec-13f/by_sector.json"
@@ -2726,7 +2726,7 @@
         },
         {
           "path": "*.holder_details[].classes_held[]",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 77,
           "valueKinds": [
             "array",
@@ -2740,6 +2740,18 @@
             "sec-13f/by_ticker.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "classes_held"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "classes_held"
+              ]
+            },
             {
               "file": "scripts/build-13f-integrity-indexes.mjs",
               "tokens": [
@@ -2786,7 +2798,7 @@
         },
         {
           "path": "*.holder_details[].position_types[]",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 45,
           "valueKinds": [
             "array",
@@ -2800,6 +2812,18 @@
             "sec-13f/by_ticker.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "position_types"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "position_types"
+              ]
+            },
             {
               "file": "scripts/build-13f-integrity-indexes.mjs",
               "tokens": [
@@ -2883,10 +2907,14 @@
         {
           "path": "*.investors[]",
           "status": "visually_rendered",
-          "presenceCount": 24,
+          "presenceCount": 197,
           "valueKinds": [
             "array",
-            "null"
+            "string"
+          ],
+          "sampleValues": [
+            "ackman",
+            "asness"
           ],
           "sampleFiles": [
             "sec-13f/by_sector.json"
@@ -2920,7 +2948,7 @@
         },
         {
           "path": "*.top_holdings[]",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 132,
           "valueKinds": [
             "array",
@@ -2935,19 +2963,25 @@
           ],
           "consumerHits": [
             {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "top_holdings"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/hooks/useSectorData.ts",
               "tokens": [
                 "top_holdings"
               ]
             },
             {
-              "file": "scripts/build-13f-enrichment-backfill.mjs",
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
               "tokens": [
                 "top_holdings"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "scripts/build-13f-enrichment-backfill.mjs",
               "tokens": [
                 "top_holdings"
               ]
@@ -3030,8 +3064,8 @@
             "string"
           ],
           "sampleValues": [
-            "012653101",
-            "H01301128"
+            "009158106",
+            "012653101"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -3053,8 +3087,8 @@
             "string"
           ],
           "sampleValues": [
-            "ALBEMARLE",
-            "ALCON"
+            "AIR PRODS AND CHEMS",
+            "ALBEMARLE"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -3068,8 +3102,8 @@
             "string"
           ],
           "sampleValues": [
-            "ALBEMARLE CORP",
-            "ALCON AG"
+            "AIR PRODS & CHEMS INC",
+            "ALBEMARLE CORP"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -3098,8 +3132,8 @@
             "string"
           ],
           "sampleValues": [
-            "global-scouter",
-            "slickcharts"
+            "13f-history",
+            "global-scouter"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -3113,8 +3147,8 @@
             "string"
           ],
           "sampleValues": [
-            "ALB",
-            "ALC"
+            "AIR",
+            "ALB"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -4459,7 +4493,7 @@
         },
         {
           "path": "enhanced_consensus.*",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "object"
@@ -4469,13 +4503,25 @@
           ],
           "consumerHits": [
             {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "enhanced_consensus"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/generated/static-route-manifest.ts",
               "tokens": [
                 "enhanced_consensus"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/hooks/use13FData.ts",
+              "tokens": [
+                "enhanced_consensus"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
               "tokens": [
                 "enhanced_consensus"
               ]
@@ -4484,7 +4530,7 @@
         },
         {
           "path": "enhanced_consensus.*.classes_held[]",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 29,
           "valueKinds": [
             "array",
@@ -4498,6 +4544,18 @@
             "sec-13f/analytics/enhanced_consensus.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "classes_held"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "classes_held"
+              ]
+            },
             {
               "file": "scripts/build-13f-integrity-indexes.mjs",
               "tokens": [
@@ -4514,7 +4572,7 @@
         },
         {
           "path": "enhanced_consensus.*.equity_holders",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 12,
           "valueKinds": [
             "number"
@@ -4527,6 +4585,18 @@
             "sec-13f/analytics/enhanced_consensus.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "equity_holders"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "equity_holders"
+              ]
+            },
             {
               "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
@@ -4567,7 +4637,7 @@
         },
         {
           "path": "enhanced_consensus.*.total_holders",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 12,
           "valueKinds": [
             "number"
@@ -4580,6 +4650,18 @@
             "sec-13f/analytics/enhanced_consensus.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "total_holders"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "total_holders"
+              ]
+            },
             {
               "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
@@ -4596,7 +4678,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-12T18:50:15.093Z"
+            "2026-06-16T13:37:01.899Z"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -4630,7 +4712,7 @@
         },
         {
           "path": "high_conviction_new[]",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "array"
@@ -4639,6 +4721,18 @@
             "sec-13f/analytics/conviction_entries.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/InsightsTab.tsx",
+              "tokens": [
+                "high_conviction_new"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "high_conviction_new"
+              ]
+            },
             {
               "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
@@ -5464,13 +5558,19 @@
               "tokens": [
                 "cusip"
               ]
+            },
+            {
+              "file": "scripts/lib/sec13f-symbols.mjs",
+              "tokens": [
+                "cusip"
+              ]
             }
           ]
         },
         {
           "path": "investor.filings[].holdings[].enrichment_source",
           "status": "not_yet_used",
-          "presenceCount": 4291,
+          "presenceCount": 4330,
           "valueKinds": [
             "string"
           ],
@@ -5486,7 +5586,7 @@
         {
           "path": "investor.filings[].holdings[].enrichment_symbol",
           "status": "not_yet_used",
-          "presenceCount": 815,
+          "presenceCount": 854,
           "valueKinds": [
             "string"
           ],
@@ -5502,7 +5602,7 @@
         {
           "path": "investor.filings[].holdings[].industry",
           "status": "metadata",
-          "presenceCount": 3932,
+          "presenceCount": 3970,
           "valueKinds": [
             "string"
           ],
@@ -5534,7 +5634,7 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "industry"
               ]
@@ -5560,12 +5660,13 @@
         {
           "path": "investor.filings[].holdings[].market_cap_as_of",
           "status": "not_yet_used",
-          "presenceCount": 3932,
+          "presenceCount": 3970,
           "valueKinds": [
             "string"
           ],
           "sampleValues": [
-            "2026-06-11"
+            "2026-06-13",
+            "2026-06-14"
           ],
           "sampleFiles": [
             "sec-13f/investors/ackman.json",
@@ -5589,7 +5690,7 @@
         {
           "path": "investor.filings[].holdings[].market_cap_bucket_abs",
           "status": "not_yet_used",
-          "presenceCount": 3932,
+          "presenceCount": 3970,
           "valueKinds": [
             "string"
           ],
@@ -5619,7 +5720,7 @@
         {
           "path": "investor.filings[].holdings[].market_cap_bucket_rel",
           "status": "not_yet_used",
-          "presenceCount": 3932,
+          "presenceCount": 3970,
           "valueKinds": [
             "string"
           ],
@@ -5649,7 +5750,7 @@
         {
           "path": "investor.filings[].holdings[].market_cap_source",
           "status": "not_yet_used",
-          "presenceCount": 3932,
+          "presenceCount": 3970,
           "valueKinds": [
             "string"
           ],
@@ -5664,13 +5765,13 @@
         {
           "path": "investor.filings[].holdings[].market_cap_usd",
           "status": "not_yet_used",
-          "presenceCount": 3932,
+          "presenceCount": 3970,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "37173690368",
-            "39020765184"
+            "36670959616",
+            "41342513152"
           ],
           "sampleFiles": [
             "sec-13f/investors/ackman.json",
@@ -5725,8 +5826,8 @@
         },
         {
           "path": "investor.filings[].holdings[].price_at_filing",
-          "status": "not_yet_used",
-          "presenceCount": 3176,
+          "status": "visually_rendered",
+          "presenceCount": 3177,
           "valueKinds": [
             "number"
           ],
@@ -5739,6 +5840,12 @@
             "sec-13f/investors/asness.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "price_at_filing"
+              ]
+            },
             {
               "file": "100xfenok-next/src/lib/superinvestors/types.ts",
               "tokens": [
@@ -5756,13 +5863,13 @@
         {
           "path": "investor.filings[].holdings[].price_latest",
           "status": "not_yet_used",
-          "presenceCount": 62,
+          "presenceCount": 63,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "500.25",
-            "58.25"
+            "513.06",
+            "366.36"
           ],
           "sampleFiles": [
             "sec-13f/investors/ackman.json",
@@ -5786,7 +5893,7 @@
         {
           "path": "investor.filings[].holdings[].price_source",
           "status": "not_yet_used",
-          "presenceCount": 62,
+          "presenceCount": 63,
           "valueKinds": [
             "string"
           ],
@@ -5801,7 +5908,7 @@
         {
           "path": "investor.filings[].holdings[].put_call",
           "status": "not_yet_used",
-          "presenceCount": 88,
+          "presenceCount": 87,
           "valueKinds": [
             "string"
           ],
@@ -5843,12 +5950,12 @@
         {
           "path": "investor.filings[].holdings[].return_as_of",
           "status": "not_yet_used",
-          "presenceCount": 62,
+          "presenceCount": 63,
           "valueKinds": [
             "string"
           ],
           "sampleValues": [
-            "2026-06-11"
+            "2026-06-14"
           ],
           "sampleFiles": [
             "sec-13f/investors/ackman.json",
@@ -5872,13 +5979,13 @@
         {
           "path": "investor.filings[].holdings[].return_since_filing_pct",
           "status": "not_yet_used",
-          "presenceCount": 62,
+          "presenceCount": 63,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "48.8849",
-            "55.3259"
+            "52.6974",
+            "59.3033"
           ],
           "sampleFiles": [
             "sec-13f/investors/ackman.json",
@@ -5944,7 +6051,7 @@
         {
           "path": "investor.filings[].holdings[].shares",
           "status": "not_yet_used",
-          "presenceCount": 3028,
+          "presenceCount": 2990,
           "valueKinds": [
             "number"
           ],
@@ -5975,7 +6082,7 @@
         {
           "path": "investor.filings[].holdings[].ticker",
           "status": "metadata",
-          "presenceCount": 3014,
+          "presenceCount": 2975,
           "valueKinds": [
             "null",
             "string"
@@ -5992,7 +6099,7 @@
         {
           "path": "investor.filings[].holdings[].title_of_class",
           "status": "not_yet_used",
-          "presenceCount": 2982,
+          "presenceCount": 2943,
           "valueKinds": [
             "string"
           ],
@@ -6022,7 +6129,7 @@
         {
           "path": "investor.filings[].holdings[].voting_authority.none",
           "status": "visually_rendered",
-          "presenceCount": 2982,
+          "presenceCount": 2943,
           "valueKinds": [
             "number"
           ],
@@ -6064,7 +6171,7 @@
         {
           "path": "investor.filings[].holdings[].voting_authority.shared",
           "status": "visually_rendered",
-          "presenceCount": 2982,
+          "presenceCount": 2943,
           "valueKinds": [
             "number"
           ],
@@ -6106,7 +6213,7 @@
         {
           "path": "investor.filings[].holdings[].voting_authority.sole",
           "status": "visually_rendered",
-          "presenceCount": 2982,
+          "presenceCount": 2943,
           "valueKinds": [
             "number"
           ],
@@ -6130,7 +6237,7 @@
         {
           "path": "investor.filings[].holdings[].weight",
           "status": "not_yet_used",
-          "presenceCount": 2982,
+          "presenceCount": 2943,
           "valueKinds": [
             "number"
           ],
@@ -6472,6 +6579,12 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "coverage"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/components/admin-live/AdminLiveBench.tsx",
               "tokens": [
                 "coverage"
@@ -6479,12 +6592,6 @@
             },
             {
               "file": "100xfenok-next/src/hooks/useMarketValuation.ts",
-              "tokens": [
-                "coverage"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/market-valuation/charts/MarketChartFrame.tsx",
               "tokens": [
                 "coverage"
               ]
@@ -6836,8 +6943,8 @@
             "number"
           ],
           "sampleValues": [
-            "0.1043",
-            "0.1427"
+            "0.1191",
+            "0.1454"
           ],
           "sampleFiles": [
             "sec-13f/analytics/portfolio_views.json"
@@ -6937,7 +7044,7 @@
             "number"
           ],
           "sampleValues": [
-            "2435"
+            "2489"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -6951,7 +7058,7 @@
             "number"
           ],
           "sampleValues": [
-            "220"
+            "257"
           ],
           "sampleFiles": [
             "sec-13f/analytics/consensus.json"
@@ -7154,7 +7261,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-12T18:50:14.166Z"
+            "2026-06-16T14:01:16.743Z"
           ],
           "sampleFiles": [
             "sec-13f/investors/ackman.json",
@@ -7229,7 +7336,7 @@
             "number"
           ],
           "sampleValues": [
-            "32725"
+            "32538"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7243,7 +7350,7 @@
             "number"
           ],
           "sampleValues": [
-            "23342"
+            "23529"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7301,6 +7408,12 @@
           ],
           "consumerHits": [
             {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "total_holdings"
+              ]
+            },
+            {
               "file": "scripts/build-13f-enrichment-backfill.mjs",
               "tokens": [
                 "total_holdings"
@@ -7316,7 +7429,7 @@
             "number"
           ],
           "sampleValues": [
-            "32717"
+            "32494"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7330,7 +7443,7 @@
             "number"
           ],
           "sampleValues": [
-            "575"
+            "545"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7374,7 +7487,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-12T18:19:01Z"
+            "2026-06-14T00:00:43Z"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7396,7 +7509,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-11T01:28:14Z"
+            "2026-06-14T00:02:42Z"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7418,7 +7531,7 @@
             "number"
           ],
           "sampleValues": [
-            "0.56"
+            "0.569"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7443,7 +7556,7 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "industry"
               ]
@@ -7458,7 +7571,7 @@
             "number"
           ],
           "sampleValues": [
-            "0.5603"
+            "0.5693"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7498,12 +7611,18 @@
             "number"
           ],
           "sampleValues": [
-            "0.431"
+            "0.4403"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "price_at_filing"
+              ]
+            },
             {
               "file": "100xfenok-next/src/lib/superinvestors/types.ts",
               "tokens": [
@@ -7526,7 +7645,7 @@
             "number"
           ],
           "sampleValues": [
-            "0.431"
+            "0.4403"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7554,7 +7673,7 @@
             "number"
           ],
           "sampleValues": [
-            "0.6386"
+            "0.6476"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7630,7 +7749,7 @@
             "number"
           ],
           "sampleValues": [
-            "20029"
+            "19494"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7644,7 +7763,7 @@
             "number"
           ],
           "sampleValues": [
-            "32717"
+            "33252"
           ],
           "sampleFiles": [
             "sec-13f/summary.json"
@@ -7652,6 +7771,12 @@
           "consumerHits": [
             {
               "file": "scripts/build-13f-enrichment-backfill.mjs",
+              "tokens": [
+                "yf-local"
+              ]
+            },
+            {
+              "file": "scripts/lib/sec13f-symbols.mjs",
               "tokens": [
                 "yf-local"
               ]
@@ -7703,7 +7828,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-12T18:50:15.095Z",
+            "2026-06-16T13:37:01.902Z",
             "2026-05-18T12:16:47.339615"
           ],
           "sampleFiles": [
@@ -8231,7 +8356,7 @@
             "number"
           ],
           "sampleValues": [
-            "843"
+            "861"
           ],
           "sampleFiles": [
             "sec-13f/analytics/guru_holders_index.json"
@@ -8272,7 +8397,7 @@
           ],
           "sampleValues": [
             "1218",
-            "843"
+            "861"
           ],
           "sampleFiles": [
             "sec-13f/analytics/buying_pressure.json",
@@ -8388,7 +8513,7 @@
             "number"
           ],
           "sampleValues": [
-            "130"
+            "93"
           ],
           "sampleFiles": [
             "sec-13f/analytics/consensus.json"
@@ -8910,6 +9035,12 @@
             "sec-13f/analytics/conviction_entries.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/lib/superinvestors/types.ts",
+              "tokens": [
+                "top_conviction_hold"
+              ]
+            },
             {
               "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
@@ -11112,8 +11243,8 @@
             "number"
           ],
           "sampleValues": [
-            "0.1506",
-            "0.15"
+            "0.178",
+            "0.1482"
           ],
           "sampleFiles": [
             "sec-13f/analytics/portfolio_views.json"
@@ -11213,7 +11344,7 @@
             "number"
           ],
           "sampleValues": [
-            "167"
+            "113"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -11235,20 +11366,26 @@
               "tokens": [
                 "unmapped"
               ]
+            },
+            {
+              "file": "scripts/lib/sec13f-symbols.mjs",
+              "tokens": [
+                "unmapped"
+              ]
             }
           ]
         },
         {
           "path": "unmapped[].cusips[]",
           "status": "not_yet_used",
-          "presenceCount": 35,
+          "presenceCount": 32,
           "valueKinds": [
             "array",
             "string"
           ],
           "sampleValues": [
             "92206C870",
-            "46428Q109"
+            "91232N207"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -11280,14 +11417,14 @@
         {
           "path": "unmapped[].examples[]",
           "status": "not_yet_used",
-          "presenceCount": 34,
+          "presenceCount": 33,
           "valueKinds": [
             "array",
             "string"
           ],
           "sampleValues": [
             "VANGUARD FDS INT TERM CORP ",
-            "ISHARES SILVER TR"
+            "UNITED STS OIL FD LP"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -11316,7 +11453,7 @@
           ],
           "sampleValues": [
             "7381153839",
-            "5187770760"
+            "2333026950"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -11330,8 +11467,8 @@
             "string"
           ],
           "sampleValues": [
-            "VANGUARD FDS INT TERM",
-            "ISHARES SILVER TR"
+            "VANGUARD INT TERM",
+            "UNITED STS OIL"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -11346,7 +11483,7 @@
           ],
           "sampleValues": [
             "VANGUARD FDS INT TERM CORP",
-            "ISHARES SILVER TR"
+            "UNITED STS OIL FD LP"
           ],
           "sampleFiles": [
             "sec-13f/analytics/ticker_aliases.json"
@@ -11378,8 +11515,8 @@
       "scannedBytes": 15607564,
       "fieldCount": 234,
       "statusCounts": {
-        "not_yet_used": 120,
-        "visually_rendered": 106,
+        "not_yet_used": 50,
+        "visually_rendered": 176,
         "metadata": 8
       },
       "fields": [
@@ -11594,7 +11731,7 @@
         },
         {
           "path": "data.balance_sheet.*.Cash Cash Equivalents And Short Term Investments",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4018,
           "valueKinds": [
             "number"
@@ -11606,11 +11743,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cash Cash Equivalents And Short Term Investments"
+              ]
+            }
           ]
         },
         {
           "path": "data.balance_sheet.*.Current Assets",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3935,
           "valueKinds": [
             "number"
@@ -11622,11 +11767,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Assets"
+              ]
+            }
           ]
         },
         {
           "path": "data.balance_sheet.*.Current Liabilities",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3935,
           "valueKinds": [
             "number"
@@ -11638,11 +11791,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Liabilities"
+              ]
+            }
           ]
         },
         {
           "path": "data.balance_sheet.*.Invested Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4250,
           "valueKinds": [
             "number"
@@ -11654,11 +11815,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Invested Capital"
+              ]
+            }
           ]
         },
         {
           "path": "data.balance_sheet.*.Net Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 2886,
           "valueKinds": [
             "number"
@@ -11670,11 +11839,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Net Debt"
+              ]
+            }
           ]
         },
         {
           "path": "data.balance_sheet.*.Ordinary Shares Number",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4253,
           "valueKinds": [
             "number"
@@ -11686,6 +11863,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Ordinary Shares Number"
+              ]
+            }
           ]
         },
         {
@@ -11786,7 +11971,7 @@
         },
         {
           "path": "data.balance_sheet.*.Working Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3931,
           "valueKinds": [
             "number"
@@ -11798,6 +11983,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Working Capital"
+              ]
+            }
           ]
         },
         {
@@ -11928,7 +12121,7 @@
         },
         {
           "path": "data.cash_flow.*.Financing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4256,
           "valueKinds": [
             "number"
@@ -11940,6 +12133,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Financing Cash Flow"
+              ]
+            }
           ]
         },
         {
@@ -11968,7 +12169,7 @@
         },
         {
           "path": "data.cash_flow.*.Investing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4248,
           "valueKinds": [
             "number"
@@ -11980,11 +12181,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Investing Cash Flow"
+              ]
+            }
           ]
         },
         {
           "path": "data.cash_flow.*.Issuance Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3620,
           "valueKinds": [
             "number"
@@ -11996,6 +12205,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Issuance Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -12024,7 +12241,7 @@
         },
         {
           "path": "data.cash_flow.*.Repayment Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3824,
           "valueKinds": [
             "number"
@@ -12036,6 +12253,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Repayment Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -12509,7 +12734,7 @@
         },
         {
           "path": "data.earnings_estimate[].numberOfAnalysts",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3649,
           "valueKinds": [
             "number"
@@ -12521,11 +12746,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "numberOfAnalysts"
+              ]
+            }
           ]
         },
         {
           "path": "data.earnings_estimate[].yearAgoEps",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3586,
           "valueKinds": [
             "number"
@@ -12537,6 +12770,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "yearAgoEps"
+              ]
+            }
           ]
         },
         {
@@ -12635,7 +12876,7 @@
         },
         {
           "path": "data.income_statement.*.Cost Of Revenue",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3821,
           "valueKinds": [
             "number"
@@ -12647,6 +12888,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cost Of Revenue"
+              ]
+            }
           ]
         },
         {
@@ -12779,7 +13028,7 @@
         },
         {
           "path": "data.income_statement.*.Operating Expense",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4022,
           "valueKinds": [
             "number"
@@ -12791,6 +13040,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Operating Expense"
+              ]
+            }
           ]
         },
         {
@@ -12819,7 +13076,7 @@
         },
         {
           "path": "data.income_statement.*.Research And Development",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 2152,
           "valueKinds": [
             "number"
@@ -12831,6 +13088,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000100.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Research And Development"
+              ]
+            }
           ]
         },
         {
@@ -12920,7 +13185,7 @@
         },
         {
           "path": "data.info.averageVolume",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 678,
           "valueKinds": [
             "number"
@@ -12932,11 +13197,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "averageVolume"
+              ]
+            }
           ]
         },
         {
           "path": "data.info.averageVolume10days",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 678,
           "valueKinds": [
             "number"
@@ -12948,6 +13221,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "averageVolume10days"
+              ]
+            }
           ]
         },
         {
@@ -12973,6 +13254,12 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "beta"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/hooks/useSectorData.ts",
               "tokens": [
                 "beta"
@@ -12983,18 +13270,12 @@
               "tokens": [
                 "beta"
               ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
-              "tokens": [
-                "beta"
-              ]
             }
           ]
         },
         {
           "path": "data.info.bookValue",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 332,
           "valueKinds": [
             "number"
@@ -13006,6 +13287,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "bookValue"
+              ]
+            }
           ]
         },
         {
@@ -13031,19 +13320,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "country"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "country"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/hooks/useScreenerData.ts",
-              "tokens": [
-                "country"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/market-valuation/types.ts",
-              "tokens": [
-                "country"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "country"
               ]
@@ -13241,7 +13530,7 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/hooks/useScreenerData.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "dividendYield"
               ]
@@ -13250,7 +13539,7 @@
         },
         {
           "path": "data.info.earningsGrowth",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 467,
           "valueKinds": [
             "number"
@@ -13262,11 +13551,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "earningsGrowth"
+              ]
+            }
           ]
         },
         {
           "path": "data.info.ebitda",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 514,
           "valueKinds": [
             "number"
@@ -13278,11 +13575,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "ebitda"
+              ]
+            }
           ]
         },
         {
           "path": "data.info.ebitdaMargins",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 315,
           "valueKinds": [
             "number"
@@ -13294,6 +13599,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "ebitdaMargins"
+              ]
+            }
           ]
         },
         {
@@ -13323,7 +13636,7 @@
         },
         {
           "path": "data.info.enterpriseToRevenue",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 80,
           "valueKinds": [
             "number"
@@ -13335,11 +13648,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/001440.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "enterpriseToRevenue"
+              ]
+            }
           ]
         },
         {
           "path": "data.info.enterpriseValue",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 13,
           "valueKinds": [
             "number"
@@ -13351,6 +13672,14 @@
           "sampleFiles": [
             "yf/finance/024110.KS.json",
             "yf/finance/055550.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "enterpriseValue"
+              ]
+            }
           ]
         },
         {
@@ -13370,6 +13699,12 @@
           ],
           "consumerHits": [
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "exchange"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/hooks/useScreenerData.ts",
               "tokens": [
                 "exchange"
@@ -13383,12 +13718,6 @@
             },
             {
               "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
-              "tokens": [
-                "exchange"
-              ]
-            },
-            {
-              "file": "scripts/build-stocks-analyzer.mjs",
               "tokens": [
                 "exchange"
               ]
@@ -13411,7 +13740,7 @@
         },
         {
           "path": "data.info.fiftyTwoWeekChangePercent",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 68,
           "valueKinds": [
             "number"
@@ -13423,6 +13752,14 @@
           "sampleFiles": [
             "yf/finance/023160.KQ.json",
             "yf/finance/030520.KQ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "fiftyTwoWeekChangePercent"
+              ]
+            }
           ]
         },
         {
@@ -13524,6 +13861,15 @@
           "sampleFiles": [
             "yf/finance/023160.KQ.json",
             "yf/finance/030520.KQ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "scripts/lib/sec13f-symbols.mjs",
+              "tokens": [
+                "longName",
+                "info.longName"
+              ]
+            }
           ]
         },
         {
@@ -13556,13 +13902,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/features/stock-analyzer/charts/chart-manager.ts",
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
               "tokens": [
                 "marketCap"
               ]
             },
             {
-              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "file": "100xfenok-next/src/features/stock-analyzer/charts/chart-manager.ts",
               "tokens": [
                 "marketCap"
               ]
@@ -13663,7 +14009,7 @@
         },
         {
           "path": "data.info.sharesOutstanding",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -13673,6 +14019,14 @@
           ],
           "sampleFiles": [
             "yf/finance/SMH.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "sharesOutstanding"
+              ]
+            }
           ]
         },
         {
@@ -13689,6 +14043,15 @@
           "sampleFiles": [
             "yf/finance/IGPT.json",
             "yf/finance/ITB.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "scripts/lib/sec13f-symbols.mjs",
+              "tokens": [
+                "shortName",
+                "info.shortName"
+              ]
+            }
           ]
         },
         {
@@ -13760,7 +14123,7 @@
         },
         {
           "path": "data.institutional_holders[].Date Reported",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 6096,
           "valueKinds": [
             "string"
@@ -13772,6 +14135,14 @@
           "sampleFiles": [
             "yf/finance/0001.HK.json",
             "yf/finance/000100.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Date Reported"
+              ]
+            }
           ]
         },
         {
@@ -13955,7 +14326,7 @@
         },
         {
           "path": "data.major_holders.institutionsFloatPercentHeld",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1030,
           "valueKinds": [
             "number"
@@ -13967,6 +14338,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "institutionsFloatPercentHeld"
+              ]
+            }
           ]
         },
         {
@@ -14061,7 +14440,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.*.Cash Cash Equivalents And Short Term Investments",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4862,
           "valueKinds": [
             "number"
@@ -14073,11 +14452,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cash Cash Equivalents And Short Term Investments"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.*.Current Assets",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4760,
           "valueKinds": [
             "number"
@@ -14089,11 +14476,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Assets"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.*.Current Liabilities",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4757,
           "valueKinds": [
             "number"
@@ -14105,11 +14500,19 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Liabilities"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.*.Invested Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 5124,
           "valueKinds": [
             "number"
@@ -14121,11 +14524,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Invested Capital"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.*.Net Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3467,
           "valueKinds": [
             "number"
@@ -14137,11 +14548,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Net Debt"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.*.Ordinary Shares Number",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 5110,
           "valueKinds": [
             "number"
@@ -14153,6 +14572,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Ordinary Shares Number"
+              ]
+            }
           ]
         },
         {
@@ -14253,7 +14680,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.*.Working Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4760,
           "valueKinds": [
             "number"
@@ -14265,6 +14692,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Working Capital"
+              ]
+            }
           ]
         },
         {
@@ -14291,7 +14726,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.2024-09-30.Cash Cash Equivalents And Short Term Investments",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14301,11 +14736,19 @@
           ],
           "sampleFiles": [
             "yf/finance/6861.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cash Cash Equivalents And Short Term Investments"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2024-09-30.Current Assets",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14315,11 +14758,19 @@
           ],
           "sampleFiles": [
             "yf/finance/6861.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Assets"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2024-09-30.Current Liabilities",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14329,11 +14780,19 @@
           ],
           "sampleFiles": [
             "yf/finance/6861.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Liabilities"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2024-09-30.Invested Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14343,11 +14802,19 @@
           ],
           "sampleFiles": [
             "yf/finance/6861.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Invested Capital"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2024-09-30.Ordinary Shares Number",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14357,6 +14824,14 @@
           ],
           "sampleFiles": [
             "yf/finance/6861.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Ordinary Shares Number"
+              ]
+            }
           ]
         },
         {
@@ -14427,7 +14902,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.2024-09-30.Working Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14437,6 +14912,14 @@
           ],
           "sampleFiles": [
             "yf/finance/6861.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Working Capital"
+              ]
+            }
           ]
         },
         {
@@ -14465,7 +14948,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Cash Cash Equivalents And Short Term Investments",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3,
           "valueKinds": [
             "number"
@@ -14477,11 +14960,19 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cash Cash Equivalents And Short Term Investments"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Current Assets",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3,
           "valueKinds": [
             "number"
@@ -14493,11 +14984,19 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Assets"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Current Liabilities",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3,
           "valueKinds": [
             "number"
@@ -14509,11 +15008,19 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Liabilities"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Invested Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3,
           "valueKinds": [
             "number"
@@ -14525,11 +15032,19 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Invested Capital"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Net Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 2,
           "valueKinds": [
             "number"
@@ -14541,11 +15056,19 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Net Debt"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Ordinary Shares Number",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3,
           "valueKinds": [
             "number"
@@ -14557,6 +15080,14 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Ordinary Shares Number"
+              ]
+            }
           ]
         },
         {
@@ -14657,7 +15188,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.2025-06-30.Working Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3,
           "valueKinds": [
             "number"
@@ -14669,6 +15200,14 @@
           "sampleFiles": [
             "yf/finance/0700.HK.json",
             "yf/finance/1024.HK.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Working Capital"
+              ]
+            }
           ]
         },
         {
@@ -14695,7 +15234,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Cash Cash Equivalents And Short Term Investments",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14705,11 +15244,19 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cash Cash Equivalents And Short Term Investments"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Current Assets",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14719,11 +15266,19 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Assets"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Current Liabilities",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14733,11 +15288,19 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Current Liabilities"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Invested Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14747,11 +15310,19 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Invested Capital"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Net Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14761,11 +15332,19 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Net Debt"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Ordinary Shares Number",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14775,6 +15354,14 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Ordinary Shares Number"
+              ]
+            }
           ]
         },
         {
@@ -14867,7 +15454,7 @@
         },
         {
           "path": "data.quarterly_balance_sheet.2026-02-28.Working Capital",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -14877,6 +15464,14 @@
           ],
           "sampleFiles": [
             "yf/finance/3382.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Working Capital"
+              ]
+            }
           ]
         },
         {
@@ -14971,7 +15566,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.*.Financing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4937,
           "valueKinds": [
             "number"
@@ -14983,6 +15578,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Financing Cash Flow"
+              ]
+            }
           ]
         },
         {
@@ -15011,7 +15614,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.*.Investing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4929,
           "valueKinds": [
             "number"
@@ -15023,11 +15626,19 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Investing Cash Flow"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_cash_flow.*.Issuance Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3467,
           "valueKinds": [
             "number"
@@ -15039,6 +15650,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Issuance Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -15067,7 +15686,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.*.Repayment Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 3937,
           "valueKinds": [
             "number"
@@ -15079,6 +15698,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Repayment Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -15151,7 +15778,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.2024-09-30.Financing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15161,6 +15788,14 @@
           ],
           "sampleFiles": [
             "yf/finance/6594.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Financing Cash Flow"
+              ]
+            }
           ]
         },
         {
@@ -15187,7 +15822,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.2024-09-30.Investing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15197,11 +15832,19 @@
           ],
           "sampleFiles": [
             "yf/finance/6594.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Investing Cash Flow"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_cash_flow.2024-09-30.Issuance Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15211,6 +15854,14 @@
           ],
           "sampleFiles": [
             "yf/finance/6594.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Issuance Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -15237,7 +15888,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.2024-09-30.Repayment Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15247,6 +15898,14 @@
           ],
           "sampleFiles": [
             "yf/finance/6594.T.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Repayment Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -15317,7 +15976,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.2025-12-31.Financing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15327,6 +15986,14 @@
           ],
           "sampleFiles": [
             "yf/finance/601658.SS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Financing Cash Flow"
+              ]
+            }
           ]
         },
         {
@@ -15353,7 +16020,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.2025-12-31.Investing Cash Flow",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15363,11 +16030,19 @@
           ],
           "sampleFiles": [
             "yf/finance/601658.SS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Investing Cash Flow"
+              ]
+            }
           ]
         },
         {
           "path": "data.quarterly_cash_flow.2025-12-31.Issuance Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15377,6 +16052,14 @@
           ],
           "sampleFiles": [
             "yf/finance/601658.SS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Issuance Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -15403,7 +16086,7 @@
         },
         {
           "path": "data.quarterly_cash_flow.2025-12-31.Repayment Of Debt",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 1,
           "valueKinds": [
             "number"
@@ -15413,6 +16096,14 @@
           ],
           "sampleFiles": [
             "yf/finance/601658.SS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Repayment Of Debt"
+              ]
+            }
           ]
         },
         {
@@ -15475,7 +16166,7 @@
         },
         {
           "path": "data.quarterly_income_statement.*.Cost Of Revenue",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4450,
           "valueKinds": [
             "number"
@@ -15487,6 +16178,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000080.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Cost Of Revenue"
+              ]
+            }
           ]
         },
         {
@@ -15619,7 +16318,7 @@
         },
         {
           "path": "data.quarterly_income_statement.*.Operating Expense",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 4665,
           "valueKinds": [
             "number"
@@ -15631,6 +16330,14 @@
           "sampleFiles": [
             "yf/finance/000001.SZ.json",
             "yf/finance/000050.SZ.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Operating Expense"
+              ]
+            }
           ]
         },
         {
@@ -15659,7 +16366,7 @@
         },
         {
           "path": "data.quarterly_income_statement.*.Research And Development",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 2524,
           "valueKinds": [
             "number"
@@ -15671,6 +16378,14 @@
           "sampleFiles": [
             "yf/finance/000050.SZ.json",
             "yf/finance/000100.KS.json"
+          ],
+          "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx",
+              "tokens": [
+                "Research And Development"
+              ]
+            }
           ]
         },
         {
@@ -16321,13 +17036,13 @@
       "internalSource": "computed",
       "fileCount": 2,
       "parsedFileCount": 2,
-      "scannedBytes": 4240015,
+      "scannedBytes": 4270349,
       "fieldCount": 106,
       "statusCounts": {
-        "not_yet_used": 51,
-        "visually_rendered": 34,
+        "not_yet_used": 50,
+        "visually_rendered": 36,
         "metadata": 7,
-        "interpreted": 14
+        "interpreted": 13
       },
       "fields": [
         {
@@ -16630,7 +17345,7 @@
             "number"
           ],
           "sampleValues": [
-            "903"
+            "904"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16660,7 +17375,7 @@
             "number"
           ],
           "sampleValues": [
-            "137"
+            "136"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16906,7 +17621,7 @@
             "string"
           ],
           "sampleValues": [
-            "2026-06-16T09:12:04.380Z"
+            "2026-06-16T14:03:36.857Z"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -16980,13 +17695,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "actionBucket"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
               "tokens": [
                 "actionBucket"
               ]
@@ -17028,7 +17743,7 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "actionLabel"
               ]
@@ -17065,13 +17780,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "actionReasons"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
               "tokens": [
                 "actionReasons"
               ]
@@ -17080,14 +17795,14 @@
         },
         {
           "path": "rows[].actionScore",
-          "status": "interpreted",
+          "status": "visually_rendered",
           "presenceCount": 1082,
           "valueKinds": [
             "number"
           ],
           "sampleValues": [
-            "78.16",
-            "75.64"
+            "83.21",
+            "81.77"
           ],
           "sampleFiles": [
             "computed/stock_action_index.json",
@@ -17107,13 +17822,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "actionScore"
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
               "tokens": [
                 "actionScore"
               ]
@@ -17122,7 +17837,7 @@
         },
         {
           "path": "rows[].canonicalSector",
-          "status": "not_yet_used",
+          "status": "visually_rendered",
           "presenceCount": 16,
           "valueKinds": [
             "string"
@@ -17135,6 +17850,12 @@
             "computed/stock_action_index.json"
           ],
           "consumerHits": [
+            {
+              "file": "100xfenok-next/src/app/superinvestors/SuperinvestorsClient.tsx",
+              "tokens": [
+                "canonicalSector"
+              ]
+            },
             {
               "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
@@ -17188,13 +17909,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "confidenceLabel"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
               "tokens": [
                 "confidenceLabel"
               ]
@@ -17204,7 +17925,7 @@
         {
           "path": "rows[].consensus",
           "status": "visually_rendered",
-          "presenceCount": 13,
+          "presenceCount": 14,
           "valueKinds": [
             "null"
           ],
@@ -17241,7 +17962,7 @@
         {
           "path": "rows[].consensus.classesHeld[]",
           "status": "not_yet_used",
-          "presenceCount": 14,
+          "presenceCount": 10,
           "valueKinds": [
             "array",
             "string"
@@ -17265,7 +17986,7 @@
         {
           "path": "rows[].consensus.equityHolders",
           "status": "not_yet_used",
-          "presenceCount": 3,
+          "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
@@ -17288,7 +18009,7 @@
         {
           "path": "rows[].consensus.equityScore",
           "status": "not_yet_used",
-          "presenceCount": 3,
+          "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
@@ -17311,7 +18032,7 @@
         {
           "path": "rows[].consensus.totalHolders",
           "status": "not_yet_used",
-          "presenceCount": 3,
+          "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
@@ -17334,7 +18055,7 @@
         {
           "path": "rows[].conviction",
           "status": "visually_rendered",
-          "presenceCount": 13,
+          "presenceCount": 14,
           "valueKinds": [
             "null"
           ],
@@ -17365,7 +18086,7 @@
         {
           "path": "rows[].conviction.count",
           "status": "not_yet_used",
-          "presenceCount": 3,
+          "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
@@ -17380,7 +18101,7 @@
         {
           "path": "rows[].conviction.investors[]",
           "status": "visually_rendered",
-          "presenceCount": 11,
+          "presenceCount": 9,
           "valueKinds": [
             "array",
             "string"
@@ -17422,7 +18143,7 @@
         {
           "path": "rows[].conviction.maxValue",
           "status": "not_yet_used",
-          "presenceCount": 3,
+          "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
@@ -17445,7 +18166,7 @@
         {
           "path": "rows[].conviction.maxWeight",
           "status": "not_yet_used",
-          "presenceCount": 3,
+          "presenceCount": 2,
           "valueKinds": [
             "number"
           ],
@@ -17469,7 +18190,7 @@
         {
           "path": "rows[].conviction.signals[]",
           "status": "visually_rendered",
-          "presenceCount": 6,
+          "presenceCount": 4,
           "valueKinds": [
             "array",
             "string"
@@ -17529,19 +18250,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "country"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "country"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/hooks/useScreenerData.ts",
-              "tokens": [
-                "country"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/market-valuation/types.ts",
-              "tokens": [
-                "country"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "country"
               ]
@@ -17616,19 +18337,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "epsGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "epsGrowthFy1"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "epsGrowthFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "epsGrowthFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
               "tokens": [
                 "epsGrowthFy1"
               ]
@@ -17658,19 +18379,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "epsGrowthFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "epsGrowthFy2"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "epsGrowthFy2"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "epsGrowthFy2"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "epsGrowthFy2"
               ]
@@ -17700,19 +18421,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "epsGrowthFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "epsGrowthFy3"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "epsGrowthFy3"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "epsGrowthFy3"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "epsGrowthFy3"
               ]
@@ -17742,13 +18463,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "forwardEpsFy1"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "forwardEpsFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "forwardEpsFy1"
               ]
@@ -17778,13 +18505,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "forwardEpsFy2"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "forwardEpsFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "forwardEpsFy2"
               ]
@@ -17814,13 +18547,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "forwardEpsFy3"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "forwardEpsFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "forwardEpsFy3"
               ]
@@ -17850,19 +18589,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "forwardPeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "forwardPeFy1"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "forwardPeFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "forwardPeFy1"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "forwardPeFy1"
               ]
@@ -17892,19 +18631,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "forwardPeFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "forwardPeFy2"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "forwardPeFy2"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "forwardPeFy2"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "forwardPeFy2"
               ]
@@ -17934,19 +18673,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "forwardPeFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "forwardPeFy3"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "forwardPeFy3"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "forwardPeFy3"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "forwardPeFy3"
               ]
@@ -17976,19 +18715,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "grossMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "grossMarginFy1"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "grossMarginFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
-              "tokens": [
-                "grossMarginFy1"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "grossMarginFy1"
               ]
@@ -18018,13 +18757,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "grossMarginFy2"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "grossMarginFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "grossMarginFy2"
               ]
@@ -18054,13 +18799,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "grossMarginFy3"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "grossMarginFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "grossMarginFy3"
               ]
@@ -18096,13 +18847,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "guruHolders"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
               "tokens": [
                 "guruHolders"
               ]
@@ -18137,13 +18888,13 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "lowEvidence"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
               "tokens": [
                 "lowEvidence"
               ]
@@ -18202,19 +18953,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "operatingMarginFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "operatingMarginFy1"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "operatingMarginFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "operatingMarginFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
               "tokens": [
                 "operatingMarginFy1"
               ]
@@ -18244,13 +18995,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "operatingMarginFy2"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "operatingMarginFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "operatingMarginFy2"
               ]
@@ -18280,13 +19037,19 @@
               ]
             },
             {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
               "tokens": [
                 "operatingMarginFy3"
               ]
             },
             {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "operatingMarginFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/lib/screener/types.ts",
               "tokens": [
                 "operatingMarginFy3"
               ]
@@ -18358,19 +19121,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "revenueGrowthFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "revenueGrowthFy1"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "revenueGrowthFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "revenueGrowthFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
               "tokens": [
                 "revenueGrowthFy1"
               ]
@@ -18400,19 +19163,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "revenueGrowthFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "revenueGrowthFy2"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "revenueGrowthFy2"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "revenueGrowthFy2"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "revenueGrowthFy2"
               ]
@@ -18442,19 +19205,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "revenueGrowthFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "revenueGrowthFy3"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "revenueGrowthFy3"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "revenueGrowthFy3"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "revenueGrowthFy3"
               ]
@@ -18484,19 +19247,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "roeFy1"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "roeFy1"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "roeFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "roeFy1"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/server/admin-live-tools.ts",
               "tokens": [
                 "roeFy1"
               ]
@@ -18526,19 +19289,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "roeFy2"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "roeFy2"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "roeFy2"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "roeFy2"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "roeFy2"
               ]
@@ -18568,19 +19331,19 @@
               ]
             },
             {
+              "file": "100xfenok-next/src/features/stock-analyzer/components/stock-analyzer-dashboard.tsx",
+              "tokens": [
+                "roeFy3"
+              ]
+            },
+            {
+              "file": "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
+              "tokens": [
+                "roeFy3"
+              ]
+            },
+            {
               "file": "100xfenok-next/src/lib/screener/deterministicRules.ts",
-              "tokens": [
-                "roeFy3"
-              ]
-            },
-            {
-              "file": "100xfenok-next/src/lib/screener/types.ts",
-              "tokens": [
-                "roeFy3"
-              ]
-            },
-            {
-              "file": "scripts/build-phase2-closeout-indexes.mjs",
               "tokens": [
                 "roeFy3"
               ]
