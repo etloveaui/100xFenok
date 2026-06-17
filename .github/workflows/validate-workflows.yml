@@ -1,0 +1,31 @@
+# Guardrail for workflow parse errors.
+#
+# If a workflow YAML file is malformed, GitHub may create a failed run with
+# no jobs and no downloadable logs. This separate guard parses workflow YAML
+# files so syntax failures leave a normal, readable job log.
+name: Validate GitHub Workflows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/ops/validate-workflow-yaml.rb'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/ops/validate-workflow-yaml.rb'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-workflow-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse workflow YAML
+        run: ruby scripts/ops/validate-workflow-yaml.rb

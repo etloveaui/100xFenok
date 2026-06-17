@@ -60,20 +60,20 @@ jobs:
 
       - name: Run batch fetch
         env:
-          INPUT_LIMIT: ${{ github.event.inputs.limit }}
-          INPUT_SHARD: ${{ github.event.inputs.shard }}
-          INPUT_TICKERS: ${{ github.event.inputs.tickers }}
-          INPUT_SLEEP: ${{ github.event.inputs.sleep }}
-          INPUT_PROFILE: ${{ github.event.inputs.profile }}
-          INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours }}
-          INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options }}
-          INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full }}
+          INPUT_LIMIT: ${{ github.event.inputs.limit || '' }}
+          INPUT_SHARD: ${{ github.event.inputs.shard || '' }}
+          INPUT_TICKERS: ${{ github.event.inputs.tickers || '' }}
+          INPUT_SLEEP: ${{ github.event.inputs.sleep || '0.8' }}
+          INPUT_PROFILE: ${{ github.event.inputs.profile || 'full' }}
+          INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '0' }}
+          INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options || 'false' }}
+          INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full || 'false' }}
         run: |
-            ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
-            if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
-            if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
-            if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
-            if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
+          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
+          if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
+          if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
+          if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
+          if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
           python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
 
