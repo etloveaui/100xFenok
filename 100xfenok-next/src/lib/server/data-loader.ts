@@ -510,6 +510,85 @@ export async function getSlickchartsManifest() {
   };
 }
 
+export async function getStockanalysisManifest() {
+  const baseDir = path.join(PUBLIC_DATA_ROOT, "stockanalysis");
+  const etfsDir = path.join(baseDir, "etfs");
+  const stocksDir = path.join(baseDir, "stocks");
+  const backfillDir = path.join(baseDir, "backfill");
+  const universePath = path.join(baseDir, "etf_universe.json");
+  const indexPath = path.join(baseDir, "index.json");
+  const latestBackfillPath = path.join(backfillDir, "latest.json");
+
+  const [meta, topLevel, etfs, stocks, backfill, universe, index, latestBackfill] =
+    await Promise.all([
+      getBaseMeta("stockanalysis"),
+      buildJsonSample(baseDir, "/data/stockanalysis", 20),
+      buildJsonSample(etfsDir, "/data/stockanalysis/etfs", 30),
+      buildJsonSample(stocksDir, "/data/stockanalysis/stocks", 30),
+      buildJsonSample(backfillDir, "/data/stockanalysis/backfill", 20),
+      readOptionalJsonRecord(universePath),
+      readOptionalJsonRecord(indexPath),
+      readOptionalJsonRecord(latestBackfillPath),
+    ]);
+
+  const universeRecords = Array.isArray(universe?.records)
+    ? universe.records.slice(0, 10)
+    : [];
+  const indexResults = Array.isArray(index?.results) ? index.results.slice(0, 10) : [];
+  const latestBackfillResults = Array.isArray(latestBackfill?.results)
+    ? latestBackfill.results.slice(0, 10)
+    : [];
+
+  return {
+    generatedAt: new Date().toISOString(),
+    basePath: "/data/stockanalysis/",
+    version: meta.version,
+    updated: meta.updated,
+    source: meta.source,
+    updateFrequency: meta.updateFrequency,
+    declaredFileCount: meta.declaredFileCount,
+    description: meta.description,
+    files: {
+      topLevelCount: topLevel.count,
+      etfFileCount: etfs.count,
+      stockFileCount: stocks.count,
+      backfillFileCount: backfill.count,
+      topLevelSample: topLevel.sample,
+      etfSample: etfs.sample,
+      stockSample: stocks.sample,
+      backfillSample: backfill.sample,
+      etfUniverse: universe ? "/data/stockanalysis/etf_universe.json" : null,
+      index: index ? "/data/stockanalysis/index.json" : null,
+      latestBackfill: latestBackfill ? "/data/stockanalysis/backfill/latest.json" : null,
+    },
+    universe: universe
+      ? {
+          generated_at: universe.generated_at ?? null,
+          asset_type: universe.asset_type ?? null,
+          counts: universe.counts ?? null,
+          warnings: universe.warnings ?? null,
+          sample_records: universeRecords,
+        }
+      : null,
+    index: index
+      ? {
+          generated_at: index.generated_at ?? null,
+          counts: index.counts ?? null,
+          stop_reason: index.stop_reason ?? null,
+          sample_results: indexResults,
+        }
+      : null,
+    latestBackfill: latestBackfill
+      ? {
+          generated_at: latestBackfill.generated_at ?? null,
+          counts: latestBackfill.counts ?? null,
+          stop_reason: latestBackfill.stop_reason ?? null,
+          sample_results: latestBackfillResults,
+        }
+      : null,
+  };
+}
+
 export async function getDamodaranManifest() {
   const baseDir = path.join(PUBLIC_DATA_ROOT, "damodaran");
   const [meta, files] = await Promise.all([
