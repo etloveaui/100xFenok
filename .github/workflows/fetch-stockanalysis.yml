@@ -1,0 +1,97 @@
+# StockAnalysis DataPack source refresh.
+# Output: data/stockanalysis/** + public mirror + manifest.
+
+name: Fetch StockAnalysis Data
+
+on:
+  schedule:
+    # 매주 일요일 23:20 UTC (한국 월요일 08:20) — Yahoo weekly refresh afterglow
+    - cron: '20 23 * * 0'
+  workflow_dispatch:
+    inputs:
+      etfs:
+        description: 'Comma-separated ETF override (empty = focus ETF list)'
+        required: false
+        default: ''
+      stocks:
+        description: 'Comma-separated stock symbols'
+        required: false
+        default: ''
+      discover_universe:
+        description: 'Refresh the full StockAnalysis ETF universe list'
+        required: false
+        default: 'true'
+      universe_backfill:
+        description: 'Deep-fetch ETF payloads from the universe list (manual chunked runs only)'
+        required: false
+        default: 'false'
+      offset:
+        description: 'ETF offset for universe backfill chunking'
+        required: false
+        default: '0'
+      limit_etfs:
+        description: 'ETF limit for smoke/backfill runs'
+        required: false
+        default: ''
+      max_universe_pages:
+        description: 'Maximum ETF universe list pages to scan'
+        required: false
+        default: '100'
+      sleep:
+        description: 'Seconds between requests'
+        required: false
+        default: '0.25'
+
+jobs:
+  fetch-stockanalysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run StockAnalysis fetch
+        env:
+          INPUT_ETFS: ${{ github.event.inputs.etfs }}
+          INPUT_STOCKS: ${{ github.event.inputs.stocks }}
+          INPUT_DISCOVER_UNIVERSE: ${{ github.event.inputs.discover_universe }}
+          INPUT_UNIVERSE_BACKFILL: ${{ github.event.inputs.universe_backfill }}
+          INPUT_OFFSET: ${{ github.event.inputs.offset }}
+          INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
+          INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
+          INPUT_SLEEP: ${{ github.event.inputs.sleep }}
+        run: |
+          ARGS="--sleep ${INPUT_SLEEP:-0.25}"
+          if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
+          if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
+          if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
+          if [ -n "$INPUT_STOCKS" ]; then ARGS="$ARGS --stocks $INPUT_STOCKS"; fi
+          if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
+          if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
+          if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
+          python3 scripts/fetch-stockanalysis.py $ARGS
+
+      - name: Mirror docs to public
+        run: |
+          mkdir -p 100xfenok-next/public/data/stockanalysis
+          cp data/stockanalysis/README.md 100xfenok-next/public/data/stockanalysis/README.md
+          cp data/stockanalysis/schema.json 100xfenok-next/public/data/stockanalysis/schema.json
+
+      - name: Build normalized market facts
+        run: python3 scripts/build-market-facts.py
+
+      - name: Update manifest
+        run: python3 scripts/update-manifest.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/stockanalysis data/computed/market_facts data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/manifest.json
+          git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
+          git pull --rebase origin main
+          git push

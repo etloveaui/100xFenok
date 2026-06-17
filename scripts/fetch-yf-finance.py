@@ -43,6 +43,15 @@ MAJOR_ETFS = {
     "TLT", "IEF", "SHY", "GLD", "SLV", "VNQ",
     "SMH", "SOXX",
 }
+LEVERAGED_AND_FOCUS_ETFS = {
+    "379800.KS", "379810.KS",
+    "APPX", "AVGG", "AVGX", "BEG", "BIL", "BILS", "BITU",
+    "CRWL", "CWVX", "DFEN", "ELIL", "ETHT", "FNGU", "KORU",
+    "MSTU", "MUU", "NVDG", "NVDL", "OKLL", "ORCX", "PLTG",
+    "PTIR", "SGOV", "SOXL", "STRC", "TMF", "TQQQ", "TSLL",
+    "TSMG", "UTSL",
+    "DDM", "QLD", "ROM", "SSO", "TNA", "UPRO", "USD", "UWM",
+}
 NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 
 ANNUAL_PERIODS = 4
@@ -63,8 +72,13 @@ SHARES_FULL_ENTRIES = 48
 
 INFO_KEYS = [
     # identity
-    "shortName", "longName", "currency", "exchange", "country",
+    "quoteType", "shortName", "longName", "currency", "exchange", "country",
     "sector", "industry", "fullTimeEmployees",
+    # fund / ETF
+    "fundFamily", "category", "legalType", "totalAssets", "netAssets",
+    "navPrice", "yield", "ytdReturn", "beta3Year", "netExpenseRatio",
+    "annualReportExpenseRatio", "threeYearAverageReturn",
+    "fiveYearAverageReturn",
     # price / range
     "currentPrice", "previousClose", "fiftyTwoWeekHigh", "fiftyTwoWeekLow",
     "fiftyTwoWeekChangePercent", "averageVolume", "averageVolume10days",
@@ -292,6 +306,80 @@ def shares_full_records(ticker_obj):
     return small_series(series, SHARES_FULL_ENTRIES)
 
 
+FUND_DATA_ATTRS = (
+    "description",
+    "fund_overview",
+    "fund_operations",
+    "asset_classes",
+    "top_holdings",
+    "equity_holdings",
+    "bond_holdings",
+    "bond_ratings",
+    "sector_weightings",
+)
+
+
+STOCK_ONLY_KEYS = (
+    "major_holders",
+    "institutional_holders",
+    "analyst_price_targets",
+    "recommendations",
+    "earnings_estimate",
+    "revenue_estimate",
+    "income_statement",
+    "quarterly_income_statement",
+    "balance_sheet",
+    "quarterly_balance_sheet",
+    "cash_flow",
+    "quarterly_cash_flow",
+    "recommendations_summary",
+    "upgrades_downgrades",
+    "earnings_dates",
+    "earnings_history",
+    "eps_trend",
+    "eps_revisions",
+    "growth_estimates",
+    "sustainability",
+    "mutualfund_holders",
+    "insider_transactions",
+    "insider_purchases",
+    "insider_roster_holders",
+    "sec_filings",
+    "news",
+)
+
+
+def is_fund_like(info):
+    quote_type = str(info.get("quoteType") or "").upper()
+    return quote_type in {"ETF", "MUTUALFUND"} or any(
+        info.get(key) is not None
+        for key in ("fundFamily", "category", "netExpenseRatio", "totalAssets")
+    )
+
+
+def fund_data_records(ticker_obj):
+    funds_data = getattr(ticker_obj, "funds_data", None)
+    if funds_data is None:
+        return None
+    out = {}
+    quote_type = safe(lambda: funds_data.quote_type())
+    if quote_type:
+        out["quote_type"] = quote_type
+    for attr in FUND_DATA_ATTRS:
+        value = safe(lambda attr=attr: getattr(funds_data, attr))
+        if value is None:
+            continue
+        if hasattr(value, "iterrows"):
+            clean = df_records(value)
+        elif isinstance(value, dict):
+            clean = clean_dict(value)
+        else:
+            clean = clean_value(value)
+        if clean is not None:
+            out[attr] = clean
+    return out or None
+
+
 def safe(fn, default=None):
     try:
         return fn()
@@ -316,54 +404,63 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     data = {}
 
     info = safe(lambda: t.info, {}) or {}
+    fund_like = is_fund_like(info)
     data["info"] = {k: info.get(k) for k in INFO_KEYS if info.get(k) is not None} or None
 
-    data["major_holders"] = safe(
-        lambda: {str(k): float(v) for k, v in t.major_holders["Value"].items()} if t.major_holders is not None and not t.major_holders.empty else None
-    )
-    data["institutional_holders"] = safe(lambda: holders_records(t.institutional_holders, INSTITUTIONAL_TOP))
+    if fund_like:
+        for key in STOCK_ONLY_KEYS:
+            data[key] = None
+    else:
+        data["major_holders"] = safe(
+            lambda: {str(k): float(v) for k, v in t.major_holders["Value"].items()} if t.major_holders is not None and not t.major_holders.empty else None
+        )
+        data["institutional_holders"] = safe(lambda: holders_records(t.institutional_holders, INSTITUTIONAL_TOP))
 
-    data["analyst_price_targets"] = safe(lambda: dict(t.analyst_price_targets) or None)
-    data["recommendations"] = safe(lambda: small_df(t.recommendations, RECOMMENDATION_ENTRIES))
-    data["earnings_estimate"] = safe(lambda: small_df(t.earnings_estimate))
-    data["revenue_estimate"] = safe(lambda: small_df(t.revenue_estimate))
+        data["analyst_price_targets"] = safe(lambda: dict(t.analyst_price_targets) or None)
+        data["recommendations"] = safe(lambda: small_df(t.recommendations, RECOMMENDATION_ENTRIES))
+        data["earnings_estimate"] = safe(lambda: small_df(t.earnings_estimate))
+        data["revenue_estimate"] = safe(lambda: small_df(t.revenue_estimate))
 
     data["dividends"] = safe(
         lambda: {_iso(k): float(v) for k, v in t.dividends.tail(DIVIDEND_ENTRIES).items()} or None
     )
 
-    data["income_statement"] = safe(lambda: curated_statement(t.income_stmt, INCOME_ITEMS, ANNUAL_PERIODS))
-    data["quarterly_income_statement"] = safe(lambda: curated_statement(t.quarterly_income_stmt, INCOME_ITEMS, QUARTERLY_PERIODS))
-    data["balance_sheet"] = safe(lambda: curated_statement(t.balance_sheet, BALANCE_ITEMS, ANNUAL_PERIODS))
-    data["quarterly_balance_sheet"] = safe(lambda: curated_statement(t.quarterly_balance_sheet, BALANCE_ITEMS, QUARTERLY_PERIODS))
-    data["cash_flow"] = safe(lambda: curated_statement(t.cashflow, CASHFLOW_ITEMS, ANNUAL_PERIODS))
-    data["quarterly_cash_flow"] = safe(lambda: curated_statement(t.quarterly_cashflow, CASHFLOW_ITEMS, QUARTERLY_PERIODS))
+    if not fund_like:
+        data["income_statement"] = safe(lambda: curated_statement(t.income_stmt, INCOME_ITEMS, ANNUAL_PERIODS))
+        data["quarterly_income_statement"] = safe(lambda: curated_statement(t.quarterly_income_stmt, INCOME_ITEMS, QUARTERLY_PERIODS))
+        data["balance_sheet"] = safe(lambda: curated_statement(t.balance_sheet, BALANCE_ITEMS, ANNUAL_PERIODS))
+        data["quarterly_balance_sheet"] = safe(lambda: curated_statement(t.quarterly_balance_sheet, BALANCE_ITEMS, QUARTERLY_PERIODS))
+        data["cash_flow"] = safe(lambda: curated_statement(t.cashflow, CASHFLOW_ITEMS, ANNUAL_PERIODS))
+        data["quarterly_cash_flow"] = safe(lambda: curated_statement(t.quarterly_cashflow, CASHFLOW_ITEMS, QUARTERLY_PERIODS))
 
-    if profile == "full":
+    if profile in {"full", "etf"}:
         data["fast_info"] = safe(lambda: clean_dict(dict(t.fast_info)))
         data["actions"] = safe(lambda: df_records(t.actions, DIVIDEND_ENTRIES, recent=True))
         data["splits"] = safe(lambda: small_series(t.splits, DIVIDEND_ENTRIES))
         data["capital_gains"] = safe(lambda: small_series(t.capital_gains, DIVIDEND_ENTRIES))
-        data["recommendations_summary"] = safe(lambda: small_df(t.recommendations_summary))
-        data["upgrades_downgrades"] = safe(lambda: small_df(t.upgrades_downgrades, UPGRADES_ENTRIES))
-        data["earnings_dates"] = safe(lambda: small_df(t.earnings_dates, EARNINGS_DATES_ENTRIES))
-        data["earnings_history"] = safe(lambda: small_df(t.earnings_history))
-        data["eps_trend"] = safe(lambda: small_df(t.eps_trend))
-        data["eps_revisions"] = safe(lambda: small_df(t.eps_revisions))
-        data["growth_estimates"] = safe(lambda: small_df(t.growth_estimates))
-        data["sustainability"] = safe(lambda: small_df(t.sustainability))
-        data["mutualfund_holders"] = safe(lambda: df_records(t.mutualfund_holders, MUTUALFUND_TOP))
-        data["insider_transactions"] = safe(lambda: df_records(t.insider_transactions, INSIDER_TOP))
-        data["insider_purchases"] = safe(lambda: df_records(t.insider_purchases, INSIDER_TOP))
-        data["insider_roster_holders"] = safe(lambda: df_records(t.insider_roster_holders, INSIDER_TOP))
-        data["sec_filings"] = safe(lambda: sec_filings_records(t.sec_filings))
-        data["news"] = safe(lambda: news_records(t.news))
+        if fund_like:
+            data["funds_data"] = safe(lambda: fund_data_records(t))
+        else:
+            data["recommendations_summary"] = safe(lambda: small_df(t.recommendations_summary))
+            data["upgrades_downgrades"] = safe(lambda: small_df(t.upgrades_downgrades, UPGRADES_ENTRIES))
+            data["earnings_dates"] = safe(lambda: small_df(t.earnings_dates, EARNINGS_DATES_ENTRIES))
+            data["earnings_history"] = safe(lambda: small_df(t.earnings_history))
+            data["eps_trend"] = safe(lambda: small_df(t.eps_trend))
+            data["eps_revisions"] = safe(lambda: small_df(t.eps_revisions))
+            data["growth_estimates"] = safe(lambda: small_df(t.growth_estimates))
+            data["sustainability"] = safe(lambda: small_df(t.sustainability))
+            data["mutualfund_holders"] = safe(lambda: df_records(t.mutualfund_holders, MUTUALFUND_TOP))
+            data["insider_transactions"] = safe(lambda: df_records(t.insider_transactions, INSIDER_TOP))
+            data["insider_purchases"] = safe(lambda: df_records(t.insider_purchases, INSIDER_TOP))
+            data["insider_roster_holders"] = safe(lambda: df_records(t.insider_roster_holders, INSIDER_TOP))
+            data["sec_filings"] = safe(lambda: sec_filings_records(t.sec_filings))
+            data["news"] = safe(lambda: news_records(t.news))
         data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
 
     if include_options:
         data["options"] = safe(lambda: option_chain_records(t))
     if include_shares_full:
-        data["shares_full"] = safe(lambda: shares_full_records(t))
+        data["shares_full"] = None if fund_like else safe(lambda: shares_full_records(t))
 
     latency_ms = round((time.perf_counter() - start) * 1000)
     return data, latency_ms
@@ -426,6 +523,7 @@ def load_universe(stocks_only=False):
         tickers |= load_dashboard_etfs()
         tickers |= load_portfolio_symbols()
         tickers |= MAJOR_ETFS
+        tickers |= LEVERAGED_AND_FOCUS_ETFS
     return sorted(t for t in tickers if SYMBOL_RE.match(t))
 
 
@@ -460,7 +558,7 @@ def main():
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="legacy mode: global-scouter stock detail only")
-    parser.add_argument("--profile", choices=("core", "full"), default="full", help="core=legacy compact fields, full=bounded extra Yahoo-only depth")
+    parser.add_argument("--profile", choices=("core", "full", "etf"), default="full", help="core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
     parser.add_argument("--include-options", action="store_true", help="fetch first option expiries; use targeted tickers only")
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
     parser.add_argument("--max-age-hours", type=float, default=0, help="skip usable local payloads fetched within N hours")

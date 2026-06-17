@@ -48,6 +48,8 @@ CATEGORY_ORDER = (
     "calendar",
     "sentiment",
     "slickcharts",
+    "stockanalysis",
+    "yf",
     "sec-13f",
     "benchmarks",
     "damodaran",
@@ -65,7 +67,7 @@ DEFAULT_FOLDER_META = {
         "update_frequency": "after source data refresh",
         "source": "Macro Monitor computed signal export",
         "schema": False,
-        "description": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data.",
+        "description": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data.",
     },
     "calendar": {
         "version": "1.0.0",
@@ -73,6 +75,13 @@ DEFAULT_FOLDER_META = {
         "source": "BujaBot USD Google Calendar",
         "schema": True,
         "description": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar.",
+    },
+    "stockanalysis": {
+        "version": "1.0.0",
+        "update_frequency": "weekly / on-demand",
+        "source": "StockAnalysis public JSON endpoints",
+        "schema": True,
+        "description": "ETF holdings, ETF metadata, quote/history cross-checks, and stock overview snapshots.",
     },
 }
 

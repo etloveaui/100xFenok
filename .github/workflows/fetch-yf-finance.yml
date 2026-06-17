@@ -18,12 +18,16 @@ on:
         description: 'Shard i/n (e.g. 0/4, empty = no shard)'
         required: false
         default: ''
+      tickers:
+        description: 'Comma-separated ticker override (e.g. TQQQ,SOXL,NVDL)'
+        required: false
+        default: ''
       sleep:
         description: 'Seconds between tickers'
         required: false
         default: '0.8'
       profile:
-        description: 'Fetch profile: core or full'
+        description: 'Fetch profile: core, full, or etf'
         required: false
         default: 'full'
       max_age_hours:
@@ -58,16 +62,18 @@ jobs:
         env:
           INPUT_LIMIT: ${{ github.event.inputs.limit }}
           INPUT_SHARD: ${{ github.event.inputs.shard }}
+          INPUT_TICKERS: ${{ github.event.inputs.tickers }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
           INPUT_PROFILE: ${{ github.event.inputs.profile }}
           INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours }}
           INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options }}
           INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full }}
         run: |
-          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
-          if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
-          if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
-          if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
+            ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
+            if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
+            if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
+            if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
+            if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
           python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
 
@@ -77,17 +83,23 @@ jobs:
       - name: Build quarter-end close snapshot
         run: python3 scripts/build-quarter-closes.py
 
+      - name: Build normalized market facts
+        run: python3 scripts/build-market-facts.py
+
       - name: Mirror to public
         run: |
           mkdir -p 100xfenok-next/public/data/yf/finance
           cp -r data/yf/finance/. 100xfenok-next/public/data/yf/finance/
           cp data/yf/quarter_closes.json 100xfenok-next/public/data/yf/quarter_closes.json
 
+      - name: Update manifest
+        run: python3 scripts/update-manifest.py
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/yf 100xfenok-next/public/data/yf
+          git add data/yf data/computed/market_facts data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/manifest.json
           git diff --staged --quiet || git commit -m "chore: update yf finance data"
           git pull --rebase origin main
           git push

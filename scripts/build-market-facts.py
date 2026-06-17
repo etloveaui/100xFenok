@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""
+Build normalized market facts from source-layer JSON.
+
+Inputs:
+  data/yf/finance/{TICKER}.json
+  data/stockanalysis/etfs/{TICKER}.json
+  data/stockanalysis/stocks/{TICKER}.json
+  data/slickcharts/stocks/{TICKER}.json
+
+Output:
+  data/computed/market_facts/index.json
+  data/computed/market_facts/tickers/{TICKER}.json
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / "data"
+OUT = DATA / "computed" / "market_facts"
+PUBLIC_OUT = ROOT / "100xfenok-next" / "public" / "data" / "computed" / "market_facts"
+SCHEMA_VERSION = "market-facts/v1"
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def load_json(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def number(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip().replace(",", "").replace("$", "")
+    mult = 1
+    if text.endswith("T"):
+        mult = 1_000_000_000_000
+        text = text[:-1]
+    elif text.endswith("B"):
+        mult = 1_000_000_000
+        text = text[:-1]
+    elif text.endswith("M"):
+        mult = 1_000_000
+        text = text[:-1]
+    if text.endswith("%"):
+        text = text[:-1]
+    try:
+        return float(text) * mult
+    except ValueError:
+        return None
+
+
+def percent(value):
+    parsed = number(value)
+    return parsed
+
+
+def fact(value, source, as_of=None, fetched_at=None, confidence="observed"):
+    if value is None:
+        return None
+    return {
+        "value": value,
+        "source": source,
+        "as_of": as_of,
+        "fetched_at": fetched_at,
+        "confidence": confidence,
+    }
+
+
+def first_fact(*items):
+    for item in items:
+        if item is not None and item.get("value") is not None:
+            return item
+    return None
+
+
+def yf_fact(yf_payload, key):
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    value = info.get(key)
+    return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"))
+
+
+def yf_fast_fact(yf_payload, key):
+    data = (yf_payload or {}).get("data") or {}
+    fast_info = data.get("fast_info") or {}
+    value = fast_info.get(key)
+    return fact(value, "yf.fast_info", fetched_at=(yf_payload or {}).get("fetched_at"))
+
+
+def stockanalysis_quote_fact(sa_payload, key):
+    quote = ((sa_payload or {}).get("normalized") or {}).get("quote") or {}
+    return fact(quote.get(key), "stockanalysis.quote", fetched_at=(sa_payload or {}).get("fetched_at"))
+
+
+def stockanalysis_overview_fact(sa_payload, key):
+    overview = ((sa_payload or {}).get("normalized") or {}).get("overview") or {}
+    value = overview.get(key)
+    parsed = number(value)
+    return fact(parsed if parsed is not None else value, "stockanalysis.overview", fetched_at=(sa_payload or {}).get("fetched_at"))
+
+
+def slick_fact(slick_payload, key):
+    current = (slick_payload or {}).get("current") or {}
+    return fact(current.get(key), "slickcharts", as_of=(slick_payload or {}).get("updated"))
+
+
+def slick_market_cap_fact(slick_payload):
+    current = (slick_payload or {}).get("current") or {}
+    parsed = number(current.get("market_cap_billions"))
+    value = parsed * 1_000_000_000 if parsed is not None else None
+    return fact(value, "slickcharts", as_of=(slick_payload or {}).get("updated"))
+
+
+def build_one(ticker, yf_payload, sa_payload, slick_payload):
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    sa_norm = (sa_payload or {}).get("normalized") or {}
+
+    asset_type = "stock"
+    if (sa_payload or {}).get("asset_type") == "etf" or str(info.get("quoteType") or "").upper() == "ETF":
+        asset_type = "etf"
+
+    price = first_fact(
+        yf_fact(yf_payload, "currentPrice"),
+        yf_fast_fact(yf_payload, "last_price"),
+        stockanalysis_quote_fact(sa_payload, "p"),
+        slick_fact(slick_payload, "price"),
+    )
+    market_cap = first_fact(
+        yf_fact(yf_payload, "marketCap"),
+        stockanalysis_overview_fact(sa_payload, "marketCap"),
+        slick_market_cap_fact(slick_payload),
+    )
+    total_assets = first_fact(
+        yf_fact(yf_payload, "totalAssets"),
+        stockanalysis_overview_fact(sa_payload, "aum"),
+    )
+
+    facts = {
+        "price": price,
+        "previous_close": first_fact(yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "pd")),
+        "change": first_fact(stockanalysis_quote_fact(sa_payload, "c")),
+        "change_pct": first_fact(stockanalysis_quote_fact(sa_payload, "cp")),
+        "market_cap": market_cap,
+        "total_assets": total_assets,
+        "trailing_pe": first_fact(yf_fact(yf_payload, "trailingPE"), slick_fact(slick_payload, "pe_trailing")),
+        "forward_pe": first_fact(yf_fact(yf_payload, "forwardPE"), stockanalysis_overview_fact(sa_payload, "forwardPE"), slick_fact(slick_payload, "pe_forward")),
+        "dividend_yield": first_fact(yf_fact(yf_payload, "dividendYield"), stockanalysis_overview_fact(sa_payload, "dividendYield"), slick_fact(slick_payload, "dividend_yield")),
+        "beta": first_fact(yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")),
+        "expense_ratio": first_fact(yf_fact(yf_payload, "netExpenseRatio"), stockanalysis_overview_fact(sa_payload, "expenseRatio")),
+    }
+    facts = {key: value for key, value in facts.items() if value is not None}
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "ticker": ticker,
+        "asset_type": asset_type,
+        "generated_at": now_iso(),
+        "identity": {
+            "name": info.get("longName") or info.get("shortName") or (slick_payload or {}).get("company") or ticker,
+            "exchange": info.get("exchange"),
+            "currency": info.get("currency"),
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+            "fund_family": info.get("fundFamily"),
+            "category": info.get("category"),
+        },
+        "facts": facts,
+        "etf": {
+            "holdings_count": sa_norm.get("holding_count"),
+            "holdings_updated": sa_norm.get("holdings_updated"),
+            "top_holdings": (sa_norm.get("holdings") or [])[:25],
+            "asset_allocation": sa_norm.get("asset_allocation"),
+            "sectors": sa_norm.get("sectors"),
+            "countries": sa_norm.get("countries"),
+            "yahoo_funds_data_available": bool(data.get("funds_data")),
+        } if asset_type == "etf" else None,
+        "sources": {
+            "yf": bool(yf_payload),
+            "stockanalysis": bool(sa_payload),
+            "slickcharts": bool(slick_payload),
+        },
+        "source_files": {
+            "yf": f"yf/finance/{ticker}.json" if yf_payload else None,
+            "stockanalysis": (
+                f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
+                if sa_payload else None
+            ),
+            "slickcharts": f"slickcharts/stocks/{ticker}.json" if slick_payload else None,
+        },
+    }
+
+
+def main() -> None:
+    yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
+    sa_files = {}
+    for folder in ("etfs", "stocks"):
+        for p in (DATA / "stockanalysis" / folder).glob("*.json"):
+            sa_files[p.stem] = p
+    slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
+    tickers = sorted(set(yf_files) | set(sa_files) | set(slick_files))
+
+    rows = []
+    generated_at = now_iso()
+    for ticker in tickers:
+        yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
+        sa_payload = load_json(sa_files[ticker]) if ticker in sa_files else None
+        slick_payload = load_json(slick_files[ticker]) if ticker in slick_files else None
+        payload = build_one(ticker, yf_payload, sa_payload, slick_payload)
+        payload["generated_at"] = generated_at
+        rel = Path("tickers") / f"{ticker}.json"
+        write_json(OUT / rel, payload)
+        write_json(PUBLIC_OUT / rel, payload)
+        rows.append({
+            "ticker": ticker,
+            "asset_type": payload["asset_type"],
+            "sources": payload["sources"],
+            "fact_count": len(payload["facts"]),
+        })
+
+    index = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": generated_at,
+        "count": len(rows),
+        "source_files": [
+            "yf/finance/*.json",
+            "stockanalysis/etfs/*.json",
+            "stockanalysis/stocks/*.json",
+            "slickcharts/stocks/*.json",
+        ],
+        "coverage": {
+            "yf": sum(1 for row in rows if row["sources"]["yf"]),
+            "stockanalysis": sum(1 for row in rows if row["sources"]["stockanalysis"]),
+            "slickcharts": sum(1 for row in rows if row["sources"]["slickcharts"]),
+            "etf": sum(1 for row in rows if row["asset_type"] == "etf"),
+            "stock": sum(1 for row in rows if row["asset_type"] == "stock"),
+        },
+        "rows": rows,
+    }
+    write_json(OUT / "index.json", index)
+    write_json(PUBLIC_OUT / "index.json", index)
+    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']}")
+
+
+if __name__ == "__main__":
+    main()
