@@ -2,18 +2,18 @@
 
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
-> **Files**: 47 (30 investors + 3 index + 11 analytics + public mirror)
-> **Version**: 3.4.0
+> **Files**: 77 public JSON (60 investors + 3 index + 14 analytics, mirrored to public data)
+> **Version**: 3.3.3 data payload / 3.4.0 schema contract
 
 ---
 
 ## Overview
 
-Institutional holdings data from SEC 13F filings. Tracks 30 major investors' portfolio positions across 29 quarters through 2026-Q1 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
+Institutional holdings data from SEC 13F filings. Tracks 60 major investors' portfolio positions across 30 quarters through 2026-Q1 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
 
 Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
-Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path.
+Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q1 current cohort includes 57 of 60 tracked investors; `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
 
 ## Structure
 
@@ -22,7 +22,7 @@ sec-13f/
 ├── summary.json           # Aggregated holdings summary
 ├── by_sector.json         # Holdings grouped by sector
 ├── by_ticker.json         # Holdings grouped by ticker
-├── investors/             # Individual investor files (30 files)
+├── investors/             # Individual investor files (60 files)
 │   ├── buffett.json       # Berkshire Hathaway
 │   ├── druckenmiller.json # Duquesne Family Office
 │   ├── dalio.json         # Bridgewater Associates
@@ -38,21 +38,26 @@ sec-13f/
     ├── enhanced_consensus.json # Weighted consensus
     ├── conviction_entries.json # Conviction + new position cross-reference
     ├── multi_quarter_trends.json # Multi-quarter streaks + snapshots
-    └── ticker_aliases.json # Raw company-name to ticker diagnostics
+    ├── ticker_aliases.json # Raw company-name to ticker diagnostics
+    ├── guru_holders_index.json # Current-quarter ticker holder lookup
+    ├── trades_ranking.json # Estimated buy/sell pressure by ticker
+    └── portfolio_views.json # Investor portfolio charts and return views
 ```
 
-## Investors Tracked (30)
+## Investors Tracked (60)
 
 | Category | Investors |
 |----------|-----------|
 | Value (10) | buffett, marks, klarman, greenblatt, einhorn, pabrai, gayner, russo, miller, fidelity |
 | Macro (4) | druckenmiller, soros, dalio, tudor |
-| Hedge (4) | griffin, cohen, hohn, laffont |
+| Hedge (11) | griffin, cohen, hohn, laffont, millennium, scion, d1, altimeter, whale_rock, balyasny, abdiel |
 | Tiger Cubs (3) | halvorsen, coleman, mandel |
 | Activist (3) | ackman, icahn, peltz |
 | Event-Driven (3) | tepper, loeb, singer |
-| Quant (2) | fisher, asness |
-| Growth (1) | wood |
+| Quant (5) | fisher, asness, renaissance, de_shaw, two_sigma |
+| Growth (11) | wood, akre, polen, hhlr, sands, fundsmith, edgewood, wcm, dorsey, durable, dragoneer |
+| Passive/Mega (6) | blackrock, vanguard, state_street, geode, northern_trust, norges |
+| Institutional Active (4) | wellington, trowe, capital_world, capital_research_global |
 
 ## Schema
 
@@ -66,11 +71,11 @@ sec-13f/
     "quarters_covered": ["2026-Q1", "2025-Q4", "..."],
     "data_latency_note": "13F filings may be delayed up to 45 days after quarter end",
     "enrichment_coverage": {
-      "sector": 0.6386,
-      "industry": 0.5600,
-      "market_cap": 0.5603,
-      "price_at_filing": 0.4310,
-      "return_since_filing": 0.4310
+      "sector": 0.7058,
+      "industry": 0.6330,
+      "market_cap": 0.6332,
+      "price_at_filing": 0.4968,
+      "return_since_filing": 0.4968
     },
     "enrichment_denominator": "public_filtered_holdings",
     "enrichment_backfill": {
@@ -152,9 +157,9 @@ Stale investors are flagged in `summary.json` with `is_stale`, `latest_quarter`,
 {
   "schema_version": "sec-13f-ticker-aliases/v1",
   "quarter": "2026-Q1",
-  "source_rows": 2602,
-  "mapped_rows": 2435,
-  "unmapped_rows": 167,
+  "source_rows": 5554,
+  "mapped_rows": 5337,
+  "unmapped_rows": 217,
   "aliases": {
     "APPLE INC": "AAPL"
   },
@@ -189,4 +194,12 @@ const consensus = await fetch(`${BASE}/analytics/consensus.json`).then(r => r.js
 
 ---
 
-*Last Updated: 2026-06-13*
+## Current Publish Snapshot
+
+- Tracked investor files: 60
+- Current analytics cohort: 57 investors for 2026-Q1
+- Stale investors excluded from current-quarter analytics: `einhorn`, `scion`, `vanguard`
+- Analytics files: 14 (`10` converter outputs + `4` 100x derived indexes)
+- Local YF enrichment: 116,668 public holdings scanned; 76,604 rows touched; 567 unique profile symbols matched
+
+*Last Updated: 2026-06-17*

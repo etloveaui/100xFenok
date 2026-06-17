@@ -60,12 +60,12 @@
     },
     "sec-13f": {
       "version": "3.4.0",
-      "updated": "2026-06-16",
+      "updated": "2026-06-17",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
-      "file_count": 47,
+      "file_count": 77,
       "schema": true,
-      "description": "Institutional holdings from 30 tracked investors (29Q accumulate where filed, per-quarter independent data, GICS sectors, enrichment + 10 analytics). v3.4.0: per-filing value-unit normalization, 30/30 CIK corrections, 13F-HR/A amendment merge"
+      "description": "Institutional holdings from 60 tracked investors across 30 quarters; 57 current 2026-Q1 cohort investors, 14 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
     },
     "sentiment": {
       "version": "1.0.0",
@@ -123,6 +123,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-06-17",
+      "folder": "sec-13f",
+      "version": "3.4.0",
+      "change": "Expanded 13F universe from 30 to 60 investors, added passive/institutional cohorts including BlackRock/Vanguard/State Street and active managers, rebuilt 30-quarter output through 2026-Q1, published 77 public JSON files and 14 analytics files. Current-quarter analytics use 57 non-stale investors; einhorn, scion, and vanguard are stale-excluded.",
+      "breaking": false
+    },
     {
       "date": "2026-06-15",
       "folder": "benchmarks",

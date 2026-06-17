@@ -1,7 +1,7 @@
 # Data Catalog
 
-> **Last Updated**: 2026-06-13
-> **Total Files**: 2,844 JSON files
+> **Last Updated**: 2026-06-17
+> **Total Files**: 2,941 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
 ---
@@ -18,7 +18,7 @@
 | [global-scouter/](global-scouter/README.md) | 1,084 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 9 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
-| [sec-13f/](sec-13f/README.md) | 47 | Quarterly | SEC EDGAR |
+| [sec-13f/](sec-13f/README.md) | 77 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
 | [slickcharts/](slickcharts/README.md) | 568 | Daily/Weekly/Monthly | SlickCharts.com |
 | [yardney/](yardney/README.md) | 1 | Weekly | Yardeni model workbook |
@@ -40,11 +40,11 @@
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
 - Yardney: S&P 500 fair value model, 1,872 weekly records, latest 2026-06-05 fair value 6,284.32 and premium +17.49%
 
-### Institutional Data (sec-13f/)
-- 30 tracked investors' 13F holdings, with 2026-Q1 included where filed (29Q accumulate mode; Einhorn last filed 2023-Q4 and is flagged `is_stale`)
-- v3.4.0 rebuild: per-filing value-unit normalization (thousands/dollars 1000x fix), 30/30 CIK→entity mappings audited and corrected, 13F-HR/A amendment merge
-- Analytics: 11 files, including normalized `consensus`, `by_ticker`, and `ticker_aliases` diagnostics
-- Enrichment metadata: sector/cap/filing-return coverage + source mix
+- 60 tracked investors' 13F holdings across 30 quarters through 2026-Q1 where filed
+- Current-quarter analytics cohort: 57/60 investors; `einhorn`, `scion`, and `vanguard` are stale-excluded until fresh filings arrive
+- v3.4.0 schema contract: per-filing value-unit normalization (thousands/dollars 1000x fix), CIK→entity audit, 13F-HR/A amendment merge
+- Analytics: 14 files, including normalized `consensus`, `by_ticker`, `ticker_aliases`, `guru_holders_index`, `trades_ranking`, and `portfolio_views`
+- Enrichment metadata: sector 70.6%, industry 63.3%, market-cap 63.3%, filing-return 49.7% coverage after local YF backfill
 - Quarterly updates
 
 ### Macro Data (macro/)

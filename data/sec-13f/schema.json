@@ -1,7 +1,7 @@
 {
   "folder": "sec-13f",
   "version": "3.4.0",
-  "updated": "2026-06-13",
+  "updated": "2026-06-17",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
   "maintainer": "SEC 13F Converter v3.4.0 (accumulate mode, full backfill default)",
@@ -9,8 +9,8 @@
     "summary.json": "Aggregated holdings summary",
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
-    "investors/": "30 individual investor files",
-    "analytics/": "Derived metrics (11 files)"
+    "investors/": "60 individual investor files",
+    "analytics/": "Derived metrics (14 files: 10 converter outputs + 4 100x derived indexes)"
   },
   "files": {
     "summary.json": {
@@ -108,18 +108,18 @@
       }
     },
     "investors/{name}.json": {
-      "description": "Individual investor holdings (30 files)",
+      "description": "Individual investor holdings (60 files)",
       "investors": [
         "buffett",
         "marks",
         "klarman",
+        "fidelity",
         "greenblatt",
         "einhorn",
         "pabrai",
         "gayner",
         "russo",
         "miller",
-        "fidelity",
         "druckenmiller",
         "soros",
         "dalio",
@@ -128,18 +128,48 @@
         "cohen",
         "hohn",
         "laffont",
-        "halvorsen",
-        "coleman",
-        "mandel",
+        "millennium",
+        "scion",
+        "d1",
+        "altimeter",
+        "whale_rock",
+        "balyasny",
+        "abdiel",
+        "fisher",
+        "asness",
+        "renaissance",
+        "de_shaw",
+        "two_sigma",
+        "wood",
+        "akre",
+        "polen",
+        "hhlr",
+        "sands",
+        "fundsmith",
+        "edgewood",
+        "wcm",
+        "dorsey",
+        "durable",
+        "dragoneer",
         "ackman",
         "icahn",
         "peltz",
         "tepper",
         "loeb",
         "singer",
-        "fisher",
-        "asness",
-        "wood"
+        "halvorsen",
+        "coleman",
+        "mandel",
+        "blackrock",
+        "vanguard",
+        "state_street",
+        "geode",
+        "northern_trust",
+        "norges",
+        "wellington",
+        "trowe",
+        "capital_world",
+        "capital_research_global"
       ],
       "schema": {
         "metadata": {
@@ -151,7 +181,7 @@
           "name": "string",
           "entity": "string (fund name)",
           "cik": "string (SEC CIK number)",
-          "group": "string (value/macro/hedge/tiger_cubs/activist/event/quant/growth)",
+          "group": "string (value/macro/hedge/tiger/activist/event/quant/growth/passive/institutional)",
           "filings[]": {
             "quarter": "string (YYYY-QN)",
             "filing_date": "YYYY-MM-DD",
@@ -308,17 +338,47 @@
     "analytics/conviction_entries.json": {
       "description": "Cross-reference of conviction weights with new/continued positions",
       "schema": {
-        "metadata": {"quarter": "string", "high_conviction_new_count": "number", "top_conviction_hold_count": "number"},
-        "high_conviction_new[]": {"investor": "string", "ticker": "string", "weight": "number", "value": "number", "signal": "string"},
-        "top_conviction_hold[]": {"investor": "string", "ticker": "string", "weight": "number", "value": "number", "signal": "string"}
+        "metadata": {
+          "quarter": "string",
+          "high_conviction_new_count": "number",
+          "top_conviction_hold_count": "number"
+        },
+        "high_conviction_new[]": {
+          "investor": "string",
+          "ticker": "string",
+          "weight": "number",
+          "value": "number",
+          "signal": "string"
+        },
+        "top_conviction_hold[]": {
+          "investor": "string",
+          "ticker": "string",
+          "weight": "number",
+          "value": "number",
+          "signal": "string"
+        }
       }
     },
     "analytics/multi_quarter_trends.json": {
       "description": "Multi-quarter streak detection and turnover trends (newest 8 quarters)",
       "schema": {
-        "metadata": {"investors_count": "number", "max_quarters_analyzed": "number"},
-        "by_investor.{id}.quarterly_snapshots[]": {"quarter": "string", "aum": "number", "holdings_count": "number", "top_10_weight": "number"},
-        "by_investor.{id}.streaks[]": {"ticker": "string", "direction": "buy|sell", "streak_quarters": "number", "start_quarter": "string", "end_quarter": "string"}
+        "metadata": {
+          "investors_count": "number",
+          "max_quarters_analyzed": "number"
+        },
+        "by_investor.{id}.quarterly_snapshots[]": {
+          "quarter": "string",
+          "aum": "number",
+          "holdings_count": "number",
+          "top_10_weight": "number"
+        },
+        "by_investor.{id}.streaks[]": {
+          "ticker": "string",
+          "direction": "buy|sell",
+          "streak_quarters": "number",
+          "start_quarter": "string",
+          "end_quarter": "string"
+        }
       }
     },
     "analytics/ticker_aliases.json": {
@@ -340,6 +400,49 @@
           "cusips": "string[]"
         }
       }
+    },
+    "analytics/guru_holders_index.json": {
+      "description": "Current-quarter ticker-to-investor lookup for screener guru holder signals",
+      "schema": {
+        "metadata": {
+          "quarter": "YYYY-QN",
+          "tickers_count": "number",
+          "generated_at": "ISO8601 datetime"
+        },
+        "tickers": {
+          "{TICKER}": {
+            "holders": "investor IDs with current-quarter holdings",
+            "holders_count": "number"
+          }
+        }
+      }
+    },
+    "analytics/trades_ranking.json": {
+      "description": "Estimated buy/sell rankings from quarter-over-quarter share deltas",
+      "schema": {
+        "metadata": {
+          "quarter": "YYYY-QN",
+          "investors_included": "string[]",
+          "investors_excluded": "array<{id, latest_quarter}>",
+          "price_method": "string",
+          "skipped_no_price": "number"
+        },
+        "bought": "top buy rows",
+        "sold": "top sell rows"
+      }
+    },
+    "analytics/portfolio_views.json": {
+      "description": "Investor portfolio and return views used by superinvestors and sector pages",
+      "schema": {
+        "metadata": {
+          "quarter": "YYYY-QN",
+          "cohort_count": "number",
+          "return_source": "string",
+          "performance_method": "string",
+          "sector_chain": "string"
+        },
+        "investors": "object keyed by investor ID"
+      }
     }
   },
   "investor_groups": {
@@ -347,13 +450,13 @@
       "buffett",
       "marks",
       "klarman",
+      "fidelity",
       "greenblatt",
       "einhorn",
       "pabrai",
       "gayner",
       "russo",
-      "miller",
-      "fidelity"
+      "miller"
     ],
     "macro": [
       "druckenmiller",
@@ -365,12 +468,34 @@
       "griffin",
       "cohen",
       "hohn",
-      "laffont"
+      "laffont",
+      "millennium",
+      "scion",
+      "d1",
+      "altimeter",
+      "whale_rock",
+      "balyasny",
+      "abdiel"
     ],
-    "tiger_cubs": [
-      "halvorsen",
-      "coleman",
-      "mandel"
+    "quant": [
+      "fisher",
+      "asness",
+      "renaissance",
+      "de_shaw",
+      "two_sigma"
+    ],
+    "growth": [
+      "wood",
+      "akre",
+      "polen",
+      "hhlr",
+      "sands",
+      "fundsmith",
+      "edgewood",
+      "wcm",
+      "dorsey",
+      "durable",
+      "dragoneer"
     ],
     "activist": [
       "ackman",
@@ -382,15 +507,32 @@
       "loeb",
       "singer"
     ],
-    "quant": [
-      "fisher",
-      "asness"
+    "tiger": [
+      "halvorsen",
+      "coleman",
+      "mandel"
     ],
-    "growth": [
-      "wood"
+    "passive": [
+      "blackrock",
+      "vanguard",
+      "state_street",
+      "geode",
+      "northern_trust",
+      "norges"
+    ],
+    "institutional": [
+      "wellington",
+      "trowe",
+      "capital_world",
+      "capital_research_global"
     ]
   },
   "breaking_changes_history": [
+    {
+      "version": "3.4.0",
+      "date": "2026-06-17",
+      "change": "Expanded tracked 13F universe from 30 to 60 investors, added passive and institutional cohorts, rebuilt 30-quarter output through 2026-Q1, and published 14 analytics files including 100x derived holder/trade/portfolio indexes. Current-quarter analytics use 57 non-stale investors."
+    },
     {
       "version": "3.3.2",
       "date": "2026-05-16",
