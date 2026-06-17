@@ -136,6 +136,11 @@ External sources
   - surfaces ETF universe coverage, saved ETF/stock file counts, current backfill
     chunk progress, hard-error count, and parity warning count in product language
     on the Explore page.
+- `100xfenok-next/src/app/explore/EtfUniverseCard.tsx`
+  - reads `stockanalysis/etf_universe.json` from the local public DataPack and
+    renders a searchable/category-filterable ETF universe on Explore;
+  - links each ETF row to `/stock/{TICKER}`, where the ticker-level ETF tab reads
+    the latest available holdings/quote/history payload.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and
