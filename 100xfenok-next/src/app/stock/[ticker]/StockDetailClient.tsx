@@ -679,9 +679,14 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
   const isEtfAsset = marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf";
-  const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf" ? "overview" : stockTab;
+  const isEtfOnlyAsset = isEtfAsset && !row;
+  const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf"
+    ? "overview"
+    : isEtfOnlyAsset && stockTab === "overview"
+      ? "etf"
+      : stockTab;
   const stockTabs: Array<{ id: StockTab; label: string }> = [
-    { id: "overview", label: "요약" },
+    ...(!isEtfOnlyAsset ? [{ id: "overview" as const, label: "요약" }] : []),
     ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
     ...(yfAvailable
       ? [
@@ -695,7 +700,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   // Unknown ticker
   if (!rowLoading && !row) {
-    if (marketFactsLoading && etfData === undefined) {
+    if (marketFactsLoading || etfData === undefined) {
       return (
         <div className="stock-shell">
           <div className="panel stock-empty">
@@ -771,7 +776,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                 <MarketFactsDepth ticker={symbol} />
               )}
               <footer className="stock-footer">
-                <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너로 이동</TransitionLink>
+                <TransitionLink href={isEtfAsset ? "/etfs" : "/screener"} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록으로 이동" : "스크리너로 이동"}</TransitionLink>
                 <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
               </footer>
             </div>
@@ -814,7 +819,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         <div className="stock-main-stack">
           <EtfDataPanel ticker={symbol} data={etfData} loading={etfData === undefined} marketFacts={marketFacts} />
           <footer className="stock-footer">
-            <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+            <TransitionLink href={isEtfAsset ? "/etfs" : `/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록에서 보기" : "스크리너에서 보기"}</TransitionLink>
             <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
           </footer>
         </div>

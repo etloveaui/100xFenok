@@ -16,6 +16,7 @@ export type ShellPage =
   | "explore"
   | "market"
   | "sectors"
+  | "etfs"
   | "screener"
   | "superinvestors"
   | "portfolio";
@@ -53,6 +54,18 @@ const NAV: Array<{ id: ShellPage; label: string; href: string; icon: ReactNode }
         <rect x="11" y="3" width="6" height="6" rx="1.5" />
         <rect x="3" y="11" width="6" height="6" rx="1.5" />
         <rect x="11" y="11" width="6" height="6" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    id: "etfs",
+    label: "ETF",
+    href: "/etfs",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
+        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
+        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -210,11 +223,10 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const [searching, setSearching] = useState(false);
-  const [status, setStatus] = useState<{ dot: string; text: string } | null>(null);
+  const [status, setStatus] = useState<{ dot: string; text: string }>(() => marketStatusKST());
 
   useEffect(() => {
     document.body.classList.add("fnk-shell-on");
-    setStatus(marketStatusKST());
     const t = setInterval(() => setStatus(marketStatusKST()), 60_000);
     return () => {
       document.body.classList.remove("fnk-shell-on");

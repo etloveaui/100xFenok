@@ -61,7 +61,12 @@ function asOfDate(value: string | null | undefined): string {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
 }
 
-export default function EtfUniverseCard() {
+interface EtfUniverseCardProps {
+  limit?: number;
+  showOpenLink?: boolean;
+}
+
+export default function EtfUniverseCard({ limit = 12, showOpenLink = true }: EtfUniverseCardProps) {
   const [doc, setDoc] = useState<EtfUniverseDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
@@ -106,8 +111,8 @@ export default function EtfUniverseCard() {
       .filter((row) => category === "전체" || row.category === category)
       .filter((row) => !q || row.ticker.includes(q) || row.name.toUpperCase().includes(q))
       .sort((a, b) => (b.aum ?? -1) - (a.aum ?? -1))
-      .slice(0, 12);
-  }, [category, query, rows]);
+      .slice(0, limit);
+  }, [category, limit, query, rows]);
 
   const total = doc?.counts?.records ?? rows.length;
   const topCategory = categories[0];
@@ -178,8 +183,13 @@ export default function EtfUniverseCard() {
           </div>
         )}
       </div>
-      <div className="panel-foot">
-        AUM 상위 표시 · 각 행은 ETF 상세 탭으로 이동
+      <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
+        <span>AUM 상위 표시 · 각 행은 ETF 상세 탭으로 이동</span>
+        {showOpenLink ? (
+          <TransitionLink href="/etfs" className="font-black text-brand-interactive hover:underline">
+            ETF 전체 보기
+          </TransitionLink>
+        ) : null}
       </div>
     </section>
   );
