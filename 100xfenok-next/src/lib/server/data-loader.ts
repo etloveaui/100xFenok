@@ -61,6 +61,7 @@ type JsonFileEntry = {
 };
 
 type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
+type JsonRecord = Record<string, unknown>;
 
 async function readJson<T>(filePath: string, schema: z.ZodType<T>): Promise<T> {
   const raw = await readPublicDataFile(filePath);
@@ -89,6 +90,19 @@ async function readPublicDataFile(filePath: string): Promise<string> {
     } catch {
       throw fsError;
     }
+  }
+}
+
+function asJsonRecord(value: unknown): JsonRecord | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as JsonRecord;
+}
+
+async function readOptionalJsonRecord(filePath: string): Promise<JsonRecord | null> {
+  try {
+    return asJsonRecord(JSON.parse(await readPublicDataFile(filePath)) as unknown);
+  } catch {
+    return null;
   }
 }
 
@@ -566,5 +580,61 @@ export async function getSec13fManifest() {
       rootSample: rootFiles.sample,
       investorSample: investors.sample,
     },
+  };
+}
+
+export async function getMarketQualityManifest() {
+  const auditPath = path.join(PUBLIC_DATA_ROOT, "computed", "market_data_audit.json");
+  const sourceParityPath = path.join(PUBLIC_DATA_ROOT, "computed", "market_source_parity.json");
+  const [meta, audit, sourceParity] = await Promise.all([
+    getBaseMeta("computed"),
+    readOptionalJsonRecord(auditPath),
+    readOptionalJsonRecord(sourceParityPath),
+  ]);
+
+  const backfill = asJsonRecord(audit?.backfill);
+  const readyForFinalize = backfill?.ready_for_finalize === true;
+  const topDivergences = Array.isArray(sourceParity?.top_divergences)
+    ? sourceParity.top_divergences.slice(0, 20)
+    : [];
+
+  return {
+    generatedAt: new Date().toISOString(),
+    basePath: "/data/computed/",
+    version: meta.version,
+    updated: meta.updated,
+    source: meta.source,
+    updateFrequency: meta.updateFrequency,
+    files: {
+      audit: audit ? "/data/computed/market_data_audit.json" : null,
+      sourceParity: sourceParity ? "/data/computed/market_source_parity.json" : null,
+    },
+    status: audit ? (readyForFinalize ? "ready" : "in_progress") : "not_available",
+    audit: audit
+      ? {
+          generated_at: audit.generated_at ?? null,
+          stockanalysis: audit.stockanalysis ?? null,
+          backfill: backfill
+            ? {
+                chunk_files: backfill.chunk_files ?? null,
+                expected_chunk_files: backfill.expected_chunk_files ?? null,
+                next_expected_offset: backfill.next_expected_offset ?? null,
+                ready_for_finalize: readyForFinalize,
+                hard_error_count: backfill.hard_error_count ?? null,
+                status_counts: backfill.status_counts ?? null,
+                error_kinds: backfill.error_kinds ?? null,
+              }
+            : null,
+          market_facts: audit.market_facts ?? null,
+          market_source_parity: audit.market_source_parity ?? null,
+        }
+      : null,
+    sourceParity: sourceParity
+      ? {
+          generated_at: sourceParity.generated_at ?? null,
+          summary: sourceParity.summary ?? null,
+          top_divergences: topDivergences,
+        }
+      : null,
   };
 }
