@@ -1,12 +1,12 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-06-16",
+  "last_updated": "2026-06-17",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
       "version": "1.0.0",
-      "updated": "2026-06-16",
+      "updated": "2026-06-17",
       "update_frequency": "hourly",
       "source": "GitHub repository tree",
       "file_count": 3,
@@ -51,7 +51,7 @@
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2026-06-16",
+      "updated": "2026-06-17",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
       "file_count": 9,
@@ -96,7 +96,7 @@
     },
     "computed": {
       "version": "1.0.0",
-      "updated": "2026-06-16",
+      "updated": "2026-06-17",
       "update_frequency": "after source data refresh",
       "source": "Macro Monitor computed signal export",
       "file_count": 4,
@@ -114,7 +114,7 @@
     },
     "yf": {
       "version": "1.0.0",
-      "updated": "2026-06-13",
+      "updated": "2026-06-17",
       "update_frequency": "weekly / on-demand",
       "source": "Yahoo Finance via yfinance",
       "file_count": 1100,
@@ -536,14 +536,14 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-06-16T22:19:52Z",
+  "generatedAt": "2026-06-17T02:05:19Z",
   "categories": [
     {
       "name": "computed",
       "path": "/data/computed/",
       "schemaVersion": "1.0.0",
       "fileCount": 4,
-      "lastUpdated": "2026-06-16",
+      "lastUpdated": "2026-06-17",
       "notes": "Deterministic computed signals derived from macro, banking, liquidity, and sentiment raw data."
     },
     {
@@ -615,7 +615,7 @@
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
       "fileCount": 9,
-      "lastUpdated": "2026-06-16",
+      "lastUpdated": "2026-06-17",
       "notes": "Macro banking, liquidity, and monthly activity survey series: 924 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-05"
     },
     {
@@ -631,8 +631,8 @@
       "path": "/data/yf/",
       "schemaVersion": "1.0.0",
       "fileCount": 1100,
-      "lastUpdated": "2026-06-13",
-      "notes": "TBD"
+      "lastUpdated": "2026-06-17",
+      "notes": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
     }
   ]
 }
