@@ -91,6 +91,10 @@ External sources
   - can publish the same audit payload to
     `data/computed/market_data_audit.json` and the Next public data mirror when
     called with `--output data/computed/market_data_audit.json --mirror-public`.
+- `scripts/finalize-market-data.py`
+  - post-refresh closeout command that rebuilds `computed/market_facts`, writes
+    `computed/market_data_audit`, updates `data/manifest.json`, and refreshes the
+    Next static data-route manifest in the required order.
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
@@ -134,7 +138,9 @@ StockAnalysis all remain visible when their values overlap.
 1. Add parity checks for Yahoo vs StockAnalysis vs SlickCharts where fields overlap.
 2. Complete full ETF universe backfill through chunked manual/workflow dispatch;
    finalize only when audit reports no missing offsets and no hard errors.
-3. Add StockAnalysis financial-statement devalue parser only after schema tests exist.
-4. Extend analyzer-specific feno-value providers beyond the common DataPack
+3. Run `scripts/finalize-market-data.py` after full backfill, then commit the
+   generated DataPack + public mirror outputs as a separate data commit.
+4. Add StockAnalysis financial-statement devalue parser only after schema tests exist.
+5. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
-5. Keep direct provider scraping as explicit fallback, not the normal path.
+6. Keep direct provider scraping as explicit fallback, not the normal path.
