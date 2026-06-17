@@ -22,6 +22,7 @@ const DataLabUI = (function() {
       summaryContainer: document.getElementById('summary-container'),
       opsContainer: document.getElementById('ops-container'),
       depthContainer: document.getElementById('depth-container'),
+      marketAuditContainer: document.getElementById('market-audit-container'),
       stockFieldContainer: document.getElementById('stock-field-container'),
       cardsContainer: document.getElementById('cards-container'),
       detailsPanel: document.getElementById('details-panel'),
@@ -32,6 +33,7 @@ const DataLabUI = (function() {
     Renderer.renderLoading();
     Renderer.renderOpsLoading();
     Renderer.renderDepthLoading();
+    Renderer.renderMarketAuditLoading();
     Renderer.renderStockFieldLoading();
 
     // Subscribe to state changes
@@ -41,6 +43,7 @@ const DataLabUI = (function() {
     try {
       await loadAllData();
       loadDepthCoverage();
+      loadMarketDataAudit();
       loadStockFieldManifest();
       runOpsChecks();
       const loadTime = Math.round(performance.now() - startTime);
@@ -209,6 +212,26 @@ const DataLabUI = (function() {
   }
 
   /**
+   * Load computed market data audit for StockAnalysis/ETF and source parity.
+   */
+  async function loadMarketDataAudit() {
+    try {
+      const basePath = window.ManifestLoader?.getBasePath?.() || '';
+      const response = await fetch(`${basePath}/data/computed/market_data_audit.json`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error(`market_data_audit returned ${response.status}`);
+      }
+      const audit = await response.json();
+      Renderer.renderMarketDataAudit(audit);
+    } catch (error) {
+      console.warn('[DataLab] Market data audit unavailable:', error);
+      Renderer.renderMarketAuditUnavailable(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /**
    * Show folder details
    * @param {string} folderName
    */
@@ -253,6 +276,7 @@ const DataLabUI = (function() {
       health: state.health,
       ops: window.OpsConsole?.getLastResults?.() || null,
       depth: 'data/admin/data-usage-manifest.json',
+      marketDataAudit: 'data/computed/market_data_audit.json',
       stockFieldManifest: 'data/admin/stock-field-usage-manifest.json',
       cache: {
         manifest: ManifestLoader.getCacheStats(),

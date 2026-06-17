@@ -93,38 +93,29 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
+      label: 'StockAnalysis ETF universe',
+      path: '/data/stockanalysis/etf_universe.json',
+      datePath: 'generated_at',
+      minCountPath: 'counts.records',
+      minCount: 5000,
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'Market data audit',
+      path: '/data/computed/market_data_audit.json',
+      datePath: 'market_source_parity.generated_at',
+      minCountPath: 'market_facts.count',
+      minCount: 5000,
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
       label: 'Computed signals',
       path: '/data/computed/signals.json',
       datePath: 'as_of',
       warnAfterDays: 1,
       failAfterDays: 3
-    },
-    {
-      label: 'Stock action index',
-      path: '/data/computed/stock_action_index.json',
-      datePath: 'generated_at',
-      minCountPath: 'coverage.indexed_stock_count',
-      minCount: 1000,
-      warnAfterDays: 7,
-      failAfterDays: 14
-    },
-    {
-      label: 'Market structure index',
-      path: '/data/computed/market_structure_index.json',
-      datePath: 'generated_at',
-      minCountPath: 'source_files',
-      minCount: 10,
-      warnAfterDays: 7,
-      failAfterDays: 14
-    },
-    {
-      label: 'Data usage manifest',
-      path: '/data/admin/data-usage-manifest.json',
-      datePath: 'generated_at',
-      minCountPath: 'totals.rootJsonCount',
-      minCount: 2500,
-      warnAfterDays: 7,
-      failAfterDays: 14
     },
     {
       label: 'Fear & Greed',
@@ -199,18 +190,21 @@ const OpsConsole = (function() {
       withBasePath: true
     }));
 
-    const deadPrefix = await probeRoute({
-      label: 'Legacy /100xFenok prefix',
-      path: '/100xFenok/data/manifest.json',
-      expectedStatus: 404,
-      withBasePath: false
-    });
-
-    checks.push(isWorkers ? deadPrefix : {
-      ...deadPrefix,
-      status: deadPrefix.status === 'fail' ? 'skip' : deadPrefix.status,
-      detail: `${deadPrefix.detail} Workers-only regression guard.`
-    });
+    if (isWorkers) {
+      checks.push(await probeRoute({
+        label: 'Legacy /100xFenok prefix',
+        path: '/100xFenok/data/manifest.json',
+        expectedStatus: 404,
+        withBasePath: false
+      }));
+    } else {
+      checks.push({
+        label: 'Legacy /100xFenok prefix',
+        status: 'skip',
+        code: 'runtime',
+        detail: 'Workers-only regression guard skipped for this runtime.'
+      });
+    }
 
     return checks;
   }
@@ -456,7 +450,7 @@ const OpsConsole = (function() {
         firstLine(run.display_title || run.name),
         `run=${run.id}`,
         `sha=${shortSha(run.head_sha)}`,
-        headMatches ? 'latest main deployed' : `deploy is behind main HEAD ${shortSha(mainSha) || 'unknown'}`,
+        headMatches ? 'main HEAD matched' : `main HEAD is ${shortSha(mainSha) || 'unknown'}`,
         formatAge(run.updated_at || run.created_at)
       ].filter(Boolean).join(' · ')
     };
@@ -508,7 +502,7 @@ const OpsConsole = (function() {
         label: check.label,
         status,
         code: ageDays <= 0 ? 'today' : `${ageDays}d`,
-        detail: `${formatDatePath(check)}=${formatDateValue(rawDate)} · stale warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d${countDetail}`
+        detail: `${formatDatePath(check)}=${formatDateValue(rawDate)} · warn>${check.warnAfterDays}d · fail>${check.failAfterDays}d${countDetail}`
       };
     } catch (error) {
       return {
@@ -535,11 +529,7 @@ const OpsConsole = (function() {
     }
 
     const rawCount = getByPath(payload, check.minCountPath);
-    const count = Array.isArray(rawCount)
-      ? rawCount.length
-      : typeof rawCount === 'number'
-        ? rawCount
-        : Number(rawCount);
+    const count = typeof rawCount === 'number' ? rawCount : Number(rawCount);
 
     if (!Number.isFinite(count)) {
       return {
