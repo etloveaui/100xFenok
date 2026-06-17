@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "SCHD",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "Schwab U.S. Dividend Equity ETF",
     "exchange": "PCX",
@@ -13,37 +13,693 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 32.53,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:42:46Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 32.53,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 32.53,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:54:00Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 32.53,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:54:00Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 32.53,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": -0.1,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:42:46Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": -0.1,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -0.31,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:42:46Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": -0.31,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 95170000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:42:46Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 95170000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 19.342802,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:54:00Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 19.342802,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:54:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 3.25,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:54:00Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3.25,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:54:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.25,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.69,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:42:46Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.69,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.06,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:42:46Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.06,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:42:46Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 103,
+    "holdings_updated": "Jun 13, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 5.76,
+        "shares": 18661925,
+        "raw": {
+          "no": 1,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "5.76%",
+          "sh": "18,661,925"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "QCOM",
+        "name": "QUALCOMM Incorporated",
+        "weight_pct": 5.63,
+        "shares": 25931632,
+        "raw": {
+          "no": 2,
+          "n": "QUALCOMM Incorporated",
+          "s": "$QCOM",
+          "as": "5.63%",
+          "sh": "25,931,632"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "UNH",
+        "name": "UnitedHealth Group Incorporated",
+        "weight_pct": 5.42,
+        "shares": 12936557,
+        "raw": {
+          "no": 3,
+          "n": "UnitedHealth Group Incorporated",
+          "s": "$UNH",
+          "as": "5.42%",
+          "sh": "12,936,557"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "KO",
+        "name": "The Coca-Cola Company",
+        "weight_pct": 4.1,
+        "shares": 48361136,
+        "raw": {
+          "no": 4,
+          "n": "The Coca-Cola Company",
+          "s": "$KO",
+          "as": "4.10%",
+          "sh": "48,361,136"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "CVX",
+        "name": "Chevron Corporation",
+        "weight_pct": 3.9,
+        "shares": 20303056,
+        "raw": {
+          "no": 5,
+          "n": "Chevron Corporation",
+          "s": "$CVX",
+          "as": "3.90%",
+          "sh": "20,303,056"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "MRK",
+        "name": "Merck & Co., Inc.",
+        "weight_pct": 3.84,
+        "shares": 31401693,
+        "raw": {
+          "no": 6,
+          "n": "Merck & Co., Inc.",
+          "s": "$MRK",
+          "as": "3.84%",
+          "sh": "31,401,693"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "PG",
+        "name": "The Procter & Gamble Company",
+        "weight_pct": 3.66,
+        "shares": 23859686,
+        "raw": {
+          "no": 7,
+          "n": "The Procter & Gamble Company",
+          "s": "$PG",
+          "as": "3.66%",
+          "sh": "23,859,686"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "VZ",
+        "name": "Verizon Communications Inc.",
+        "weight_pct": 3.64,
+        "shares": 73769760,
+        "raw": {
+          "no": 8,
+          "n": "Verizon Communications Inc.",
+          "s": "$VZ",
+          "as": "3.64%",
+          "sh": "73,769,760"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "AMGN",
+        "name": "Amgen Inc.",
+        "weight_pct": 3.63,
+        "shares": 9958480,
+        "raw": {
+          "no": 9,
+          "n": "Amgen Inc.",
+          "s": "$AMGN",
+          "as": "3.63%",
+          "sh": "9,958,480"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "COP",
+        "name": "ConocoPhillips",
+        "weight_pct": 3.57,
+        "shares": 29775636,
+        "raw": {
+          "no": 10,
+          "n": "ConocoPhillips",
+          "s": "$COP",
+          "as": "3.57%",
+          "sh": "29,775,636"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight_pct": 3.45,
+        "shares": 10232696,
+        "raw": {
+          "no": 11,
+          "n": "The Home Depot, Inc.",
+          "s": "$HD",
+          "as": "3.45%",
+          "sh": "10,232,696"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight_pct": 3.41,
+        "shares": 23041593,
+        "raw": {
+          "no": 12,
+          "n": "PepsiCo, Inc.",
+          "s": "$PEP",
+          "as": "3.41%",
+          "sh": "23,041,593"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "ABT",
+        "name": "Abbott Laboratories",
+        "weight_pct": 3.02,
+        "shares": 33395213,
+        "raw": {
+          "no": 13,
+          "n": "Abbott Laboratories",
+          "s": "$ABT",
+          "as": "3.02%",
+          "sh": "33,395,213"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "MO",
+        "name": "Altria Group, Inc.",
+        "weight_pct": 3.01,
+        "shares": 40797300,
+        "raw": {
+          "no": 14,
+          "n": "Altria Group, Inc.",
+          "s": "$MO",
+          "as": "3.01%",
+          "sh": "40,797,300"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "BMY",
+        "name": "Bristol-Myers Squibb Company",
+        "weight_pct": 2.9,
+        "shares": 49493180,
+        "raw": {
+          "no": 15,
+          "n": "Bristol-Myers Squibb Company",
+          "s": "$BMY",
+          "as": "2.90%",
+          "sh": "49,493,180"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "LMT",
+        "name": "Lockheed Martin Corporation",
+        "weight_pct": 2.73,
+        "shares": 4920515,
+        "raw": {
+          "no": 16,
+          "n": "Lockheed Martin Corporation",
+          "s": "$LMT",
+          "as": "2.73%",
+          "sh": "4,920,515"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "ACN",
+        "name": "Accenture plc",
+        "weight_pct": 2.61,
+        "shares": 14953889,
+        "raw": {
+          "no": 17,
+          "n": "Accenture plc",
+          "s": "$ACN",
+          "as": "2.61%",
+          "sh": "14,953,889"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "BX",
+        "name": "Blackstone Inc.",
+        "weight_pct": 2.29,
+        "shares": 18195615,
+        "raw": {
+          "no": 18,
+          "n": "Blackstone Inc.",
+          "s": "$BX",
+          "as": "2.29%",
+          "sh": "18,195,615"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ADP",
+        "name": "Automatic Data Processing, Inc.",
+        "weight_pct": 2.27,
+        "shares": 9785448,
+        "raw": {
+          "no": 19,
+          "n": "Automatic Data Processing, Inc.",
+          "s": "$ADP",
+          "as": "2.27%",
+          "sh": "9,785,448"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "CMCSA",
+        "name": "Comcast Corporation",
+        "weight_pct": 2.19,
+        "shares": 87210382,
+        "raw": {
+          "no": 20,
+          "n": "Comcast Corporation",
+          "s": "$CMCSA",
+          "as": "2.19%",
+          "sh": "87,210,382"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "SLB",
+        "name": "SLB N.V.",
+        "weight_pct": 2.09,
+        "shares": 36341486,
+        "raw": {
+          "no": 21,
+          "n": "SLB N.V.",
+          "s": "$SLB",
+          "as": "2.09%",
+          "sh": "36,341,486"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "UPS",
+        "name": "United Parcel Service, Inc.",
+        "weight_pct": 1.99,
+        "shares": 17959911,
+        "raw": {
+          "no": 22,
+          "n": "United Parcel Service, Inc.",
+          "s": "$UPS",
+          "as": "1.99%",
+          "sh": "17,959,911"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "EOG",
+        "name": "EOG Resources, Inc.",
+        "weight_pct": 1.85,
+        "shares": 13186903,
+        "raw": {
+          "no": 23,
+          "n": "EOG Resources, Inc.",
+          "s": "$EOG",
+          "as": "1.85%",
+          "sh": "13,186,903"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "TGT",
+        "name": "Target Corporation",
+        "weight_pct": 1.53,
+        "shares": 11004678,
+        "raw": {
+          "no": 24,
+          "n": "Target Corporation",
+          "s": "$TGT",
+          "as": "1.53%",
+          "sh": "11,004,678"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "F",
+        "name": "Ford Motor Company",
+        "weight_pct": 1.45,
+        "shares": 95235862,
+        "raw": {
+          "no": 25,
+          "n": "Ford Motor Company",
+          "s": "$F",
+          "as": "1.45%",
+          "sh": "95,235,862"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Healthcare",
+        "w": 18.87
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 18.86
+      },
+      {
+        "n": "Technology",
+        "w": 17.83
+      },
+      {
+        "n": "Energy",
+        "w": 14.91
+      },
+      {
+        "n": "Financials",
+        "w": 9.47
+      },
+      {
+        "n": "Industrials",
+        "w": 7.48
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 6.58
+      },
+      {
+        "n": "Communication Services",
+        "w": 5.97
+      },
+      {
+        "n": "Utilities",
+        "w": 0.03
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 99.16429,
+        "country": "United States"
+      },
+      {
+        "code": "GB",
+        "weight": 0.76296,
+        "country": "United Kingdom"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/SCHD.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/SCHD.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

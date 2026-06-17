@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "011210.KS",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "Hyundai Wia Corporation",
     "exchange": "KSC",
@@ -18,42 +18,177 @@
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:15:32Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 76900.0,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "previous_close": {
       "value": 71600.0,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:15:32Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 71600.0,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 5300.0,
+      "source": "yf.derived",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:15:32Z",
+      "confidence": "derived",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 5300.0,
+          "source": "yf.derived",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 7.402234636871509,
+      "source": "yf.derived",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:15:32Z",
+      "confidence": "derived",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 7.402234636871509,
+          "source": "yf.derived",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 1
     },
     "market_cap": {
       "value": 2045366501376,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:15:32Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 2045366501376,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "forward_pe": {
       "value": 9.75792,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:15:32Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 9.75792,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 1.56,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:15:32Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.56,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     },
     "beta": {
       "value": 1.017,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:15:32Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.017,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:15:32Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": null,
@@ -66,5 +201,62 @@
     "yf": "yf/finance/011210.KS.json",
     "stockanalysis": null,
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

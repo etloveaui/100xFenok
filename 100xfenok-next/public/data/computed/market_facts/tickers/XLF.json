@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLF",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Financial Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,669 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 54.35,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 54.35,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 52.62,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:54Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 52.62,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:54Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 54.35,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.79,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:41Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.79,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 1.47,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:41Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 1.47,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 49530000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 49530000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 16.82867,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:54Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 16.82867,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:54Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 1.54,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:54Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.54,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:54Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.46,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.88,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.88,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:41Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 80,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight_pct": 11.91,
+        "shares": 12303112,
+        "raw": {
+          "no": 1,
+          "n": "Berkshire Hathaway Inc.",
+          "s": "$BRK.B",
+          "as": "11.91%",
+          "sh": "12,303,112"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight_pct": 11.29,
+        "shares": 18089672,
+        "raw": {
+          "no": 2,
+          "n": "JPMorgan Chase & Co.",
+          "s": "$JPM",
+          "as": "11.29%",
+          "sh": "18,089,672"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "V",
+        "name": "Visa Inc.",
+        "weight_pct": 7.14,
+        "shares": 11278756,
+        "raw": {
+          "no": 3,
+          "n": "Visa Inc.",
+          "s": "$V",
+          "as": "7.14%",
+          "sh": "11,278,756"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "MA",
+        "name": "Mastercard Incorporated",
+        "weight_pct": 5.24,
+        "shares": 5464155,
+        "raw": {
+          "no": 4,
+          "n": "Mastercard Incorporated",
+          "s": "$MA",
+          "as": "5.24%",
+          "sh": "5,464,155"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "BAC",
+        "name": "Bank of America Corporation",
+        "weight_pct": 4.86,
+        "shares": 44519178,
+        "raw": {
+          "no": 5,
+          "n": "Bank of America Corporation",
+          "s": "$BAC",
+          "as": "4.86%",
+          "sh": "44,519,178"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "GS",
+        "name": "The Goldman Sachs Group, Inc.",
+        "weight_pct": 4.23,
+        "shares": 2012487,
+        "raw": {
+          "no": 6,
+          "n": "The Goldman Sachs Group, Inc.",
+          "s": "$GS",
+          "as": "4.23%",
+          "sh": "2,012,487"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "MS",
+        "name": "Morgan Stanley",
+        "weight_pct": 3.44,
+        "shares": 8071671,
+        "raw": {
+          "no": 7,
+          "n": "Morgan Stanley",
+          "s": "$MS",
+          "as": "3.44%",
+          "sh": "8,071,671"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "WFC",
+        "name": "Wells Fargo & Company",
+        "weight_pct": 3.37,
+        "shares": 20749063,
+        "raw": {
+          "no": 8,
+          "n": "Wells Fargo & Company",
+          "s": "$WFC",
+          "as": "3.37%",
+          "sh": "20,749,063"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "C",
+        "name": "Citigroup Inc.",
+        "weight_pct": 3.23,
+        "shares": 11724552,
+        "raw": {
+          "no": 9,
+          "n": "Citigroup Inc.",
+          "s": "$C",
+          "as": "3.23%",
+          "sh": "11,724,552"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "AXP",
+        "name": "American Express Company",
+        "weight_pct": 2.35,
+        "shares": 3593304,
+        "raw": {
+          "no": 10,
+          "n": "American Express Company",
+          "s": "$AXP",
+          "as": "2.35%",
+          "sh": "3,593,304"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "SCHW",
+        "name": "The Charles Schwab Corporation",
+        "weight_pct": 1.99,
+        "shares": 11206742,
+        "raw": {
+          "no": 11,
+          "n": "The Charles Schwab Corporation",
+          "s": "$SCHW",
+          "as": "1.99%",
+          "sh": "11,206,742"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "BLK",
+        "name": "BlackRock, Inc.",
+        "weight_pct": 1.97,
+        "shares": 967934,
+        "raw": {
+          "no": 12,
+          "n": "BlackRock, Inc.",
+          "s": "$BLK",
+          "as": "1.97%",
+          "sh": "967,934"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "SPGI",
+        "name": "S&P Global Inc.",
+        "weight_pct": 1.7,
+        "shares": 2052815,
+        "raw": {
+          "no": 13,
+          "n": "S&P Global Inc.",
+          "s": "$SPGI",
+          "as": "1.70%",
+          "sh": "2,052,815"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "COF",
+        "name": "Capital One Financial Corporation",
+        "weight_pct": 1.59,
+        "shares": 4193781,
+        "raw": {
+          "no": 14,
+          "n": "Capital One Financial Corporation",
+          "s": "$COF",
+          "as": "1.59%",
+          "sh": "4,193,781"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "PGR",
+        "name": "The Progressive Corporation",
+        "weight_pct": 1.56,
+        "shares": 3932278,
+        "raw": {
+          "no": 15,
+          "n": "The Progressive Corporation",
+          "s": "$PGR",
+          "as": "1.56%",
+          "sh": "3,932,278"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "CB",
+        "name": "Chubb Limited",
+        "weight_pct": 1.56,
+        "shares": 2440246,
+        "raw": {
+          "no": 16,
+          "n": "Chubb Limited",
+          "s": "$CB",
+          "as": "1.56%",
+          "sh": "2,440,246"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "BNY",
+        "name": "The Bank of New York Mellon Corporation",
+        "weight_pct": 1.29,
+        "shares": 4617442,
+        "raw": {
+          "no": 17,
+          "n": "The Bank of New York Mellon Corporation",
+          "s": "$BNY",
+          "as": "1.29%",
+          "sh": "4,617,442"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "CME",
+        "name": "CME Group Inc.",
+        "weight_pct": 1.26,
+        "shares": 2419206,
+        "raw": {
+          "no": 18,
+          "n": "CME Group Inc.",
+          "s": "$CME",
+          "as": "1.26%",
+          "sh": "2,419,206"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "BX",
+        "name": "Blackstone Inc.",
+        "weight_pct": 1.22,
+        "shares": 5023148,
+        "raw": {
+          "no": 19,
+          "n": "Blackstone Inc.",
+          "s": "$BX",
+          "as": "1.22%",
+          "sh": "5,023,148"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "PNC",
+        "name": "The PNC Financial Services Group, Inc.",
+        "weight_pct": 1.22,
+        "shares": 2709814,
+        "raw": {
+          "no": 20,
+          "n": "The PNC Financial Services Group, Inc.",
+          "s": "$PNC",
+          "as": "1.22%",
+          "sh": "2,709,814"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "USB",
+        "name": "U.S. Bancorp",
+        "weight_pct": 1.18,
+        "shares": 10429320,
+        "raw": {
+          "no": 21,
+          "n": "U.S. Bancorp",
+          "s": "$USB",
+          "as": "1.18%",
+          "sh": "10,429,320"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "MRSH",
+        "name": "Marsh & McLennan Companies, Inc.",
+        "weight_pct": 1.05,
+        "shares": 3248124,
+        "raw": {
+          "no": 22,
+          "n": "Marsh & McLennan Companies, Inc.",
+          "s": "$MRSH",
+          "as": "1.05%",
+          "sh": "3,248,124"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "ICE",
+        "name": "Intercontinental Exchange, Inc.",
+        "weight_pct": 1.04,
+        "shares": 3809986,
+        "raw": {
+          "no": 23,
+          "n": "Intercontinental Exchange, Inc.",
+          "s": "$ICE",
+          "as": "1.04%",
+          "sh": "3,809,986"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "HOOD",
+        "name": "Robinhood Markets, Inc.",
+        "weight_pct": 1.02,
+        "shares": 5302391,
+        "raw": {
+          "no": 24,
+          "n": "Robinhood Markets, Inc.",
+          "s": "$HOOD",
+          "as": "1.02%",
+          "sh": "5,302,391"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "AON",
+        "name": "Aon plc",
+        "weight_pct": 0.93,
+        "shares": 1439316,
+        "raw": {
+          "no": 25,
+          "n": "Aon plc",
+          "s": "$AON",
+          "as": "0.93%",
+          "sh": "1,439,316"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Financials",
+        "w": 98.22
+      },
+      {
+        "n": "Technology",
+        "w": 1.57
+      },
+      {
+        "n": "Industrials",
+        "w": 0.21
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 98.56058,
+        "country": "United States"
+      },
+      {
+        "code": "CH",
+        "weight": 1.43942,
+        "country": "Switzerland"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLF.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLF.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MOH",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "Molina Healthcare, Inc.",
     "exchange": null,
@@ -18,35 +18,112 @@
       "source": "slickcharts",
       "as_of": "2026-03-01T09:31:10+00:00",
       "fetched_at": null,
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 154.05,
+          "source": "slickcharts",
+          "as_of": "2026-03-01T09:31:10+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "market_cap": {
       "value": 7930000000.0,
       "source": "slickcharts",
       "as_of": "2026-03-01T09:31:10+00:00",
       "fetched_at": null,
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 7930000000.0,
+          "source": "slickcharts",
+          "as_of": "2026-03-01T09:31:10+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 18.01,
       "source": "slickcharts",
       "as_of": "2026-03-01T09:31:10+00:00",
       "fetched_at": null,
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 18.01,
+          "source": "slickcharts",
+          "as_of": "2026-03-01T09:31:10+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "forward_pe": {
       "value": 14.66,
       "source": "slickcharts",
       "as_of": "2026-03-01T09:31:10+00:00",
       "fetched_at": null,
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 14.66,
+          "source": "slickcharts",
+          "as_of": "2026-03-01T09:31:10+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 0.0,
       "source": "slickcharts",
       "as_of": "2026-03-01T09:31:10+00:00",
       "fetched_at": null,
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "slickcharts",
+          "as_of": "2026-03-01T09:31:10+00:00",
+          "fetched_at": null,
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": null,
@@ -59,5 +136,62 @@
     "yf": null,
     "stockanalysis": null,
     "slickcharts": "slickcharts/stocks/MOH.json"
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

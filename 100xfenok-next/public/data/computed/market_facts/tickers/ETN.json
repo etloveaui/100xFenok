@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ETN",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "Eaton Corporation plc",
     "exchange": "NYQ",
@@ -18,49 +18,234 @@
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 391.39,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 400.6,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "previous_close": {
       "value": 393.64,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 393.64,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -2.25,
+      "source": "yf.derived",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:41:25Z",
+      "confidence": "derived",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": -2.25,
+          "source": "yf.derived",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -0.5715882532262981,
+      "source": "yf.derived",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:41:25Z",
+      "confidence": "derived",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": -0.5715882532262981,
+          "source": "yf.derived",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 1
     },
     "market_cap": {
       "value": 151976738816,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 151976738816,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 155550000000.0,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "trailing_pe": {
       "value": 38.29648,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 38.29648,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 39.16,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "forward_pe": {
       "value": 24.894924,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 24.894924,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 25.58,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "dividend_yield": {
       "value": 1.12,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.12,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.07,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     },
     "beta": {
       "value": 1.192,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:41:25Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.192,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:41:25Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": null,
@@ -73,5 +258,62 @@
     "yf": "yf/finance/ETN.json",
     "stockanalysis": null,
     "slickcharts": "slickcharts/stocks/ETN.json"
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

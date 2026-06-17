@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLU",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Utilities Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,660 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 45.06,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:59Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 45.06,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 44.05,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:09Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 44.05,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:09Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 45.06,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.32,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:59Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.32,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.72,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:59Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.72,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 22550000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:59Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 22550000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 20.492155,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:09Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 20.492155,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 2.68,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:09Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 2.68,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:09Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 2.64,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.6,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:59Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.6,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:59Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 34,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "NEE",
+        "name": "NextEra Energy, Inc.",
+        "weight_pct": 12.98,
+        "shares": 34347605,
+        "raw": {
+          "no": 1,
+          "n": "NextEra Energy, Inc.",
+          "s": "$NEE",
+          "as": "12.98%",
+          "sh": "34,347,605"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "SO",
+        "name": "The Southern Company",
+        "weight_pct": 7.5,
+        "shares": 18159988,
+        "raw": {
+          "no": 2,
+          "n": "The Southern Company",
+          "s": "$SO",
+          "as": "7.50%",
+          "sh": "18,159,988"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "DUK",
+        "name": "Duke Energy Corporation",
+        "weight_pct": 7.05,
+        "shares": 12825652,
+        "raw": {
+          "no": 3,
+          "n": "Duke Energy Corporation",
+          "s": "$DUK",
+          "as": "7.05%",
+          "sh": "12,825,652"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "CEG",
+        "name": "Constellation Energy Corporation",
+        "weight_pct": 5.88,
+        "shares": 5272352,
+        "raw": {
+          "no": 4,
+          "n": "Constellation Energy Corporation",
+          "s": "$CEG",
+          "as": "5.88%",
+          "sh": "5,272,352"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "AEP",
+        "name": "American Electric Power Company, Inc.",
+        "weight_pct": 5.07,
+        "shares": 8920239,
+        "raw": {
+          "no": 5,
+          "n": "American Electric Power Company, Inc.",
+          "s": "$AEP",
+          "as": "5.07%",
+          "sh": "8,920,239"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "SRE",
+        "name": "Sempra",
+        "weight_pct": 4.37,
+        "shares": 10764432,
+        "raw": {
+          "no": 6,
+          "n": "Sempra",
+          "s": "$SRE",
+          "as": "4.37%",
+          "sh": "10,764,432"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "D",
+        "name": "Dominion Energy, Inc.",
+        "weight_pct": 4.2,
+        "shares": 14083221,
+        "raw": {
+          "no": 7,
+          "n": "Dominion Energy, Inc.",
+          "s": "$D",
+          "as": "4.20%",
+          "sh": "14,083,221"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "ETR",
+        "name": "Entergy Corporation",
+        "weight_pct": 3.64,
+        "shares": 7460221,
+        "raw": {
+          "no": 8,
+          "n": "Entergy Corporation",
+          "s": "$ETR",
+          "as": "3.64%",
+          "sh": "7,460,221"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "EXC",
+        "name": "Exelon Corporation",
+        "weight_pct": 3.43,
+        "shares": 16870138,
+        "raw": {
+          "no": 9,
+          "n": "Exelon Corporation",
+          "s": "$EXC",
+          "as": "3.43%",
+          "sh": "16,870,138"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "VST",
+        "name": "Vistra Corp.",
+        "weight_pct": 3.42,
+        "shares": 5252802,
+        "raw": {
+          "no": 10,
+          "n": "Vistra Corp.",
+          "s": "$VST",
+          "as": "3.42%",
+          "sh": "5,252,802"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "XEL",
+        "name": "Xcel Energy Inc.",
+        "weight_pct": 3.4,
+        "shares": 9755998,
+        "raw": {
+          "no": 11,
+          "n": "Xcel Energy Inc.",
+          "s": "$XEL",
+          "as": "3.40%",
+          "sh": "9,755,998"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "PEG",
+        "name": "Public Service Enterprise Group Incorporated",
+        "weight_pct": 2.88,
+        "shares": 8232343,
+        "raw": {
+          "no": 12,
+          "n": "Public Service Enterprise Group Incorporated",
+          "s": "$PEG",
+          "as": "2.88%",
+          "sh": "8,232,343"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "ED",
+        "name": "Consolidated Edison, Inc.",
+        "weight_pct": 2.82,
+        "shares": 5952807,
+        "raw": {
+          "no": 13,
+          "n": "Consolidated Edison, Inc.",
+          "s": "$ED",
+          "as": "2.82%",
+          "sh": "5,952,807"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "PCG",
+        "name": "PG&E Corporation",
+        "weight_pct": 2.7,
+        "shares": 36250144,
+        "raw": {
+          "no": 14,
+          "n": "PG&E Corporation",
+          "s": "$PCG",
+          "as": "2.70%",
+          "sh": "36,250,144"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "WEC",
+        "name": "WEC Energy Group, Inc.",
+        "weight_pct": 2.68,
+        "shares": 5367733,
+        "raw": {
+          "no": 15,
+          "n": "WEC Energy Group, Inc.",
+          "s": "$WEC",
+          "as": "2.68%",
+          "sh": "5,367,733"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "DTE",
+        "name": "DTE Energy Company",
+        "weight_pct": 2.22,
+        "shares": 3425194,
+        "raw": {
+          "no": 16,
+          "n": "DTE Energy Company",
+          "s": "$DTE",
+          "as": "2.22%",
+          "sh": "3,425,194"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "AEE",
+        "name": "Ameren Corporation",
+        "weight_pct": 2.18,
+        "shares": 4558471,
+        "raw": {
+          "no": 17,
+          "n": "Ameren Corporation",
+          "s": "$AEE",
+          "as": "2.18%",
+          "sh": "4,558,471"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ATO",
+        "name": "Atmos Energy Corporation",
+        "weight_pct": 2.04,
+        "shares": 2728444,
+        "raw": {
+          "no": 18,
+          "n": "Atmos Energy Corporation",
+          "s": "$ATO",
+          "as": "2.04%",
+          "sh": "2,728,444"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "EIX",
+        "name": "Edison International",
+        "weight_pct": 2.04,
+        "shares": 6346122,
+        "raw": {
+          "no": 19,
+          "n": "Edison International",
+          "s": "$EIX",
+          "as": "2.04%",
+          "sh": "6,346,122"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "CNP",
+        "name": "CenterPoint Energy, Inc.",
+        "weight_pct": 2.03,
+        "shares": 10767495,
+        "raw": {
+          "no": 20,
+          "n": "CenterPoint Energy, Inc.",
+          "s": "$CNP",
+          "as": "2.03%",
+          "sh": "10,767,495"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "NRG",
+        "name": "NRG Energy, Inc.",
+        "weight_pct": 1.93,
+        "shares": 3502661,
+        "raw": {
+          "no": 21,
+          "n": "NRG Energy, Inc.",
+          "s": "$NRG",
+          "as": "1.93%",
+          "sh": "3,502,661"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "PPL",
+        "name": "PPL Corporation",
+        "weight_pct": 1.92,
+        "shares": 12200166,
+        "raw": {
+          "no": 22,
+          "n": "PPL Corporation",
+          "s": "$PPL",
+          "as": "1.92%",
+          "sh": "12,200,166"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "ES",
+        "name": "Eversource Energy",
+        "weight_pct": 1.87,
+        "shares": 6187795,
+        "raw": {
+          "no": 23,
+          "n": "Eversource Energy",
+          "s": "$ES",
+          "as": "1.87%",
+          "sh": "6,187,795"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "AWK",
+        "name": "American Water Works Company, Inc.",
+        "weight_pct": 1.79,
+        "shares": 3218955,
+        "raw": {
+          "no": 24,
+          "n": "American Water Works Company, Inc.",
+          "s": "$AWK",
+          "as": "1.79%",
+          "sh": "3,218,955"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "FE",
+        "name": "FirstEnergy Corp.",
+        "weight_pct": 1.77,
+        "shares": 8574525,
+        "raw": {
+          "no": 25,
+          "n": "FirstEnergy Corp.",
+          "s": "$FE",
+          "as": "1.77%",
+          "sh": "8,574,525"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Utilities",
+        "w": 99.68
+      },
+      {
+        "n": "Other",
+        "w": 0.32
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLU.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLU.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

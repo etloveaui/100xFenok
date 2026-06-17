@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLRE",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Real Estate Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,660 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 45.1,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:55Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 45.1,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 44.92,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:06Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 44.92,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:06Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 45.1,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.11,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:55Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.11,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.24,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:55Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.24,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 8170000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:55Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 8170000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 33.413593,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:06Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 33.413593,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:06Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 3.18,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:06Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3.18,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:06Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.1,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.99,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:55Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.99,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:55Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:55Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 34,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "WELL",
+        "name": "Welltower Inc.",
+        "weight_pct": 10.0,
+        "shares": 3806841,
+        "raw": {
+          "no": 1,
+          "n": "Welltower Inc.",
+          "s": "$WELL",
+          "as": "10.00%",
+          "sh": "3,806,841"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "PLD",
+        "name": "Prologis, Inc.",
+        "weight_pct": 9.23,
+        "shares": 5071459,
+        "raw": {
+          "no": 2,
+          "n": "Prologis, Inc.",
+          "s": "$PLD",
+          "as": "9.23%",
+          "sh": "5,071,459"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "EQIX",
+        "name": "Equinix, Inc.",
+        "weight_pct": 7.04,
+        "shares": 536042,
+        "raw": {
+          "no": 3,
+          "n": "Equinix, Inc.",
+          "s": "$EQIX",
+          "as": "7.04%",
+          "sh": "536,042"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "AMT",
+        "name": "American Tower Corporation",
+        "weight_pct": 5.86,
+        "shares": 2554235,
+        "raw": {
+          "no": 4,
+          "n": "American Tower Corporation",
+          "s": "$AMT",
+          "as": "5.86%",
+          "sh": "2,554,235"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "SPG",
+        "name": "Simon Property Group, Inc.",
+        "weight_pct": 4.82,
+        "shares": 1810253,
+        "raw": {
+          "no": 5,
+          "n": "Simon Property Group, Inc.",
+          "s": "$SPG",
+          "as": "4.82%",
+          "sh": "1,810,253"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "PSA",
+        "name": "Public Storage",
+        "weight_pct": 4.53,
+        "shares": 1144176,
+        "raw": {
+          "no": 6,
+          "n": "Public Storage",
+          "s": "$PSA",
+          "as": "4.53%",
+          "sh": "1,144,176"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "DLR",
+        "name": "Digital Realty Trust, Inc.",
+        "weight_pct": 4.34,
+        "shares": 1900201,
+        "raw": {
+          "no": 7,
+          "n": "Digital Realty Trust, Inc.",
+          "s": "$DLR",
+          "as": "4.34%",
+          "sh": "1,900,201"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "VTR",
+        "name": "Ventas, Inc.",
+        "weight_pct": 4.1,
+        "shares": 3978010,
+        "raw": {
+          "no": 8,
+          "n": "Ventas, Inc.",
+          "s": "$VTR",
+          "as": "4.10%",
+          "sh": "3,978,010"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "O",
+        "name": "Realty Income Corporation",
+        "weight_pct": 4.07,
+        "shares": 5303082,
+        "raw": {
+          "no": 9,
+          "n": "Realty Income Corporation",
+          "s": "$O",
+          "as": "4.07%",
+          "sh": "5,303,082"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "CBRE",
+        "name": "CBRE Group, Inc.",
+        "weight_pct": 4.03,
+        "shares": 2433644,
+        "raw": {
+          "no": 10,
+          "n": "CBRE Group, Inc.",
+          "s": "$CBRE",
+          "as": "4.03%",
+          "sh": "2,433,644"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "CCI",
+        "name": "Crown Castle Inc.",
+        "weight_pct": 3.99,
+        "shares": 3647338,
+        "raw": {
+          "no": 11,
+          "n": "Crown Castle Inc.",
+          "s": "$CCI",
+          "as": "3.99%",
+          "sh": "3,647,338"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "IRM",
+        "name": "Iron Mountain Incorporated",
+        "weight_pct": 3.86,
+        "shares": 2477790,
+        "raw": {
+          "no": 12,
+          "n": "Iron Mountain Incorporated",
+          "s": "$IRM",
+          "as": "3.86%",
+          "sh": "2,477,790"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "EXR",
+        "name": "Extra Space Storage Inc.",
+        "weight_pct": 3.22,
+        "shares": 1777790,
+        "raw": {
+          "no": 13,
+          "n": "Extra Space Storage Inc.",
+          "s": "$EXR",
+          "as": "3.22%",
+          "sh": "1,777,790"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "VICI",
+        "name": "VICI Properties Inc.",
+        "weight_pct": 3.16,
+        "shares": 9149855,
+        "raw": {
+          "no": 14,
+          "n": "VICI Properties Inc.",
+          "s": "$VICI",
+          "as": "3.16%",
+          "sh": "9,149,855"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "AVB",
+        "name": "AvalonBay Communities, Inc.",
+        "weight_pct": 2.7,
+        "shares": 1185944,
+        "raw": {
+          "no": 15,
+          "n": "AvalonBay Communities, Inc.",
+          "s": "$AVB",
+          "as": "2.70%",
+          "sh": "1,185,944"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "EQR",
+        "name": "Equity Residential",
+        "weight_pct": 2.35,
+        "shares": 2879784,
+        "raw": {
+          "no": 16,
+          "n": "Equity Residential",
+          "s": "$EQR",
+          "as": "2.35%",
+          "sh": "2,879,784"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "SBAC",
+        "name": "SBA Communications Corporation",
+        "weight_pct": 2.16,
+        "shares": 892443,
+        "raw": {
+          "no": 17,
+          "n": "SBA Communications Corporation",
+          "s": "$SBAC",
+          "as": "2.16%",
+          "sh": "892,443"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ESS",
+        "name": "Essex Property Trust, Inc.",
+        "weight_pct": 1.87,
+        "shares": 539449,
+        "raw": {
+          "no": 18,
+          "n": "Essex Property Trust, Inc.",
+          "s": "$ESS",
+          "as": "1.87%",
+          "sh": "539,449"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "WY",
+        "name": "Weyerhaeuser Company",
+        "weight_pct": 1.84,
+        "shares": 6035839,
+        "raw": {
+          "no": 19,
+          "n": "Weyerhaeuser Company",
+          "s": "$WY",
+          "as": "1.84%",
+          "sh": "6,035,839"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "KIM",
+        "name": "Kimco Realty Corporation",
+        "weight_pct": 1.77,
+        "shares": 5642686,
+        "raw": {
+          "no": 20,
+          "n": "Kimco Realty Corporation",
+          "s": "$KIM",
+          "as": "1.77%",
+          "sh": "5,642,686"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "INVH",
+        "name": "Invitation Homes Inc.",
+        "weight_pct": 1.7,
+        "shares": 4720975,
+        "raw": {
+          "no": 21,
+          "n": "Invitation Homes Inc.",
+          "s": "$INVH",
+          "as": "1.70%",
+          "sh": "4,720,975"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "MAA",
+        "name": "Mid-America Apartment Communities, Inc.",
+        "weight_pct": 1.66,
+        "shares": 978588,
+        "raw": {
+          "no": 22,
+          "n": "Mid-America Apartment Communities, Inc.",
+          "s": "$MAA",
+          "as": "1.66%",
+          "sh": "978,588"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "HST",
+        "name": "Host Hotels & Resorts, Inc.",
+        "weight_pct": 1.64,
+        "shares": 5353605,
+        "raw": {
+          "no": 23,
+          "n": "Host Hotels & Resorts, Inc.",
+          "s": "$HST",
+          "as": "1.64%",
+          "sh": "5,353,605"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "DOC",
+        "name": "Healthpeak Properties, Inc.",
+        "weight_pct": 1.47,
+        "shares": 5818129,
+        "raw": {
+          "no": 24,
+          "n": "Healthpeak Properties, Inc.",
+          "s": "$DOC",
+          "as": "1.47%",
+          "sh": "5,818,129"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CSGP",
+        "name": "CoStar Group, Inc.",
+        "weight_pct": 1.4,
+        "shares": 3547871,
+        "raw": {
+          "no": 25,
+          "n": "CoStar Group, Inc.",
+          "s": "$CSGP",
+          "as": "1.40%",
+          "sh": "3,547,871"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Real Estate",
+        "w": 99.89
+      },
+      {
+        "n": "Other",
+        "w": 0.11
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLRE.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLRE.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

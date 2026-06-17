@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "VOX",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "Vanguard Communication Services Index Fund ETF Shares",
     "exchange": "PCX",
@@ -13,37 +13,686 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 190.83,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:22:16Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 190.83,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 187.3,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:58:19Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 187.3,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:58:19Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 190.83,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.42,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:22:16Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.42,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.22,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:22:16Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.22,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 5730000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:22:16Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 5730000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 18.633568,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:58:19Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 18.633568,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:58:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 0.96,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:58:19Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.96,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:58:19Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.99,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 1.05,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:22:16Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.05,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.09,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:22:16Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.09,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:22:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 117,
+    "holdings_updated": "May 31, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 22.12,
+        "shares": 2218221,
+        "raw": {
+          "no": 1,
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "22.12%",
+          "sh": "2,218,221"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 14.1,
+        "shares": 2351300,
+        "raw": {
+          "no": 2,
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "14.10%",
+          "sh": "2,351,300"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "GOOG",
+        "name": "Alphabet Inc.",
+        "weight_pct": 7.51,
+        "shares": 1265408,
+        "raw": {
+          "no": 3,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "7.51%",
+          "sh": "1,265,408"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "VZ",
+        "name": "Verizon Communications Inc.",
+        "weight_pct": 4.42,
+        "shares": 5858983,
+        "raw": {
+          "no": 4,
+          "n": "Verizon Communications Inc.",
+          "s": "$VZ",
+          "as": "4.42%",
+          "sh": "5,858,983"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "DIS",
+        "name": "The Walt Disney Company",
+        "weight_pct": 4.39,
+        "shares": 2734459,
+        "raw": {
+          "no": 5,
+          "n": "The Walt Disney Company",
+          "s": "$DIS",
+          "as": "4.39%",
+          "sh": "2,734,459"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "T",
+        "name": "AT&T Inc.",
+        "weight_pct": 4.38,
+        "shares": 11197223,
+        "raw": {
+          "no": 6,
+          "n": "AT&T Inc.",
+          "s": "$T",
+          "as": "4.38%",
+          "sh": "11,197,223"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight_pct": 4.25,
+        "shares": 3131239,
+        "raw": {
+          "no": 7,
+          "n": "Netflix, Inc.",
+          "s": "$NFLX",
+          "as": "4.25%",
+          "sh": "3,131,239"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "CMCSA",
+        "name": "Comcast Corporation",
+        "weight_pct": 3.82,
+        "shares": 9736630,
+        "raw": {
+          "no": 8,
+          "n": "Comcast Corporation",
+          "s": "$CMCSA",
+          "as": "3.82%",
+          "sh": "9,736,630"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "TMUS",
+        "name": "T-Mobile US, Inc.",
+        "weight_pct": 3.78,
+        "shares": 1280148,
+        "raw": {
+          "no": 9,
+          "n": "T-Mobile US, Inc.",
+          "s": "$TMUS",
+          "as": "3.78%",
+          "sh": "1,280,148"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "WBD",
+        "name": "Warner Bros. Discovery, Inc.",
+        "weight_pct": 3.44,
+        "shares": 8089431,
+        "raw": {
+          "no": 10,
+          "n": "Warner Bros. Discovery, Inc.",
+          "s": "$WBD",
+          "as": "3.44%",
+          "sh": "8,089,431"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "EA",
+        "name": "Electronic Arts Inc.",
+        "weight_pct": 2.54,
+        "shares": 799399,
+        "raw": {
+          "no": 11,
+          "n": "Electronic Arts Inc.",
+          "s": "$EA",
+          "as": "2.54%",
+          "sh": "799,399"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "TTWO",
+        "name": "Take-Two Interactive Software, Inc.",
+        "weight_pct": 2.21,
+        "shares": 624332,
+        "raw": {
+          "no": 12,
+          "n": "Take-Two Interactive Software, Inc.",
+          "s": "$TTWO",
+          "as": "2.21%",
+          "sh": "624,332"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "RBLX",
+        "name": "Roblox Corporation",
+        "weight_pct": 1.57,
+        "shares": 2113370,
+        "raw": {
+          "no": 13,
+          "n": "Roblox Corporation",
+          "s": "$RBLX",
+          "as": "1.57%",
+          "sh": "2,113,370"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "LYV",
+        "name": "Live Nation Entertainment, Inc.",
+        "weight_pct": 1.48,
+        "shares": 556651,
+        "raw": {
+          "no": 14,
+          "n": "Live Nation Entertainment, Inc.",
+          "s": "$LYV",
+          "as": "1.48%",
+          "sh": "556,651"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "ASTS",
+        "name": "AST SpaceMobile, Inc.",
+        "weight_pct": 1.39,
+        "shares": 779263,
+        "raw": {
+          "no": 15,
+          "n": "AST SpaceMobile, Inc.",
+          "s": "$ASTS",
+          "as": "1.39%",
+          "sh": "779,263"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "OMC",
+        "name": "Omnicom Group Inc.",
+        "weight_pct": 1.16,
+        "shares": 1011393,
+        "raw": {
+          "no": 16,
+          "n": "Omnicom Group Inc.",
+          "s": "$OMC",
+          "as": "1.16%",
+          "sh": "1,011,393"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "RDDT",
+        "name": "Reddit, Inc.",
+        "weight_pct": 1.13,
+        "shares": 408877,
+        "raw": {
+          "no": 17,
+          "n": "Reddit, Inc.",
+          "s": "$RDDT",
+          "as": "1.13%",
+          "sh": "408,877"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "FWONK",
+        "name": "Formula One Group",
+        "weight_pct": 1.08,
+        "shares": 755571,
+        "raw": {
+          "no": 18,
+          "n": "Formula One Group",
+          "s": "$FWONK",
+          "as": "1.08%",
+          "sh": "755,571"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ROKU",
+        "name": "Roku, Inc.",
+        "weight_pct": 0.95,
+        "shares": 463877,
+        "raw": {
+          "no": 19,
+          "n": "Roku, Inc.",
+          "s": "$ROKU",
+          "as": "0.95%",
+          "sh": "463,877"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "SATS",
+        "name": "EchoStar Corporation",
+        "weight_pct": 0.94,
+        "shares": 461236,
+        "raw": {
+          "no": 20,
+          "n": "EchoStar Corporation",
+          "s": "$SATS",
+          "as": "0.94%",
+          "sh": "461,236"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "TKO",
+        "name": "TKO Group Holdings, Inc.",
+        "weight_pct": 0.76,
+        "shares": 235187,
+        "raw": {
+          "no": 21,
+          "n": "TKO Group Holdings, Inc.",
+          "s": "$TKO",
+          "as": "0.76%",
+          "sh": "235,187"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "NYT",
+        "name": "The New York Times Company",
+        "weight_pct": 0.66,
+        "shares": 557487,
+        "raw": {
+          "no": 22,
+          "n": "The New York Times Company",
+          "s": "$NYT",
+          "as": "0.66%",
+          "sh": "557,487"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "CHTR",
+        "name": "Charter Communications, Inc.",
+        "weight_pct": 0.66,
+        "shares": 289866,
+        "raw": {
+          "no": 23,
+          "n": "Charter Communications, Inc.",
+          "s": "$CHTR",
+          "as": "0.66%",
+          "sh": "289,866"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "LUMN",
+        "name": "Lumen Technologies, Inc.",
+        "weight_pct": 0.59,
+        "shares": 3380246,
+        "raw": {
+          "no": 24,
+          "n": "Lumen Technologies, Inc.",
+          "s": "$LUMN",
+          "as": "0.59%",
+          "sh": "3,380,246"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "NWSA",
+        "name": "News Corporation",
+        "weight_pct": 0.53,
+        "shares": 1299274,
+        "raw": {
+          "no": 25,
+          "n": "News Corporation",
+          "s": "$NWSA",
+          "as": "0.53%",
+          "sh": "1,299,274"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Communication Services",
+        "w": 98.02
+      },
+      {
+        "n": "Technology",
+        "w": 1.67
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 0.19
+      },
+      {
+        "n": "Real Estate",
+        "w": 0.09
+      },
+      {
+        "n": "Industrials",
+        "w": 0.02
+      },
+      {
+        "n": "Healthcare",
+        "w": 0.01
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 99.60189,
+        "country": "United States"
+      },
+      {
+        "code": "GB",
+        "weight": 0.20795,
+        "country": "United Kingdom"
+      },
+      {
+        "code": "CA",
+        "weight": 0.11455,
+        "country": "Canada"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/VOX.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/VOX.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

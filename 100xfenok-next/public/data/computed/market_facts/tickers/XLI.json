@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLI",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Industrial Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,664 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 179.85,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:45Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 179.85,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 175.15,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:57Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 175.15,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:57Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 179.85,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 1.17,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:45Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 1.17,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.65,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:45Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.65,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 31070000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:45Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 31070000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 30.595816,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:57Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 30.595816,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:57Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 1.18,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:57Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.18,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:57Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.14,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 1.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:45Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:45Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:45Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 83,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "CAT",
+        "name": "Caterpillar Inc.",
+        "weight_pct": 7.81,
+        "shares": 2676676,
+        "raw": {
+          "no": 1,
+          "n": "Caterpillar Inc.",
+          "s": "$CAT",
+          "as": "7.81%",
+          "sh": "2,676,676"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "GE",
+        "name": "GE Aerospace",
+        "weight_pct": 6.45,
+        "shares": 6033702,
+        "raw": {
+          "no": 2,
+          "n": "GE Aerospace",
+          "s": "$GE",
+          "as": "6.45%",
+          "sh": "6,033,702"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "GEV",
+        "name": "GE Vernova Inc.",
+        "weight_pct": 4.74,
+        "shares": 1550523,
+        "raw": {
+          "no": 3,
+          "n": "GE Vernova Inc.",
+          "s": "$GEV",
+          "as": "4.74%",
+          "sh": "1,550,523"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "RTX",
+        "name": "RTX Corporation",
+        "weight_pct": 4.43,
+        "shares": 7722322,
+        "raw": {
+          "no": 4,
+          "n": "RTX Corporation",
+          "s": "$RTX",
+          "as": "4.43%",
+          "sh": "7,722,322"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "BA",
+        "name": "The Boeing Company",
+        "weight_pct": 3.23,
+        "shares": 4517144,
+        "raw": {
+          "no": 5,
+          "n": "The Boeing Company",
+          "s": "$BA",
+          "as": "3.23%",
+          "sh": "4,517,144"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "UNP",
+        "name": "Union Pacific Corporation",
+        "weight_pct": 2.85,
+        "shares": 3413170,
+        "raw": {
+          "no": 6,
+          "n": "Union Pacific Corporation",
+          "s": "$UNP",
+          "as": "2.85%",
+          "sh": "3,413,170"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "ETN",
+        "name": "Eaton Corporation plc",
+        "weight_pct": 2.84,
+        "shares": 2234103,
+        "raw": {
+          "no": 7,
+          "n": "Eaton Corporation plc",
+          "s": "$ETN",
+          "as": "2.84%",
+          "sh": "2,234,103"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "UBER",
+        "name": "Uber Technologies, Inc.",
+        "weight_pct": 2.69,
+        "shares": 11838040,
+        "raw": {
+          "no": 8,
+          "n": "Uber Technologies, Inc.",
+          "s": "$UBER",
+          "as": "2.69%",
+          "sh": "11,838,040"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "DE",
+        "name": "Deere & Company",
+        "weight_pct": 2.61,
+        "shares": 1450018,
+        "raw": {
+          "no": 9,
+          "n": "Deere & Company",
+          "s": "$DE",
+          "as": "2.61%",
+          "sh": "1,450,018"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "HON",
+        "name": "Honeywell International Inc.",
+        "weight_pct": 2.59,
+        "shares": 3651906,
+        "raw": {
+          "no": 10,
+          "n": "Honeywell International Inc.",
+          "s": "$HON",
+          "as": "2.59%",
+          "sh": "3,651,906"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "VRT",
+        "name": "Vertiv Holdings Co",
+        "weight_pct": 2.14,
+        "shares": 2201019,
+        "raw": {
+          "no": 11,
+          "n": "Vertiv Holdings Co",
+          "s": "$VRT",
+          "as": "2.14%",
+          "sh": "2,201,019"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "PH",
+        "name": "Parker-Hannifin Corporation",
+        "weight_pct": 2.08,
+        "shares": 726012,
+        "raw": {
+          "no": 12,
+          "n": "Parker-Hannifin Corporation",
+          "s": "$PH",
+          "as": "2.08%",
+          "sh": "726,012"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "HWM",
+        "name": "Howmet Aerospace Inc.",
+        "weight_pct": 1.95,
+        "shares": 2306924,
+        "raw": {
+          "no": 13,
+          "n": "Howmet Aerospace Inc.",
+          "s": "$HWM",
+          "as": "1.95%",
+          "sh": "2,306,924"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "PWR",
+        "name": "Quanta Services, Inc.",
+        "weight_pct": 1.94,
+        "shares": 858034,
+        "raw": {
+          "no": 14,
+          "n": "Quanta Services, Inc.",
+          "s": "$PWR",
+          "as": "1.94%",
+          "sh": "858,034"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "LMT",
+        "name": "Lockheed Martin Corporation",
+        "weight_pct": 1.93,
+        "shares": 1165035,
+        "raw": {
+          "no": 15,
+          "n": "Lockheed Martin Corporation",
+          "s": "$LMT",
+          "as": "1.93%",
+          "sh": "1,165,035"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "TT",
+        "name": "Trane Technologies plc",
+        "weight_pct": 1.88,
+        "shares": 1273217,
+        "raw": {
+          "no": 16,
+          "n": "Trane Technologies plc",
+          "s": "$TT",
+          "as": "1.88%",
+          "sh": "1,273,217"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "CMI",
+        "name": "Cummins Inc.",
+        "weight_pct": 1.69,
+        "shares": 794985,
+        "raw": {
+          "no": 17,
+          "n": "Cummins Inc.",
+          "s": "$CMI",
+          "as": "1.69%",
+          "sh": "794,985"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "GD",
+        "name": "General Dynamics Corporation",
+        "weight_pct": 1.64,
+        "shares": 1460337,
+        "raw": {
+          "no": 18,
+          "n": "General Dynamics Corporation",
+          "s": "$GD",
+          "as": "1.64%",
+          "sh": "1,460,337"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ADP",
+        "name": "Automatic Data Processing, Inc.",
+        "weight_pct": 1.62,
+        "shares": 2316946,
+        "raw": {
+          "no": 19,
+          "n": "Automatic Data Processing, Inc.",
+          "s": "$ADP",
+          "as": "1.62%",
+          "sh": "2,316,946"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "JCI",
+        "name": "Johnson Controls International plc",
+        "weight_pct": 1.61,
+        "shares": 3521976,
+        "raw": {
+          "no": 20,
+          "n": "Johnson Controls International plc",
+          "s": "$JCI",
+          "as": "1.61%",
+          "sh": "3,521,976"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "CSX",
+        "name": "CSX Corporation",
+        "weight_pct": 1.58,
+        "shares": 10700439,
+        "raw": {
+          "no": 21,
+          "n": "CSX Corporation",
+          "s": "$CSX",
+          "as": "1.58%",
+          "sh": "10,700,439"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "MMM",
+        "name": "3M Company",
+        "weight_pct": 1.5,
+        "shares": 3030961,
+        "raw": {
+          "no": 22,
+          "n": "3M Company",
+          "s": "$MMM",
+          "as": "1.50%",
+          "sh": "3,030,961"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "EMR",
+        "name": "Emerson Electric Co.",
+        "weight_pct": 1.48,
+        "shares": 3233994,
+        "raw": {
+          "no": 23,
+          "n": "Emerson Electric Co.",
+          "s": "$EMR",
+          "as": "1.48%",
+          "sh": "3,233,994"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "WM",
+        "name": "Waste Management, Inc.",
+        "weight_pct": 1.45,
+        "shares": 2135253,
+        "raw": {
+          "no": 24,
+          "n": "Waste Management, Inc.",
+          "s": "$WM",
+          "as": "1.45%",
+          "sh": "2,135,253"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "UPS",
+        "name": "United Parcel Service, Inc.",
+        "weight_pct": 1.45,
+        "shares": 4252620,
+        "raw": {
+          "no": 25,
+          "n": "United Parcel Service, Inc.",
+          "s": "$UPS",
+          "as": "1.45%",
+          "sh": "4,252,620"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Industrials",
+        "w": 93.94
+      },
+      {
+        "n": "Technology",
+        "w": 5.81
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 0.25
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLI.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLI.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

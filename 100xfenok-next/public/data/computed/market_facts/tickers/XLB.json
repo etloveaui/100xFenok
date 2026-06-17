@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLB",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Materials Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,670 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 52.72,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:28:22Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 52.72,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 51.22,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:45Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 51.22,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:45Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 52.72,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.22,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:28:22Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.22,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.42,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:28:22Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.42,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 7830000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:28:22Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 7830000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 26.360126,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:45Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 26.360126,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:45Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 1.71,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:45Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.71,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:45Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.66,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.93,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:28:22Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.93,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:28:22Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:28:22Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 29,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "LIN",
+        "name": "Linde plc",
+        "weight_pct": 14.46,
+        "shares": 2324123,
+        "raw": {
+          "no": 1,
+          "n": "Linde plc",
+          "s": "$LIN",
+          "as": "14.46%",
+          "sh": "2,324,123"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "NEM",
+        "name": "Newmont Corporation",
+        "weight_pct": 6.86,
+        "shares": 5431533,
+        "raw": {
+          "no": 2,
+          "n": "Newmont Corporation",
+          "s": "$NEM",
+          "as": "6.86%",
+          "sh": "5,431,533"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "NUE",
+        "name": "Nucor Corporation",
+        "weight_pct": 6.43,
+        "shares": 2076203,
+        "raw": {
+          "no": 3,
+          "n": "Nucor Corporation",
+          "s": "$NUE",
+          "as": "6.43%",
+          "sh": "2,076,203"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "FCX",
+        "name": "Freeport-McMoRan Inc.",
+        "weight_pct": 5.99,
+        "shares": 7153343,
+        "raw": {
+          "no": 4,
+          "n": "Freeport-McMoRan Inc.",
+          "s": "$FCX",
+          "as": "5.99%",
+          "sh": "7,153,343"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "VMC",
+        "name": "Vulcan Materials Company",
+        "weight_pct": 4.63,
+        "shares": 1323387,
+        "raw": {
+          "no": 5,
+          "n": "Vulcan Materials Company",
+          "s": "$VMC",
+          "as": "4.63%",
+          "sh": "1,323,387"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "CRH",
+        "name": "CRH plc",
+        "weight_pct": 4.49,
+        "shares": 3429880,
+        "raw": {
+          "no": 6,
+          "n": "CRH plc",
+          "s": "$CRH",
+          "as": "4.49%",
+          "sh": "3,429,880"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "STLD",
+        "name": "Steel Dynamics, Inc.",
+        "weight_pct": 4.47,
+        "shares": 1374914,
+        "raw": {
+          "no": 7,
+          "n": "Steel Dynamics, Inc.",
+          "s": "$STLD",
+          "as": "4.47%",
+          "sh": "1,374,914"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "SHW",
+        "name": "The Sherwin-Williams Company",
+        "weight_pct": 4.39,
+        "shares": 1147518,
+        "raw": {
+          "no": 8,
+          "n": "The Sherwin-Williams Company",
+          "s": "$SHW",
+          "as": "4.39%",
+          "sh": "1,147,518"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "APD",
+        "name": "Air Products and Chemicals, Inc.",
+        "weight_pct": 4.34,
+        "shares": 1284601,
+        "raw": {
+          "no": 9,
+          "n": "Air Products and Chemicals, Inc.",
+          "s": "$APD",
+          "as": "4.34%",
+          "sh": "1,284,601"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "MLM",
+        "name": "Martin Marietta Materials, Inc.",
+        "weight_pct": 4.2,
+        "shares": 596980,
+        "raw": {
+          "no": 10,
+          "n": "Martin Marietta Materials, Inc.",
+          "s": "$MLM",
+          "as": "4.20%",
+          "sh": "596,980"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "ECL",
+        "name": "Ecolab Inc.",
+        "weight_pct": 4.12,
+        "shares": 1287787,
+        "raw": {
+          "no": 11,
+          "n": "Ecolab Inc.",
+          "s": "$ECL",
+          "as": "4.12%",
+          "sh": "1,287,787"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "CTVA",
+        "name": "Corteva, Inc.",
+        "weight_pct": 4.1,
+        "shares": 4536444,
+        "raw": {
+          "no": 12,
+          "n": "Corteva, Inc.",
+          "s": "$CTVA",
+          "as": "4.10%",
+          "sh": "4,536,444"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "PPG",
+        "name": "PPG Industries, Inc.",
+        "weight_pct": 3.26,
+        "shares": 2247559,
+        "raw": {
+          "no": 13,
+          "n": "PPG Industries, Inc.",
+          "s": "$PPG",
+          "as": "3.26%",
+          "sh": "2,247,559"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "DOW",
+        "name": "Dow Inc.",
+        "weight_pct": 2.85,
+        "shares": 7186647,
+        "raw": {
+          "no": 14,
+          "n": "Dow Inc.",
+          "s": "$DOW",
+          "as": "2.85%",
+          "sh": "7,186,647"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "SW",
+        "name": "Smurfit Westrock Plc",
+        "weight_pct": 2.78,
+        "shares": 5232306,
+        "raw": {
+          "no": 15,
+          "n": "Smurfit Westrock Plc",
+          "s": "$SW",
+          "as": "2.78%",
+          "sh": "5,232,306"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "PKG",
+        "name": "Packaging Corporation of America",
+        "weight_pct": 2.46,
+        "shares": 895104,
+        "raw": {
+          "no": 16,
+          "n": "Packaging Corporation of America",
+          "s": "$PKG",
+          "as": "2.46%",
+          "sh": "895,104"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "IFF",
+        "name": "International Flavors & Fragrances Inc.",
+        "weight_pct": 2.4,
+        "shares": 2564974,
+        "raw": {
+          "no": 17,
+          "n": "International Flavors & Fragrances Inc.",
+          "s": "$IFF",
+          "as": "2.40%",
+          "sh": "2,564,974"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ALB",
+        "name": "Albemarle Corporation",
+        "weight_pct": 2.38,
+        "shares": 1180356,
+        "raw": {
+          "no": 18,
+          "n": "Albemarle Corporation",
+          "s": "$ALB",
+          "as": "2.38%",
+          "sh": "1,180,356"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "DD",
+        "name": "DuPont de Nemours, Inc.",
+        "weight_pct": 2.37,
+        "shares": 4098385,
+        "raw": {
+          "no": 19,
+          "n": "DuPont de Nemours, Inc.",
+          "s": "$DD",
+          "as": "2.37%",
+          "sh": "4,098,385"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "IP",
+        "name": "International Paper Company",
+        "weight_pct": 2.3,
+        "shares": 5288735,
+        "raw": {
+          "no": 20,
+          "n": "International Paper Company",
+          "s": "$IP",
+          "as": "2.30%",
+          "sh": "5,288,735"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "AMCR",
+        "name": "Amcor plc",
+        "weight_pct": 2.27,
+        "shares": 4627777,
+        "raw": {
+          "no": 21,
+          "n": "Amcor plc",
+          "s": "$AMCR",
+          "as": "2.27%",
+          "sh": "4,627,777"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "CF",
+        "name": "CF Industries Holdings, Inc.",
+        "weight_pct": 1.99,
+        "shares": 1562210,
+        "raw": {
+          "no": 22,
+          "n": "CF Industries Holdings, Inc.",
+          "s": "$CF",
+          "as": "1.99%",
+          "sh": "1,562,210"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "LYB",
+        "name": "LyondellBasell Industries N.V.",
+        "weight_pct": 1.95,
+        "shares": 2579067,
+        "raw": {
+          "no": 23,
+          "n": "LyondellBasell Industries N.V.",
+          "s": "$LYB",
+          "as": "1.95%",
+          "sh": "2,579,067"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "BALL",
+        "name": "Ball Corporation",
+        "weight_pct": 1.84,
+        "shares": 2684073,
+        "raw": {
+          "no": 24,
+          "n": "Ball Corporation",
+          "s": "$BALL",
+          "as": "1.84%",
+          "sh": "2,684,073"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "AVY",
+        "name": "Avery Dennison Corporation",
+        "weight_pct": 1.48,
+        "shares": 774074,
+        "raw": {
+          "no": 25,
+          "n": "Avery Dennison Corporation",
+          "s": "$AVY",
+          "as": "1.48%",
+          "sh": "774,074"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Materials",
+        "w": 86.83
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 13.17
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 94.55563,
+        "country": "United States"
+      },
+      {
+        "code": "IE",
+        "weight": 2.8745,
+        "country": "Ireland"
+      },
+      {
+        "code": "GB",
+        "weight": 2.56987,
+        "country": "United Kingdom"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLB.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLB.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

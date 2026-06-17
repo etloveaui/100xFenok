@@ -1,0 +1,1971 @@
+{
+  "schema_version": "market-source-parity/v1",
+  "generated_at": "2026-06-17T09:46:12Z",
+  "source": "computed/market_facts candidate comparison",
+  "summary": {
+    "inspected_ticker_files": 5741,
+    "fields": 11,
+    "multi_candidate_fields": 2127,
+    "divergence_rows": 2127,
+    "percent_scale_warnings": 0
+  },
+  "by_field": {
+    "beta": {
+      "ticker_count": 3967,
+      "multi_candidate_count": 3,
+      "selected_sources": {
+        "stockanalysis.overview": 2950,
+        "yf": 1017
+      },
+      "candidate_sources": {
+        "stockanalysis.overview": 3,
+        "yf": 3
+      }
+    },
+    "change": {
+      "ticker_count": 5624,
+      "multi_candidate_count": 3,
+      "selected_sources": {
+        "stockanalysis.quote": 4560,
+        "yf.derived": 1064
+      },
+      "candidate_sources": {
+        "stockanalysis.quote": 3,
+        "yf.derived": 3
+      }
+    },
+    "change_pct": {
+      "ticker_count": 5624,
+      "multi_candidate_count": 3,
+      "selected_sources": {
+        "stockanalysis.quote": 4560,
+        "yf.derived": 1064
+      },
+      "candidate_sources": {
+        "stockanalysis.quote": 3,
+        "yf.derived": 3
+      }
+    },
+    "dividend_yield": {
+      "ticker_count": 4785,
+      "multi_candidate_count": 376,
+      "selected_sources": {
+        "slickcharts": 190,
+        "stockanalysis.overview": 3723,
+        "yf": 872
+      },
+      "candidate_sources": {
+        "slickcharts": 323,
+        "stockanalysis.overview": 53,
+        "yf": 376
+      }
+    },
+    "expense_ratio": {
+      "ticker_count": 4545,
+      "multi_candidate_count": 34,
+      "selected_sources": {
+        "stockanalysis.overview": 4509,
+        "yf": 36
+      },
+      "candidate_sources": {
+        "stockanalysis.overview": 34,
+        "yf": 34
+      }
+    },
+    "forward_pe": {
+      "ticker_count": 1122,
+      "multi_candidate_count": 405,
+      "selected_sources": {
+        "slickcharts": 101,
+        "yf": 1021
+      },
+      "candidate_sources": {
+        "slickcharts": 405,
+        "stockanalysis.overview": 3,
+        "yf": 405
+      }
+    },
+    "market_cap": {
+      "ticker_count": 1168,
+      "multi_candidate_count": 408,
+      "selected_sources": {
+        "slickcharts": 104,
+        "yf": 1064
+      },
+      "candidate_sources": {
+        "slickcharts": 408,
+        "stockanalysis.overview": 3,
+        "yf": 408
+      }
+    },
+    "previous_close": {
+      "ticker_count": 5630,
+      "multi_candidate_count": 67,
+      "selected_sources": {
+        "stockanalysis.quote": 4493,
+        "yf": 1137
+      },
+      "candidate_sources": {
+        "stockanalysis.quote": 67,
+        "yf": 67
+      }
+    },
+    "price": {
+      "ticker_count": 5729,
+      "multi_candidate_count": 408,
+      "selected_sources": {
+        "slickcharts": 105,
+        "stockanalysis.quote": 4557,
+        "yf": 1067
+      },
+      "candidate_sources": {
+        "slickcharts": 408,
+        "stockanalysis.quote": 3,
+        "yf": 408
+      }
+    },
+    "total_assets": {
+      "ticker_count": 4332,
+      "multi_candidate_count": 33,
+      "selected_sources": {
+        "stockanalysis.overview": 4296,
+        "yf": 36
+      },
+      "candidate_sources": {
+        "stockanalysis.overview": 33,
+        "yf": 33
+      }
+    },
+    "trailing_pe": {
+      "ticker_count": 821,
+      "multi_candidate_count": 387,
+      "selected_sources": {
+        "slickcharts": 95,
+        "yf": 726
+      },
+      "candidate_sources": {
+        "slickcharts": 387,
+        "yf": 387
+      }
+    }
+  },
+  "top_divergences": [
+    {
+      "ticker": "NVDA",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 106.590574,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -2.37
+        },
+        {
+          "source": "yf.derived",
+          "value": 0.1561966124859634
+        }
+      ]
+    },
+    {
+      "ticker": "NVDA",
+      "asset_type": "stock",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 106.349206,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -5.04
+        },
+        {
+          "source": "yf.derived",
+          "value": 0.3199999999999932
+        }
+      ]
+    },
+    {
+      "ticker": "IGV",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 100.0,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 0.02
+        }
+      ]
+    },
+    {
+      "ticker": "DFEN",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 97.540984,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.18
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 7.32
+        }
+      ]
+    },
+    {
+      "ticker": "NVDA",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 95.918367,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.49
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.02
+        }
+      ]
+    },
+    {
+      "ticker": "KLAC",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 88.888889,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.36
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.04
+        }
+      ]
+    },
+    {
+      "ticker": "KLAC",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 86.754505,
+      "values": [
+        {
+          "source": "yf",
+          "value": 254.54
+        },
+        {
+          "source": "slickcharts",
+          "value": 1921.71
+        }
+      ]
+    },
+    {
+      "ticker": "TPL",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 86.658009,
+      "values": [
+        {
+          "source": "yf",
+          "value": 5.1820292
+        },
+        {
+          "source": "slickcharts",
+          "value": 38.84
+        }
+      ]
+    },
+    {
+      "ticker": "BNY",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 77.55102,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.47
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.33
+        }
+      ]
+    },
+    {
+      "ticker": "BITU",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 74.729199,
+      "values": [
+        {
+          "source": "yf",
+          "value": 21.23
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 84.01
+        }
+      ]
+    },
+    {
+      "ticker": "MUU",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 74.545455,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.14
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 0.55
+        }
+      ]
+    },
+    {
+      "ticker": "DD",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 65.271967,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.66
+        },
+        {
+          "source": "slickcharts",
+          "value": 4.78
+        }
+      ]
+    },
+    {
+      "ticker": "MLM",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 61.729151,
+      "values": [
+        {
+          "source": "yf",
+          "value": 36.241684
+        },
+        {
+          "source": "slickcharts",
+          "value": 13.87
+        }
+      ]
+    },
+    {
+      "ticker": "CIEN",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 59.519852,
+      "values": [
+        {
+          "source": "yf",
+          "value": 149.1572
+        },
+        {
+          "source": "slickcharts",
+          "value": 368.47
+        }
+      ]
+    },
+    {
+      "ticker": "SPG",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 59.398023,
+      "values": [
+        {
+          "source": "yf",
+          "value": 15.221681
+        },
+        {
+          "source": "slickcharts",
+          "value": 37.49
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 54.185631,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -1.08
+        },
+        {
+          "source": "yf.derived",
+          "value": -2.3573390296002574
+        }
+      ]
+    },
+    {
+      "ticker": "PYPL",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 53.333333,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.35
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.63
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 52.750809,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -1.46
+        },
+        {
+          "source": "yf.derived",
+          "value": -3.0900000000000176
+        }
+      ]
+    },
+    {
+      "ticker": "PCAR",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 52.419355,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.18
+        },
+        {
+          "source": "slickcharts",
+          "value": 2.48
+        }
+      ]
+    },
+    {
+      "ticker": "CCI",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 52.142255,
+      "values": [
+        {
+          "source": "yf",
+          "value": 38.886078
+        },
+        {
+          "source": "slickcharts",
+          "value": 18.61
+        }
+      ]
+    },
+    {
+      "ticker": "TTD",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 50.074018,
+      "values": [
+        {
+          "source": "yf",
+          "value": 8.971699
+        },
+        {
+          "source": "slickcharts",
+          "value": 17.97
+        }
+      ]
+    },
+    {
+      "ticker": "AVGG",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 48.841139,
+      "values": [
+        {
+          "source": "yf",
+          "value": 29278216.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 57230000.0
+        }
+      ]
+    },
+    {
+      "ticker": "COO",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 47.345022,
+      "values": [
+        {
+          "source": "yf",
+          "value": 57.525425
+        },
+        {
+          "source": "slickcharts",
+          "value": 30.29
+        }
+      ]
+    },
+    {
+      "ticker": "ITB",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 46.721311,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.22
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 0.65
+        }
+      ]
+    },
+    {
+      "ticker": "DASH",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 45.921561,
+      "values": [
+        {
+          "source": "yf",
+          "value": 19.257332
+        },
+        {
+          "source": "slickcharts",
+          "value": 35.61
+        }
+      ]
+    },
+    {
+      "ticker": "JCI",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 45.740623,
+      "values": [
+        {
+          "source": "yf",
+          "value": 44.195126
+        },
+        {
+          "source": "slickcharts",
+          "value": 23.98
+        }
+      ]
+    },
+    {
+      "ticker": "PLTG",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 43.645756,
+      "values": [
+        {
+          "source": "yf",
+          "value": 47236904.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 26620000.0
+        }
+      ]
+    },
+    {
+      "ticker": "ORCL",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 40.002797,
+      "values": [
+        {
+          "source": "yf",
+          "value": 16.94321
+        },
+        {
+          "source": "slickcharts",
+          "value": 28.24
+        }
+      ]
+    },
+    {
+      "ticker": "PTIR",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 38.180428,
+      "values": [
+        {
+          "source": "yf",
+          "value": 531013056.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 328270000.0
+        }
+      ]
+    },
+    {
+      "ticker": "ORCX",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 36.118978,
+      "values": [
+        {
+          "source": "yf",
+          "value": 433070720.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 276650000.0
+        }
+      ]
+    },
+    {
+      "ticker": "PANW",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 35.894966,
+      "values": [
+        {
+          "source": "yf",
+          "value": 243.14783
+        },
+        {
+          "source": "slickcharts",
+          "value": 155.87
+        }
+      ]
+    },
+    {
+      "ticker": "SMCI",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 34.053566,
+      "values": [
+        {
+          "source": "yf",
+          "value": 16.031578
+        },
+        {
+          "source": "slickcharts",
+          "value": 24.31
+        }
+      ]
+    },
+    {
+      "ticker": "SMCI",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 33.913397,
+      "values": [
+        {
+          "source": "yf",
+          "value": 18319206400.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 27720000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "SMCI",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 33.911911,
+      "values": [
+        {
+          "source": "yf",
+          "value": 30.46
+        },
+        {
+          "source": "slickcharts",
+          "value": 46.09
+        }
+      ]
+    },
+    {
+      "ticker": "SMCI",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 32.933282,
+      "values": [
+        {
+          "source": "yf",
+          "value": 9.603954
+        },
+        {
+          "source": "slickcharts",
+          "value": 14.32
+        }
+      ]
+    },
+    {
+      "ticker": "AVGG",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 32.286996,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.51
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 2.23
+        }
+      ]
+    },
+    {
+      "ticker": "AVGX",
+      "asset_type": "etf",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 32.121212,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.12
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 1.65
+        }
+      ]
+    },
+    {
+      "ticker": "BDX",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 31.59524,
+      "values": [
+        {
+          "source": "yf",
+          "value": 25.521816
+        },
+        {
+          "source": "slickcharts",
+          "value": 37.31
+        }
+      ]
+    },
+    {
+      "ticker": "INSM",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 30.938869,
+      "values": [
+        {
+          "source": "yf",
+          "value": 301.32724
+        },
+        {
+          "source": "slickcharts",
+          "value": 208.1
+        }
+      ]
+    },
+    {
+      "ticker": "CIEN",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 30.270002,
+      "values": [
+        {
+          "source": "yf",
+          "value": 46.363476
+        },
+        {
+          "source": "slickcharts",
+          "value": 66.49
+        }
+      ]
+    },
+    {
+      "ticker": "JKHY",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 30.107527,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.86
+        },
+        {
+          "source": "slickcharts",
+          "value": 1.3
+        }
+      ]
+    },
+    {
+      "ticker": "TSN",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.859155,
+      "values": [
+        {
+          "source": "yf",
+          "value": 3.55
+        },
+        {
+          "source": "slickcharts",
+          "value": 2.49
+        }
+      ]
+    },
+    {
+      "ticker": "GEV",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 28.571429,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.21
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.15
+        }
+      ]
+    },
+    {
+      "ticker": "ALNY",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 27.673143,
+      "values": [
+        {
+          "source": "yf",
+          "value": 20.54806
+        },
+        {
+          "source": "slickcharts",
+          "value": 28.41
+        }
+      ]
+    },
+    {
+      "ticker": "WDC",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 27.272727,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.11
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.08
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 26.969659,
+      "values": [
+        {
+          "source": "yf",
+          "value": 61.703335
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 84.49
+        },
+        {
+          "source": "slickcharts",
+          "value": 75.34
+        }
+      ]
+    },
+    {
+      "ticker": "AVGO",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 26.932492,
+      "values": [
+        {
+          "source": "yf",
+          "value": 63.678333
+        },
+        {
+          "source": "slickcharts",
+          "value": 87.15
+        }
+      ]
+    },
+    {
+      "ticker": "BA",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 26.855764,
+      "values": [
+        {
+          "source": "yf",
+          "value": 86.92461
+        },
+        {
+          "source": "slickcharts",
+          "value": 118.84
+        }
+      ]
+    },
+    {
+      "ticker": "EXC",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 26.648352,
+      "values": [
+        {
+          "source": "yf",
+          "value": 3.64
+        },
+        {
+          "source": "slickcharts",
+          "value": 2.67
+        }
+      ]
+    },
+    {
+      "ticker": "GDDY",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 25.975575,
+      "values": [
+        {
+          "source": "yf",
+          "value": 7.076735
+        },
+        {
+          "source": "slickcharts",
+          "value": 9.56
+        }
+      ]
+    },
+    {
+      "ticker": "KLAC",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 24.502094,
+      "values": [
+        {
+          "source": "yf",
+          "value": 332499288064.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 251030000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "KLAC",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 24.440869,
+      "values": [
+        {
+          "source": "yf",
+          "value": 71.90395
+        },
+        {
+          "source": "slickcharts",
+          "value": 54.33
+        }
+      ]
+    },
+    {
+      "ticker": "KLAC",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 24.173804,
+      "values": [
+        {
+          "source": "yf",
+          "value": 50.43112
+        },
+        {
+          "source": "slickcharts",
+          "value": 38.24
+        }
+      ]
+    },
+    {
+      "ticker": "ADBE",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 24.017588,
+      "values": [
+        {
+          "source": "yf",
+          "value": 7.4538746
+        },
+        {
+          "source": "slickcharts",
+          "value": 9.81
+        }
+      ]
+    },
+    {
+      "ticker": "DLR",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 23.791326,
+      "values": [
+        {
+          "source": "yf",
+          "value": 64.3125
+        },
+        {
+          "source": "slickcharts",
+          "value": 84.39
+        }
+      ]
+    },
+    {
+      "ticker": "HPE",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 23.157423,
+      "values": [
+        {
+          "source": "yf",
+          "value": 12.048916
+        },
+        {
+          "source": "slickcharts",
+          "value": 15.68
+        }
+      ]
+    },
+    {
+      "ticker": "CIEN",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 23.137377,
+      "values": [
+        {
+          "source": "yf",
+          "value": 445.98
+        },
+        {
+          "source": "slickcharts",
+          "value": 580.23
+        }
+      ]
+    },
+    {
+      "ticker": "CIEN",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 23.050005,
+      "values": [
+        {
+          "source": "yf",
+          "value": 63129776128.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 82040000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "NVDA",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 22.749272,
+      "values": [
+        {
+          "source": "yf",
+          "value": 16.122227
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 20.87
+        },
+        {
+          "source": "slickcharts",
+          "value": 17.07
+        }
+      ]
+    },
+    {
+      "ticker": "ADBE",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 22.70447,
+      "values": [
+        {
+          "source": "yf",
+          "value": 11.671625
+        },
+        {
+          "source": "slickcharts",
+          "value": 15.1
+        }
+      ]
+    },
+    {
+      "ticker": "KMB",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 22.417148,
+      "values": [
+        {
+          "source": "yf",
+          "value": 19.7853
+        },
+        {
+          "source": "slickcharts",
+          "value": 15.35
+        }
+      ]
+    },
+    {
+      "ticker": "ORCL",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 22.227158,
+      "values": [
+        {
+          "source": "yf",
+          "value": 31.52911
+        },
+        {
+          "source": "slickcharts",
+          "value": 40.54
+        }
+      ]
+    },
+    {
+      "ticker": "PCG",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 22.033898,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.18
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.92
+        }
+      ]
+    },
+    {
+      "ticker": "MSTU",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 21.774105,
+      "values": [
+        {
+          "source": "yf",
+          "value": 530182496.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 414740000.0
+        }
+      ]
+    },
+    {
+      "ticker": "ADBE",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 21.291617,
+      "values": [
+        {
+          "source": "yf",
+          "value": 204.02
+        },
+        {
+          "source": "slickcharts",
+          "value": 259.21
+        }
+      ]
+    },
+    {
+      "ticker": "ADBE",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 21.289603,
+      "values": [
+        {
+          "source": "yf",
+          "value": 82464882688.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 104770000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "BITU",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 21.213764,
+      "values": [
+        {
+          "source": "yf",
+          "value": 446550080.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 351820000.0
+        }
+      ]
+    },
+    {
+      "ticker": "AMAT",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 20.899623,
+      "values": [
+        {
+          "source": "yf",
+          "value": 53.463715
+        },
+        {
+          "source": "slickcharts",
+          "value": 42.29
+        }
+      ]
+    },
+    {
+      "ticker": "APP",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 20.837488,
+      "values": [
+        {
+          "source": "yf",
+          "value": 22.656311
+        },
+        {
+          "source": "slickcharts",
+          "value": 28.62
+        }
+      ]
+    },
+    {
+      "ticker": "AMAT",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 20.659321,
+      "values": [
+        {
+          "source": "yf",
+          "value": 567.25
+        },
+        {
+          "source": "slickcharts",
+          "value": 450.06
+        }
+      ]
+    },
+    {
+      "ticker": "AMAT",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 20.659183,
+      "values": [
+        {
+          "source": "yf",
+          "value": 450373484544.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 357330000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "AMAT",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 20.540576,
+      "values": [
+        {
+          "source": "yf",
+          "value": 34.88573
+        },
+        {
+          "source": "slickcharts",
+          "value": 27.72
+        }
+      ]
+    },
+    {
+      "ticker": "SPG",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 20.161706,
+      "values": [
+        {
+          "source": "yf",
+          "value": 83230736384.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 66450000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "APP",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.984009,
+      "values": [
+        {
+          "source": "yf",
+          "value": 43.272648
+        },
+        {
+          "source": "slickcharts",
+          "value": 54.08
+        }
+      ]
+    },
+    {
+      "ticker": "HUM",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.827586,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.93
+        },
+        {
+          "source": "slickcharts",
+          "value": 1.16
+        }
+      ]
+    },
+    {
+      "ticker": "HUM",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.460999,
+      "values": [
+        {
+          "source": "yf",
+          "value": 379.22
+        },
+        {
+          "source": "slickcharts",
+          "value": 305.42
+        }
+      ]
+    },
+    {
+      "ticker": "HUM",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.459207,
+      "values": [
+        {
+          "source": "yf",
+          "value": 45529722880.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 36670000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.363178,
+      "values": [
+        {
+          "source": "yf",
+          "value": 142.2111
+        },
+        {
+          "source": "slickcharts",
+          "value": 176.36
+        }
+      ]
+    },
+    {
+      "ticker": "HUM",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.227546,
+      "values": [
+        {
+          "source": "yf",
+          "value": 40.471718
+        },
+        {
+          "source": "slickcharts",
+          "value": 32.69
+        }
+      ]
+    },
+    {
+      "ticker": "AVGO",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.21133,
+      "values": [
+        {
+          "source": "yf",
+          "value": 19.744751
+        },
+        {
+          "source": "slickcharts",
+          "value": 24.44
+        }
+      ]
+    },
+    {
+      "ticker": "INTU",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 19.075145,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.73
+        },
+        {
+          "source": "slickcharts",
+          "value": 1.4
+        }
+      ]
+    },
+    {
+      "ticker": "APP",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.972745,
+      "values": [
+        {
+          "source": "yf",
+          "value": 496.77
+        },
+        {
+          "source": "slickcharts",
+          "value": 613.09
+        }
+      ]
+    },
+    {
+      "ticker": "APP",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.97229,
+      "values": [
+        {
+          "source": "yf",
+          "value": 166884671488.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 205960000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "HUM",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.765616,
+      "values": [
+        {
+          "source": "yf",
+          "value": 24.103094
+        },
+        {
+          "source": "slickcharts",
+          "value": 19.58
+        }
+      ]
+    },
+    {
+      "ticker": "DELL",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.75,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.64
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.52
+        }
+      ]
+    },
+    {
+      "ticker": "VTR",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.685656,
+      "values": [
+        {
+          "source": "yf",
+          "value": 99.92087
+        },
+        {
+          "source": "slickcharts",
+          "value": 81.25
+        }
+      ]
+    },
+    {
+      "ticker": "ORCL",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.447161,
+      "values": [
+        {
+          "source": "yf",
+          "value": 184.13
+        },
+        {
+          "source": "slickcharts",
+          "value": 225.78
+        }
+      ]
+    },
+    {
+      "ticker": "ORCL",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.446698,
+      "values": [
+        {
+          "source": "yf",
+          "value": 529566367744.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 649350000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "QCOM",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.390805,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.74
+        },
+        {
+          "source": "slickcharts",
+          "value": 1.42
+        }
+      ]
+    },
+    {
+      "ticker": "PTC",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.370975,
+      "values": [
+        {
+          "source": "yf",
+          "value": 13.150436
+        },
+        {
+          "source": "slickcharts",
+          "value": 16.11
+        }
+      ]
+    },
+    {
+      "ticker": "ORCL",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.348624,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.09
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.89
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 18.239195,
+      "values": [
+        {
+          "source": "yf",
+          "value": 306831949824.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 319440000000.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 375280000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 18.23815,
+      "values": [
+        {
+          "source": "yf",
+          "value": 127.99
+        },
+        {
+          "source": "stockanalysis.quote",
+          "value": 133.25
+        },
+        {
+          "source": "slickcharts",
+          "value": 156.54
+        }
+      ]
+    },
+    {
+      "ticker": "TSLL",
+      "asset_type": "etf",
+      "field": "total_assets",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.093574,
+      "values": [
+        {
+          "source": "yf",
+          "value": 5433029120.0
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 4450000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "PTC",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.056657,
+      "values": [
+        {
+          "source": "yf",
+          "value": 113.68
+        },
+        {
+          "source": "slickcharts",
+          "value": 138.73
+        }
+      ]
+    },
+    {
+      "ticker": "PTC",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.035588,
+      "values": [
+        {
+          "source": "yf",
+          "value": 13130698752.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 16020000000.0
+        }
+      ]
+    },
+    {
+      "ticker": "DIS",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 18.0,
+      "values": [
+        {
+          "source": "yf",
+          "value": 1.5
+        },
+        {
+          "source": "slickcharts",
+          "value": 1.23
+        }
+      ]
+    },
+    {
+      "ticker": "NOW",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 17.866045,
+      "values": [
+        {
+          "source": "yf",
+          "value": 102.15
+        },
+        {
+          "source": "slickcharts",
+          "value": 124.37
+        }
+      ]
+    },
+    {
+      "ticker": "NOW",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 17.86362,
+      "values": [
+        {
+          "source": "yf",
+          "value": 105348120576.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 128259999999.99998
+        }
+      ]
+    },
+    {
+      "ticker": "FDX",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 17.839134,
+      "values": [
+        {
+          "source": "yf",
+          "value": 80723050496.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 98250000000.0
+        }
+      ]
+    }
+  ],
+  "percent_scale_warnings": []
+}

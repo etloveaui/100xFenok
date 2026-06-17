@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "DXCM",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "DexCom, Inc.",
     "exchange": "NMS",
@@ -18,49 +18,226 @@
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:40:35Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 75.37,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 73.74,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "previous_close": {
       "value": 75.25,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:40:35Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 75.25,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.12000000000000455,
+      "source": "yf.derived",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:40:35Z",
+      "confidence": "derived",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.12000000000000455,
+          "source": "yf.derived",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.15946843853821202,
+      "source": "yf.derived",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:40:35Z",
+      "confidence": "derived",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.15946843853821202,
+          "source": "yf.derived",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 1
     },
     "market_cap": {
       "value": 29083248640,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:40:35Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 29083248640,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 28450000000.0,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "trailing_pe": {
       "value": 32.34764,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:40:35Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 32.34764,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 31.54,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "forward_pe": {
       "value": 24.46403,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:40:35Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 24.46403,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 23.97,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
     },
     "dividend_yield": {
       "value": 0,
       "source": "slickcharts",
       "as_of": "2026-06-01T15:21:34+00:00",
       "fetched_at": null,
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0,
+          "source": "slickcharts",
+          "as_of": "2026-06-01T15:21:34+00:00",
+          "fetched_at": null,
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     },
     "beta": {
       "value": 1.443,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:40:35Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.443,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:40:35Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": null,
@@ -73,5 +250,62 @@
     "yf": "yf/finance/DXCM.json",
     "stockanalysis": null,
     "slickcharts": "slickcharts/stocks/DXCM.json"
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "TLT",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "iShares 20+ Year Treasury Bond ETF",
     "exchange": "NGM",
@@ -13,37 +13,596 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 86.19,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:57:43Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 86.19,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 85.98,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:56:22Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 85.98,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:56:22Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 86.19,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.47,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:57:43Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.47,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.55,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:57:43Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.55,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 40680000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:57:43Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 40680000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "forward_pe": {
       "value": -4288.5,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:56:22Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": -4288.5,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:56:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 4.55,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:56:22Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 4.55,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:56:22Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 4.54,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.52,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:57:43Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.52,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.15,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:57:43Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.15,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:57:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 48,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "TREASURY BOND - 4.13 2053-08-15",
+        "weight_pct": 4.66,
+        "shares": 2150887600,
+        "raw": {
+          "no": 1,
+          "n": "TREASURY BOND - 4.13 2053-08-15",
+          "as": "4.66%",
+          "sh": "2,150,887,600"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "TREASURY BOND - 4.75 2053-11-15",
+        "weight_pct": 4.53,
+        "shares": 1908028500,
+        "raw": {
+          "no": 2,
+          "n": "TREASURY BOND - 4.75 2053-11-15",
+          "as": "4.53%",
+          "sh": "1,908,028,500"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "TREASURY BOND - 4.75 2055-05-15",
+        "weight_pct": 4.49,
+        "shares": 1888425000,
+        "raw": {
+          "no": 3,
+          "n": "TREASURY BOND - 4.75 2055-05-15",
+          "as": "4.49%",
+          "sh": "1,888,425,000"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "TREASURY BOND - 4.63 2054-05-15",
+        "weight_pct": 4.43,
+        "shares": 1901277000,
+        "raw": {
+          "no": 4,
+          "n": "TREASURY BOND - 4.63 2054-05-15",
+          "as": "4.43%",
+          "sh": "1,901,277,000"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "TREASURY BOND - 2.0 2051-08-15",
+        "weight_pct": 4.22,
+        "shares": 3001752600,
+        "raw": {
+          "no": 5,
+          "n": "TREASURY BOND - 2.0 2051-08-15",
+          "as": "4.22%",
+          "sh": "3,001,752,600"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "TREASURY BOND - 4.25 2054-02-15",
+        "weight_pct": 4.11,
+        "shares": 1855794700,
+        "raw": {
+          "no": 6,
+          "n": "TREASURY BOND - 4.25 2054-02-15",
+          "as": "4.11%",
+          "sh": "1,855,794,700"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "TREASURY BOND - 1.88 2051-11-15",
+        "weight_pct": 4.06,
+        "shares": 3021953200,
+        "raw": {
+          "no": 7,
+          "n": "TREASURY BOND - 1.88 2051-11-15",
+          "as": "4.06%",
+          "sh": "3,021,953,200"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "TREASURY BOND (OLD) - 4.75 2056-02-15",
+        "weight_pct": 4.02,
+        "shares": 1669131600,
+        "raw": {
+          "no": 8,
+          "n": "TREASURY BOND (OLD) - 4.75 2056-02-15",
+          "as": "4.02%",
+          "sh": "1,669,131,600"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "TREASURY BOND - 4.25 2054-08-15",
+        "weight_pct": 4.02,
+        "shares": 1813333600,
+        "raw": {
+          "no": 9,
+          "n": "TREASURY BOND - 4.25 2054-08-15",
+          "as": "4.02%",
+          "sh": "1,813,333,600"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "TREASURY BOND - 3.63 2053-05-15",
+        "weight_pct": 3.89,
+        "shares": 1985124100,
+        "raw": {
+          "no": 10,
+          "n": "TREASURY BOND - 3.63 2053-05-15",
+          "as": "3.89%",
+          "sh": "1,985,124,100"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "TREASURY BOND - 4.63 2055-02-15",
+        "weight_pct": 3.87,
+        "shares": 1643500900,
+        "raw": {
+          "no": 11,
+          "n": "TREASURY BOND - 4.63 2055-02-15",
+          "as": "3.87%",
+          "sh": "1,643,500,900"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "TREASURY BOND - 4.0 2052-11-15",
+        "weight_pct": 3.65,
+        "shares": 1739090000,
+        "raw": {
+          "no": 12,
+          "n": "TREASURY BOND - 4.0 2052-11-15",
+          "as": "3.65%",
+          "sh": "1,739,090,000"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "TREASURY BOND - 4.5 2054-11-15",
+        "weight_pct": 3.48,
+        "shares": 1526528200,
+        "raw": {
+          "no": 13,
+          "n": "TREASURY BOND - 4.5 2054-11-15",
+          "as": "3.48%",
+          "sh": "1,526,528,200"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "TREASURY BOND (2OLD) - 4.63 2055-11-15",
+        "weight_pct": 3.23,
+        "shares": 1385748400,
+        "raw": {
+          "no": 14,
+          "n": "TREASURY BOND (2OLD) - 4.63 2055-11-15",
+          "as": "3.23%",
+          "sh": "1,385,748,400"
+        }
+      },
+      {
+        "rank": 15,
+        "name": "TREASURY BOND - 3.63 2053-02-15",
+        "weight_pct": 3.03,
+        "shares": 1526585500,
+        "raw": {
+          "no": 15,
+          "n": "TREASURY BOND - 3.63 2053-02-15",
+          "as": "3.03%",
+          "sh": "1,526,585,500"
+        }
+      },
+      {
+        "rank": 16,
+        "name": "TREASURY BOND - 4.75 2055-08-15",
+        "weight_pct": 2.95,
+        "shares": 1227711200,
+        "raw": {
+          "no": 16,
+          "n": "TREASURY BOND - 4.75 2055-08-15",
+          "as": "2.95%",
+          "sh": "1,227,711,200"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "TREASURY BOND - 3.38 2048-11-15",
+        "weight_pct": 2.83,
+        "shares": 1475828900,
+        "raw": {
+          "no": 17,
+          "n": "TREASURY BOND - 3.38 2048-11-15",
+          "as": "2.83%",
+          "sh": "1,475,828,900"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "TREASURY BOND - 3.0 2048-08-15",
+        "weight_pct": 2.78,
+        "shares": 1532047900,
+        "raw": {
+          "no": 18,
+          "n": "TREASURY BOND - 3.0 2048-08-15",
+          "as": "2.78%",
+          "sh": "1,532,047,900"
+        }
+      },
+      {
+        "rank": 19,
+        "name": "TREASURY BOND - 1.88 2051-02-15",
+        "weight_pct": 2.77,
+        "shares": 2021209400,
+        "raw": {
+          "no": 19,
+          "n": "TREASURY BOND - 1.88 2051-02-15",
+          "as": "2.77%",
+          "sh": "2,021,209,400"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "TREASURY BOND - 3.13 2048-05-15",
+        "weight_pct": 2.64,
+        "shares": 1434593900,
+        "raw": {
+          "no": 20,
+          "n": "TREASURY BOND - 3.13 2048-05-15",
+          "as": "2.64%",
+          "sh": "1,434,593,900"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "TREASURY BOND - 1.38 2050-08-15",
+        "weight_pct": 2.59,
+        "shares": 2145032100,
+        "raw": {
+          "no": 21,
+          "n": "TREASURY BOND - 1.38 2050-08-15",
+          "as": "2.59%",
+          "sh": "2,145,032,100"
+        }
+      },
+      {
+        "rank": 22,
+        "name": "TREASURY BOND - 1.63 2050-11-15",
+        "weight_pct": 2.44,
+        "shares": 1909888600,
+        "raw": {
+          "no": 22,
+          "n": "TREASURY BOND - 1.63 2050-11-15",
+          "as": "2.44%",
+          "sh": "1,909,888,600"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "TREASURY BOND - 3.0 2049-02-15",
+        "weight_pct": 2.39,
+        "shares": 1324733700,
+        "raw": {
+          "no": 23,
+          "n": "TREASURY BOND - 3.0 2049-02-15",
+          "as": "2.39%",
+          "sh": "1,324,733,700"
+        }
+      },
+      {
+        "rank": 24,
+        "name": "TREASURY BOND - 2.0 2050-02-15",
+        "weight_pct": 2.17,
+        "shares": 1510915600,
+        "raw": {
+          "no": 24,
+          "n": "TREASURY BOND - 2.0 2050-02-15",
+          "as": "2.17%",
+          "sh": "1,510,915,600"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "TREASURY BOND - 3.0 2048-02-15",
+        "weight_pct": 2.14,
+        "shares": 1175602600,
+        "raw": {
+          "no": 25,
+          "n": "TREASURY BOND - 3.0 2048-02-15",
+          "as": "2.14%",
+          "sh": "1,175,602,600"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/TLT.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/TLT.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLK",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Technology Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,670 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 186.44,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 186.44,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 183.21,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:00Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 183.21,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:00Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 186.44,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": -5.35,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:48Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": -5.35,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -2.79,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:48Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": -2.79,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 117780000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 117780000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 36.82672,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:00Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 36.82672,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 0.4,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:00Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.4,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.41,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 1.34,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.34,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:38:48Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:38:48Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 75,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 13.13,
+        "shares": 77360783,
+        "raw": {
+          "no": 1,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "13.13%",
+          "sh": "77,360,783"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 11.26,
+        "shares": 46738473,
+        "raw": {
+          "no": 2,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "11.26%",
+          "sh": "46,738,473"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 7.64,
+        "shares": 23640025,
+        "raw": {
+          "no": 3,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "7.64%",
+          "sh": "23,640,025"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 7.09,
+        "shares": 8727125,
+        "raw": {
+          "no": 4,
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "7.09%",
+          "sh": "8,727,125"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "weight_pct": 5.35,
+        "shares": 12642179,
+        "raw": {
+          "no": 5,
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "5.35%",
+          "sh": "12,642,179"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 4.77,
+        "shares": 15094164,
+        "raw": {
+          "no": 6,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "4.77%",
+          "sh": "15,094,164"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "weight_pct": 3.75,
+        "shares": 36407135,
+        "raw": {
+          "no": 7,
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "3.75%",
+          "sh": "36,407,135"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 3.07,
+        "shares": 30636584,
+        "raw": {
+          "no": 8,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "3.07%",
+          "sh": "30,636,584"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 2.94,
+        "shares": 9682920,
+        "raw": {
+          "no": 9,
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.94%",
+          "sh": "9,682,920"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight_pct": 2.89,
+        "shares": 6154466,
+        "raw": {
+          "no": 10,
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "2.89%",
+          "sh": "6,154,466"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "KLAC",
+        "name": "KLA Corporation",
+        "weight_pct": 2.14,
+        "shares": 10163660,
+        "raw": {
+          "no": 11,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "2.14%",
+          "sh": "10,163,660"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
+        "weight_pct": 2.0,
+        "shares": 13148446,
+        "raw": {
+          "no": 12,
+          "n": "Oracle Corporation",
+          "s": "$ORCL",
+          "as": "2.00%",
+          "sh": "13,148,446"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "weight_pct": 1.88,
+        "shares": 17712567,
+        "raw": {
+          "no": 13,
+          "n": "Palantir Technologies Inc.",
+          "s": "$PLTR",
+          "as": "1.88%",
+          "sh": "17,712,567"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "SNDK",
+        "name": "Sandisk Corporation",
+        "weight_pct": 1.87,
+        "shares": 1144493,
+        "raw": {
+          "no": 14,
+          "n": "Sandisk Corporation",
+          "s": "$SNDK",
+          "as": "1.87%",
+          "sh": "1,144,493"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 1.75,
+        "shares": 7037083,
+        "raw": {
+          "no": 15,
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "1.75%",
+          "sh": "7,037,083"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "IBM",
+        "name": "International Business Machines Corporation",
+        "weight_pct": 1.63,
+        "shares": 7247914,
+        "raw": {
+          "no": 16,
+          "n": "International Business Machines Corporation",
+          "s": "$IBM",
+          "as": "1.63%",
+          "sh": "7,247,914"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "PANW",
+        "name": "Palo Alto Networks, Inc.",
+        "weight_pct": 1.45,
+        "shares": 6265751,
+        "raw": {
+          "no": 17,
+          "n": "Palo Alto Networks, Inc.",
+          "s": "$PANW",
+          "as": "1.45%",
+          "sh": "6,265,751"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "QCOM",
+        "name": "QUALCOMM Incorporated",
+        "weight_pct": 1.45,
+        "shares": 8273429,
+        "raw": {
+          "no": 18,
+          "n": "QUALCOMM Incorporated",
+          "s": "$QCOM",
+          "as": "1.45%",
+          "sh": "8,273,429"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ADI",
+        "name": "Analog Devices, Inc.",
+        "weight_pct": 1.31,
+        "shares": 3788810,
+        "raw": {
+          "no": 19,
+          "n": "Analog Devices, Inc.",
+          "s": "$ADI",
+          "as": "1.31%",
+          "sh": "3,788,810"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "STX",
+        "name": "Seagate Technology Holdings plc",
+        "weight_pct": 1.3,
+        "shares": 1690917,
+        "raw": {
+          "no": 20,
+          "n": "Seagate Technology Holdings plc",
+          "s": "$STX",
+          "as": "1.30%",
+          "sh": "1,690,917"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "WDC",
+        "name": "Western Digital Corporation",
+        "weight_pct": 1.22,
+        "shares": 2628858,
+        "raw": {
+          "no": 21,
+          "n": "Western Digital Corporation",
+          "s": "$WDC",
+          "as": "1.22%",
+          "sh": "2,628,858"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "APH",
+        "name": "Amphenol Corporation",
+        "weight_pct": 1.21,
+        "shares": 9531285,
+        "raw": {
+          "no": 22,
+          "n": "Amphenol Corporation",
+          "s": "$APH",
+          "as": "1.21%",
+          "sh": "9,531,285"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "CRWD",
+        "name": "CrowdStrike Holdings, Inc.",
+        "weight_pct": 1.1,
+        "shares": 1954750,
+        "raw": {
+          "no": 23,
+          "n": "CrowdStrike Holdings, Inc.",
+          "s": "$CRWD",
+          "as": "1.10%",
+          "sh": "1,954,750"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "ANET",
+        "name": "Arista Networks, Inc.",
+        "weight_pct": 1.08,
+        "shares": 8006836,
+        "raw": {
+          "no": 24,
+          "n": "Arista Networks, Inc.",
+          "s": "$ANET",
+          "as": "1.08%",
+          "sh": "8,006,836"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight_pct": 1.0,
+        "shares": 7265472,
+        "raw": {
+          "no": 25,
+          "n": "Salesforce, Inc.",
+          "s": "$CRM",
+          "as": "1.00%",
+          "sh": "7,265,472"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 99.14
+      },
+      {
+        "n": "Communication Services",
+        "w": 0.86
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 98.90777,
+        "country": "United States"
+      },
+      {
+        "code": "CN",
+        "weight": 0.58547,
+        "country": "China"
+      },
+      {
+        "code": "NL",
+        "weight": 0.50676,
+        "country": "Netherlands"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLK.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLK.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "VNQ",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "Vanguard Real Estate Index Fund ETF Shares",
     "exchange": "PCX",
@@ -13,37 +13,660 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 98.06,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:21:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 98.06,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 97.61,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:58:14Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 97.61,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:58:14Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 98.06,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.24,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:21:48Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.24,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.25,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:21:48Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.25,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 37700000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:21:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 37700000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 31.884125,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:58:14Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 31.884125,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:58:14Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 3.64,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:58:14Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3.64,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:58:14Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.56,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 1.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:21:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.13,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:21:48Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.13,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:21:48Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 159,
+    "holdings_updated": "Apr 30, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "!MUTF/VRTPX",
+        "name": "Vanguard Real Estate II Index Fund",
+        "weight_pct": 14.58,
+        "shares": 441410735,
+        "raw": {
+          "no": 1,
+          "n": "Vanguard Real Estate II Index Fund",
+          "s": "!mutf/VRTPX",
+          "as": "14.58%",
+          "sh": "441,410,735"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "WELL",
+        "name": "Welltower Inc.",
+        "weight_pct": 7.8,
+        "shares": 25200255,
+        "raw": {
+          "no": 2,
+          "n": "Welltower Inc.",
+          "s": "$WELL",
+          "as": "7.80%",
+          "sh": "25,200,255"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "PLD",
+        "name": "Prologis, Inc.",
+        "weight_pct": 6.97,
+        "shares": 34460256,
+        "raw": {
+          "no": 3,
+          "n": "Prologis, Inc.",
+          "s": "$PLD",
+          "as": "6.97%",
+          "sh": "34,460,256"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "EQIX",
+        "name": "Equinix, Inc.",
+        "weight_pct": 5.62,
+        "shares": 3642627,
+        "raw": {
+          "no": 4,
+          "n": "Equinix, Inc.",
+          "s": "$EQIX",
+          "as": "5.62%",
+          "sh": "3,642,627"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "AMT",
+        "name": "American Tower Corporation",
+        "weight_pct": 4.52,
+        "shares": 17367869,
+        "raw": {
+          "no": 5,
+          "n": "American Tower Corporation",
+          "s": "$AMT",
+          "as": "4.52%",
+          "sh": "17,367,869"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "DLR",
+        "name": "Digital Realty Trust, Inc.",
+        "weight_pct": 3.65,
+        "shares": 12743645,
+        "raw": {
+          "no": 6,
+          "n": "Digital Realty Trust, Inc.",
+          "s": "$DLR",
+          "as": "3.65%",
+          "sh": "12,743,645"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "SPG",
+        "name": "Simon Property Group, Inc.",
+        "weight_pct": 3.52,
+        "shares": 12111478,
+        "raw": {
+          "no": 7,
+          "n": "Simon Property Group, Inc.",
+          "s": "$SPG",
+          "as": "3.52%",
+          "sh": "12,111,478"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "O",
+        "name": "Realty Income Corporation",
+        "weight_pct": 3.1,
+        "shares": 33857791,
+        "raw": {
+          "no": 8,
+          "n": "Realty Income Corporation",
+          "s": "$O",
+          "as": "3.10%",
+          "sh": "33,857,791"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "PSA",
+        "name": "Public Storage",
+        "weight_pct": 2.52,
+        "shares": 5858589,
+        "raw": {
+          "no": 9,
+          "n": "Public Storage",
+          "s": "$PSA",
+          "as": "2.52%",
+          "sh": "5,858,589"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "CBRE",
+        "name": "CBRE Group, Inc.",
+        "weight_pct": 2.25,
+        "shares": 11040463,
+        "raw": {
+          "no": 10,
+          "n": "CBRE Group, Inc.",
+          "s": "$CBRE",
+          "as": "2.25%",
+          "sh": "11,040,463"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "VTR",
+        "name": "Ventas, Inc.",
+        "weight_pct": 2.18,
+        "shares": 17426731,
+        "raw": {
+          "no": 11,
+          "n": "Ventas, Inc.",
+          "s": "$VTR",
+          "as": "2.18%",
+          "sh": "17,426,731"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "CCI",
+        "name": "Crown Castle Inc.",
+        "weight_pct": 2.04,
+        "shares": 16155928,
+        "raw": {
+          "no": 12,
+          "n": "Crown Castle Inc.",
+          "s": "$CCI",
+          "as": "2.04%",
+          "sh": "16,155,928"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "IRM",
+        "name": "Iron Mountain Incorporated",
+        "weight_pct": 1.97,
+        "shares": 10966144,
+        "raw": {
+          "no": 13,
+          "n": "Iron Mountain Incorporated",
+          "s": "$IRM",
+          "as": "1.97%",
+          "sh": "10,966,144"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "EXR",
+        "name": "Extra Space Storage Inc.",
+        "weight_pct": 1.61,
+        "shares": 7874224,
+        "raw": {
+          "no": 14,
+          "n": "Extra Space Storage Inc.",
+          "s": "$EXR",
+          "as": "1.61%",
+          "sh": "7,874,224"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "VICI",
+        "name": "VICI Properties Inc.",
+        "weight_pct": 1.57,
+        "shares": 37710247,
+        "raw": {
+          "no": 15,
+          "n": "VICI Properties Inc.",
+          "s": "$VICI",
+          "as": "1.57%",
+          "sh": "37,710,247"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "AVB",
+        "name": "AvalonBay Communities, Inc.",
+        "weight_pct": 1.37,
+        "shares": 5253062,
+        "raw": {
+          "no": 16,
+          "n": "AvalonBay Communities, Inc.",
+          "s": "$AVB",
+          "as": "1.37%",
+          "sh": "5,253,062"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "EQR",
+        "name": "Equity Residential",
+        "weight_pct": 1.25,
+        "shares": 13409544,
+        "raw": {
+          "no": 17,
+          "n": "Equity Residential",
+          "s": "$EQR",
+          "as": "1.25%",
+          "sh": "13,409,544"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "SBAC",
+        "name": "SBA Communications Corporation",
+        "weight_pct": 1.25,
+        "shares": 3952807,
+        "raw": {
+          "no": 18,
+          "n": "SBA Communications Corporation",
+          "s": "$SBAC",
+          "as": "1.25%",
+          "sh": "3,952,807"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "WY",
+        "name": "Weyerhaeuser Company",
+        "weight_pct": 0.93,
+        "shares": 26743365,
+        "raw": {
+          "no": 19,
+          "n": "Weyerhaeuser Company",
+          "s": "$WY",
+          "as": "0.93%",
+          "sh": "26,743,365"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "ESS",
+        "name": "Essex Property Trust, Inc.",
+        "weight_pct": 0.9,
+        "shares": 2389343,
+        "raw": {
+          "no": 20,
+          "n": "Essex Property Trust, Inc.",
+          "s": "$ESS",
+          "as": "0.90%",
+          "sh": "2,389,343"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "INVH",
+        "name": "Invitation Homes Inc.",
+        "weight_pct": 0.89,
+        "shares": 21605484,
+        "raw": {
+          "no": 21,
+          "n": "Invitation Homes Inc.",
+          "s": "$INVH",
+          "as": "0.89%",
+          "sh": "21,605,484"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "KIM",
+        "name": "Kimco Realty Corporation",
+        "weight_pct": 0.85,
+        "shares": 25123351,
+        "raw": {
+          "no": 22,
+          "n": "Kimco Realty Corporation",
+          "s": "$KIM",
+          "as": "0.85%",
+          "sh": "25,123,351"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "WPC",
+        "name": "W. P. Carey Inc.",
+        "weight_pct": 0.84,
+        "shares": 8130085,
+        "raw": {
+          "no": 23,
+          "n": "W. P. Carey Inc.",
+          "s": "$WPC",
+          "as": "0.84%",
+          "sh": "8,130,085"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "SUI",
+        "name": "Sun Communities, Inc.",
+        "weight_pct": 0.84,
+        "shares": 4587988,
+        "raw": {
+          "no": 24,
+          "n": "Sun Communities, Inc.",
+          "s": "$SUI",
+          "as": "0.84%",
+          "sh": "4,587,988"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "MAA",
+        "name": "Mid-America Apartment Communities, Inc.",
+        "weight_pct": 0.8,
+        "shares": 4343640,
+        "raw": {
+          "no": 25,
+          "n": "Mid-America Apartment Communities, Inc.",
+          "s": "$MAA",
+          "as": "0.80%",
+          "sh": "4,343,640"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Real Estate",
+        "w": 84.64
+      },
+      {
+        "n": "Other",
+        "w": 15.36
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/VNQ.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/VNQ.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

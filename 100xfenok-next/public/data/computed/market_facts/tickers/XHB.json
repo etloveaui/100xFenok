@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XHB",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street SPDR S&P Homebuilders ETF",
     "exchange": "PCX",
@@ -13,37 +13,664 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 109.84,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:27:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 109.84,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 107.83,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:42Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 107.83,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:42Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 109.84,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 1.51,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:27:48Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 1.51,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 1.39,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:27:48Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 1.39,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 1660000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:27:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1660000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 18.462997,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:42Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 18.462997,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:42Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 0.76,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:59:42Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.76,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:59:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.64,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 1.28,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:27:48Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.28,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.35,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:27:48Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.35,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:27:48Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 35,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "MOD",
+        "name": "Modine Manufacturing Company",
+        "weight_pct": 4.64,
+        "shares": 276177,
+        "raw": {
+          "no": 1,
+          "n": "Modine Manufacturing Company",
+          "s": "$MOD",
+          "as": "4.64%",
+          "sh": "276,177"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "CARR",
+        "name": "Carrier Global Corporation",
+        "weight_pct": 3.95,
+        "shares": 944122,
+        "raw": {
+          "no": 2,
+          "n": "Carrier Global Corporation",
+          "s": "$CARR",
+          "as": "3.95%",
+          "sh": "944,122"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "TMHC",
+        "name": "Taylor Morrison Home Corporation",
+        "weight_pct": 3.94,
+        "shares": 930328,
+        "raw": {
+          "no": 3,
+          "n": "Taylor Morrison Home Corporation",
+          "s": "$TMHC",
+          "as": "3.94%",
+          "sh": "930,328"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "WSM",
+        "name": "Williams-Sonoma, Inc.",
+        "weight_pct": 3.92,
+        "shares": 298283,
+        "raw": {
+          "no": 4,
+          "n": "Williams-Sonoma, Inc.",
+          "s": "$WSM",
+          "as": "3.92%",
+          "sh": "298,283"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "MAS",
+        "name": "Masco Corporation",
+        "weight_pct": 3.88,
+        "shares": 886710,
+        "raw": {
+          "no": 5,
+          "n": "Masco Corporation",
+          "s": "$MAS",
+          "as": "3.88%",
+          "sh": "886,710"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "CVCO",
+        "name": "Cavco Industries, Inc.",
+        "weight_pct": 3.79,
+        "shares": 108839,
+        "raw": {
+          "no": 6,
+          "n": "Cavco Industries, Inc.",
+          "s": "$CVCO",
+          "as": "3.79%",
+          "sh": "108,839"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "OC",
+        "name": "Owens Corning",
+        "weight_pct": 3.75,
+        "shares": 516265,
+        "raw": {
+          "no": 7,
+          "n": "Owens Corning",
+          "s": "$OC",
+          "as": "3.75%",
+          "sh": "516,265"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "MTH",
+        "name": "Meritage Homes Corporation",
+        "weight_pct": 3.64,
+        "shares": 849469,
+        "raw": {
+          "no": 8,
+          "n": "Meritage Homes Corporation",
+          "s": "$MTH",
+          "as": "3.64%",
+          "sh": "849,469"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "TT",
+        "name": "Trane Technologies plc",
+        "weight_pct": 3.56,
+        "shares": 128131,
+        "raw": {
+          "no": 9,
+          "n": "Trane Technologies plc",
+          "s": "$TT",
+          "as": "3.56%",
+          "sh": "128,131"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "DHI",
+        "name": "D.R. Horton, Inc.",
+        "weight_pct": 3.54,
+        "shares": 388377,
+        "raw": {
+          "no": 10,
+          "n": "D.R. Horton, Inc.",
+          "s": "$DHI",
+          "as": "3.54%",
+          "sh": "388,377"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "BLD",
+        "name": "TopBuild Corp.",
+        "weight_pct": 3.54,
+        "shares": 145836,
+        "raw": {
+          "no": 11,
+          "n": "TopBuild Corp.",
+          "s": "$BLD",
+          "as": "3.54%",
+          "sh": "145,836"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "JCI",
+        "name": "Johnson Controls International plc",
+        "weight_pct": 3.53,
+        "shares": 410455,
+        "raw": {
+          "no": 12,
+          "n": "Johnson Controls International plc",
+          "s": "$JCI",
+          "as": "3.53%",
+          "sh": "410,455"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "TOL",
+        "name": "Toll Brothers, Inc.",
+        "weight_pct": 3.38,
+        "shares": 386841,
+        "raw": {
+          "no": 13,
+          "n": "Toll Brothers, Inc.",
+          "s": "$TOL",
+          "as": "3.38%",
+          "sh": "386,841"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "LII",
+        "name": "Lennox International Inc.",
+        "weight_pct": 3.36,
+        "shares": 108929,
+        "raw": {
+          "no": 14,
+          "n": "Lennox International Inc.",
+          "s": "$LII",
+          "as": "3.36%",
+          "sh": "108,929"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "CSL",
+        "name": "Carlisle Companies Incorporated",
+        "weight_pct": 3.27,
+        "shares": 156969,
+        "raw": {
+          "no": 15,
+          "n": "Carlisle Companies Incorporated",
+          "s": "$CSL",
+          "as": "3.27%",
+          "sh": "156,969"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SKY",
+        "name": "Champion Homes, Inc.",
+        "weight_pct": 3.26,
+        "shares": 705671,
+        "raw": {
+          "no": 16,
+          "n": "Champion Homes, Inc.",
+          "s": "$SKY",
+          "as": "3.26%",
+          "sh": "705,671"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "PHM",
+        "name": "PulteGroup, Inc.",
+        "weight_pct": 3.25,
+        "shares": 449109,
+        "raw": {
+          "no": 17,
+          "n": "PulteGroup, Inc.",
+          "s": "$PHM",
+          "as": "3.25%",
+          "sh": "449,109"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "KBH",
+        "name": "KB Home",
+        "weight_pct": 3.17,
+        "shares": 1013542,
+        "raw": {
+          "no": 18,
+          "n": "KB Home",
+          "s": "$KBH",
+          "as": "3.17%",
+          "sh": "1,013,542"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "NVR",
+        "name": "NVR, Inc.",
+        "weight_pct": 3.13,
+        "shares": 8388,
+        "raw": {
+          "no": 19,
+          "n": "NVR, Inc.",
+          "s": "$NVR",
+          "as": "3.13%",
+          "sh": "8,388"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight_pct": 3.06,
+        "shares": 157930,
+        "raw": {
+          "no": 20,
+          "n": "The Home Depot, Inc.",
+          "s": "$HD",
+          "as": "3.06%",
+          "sh": "157,930"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "SGI",
+        "name": "Somnigroup International Inc.",
+        "weight_pct": 3.06,
+        "shares": 701400,
+        "raw": {
+          "no": 21,
+          "n": "Somnigroup International Inc.",
+          "s": "$SGI",
+          "as": "3.06%",
+          "sh": "701,400"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "LEN",
+        "name": "Lennar Corporation",
+        "weight_pct": 3.03,
+        "shares": 573791,
+        "raw": {
+          "no": 22,
+          "n": "Lennar Corporation",
+          "s": "$LEN",
+          "as": "3.03%",
+          "sh": "573,791"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "WMS",
+        "name": "Advanced Drainage Systems, Inc.",
+        "weight_pct": 3.03,
+        "shares": 376332,
+        "raw": {
+          "no": 23,
+          "n": "Advanced Drainage Systems, Inc.",
+          "s": "$WMS",
+          "as": "3.03%",
+          "sh": "376,332"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "ALLE",
+        "name": "Allegion plc",
+        "weight_pct": 2.97,
+        "shares": 377863,
+        "raw": {
+          "no": 24,
+          "n": "Allegion plc",
+          "s": "$ALLE",
+          "as": "2.97%",
+          "sh": "377,863"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "LOW",
+        "name": "Lowe's Companies, Inc.",
+        "weight_pct": 2.91,
+        "shares": 224435,
+        "raw": {
+          "no": 25,
+          "n": "Lowe's Companies, Inc.",
+          "s": "$LOW",
+          "as": "2.91%",
+          "sh": "224,435"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Consumer Discretionary",
+        "w": 61.15
+      },
+      {
+        "n": "Industrials",
+        "w": 37.65
+      },
+      {
+        "n": "Real Estate",
+        "w": 1.2
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XHB.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XHB.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

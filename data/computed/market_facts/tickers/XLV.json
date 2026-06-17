@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XLV",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "State Street Health Care Select Sector SPDR ETF",
     "exchange": "PCX",
@@ -13,37 +13,660 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 152.94,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:39:04Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 152.94,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 154.09,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:11Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 154.09,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:11Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 152.94,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.05,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:39:04Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.05,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.03,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:39:04Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.03,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 39240000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:39:04Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 39240000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 24.808002,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:11Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 24.808002,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 1.68,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-14T00:00:11Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.68,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-14T00:00:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.64,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.58,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:39:04Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.58,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.08,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T09:39:04Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T09:39:04Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 63,
+    "holdings_updated": "Jun 12, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight_pct": 16.15,
+        "shares": 5610669,
+        "raw": {
+          "no": 1,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "16.15%",
+          "sh": "5,610,669"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight_pct": 10.44,
+        "shares": 17063035,
+        "raw": {
+          "no": 2,
+          "n": "Johnson & Johnson",
+          "s": "$JNJ",
+          "as": "10.44%",
+          "sh": "17,063,035"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight_pct": 7.24,
+        "shares": 12513760,
+        "raw": {
+          "no": 3,
+          "n": "AbbVie Inc.",
+          "s": "$ABBV",
+          "as": "7.24%",
+          "sh": "12,513,760"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "UNH",
+        "name": "UnitedHealth Group Incorporated",
+        "weight_pct": 6.62,
+        "shares": 6413666,
+        "raw": {
+          "no": 4,
+          "n": "UnitedHealth Group Incorporated",
+          "s": "$UNH",
+          "as": "6.62%",
+          "sh": "6,413,666"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "MRK",
+        "name": "Merck & Co., Inc.",
+        "weight_pct": 5.28,
+        "shares": 17573711,
+        "raw": {
+          "no": 5,
+          "n": "Merck & Co., Inc.",
+          "s": "$MRK",
+          "as": "5.28%",
+          "sh": "17,573,711"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "AMGN",
+        "name": "Amgen Inc.",
+        "weight_pct": 3.44,
+        "shares": 3812693,
+        "raw": {
+          "no": 6,
+          "n": "Amgen Inc.",
+          "s": "$AMGN",
+          "as": "3.44%",
+          "sh": "3,812,693"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "TMO",
+        "name": "Thermo Fisher Scientific Inc.",
+        "weight_pct": 3.17,
+        "shares": 2660162,
+        "raw": {
+          "no": 7,
+          "n": "Thermo Fisher Scientific Inc.",
+          "s": "$TMO",
+          "as": "3.17%",
+          "sh": "2,660,162"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "GILD",
+        "name": "Gilead Sciences, Inc.",
+        "weight_pct": 2.78,
+        "shares": 8784496,
+        "raw": {
+          "no": 8,
+          "n": "Gilead Sciences, Inc.",
+          "s": "$GILD",
+          "as": "2.78%",
+          "sh": "8,784,496"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "ABT",
+        "name": "Abbott Laboratories",
+        "weight_pct": 2.76,
+        "shares": 12311869,
+        "raw": {
+          "no": 9,
+          "n": "Abbott Laboratories",
+          "s": "$ABT",
+          "as": "2.76%",
+          "sh": "12,311,869"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "PFE",
+        "name": "Pfizer Inc.",
+        "weight_pct": 2.68,
+        "shares": 40257046,
+        "raw": {
+          "no": 10,
+          "n": "Pfizer Inc.",
+          "s": "$PFE",
+          "as": "2.68%",
+          "sh": "40,257,046"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "ISRG",
+        "name": "Intuitive Surgical, Inc.",
+        "weight_pct": 2.63,
+        "shares": 2514413,
+        "raw": {
+          "no": 11,
+          "n": "Intuitive Surgical, Inc.",
+          "s": "$ISRG",
+          "as": "2.63%",
+          "sh": "2,514,413"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "CVS",
+        "name": "CVS Health Corporation",
+        "weight_pct": 2.33,
+        "shares": 9007756,
+        "raw": {
+          "no": 12,
+          "n": "CVS Health Corporation",
+          "s": "$CVS",
+          "as": "2.33%",
+          "sh": "9,007,756"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "BMY",
+        "name": "Bristol-Myers Squibb Company",
+        "weight_pct": 2.09,
+        "shares": 14419055,
+        "raw": {
+          "no": 13,
+          "n": "Bristol-Myers Squibb Company",
+          "s": "$BMY",
+          "as": "2.09%",
+          "sh": "14,419,055"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "DHR",
+        "name": "Danaher Corporation",
+        "weight_pct": 2.04,
+        "shares": 4454570,
+        "raw": {
+          "no": 14,
+          "n": "Danaher Corporation",
+          "s": "$DHR",
+          "as": "2.04%",
+          "sh": "4,454,570"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "VRTX",
+        "name": "Vertex Pharmaceuticals Incorporated",
+        "weight_pct": 2.03,
+        "shares": 1798405,
+        "raw": {
+          "no": 15,
+          "n": "Vertex Pharmaceuticals Incorporated",
+          "s": "$VRTX",
+          "as": "2.03%",
+          "sh": "1,798,405"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SYK",
+        "name": "Stryker Corporation",
+        "weight_pct": 1.93,
+        "shares": 2438665,
+        "raw": {
+          "no": 16,
+          "n": "Stryker Corporation",
+          "s": "$SYK",
+          "as": "1.93%",
+          "sh": "2,438,665"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "MDT",
+        "name": "Medtronic plc",
+        "weight_pct": 1.85,
+        "shares": 9077183,
+        "raw": {
+          "no": 17,
+          "n": "Medtronic plc",
+          "s": "$MDT",
+          "as": "1.85%",
+          "sh": "9,077,183"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "MCK",
+        "name": "McKesson Corporation",
+        "weight_pct": 1.73,
+        "shares": 867249,
+        "raw": {
+          "no": 18,
+          "n": "McKesson Corporation",
+          "s": "$MCK",
+          "as": "1.73%",
+          "sh": "867,249"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ELV",
+        "name": "Elevance Health, Inc.",
+        "weight_pct": 1.6,
+        "shares": 1562688,
+        "raw": {
+          "no": 19,
+          "n": "Elevance Health, Inc.",
+          "s": "$ELV",
+          "as": "1.60%",
+          "sh": "1,562,688"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "CI",
+        "name": "The Cigna Group",
+        "weight_pct": 1.41,
+        "shares": 1865384,
+        "raw": {
+          "no": 20,
+          "n": "The Cigna Group",
+          "s": "$CI",
+          "as": "1.41%",
+          "sh": "1,865,384"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "BSX",
+        "name": "Boston Scientific Corporation",
+        "weight_pct": 1.25,
+        "shares": 10500305,
+        "raw": {
+          "no": 21,
+          "n": "Boston Scientific Corporation",
+          "s": "$BSX",
+          "as": "1.25%",
+          "sh": "10,500,305"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "REGN",
+        "name": "Regeneron Pharmaceuticals, Inc.",
+        "weight_pct": 1.11,
+        "shares": 713761,
+        "raw": {
+          "no": 22,
+          "n": "Regeneron Pharmaceuticals, Inc.",
+          "s": "$REGN",
+          "as": "1.11%",
+          "sh": "713,761"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "HCA",
+        "name": "HCA Healthcare, Inc.",
+        "weight_pct": 1.09,
+        "shares": 1108331,
+        "raw": {
+          "no": 23,
+          "n": "HCA Healthcare, Inc.",
+          "s": "$HCA",
+          "as": "1.09%",
+          "sh": "1,108,331"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "COR",
+        "name": "Cencora, Inc.",
+        "weight_pct": 0.99,
+        "shares": 1377369,
+        "raw": {
+          "no": 24,
+          "n": "Cencora, Inc.",
+          "s": "$COR",
+          "as": "0.99%",
+          "sh": "1,377,369"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CAH",
+        "name": "Cardinal Health, Inc.",
+        "weight_pct": 0.95,
+        "shares": 1666094,
+        "raw": {
+          "no": 25,
+          "n": "Cardinal Health, Inc.",
+          "s": "$CAH",
+          "as": "0.95%",
+          "sh": "1,666,094"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Health Care",
+        "w": 99.87
+      },
+      {
+        "n": "Other",
+        "w": 0.13
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/XLV.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/XLV.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "ITB",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "iShares U.S. Home Construction ETF",
     "exchange": "BTS",
@@ -13,37 +13,668 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 98.26,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T07:53:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 98.26,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 97.74,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:45:23Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 97.74,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:45:23Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 98.26,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 1.17,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T07:53:41Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 1.17,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 1.21,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T07:53:41Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 1.21,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 2640000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T07:53:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 2640000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 16.209755,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:45:23Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 16.209755,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:45:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 1.22,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:45:23Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.22,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:45:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.65,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 1.3,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T07:53:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.3,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.38,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T07:53:41Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.38,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T07:53:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 48,
+    "holdings_updated": "Jun 12, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "DHI",
+        "name": "D.R. Horton, Inc.",
+        "weight_pct": 16.04,
+        "shares": 2796505,
+        "raw": {
+          "no": 1,
+          "n": "D.R. Horton, Inc.",
+          "s": "$DHI",
+          "as": "16.04%",
+          "sh": "2,796,505"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "PHM",
+        "name": "PulteGroup, Inc.",
+        "weight_pct": 9.14,
+        "shares": 1994350,
+        "raw": {
+          "no": 2,
+          "n": "PulteGroup, Inc.",
+          "s": "$PHM",
+          "as": "9.14%",
+          "sh": "1,994,350"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "LEN",
+        "name": "Lennar Corporation",
+        "weight_pct": 7.53,
+        "shares": 2239613,
+        "raw": {
+          "no": 3,
+          "n": "Lennar Corporation",
+          "s": "$LEN",
+          "as": "7.53%",
+          "sh": "2,239,613"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "NVR",
+        "name": "NVR, Inc.",
+        "weight_pct": 6.88,
+        "shares": 28986,
+        "raw": {
+          "no": 4,
+          "n": "NVR, Inc.",
+          "s": "$NVR",
+          "as": "6.88%",
+          "sh": "28,986"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "TOL",
+        "name": "Toll Brothers, Inc.",
+        "weight_pct": 5.38,
+        "shares": 983457,
+        "raw": {
+          "no": 5,
+          "n": "Toll Brothers, Inc.",
+          "s": "$TOL",
+          "as": "5.38%",
+          "sh": "983,457"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "BLD",
+        "name": "TopBuild Corp.",
+        "weight_pct": 4.43,
+        "shares": 289705,
+        "raw": {
+          "no": 6,
+          "n": "TopBuild Corp.",
+          "s": "$BLD",
+          "as": "4.43%",
+          "sh": "289,705"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "SHW",
+        "name": "The Sherwin-Williams Company",
+        "weight_pct": 4.41,
+        "shares": 373852,
+        "raw": {
+          "no": 7,
+          "n": "The Sherwin-Williams Company",
+          "s": "$SHW",
+          "as": "4.41%",
+          "sh": "373,852"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight_pct": 4.2,
+        "shares": 343911,
+        "raw": {
+          "no": 8,
+          "n": "The Home Depot, Inc.",
+          "s": "$HD",
+          "as": "4.20%",
+          "sh": "343,911"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "LOW",
+        "name": "Lowe's Companies, Inc.",
+        "weight_pct": 4.02,
+        "shares": 488711,
+        "raw": {
+          "no": 9,
+          "n": "Lowe's Companies, Inc.",
+          "s": "$LOW",
+          "as": "4.02%",
+          "sh": "488,711"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "LII",
+        "name": "Lennox International Inc.",
+        "weight_pct": 3.46,
+        "shares": 181696,
+        "raw": {
+          "no": 10,
+          "n": "Lennox International Inc.",
+          "s": "$LII",
+          "as": "3.46%",
+          "sh": "181,696"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "MAS",
+        "name": "Masco Corporation",
+        "weight_pct": 3.19,
+        "shares": 1159082,
+        "raw": {
+          "no": 11,
+          "n": "Masco Corporation",
+          "s": "$MAS",
+          "as": "3.19%",
+          "sh": "1,159,082"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "TMHC",
+        "name": "Taylor Morrison Home Corporation",
+        "weight_pct": 2.71,
+        "shares": 1014343,
+        "raw": {
+          "no": 12,
+          "n": "Taylor Morrison Home Corporation",
+          "s": "$TMHC",
+          "as": "2.71%",
+          "sh": "1,014,343"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "OC",
+        "name": "Owens Corning",
+        "weight_pct": 2.11,
+        "shares": 467918,
+        "raw": {
+          "no": 13,
+          "n": "Owens Corning",
+          "s": "$OC",
+          "as": "2.11%",
+          "sh": "467,918"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "MTH",
+        "name": "Meritage Homes Corporation",
+        "weight_pct": 1.92,
+        "shares": 693379,
+        "raw": {
+          "no": 14,
+          "n": "Meritage Homes Corporation",
+          "s": "$MTH",
+          "as": "1.92%",
+          "sh": "693,379"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "BLDR",
+        "name": "Builders FirstSource, Inc.",
+        "weight_pct": 1.82,
+        "shares": 629502,
+        "raw": {
+          "no": 15,
+          "n": "Builders FirstSource, Inc.",
+          "s": "$BLDR",
+          "as": "1.82%",
+          "sh": "629,502"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "IBP",
+        "name": "Installed Building Products, Inc.",
+        "weight_pct": 1.81,
+        "shares": 235065,
+        "raw": {
+          "no": 16,
+          "n": "Installed Building Products, Inc.",
+          "s": "$IBP",
+          "as": "1.81%",
+          "sh": "235,065"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "CVCO",
+        "name": "Cavco Industries, Inc.",
+        "weight_pct": 1.78,
+        "shares": 80540,
+        "raw": {
+          "no": 17,
+          "n": "Cavco Industries, Inc.",
+          "s": "$CVCO",
+          "as": "1.78%",
+          "sh": "80,540"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "SSD",
+        "name": "Simpson Manufacturing Co., Inc.",
+        "weight_pct": 1.7,
+        "shares": 236018,
+        "raw": {
+          "no": 18,
+          "n": "Simpson Manufacturing Co., Inc.",
+          "s": "$SSD",
+          "as": "1.70%",
+          "sh": "236,018"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "SKY",
+        "name": "Champion Homes, Inc.",
+        "weight_pct": 1.68,
+        "shares": 574005,
+        "raw": {
+          "no": 19,
+          "n": "Champion Homes, Inc.",
+          "s": "$SKY",
+          "as": "1.68%",
+          "sh": "574,005"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "EXP",
+        "name": "Eagle Materials Inc.",
+        "weight_pct": 1.43,
+        "shares": 178937,
+        "raw": {
+          "no": 20,
+          "n": "Eagle Materials Inc.",
+          "s": "$EXP",
+          "as": "1.43%",
+          "sh": "178,937"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "MHO",
+        "name": "M/I Homes, Inc.",
+        "weight_pct": 1.43,
+        "shares": 271416,
+        "raw": {
+          "no": 21,
+          "n": "M/I Homes, Inc.",
+          "s": "$MHO",
+          "as": "1.43%",
+          "sh": "271,416"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "KBH",
+        "name": "KB Home",
+        "weight_pct": 1.32,
+        "shares": 655731,
+        "raw": {
+          "no": 22,
+          "n": "KB Home",
+          "s": "$KBH",
+          "as": "1.32%",
+          "sh": "655,731"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "FND",
+        "name": "Floor & Decor Holdings, Inc.",
+        "weight_pct": 1.22,
+        "shares": 613421,
+        "raw": {
+          "no": 23,
+          "n": "Floor & Decor Holdings, Inc.",
+          "s": "$FND",
+          "as": "1.22%",
+          "sh": "613,421"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "MHK",
+        "name": "Mohawk Industries, Inc.",
+        "weight_pct": 1.18,
+        "shares": 295638,
+        "raw": {
+          "no": 24,
+          "n": "Mohawk Industries, Inc.",
+          "s": "$MHK",
+          "as": "1.18%",
+          "sh": "295,638"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "FBIN",
+        "name": "Fortune Brands Innovations, Inc.",
+        "weight_pct": 1.1,
+        "shares": 683998,
+        "raw": {
+          "no": 25,
+          "n": "Fortune Brands Innovations, Inc.",
+          "s": "$FBIN",
+          "as": "1.10%",
+          "sh": "683,998"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Consumer Discretionary",
+        "w": 79.05
+      },
+      {
+        "n": "Industrials",
+        "w": 15.28
+      },
+      {
+        "n": "Materials",
+        "w": 5.08
+      },
+      {
+        "n": "Other",
+        "w": 0.59
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/ITB.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/ITB.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }

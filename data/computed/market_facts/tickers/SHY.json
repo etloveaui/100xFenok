@@ -1,8 +1,8 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "SHY",
-  "asset_type": "stock",
-  "generated_at": "2026-06-17T05:52:24Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-17T09:46:08Z",
   "identity": {
     "name": "iShares 1-3 Year Treasury Bond ETF",
     "exchange": "NGM",
@@ -13,37 +13,595 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 82.125,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:45:58Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 82.125,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
       "value": 82.09,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:54:17Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "candidates": [
+        {
+          "value": 82.09,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:54:17Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 82.13,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.02,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:45:58Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.02,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.02,
+      "source": "stockanalysis.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:45:58Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "candidates": [
+        {
+          "value": 0.02,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 25290000000.0,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:45:58Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 25290000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "trailing_pe": {
       "value": 3730.4546,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:54:17Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3730.4546,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:54:17Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
     },
     "dividend_yield": {
       "value": 3.71,
       "source": "yf",
       "as_of": null,
       "fetched_at": "2026-06-13T23:54:17Z",
-      "confidence": "observed"
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3.71,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:54:17Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.68,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.05,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:45:58Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.05,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.15,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-17T08:45:58Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.15,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-17T08:45:58Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 92,
+    "holdings_updated": "Jun 15, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "TREASURY NOTE - 1.25 2028-04-30",
+        "weight_pct": 1.96,
+        "shares": 524732400,
+        "raw": {
+          "no": 1,
+          "n": "TREASURY NOTE - 1.25 2028-04-30",
+          "as": "1.96%",
+          "sh": "524,732,400"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "TREASURY NOTE - 3.5 2028-01-31",
+        "weight_pct": 1.73,
+        "shares": 438471700,
+        "raw": {
+          "no": 2,
+          "n": "TREASURY NOTE - 3.5 2028-01-31",
+          "as": "1.73%",
+          "sh": "438,471,700"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "TREASURY NOTE - 1.25 2028-06-30",
+        "weight_pct": 1.61,
+        "shares": 430580000,
+        "raw": {
+          "no": 3,
+          "n": "TREASURY NOTE - 1.25 2028-06-30",
+          "as": "1.61%",
+          "sh": "430,580,000"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "TREASURY NOTE - 4.63 2029-04-30",
+        "weight_pct": 1.53,
+        "shares": 381155000,
+        "raw": {
+          "no": 4,
+          "n": "TREASURY NOTE - 4.63 2029-04-30",
+          "as": "1.53%",
+          "sh": "381,155,000"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "TREASURY NOTE - 3.75 2027-08-15",
+        "weight_pct": 1.5,
+        "shares": 377938000,
+        "raw": {
+          "no": 5,
+          "n": "TREASURY NOTE - 3.75 2027-08-15",
+          "as": "1.50%",
+          "sh": "377,938,000"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "TREASURY NOTE - 4.5 2029-05-31",
+        "weight_pct": 1.5,
+        "shares": 375849100,
+        "raw": {
+          "no": 6,
+          "n": "TREASURY NOTE - 4.5 2029-05-31",
+          "as": "1.50%",
+          "sh": "375,849,100"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "TREASURY NOTE - 2.25 2027-08-15",
+        "weight_pct": 1.47,
+        "shares": 377445300,
+        "raw": {
+          "no": 7,
+          "n": "TREASURY NOTE - 2.25 2027-08-15",
+          "as": "1.47%",
+          "sh": "377,445,300"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "TREASURY NOTE - 4.38 2027-07-15",
+        "weight_pct": 1.46,
+        "shares": 363160900,
+        "raw": {
+          "no": 8,
+          "n": "TREASURY NOTE - 4.38 2027-07-15",
+          "as": "1.46%",
+          "sh": "363,160,900"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "TREASURY NOTE - 4.25 2028-02-15",
+        "weight_pct": 1.42,
+        "shares": 354693500,
+        "raw": {
+          "no": 9,
+          "n": "TREASURY NOTE - 4.25 2028-02-15",
+          "as": "1.42%",
+          "sh": "354,693,500"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "TREASURY NOTE - 3.38 2027-09-15",
+        "weight_pct": 1.4,
+        "shares": 354626600,
+        "raw": {
+          "no": 10,
+          "n": "TREASURY NOTE - 3.38 2027-09-15",
+          "as": "1.40%",
+          "sh": "354,626,600"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "TREASURY NOTE - 3.88 2027-10-15",
+        "weight_pct": 1.4,
+        "shares": 352997200,
+        "raw": {
+          "no": 11,
+          "n": "TREASURY NOTE - 3.88 2027-10-15",
+          "as": "1.40%",
+          "sh": "352,997,200"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "TREASURY NOTE - 0.5 2027-08-31",
+        "weight_pct": 1.39,
+        "shares": 368754700,
+        "raw": {
+          "no": 12,
+          "n": "TREASURY NOTE - 0.5 2027-08-31",
+          "as": "1.39%",
+          "sh": "368,754,700"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "TREASURY NOTE - 1.25 2028-09-30",
+        "weight_pct": 1.39,
+        "shares": 374306700,
+        "raw": {
+          "no": 13,
+          "n": "TREASURY NOTE - 1.25 2028-09-30",
+          "as": "1.39%",
+          "sh": "374,306,700"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "TREASURY NOTE - 4.13 2029-03-31",
+        "weight_pct": 1.37,
+        "shares": 345026000,
+        "raw": {
+          "no": 14,
+          "n": "TREASURY NOTE - 4.13 2029-03-31",
+          "as": "1.37%",
+          "sh": "345,026,000"
+        }
+      },
+      {
+        "rank": 15,
+        "name": "TREASURY NOTE - 4.25 2028-01-15",
+        "weight_pct": 1.36,
+        "shares": 339026300,
+        "raw": {
+          "no": 15,
+          "n": "TREASURY NOTE - 4.25 2028-01-15",
+          "as": "1.36%",
+          "sh": "339,026,300"
+        }
+      },
+      {
+        "rank": 16,
+        "name": "TREASURY NOTE - 4.13 2027-11-15",
+        "weight_pct": 1.36,
+        "shares": 343364600,
+        "raw": {
+          "no": 16,
+          "n": "TREASURY NOTE - 4.13 2027-11-15",
+          "as": "1.36%",
+          "sh": "343,364,600"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "TREASURY NOTE - 2.88 2028-05-15",
+        "weight_pct": 1.35,
+        "shares": 350877900,
+        "raw": {
+          "no": 17,
+          "n": "TREASURY NOTE - 2.88 2028-05-15",
+          "as": "1.35%",
+          "sh": "350,877,900"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "TREASURY NOTE - 1.13 2028-02-29",
+        "weight_pct": 1.34,
+        "shares": 357695300,
+        "raw": {
+          "no": 18,
+          "n": "TREASURY NOTE - 1.13 2028-02-29",
+          "as": "1.34%",
+          "sh": "357,695,300"
+        }
+      },
+      {
+        "rank": 19,
+        "name": "TREASURY NOTE - 2.75 2028-02-15",
+        "weight_pct": 1.34,
+        "shares": 345637100,
+        "raw": {
+          "no": 19,
+          "n": "TREASURY NOTE - 2.75 2028-02-15",
+          "as": "1.34%",
+          "sh": "345,637,100"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "TREASURY NOTE - 4.0 2027-12-15",
+        "weight_pct": 1.34,
+        "shares": 341727400,
+        "raw": {
+          "no": 20,
+          "n": "TREASURY NOTE - 4.0 2027-12-15",
+          "as": "1.34%",
+          "sh": "341,727,400"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "TREASURY NOTE - 0.75 2028-01-31",
+        "weight_pct": 1.34,
+        "shares": 356917500,
+        "raw": {
+          "no": 21,
+          "n": "TREASURY NOTE - 0.75 2028-01-31",
+          "as": "1.34%",
+          "sh": "356,917,500"
+        }
+      },
+      {
+        "rank": 22,
+        "name": "TREASURY NOTE - 4.13 2028-07-31",
+        "weight_pct": 1.31,
+        "shares": 328302000,
+        "raw": {
+          "no": 22,
+          "n": "TREASURY NOTE - 4.13 2028-07-31",
+          "as": "1.31%",
+          "sh": "328,302,000"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "TREASURY NOTE - 4.25 2029-02-28",
+        "weight_pct": 1.31,
+        "shares": 327399000,
+        "raw": {
+          "no": 23,
+          "n": "TREASURY NOTE - 4.25 2029-02-28",
+          "as": "1.31%",
+          "sh": "327,399,000"
+        }
+      },
+      {
+        "rank": 24,
+        "name": "TREASURY NOTE - 1.25 2028-05-31",
+        "weight_pct": 1.3,
+        "shares": 347891800,
+        "raw": {
+          "no": 24,
+          "n": "TREASURY NOTE - 1.25 2028-05-31",
+          "as": "1.30%",
+          "sh": "347,891,800"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "TREASURY NOTE - 2.88 2028-08-15",
+        "weight_pct": 1.3,
+        "shares": 334701600,
+        "raw": {
+          "no": 25,
+          "n": "TREASURY NOTE - 2.88 2028-08-15",
+          "as": "1.30%",
+          "sh": "334,701,600"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "yahoo_funds_data_available": false
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/SHY.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/etfs/SHY.json",
     "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
   }
 }
