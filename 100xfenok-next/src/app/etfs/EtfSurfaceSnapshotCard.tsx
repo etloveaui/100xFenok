@@ -60,27 +60,18 @@ interface EtfSurfaceData {
 }
 
 let etfSurfaceCache: EtfSurfaceData | null = null;
-let etfSurfacePending: Promise<EtfSurfaceData> | null = null;
+let etfSurfacePending: Promise<EtfSurfaceData | null> | null = null;
 
-function loadJson<T>(surface: string): Promise<SurfaceDoc<T> | null> {
-  return fetch(`/api/data/stockanalysis/surfaces/${surface}`, { cache: "no-store" })
-    .then((response) => (response.ok ? response.json() as Promise<SurfaceDoc<T>> : null))
-    .catch(() => null);
-}
-
-function loadEtfSurfaceData(): Promise<EtfSurfaceData> {
+function loadEtfSurfaceData(): Promise<EtfSurfaceData | null> {
   if (etfSurfaceCache) return Promise.resolve(etfSurfaceCache);
   if (etfSurfacePending) return etfSurfacePending;
-  etfSurfacePending = Promise.all([
-    loadJson<NewEtfRow>("new_etfs"),
-    loadJson<EtfScreenerRow>("etf_screener"),
-    loadJson<ProviderRow>("etf_provider_blackrock"),
-    loadJson<ProviderRow>("etf_provider_proshares"),
-    loadJson<BitcoinEtfRow>("list_bitcoin_etfs"),
-  ]).then(([newEtfs, screener, blackrock, proshares, bitcoin]) => {
-    etfSurfaceCache = { newEtfs, screener, blackrock, proshares, bitcoin };
-    return etfSurfaceCache;
-  });
+  etfSurfacePending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
+    .then((response) => (response.ok ? response.json() as Promise<EtfSurfaceData> : null))
+    .then((payload) => {
+      etfSurfaceCache = payload;
+      return payload;
+    })
+    .catch(() => null);
   return etfSurfacePending;
 }
 
@@ -251,7 +242,7 @@ export default function EtfSurfaceSnapshotCard() {
       )}
 
       <div className="panel-foot">
-        <span>StockAnalysis ETF surface JSON을 직접 소비합니다</span>
+        <span>ETF 표면 원본은 서버에서 요약되어 전송됩니다</span>
       </div>
     </section>
   );
