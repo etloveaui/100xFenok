@@ -20,6 +20,7 @@ The fetch universe is broader than `global-scouter/stocks/detail/`:
 - Dashboard sector ETF constants
 - Portfolio time-series symbols
 - Major market ETFs used by product views
+- AA/focus leveraged ETF watchlist, including single-stock 2x/3x ETFs
 
 Non-Yahoo index labels such as `KOSPI`, `NASDAQ`, `SHANGHAI`, `TOPIX`, and
 `HSCEI` are excluded from the finance fetch universe.
@@ -70,6 +71,10 @@ coverage when Yahoo returns a usable quote/info payload.
   recommendation summary, upgrades/downgrades, earnings calendar/history,
   EPS/revision/growth estimates, sustainability, mutual-fund holders,
   insider rows, SEC filing links, news, and one-year daily history.
+- `etf`: fund-focused profile for ETFs and leveraged ETFs. It keeps quote,
+  dividend/action/split/history data and adds Yahoo `funds_data` fields such as
+  fund overview, operations, asset classes, sector weights, and top holdings,
+  while skipping stock-only statement/holder/analyst modules.
 - `--include-options`: targeted-only option-chain sample, off by default.
 - `--include-shares-full`: targeted/full backfill for share-count history,
   used for buyback/dilution modeling after runtime validation.

@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "schema_version": "stockanalysis/v1",
+  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, and quote/history cross-checks.",
+  "primary_paths": {
+    "index": "index.json",
+    "etf_universe": "etf_universe.json",
+    "etf": "etfs/{TICKER}.json",
+    "stock": "stocks/{TICKER}.json"
+  },
+  "fields": {
+    "schema_version": "string",
+    "source": "stockanalysis",
+    "asset_type": "etf|stock",
+    "ticker": "string",
+    "fetched_at": "ISO-8601 UTC timestamp",
+    "endpoints": "object of endpoint paths",
+    "normalized": "DataPack-facing normalized subset",
+    "raw": "raw endpoint payloads"
+  },
+  "universe_fields": {
+    "counts.records": "number of ETF table records parsed from /etf/ list pages",
+    "records[].ticker": "ETF ticker symbol",
+    "records[].name": "fund name",
+    "records[].category": "StockAnalysis asset class/category label",
+    "records[].aum_raw": "source AUM string",
+    "records[].aum": "AUM normalized to numeric dollars where parseable",
+    "records[].source_page": "StockAnalysis ETF list page number"
+  }
+}
