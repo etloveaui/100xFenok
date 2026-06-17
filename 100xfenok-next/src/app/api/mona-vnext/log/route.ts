@@ -16,6 +16,10 @@ function noStoreJson(body: unknown, status = 200) {
   });
 }
 
+function errorDetail(error: unknown) {
+  return error instanceof Error ? error.message : String(error ?? "UNKNOWN_ERROR");
+}
+
 async function requireAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
@@ -31,6 +35,14 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return noStoreJson({ error: "INVALID_JSON" }, 400);
 
-  const result = await appendMonaVnextVoiceLog(body);
-  return noStoreJson(result);
+  try {
+    const result = await appendMonaVnextVoiceLog(body);
+    return noStoreJson(result);
+  } catch (error) {
+    return noStoreJson({
+      ok: false,
+      error: "MONA_VNEXT_LOG_WRITE_FAILED",
+      detail: errorDetail(error),
+    }, 500);
+  }
 }

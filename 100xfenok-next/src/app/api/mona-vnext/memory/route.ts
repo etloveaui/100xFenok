@@ -20,6 +20,10 @@ function noStoreJson(body: unknown, status = 200) {
   });
 }
 
+function errorDetail(error: unknown) {
+  return error instanceof Error ? error.message : String(error ?? "UNKNOWN_ERROR");
+}
+
 async function requireAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
@@ -31,12 +35,20 @@ async function requireAdminSession() {
 export async function GET() {
   const blocked = await requireAdminSession();
   if (blocked) return blocked;
-  const memory = await readMonaVnextMemorySummary();
-  return noStoreJson({
-    namespace: MONA_VNEXT_NAMESPACE_POLICY,
-    mode: "owner-test-only",
-    memory,
-  });
+  try {
+    const memory = await readMonaVnextMemorySummary();
+    return noStoreJson({
+      namespace: MONA_VNEXT_NAMESPACE_POLICY,
+      mode: "owner-test-only",
+      memory,
+    });
+  } catch (error) {
+    return noStoreJson({
+      ok: false,
+      error: "MONA_VNEXT_MEMORY_READ_FAILED",
+      detail: errorDetail(error),
+    }, 500);
+  }
 }
 
 export async function POST(request: Request) {
@@ -46,6 +58,14 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return noStoreJson({ error: "INVALID_JSON" }, 400);
 
-  const result = await appendMonaVnextMemoryCheckpoint(body);
-  return noStoreJson(result);
+  try {
+    const result = await appendMonaVnextMemoryCheckpoint(body);
+    return noStoreJson(result);
+  } catch (error) {
+    return noStoreJson({
+      ok: false,
+      error: "MONA_VNEXT_MEMORY_WRITE_FAILED",
+      detail: errorDetail(error),
+    }, 500);
+  }
 }

@@ -1,9 +1,9 @@
-import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   MONA_VNEXT_DATA_NAMESPACE,
 } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import type { MonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvisory";
+import { createMonaVnextObjectStore } from "@/features/mona-vnext/storage/objectStore";
 
 type MemoryCheckpoint = {
   conversationId: string;
@@ -12,7 +12,7 @@ type MemoryCheckpoint = {
   advisory: MonaVnextSrsAdvisory;
 };
 
-const MEMORY_ROOT = path.join(process.cwd(), "data", MONA_VNEXT_DATA_NAMESPACE, "owner-test");
+const MEMORY_DIR = path.join("data", MONA_VNEXT_DATA_NAMESPACE, "owner-test");
 const chains = new Map<string, Promise<void>>();
 
 function safeSegment(value: unknown, fallback: string) {
@@ -64,10 +64,10 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
     advisory: normalizeAdvisory(args.advisory),
   };
 
-  const filePath = path.join(MEMORY_ROOT, `${conversationId}.json`);
-  const prev = chains.get(filePath) ?? Promise.resolve();
+  const relPath = path.join(MEMORY_DIR, `${conversationId}.json`);
+  const prev = chains.get(relPath) ?? Promise.resolve();
   const current = prev.then(async () => {
-    await mkdir(MEMORY_ROOT, { recursive: true });
+    const store = await createMonaVnextObjectStore();
     let doc: Record<string, unknown> = {
       schemaVersion: 1,
       source: "mona-vnext-memory-advisory",
@@ -79,8 +79,8 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
     };
 
     try {
-      const raw = await readFile(filePath, "utf8");
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const raw = await store.readText(relPath);
+      const parsed = raw ? JSON.parse(raw) as Record<string, unknown> : null;
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) doc = parsed;
     } catch {
       // Missing file starts a new advisory doc.
@@ -99,26 +99,25 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
       checkpoints: [...checkpoints, checkpoint].slice(-200),
     };
 
-    const tmp = `${filePath}.tmp`;
     const raw = `${JSON.stringify(payload, null, 2)}\n`;
-    await writeFile(tmp, raw, "utf8");
-    await rename(tmp, filePath);
+    await store.writeText(relPath, raw);
     return {
       ok: true,
-      file: path.relative(process.cwd(), filePath),
+      file: relPath,
+      backend: store.backend,
       conversationId,
       turnSeq,
       checkpointCount: payload.checkpoints.length,
     };
   });
 
-  chains.set(filePath, current.then(() => {}, () => {}));
+  chains.set(relPath, current.then(() => {}, () => {}));
   return current;
 }
 
 export async function readMonaVnextMemorySummary() {
-  await mkdir(MEMORY_ROOT, { recursive: true });
-  const files = await readdir(MEMORY_ROOT).catch(() => []);
+  const store = await createMonaVnextObjectStore();
+  const files = await store.listJson(MEMORY_DIR);
   const summaries: Array<{
     conversationId: string;
     savedAt: string | null;
@@ -128,10 +127,10 @@ export async function readMonaVnextMemorySummary() {
     nextSessionSuggestions: string[];
   }> = [];
 
-  for (const file of files.filter((item) => item.endsWith(".json")).slice(-20)) {
-    const filePath = path.join(MEMORY_ROOT, file);
+  for (const file of files.sort((a, b) => b.mtimeMs - a.mtimeMs).slice(0, 20)) {
     try {
-      const raw = await readFile(filePath, "utf8");
+      const raw = await store.readText(file.relPath);
+      if (!raw) continue;
       const parsed = JSON.parse(raw) as Record<string, unknown>;
       const checkpoints = Array.isArray(parsed.checkpoints) ? parsed.checkpoints : [];
       const last = checkpoints.at(-1);
@@ -142,7 +141,7 @@ export async function readMonaVnextMemorySummary() {
         ? lastRecord.advisory as Record<string, unknown>
         : {};
       summaries.push({
-        conversationId: typeof parsed.conversationId === "string" ? parsed.conversationId : file.replace(/\.json$/, ""),
+        conversationId: typeof parsed.conversationId === "string" ? parsed.conversationId : file.name.replace(/\.json$/, ""),
         savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : null,
         checkpointCount: checkpoints.length,
         best3Candidates: normalizeStringArray(advisory.best3Candidates, 3),

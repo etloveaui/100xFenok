@@ -364,12 +364,18 @@ main {
 body.design-v2 [data-v1-chrome],
 body.design-v3 [data-v1-chrome],
 body.design-v4 [data-v1-chrome],
-body.fnk-shell-on [data-v1-chrome] { display: none !important; }
-body.fnk-shell-on .app-mobile-dock { display: none !important; }
+body.fnk-shell-on [data-v1-chrome],
+body:has([data-immersive-route^="winddown"]) [data-v1-chrome] { display: none !important; }
+body.fnk-shell-on .app-mobile-dock,
+body:has([data-immersive-route^="winddown"]) .app-mobile-dock { display: none !important; }
 body.design-v2 main,
 body.design-v3 main,
 body.design-v4 main,
 body.fnk-shell-on main { padding-top: 0 !important; padding-bottom: 0 !important; }
+body:has([data-immersive-route^="winddown"]) #main-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
 
 /* Line clamp utilities */
 .line-clamp-2 {

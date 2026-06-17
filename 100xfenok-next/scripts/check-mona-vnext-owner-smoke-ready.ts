@@ -12,6 +12,7 @@ type Check = {
 const appRoot = process.cwd();
 const args = process.argv.slice(2);
 const baseUrl = readArg("--base-url");
+const sourceOnly = args.includes("--source-only");
 
 function readArg(name: string) {
   const direct = args.find((arg) => arg.startsWith(`${name}=`));
@@ -56,6 +57,8 @@ function checkSourceInvariants(): Check[] {
   const winddownVnext = readRel("src/app/winddown-vnext/page.tsx");
   const adminLiveBench = readRel("src/components/admin-live/AdminLiveBench.tsx");
   const liveSetup = readRel("src/features/mona-vnext/server/liveSetup.ts");
+  const wrangler = readRel("wrangler.jsonc");
+  const storage = readRel("src/features/mona-vnext/storage/objectStore.ts");
   const vnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
     && adminLiveBench.includes("<MonaVnextEntry locked={settingsLocked} />")
     && !/normalizedCoachConfig\.tester === "owner"\s*\?\s*\(\s*<MonaVnextEntry/.test(adminLiveBench);
@@ -111,14 +114,31 @@ function checkSourceInvariants(): Check[] {
         : "FAIL",
       "AUDIO/no-interrupt/transcription setup with no tools/functionDeclarations",
     ),
+    check(
+      "vnext-kv-binding",
+      wrangler.includes("\"binding\": \"MONA_VNEXT_KV\"")
+        && wrangler.includes("9ca9cc74a4f341aeaa231fa67db65302")
+        && storage.includes("cloudflare-kv")
+        && storage.includes("cloudflare-kv-missing")
+        ? "PASS"
+        : "FAIL",
+      "Cloudflare Worker must bind MONA_VNEXT_KV and vNext storage must fail closed when missing",
+    ),
   ];
 }
 
 async function checkRouteReadiness(): Promise<Check[]> {
+  if (sourceOnly) {
+    return [
+      check("route-smoke", "WARN", "skipped by --source-only"),
+      check("session-readiness", "WARN", "skipped by --source-only"),
+    ];
+  }
+
   if (!baseUrl) {
     return [
-      check("route-smoke", "WARN", "skipped; pass --base-url=http://127.0.0.1:3030 after starting dev server"),
-      check("session-readiness", "WARN", "skipped; pass --base-url=http://127.0.0.1:3030 after starting dev server"),
+      check("route-smoke", "FAIL", "missing --base-url; owner smoke must hit a real running server"),
+      check("session-readiness", "FAIL", "missing --base-url; owner smoke must hit a real running server"),
     ];
   }
 
@@ -151,11 +171,15 @@ async function checkRouteReadiness(): Promise<Check[]> {
 }
 
 function checkOwnerLogPath(): Check[] {
+  if (sourceOnly) {
+    return [check("owner-log-dir", "WARN", "skipped by --source-only")];
+  }
+
   const relDir = "data/voice-logs-vnext/owner-test";
   const logDir = path.join(appRoot, relDir);
   if (!existsSync(logDir)) {
     return [
-      check("owner-log-dir", "WARN", `${relDir} does not exist yet; real owner smoke has not produced a log`),
+      check("owner-log-dir", "FAIL", `${relDir} does not exist; real owner smoke has not produced a log`),
     ];
   }
 
@@ -168,7 +192,7 @@ function checkOwnerLogPath(): Check[] {
     .sort((a, b) => b.mtimeMs - a.mtimeMs);
 
   if (files.length === 0) {
-    return [check("owner-log-file", "WARN", `${relDir} exists but has no JSON logs`)];
+    return [check("owner-log-file", "FAIL", `${relDir} exists but has no JSON logs`)];
   }
 
   const latest = path.join(relDir, files[0].name);

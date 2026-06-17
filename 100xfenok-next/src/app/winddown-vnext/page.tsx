@@ -24,8 +24,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f7f3ea",
+  themeColor: "#f8fafc",
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default async function WindDownVnextPage() {
@@ -35,11 +36,15 @@ export default async function WindDownVnextPage() {
   );
 
   if (!authenticated) {
-    return <AdminAccessGate />;
+    return (
+      <div data-immersive-route="winddown-vnext" className={fraunces.variable}>
+        <AdminAccessGate />
+      </div>
+    );
   }
 
   return (
-    <div className={fraunces.variable}>
+    <div data-immersive-route="winddown-vnext" className={fraunces.variable}>
       <MonaVoiceCoachApp />
     </div>
   );

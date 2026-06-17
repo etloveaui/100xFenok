@@ -26,10 +26,13 @@ export type MonaVnextSessionResponse = {
   websocketEndpoint: string;
   setup: Record<string, unknown>;
   settings: {
+    model: string;
     voiceName: string;
     vadPreset: string;
     lowVoice: boolean;
     interruptionMode: string;
+    temperature: number;
+    thinkingLevel: string;
     namespace: string;
     productionWriteEnabled: false;
     clientBuildVersion?: string;

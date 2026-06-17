@@ -1,5 +1,6 @@
 import type { MonaVnextBaselineLog, MonaVnextBaselinePromptPolicy } from "@/features/mona-vnext/coach/baselineEvidence";
 import type { MonaVnextLessonState } from "@/features/mona-vnext/coach/coachPolicy";
+import type { MONA_VNEXT_GEMINI_MODELS, MonaVnextGeminiModel } from "@/features/mona-vnext/live/modelOptions";
 import type { MonaVnextLiveStatus, MonaVnextSessionResponse } from "@/features/mona-vnext/live/liveProtocol";
 import type { MonaVnextSessionMetrics } from "@/features/mona-vnext/live/useGeminiLiveSession";
 import type { MonaVnextLogEvent } from "@/features/mona-vnext/logging/voiceLogSchema";
@@ -14,11 +15,15 @@ type Props = {
   namespacePolicy: MonaVnextNamespacePolicy;
   status: MonaVnextLiveStatus;
   metrics: MonaVnextSessionMetrics;
+  modelOptions: typeof MONA_VNEXT_GEMINI_MODELS;
+  selectedModel: MonaVnextGeminiModel;
+  onSelectModel: (model: MonaVnextGeminiModel) => void;
   session: MonaVnextSessionResponse | null;
   lessonState: MonaVnextLessonState;
   transcriptState: MonaVnextTranscriptState;
   events: MonaVnextLogEvent[];
   lastPersistedFile: string | null;
+  persistenceError: string | null;
   onStart: () => void;
   onStop: () => void;
   onSendStart: () => void;
@@ -41,11 +46,15 @@ export function WindDownVnextShell({
   namespacePolicy,
   status,
   metrics,
+  modelOptions,
+  selectedModel,
+  onSelectModel,
   session,
   lessonState,
   transcriptState,
   events,
   lastPersistedFile,
+  persistenceError,
   onStart,
   onStop,
   onSendStart,
@@ -91,10 +100,46 @@ export function WindDownVnextShell({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">frames</p>
                 <p className="mt-1 font-semibold text-[#2f2b33]">{metrics.audioFramesSent}</p>
               </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">rms / peak</p>
+                <p className="mt-1 font-semibold text-[#2f2b33]">
+                  {metrics.lastAudioRms === null ? "-" : metrics.lastAudioRms.toFixed(4)}
+                  {" / "}
+                  {metrics.lastAudioPeak === null ? "-" : metrics.lastAudioPeak.toFixed(3)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">input Hz</p>
+                <p className="mt-1 font-semibold text-[#2f2b33]">{metrics.inputSampleRate ?? "-"}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {modelOptions.map((model) => (
+                <button
+                  key={model.id}
+                  type="button"
+                  disabled={status !== "idle" && status !== "stopped" && status !== "error"}
+                  onClick={() => onSelectModel(model.id)}
+                  className={[
+                    "rounded-md border px-3 py-2 text-left text-[12px] font-semibold transition",
+                    selectedModel === model.id
+                      ? "border-[#6d5d8f] bg-[#f0ecff] text-[#4f3d78]"
+                      : "border-[#dfd4c4] bg-white text-[#5f5867]",
+                    status !== "idle" && status !== "stopped" && status !== "error"
+                      ? "cursor-not-allowed opacity-60"
+                      : "hover:border-[#b9a7c9]",
+                  ].join(" ")}
+                >
+                  <span className="block">{model.label}</span>
+                  <span className="mt-1 block font-mono text-[10px] font-normal text-[#857b8d]">{model.detail}</span>
+                </button>
+              ))}
             </div>
             <p className="mt-3 text-[13px]">{promptPolicy.reject[0]}</p>
             {session ? (
-              <p className="mt-2 text-[12px] text-[#857b8d]">{session.conversationId}</p>
+              <p className="mt-2 text-[12px] text-[#857b8d]">
+                {session.settings.model} · temp {session.settings.temperature} · thinking {session.settings.thinkingLevel} · {session.conversationId}
+              </p>
             ) : null}
           </section>
 
@@ -123,6 +168,11 @@ export function WindDownVnextShell({
               ))}
             </div>
             {lastPersistedFile ? <p className="mt-2 text-[#5f5867]">log: {lastPersistedFile}</p> : null}
+            {persistenceError ? (
+              <p className="mt-2 rounded-md border border-[#d06a6a] bg-[#fff1f1] px-3 py-2 font-semibold text-[#9b3d3d]">
+                저장 실패: {persistenceError}
+              </p>
+            ) : null}
             {metrics.lastError ? <p className="mt-2 font-semibold text-[#9b3d3d]">{metrics.lastError}</p> : null}
           </section>
         </div>

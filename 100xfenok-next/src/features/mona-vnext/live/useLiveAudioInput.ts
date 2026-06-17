@@ -17,6 +17,11 @@ type AudioInputRuntime = {
 type StartOptions = {
   socket: WebSocket;
   onFrameSent?: () => void;
+  onAudioStats?: (stats: {
+    inputSampleRate: number;
+    rms: number;
+    peak: number;
+  }) => void;
   onPermission?: (state: "granted" | "denied" | "prompt" | "stopped") => void;
 };
 
@@ -27,6 +32,7 @@ function getAudioContextCtor() {
 
 export function useLiveAudioInput() {
   const runtimeRef = useRef<AudioInputRuntime | null>(null);
+  const frameCountRef = useRef(0);
 
   const stop = useCallback((onPermission?: StartOptions["onPermission"]) => {
     const runtime = runtimeRef.current;
@@ -45,8 +51,9 @@ export function useLiveAudioInput() {
     onPermission?.("stopped");
   }, []);
 
-  const start = useCallback(async ({ socket, onFrameSent, onPermission }: StartOptions) => {
+  const start = useCallback(async ({ socket, onFrameSent, onAudioStats, onPermission }: StartOptions) => {
     stop(onPermission);
+    frameCountRef.current = 0;
 
     const AudioContextCtor = getAudioContextCtor();
     if (!AudioContextCtor) {
@@ -72,10 +79,26 @@ export function useLiveAudioInput() {
 
     processor.onaudioprocess = (event) => {
       if (socket.readyState !== WebSocket.OPEN) return;
-      const pcm = downsampleToPcm16(event.inputBuffer.getChannelData(0), context.sampleRate);
+      const input = event.inputBuffer.getChannelData(0);
+      const pcm = downsampleToPcm16(input, context.sampleRate);
       if (pcm.length === 0) return;
       socket.send(JSON.stringify(buildRealtimeAudioInput(pcm)));
       onFrameSent?.();
+      frameCountRef.current += 1;
+      if (frameCountRef.current === 1 || frameCountRef.current % 50 === 0) {
+        let sumSquares = 0;
+        let peak = 0;
+        for (let i = 0; i < input.length; i += 1) {
+          const sample = Math.abs(input[i]);
+          sumSquares += sample * sample;
+          if (sample > peak) peak = sample;
+        }
+        onAudioStats?.({
+          inputSampleRate: context.sampleRate,
+          rms: Math.sqrt(sumSquares / input.length),
+          peak,
+        });
+      }
     };
 
     source.connect(processor);

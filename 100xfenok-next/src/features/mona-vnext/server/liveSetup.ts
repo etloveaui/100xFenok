@@ -1,9 +1,19 @@
 import { buildMonaVnextSystemPrompt } from "@/features/mona-vnext/coach/coachPrompt";
+import {
+  MONA_VNEXT_DEFAULT_GEMINI_MODEL,
+  MONA_VNEXT_GEMINI_MODELS,
+  normalizeMonaVnextGeminiModel,
+} from "@/features/mona-vnext/live/modelOptions";
+import {
+  MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE,
+  MONA_VNEXT_LIVE_THINKING_LEVEL,
+  normalizeMonaVnextLiveTemperature,
+} from "@/features/mona-vnext/live/generationOptions";
 import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVnextNamespace";
+import { getMonaVnextPersistenceReadiness } from "@/features/mona-vnext/storage/objectStore";
 
 export const MONA_VNEXT_GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
-export const MONA_VNEXT_GEMINI_MODEL = "gemini-3.1-flash-live-preview";
-export const MONA_VNEXT_GEMINI_MODEL_RESOURCE = `models/${MONA_VNEXT_GEMINI_MODEL}`;
+export const MONA_VNEXT_GEMINI_MODEL = MONA_VNEXT_DEFAULT_GEMINI_MODEL;
 export const MONA_VNEXT_AUTH_TOKEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1alpha/auth_tokens";
 export const MONA_VNEXT_LIVE_WS_ENDPOINT =
   "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained";
@@ -49,13 +59,23 @@ export function normalizeMonaVnextInterruptionMode(value: unknown): MonaVnextInt
   return value === "barge-in" ? "barge-in" : "no-interrupt";
 }
 
-export function buildMonaVnextReadiness() {
+export async function buildMonaVnextReadiness() {
   const hasKey = getMonaVnextGeminiApiKey() !== null;
+  const persistence = await getMonaVnextPersistenceReadiness();
+  const ready = hasKey && persistence.status === "READY";
   return {
     adapter: "gemini-live-ephemeral-vnext",
-    status: hasKey ? "READY" : "BLOCKED",
+    status: ready ? "READY" : "BLOCKED",
     missingEnv: hasKey ? null : MONA_VNEXT_GEMINI_API_KEY_ENV,
+    missingBinding: hasKey ? persistence.missingBinding : null,
+    persistence,
     model: MONA_VNEXT_GEMINI_MODEL,
+    supportedModels: MONA_VNEXT_GEMINI_MODELS,
+    generation: {
+      temperature: MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE,
+      thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
+      responseModalities: ["AUDIO"],
+    },
     websocketEndpoint: MONA_VNEXT_LIVE_WS_ENDPOINT,
     tokenEndpoint: "server-only:v1alpha/auth_tokens",
     namespace: MONA_VNEXT_NAMESPACE_POLICY,
@@ -69,19 +89,23 @@ export function buildMonaVnextReadiness() {
 }
 
 export function buildMonaVnextLiveSetup(options: {
+  model?: unknown;
   voiceName: MonaVnextVoiceName;
   vadPreset: MonaVnextVadPreset;
   lowVoice: boolean;
   interruptionMode: MonaVnextInterruptionMode;
   englishVisible: boolean;
+  temperature?: unknown;
 }) {
   const vad = VAD_PRESETS[options.vadPreset];
+  const model = normalizeMonaVnextGeminiModel(options.model);
+  const temperature = normalizeMonaVnextLiveTemperature(options.temperature);
   return {
-    model: MONA_VNEXT_GEMINI_MODEL_RESOURCE,
+    model: `models/${model}`,
     generationConfig: {
       responseModalities: ["AUDIO"],
-      thinkingConfig: { thinkingLevel: "low" },
-      temperature: 0.55,
+      thinkingConfig: { thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL },
+      temperature,
       speechConfig: {
         voiceConfig: {
           prebuiltVoiceConfig: {

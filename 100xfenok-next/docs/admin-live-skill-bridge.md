@@ -80,6 +80,25 @@ Conversation logs:
   metrics, UI logs, and a compact user/model transcript.
 - `data/voice-logs/` is gitignored and must remain private local state.
 
+Mona vNext owner-test logs:
+
+- `/winddown-vnext` is an owner-test surface. It must keep
+  `productionWriteEnabled: false` until the owner explicitly approves
+  promotion.
+- vNext does not write to current Mona production study files. It writes
+  isolated logs through the Cloudflare KV binding `MONA_VNEXT_KV`.
+- The KV log key shape is
+  `data/voice-logs-vnext/owner-test/{date}_mona-vnext_{conversationId}.json`.
+  The date segment is derived from the session `startedAt` timestamp.
+- Each log records the selected Gemini model, `temperature`, `thinkingLevel`,
+  metrics, events, turn transcript, and finalized status so owner smokes can
+  compare runs without guessing the generation setup.
+- Current default generation settings are Gemini `gemini-3.1-flash-live-preview`,
+  `temperature: 1`, and `thinkingLevel: low`. `temperature: 0.55` remains only
+  as an explicit A/B override, not the default.
+- If `MONA_VNEXT_KV` is missing or unreadable, vNext must fail closed and show a
+  persistence error instead of silently dropping logs.
+
 ## Local Verification
 
 ```bash

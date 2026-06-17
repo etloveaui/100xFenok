@@ -1,4 +1,3 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   MONA_VNEXT_LOG_SCHEMA_VERSION,
@@ -7,9 +6,10 @@ import {
   type MonaVnextVoiceLogDoc,
 } from "@/features/mona-vnext/logging/voiceLogSchema";
 import { MONA_VNEXT_LOG_NAMESPACE } from "@/features/mona-vnext/memory/monaVnextNamespace";
+import { createMonaVnextObjectStore } from "@/features/mona-vnext/storage/objectStore";
 import type { MonaVnextTurn } from "@/features/mona-vnext/transcript/turnBoundary";
 
-const LOG_ROOT = path.join(process.cwd(), "data", MONA_VNEXT_LOG_NAMESPACE, "owner-test");
+const LOG_DIR = path.join("data", MONA_VNEXT_LOG_NAMESPACE, "owner-test");
 const chains = new Map<string, Promise<void>>();
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -109,11 +109,11 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
   const sessionId = safeSegment(args.sessionId, conversationId);
   const startedAt = normalizeIso(args.startedAt) ?? now;
   const final = args.final === true;
-  const filePath = path.join(LOG_ROOT, `${startedAt.slice(0, 10)}_mona-vnext_${conversationId}.json`);
-  const prev = chains.get(filePath) ?? Promise.resolve();
+  const relPath = path.join(LOG_DIR, `${startedAt.slice(0, 10)}_mona-vnext_${conversationId}.json`);
+  const prev = chains.get(relPath) ?? Promise.resolve();
 
   const current = prev.then(async () => {
-    await mkdir(LOG_ROOT, { recursive: true });
+    const store = await createMonaVnextObjectStore();
     let doc: MonaVnextVoiceLogDoc = {
       schemaVersion: MONA_VNEXT_LOG_SCHEMA_VERSION,
       source: "mona-vnext",
@@ -133,9 +133,9 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
     };
 
     try {
-      const raw = await readFile(filePath, "utf8");
-      const parsed = JSON.parse(raw) as MonaVnextVoiceLogDoc;
-      if (parsed && parsed.source === "mona-vnext" && Array.isArray(parsed.turns)) {
+      const previous = await store.readText(relPath);
+      const parsed = previous ? JSON.parse(previous) as MonaVnextVoiceLogDoc : null;
+      if (parsed?.source === "mona-vnext" && Array.isArray(parsed.turns)) {
         doc = parsed;
       }
     } catch {
@@ -179,12 +179,11 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
     };
 
     const raw = `${JSON.stringify(payload, null, 2)}\n`;
-    const tmp = `${filePath}.tmp`;
-    await writeFile(tmp, raw, "utf8");
-    await rename(tmp, filePath);
+    await store.writeText(relPath, raw);
     return {
       ok: true,
-      file: path.relative(process.cwd(), filePath),
+      file: relPath,
+      backend: store.backend,
       sessionId,
       conversationId,
       turnCount: payload.turns.length,
@@ -194,6 +193,6 @@ export async function appendMonaVnextVoiceLog(args: Record<string, unknown>) {
     };
   });
 
-  chains.set(filePath, current.then(() => {}, () => {}));
+  chains.set(relPath, current.then(() => {}, () => {}));
   return current;
 }

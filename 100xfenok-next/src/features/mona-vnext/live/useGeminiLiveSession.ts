@@ -13,6 +13,8 @@ import {
 } from "@/features/mona-vnext/live/liveProtocol";
 import { useLiveAudioInput } from "@/features/mona-vnext/live/useLiveAudioInput";
 import { useLiveAudioOutput } from "@/features/mona-vnext/live/useLiveAudioOutput";
+import type { MonaVnextGeminiModel } from "@/features/mona-vnext/live/modelOptions";
+import type { MonaVnextLiveTemperature } from "@/features/mona-vnext/live/generationOptions";
 
 export type MonaVnextSessionMetrics = {
   micPermission: "unknown" | "granted" | "denied" | "prompt" | "stopped";
@@ -21,17 +23,22 @@ export type MonaVnextSessionMetrics = {
   setupDoneMs: number | null;
   firstResponseMs: number | null;
   audioFramesSent: number;
+  lastAudioRms: number | null;
+  lastAudioPeak: number | null;
+  inputSampleRate: number | null;
   turnCount: number;
   interruptionCount: number;
   lastError: string | null;
 };
 
 export type MonaVnextSessionSettings = {
+  model: MonaVnextGeminiModel;
   voiceName: string;
   vadPreset: string;
   lowVoice: boolean;
   interruptionMode: "no-interrupt" | "barge-in";
   englishVisible: boolean;
+  temperature: MonaVnextLiveTemperature;
 };
 
 type Options = {
@@ -49,6 +56,9 @@ const EMPTY_METRICS: MonaVnextSessionMetrics = {
   setupDoneMs: null,
   firstResponseMs: null,
   audioFramesSent: 0,
+  lastAudioRms: null,
+  lastAudioPeak: null,
+  inputSampleRate: null,
   turnCount: 0,
   interruptionCount: 0,
   lastError: null,
@@ -136,6 +146,14 @@ export function useGeminiLiveSession({
             setMetrics((current) => ({
               ...current,
               audioFramesSent: current.audioFramesSent + 1,
+            }));
+          },
+          onAudioStats: (stats) => {
+            setMetrics((current) => ({
+              ...current,
+              lastAudioRms: stats.rms,
+              lastAudioPeak: stats.peak,
+              inputSampleRate: stats.inputSampleRate,
             }));
           },
           onPermission: (micPermission) => {

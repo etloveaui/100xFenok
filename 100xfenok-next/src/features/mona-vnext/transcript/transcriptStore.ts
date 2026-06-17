@@ -6,6 +6,8 @@ import {
   type MonaVnextWorkingTurn,
 } from "@/features/mona-vnext/transcript/turnBoundary";
 
+type TranscriptMergeMode = "input" | "output";
+
 export type MonaVnextTranscriptState = {
   conversationId: string;
   nextTurnSeq: number;
@@ -33,6 +35,44 @@ export function createMonaVnextTranscriptState(conversationId: string): MonaVnex
   };
 }
 
+function shouldJoinWithSpace(previous: string, incoming: string, mode: TranscriptMergeMode) {
+  if (!previous || !incoming) return false;
+  if (/[\s([{"'“‘-]$/.test(previous)) return false;
+  if (/^[\s,.!?;:)\]}"'”’]/.test(incoming)) return false;
+
+  const previousTail = previous.at(-1) ?? "";
+  const incomingHead = incoming.at(0) ?? "";
+  if (/[A-Za-z0-9]$/.test(previousTail) && /^[A-Za-z0-9]/.test(incomingHead)) return true;
+  if (/[A-Za-z0-9"”’]$/.test(previousTail) && /^[가-힣]/.test(incomingHead)) return true;
+  if (/[가-힣]$/.test(previousTail) && /^[A-Za-z0-9"“‘]/.test(incomingHead)) return true;
+
+  if (mode === "output" && /[가-힣]$/.test(previousTail) && /^[가-힣]/.test(incomingHead)) {
+    return true;
+  }
+  if (mode === "input" && previous.length > 1 && incoming.length > 1 && /[가-힣]$/.test(previousTail) && /^[가-힣]/.test(incomingHead)) {
+    return true;
+  }
+  return false;
+}
+
+export function mergeMonaVnextTranscriptText(
+  previousValue: string | null | undefined,
+  incomingValue: string | null | undefined,
+  mode: TranscriptMergeMode,
+) {
+  const previous = normalizeTranscriptText(previousValue);
+  const incoming = normalizeTranscriptText(incomingValue);
+  if (!incoming) return previous;
+  if (!previous) return incoming;
+
+  if (incoming === previous) return previous;
+  if (incoming.startsWith(previous)) return incoming;
+  if (previous.endsWith(incoming) || previous.includes(incoming)) return previous;
+
+  const joiner = shouldJoinWithSpace(previous, incoming, mode) ? " " : "";
+  return normalizeTranscriptText(`${previous}${joiner}${incoming}`);
+}
+
 export function applyMonaVnextServerContent(
   state: MonaVnextTranscriptState,
   serverContent: MonaVnextServerContent,
@@ -55,7 +95,7 @@ export function applyMonaVnextServerContent(
   if (inputText) {
     current = {
       ...current,
-      userText: inputText,
+      userText: mergeMonaVnextTranscriptText(current.userText, inputText, "input"),
       startedAtIso: current.startedAtIso ?? atIso,
     };
     events.push({ type: "input-partial", text: inputText, atIso });
@@ -65,7 +105,7 @@ export function applyMonaVnextServerContent(
   if (outputText) {
     current = {
       ...current,
-      modelText: outputText,
+      modelText: mergeMonaVnextTranscriptText(current.modelText, outputText, "output"),
       startedAtIso: current.startedAtIso ?? atIso,
     };
     events.push({ type: "output-partial", text: outputText, atIso });

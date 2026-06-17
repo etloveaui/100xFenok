@@ -4,6 +4,11 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
+import { normalizeMonaVnextGeminiModel } from "@/features/mona-vnext/live/modelOptions";
+import {
+  MONA_VNEXT_LIVE_THINKING_LEVEL,
+  normalizeMonaVnextLiveTemperature,
+} from "@/features/mona-vnext/live/generationOptions";
 import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import {
   MONA_VNEXT_AUTH_TOKEN_ENDPOINT,
@@ -45,15 +50,18 @@ function normalizeClientBuildVersion(value: unknown) {
 export async function GET() {
   const blocked = await requireAdminSession();
   if (blocked) return blocked;
+  const readiness = await buildMonaVnextReadiness();
 
   return noStoreJson({
-    readiness: buildMonaVnextReadiness(),
+    readiness,
     defaults: {
       voiceName: "Kore",
       vadPreset: "relaxed",
       lowVoice: true,
       interruptionMode: "no-interrupt",
       englishVisible: true,
+      temperature: normalizeMonaVnextLiveTemperature(null),
+      thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
       namespace: MONA_VNEXT_NAMESPACE_POLICY,
     },
   });
@@ -66,13 +74,16 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const now = new Date();
   const apiKey = getMonaVnextGeminiApiKey();
+  const readiness = await buildMonaVnextReadiness();
   const conversationId = createMonaVnextConversationId(now);
   const sessionId = `${conversationId}-live`;
+  const model = normalizeMonaVnextGeminiModel(body?.model);
   const voiceName = normalizeMonaVnextVoice(body?.voiceName);
   const vadPreset = normalizeMonaVnextVadPreset(body?.vadPreset);
   const interruptionMode = normalizeMonaVnextInterruptionMode(body?.interruptionMode);
   const lowVoice = body?.lowVoice !== false;
   const englishVisible = body?.englishVisible !== false;
+  const temperature = normalizeMonaVnextLiveTemperature(body?.temperature);
   const clientBuildVersion = normalizeClientBuildVersion(body?.clientBuildVersion);
 
   if (!apiKey) {
@@ -81,18 +92,32 @@ export async function POST(request: Request) {
         error: "MISSING_GEMINI_API_KEY",
         status: "BLOCKED",
         missingEnv: MONA_VNEXT_GEMINI_API_KEY_ENV,
-        readiness: buildMonaVnextReadiness(),
+        readiness,
+      },
+      503,
+    );
+  }
+
+  if (readiness.persistence.status !== "READY") {
+    return noStoreJson(
+      {
+        error: "MONA_VNEXT_PERSISTENCE_NOT_READY",
+        status: "BLOCKED",
+        missingBinding: readiness.persistence.missingBinding,
+        readiness,
       },
       503,
     );
   }
 
   const setup = buildMonaVnextLiveSetup({
+    model,
     voiceName,
     vadPreset,
     lowVoice,
     interruptionMode,
     englishVisible,
+    temperature,
   });
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
@@ -149,10 +174,13 @@ export async function POST(request: Request) {
     setup,
     settings: {
       ...(clientBuildVersion ? { clientBuildVersion } : {}),
+      model,
       voiceName,
       vadPreset,
       lowVoice,
       interruptionMode,
+      temperature,
+      thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
       namespace: "mona-vnext",
       productionWriteEnabled: false,
     },

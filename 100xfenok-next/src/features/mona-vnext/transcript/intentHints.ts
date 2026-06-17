@@ -30,6 +30,13 @@ const REPAIR_PATTERNS = [
   /씨발/,
   /좆/,
   /병신/,
+  /무시/,
+  /인식.*못/,
+  /이해.*못/,
+  /말.*이해/,
+  /내 말.*(?:안|못).*듣/,
+  /왜.*(?:넘어가|넘어갔|넘어갈|뛰어넘|뛰어났|건너뛰|스킵)/,
+  /(?:넘어가|넘어갔|넘어갈|뛰어넘|뛰어났|건너뛰|스킵).*왜/,
   /왜.*반복/,
   /왜.*계속/,
   /못 알아듣/,
@@ -50,9 +57,9 @@ export function detectMonaVnextIntent(text: string | null | undefined): MonaVnex
   const normalized = (text ?? "").trim();
   if (!normalized) return "unknown";
   if (STOP_PATTERNS.some((pattern) => pattern.test(normalized))) return "stop";
-  if (NEXT_PATTERNS.some((pattern) => pattern.test(normalized))) return "next_material";
   if (ENGLISH_VISIBILITY_PATTERNS.some((pattern) => pattern.test(normalized))) return "english_visibility";
   if (REPAIR_PATTERNS.some((pattern) => pattern.test(normalized))) return "repair";
+  if (NEXT_PATTERNS.some((pattern) => pattern.test(normalized))) return "next_material";
   return "lesson_attempt";
 }
 

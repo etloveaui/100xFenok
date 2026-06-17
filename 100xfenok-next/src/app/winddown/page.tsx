@@ -44,11 +44,15 @@ export default async function WindDownPage() {
   );
 
   if (!authenticated) {
-    return <AdminAccessGate />;
+    return (
+      <div data-immersive-route="winddown" className={fraunces.variable}>
+        <AdminAccessGate />
+      </div>
+    );
   }
 
   return (
-    <div className={fraunces.variable}>
+    <div data-immersive-route="winddown" className={fraunces.variable}>
       <AdminLiveBench initialMode="mona" simpleUi />
     </div>
   );
