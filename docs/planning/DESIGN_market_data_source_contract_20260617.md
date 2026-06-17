@@ -94,7 +94,9 @@ External sources
 - `scripts/finalize-market-data.py`
   - post-refresh closeout command that rebuilds `computed/market_facts`, writes
     `computed/market_data_audit`, updates `data/manifest.json`, and refreshes the
-    Next static data-route manifest in the required order.
+    Next static data-route manifest in the required order;
+  - runs an audit preflight first and stops unless `ready_for_finalize=true`
+    (`--allow-incomplete` is an explicit override for local experiments only).
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
