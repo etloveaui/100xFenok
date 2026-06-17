@@ -25,6 +25,18 @@ on:
         description: 'Deep-fetch ETF payloads from the universe list (manual chunked runs only)'
         required: false
         default: 'false'
+      fetch_surfaces:
+        description: 'Refresh high-value StockAnalysis public table/devalue surfaces'
+        required: false
+        default: 'true'
+      surface_set:
+        description: 'Surface bundle: core, events, movers, industry, etf'
+        required: false
+        default: 'core'
+      surfaces:
+        description: 'Comma-separated surface override'
+        required: false
+        default: ''
       offset:
         description: 'ETF offset for universe backfill chunking'
         required: false
@@ -60,6 +72,9 @@ jobs:
           INPUT_STOCKS: ${{ github.event.inputs.stocks }}
           INPUT_DISCOVER_UNIVERSE: ${{ github.event.inputs.discover_universe }}
           INPUT_UNIVERSE_BACKFILL: ${{ github.event.inputs.universe_backfill }}
+          INPUT_FETCH_SURFACES: ${{ github.event.inputs.fetch_surfaces }}
+          INPUT_SURFACE_SET: ${{ github.event.inputs.surface_set }}
+          INPUT_SURFACES: ${{ github.event.inputs.surfaces }}
           INPUT_OFFSET: ${{ github.event.inputs.offset }}
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
@@ -68,6 +83,9 @@ jobs:
           ARGS="--sleep ${INPUT_SLEEP:-0.25}"
           if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
           if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
+          if [ "${INPUT_FETCH_SURFACES:-true}" = "true" ]; then ARGS="$ARGS --fetch-surfaces"; fi
+          if [ -n "$INPUT_SURFACE_SET" ]; then ARGS="$ARGS --surface-set $INPUT_SURFACE_SET"; fi
+          if [ -n "$INPUT_SURFACES" ]; then ARGS="$ARGS --surfaces $INPUT_SURFACES"; fi
           if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
           if [ -n "$INPUT_STOCKS" ]; then ARGS="$ARGS --stocks $INPUT_STOCKS"; fi
           if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi

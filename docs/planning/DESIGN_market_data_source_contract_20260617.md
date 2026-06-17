@@ -14,7 +14,7 @@ instead of scraping providers independently.
 ```
 External sources
   ├─ Yahoo/yfinance          quote/history/options/fund profile/stock facts
-  ├─ StockAnalysis           ETF holdings + ETF/stock quote/history/overview
+  ├─ StockAnalysis           ETF holdings/screener + events + quote/history/overview
   ├─ SlickCharts             direct index constituents + returns/dividends
   ├─ Global Scouter          stock forward estimates/revisions/detail rows
   ├─ Benchmark Excel         benchmark valuation/time-series context
@@ -49,8 +49,15 @@ External sources
 | ETF quote/history/options | Yahoo | StockAnalysis quote/history | Yahoo options are targeted only. |
 | ETF fund profile/top holdings | Yahoo funds_data | StockAnalysis overview | Yahoo gives fund overview/classes/sectors/top rows. |
 | ETF holdings/swap rows | StockAnalysis | issuer CSV later | Especially useful for leveraged/single-stock ETF swap exposure. |
+| ETF full-field screener, AUM, holdings count | StockAnalysis | Yahoo funds_data | StockAnalysis `etf_screener` is the richer universe layer. |
+| new ETF launches | StockAnalysis | issuer/ETF lists later | Drives ETF discovery and AA-style ETF watchlists. |
 | direct index constituents | SlickCharts | StockAnalysis SPY/QQQ/DIA ETF proxy | Keep direct index because ETF proxy can drift. |
 | index/stock returns/dividends | SlickCharts | Yahoo history/dividends | Existing Explore/Screener surfaces rely on this. |
+| corporate actions | StockAnalysis | Yahoo events where available | Splits/dividends/delistings feed Radar and Data Lab checks. |
+| earnings calendar | StockAnalysis | Yahoo calendar later | Includes date, BMO/AMC, EPS/revenue estimates, growth, market cap. |
+| IPO calendar/filings/statistics | StockAnalysis | SEC S-1/EDGAR later | Product-facing IPO radar; EDGAR remains filing source of record. |
+| market movers | StockAnalysis | Yahoo movers, computed facts | Radar/explore surface; keep freshness timestamp visible. |
+| industry/sector maps | StockAnalysis | Damodaran sector data | Useful for taxonomy and sector-detail UI, not valuation SSOT. |
 | benchmark valuation context | Benchmark Excel | Damodaran | Distinct source; no consolidation into Yahoo. |
 | macro factors | FRED/Yardeni/OECD/PMI/Damodaran | none | Specialist lanes stay specialist. |
 
@@ -65,7 +72,14 @@ External sources
   - discovers the full StockAnalysis ETF universe into `data/stockanalysis/etf_universe.json`;
   - writes `data/stockanalysis/etfs/{TICKER}.json`;
   - writes `data/stockanalysis/stocks/{TICKER}.json` when stocks are requested;
+  - decodes verified Svelte/devalue surfaces into
+    `data/stockanalysis/surfaces/{NAME}.json` for `new_etfs`,
+    `etf_screener`, `actions_recent`, and `earnings_calendar`;
+  - captures additional HTML table surfaces for IPO, market mover, ETF provider,
+    thematic list, and industry pages;
   - supports chunked universe backfill with `--universe-backfill --offset --limit-etfs`;
+  - supports `--fetch-surfaces --surface-set core --surfaces-only` for event/radar
+    refreshes without waiting for ETF universe backfills;
   - supports `--stop-on-hard-error` so expected holdings 404s are recorded while
     rate-limit/blocking/schema errors stop the run;
   - mirrors generated JSON to `100xfenok-next/public/data/stockanalysis/`.
@@ -189,6 +203,9 @@ StockAnalysis all remain visible when their values overlap.
    generated DataPack + public mirror outputs as a separate data commit.
 4. Promote the StockAnalysis financial probe into the main fetcher only after
    fixture/schema tests are added and the ETF backfill run is closed.
-5. Extend analyzer-specific feno-value providers beyond the common DataPack
+5. Add consumer routes/cards for `stockanalysis/surfaces`:
+   ETF launch radar, earnings calendar, corporate actions, IPO radar, and
+   industry maps.
+6. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
-6. Keep direct provider scraping as explicit fallback, not the normal path.
+7. Keep direct provider scraping as explicit fallback, not the normal path.

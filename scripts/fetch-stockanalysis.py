@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
-StockAnalysis source fetcher — REST JSON layer for ETF holdings and stock context.
+StockAnalysis source fetcher — REST JSON layer and public table surfaces.
 
 The stock financial-statement pages use SvelteKit/devalue payloads and are
 intentionally left for a later parser. This fetcher keeps the stable REST-shaped
 endpoints first: ETF holdings/overview/history/quote and stock overview/history/quote.
+It also captures high-value public HTML table surfaces such as new ETFs, IPOs,
+corporate actions, market movers, industry maps, and ETF provider pages.
 
 Output:
   data/stockanalysis/etfs/{TICKER}.json
   data/stockanalysis/stocks/{TICKER}.json
+  data/stockanalysis/surfaces/{NAME}.json
   data/stockanalysis/index.json
 """
 
@@ -41,6 +44,183 @@ DEFAULT_ETFS = [
     "ELIL", "CRWL", "ORCX", "MUU", "TSMG", "APPX", "MSTU",
     "OKLL", "CWVX", "BITU", "ETHT", "STRC", "SGOV", "BIL", "BILS",
 ]
+
+SURFACE_DEFINITIONS = {
+    "new_etfs": {
+        "path": "/etf/list/new/__data.json?x-sveltekit-invalidated=01",
+        "page_path": "/etf/list/new/",
+        "format": "svelte_devalue",
+        "group": "etf",
+        "priority": "p0",
+        "role": "new ETF launch radar",
+    },
+    "etf_screener": {
+        "path": "/etf/screener/__data.json?x-sveltekit-invalidated=01",
+        "page_path": "/etf/screener/",
+        "format": "svelte_devalue",
+        "group": "etf",
+        "priority": "p0",
+        "role": "ETF universe enrichment and ranking cross-check",
+    },
+    "etf_provider_blackrock": {
+        "path": "/etf/provider/blackrock/",
+        "group": "etf_provider",
+        "priority": "p0",
+        "role": "large passive manager ETF catalog",
+    },
+    "etf_provider_proshares": {
+        "path": "/etf/provider/proshares/",
+        "group": "etf_provider",
+        "priority": "p0",
+        "role": "leveraged ETF provider catalog",
+    },
+    "list_bitcoin_etfs": {
+        "path": "/list/bitcoin-etfs/",
+        "group": "theme_list",
+        "priority": "p0",
+        "role": "thematic ETF list seed",
+    },
+    "ipos_recent": {
+        "path": "/ipos/",
+        "group": "ipo",
+        "priority": "p0",
+        "role": "recent IPO performance and upcoming IPO sidebar",
+    },
+    "ipos_statistics": {
+        "path": "/ipos/statistics/",
+        "group": "ipo",
+        "priority": "p0",
+        "role": "IPO activity statistics and market cycle context",
+    },
+    "ipos_calendar": {
+        "path": "/ipos/calendar/",
+        "group": "ipo",
+        "priority": "p0",
+        "role": "upcoming IPO calendar",
+    },
+    "ipos_filings": {
+        "path": "/ipos/filings/",
+        "group": "ipo",
+        "priority": "p0",
+        "role": "new IPO filing radar",
+    },
+    "ipos_withdrawn": {
+        "path": "/ipos/withdrawn/",
+        "group": "ipo",
+        "priority": "p0",
+        "role": "withdrawn IPO risk/off-cycle signal",
+    },
+    "actions_recent": {
+        "path": "/actions/__data.json?x-sveltekit-invalidated=01",
+        "page_path": "/actions/",
+        "format": "svelte_devalue",
+        "group": "corporate_actions",
+        "priority": "p0",
+        "role": "corporate action event tape",
+    },
+    "actions_splits": {
+        "path": "/actions/splits/",
+        "group": "corporate_actions",
+        "priority": "p0",
+        "role": "split and reverse-split tape",
+    },
+    "market_gainers": {
+        "path": "/markets/gainers/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "daily top gainers",
+    },
+    "market_losers": {
+        "path": "/markets/losers/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "daily top losers",
+    },
+    "market_active": {
+        "path": "/markets/active/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "most active stocks",
+    },
+    "market_premarket": {
+        "path": "/markets/premarket/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "premarket gainers/losers",
+    },
+    "market_afterhours": {
+        "path": "/markets/afterhours/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "after-hours gainers/losers",
+    },
+    "market_gainers_week": {
+        "path": "/markets/gainers/week/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "one-week momentum leaders",
+    },
+    "market_gainers_month": {
+        "path": "/markets/gainers/month/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "one-month momentum leaders",
+    },
+    "market_losers_ytd": {
+        "path": "/markets/losers/ytd/",
+        "group": "market_movers",
+        "priority": "p0",
+        "role": "YTD downside leaders",
+    },
+    "earnings_calendar": {
+        "path": "/stocks/earnings-calendar/__data.json?x-sveltekit-invalidated=01",
+        "page_path": "/stocks/earnings-calendar/",
+        "format": "svelte_devalue",
+        "group": "earnings",
+        "priority": "p0",
+        "role": "earnings calendar with EPS/revenue estimates and timing",
+    },
+    "industries": {
+        "path": "/stocks/industry/",
+        "group": "industry",
+        "priority": "p0",
+        "role": "sector grouped industry map",
+    },
+    "industries_all": {
+        "path": "/stocks/industry/all/",
+        "group": "industry",
+        "priority": "p0",
+        "role": "flat industry map",
+    },
+    "sector_technology": {
+        "path": "/stocks/sector/technology/",
+        "group": "industry",
+        "priority": "p0",
+        "role": "sector constituent sample",
+    },
+    "industry_semiconductors": {
+        "path": "/stocks/industry/semiconductors/",
+        "group": "industry",
+        "priority": "p0",
+        "role": "industry constituent sample",
+    },
+}
+
+SURFACE_SETS = {
+    "core": tuple(SURFACE_DEFINITIONS.keys()),
+    "events": (
+        "new_etfs", "ipos_recent", "ipos_statistics", "ipos_calendar",
+        "ipos_filings", "ipos_withdrawn", "actions_recent", "actions_splits",
+        "earnings_calendar",
+    ),
+    "movers": (
+        "market_gainers", "market_losers", "market_active", "market_premarket",
+        "market_afterhours", "market_gainers_week", "market_gainers_month",
+        "market_losers_ytd",
+    ),
+    "industry": ("industries", "industries_all", "sector_technology", "industry_semiconductors"),
+    "etf": ("new_etfs", "etf_screener", "etf_provider_blackrock", "etf_provider_proshares", "list_bitcoin_etfs"),
+}
 
 
 class ETFUniverseParser(HTMLParser):
@@ -75,7 +255,7 @@ class ETFUniverseParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "td" and self._in_td:
-            text = " ".join("".join(self._cell_text).split())
+            text = normalize_space("".join(self._cell_text))
             self._cells.append(text)
             self._cell_text = []
             self._in_td = False
@@ -97,8 +277,211 @@ class ETFUniverseParser(HTMLParser):
             self._symbol = None
 
 
+class HTMLTableParser(HTMLParser):
+    """Extract generic HTML table headers, rows, and first-link metadata."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.tables: list[dict] = []
+        self._table_depth = 0
+        self._current_table: dict | None = None
+        self._in_tr = False
+        self._in_cell = False
+        self._cell_tag = ""
+        self._cell_text: list[str] = []
+        self._cell_links: list[str] = []
+        self._row: list[dict] = []
+        self._row_has_header = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = dict(attrs)
+        if tag == "table":
+            if self._table_depth == 0:
+                self._current_table = {"headers": [], "rows": []}
+            self._table_depth += 1
+        elif self._table_depth and tag == "tr":
+            self._in_tr = True
+            self._row = []
+            self._row_has_header = False
+        elif self._in_tr and tag in {"th", "td"}:
+            self._in_cell = True
+            self._cell_tag = tag
+            self._cell_text = []
+            self._cell_links = []
+            if tag == "th":
+                self._row_has_header = True
+        elif self._in_cell and tag == "a":
+            href = attrs_dict.get("href")
+            if href:
+                self._cell_links.append(href)
+
+    def handle_data(self, data: str) -> None:
+        if self._in_cell:
+            self._cell_text.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"th", "td"} and self._in_cell:
+            text = normalize_space("".join(self._cell_text))
+            self._row.append(
+                {
+                    "text": text,
+                    "links": self._cell_links[:],
+                    "tag": self._cell_tag,
+                }
+            )
+            self._in_cell = False
+            self._cell_tag = ""
+            self._cell_text = []
+            self._cell_links = []
+        elif tag == "tr" and self._in_tr:
+            self._flush_row()
+        elif tag == "table" and self._table_depth:
+            self._table_depth -= 1
+            if self._table_depth == 0 and self._current_table is not None:
+                if self._current_table["headers"] or self._current_table["rows"]:
+                    self.tables.append(self._current_table)
+                self._current_table = None
+
+    def _flush_row(self) -> None:
+        if not self._row or self._current_table is None:
+            self._in_tr = False
+            return
+
+        texts = [cell["text"] for cell in self._row]
+        if self._row_has_header and not self._current_table["headers"]:
+            self._current_table["headers"] = texts
+        else:
+            headers = self._current_table["headers"] or [f"Column {idx + 1}" for idx in range(len(self._row))]
+            row = {}
+            for idx, cell in enumerate(self._row):
+                header = headers[idx] if idx < len(headers) else f"Column {idx + 1}"
+                key = slug_key(header)
+                row[key] = cell["text"]
+                if cell["links"]:
+                    row[f"{key}_href"] = normalize_href(cell["links"][0])
+            if any(value for key, value in row.items() if not key.endswith("_href")):
+                self._current_table["rows"].append(row)
+
+        self._row = []
+        self._row_has_header = False
+        self._in_tr = False
+
+
 def now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def normalize_space(value: str | None) -> str:
+    return " ".join(str(value or "").split())
+
+
+def slug_key(header: str) -> str:
+    text = normalize_space(header).lower()
+    text = text.replace("%", " pct ").replace("#", " rank ")
+    text = text.replace("&", " and ").replace(".", "")
+    text = re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+    return text or "field"
+
+
+def normalize_href(href: str) -> str:
+    if href.startswith("https://") or href.startswith("http://"):
+        return href
+    if href.startswith("/"):
+        return f"{BASE_URL}{href}"
+    return href
+
+
+def extract_title(html: str) -> str | None:
+    match = re.search(r"<title[^>]*>(.*?)</title>", html, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return None
+    return normalize_space(re.sub(r"<[^>]+>", " ", match.group(1)))
+
+
+def decode_svelte_data(data: list) -> object:
+    seen = {}
+
+    def dec_ref(index: int):
+        if index == -1:
+            return None
+        if not isinstance(index, int) or index < 0 or index >= len(data):
+            return index
+        if index in seen:
+            return seen[index]
+        raw = data[index]
+        if isinstance(raw, dict):
+            out = {}
+            seen[index] = out
+            for key, value in raw.items():
+                out[key] = dec(value)
+            return out
+        if isinstance(raw, list):
+            out = []
+            seen[index] = out
+            out.extend(dec(value) for value in raw)
+            return out
+        return raw
+
+    def dec(value):
+        if isinstance(value, int):
+            return dec_ref(value)
+        if isinstance(value, dict):
+            return {key: dec(child) for key, child in value.items()}
+        if isinstance(value, list):
+            return [dec(child) for child in value]
+        return value
+
+    return dec_ref(0)
+
+
+def extract_svelte_node(payload: dict, required_keys: tuple[str, ...] = ()) -> dict:
+    fallback = None
+    for node in reversed(payload.get("nodes") or []):
+        data = node.get("data") if isinstance(node, dict) else None
+        if not isinstance(data, list) or not data:
+            continue
+        decoded = decode_svelte_data(data)
+        if not isinstance(decoded, dict):
+            continue
+        if required_keys and any(key in decoded for key in required_keys):
+            return decoded
+        fallback = decoded if fallback is None else fallback
+    if isinstance(fallback, dict):
+        return fallback
+    raise ValueError("Svelte data node not found")
+
+
+def flatten_earnings_calendar(decoded: dict) -> list[dict]:
+    records = []
+    for week in decoded.get("earnings") or []:
+        if not isinstance(week, dict):
+            continue
+        week_of = week.get("weekOf")
+        for day in week.get("days") or []:
+            if not isinstance(day, dict):
+                continue
+            base = {
+                "week_of": week_of,
+                "date": day.get("date"),
+                "day": day.get("day"),
+            }
+            for symbol in day.get("symbols") or []:
+                if not isinstance(symbol, dict):
+                    continue
+                records.append(
+                    {
+                        **base,
+                        "symbol": symbol.get("s"),
+                        "name": symbol.get("n"),
+                        "timing": symbol.get("t"),
+                        "eps_estimate": symbol.get("e"),
+                        "eps_growth_pct": symbol.get("eg"),
+                        "revenue_estimate": symbol.get("r"),
+                        "revenue_growth_pct": symbol.get("rg"),
+                        "market_cap": symbol.get("m"),
+                    }
+                )
+    return records
 
 
 def clean_symbol(value: str) -> str | None:
@@ -210,6 +593,181 @@ def parse_etf_universe_page(html: str, page: int) -> list[dict]:
     for row in parser.rows:
         rows.append({**row, "source_page": page})
     return rows
+
+
+def parse_html_tables(html: str) -> list[dict]:
+    parser = HTMLTableParser()
+    parser.feed(html)
+    tables = []
+    for idx, table in enumerate(parser.tables):
+        records = table.get("rows") or []
+        tables.append(
+            {
+                "index": idx,
+                "headers": table.get("headers") or [],
+                "row_count": len(records),
+                "records": records,
+            }
+        )
+    return tables
+
+
+def fetch_table_surface(name: str, definition: dict, timeout: int) -> dict:
+    path = definition["path"]
+    html = fetch_text(path, timeout)
+    tables = parse_html_tables(html)
+    page_path = definition.get("page_path") or path
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "surface": name,
+        "group": definition["group"],
+        "priority": definition["priority"],
+        "role": definition["role"],
+        "fetched_at": now_iso(),
+        "endpoint": path,
+        "url": f"{BASE_URL}{page_path}",
+        "format": "html_table",
+        "title": extract_title(html),
+        "counts": {
+            "tables": len(tables),
+            "rows": sum(table["row_count"] for table in tables),
+        },
+        "tables": tables,
+    }
+
+
+def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
+    path = definition["path"]
+    page_path = definition.get("page_path") or path.replace("/__data.json?x-sveltekit-invalidated=01", "/")
+    payload = fetch_json(path, timeout)
+
+    if name == "earnings_calendar":
+        decoded = extract_svelte_node(payload, ("earnings",))
+        records = flatten_earnings_calendar(decoded)
+        metadata = {
+            "weeks": decoded.get("earnings"),
+            "days": decoded.get("days"),
+            "view": decoded.get("view"),
+        }
+    else:
+        decoded = extract_svelte_node(payload, ("data",))
+        records = decoded.get("data") if isinstance(decoded.get("data"), list) else []
+        metadata = {
+            key: value
+            for key, value in decoded.items()
+            if key not in {"data", "earnings"}
+        }
+
+    data_points = metadata.get("dataPoints")
+    field_count = len(data_points) if isinstance(data_points, (list, dict)) else None
+    day_count = len(metadata.get("days") or []) if isinstance(metadata.get("days"), list) else None
+    week_count = len(metadata.get("weeks") or []) if isinstance(metadata.get("weeks"), list) else None
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "surface": name,
+        "group": definition["group"],
+        "priority": definition["priority"],
+        "role": definition["role"],
+        "fetched_at": now_iso(),
+        "endpoint": path,
+        "url": f"{BASE_URL}{page_path}",
+        "format": "svelte_devalue",
+        "counts": {
+            "records": len(records),
+            "fields": field_count,
+            "days": day_count,
+            "weeks": week_count,
+        },
+        "records": records,
+        "metadata": {key: value for key, value in metadata.items() if value is not None},
+    }
+
+
+def parse_surface_names(value: str, surface_set: str) -> list[str]:
+    if value:
+        names = [item.strip() for item in value.split(",") if item.strip()]
+    else:
+        names = list(SURFACE_SETS[surface_set])
+
+    unknown = [name for name in names if name not in SURFACE_DEFINITIONS]
+    if unknown:
+        known = ", ".join(sorted(SURFACE_DEFINITIONS))
+        raise SystemExit(f"Unknown surface name(s): {', '.join(unknown)}. Known: {known}")
+
+    out = []
+    seen = set()
+    for name in names:
+        if name not in seen:
+            out.append(name)
+            seen.add(name)
+    return out
+
+
+def fetch_surfaces(surface_names: list[str], timeout: int, sleep: float, mirror_public: bool) -> dict:
+    results = []
+    for idx, name in enumerate(surface_names, 1):
+        definition = SURFACE_DEFINITIONS[name]
+        start = time.perf_counter()
+        try:
+            if definition.get("format") == "svelte_devalue":
+                payload = fetch_svelte_surface(name, definition, timeout)
+            else:
+                payload = fetch_table_surface(name, definition, timeout)
+            rel_path = f"surfaces/{name}.json"
+            write_payload(rel_path, payload, mirror_public)
+            result = {
+                "surface": name,
+                "group": definition["group"],
+                "format": payload.get("format"),
+                "status": "ok",
+                "path": rel_path,
+                "endpoint": definition["path"],
+                "tables": payload["counts"].get("tables", 0),
+                "rows": payload["counts"].get("rows", payload["counts"].get("records", 0)),
+                "latency_ms": round((time.perf_counter() - start) * 1000),
+                "error": None,
+            }
+        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+            result = {
+                "surface": name,
+                "group": definition["group"],
+                "format": definition.get("format", "html_table"),
+                "status": "error",
+                "path": None,
+                "endpoint": definition["path"],
+                "tables": 0,
+                "rows": 0,
+                "latency_ms": round((time.perf_counter() - start) * 1000),
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+
+        results.append(result)
+        status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
+        print(
+            f"[surface {idx}/{len(surface_names)}] {name} {status} rows={result['rows']} {result['latency_ms']}ms",
+            flush=True,
+        )
+        time.sleep(sleep)
+
+    summary = {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "asset_type": "surface_index",
+        "generated_at": now_iso(),
+        "counts": {
+            "surfaces_requested": len(surface_names),
+            "ok": sum(1 for item in results if item["error"] is None),
+            "failed": sum(1 for item in results if item["error"] is not None),
+            "tables": sum(item["tables"] for item in results),
+            "rows": sum(item["rows"] for item in results),
+        },
+        "results": results,
+    }
+    write_payload("surfaces/index.json", summary, mirror_public)
+    return summary
 
 
 def next_etf_page_path(html: str) -> str | None:
@@ -425,6 +983,10 @@ def main() -> None:
     parser.add_argument("--discover-etf-universe", action="store_true", help="scrape /etf/ list pages into etf_universe.json")
     parser.add_argument("--universe-only", action="store_true", help="only refresh etf_universe.json; do not deep-fetch ETF payloads")
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
+    parser.add_argument("--fetch-surfaces", action="store_true", help="refresh high-value public table surfaces into surfaces/*.json")
+    parser.add_argument("--surface-set", choices=sorted(SURFACE_SETS), default="core", help="named surface bundle to fetch")
+    parser.add_argument("--surfaces", default="", help="comma-separated surface override; default = --surface-set")
+    parser.add_argument("--surfaces-only", action="store_true", help="only refresh surfaces; do not deep-fetch ETF/stock payloads")
     parser.add_argument("--offset", type=int, default=0, help="ETF offset for universe backfill chunking")
     parser.add_argument("--limit-etfs", type=int, default=0)
     parser.add_argument("--max-universe-pages", type=int, default=100)
@@ -444,8 +1006,14 @@ def main() -> None:
             f"[universe] ETFs={universe_payload['counts']['records']} pages={universe_payload['counts']['pages']}",
             flush=True,
         )
-        if args.universe_only:
-            return
+
+    surface_summary = None
+    if args.fetch_surfaces:
+        surface_names = parse_surface_names(args.surfaces, args.surface_set)
+        surface_summary = fetch_surfaces(surface_names, args.timeout, args.sleep, mirror_public)
+
+    if args.universe_only or args.surfaces_only:
+        return
 
     explicit_etfs = parse_symbols(args.etfs)
     if args.universe_backfill:
@@ -491,11 +1059,15 @@ def main() -> None:
             "etf_universe": (universe_payload or {}).get("counts", {}).get("records"),
             "etfs_requested": len(etfs),
             "stocks_requested": len(stocks),
+            "surfaces_requested": (surface_summary or {}).get("counts", {}).get("surfaces_requested", 0),
+            "surfaces_ok": (surface_summary or {}).get("counts", {}).get("ok", 0),
+            "surfaces_failed": (surface_summary or {}).get("counts", {}).get("failed", 0),
             "ok": sum(1 for item in results if item["error"] is None),
             "failed": sum(1 for item in results if item["error"] is not None),
             "hard_failed": sum(1 for item in results if is_hard_error(item["error"])),
         },
         "results": results,
+        "surface_results": (surface_summary or {}).get("results"),
         "stop_reason": stop_reason,
     }
     if args.universe_backfill:

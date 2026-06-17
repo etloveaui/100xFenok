@@ -119,6 +119,12 @@ export function normalizeStockanalysisTicker(value: string): string | null {
   return normalized;
 }
 
+export function normalizeStockanalysisSurfaceName(value: string): string | null {
+  const normalized = value.trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(normalized)) return null;
+  return normalized;
+}
+
 function toPublicPath(filePath: string): string | null {
   const relative = path.relative(path.join(process.cwd(), "public"), filePath);
   if (relative.startsWith("..") || path.isAbsolute(relative)) return null;
@@ -200,6 +206,8 @@ function getConsumerLane(publicPath: string, category: string) {
   if (category === "yf") return "stock";
   if (category === "stockanalysis") {
     if (publicPath.includes("/backfill/")) return "admin";
+    if (publicPath.includes("/surfaces/index.json")) return "admin";
+    if (publicPath.includes("/surfaces/")) return "explore";
     if (publicPath.includes("/etf_universe.json")) return "explore";
     return "stock";
   }
@@ -234,6 +242,7 @@ function getContentClass(publicPath: string, category: string) {
   if (category === "stockanalysis") {
     if (key.includes("/etf_universe.json")) return "etf-universe";
     if (key.includes("/backfill/")) return "fetch-audit";
+    if (key.includes("/surfaces/")) return "market-event-surface";
     if (key.includes("/etfs/")) return "etf-holdings";
     if (key.includes("/stocks/")) return "stock-overview";
     return "ticker-finance";
@@ -528,20 +537,24 @@ export async function getStockanalysisManifest() {
   const etfsDir = path.join(baseDir, "etfs");
   const stocksDir = path.join(baseDir, "stocks");
   const backfillDir = path.join(baseDir, "backfill");
+  const surfacesDir = path.join(baseDir, "surfaces");
   const universePath = path.join(baseDir, "etf_universe.json");
   const indexPath = path.join(baseDir, "index.json");
   const latestBackfillPath = path.join(backfillDir, "latest.json");
+  const surfaceIndexPath = path.join(surfacesDir, "index.json");
 
-  const [meta, topLevel, etfs, stocks, backfill, universe, index, latestBackfill] =
+  const [meta, topLevel, etfs, stocks, backfill, surfaces, universe, index, latestBackfill, surfaceIndex] =
     await Promise.all([
       getBaseMeta("stockanalysis"),
       buildJsonSample(baseDir, "/data/stockanalysis", 20),
       buildJsonSample(etfsDir, "/data/stockanalysis/etfs", 30),
       buildJsonSample(stocksDir, "/data/stockanalysis/stocks", 30),
       buildJsonSample(backfillDir, "/data/stockanalysis/backfill", 20),
+      buildJsonSample(surfacesDir, "/data/stockanalysis/surfaces", 30),
       readOptionalJsonRecord(universePath),
       readOptionalJsonRecord(indexPath),
       readOptionalJsonRecord(latestBackfillPath),
+      readOptionalJsonRecord(surfaceIndexPath),
     ]);
 
   const universeRecords = Array.isArray(universe?.records)
@@ -550,6 +563,9 @@ export async function getStockanalysisManifest() {
   const indexResults = Array.isArray(index?.results) ? index.results.slice(0, 10) : [];
   const latestBackfillResults = Array.isArray(latestBackfill?.results)
     ? latestBackfill.results.slice(0, 10)
+    : [];
+  const surfaceResults = Array.isArray(surfaceIndex?.results)
+    ? surfaceIndex.results.slice(0, 20)
     : [];
 
   return {
@@ -566,13 +582,16 @@ export async function getStockanalysisManifest() {
       etfFileCount: etfs.count,
       stockFileCount: stocks.count,
       backfillFileCount: backfill.count,
+      surfaceFileCount: surfaces.count,
       topLevelSample: topLevel.sample,
       etfSample: etfs.sample,
       stockSample: stocks.sample,
       backfillSample: backfill.sample,
+      surfaceSample: surfaces.sample,
       etfUniverse: universe ? "/data/stockanalysis/etf_universe.json" : null,
       index: index ? "/data/stockanalysis/index.json" : null,
       latestBackfill: latestBackfill ? "/data/stockanalysis/backfill/latest.json" : null,
+      surfaceIndex: surfaceIndex ? "/data/stockanalysis/surfaces/index.json" : null,
     },
     universe: universe
       ? {
@@ -599,6 +618,13 @@ export async function getStockanalysisManifest() {
           sample_results: latestBackfillResults,
         }
       : null,
+    surfaces: surfaceIndex
+      ? {
+          generated_at: surfaceIndex.generated_at ?? null,
+          counts: surfaceIndex.counts ?? null,
+          sample_results: surfaceResults,
+        }
+      : null,
   };
 }
 
@@ -608,6 +634,11 @@ export async function getStockanalysisAsset(
 ) {
   const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${ticker}.json`);
   return readOptionalJsonRecord(assetPath);
+}
+
+export async function getStockanalysisSurface(surfaceName: string) {
+  const surfacePath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", "surfaces", `${surfaceName}.json`);
+  return readOptionalJsonRecord(surfacePath);
 }
 
 export async function getDamodaranManifest() {

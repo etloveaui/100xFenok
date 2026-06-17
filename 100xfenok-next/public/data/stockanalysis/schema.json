@@ -1,12 +1,14 @@
 {
   "version": "1.0.0",
   "schema_version": "stockanalysis/v1",
-  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, and quote/history cross-checks.",
+  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, quote/history cross-checks, and market event surfaces.",
   "primary_paths": {
     "index": "index.json",
     "etf_universe": "etf_universe.json",
     "etf": "etfs/{TICKER}.json",
-    "stock": "stocks/{TICKER}.json"
+    "stock": "stocks/{TICKER}.json",
+    "surface_index": "surfaces/index.json",
+    "surface": "surfaces/{NAME}.json"
   },
   "fields": {
     "schema_version": "string",
@@ -17,6 +19,18 @@
     "endpoints": "object of endpoint paths",
     "normalized": "DataPack-facing normalized subset",
     "raw": "raw endpoint payloads"
+  },
+  "surface_fields": {
+    "surface": "surface identifier such as etf_screener, actions_recent, earnings_calendar",
+    "group": "etf|ipo|corporate_actions|earnings|market_movers|industry|etf_provider|theme_list",
+    "format": "svelte_devalue|html_table",
+    "endpoint": "StockAnalysis source endpoint path",
+    "url": "human page URL when available",
+    "counts.records": "record count for svelte/devalue surfaces",
+    "counts.rows": "row count for HTML table surfaces",
+    "records[]": "normalized records for decoded svelte/devalue surfaces",
+    "tables[]": "HTML table headers and records for HTML table surfaces",
+    "metadata": "source field definitions, day/week summaries, or page metadata"
   },
   "universe_fields": {
     "counts.records": "number of ETF table records parsed from /etf/ list pages",

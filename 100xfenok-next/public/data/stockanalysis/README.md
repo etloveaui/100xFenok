@@ -1,6 +1,6 @@
 # StockAnalysis Data
 
-> **Source**: StockAnalysis REST-shaped public JSON endpoints
+> **Source**: StockAnalysis public JSON, Svelte/devalue payloads, and HTML table surfaces
 > **Update**: Weekly / on-demand
 > **Version**: `stockanalysis/v1`
 
@@ -9,16 +9,19 @@
 ## Overview
 
 This folder preserves StockAnalysis as a separate 100x DataPack source layer.
-It is used for ETF holdings, ETF metadata, quote/history cross-checks, and
-stock overview snapshots.
+It is used for ETF holdings, ETF metadata, quote/history cross-checks, stock
+overview snapshots, and market event surfaces such as new ETFs, IPOs,
+corporate actions, earnings calendars, market movers, and industry maps.
 
 The full ETF universe is stored separately from deep ETF payloads. Universe
 refresh is lightweight; deep holdings/history backfill is intentionally chunked
 with `--universe-backfill --offset --limit-etfs` to avoid large request bursts.
 
-Stock financial statements are intentionally not included in v1 because those
-pages are SvelteKit/devalue payloads, not simple REST JSON. They belong in a
-later parser phase after endpoint and licensing risk review.
+Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
+JSON. v1 now decodes the high-value non-financial surfaces where live probes
+confirmed stable payloads (`new_etfs`, `etf_screener`, `actions_recent`,
+`earnings_calendar`). Stock financial statements remain in the probe phase until
+fixture/schema tests are added.
 
 ## Structure
 
@@ -30,8 +33,13 @@ stockanalysis/
 │   ├── SPY.json
 │   ├── TQQQ.json
 │   └── ...
-└── stocks/
-    ├── AAPL.json
+├── stocks/
+│   ├── AAPL.json
+│   └── ...
+└── surfaces/
+    ├── index.json
+    ├── etf_screener.json
+    ├── earnings_calendar.json
     └── ...
 ```
 
@@ -39,6 +47,10 @@ stockanalysis/
 
 - ETF universe ticker/name/category/AUM list: primary source.
 - ETF holdings and swap/counterparty rows: primary source.
+- ETF screener full-field universe: primary source.
+- New ETF launches, IPO calendars/filings, corporate actions, and earnings
+  calendar: primary market event source.
+- Market movers and industry maps: cross-check/source-enrichment layer.
 - ETF quote/history/overview: cross-check and fallback to Yahoo Finance.
 - Stock overview/quote/history: cross-check and fallback only.
 - Stock financial statements: not covered in v1; use existing Yahoo/Global
@@ -89,6 +101,28 @@ Universe payload:
 }
 ```
 
+Surface payload:
+
+```json
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "surface": "earnings_calendar",
+  "format": "svelte_devalue",
+  "counts": {"records": 3690, "days": 75, "weeks": 15},
+  "records": [
+    {
+      "date": "2026-04-20",
+      "symbol": "FLXS",
+      "timing": "amc",
+      "eps_estimate": 0.75,
+      "revenue_estimate": 115391200
+    }
+  ],
+  "metadata": {}
+}
+```
+
 ## Update Modes
 
 ```bash
@@ -97,6 +131,9 @@ python3 scripts/fetch-stockanalysis.py --discover-etf-universe --universe-only
 
 # Normal focused refresh: universe + default focus ETF list + selected stocks
 python3 scripts/fetch-stockanalysis.py --discover-etf-universe --stocks AAPL,NVDA,PLTR
+
+# Refresh high-value source surfaces only
+python3 scripts/fetch-stockanalysis.py --fetch-surfaces --surface-set core --surfaces-only
 
 # Controlled full ETF backfill chunk
 python3 scripts/fetch-stockanalysis.py --universe-backfill --offset 0 --limit-etfs 100 --sleep 0.25

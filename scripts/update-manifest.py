@@ -79,9 +79,9 @@ DEFAULT_FOLDER_META = {
     "stockanalysis": {
         "version": "1.0.0",
         "update_frequency": "weekly / on-demand",
-        "source": "StockAnalysis public JSON endpoints",
+        "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
         "schema": True,
-        "description": "ETF holdings, ETF metadata, quote/history cross-checks, and stock overview snapshots.",
+        "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock overview snapshots, and market event surfaces.",
     },
 }
 
