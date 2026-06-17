@@ -132,6 +132,10 @@ External sources
   - exposes a lightweight quality surface over `computed/market_data_audit` and
     `computed/market_source_parity`; missing files return `not_available`
     instead of breaking during long backfills.
+- `100xfenok-next/src/app/explore/DataCoverageCard.tsx`
+  - surfaces ETF universe coverage, saved ETF/stock file counts, current backfill
+    chunk progress, hard-error count, and parity warning count in product language
+    on the Explore page.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and
