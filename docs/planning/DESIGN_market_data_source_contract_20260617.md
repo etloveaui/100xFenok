@@ -66,6 +66,8 @@ External sources
   - writes `data/stockanalysis/etfs/{TICKER}.json`;
   - writes `data/stockanalysis/stocks/{TICKER}.json` when stocks are requested;
   - supports chunked universe backfill with `--universe-backfill --offset --limit-etfs`;
+  - supports `--stop-on-hard-error` so expected holdings 404s are recorded while
+    rate-limit/blocking/schema errors stop the run;
   - mirrors generated JSON to `100xfenok-next/public/data/stockanalysis/`.
 - `scripts/update-manifest.py`
   - knows the `stockanalysis` category and schema metadata.
@@ -83,7 +85,12 @@ External sources
 - `scripts/audit-market-data.py`
   - read-only audit for ETF universe backfill progress, failure classes,
     market-facts coverage, resolver candidate preservation, policy-source
-    mismatches, and large percent-scale candidate disagreements.
+    mismatches, and large percent-scale candidate disagreements;
+  - reports completed/missing backfill offsets, next expected offset, hard-error
+    count, and finalization readiness for the full ETF universe run.
+- `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
+  - reads `computed/market_facts` through DataPack policy as a fallback layer for
+    common quote/valuation/fund fields before analyzer-specific provider work.
 - `100xfenok-next/src/lib/server/data-loader.ts`
   - classifies `stockanalysis` ETF/stock details as stock data, ETF universe as
     explore inventory, and backfill indexes as admin fetch-audit artifacts.
@@ -122,9 +129,9 @@ StockAnalysis all remain visible when their values overlap.
 ## Next Contract
 
 1. Add parity checks for Yahoo vs StockAnalysis vs SlickCharts where fields overlap.
-2. Complete full ETF universe backfill through chunked manual/workflow dispatch,
-   stopping only on rate-limit/blocking failures rather than expected holdings
-   404s.
+2. Complete full ETF universe backfill through chunked manual/workflow dispatch;
+   finalize only when audit reports no missing offsets and no hard errors.
 3. Add StockAnalysis financial-statement devalue parser only after schema tests exist.
-4. Route feno-value runtime fields from `computed/market_facts` before direct yfinance calls.
+4. Extend analyzer-specific feno-value providers beyond the common DataPack
+   fallback path.
 5. Keep direct provider scraping as explicit fallback, not the normal path.

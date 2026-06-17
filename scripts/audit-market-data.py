@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
+CHUNK_RE = re.compile(r"^index_offset_(\d+)_limit_(\d+)\.json$")
 
 
 def load_json(path: Path):
@@ -25,6 +27,25 @@ def pct(part: int, whole: int) -> str:
     return f"{(part / whole) * 100:.1f}%"
 
 
+def is_expected_missing_error(error: object) -> bool:
+    return isinstance(error, str) and "HTTPError: HTTP Error 404" in error
+
+
+def is_hard_error(error: object) -> bool:
+    return isinstance(error, str) and error.strip() and not is_expected_missing_error(error)
+
+
+def expected_backfill_chunks(universe_count: int) -> list[dict[str, int]]:
+    if universe_count <= 0:
+        return []
+    chunks = [{"offset": 0, "limit": min(100, universe_count)}]
+    offset = 100
+    while offset < universe_count:
+        chunks.append({"offset": offset, "limit": min(500, universe_count - offset)})
+        offset += 500
+    return chunks
+
+
 def main() -> None:
     universe = load_json(DATA / "stockanalysis" / "etf_universe.json") or {}
     universe_count = int(((universe.get("counts") or {}).get("records") or len(universe.get("records") or [])) or 0)
@@ -33,12 +54,41 @@ def main() -> None:
 
     backfill_dir = DATA / "stockanalysis" / "backfill"
     backfill_files = sorted(backfill_dir.glob("index_offset_*_limit_*.json"))
+    expected_chunks = expected_backfill_chunks(universe_count)
+    expected_limits = {row["offset"]: row["limit"] for row in expected_chunks}
     results = []
+    chunk_summaries = []
+    ignored_chunk_summaries = []
     for path in backfill_files:
         payload = load_json(path) or {}
+        rows = []
         for row in payload.get("results") or []:
             if isinstance(row, dict):
-                results.append(row)
+                rows.append(row)
+        counts = payload.get("counts") or {}
+        match = CHUNK_RE.match(path.name)
+        offset = int(match.group(1)) if match else None
+        limit = int(match.group(2)) if match else None
+        hard_failed = counts.get("hard_failed")
+        if hard_failed is None:
+            hard_failed = sum(1 for row in rows if is_hard_error(row.get("error")))
+        chunk_summary = {
+            "file": path.name,
+            "offset": offset,
+            "limit": limit,
+            "rows": len(rows),
+            "ok": int(counts.get("ok") or 0),
+            "error": int(counts.get("failed") or 0),
+            "hard_failed": int(hard_failed or 0),
+            "stop_reason": payload.get("stop_reason"),
+        }
+        if offset in expected_limits and limit == expected_limits[offset]:
+            results.extend(rows)
+            chunk_summaries.append(chunk_summary)
+        else:
+            ignored_chunk_summaries.append(chunk_summary)
+    chunk_summaries.sort(key=lambda row: (row["offset"] is None, row["offset"] or 0))
+    ignored_chunk_summaries.sort(key=lambda row: (row["offset"] is None, row["offset"] or 0, row["limit"] or 0))
 
     status_counts = Counter(str(row.get("status") or "unknown") for row in results)
     error_kinds = Counter()
@@ -53,6 +103,19 @@ def main() -> None:
                 error_kinds["http_403"] += 1
             else:
                 error_kinds[err.split(":", 1)[0]] += 1
+    hard_error_count = sum(1 for row in results if is_hard_error(row.get("error")))
+    only_expected_404_errors = hard_error_count == 0 and all(kind == "http_404" for kind in error_kinds)
+    completed_offsets = {
+        row["offset"]
+        for row in chunk_summaries
+        if isinstance(row.get("offset"), int)
+    }
+    missing_offsets = [
+        row["offset"]
+        for row in expected_chunks
+        if row["offset"] not in completed_offsets
+    ]
+    next_expected_offset = missing_offsets[0] if missing_offsets else None
 
     market_index = load_json(DATA / "computed" / "market_facts" / "index.json") or {}
     market_rows = market_index.get("rows") or []
@@ -97,10 +160,21 @@ def main() -> None:
             "etf_backfill_progress": pct(len(etf_files), universe_count),
         },
         "backfill": {
-            "chunk_files": len(backfill_files),
+            "raw_chunk_files": len(backfill_files),
+            "chunk_files": len(chunk_summaries),
+            "expected_chunk_files": len(expected_chunks),
             "rows_seen": len(results),
             "status_counts": dict(status_counts),
             "error_kinds": dict(error_kinds),
+            "hard_error_count": hard_error_count,
+            "only_expected_404_errors": only_expected_404_errors,
+            "completed_offsets": sorted(completed_offsets),
+            "missing_offsets": missing_offsets,
+            "next_expected_offset": next_expected_offset,
+            "ready_for_finalize": next_expected_offset is None and only_expected_404_errors,
+            "detail_minus_backfill_ok": len(etf_files) - int(status_counts.get("ok") or 0),
+            "chunks": chunk_summaries,
+            "ignored_chunks": ignored_chunk_summaries,
         },
         "market_facts": {
             "count": market_index.get("count") or len(market_rows),
