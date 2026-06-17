@@ -93,6 +93,69 @@ function loadYfFinance(ticker: string): Promise<any | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Stockanalysis ETF asset data
+// ---------------------------------------------------------------------------
+
+interface StockanalysisEtfHolding {
+  rank?: number | null;
+  symbol?: string | null;
+  name?: string | null;
+  weight_pct?: number | null;
+  shares?: number | string | null;
+  raw?: Record<string, unknown>;
+}
+
+interface StockanalysisWeightedRow {
+  key?: string | null;
+  n?: string | null;
+  country?: string | null;
+  code?: string | null;
+  value?: number | null;
+  w?: number | null;
+  weight?: number | null;
+}
+
+interface StockanalysisHistoryPoint {
+  t?: string | null;
+  o?: number | null;
+  h?: number | null;
+  l?: number | null;
+  c?: number | null;
+  v?: number | null;
+  ch?: number | null;
+}
+
+interface StockanalysisEtfPayload {
+  ticker?: string;
+  asset_type?: string;
+  fetched_at?: string;
+  normalized?: {
+    holdings?: StockanalysisEtfHolding[];
+    asset_allocation?: StockanalysisWeightedRow[] | null;
+    sectors?: StockanalysisWeightedRow[] | null;
+    countries?: StockanalysisWeightedRow[] | null;
+    holding_count?: number | null;
+    holdings_updated?: string | null;
+    overview?: Record<string, unknown> | null;
+    quote?: Record<string, unknown> | null;
+    history?: StockanalysisHistoryPoint[];
+  };
+}
+
+function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload | null> {
+  const symbol = ticker.trim().toUpperCase();
+  if (!symbol) return Promise.resolve(null);
+  return fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}`, { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => (
+      data && typeof data === "object" && !Array.isArray(data)
+        ? data as StockanalysisEtfPayload
+        : null
+    ))
+    .catch(() => null);
+}
+
+// ---------------------------------------------------------------------------
 // trades_ranking cache
 // ---------------------------------------------------------------------------
 
@@ -124,6 +187,7 @@ function loadTradesRanking(): Promise<TradesCache | null> {
 
 type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
+type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates";
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
 
 function isFiniteNumber(value: unknown): value is number {
@@ -154,6 +218,32 @@ function fmtPct(n: number): string {
 function fmtDivYield(n: number): string { return `${(n * 100).toFixed(2)}%`; }
 function fmtWholePct(n: MaybeNumber): string { return isFiniteNumber(n) ? `${n.toFixed(1)}%` : "—"; }
 function fmtWholeSignedPct(n: MaybeNumber): string { return isFiniteNumber(n) ? fmtPct(n / 100) : "—"; }
+function fmtEtfPct(n: MaybeNumber): string {
+  if (!isFiniteNumber(n)) return "—";
+  const abs = Math.abs(n);
+  return `${n.toFixed(abs >= 100 ? 1 : abs >= 10 ? 2 : 2)}%`;
+}
+function fmtEtfSignedPct(n: MaybeNumber): string {
+  return isFiniteNumber(n) ? formatSignedPercent(n, { digits: 2, fraction: false }) : "—";
+}
+function fmtShares(value: unknown): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (!isFiniteNumber(value)) return "—";
+  return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1000 ? 0 : 2 });
+}
+function fmtDateish(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return "—";
+  return value.trim();
+}
+function rawText(value: unknown): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (isFiniteNumber(value)) return value.toLocaleString();
+  return "—";
+}
+function factNumber(source: any, key: string): number | null {
+  const value = source?.facts?.[key]?.value;
+  return isFiniteNumber(value) ? value : null;
+}
 
 function toFractionSeries(data: NumberSeries | null | undefined): NumberSeries {
   return (data ?? []).map((value) => (isFiniteNumber(value) ? value / 100 : null));
@@ -550,7 +640,8 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   const rowLoading = row === undefined;
   const [yfData, setYfData] = useState<any | undefined>(undefined);
-  const [stockTab, setStockTab] = useState<"overview" | "financials" | "statistics" | "ownership" | "estimates">("overview");
+  const [stockTab, setStockTab] = useState<StockTab>("overview");
+  const [etfData, setEtfData] = useState<StockanalysisEtfPayload | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -563,6 +654,15 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
     loadYfFinance(symbol).then((d) => { if (!cancelled) setYfData(d ?? null); });
     return () => { cancelled = true; };
   }, [symbol, canLoadStockData, row]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setEtfData(undefined);
+    });
+    loadStockanalysisEtf(symbol).then((d) => { if (!cancelled) setEtfData(d); });
+    return () => { cancelled = true; };
+  }, [symbol]);
 
   const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
   useEffect(() => {
@@ -578,19 +678,24 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
-  const yfTabs: Array<{ id: typeof stockTab; label: string }> = yfAvailable
-    ? [
-        { id: "overview", label: "요약" },
-        { id: "financials", label: "재무" },
-        { id: "statistics", label: "통계" },
-        { id: "ownership", label: "보유기관" },
-        { id: "estimates", label: "추정치" },
-      ]
-    : [{ id: "overview" as const, label: "요약" }];
+  const isEtfAsset = marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf";
+  const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf" ? "overview" : stockTab;
+  const stockTabs: Array<{ id: StockTab; label: string }> = [
+    { id: "overview", label: "요약" },
+    ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
+    ...(yfAvailable
+      ? [
+          { id: "financials" as const, label: "재무" },
+          { id: "statistics" as const, label: "통계" },
+          { id: "ownership" as const, label: "보유기관" },
+          { id: "estimates" as const, label: "추정치" },
+        ]
+      : []),
+  ];
 
   // Unknown ticker
   if (!rowLoading && !row) {
-    if (marketFactsLoading) {
+    if (marketFactsLoading && etfData === undefined) {
       return (
         <div className="stock-shell">
           <div className="panel stock-empty">
@@ -600,8 +705,12 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         </div>
       );
     }
-    if (marketFacts) {
-      const identity = marketFacts.identity ?? {};
+    if (marketFacts || etfData) {
+      const identity = marketFacts?.identity ?? {};
+      const quote = etfData?.normalized?.quote ?? {};
+      const displayAssetName = identity.name ?? symbol;
+      const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null);
+      const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null);
       return (
         <div className="stock-shell">
           <section className="stock-entity panel">
@@ -609,15 +718,15 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               <span className="stock-logo">{symbol.slice(0, 1)}</span>
               <div className="stock-id">
                 <div className="stock-name">
-                  <h1>{identity.name ?? symbol}</h1>
+                  <h1>{displayAssetName}</h1>
                   <WatchStar ticker={symbol} className="stock-star" />
                 </div>
                 <div className="stock-meta">
                   <span className="num">{symbol}</span>
-                  {marketFacts.asset_type ? (
+                  {isEtfAsset || marketFacts?.asset_type ? (
                     <>
                       <span className="x">·</span>
-                      <span>{marketFacts.asset_type === "etf" ? "ETF" : marketFacts.asset_type}</span>
+                      <span>{isEtfAsset ? "ETF" : marketFacts?.asset_type}</span>
                     </>
                   ) : null}
                   {identity.category ? (
@@ -628,11 +737,39 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   ) : null}
                 </div>
               </div>
+              <div className="stock-price">
+                <span className="big num">{price !== null ? formatMoney(price, identity.currency ?? "USD") : "—"}</span>
+                {changePct !== null ? <span className={`stock-chip num ${changePct >= 0 ? "up" : "down"}`}>{fmtEtfSignedPct(changePct)}</span> : null}
+                <span className="delay">{fmtDateish(quote.u) !== "—" ? fmtDateish(quote.u) : "데이터 지연 가능"}</span>
+              </div>
+            </div>
+            <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
+              {stockTabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setStockTab(t.id)}
+                  className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
+                  aria-current={activeStockTab === t.id ? "page" : undefined}
+                >
+                  {t.label}
+                </button>
+              ))}
+              {etfData === undefined ? <span className="stock-tab-note">ETF 원장 로딩 중...</span> : null}
             </div>
           </section>
           <div className="stock-body">
+            {activeStockTab === "etf" ? (
+              <div className="stock-summary-stack">
+                <MarketFactsDepth ticker={symbol} compact />
+              </div>
+            ) : null}
             <div className="stock-main-stack">
-              <MarketFactsDepth ticker={symbol} />
+              {activeStockTab === "etf" ? (
+                <EtfDataPanel ticker={symbol} data={etfData} loading={etfData === undefined} marketFacts={marketFacts} />
+              ) : (
+                <MarketFactsDepth ticker={symbol} />
+              )}
               <footer className="stock-footer">
                 <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너로 이동</TransitionLink>
                 <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
@@ -671,12 +808,23 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const returnUp = (row?.return12m ?? 0) >= 0;
 
   function renderStockDataTab() {
-    if (stockTab === "overview") return null;
+    if (activeStockTab === "overview") return null;
+    if (activeStockTab === "etf") {
+      return (
+        <div className="stock-main-stack">
+          <EtfDataPanel ticker={symbol} data={etfData} loading={etfData === undefined} marketFacts={marketFacts} />
+          <footer className="stock-footer">
+            <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+            <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+          </footer>
+        </div>
+      );
+    }
     return (
       <div className="grid gap-4">
         {yfAvailable ? (
           <section className="panel stock-tab-panel">
-            <div className="panel-b">{renderYfTab(stockTab, yfData, industryBench)}</div>
+            <div className="panel-b">{renderYfTab(activeStockTab, yfData, industryBench)}</div>
           </section>
         ) : null}
         {detailLoading ? (
@@ -686,7 +834,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           </div>
         ) : detail ? (
           <>
-            {stockTab === "financials" ? (
+            {activeStockTab === "financials" ? (
               <SectionCard title="재무 추이">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {([
@@ -709,7 +857,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               </SectionCard>
             ) : null}
 
-            {stockTab === "statistics" ? (
+            {activeStockTab === "statistics" ? (
               <>
                 <SectionCard title="밸류에이션">
                   <div className="grid gap-5 sm:grid-cols-2">
@@ -781,14 +929,14 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               </>
             ) : null}
 
-            {stockTab === "estimates" ? (
+            {activeStockTab === "estimates" ? (
               <SectionCard title="리비전·추정치">
                 <RevisionPulse detail={detail} />
                 <CompactFinancialTable detail={detail} years={years} />
               </SectionCard>
             ) : null}
 
-            {stockTab === "ownership" ? (
+            {activeStockTab === "ownership" ? (
               <div id="guru-section">
                 <SectionCard>
                   <GuruSection f13Entries={f13Entries} ticker={symbol} />
@@ -845,18 +993,18 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           </div>
         </div>
         <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
-          {yfTabs.map((t) => (
+          {stockTabs.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setStockTab(t.id)}
-              className={`stock-tab ${stockTab === t.id ? "on" : ""}`}
-              aria-current={stockTab === t.id ? "page" : undefined}
+              className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
+              aria-current={activeStockTab === t.id ? "page" : undefined}
             >
               {t.label}
             </button>
           ))}
-          {!yfLoaded ? <span className="stock-tab-note">보조 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">보조 데이터 수집 전</span> : null}
+          {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 원장 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">보조 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">보조 데이터 수집 전</span> : null}
         </div>
       </section>
 
@@ -881,7 +1029,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           <MarketFactsDepth ticker={symbol} compact />
       </div>
 
-      {stockTab !== "overview" ? renderStockDataTab() : (
+      {activeStockTab !== "overview" ? renderStockDataTab() : (
       <div className="stock-overview-grid">
         {/* LEFT RAIL (280px sticky) */}
         <aside className="stock-side">
@@ -1009,6 +1157,251 @@ function SkeletonSection() {
       <div className="panel-b">
       <div className="h-5 w-1/3 rounded bg-slate-200" />
       <div className="mt-3 h-32 rounded bg-slate-200" />
+      </div>
+    </div>
+  );
+}
+
+function EtfDataPanel({
+  ticker,
+  data,
+  loading,
+  marketFacts,
+}: {
+  ticker: string;
+  data: StockanalysisEtfPayload | null | undefined;
+  loading: boolean;
+  marketFacts: any;
+}) {
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <SkeletonSection />
+        <SkeletonSection />
+      </div>
+    );
+  }
+
+  const normalized = data?.normalized ?? {};
+  const overview = normalized.overview ?? {};
+  const quote = normalized.quote ?? {};
+  const currency = typeof marketFacts?.identity?.currency === "string" ? marketFacts.identity.currency : "USD";
+  const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null);
+  const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null);
+  const totalAssets = factNumber(marketFacts, "total_assets");
+  const expenseRatio = factNumber(marketFacts, "expense_ratio");
+  const dividendYield = factNumber(marketFacts, "dividend_yield");
+  const beta = factNumber(marketFacts, "beta");
+  const holdingsFromFacts = Array.isArray(marketFacts?.etf?.top_holdings)
+    ? marketFacts.etf.top_holdings as StockanalysisEtfHolding[]
+    : [];
+  const holdings = Array.isArray(normalized.holdings) && normalized.holdings.length > 0
+    ? normalized.holdings
+    : holdingsFromFacts;
+  const holdingCount = isFiniteNumber(normalized.holding_count)
+    ? normalized.holding_count
+    : isFiniteNumber(marketFacts?.etf?.holdings_count)
+      ? marketFacts.etf.holdings_count
+      : holdings.length;
+  const holdingsUpdated = normalized.holdings_updated ?? marketFacts?.etf?.holdings_updated ?? null;
+  const history = Array.isArray(normalized.history) ? normalized.history : [];
+  const assetAllocation = normalized.asset_allocation ?? marketFacts?.etf?.asset_allocation ?? null;
+  const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
+  const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
+  const totalWeight = holdings.reduce((sum, item) => sum + (isFiniteNumber(item.weight_pct) ? item.weight_pct : 0), 0);
+  const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
+
+  const cards = [
+    { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: fmtDateish(quote.u) },
+    { label: "당일 변화", value: fmtEtfSignedPct(changePct), note: rawText(quote.ex) },
+    { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "AUM" },
+    { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
+    { label: "보수율", value: expenseRatio !== null ? fmtEtfPct(expenseRatio) : rawText(overview.expenseRatio), note: "Expense" },
+    { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "Yield" },
+    { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "민감도" },
+    { label: "설정일", value: rawText(overview.inception), note: "Inception" },
+    { label: "보유 행", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: fmtDateish(holdingsUpdated) },
+    { label: "보유 비중합", value: holdings.length > 0 ? fmtEtfPct(totalWeight) : "—", note: "표시 행 기준" },
+  ].filter((card) => card.value !== "—");
+
+  if (!data && !marketFacts) {
+    return (
+      <SectionCard title="ETF 원장">
+        <div className="py-8 text-center">
+          <p className="text-sm font-black text-slate-700">ETF 원장 데이터가 없습니다</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">데이터 백필 또는 `/api/data/stockanalysis/etfs/{ticker}` 경로를 확인해 주세요.</p>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <SectionCard title="ETF 원장 스냅샷">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {cards.map((card) => (
+            <div key={`${card.label}-${card.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
+              <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{card.value}</p>
+              {card.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{card.note}</p> : null}
+            </div>
+          ))}
+        </div>
+        {website ? (
+          <a
+            href={website}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 transition hover:border-brand-interactive hover:bg-white hover:text-brand-interactive"
+          >
+            운용사 원문 열기
+          </a>
+        ) : null}
+      </SectionCard>
+
+      <SectionCard title="보유·스왑 원장">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
+          <span>{ticker} · 표시 {holdings.length.toLocaleString()}행</span>
+          <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
+        </div>
+        <EtfHoldingsTable holdings={holdings} currency={currency} />
+      </SectionCard>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <SectionCard title="자산 분해">
+          <EtfWeightedList rows={assetAllocation} empty="자산 분해 데이터 없음" />
+        </SectionCard>
+        <SectionCard title="섹터 분해">
+          <EtfWeightedList rows={sectors} empty="섹터 데이터 없음" />
+        </SectionCard>
+        <SectionCard title="국가 분해">
+          <EtfWeightedList rows={countries} empty="국가 데이터 없음" />
+        </SectionCard>
+      </div>
+
+      <SectionCard title="가격 히스토리">
+        <EtfHistoryView history={history} currency={currency} />
+      </SectionCard>
+    </div>
+  );
+}
+
+function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHolding[]; currency: string }) {
+  if (!holdings.length) {
+    return <p className="text-sm font-semibold text-slate-400">보유 데이터 없음</p>;
+  }
+  return (
+    <div className="-mx-1 max-h-[560px] overflow-auto px-1">
+      <table className="w-full min-w-[620px] text-xs">
+        <thead className="sticky top-0 z-10 bg-white">
+          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <th className="px-2 py-2 text-right">#</th>
+            <th className="px-2 py-2 text-left">종목/계약</th>
+            <th className="px-2 py-2 text-left">티커</th>
+            <th className="px-2 py-2 text-right">비중</th>
+            <th className="px-2 py-2 text-right">수량</th>
+          </tr>
+        </thead>
+        <tbody>
+          {holdings.map((item, index) => {
+            const weight = isFiniteNumber(item.weight_pct) ? item.weight_pct : null;
+            const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
+            return (
+              <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-400">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
+                <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
+                <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
+                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-400">표시 통화: {currency}</p> : null}
+    </div>
+  );
+}
+
+function weightedRowName(row: StockanalysisWeightedRow): string {
+  return row.key ?? row.n ?? row.country ?? row.code ?? "—";
+}
+
+function weightedRowValue(row: StockanalysisWeightedRow): number | null {
+  if (isFiniteNumber(row.value)) return row.value;
+  if (isFiniteNumber(row.w)) return row.w;
+  if (isFiniteNumber(row.weight)) return row.weight;
+  return null;
+}
+
+function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | null | undefined; empty: string }) {
+  const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
+  if (!items.length) return <p className="text-sm font-semibold text-slate-400">{empty}</p>;
+  return (
+    <div className="space-y-2">
+      {items.map((row, index) => {
+        const value = weightedRowValue(row) ?? 0;
+        const width = Math.min(100, Math.abs(value));
+        return (
+          <div key={`${weightedRowName(row)}-${index}`}>
+            <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+              <span className="min-w-0 truncate font-bold text-slate-700">{weightedRowName(row)}</span>
+              <span className={`orbitron tabular-nums font-black ${value < 0 ? "text-rose-600" : "text-slate-900"}`}>{fmtEtfPct(value)}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className={`h-2 rounded-full ${value < 0 ? "bg-rose-400" : "bg-brand-interactive"}`} style={{ width: `${width}%` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPoint[]; currency: string }) {
+  const rows = history.filter((point) => isFiniteNumber(point.c));
+  if (!rows.length) return <p className="text-sm font-semibold text-slate-400">가격 히스토리 없음</p>;
+  const chronological = [...rows].reverse();
+  const closes = chronological.map((point) => point.c).filter(isFiniteNumber);
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = max - min || 1;
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+      <div className="flex h-40 items-end gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+        {chronological.map((point, index) => {
+          const close = isFiniteNumber(point.c) ? point.c : min;
+          const height = 10 + ((close - min) / range) * 90;
+          const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
+          return (
+            <div key={`${point.t ?? "month"}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${point.t}: ${formatMoney(close, currency)}`}>
+              <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
+              <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(point.t ?? "").slice(5, 7)}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full min-w-[360px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <th className="px-2 py-2 text-left">월</th>
+              <th className="px-2 py-2 text-right">종가</th>
+              <th className="px-2 py-2 text-right">변화</th>
+              <th className="px-2 py-2 text-right">거래량</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((point, index) => (
+              <tr key={`${point.t ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-2 font-bold text-slate-700">{point.t ?? "—"}</td>
+                <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(point.c, currency)}</td>
+                <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtEtfSignedPct(point.ch)}</td>
+                <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
