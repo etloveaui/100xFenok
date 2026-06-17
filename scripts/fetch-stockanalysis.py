@@ -408,6 +408,16 @@ def run_one(kind: str, ticker: str, timeout: int, mirror_public: bool) -> dict:
         }
 
 
+def is_expected_missing_error(error: str | None) -> bool:
+    """StockAnalysis has universe rows whose holdings endpoint returns a stable 404."""
+    return bool(error and "HTTP Error 404" in error)
+
+
+def is_hard_error(error: str | None) -> bool:
+    """Hard errors should stop unattended backfill loops."""
+    return bool(error and not is_expected_missing_error(error))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--etfs", default="", help="comma-separated ETF override; default focus ETF list")
@@ -422,6 +432,7 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=20)
     parser.add_argument("--no-public-mirror", action="store_true")
     parser.add_argument("--fail-on-error", action="store_true", help="exit non-zero when any ticker fails")
+    parser.add_argument("--stop-on-hard-error", action="store_true", help="stop chunk on non-404 fetch errors")
     args = parser.parse_args()
 
     mirror_public = not args.no_public_mirror
@@ -453,13 +464,24 @@ def main() -> None:
     stocks = parse_symbols(args.stocks)
 
     results = []
+    stop_reason = None
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
             result = run_one(kind, ticker, args.timeout, mirror_public)
             results.append(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
             print(f"[{kind} {idx}/{len(symbols)}] {ticker} {status} {result['latency_ms']}ms", flush=True)
+            if args.stop_on_hard_error and is_hard_error(result["error"]):
+                stop_reason = {
+                    "ticker": ticker,
+                    "asset_type": kind,
+                    "error": result["error"],
+                    "message": "stopped on non-404 fetch error",
+                }
+                break
             time.sleep(args.sleep)
+        if stop_reason:
+            break
 
     summary = {
         "schema_version": SCHEMA_VERSION,
@@ -471,8 +493,10 @@ def main() -> None:
             "stocks_requested": len(stocks),
             "ok": sum(1 for item in results if item["error"] is None),
             "failed": sum(1 for item in results if item["error"] is not None),
+            "hard_failed": sum(1 for item in results if is_hard_error(item["error"])),
         },
         "results": results,
+        "stop_reason": stop_reason,
     }
     if args.universe_backfill:
         limit_label = args.limit_etfs if args.limit_etfs else "all"
@@ -481,6 +505,8 @@ def main() -> None:
         write_payload("backfill/latest.json", summary, mirror_public)
     else:
         write_payload("index.json", summary, mirror_public)
+    if stop_reason:
+        raise SystemExit(2)
     if args.fail_on_error and summary["counts"]["failed"]:
         raise SystemExit(1)
 
