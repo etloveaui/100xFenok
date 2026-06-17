@@ -90,7 +90,8 @@ External sources
     count, and finalization readiness for the full ETF universe run;
   - can publish the same audit payload to
     `data/computed/market_data_audit.json` and the Next public data mirror when
-    called with `--output data/computed/market_data_audit.json --mirror-public`.
+    called with `--output data/computed/market_data_audit.json --mirror-public`;
+  - includes `market_source_parity.summary` when the parity report exists.
 - `scripts/finalize-market-data.py`
   - post-refresh closeout command that rebuilds `computed/market_facts`, writes
     `computed/market_source_parity` and `computed/market_data_audit`, updates

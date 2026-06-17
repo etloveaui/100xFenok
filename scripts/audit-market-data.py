@@ -122,6 +122,7 @@ def build_payload() -> dict:
     market_index = load_json(DATA / "computed" / "market_facts" / "index.json") or {}
     market_rows = market_index.get("rows") or []
     market_coverage = market_index.get("coverage") or {}
+    source_parity = load_json(DATA / "computed" / "market_source_parity.json") or {}
     candidate_fields = 0
     multi_candidate_fields = 0
     policy_mismatch_fields = 0
@@ -186,6 +187,10 @@ def build_payload() -> dict:
             "multi_candidate_fields": multi_candidate_fields,
             "policy_mismatch_fields": policy_mismatch_fields,
             "percent_scale_warnings": percent_scale_warnings,
+        },
+        "market_source_parity": {
+            "generated_at": source_parity.get("generated_at"),
+            "summary": source_parity.get("summary"),
         },
     }
 
