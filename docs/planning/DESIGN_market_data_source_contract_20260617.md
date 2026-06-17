@@ -104,6 +104,11 @@ External sources
   - reads `computed/market_facts/tickers/*.json` candidates and summarizes
     selected-source counts, candidate-source counts, top divergences, and
     percent-scale warnings so overlapping provider data remains inspectable.
+- `scripts/probe-stockanalysis-financials.py`
+  - read-only implementation spike for StockAnalysis financial `__data.json`
+    payloads; decodes the Svelte/devalue index structure into normalized
+    income, balance sheet, cash-flow, and ratios rows without touching the active
+    ETF backfill fetcher.
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
@@ -149,7 +154,8 @@ StockAnalysis all remain visible when their values overlap.
    finalize only when audit reports no missing offsets and no hard errors.
 3. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-4. Add StockAnalysis financial-statement devalue parser only after schema tests exist.
+4. Promote the StockAnalysis financial probe into the main fetcher only after
+   fixture/schema tests are added and the ETF backfill run is closed.
 5. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
 6. Keep direct provider scraping as explicit fallback, not the normal path.
