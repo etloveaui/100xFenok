@@ -111,9 +111,10 @@ def normalize_statement(ticker: str, statement: str, decoded: dict) -> dict:
     }
 
 
-def fetch_statement(ticker: str, statement: str, timeout: int) -> dict:
+def fetch_statement(ticker: str, statement: str, period: str, timeout: int) -> dict:
     path = STATEMENT_PATHS[statement]
-    url = f"{BASE_URL}/stocks/{ticker.lower()}/{path}/__data.json"
+    suffix = "?p=quarterly" if period == "quarterly" else ""
+    url = f"{BASE_URL}/stocks/{ticker.lower()}/{path}/__data.json{suffix}"
     payload = fetch_json(url, timeout)
     decoded = extract_node(payload)
     normalized = normalize_statement(ticker, statement, decoded)
@@ -121,15 +122,16 @@ def fetch_statement(ticker: str, statement: str, timeout: int) -> dict:
     return normalized
 
 
-def build_probe(ticker: str, timeout: int) -> dict:
+def build_probe(ticker: str, period: str, timeout: int) -> dict:
     statements = {}
     for statement in STATEMENT_PATHS:
-        statements[statement] = fetch_statement(ticker, statement, timeout)
+        statements[statement] = fetch_statement(ticker, statement, period, timeout)
     return {
         "schema_version": "stockanalysis-financials-probe/v1",
         "generated_at": now_iso(),
         "source": "stockanalysis financial __data.json",
         "ticker": ticker.upper(),
+        "requested_period": period,
         "statements": statements,
         "summary": {
             key: {
@@ -147,6 +149,7 @@ def build_probe(ticker: str, timeout: int) -> dict:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Probe StockAnalysis financial statement payloads.")
     parser.add_argument("ticker", nargs="?", default="AAPL")
+    parser.add_argument("--period", choices=["annual", "quarterly"], default="annual")
     parser.add_argument("--timeout", type=int, default=20)
     parser.add_argument("--output", help="Optional output JSON path for the full normalized probe.")
     parser.add_argument("--full", action="store_true", help="Print full normalized payload instead of summary.")
@@ -155,7 +158,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    payload = build_probe(args.ticker, args.timeout)
+    payload = build_probe(args.ticker, args.period, args.timeout)
     if args.output:
         output = Path(args.output).expanduser()
         output.parent.mkdir(parents=True, exist_ok=True)

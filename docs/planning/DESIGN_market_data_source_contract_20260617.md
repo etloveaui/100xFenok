@@ -107,8 +107,8 @@ External sources
 - `scripts/probe-stockanalysis-financials.py`
   - read-only implementation spike for StockAnalysis financial `__data.json`
     payloads; decodes the Svelte/devalue index structure into normalized
-    income, balance sheet, cash-flow, and ratios rows without touching the active
-    ETF backfill fetcher.
+    annual or quarterly income, balance sheet, cash-flow, and ratios rows without
+    touching the active ETF backfill fetcher.
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
