@@ -131,6 +131,9 @@ External sources
   - validates the main fetcher's devalue surface decoder, ETF universe HTML
     parser, generic table parser, and surface-name validation against local
     fixtures under `scripts/fixtures/stockanalysis/`.
+- `scripts/test_stockanalysis_surface_contract.py`
+  - validates that fetcher `SURFACE_DEFINITIONS`, surface sets, source
+    DataPack outputs, and Next public mirror outputs stay in lockstep.
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
@@ -209,12 +212,15 @@ StockAnalysis all remain visible when their values overlap.
    finalize only when audit reports no missing offsets and no hard errors.
 3. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-4. Expand the StockAnalysis financial fixture suite to balance sheet,
+4. Keep shipped StockAnalysis surfaces actively visible in Explore/Admin/Data Lab
+   and guarded by contract tests so committed surface data does not become dead
+   DataPack weight.
+5. Expand the StockAnalysis financial fixture suite to balance sheet,
    cash-flow, ratios, quarterly periods, and schema checks before promoting the
    probe into the main fetcher after the ETF backfill run is closed.
-5. Add consumer routes/cards for `stockanalysis/surfaces`:
+6. Add consumer routes/cards for `stockanalysis/surfaces`:
    ETF launch radar, earnings calendar, corporate actions, IPO radar, and
    industry maps.
-6. Extend analyzer-specific feno-value providers beyond the common DataPack
+7. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
-7. Keep direct provider scraping as explicit fallback, not the normal path.
+8. Keep direct provider scraping as explicit fallback, not the normal path.

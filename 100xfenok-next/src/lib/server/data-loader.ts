@@ -565,7 +565,7 @@ export async function getStockanalysisManifest() {
     ? latestBackfill.results.slice(0, 10)
     : [];
   const surfaceResults = Array.isArray(surfaceIndex?.results)
-    ? surfaceIndex.results.slice(0, 20)
+    ? surfaceIndex.results
     : [];
 
   return {

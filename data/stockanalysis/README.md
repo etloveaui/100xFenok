@@ -142,6 +142,9 @@ python3 scripts/test-stockanalysis-financials-fixtures.py
 # Validate fetcher parsers against local fixtures
 python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
 
+# Validate fetcher surface definitions against current DataPack outputs
+python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+
 # Inspect a saved financial __data.json fixture through the probe
 python3 scripts/probe-stockanalysis-financials.py AAPL --statement income \
   --fixture scripts/fixtures/stockanalysis/aapl_income_annual__data.fixture.json

@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 
 interface SurfaceResult {
   surface?: string;
+  group?: string;
   rows?: number | null;
   status?: string | null;
 }
@@ -108,6 +109,14 @@ function rowsFor(surface: string, manifest: StockanalysisManifest | null): numbe
   return typeof hit?.rows === "number" ? hit.rows : null;
 }
 
+function rowsForGroup(group: string, manifest: StockanalysisManifest | null): number | null {
+  const results = manifest?.surfaces?.sample_results ?? [];
+  const rows = results
+    .filter((item) => item.group === group && item.status === "ok")
+    .map((item) => (typeof item.rows === "number" ? item.rows : 0));
+  return rows.length ? rows.reduce((sum, value) => sum + value, 0) : null;
+}
+
 export default function MarketEventSurfacesCard() {
   const [data, setData] = useState<SurfaceRadarData | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -163,6 +172,24 @@ export default function MarketEventSurfacesCard() {
       label: "ETF 스크리너",
       detail: "AUM·자산군·보유수",
       value: fmtNumber(rowsFor("etf_screener", data?.manifest ?? null)),
+      tone: "up",
+    },
+    {
+      label: "IPO 레이더",
+      detail: "상장·철회·통계",
+      value: fmtNumber(rowsForGroup("ipo", data?.manifest ?? null)),
+      tone: "neutral",
+    },
+    {
+      label: "시장 무버",
+      detail: "장전·장후·주간·월간",
+      value: fmtNumber(rowsForGroup("market_movers", data?.manifest ?? null)),
+      tone: "neutral",
+    },
+    {
+      label: "산업 지도",
+      detail: "섹터·업종 구성",
+      value: fmtNumber(rowsForGroup("industry", data?.manifest ?? null)),
       tone: "up",
     },
   ];
