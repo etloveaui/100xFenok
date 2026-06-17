@@ -145,6 +145,13 @@ External sources
   - falls back to `market_facts` when a ticker is absent from
     `global-scouter/core/stocks_analyzer.json`, allowing ETF-first pages such
     as leveraged funds to render instead of hard-failing.
+  - always probes the StockAnalysis ETF asset API for the current ticker and
+    opens a data-driven `ETF` tab only when the local DataPack has an ETF
+    payload;
+  - renders ETF snapshot, holdings/swap rows, asset/sector/country breakdowns,
+    and monthly price history from `/api/data/stockanalysis/etfs/{TICKER}` plus
+    `computed/market_facts`, so refreshed JSON updates the page without UI code
+    changes.
 
 ## Resolver Policy
 
