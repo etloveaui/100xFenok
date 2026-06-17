@@ -122,7 +122,15 @@ External sources
   - read-only implementation spike for StockAnalysis financial `__data.json`
     payloads; decodes the Svelte/devalue index structure into normalized
     annual or quarterly income, balance sheet, cash-flow, and ratios rows without
-    touching the active ETF backfill fetcher.
+    touching the active ETF backfill fetcher;
+  - supports `--fixture scripts/fixtures/stockanalysis/aapl_income_annual__data.fixture.json`
+    plus `scripts/test-stockanalysis-financials-fixtures.py` so the devalue
+    decoder and normalized row contract can be checked without live network
+    access.
+- `scripts/test_fetch_stockanalysis_fixtures.py`
+  - validates the main fetcher's devalue surface decoder, ETF universe HTML
+    parser, generic table parser, and surface-name validation against local
+    fixtures under `scripts/fixtures/stockanalysis/`.
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
@@ -201,8 +209,9 @@ StockAnalysis all remain visible when their values overlap.
    finalize only when audit reports no missing offsets and no hard errors.
 3. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-4. Promote the StockAnalysis financial probe into the main fetcher only after
-   fixture/schema tests are added and the ETF backfill run is closed.
+4. Expand the StockAnalysis financial fixture suite to balance sheet,
+   cash-flow, ratios, quarterly periods, and schema checks before promoting the
+   probe into the main fetcher after the ETF backfill run is closed.
 5. Add consumer routes/cards for `stockanalysis/surfaces`:
    ETF launch radar, earnings calendar, corporate actions, IPO radar, and
    industry maps.

@@ -21,7 +21,8 @@ Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
 confirmed stable payloads (`new_etfs`, `etf_screener`, `actions_recent`,
 `earnings_calendar`). Stock financial statements remain in the probe phase until
-fixture/schema tests are added.
+schema coverage is promoted, but the probe now has a fixture smoke path for the
+devalue decoder and normalized statement rows.
 
 ## Structure
 
@@ -134,6 +135,16 @@ python3 scripts/fetch-stockanalysis.py --discover-etf-universe --stocks AAPL,NVD
 
 # Refresh high-value source surfaces only
 python3 scripts/fetch-stockanalysis.py --fetch-surfaces --surface-set core --surfaces-only
+
+# Validate the financial devalue decoder without network access
+python3 scripts/test-stockanalysis-financials-fixtures.py
+
+# Validate fetcher parsers against local fixtures
+python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
+
+# Inspect a saved financial __data.json fixture through the probe
+python3 scripts/probe-stockanalysis-financials.py AAPL --statement income \
+  --fixture scripts/fixtures/stockanalysis/aapl_income_annual__data.fixture.json
 
 # Controlled full ETF backfill chunk
 python3 scripts/fetch-stockanalysis.py --universe-backfill --offset 0 --limit-etfs 100 --sleep 0.25

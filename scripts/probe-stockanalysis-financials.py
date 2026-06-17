@@ -122,6 +122,27 @@ def fetch_statement(ticker: str, statement: str, period: str, timeout: int) -> d
     return normalized
 
 
+def load_fixture_statement(ticker: str, statement: str, fixture: Path) -> dict:
+    payload = json.loads(fixture.read_text(encoding="utf-8"))
+    decoded = extract_node(payload)
+    normalized = normalize_statement(ticker, statement, decoded)
+    normalized["fixture"] = str(fixture)
+    return normalized
+
+
+def build_summary(statements: dict[str, dict]) -> dict:
+    return {
+        key: {
+            "statement": value.get("statement"),
+            "period": value.get("period"),
+            "field_count": value.get("field_count"),
+            "period_count": len(value.get("periods") or []),
+            "sample_fields": [row.get("field") for row in (value.get("rows") or [])[:8]],
+        }
+        for key, value in statements.items()
+    }
+
+
 def build_probe(ticker: str, period: str, timeout: int) -> dict:
     statements = {}
     for statement in STATEMENT_PATHS:
@@ -133,16 +154,21 @@ def build_probe(ticker: str, period: str, timeout: int) -> dict:
         "ticker": ticker.upper(),
         "requested_period": period,
         "statements": statements,
-        "summary": {
-            key: {
-                "statement": value.get("statement"),
-                "period": value.get("period"),
-                "field_count": value.get("field_count"),
-                "period_count": len(value.get("periods") or []),
-                "sample_fields": [row.get("field") for row in (value.get("rows") or [])[:8]],
-            }
-            for key, value in statements.items()
-        },
+        "summary": build_summary(statements),
+    }
+
+
+def build_fixture_probe(ticker: str, statement: str, fixture: Path) -> dict:
+    normalized = load_fixture_statement(ticker, statement, fixture)
+    statements = {statement: normalized}
+    return {
+        "schema_version": "stockanalysis-financials-probe/v1",
+        "generated_at": now_iso(),
+        "source": "stockanalysis financial __data.json fixture",
+        "ticker": ticker.upper(),
+        "requested_period": normalized.get("period"),
+        "statements": statements,
+        "summary": build_summary(statements),
     }
 
 
@@ -150,6 +176,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Probe StockAnalysis financial statement payloads.")
     parser.add_argument("ticker", nargs="?", default="AAPL")
     parser.add_argument("--period", choices=["annual", "quarterly"], default="annual")
+    parser.add_argument("--statement", choices=sorted(STATEMENT_PATHS), default="income", help="statement type for --fixture")
+    parser.add_argument("--fixture", help="Read a saved __data.json fixture instead of calling StockAnalysis")
     parser.add_argument("--timeout", type=int, default=20)
     parser.add_argument("--output", help="Optional output JSON path for the full normalized probe.")
     parser.add_argument("--full", action="store_true", help="Print full normalized payload instead of summary.")
@@ -158,7 +186,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    payload = build_probe(args.ticker, args.period, args.timeout)
+    if args.fixture:
+        payload = build_fixture_probe(args.ticker, args.statement, Path(args.fixture).expanduser())
+    else:
+        payload = build_probe(args.ticker, args.period, args.timeout)
     if args.output:
         output = Path(args.output).expanduser()
         output.parent.mkdir(parents=True, exist_ok=True)
