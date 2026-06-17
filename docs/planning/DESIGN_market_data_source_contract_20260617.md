@@ -112,9 +112,26 @@ External sources
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
+- `docs/products/skills/feno-data` and `feno-data-remote` (CCH)
+  - document local/remote StockAnalysis ETF and stock single-ticker reads;
+  - remote helper supports `python3 feno_data_remote.py stockanalysis etf NVDL
+    'normalized.holdings[0]'` and `... stock AAPL normalized.overview`.
+- `docs/products/skills/feno-value/scripts/providers/datapack.py` (CCH)
+  - exposes StockAnalysis ETF, ETF universe, and stock helpers;
+  - integration coverage includes StockAnalysis stock overview access.
 - `100xfenok-next/src/lib/server/data-loader.ts`
   - classifies `stockanalysis` ETF/stock details as stock data, ETF universe as
     explore inventory, and backfill indexes as admin fetch-audit artifacts.
+- `100xfenok-next/src/app/api/data/stockanalysis/route.ts`
+  - exposes a lightweight StockAnalysis manifest with top-level, ETF, stock,
+    and backfill file counts plus small samples and universe/latest-run counts.
+- `100xfenok-next/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`
+  - serves raw StockAnalysis ETF or stock JSON by ticker (`etfs/SPY`,
+    `stocks/AAPL`) so consumers do not need to assemble file paths manually.
+- `100xfenok-next/src/app/api/data/market-quality/route.ts`
+  - exposes a lightweight quality surface over `computed/market_data_audit` and
+    `computed/market_source_parity`; missing files return `not_available`
+    instead of breaking during long backfills.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and
