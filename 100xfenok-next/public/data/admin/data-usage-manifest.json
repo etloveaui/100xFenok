@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-17T07:31:48.504Z",
+  "generated_at": "2026-06-17T13:00:30.614Z",
   "totals": {
-    "rootJsonCount": 4231,
-    "publicJsonCount": 4284,
-    "mirroredRootJsonCount": 4230,
+    "rootJsonCount": 13245,
+    "publicJsonCount": 13298,
+    "mirroredRootJsonCount": 13244,
     "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 54,
-    "directDataFetchCount": 101,
+    "directDataFetchCount": 106,
     "dynamicPatternCount": 4
   },
   "mirror_sync_status": "partial",
@@ -138,9 +138,9 @@
     },
     {
       "category": "computed",
-      "rootJsonCount": 1255,
-      "publicJsonCount": 1255,
-      "directFetchCount": 4,
+      "rootJsonCount": 5746,
+      "publicJsonCount": 5746,
+      "directFetchCount": 6,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 1,
       "status": "active",
@@ -228,12 +228,12 @@
     },
     {
       "category": "stockanalysis",
-      "rootJsonCount": 54,
-      "publicJsonCount": 54,
-      "directFetchCount": 0,
+      "rootJsonCount": 4577,
+      "publicJsonCount": 4577,
+      "directFetchCount": 3,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
-      "status": "catalog_only",
+      "status": "active",
       "usage": "manifest/catalog coverage"
     },
     {
@@ -346,6 +346,20 @@
       "consumers": [
         "100xfenok-next/src/app/explore/WeekAheadCard.tsx",
         "100xfenok-next/src/hooks/useMarketValuation.ts"
+      ]
+    },
+    {
+      "dataPath": "computed/market_data_audit.json",
+      "category": "computed",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
+      "dataPath": "computed/market_source_parity.json",
+      "category": "computed",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-loader.ts"
       ]
     },
     {
@@ -1060,6 +1074,28 @@
       ]
     },
     {
+      "dataPath": "stockanalysis/backfill/latest.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/etf_universe.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/app/explore/EtfUniverseCard.tsx",
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/index.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
       "dataPath": "yardney/yardney_model.json",
       "category": "yardney",
       "consumers": [
@@ -1103,7 +1139,7 @@
       },
       {
         "id": "liquidity_stress",
-        "asOf": "2026-06-16",
+        "asOf": "2026-06-17",
         "status": "caution"
       },
       {
