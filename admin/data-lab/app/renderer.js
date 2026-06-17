@@ -274,6 +274,123 @@ const Renderer = (function() {
     `;
   }
 
+  function renderMarketAuditLoading() {
+    if (!elements?.marketAuditContainer) return;
+    elements.marketAuditContainer.innerHTML = `
+      ${Array.from({ length: 4 }, () => `
+        <div class="bg-white rounded-xl p-5 shadow animate-pulse">
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div class="h-10 bg-gray-100 rounded mb-3"></div>
+          <div class="h-3 bg-gray-200 rounded w-4/5"></div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  function renderMarketDataAudit(audit) {
+    if (!elements?.marketAuditContainer) return;
+    const stockanalysis = audit?.stockanalysis || {};
+    const backfill = audit?.backfill || {};
+    const facts = audit?.market_facts || {};
+    const parity = audit?.market_source_parity?.summary || audit?.market_source_parity || {};
+    const ready = backfill.ready_for_finalize === true
+      && Number(backfill.hard_error_count || 0) === 0
+      && Array.isArray(backfill.missing_offsets)
+      && backfill.missing_offsets.length === 0
+      && Number(facts.policy_mismatch_fields || 0) === 0
+      && Number(facts.percent_scale_warnings || 0) === 0;
+    const generatedAt = audit?.market_source_parity?.generated_at || audit?.generated_at || '-';
+
+    elements.marketAuditContainer.innerHTML = `
+      ${renderMarketAuditCard({
+        title: 'ETF 백필',
+        status: ready ? 'pass' : 'warn',
+        code: ready ? 'READY' : 'CHECK',
+        rows: [
+          ['Universe', stockanalysis.universe_records],
+          ['Detail', `${Formatters.formatNumber(stockanalysis.etf_detail_files || 0, 0)} (${escapeHtml(stockanalysis.etf_backfill_progress || '-')})`],
+          ['Rows seen', backfill.rows_seen],
+          ['404 expected', backfill.error_kinds?.http_404]
+        ]
+      })}
+      ${renderMarketAuditCard({
+        title: '백필 무결성',
+        status: Number(backfill.hard_error_count || 0) === 0 && ready ? 'pass' : 'warn',
+        code: Number(backfill.hard_error_count || 0) === 0 ? 'HARD 0' : 'HARD',
+        rows: [
+          ['OK', backfill.status_counts?.ok],
+          ['Error', backfill.status_counts?.error],
+          ['Hard', backfill.hard_error_count],
+          ['Missing', Array.isArray(backfill.missing_offsets) ? backfill.missing_offsets.length : '-']
+        ]
+      })}
+      ${renderMarketAuditCard({
+        title: 'Market Facts',
+        status: Number(facts.count || 0) >= 5000 ? 'pass' : 'warn',
+        code: `${Formatters.formatNumber(facts.count || 0, 0)} facts`,
+        rows: [
+          ['ETF', facts.coverage?.etf],
+          ['Stock', facts.coverage?.stock],
+          ['StockAnalysis', facts.coverage?.stockanalysis],
+          ['Yahoo', facts.coverage?.yf]
+        ]
+      })}
+      ${renderMarketAuditCard({
+        title: 'Source Parity',
+        status: Number(facts.policy_mismatch_fields || 0) === 0 && Number(facts.percent_scale_warnings || 0) === 0 ? 'pass' : 'warn',
+        code: escapeHtml(generatedAt).slice(0, 10),
+        rows: [
+          ['Inspected', parity.inspected_ticker_files || facts.audited_ticker_files],
+          ['Multi-candidate', parity.multi_candidate_fields || facts.multi_candidate_fields],
+          ['Divergence', parity.divergence_rows],
+          ['Scale warn', facts.percent_scale_warnings]
+        ]
+      })}
+    `;
+  }
+
+  function renderMarketAuditUnavailable(message) {
+    if (!elements?.marketAuditContainer) return;
+    elements.marketAuditContainer.innerHTML = `
+      <div class="xl:col-span-4 rounded-xl border border-yellow-200 bg-yellow-50 p-5 text-sm text-yellow-800">
+        <div class="font-semibold mb-1">시장 데이터 감사 확인 불가</div>
+        <div class="break-words">${escapeHtml(message)}</div>
+      </div>
+    `;
+  }
+
+  function renderMarketAuditCard({ title, status, code, rows }) {
+    const styles = status === 'pass'
+      ? 'bg-green-100 text-green-700 border-green-200'
+      : 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    return `
+      <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">${escapeHtml(title)}</h3>
+            <p class="text-xs text-gray-500 mt-1">computed/market_data_audit.json</p>
+          </div>
+          <span class="shrink-0 px-2 py-1 rounded-full border text-xs font-bold ${styles}">${escapeHtml(code || status.toUpperCase())}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          ${rows.map(([label, value]) => renderAuditMetric(label, value)).join('')}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderAuditMetric(label, value) {
+    const display = typeof value === 'number'
+      ? Formatters.formatNumber(value, 0)
+      : String(value ?? '-');
+    return `
+      <div class="rounded-lg bg-gray-50 px-3 py-2">
+        <div class="text-[11px] font-semibold text-gray-400">${escapeHtml(label)}</div>
+        <div class="mt-0.5 min-w-0 break-words text-sm font-black text-gray-800">${escapeHtml(display)}</div>
+      </div>
+    `;
+  }
+
   function renderStockFieldLoading() {
     if (!elements?.stockFieldContainer) return;
     elements.stockFieldContainer.innerHTML = `
@@ -771,6 +888,9 @@ const Renderer = (function() {
     renderDepthLoading,
     renderDepthCoverage,
     renderDepthUnavailable,
+    renderMarketAuditLoading,
+    renderMarketDataAudit,
+    renderMarketAuditUnavailable,
     renderStockFieldLoading,
     renderStockFieldManifest,
     renderStockFieldUnavailable,

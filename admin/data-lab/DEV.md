@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.0.0 (Manifest-driven architecture)
+> **Version**: 2.1.0 (Manifest + market audit architecture)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -25,6 +25,7 @@ admin/data-lab/
 ├── app/
 │   ├── dashboard.js              (main orchestrator)
 │   ├── renderer.js               (UI rendering)
+│   ├── ops-console.js            (read-only route/asset/freshness checks)
 │   └── state-manager.js          (reactive state)
 ├── shared/
 │   ├── config/
@@ -66,6 +67,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **Freshness signals** | 🟢 Fresh / 🟡 Stale / 🔴 Critical based on update frequency |
 | **3-tier caching** | Memory → SessionStorage → Network |
 | **Reactive state** | Observer pattern for automatic UI updates |
+| **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, and source parity |
 
 ---
 
@@ -147,6 +149,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.1.0 | 2026-06-17 | Added market data audit cards and freshness guards for StockAnalysis ETF universe + computed market source parity |
 | 2.0.1 | 2026-04-14 | Added `embed=1` shell mode to hide legacy header/footer inside Next.js iframe bridge (#269) |
 | 2.0.0 | 2026-01-20 | Manifest-driven architecture, 94% code reduction (1,716→103 lines) |
 | 1.1.0 | 2026-01-10 | SlickCharts integration (34 validators) |
