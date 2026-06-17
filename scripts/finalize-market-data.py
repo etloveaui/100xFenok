@@ -96,6 +96,7 @@ def main() -> None:
     python = sys.executable
     assert_ready_for_finalize(python, args.allow_incomplete, args.dry_run)
     run_step([python, "scripts/build-market-facts.py"], ROOT, args.dry_run)
+    run_step([python, "scripts/build-market-source-parity.py"], ROOT, args.dry_run)
     run_step(
         [
             python,

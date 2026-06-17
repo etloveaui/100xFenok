@@ -167,7 +167,7 @@ function getCategory(directory: string, name: string) {
 
 function getConsumerLane(publicPath: string, category: string) {
   if (category === "root" || category === "metadata" || category === "admin") return "admin";
-  if (category === "computed" && publicPath.toLowerCase().includes("audit")) return "admin";
+  if (category === "computed" && /audit|parity/i.test(publicPath)) return "admin";
   if (category === "calendar" || category === "computed") return "explore";
   if (category === "sec-13f") return "superinvestors";
   if (category === "yf") return "stock";
@@ -220,6 +220,7 @@ function getContentClass(publicPath: string, category: string) {
   if (category === "slickcharts") return "market-structure";
   if (category === "damodaran") return "valuation-input";
   if (category === "computed" && key.includes("audit")) return "fetch-audit";
+  if (category === "computed" && key.includes("parity")) return "source-parity";
   if (category === "computed") return "computed-signal";
   if (category === "calendar") return "event-calendar";
   return "dataset";
