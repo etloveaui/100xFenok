@@ -146,6 +146,68 @@ interface SlickStockData {
   dividends?: SlickDividendPoint[];
 }
 
+interface MarketFactCandidate {
+  value?: unknown;
+  source?: string;
+  as_of?: string | null;
+  fetched_at?: string | null;
+  confidence?: string;
+  unit?: string;
+}
+
+interface MarketFact extends MarketFactCandidate {
+  candidates?: MarketFactCandidate[];
+  policy?: string[];
+  candidate_count?: number;
+}
+
+interface MarketFactsData {
+  ticker?: string;
+  asset_type?: string;
+  generated_at?: string;
+  identity?: {
+    name?: string | null;
+    exchange?: string | null;
+    currency?: string | null;
+    sector?: string | null;
+    industry?: string | null;
+    fund_family?: string | null;
+    category?: string | null;
+  };
+  facts?: Record<string, MarketFact>;
+  etf?: {
+    holdings_count?: number | null;
+    holdings_updated?: string | null;
+    top_holdings?: Array<{
+      rank?: number;
+      symbol?: string;
+      name?: string;
+      weight_pct?: number;
+      shares?: number;
+    }>;
+    asset_allocation?: Array<{
+      key?: string;
+      value?: number;
+    }>;
+    sectors?: Array<{
+      n?: string;
+      key?: string;
+      w?: number;
+      weight?: number;
+      value?: number;
+    }>;
+    countries?: Array<{
+      code?: string;
+      country?: string;
+      weight?: number;
+      value?: number;
+    }>;
+    yahoo_funds_data_available?: boolean;
+  } | null;
+  sources?: Record<string, boolean>;
+  source_files?: Record<string, string | null>;
+}
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -367,6 +429,7 @@ export function use13FData(ticker: string) {
 }
 
 const SLICK_STOCK_CACHE = new Map<string, SlickStockData | null>();
+const MARKET_FACTS_CACHE = new Map<string, MarketFactsData | null>();
 
 function readSlickMetric(value: unknown): SlickMetricPoint | null {
   if (!isRecord(value)) return null;
@@ -475,6 +538,266 @@ export function useSlickStock(ticker: string, enabled = true) {
   }, [ticker, enabled]);
 
   return { data, loading };
+}
+
+function normalizeMarketFacts(value: unknown): MarketFactsData | null {
+  if (!isRecord(value)) return null;
+  if (!isRecord(value.facts) && !isRecord(value.identity) && !isRecord(value.etf)) return null;
+  return value as unknown as MarketFactsData;
+}
+
+export function useMarketFacts(ticker: string, enabled = true) {
+  const [data, setData] = useState<MarketFactsData | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const symbol = normalizeTicker(ticker);
+    if (!enabled || !symbol) {
+      setData(null);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    const cached = MARKET_FACTS_CACHE.get(symbol);
+    if (cached !== undefined) {
+      setData(cached);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        const r = await fetch(`/data/computed/market_facts/tickers/${encodeURIComponent(symbol)}.json`);
+        const parsed = r.ok ? normalizeMarketFacts(await r.json()) : null;
+        MARKET_FACTS_CACHE.set(symbol, parsed);
+        if (!cancelled) setData(parsed);
+      } catch {
+        MARKET_FACTS_CACHE.set(symbol, null);
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticker, enabled]);
+
+  return { data, loading };
+}
+
+function sourceLabel(source?: string): string {
+  if (!source) return "출처 없음";
+  if (source === "yf") return "기본 시세/재무";
+  if (source === "yf.fast_info") return "빠른 시세";
+  if (source === "stockanalysis") return "보조 데이터";
+  if (source === "stockanalysis.quote") return "보조 시세";
+  if (source === "stockanalysis.overview") return "보조 재무";
+  if (source === "slickcharts") return "지수 비중";
+  return source;
+}
+
+function fmtMarketMoney(value: number, currency = "USD"): string {
+  const sign = value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+  const prefix = currency === "USD" ? "$" : `${currency} `;
+  if (abs >= 1_000_000_000_000) return `${sign}${prefix}${(abs / 1_000_000_000_000).toFixed(2)}T`;
+  if (abs >= 1_000_000_000) return `${sign}${prefix}${(abs / 1_000_000_000).toFixed(1)}B`;
+  if (abs >= 1_000_000) return `${sign}${prefix}${(abs / 1_000_000).toFixed(1)}M`;
+  return `${sign}${prefix}${abs.toFixed(abs >= 100 ? 0 : 2)}`;
+}
+
+function formatMarketFact(key: string, fact: MarketFact | undefined, currency = "USD"): string {
+  const value = fact?.value;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    if (key === "price" || key === "previous_close" || key === "change") return fmtMarketMoney(value, currency);
+    if (key === "market_cap" || key === "total_assets") return fmtMarketMoney(value, currency);
+    if (key === "change_pct" || key === "dividend_yield" || key === "expense_ratio") return `${value.toFixed(2)}%`;
+    if (key === "trailing_pe" || key === "forward_pe") return `${value.toFixed(1)}x`;
+    if (key === "beta") return value.toFixed(2);
+    return value.toLocaleString();
+  }
+  if (typeof value === "string" && value.trim()) return value;
+  return "—";
+}
+
+function etfBreakdownLabel(row: { key?: string; n?: string; country?: string; code?: string }): string {
+  return row.key ?? row.n ?? row.country ?? row.code ?? "—";
+}
+
+function etfBreakdownWeight(row: { value?: number; w?: number; weight?: number }): number | null {
+  if (isFiniteNumber(row.value)) return row.value;
+  if (isFiniteNumber(row.w)) return row.w;
+  if (isFiniteNumber(row.weight)) return row.weight;
+  return null;
+}
+
+function EtfBreakdownStrip({
+  title,
+  rows,
+  limit,
+}: {
+  title: string;
+  rows?: Array<{ key?: string; n?: string; country?: string; code?: string; value?: number; w?: number; weight?: number }>;
+  limit: number;
+}) {
+  const items = (rows ?? []).slice(0, limit);
+  if (items.length === 0) return null;
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5">
+      <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{title}</p>
+      <div className="flex min-w-0 flex-wrap gap-1.5">
+        {items.map((row, index) => {
+          const weight = etfBreakdownWeight(row);
+          return (
+            <span key={`${title}-${index}-${etfBreakdownLabel(row)}`} className="max-w-full rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-200">
+              <span className="inline-block max-w-[9rem] truncate align-bottom">{etfBreakdownLabel(row)}</span>
+              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-slate-900">{weight.toFixed(1)}%</span> : null}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MarketFactCard({ label, field, fact, currency }: { label: string; field: string; fact?: MarketFact; currency?: string }) {
+  if (!fact) return null;
+  const candidateCount = fact.candidate_count ?? fact.candidates?.length ?? 1;
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
+        <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
+          {candidateCount}개 후보
+        </span>
+      </div>
+      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">
+        {formatMarketFact(field, fact, currency)}
+      </p>
+      <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-slate-400" title={sourceLabel(fact.source)}>
+        {sourceLabel(fact.source)}
+      </p>
+    </div>
+  );
+}
+
+export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; compact?: boolean }) {
+  const { data, loading } = useMarketFacts(ticker);
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-sm font-semibold text-slate-500">
+        통합 데이터 확인 중…
+      </div>
+    );
+  }
+  if (!data) return null;
+
+  const facts = data.facts ?? {};
+  const currency = data.identity?.currency ?? "USD";
+  const primaryFields = data.asset_type === "etf"
+    ? [
+        ["가격", "price"],
+        ["등락률", "change_pct"],
+        ["순자산", "total_assets"],
+        ["비용률", "expense_ratio"],
+        ["베타", "beta"],
+        ["배당률", "dividend_yield"],
+      ]
+    : [
+        ["가격", "price"],
+        ["등락률", "change_pct"],
+        ["시가총액", "market_cap"],
+        ["PER", "trailing_pe"],
+        ["예상 PER", "forward_pe"],
+        ["배당률", "dividend_yield"],
+      ];
+  const availableSources = Object.entries(data.sources ?? {})
+    .filter(([, available]) => available)
+    .map(([source]) => source);
+  const topHoldings = (data.etf?.top_holdings ?? []).slice(0, compact ? 5 : 10);
+  const breakdownLimit = compact ? 4 : 8;
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+      <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+        <div className="min-w-0">
+          <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">통합 데이터</h4>
+          <p className="mt-0.5 min-w-0 truncate text-[11px] font-bold text-slate-400">
+            {data.identity?.name ?? data.ticker ?? ticker} · {data.asset_type === "etf" ? "ETF" : "주식"}
+          </p>
+        </div>
+        <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
+          {data.generated_at?.slice(0, 10) ?? "—"}
+        </span>
+      </div>
+      <div className="grid min-w-0 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        {primaryFields.map(([label, field]) => (
+          <MarketFactCard key={field} label={label} field={field} fact={facts[field]} currency={currency} />
+        ))}
+      </div>
+
+      {data.asset_type === "etf" ? (
+        <div className="mt-3 grid min-w-0 gap-2 md:grid-cols-3">
+          <EtfBreakdownStrip title="자산 배분" rows={data.etf?.asset_allocation} limit={breakdownLimit} />
+          <EtfBreakdownStrip title="섹터 분해" rows={data.etf?.sectors} limit={breakdownLimit} />
+          <EtfBreakdownStrip title="국가 분해" rows={data.etf?.countries} limit={breakdownLimit} />
+        </div>
+      ) : null}
+
+      {topHoldings.length > 0 ? (
+        <div className="mt-3 min-w-0">
+          <div className="mb-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">ETF 상위 보유</p>
+            <span className="text-[10px] font-bold text-slate-400">
+              {data.etf?.holdings_updated ?? "—"} · {data.etf?.holdings_count ?? topHoldings.length}개
+            </span>
+          </div>
+          <div className="-mx-1 overflow-x-auto px-1">
+            <table className="w-full min-w-[360px] text-[11px]">
+              <thead>
+                <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                  <th className="px-2 py-1.5 text-left">보유 항목</th>
+                  <th className="px-2 py-1.5 text-right">비중</th>
+                  <th className="px-2 py-1.5 text-right">수량</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topHoldings.map((row, index) => (
+                  <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-slate-100 last:border-b-0">
+                    <td className="px-2 py-1.5 font-bold text-slate-700">
+                      <span className="block max-w-[14rem] truncate">{row.name ?? "—"}</span>
+                      {row.symbol ? <span className="orbitron text-[10px] font-black text-slate-400">{row.symbol}</span> : null}
+                    </td>
+                    <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-slate-900">
+                      {isFiniteNumber(row.weight_pct) ? `${row.weight_pct.toFixed(2)}%` : "—"}
+                    </td>
+                    <td className="px-2 py-1.5 text-right font-bold tabular-nums text-slate-500">
+                      {isFiniteNumber(row.shares) ? row.shares.toLocaleString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {availableSources.map((source) => (
+          <span key={source} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500">
+            {sourceLabel(source)}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function Sparkline({
@@ -1256,6 +1579,7 @@ export function StockDetailBody({
           </p>
         </div>
       ) : null}
+      {ticker ? <MarketFactsDepth ticker={ticker} compact /> : null}
       <div className="grid gap-5 sm:grid-cols-3">
         {/* PER Band Chart */}
         <div>

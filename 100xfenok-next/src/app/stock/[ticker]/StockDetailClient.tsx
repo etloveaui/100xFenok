@@ -12,6 +12,8 @@ import {
   RevisionPulse,
   RawFinancialDepth,
   PriceDividendHistoryDepth,
+  MarketFactsDepth,
+  useMarketFacts,
   fmtLarge,
   deriveProfitabilityEstimates,
 } from "@/app/screener/StockDetailPanel";
@@ -530,6 +532,7 @@ function KV({ label, value }: { label: string; value: string }) {
 export default function StockDetailClient({ ticker }: { ticker: string }) {
   const symbol = ticker.trim().toUpperCase();
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
+  const { data: marketFacts, loading: marketFactsLoading } = useMarketFacts(symbol);
   const canLoadStockData = row !== undefined && row !== null;
   const { detail, loading: detailLoading } = useStockDetail(symbol, canLoadStockData);
   const f13Entries = use13FData(symbol);
@@ -587,6 +590,58 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   // Unknown ticker
   if (!rowLoading && !row) {
+    if (marketFactsLoading) {
+      return (
+        <div className="stock-shell">
+          <div className="panel stock-empty">
+            <p className="text-lg font-black text-slate-700">통합 데이터 확인 중</p>
+            <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} 통합 데이터를 확인하고 있습니다.</p>
+          </div>
+        </div>
+      );
+    }
+    if (marketFacts) {
+      const identity = marketFacts.identity ?? {};
+      return (
+        <div className="stock-shell">
+          <section className="stock-entity panel">
+            <div className="stock-entity-in">
+              <span className="stock-logo">{symbol.slice(0, 1)}</span>
+              <div className="stock-id">
+                <div className="stock-name">
+                  <h1>{identity.name ?? symbol}</h1>
+                  <WatchStar ticker={symbol} className="stock-star" />
+                </div>
+                <div className="stock-meta">
+                  <span className="num">{symbol}</span>
+                  {marketFacts.asset_type ? (
+                    <>
+                      <span className="x">·</span>
+                      <span>{marketFacts.asset_type === "etf" ? "ETF" : marketFacts.asset_type}</span>
+                    </>
+                  ) : null}
+                  {identity.category ? (
+                    <>
+                      <span className="x">·</span>
+                      <span>{identity.category}</span>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </section>
+          <div className="stock-body">
+            <div className="stock-main-stack">
+              <MarketFactsDepth ticker={symbol} />
+              <footer className="stock-footer">
+                <TransitionLink href="/screener" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너로 이동</TransitionLink>
+                <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+              </footer>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="stock-shell">
         <div className="panel stock-empty">
@@ -719,7 +774,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                     <PriceDividendHistoryDepth ticker={symbol} showUnavailable />
                   ) : (
                     <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
-                      SlickCharts per-stock 데이터는 미국 티커 중심으로 수집됩니다.
+                      일부 보조 통계는 미국 티커 중심으로 수집됩니다.
                     </div>
                   )}
                 </SectionCard>
@@ -801,7 +856,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               {t.label}
             </button>
           ))}
-          {!yfLoaded ? <span className="stock-tab-note">yf 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">yf 데이터 수집 전</span> : null}
+          {!yfLoaded ? <span className="stock-tab-note">보조 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">보조 데이터 수집 전</span> : null}
         </div>
       </section>
 
@@ -823,6 +878,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               industry={industryBench}
             />
           ) : null}
+          <MarketFactsDepth ticker={symbol} compact />
       </div>
 
       {stockTab !== "overview" ? renderStockDataTab() : (

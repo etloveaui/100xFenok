@@ -72,12 +72,59 @@ External sources
 - `scripts/build-market-facts.py`
   - builds `data/computed/market_facts/tickers/{TICKER}.json`;
   - merges Yahoo, StockAnalysis, and SlickCharts availability flags;
+  - resolves overlapping fields with an explicit per-field source policy;
+  - preserves all non-null source candidates under each selected fact so
+    discarded-but-available data remains inspectable;
+  - prefers `stockanalysis/etfs/{TICKER}.json` over the stock folder on any
+    ticker collision so ETF holdings are not silently lost;
+  - marks percent-like fields as `unit=percent_points` and adds Yahoo-derived
+    change/change_pct candidates when raw quote change fields are absent;
   - mirrors the normalized facts to `100xfenok-next/public/data/computed/market_facts/`.
+- `scripts/audit-market-data.py`
+  - read-only audit for ETF universe backfill progress, failure classes,
+    market-facts coverage, resolver candidate preservation, policy-source
+    mismatches, and large percent-scale candidate disagreements.
+- `100xfenok-next/src/lib/server/data-loader.ts`
+  - classifies `stockanalysis` ETF/stock details as stock data, ETF universe as
+    explore inventory, and backfill indexes as admin fetch-audit artifacts.
+- `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
+  - reads `computed/market_facts/tickers/{TICKER}.json`;
+  - shows selected values, user-facing source-role labels, candidate counts, and
+    ETF holdings/allocation/sector/country breakdowns without exposing provider
+    brand names in the product UI.
+- `100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx`
+  - falls back to `market_facts` when a ticker is absent from
+    `global-scouter/core/stocks_analyzer.json`, allowing ETF-first pages such
+    as leveraged funds to render instead of hard-failing.
+
+## Resolver Policy
+
+`computed/market_facts` exposes a selected value at `facts.{field}.value`, but
+the same object also carries `policy`, `candidates`, and `candidate_count`.
+This keeps UI consumption simple while preserving overlapping source evidence.
+
+| Field | Priority |
+|---|---|
+| price | Yahoo → Yahoo fast_info → StockAnalysis quote → SlickCharts |
+| previous_close | Yahoo → StockAnalysis quote |
+| change / change_pct | StockAnalysis quote → Yahoo → Yahoo-derived current vs previous close |
+| market_cap | Yahoo → StockAnalysis overview → SlickCharts |
+| total_assets | Yahoo → StockAnalysis overview |
+| trailing_pe | Yahoo → SlickCharts |
+| forward_pe | Yahoo → StockAnalysis overview → SlickCharts |
+| dividend_yield | Yahoo → StockAnalysis overview → SlickCharts |
+| beta | Yahoo → StockAnalysis overview |
+| expense_ratio | Yahoo → StockAnalysis overview |
+
+This is intentionally not a single-provider takeover. Yahoo, SlickCharts, and
+StockAnalysis all remain visible when their values overlap.
 
 ## Next Contract
 
 1. Add parity checks for Yahoo vs StockAnalysis vs SlickCharts where fields overlap.
-2. Promote full ETF universe backfill gradually: top AUM and focus ETFs first, full 5k only via chunked manual/workflow dispatch.
+2. Complete full ETF universe backfill through chunked manual/workflow dispatch,
+   stopping only on rate-limit/blocking failures rather than expected holdings
+   404s.
 3. Add StockAnalysis financial-statement devalue parser only after schema tests exist.
 4. Route feno-value runtime fields from `computed/market_facts` before direct yfinance calls.
 5. Keep direct provider scraping as explicit fallback, not the normal path.

@@ -25,6 +25,19 @@ DATA = ROOT / "data"
 OUT = DATA / "computed" / "market_facts"
 PUBLIC_OUT = ROOT / "100xfenok-next" / "public" / "data" / "computed" / "market_facts"
 SCHEMA_VERSION = "market-facts/v1"
+FIELD_SOURCE_POLICY = {
+    "price": ["yf", "yf.fast_info", "stockanalysis.quote", "slickcharts"],
+    "previous_close": ["yf", "stockanalysis.quote"],
+    "change": ["stockanalysis.quote", "yf", "yf.derived"],
+    "change_pct": ["stockanalysis.quote", "yf", "yf.derived"],
+    "market_cap": ["yf", "stockanalysis.overview", "slickcharts"],
+    "total_assets": ["yf", "stockanalysis.overview"],
+    "trailing_pe": ["yf", "slickcharts"],
+    "forward_pe": ["yf", "stockanalysis.overview", "slickcharts"],
+    "dividend_yield": ["yf", "stockanalysis.overview", "slickcharts"],
+    "beta": ["yf", "stockanalysis.overview"],
+    "expense_ratio": ["yf", "stockanalysis.overview"],
+}
 
 
 def now_iso() -> str:
@@ -72,16 +85,19 @@ def percent(value):
     return parsed
 
 
-def fact(value, source, as_of=None, fetched_at=None, confidence="observed"):
+def fact(value, source, as_of=None, fetched_at=None, confidence="observed", unit=None):
     if value is None:
         return None
-    return {
+    payload = {
         "value": value,
         "source": source,
         "as_of": as_of,
         "fetched_at": fetched_at,
         "confidence": confidence,
     }
+    if unit:
+        payload["unit"] = unit
+    return payload
 
 
 def first_fact(*items):
@@ -91,11 +107,30 @@ def first_fact(*items):
     return None
 
 
+def resolve_fact(field, *items):
+    candidates = [item for item in items if item is not None and item.get("value") is not None]
+    selected = first_fact(*candidates)
+    if selected is None:
+        return None
+    resolved = dict(selected)
+    resolved["policy"] = FIELD_SOURCE_POLICY.get(field, [])
+    resolved["candidates"] = candidates
+    resolved["candidate_count"] = len(candidates)
+    return resolved
+
+
 def yf_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     value = info.get(key)
     return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"))
+
+
+def yf_percent_fact(yf_payload, key):
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    value = number(info.get(key))
+    return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
 
 
 def yf_fast_fact(yf_payload, key):
@@ -105,21 +140,41 @@ def yf_fast_fact(yf_payload, key):
     return fact(value, "yf.fast_info", fetched_at=(yf_payload or {}).get("fetched_at"))
 
 
+def yf_derived_change_fact(yf_payload):
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    current = number(info.get("currentPrice"))
+    previous = number(info.get("previousClose"))
+    if current is None or previous is None:
+        return None
+    return fact(current - previous, "yf.derived", fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
+
+
+def yf_derived_change_pct_fact(yf_payload):
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    current = number(info.get("currentPrice"))
+    previous = number(info.get("previousClose"))
+    if current is None or previous in (None, 0):
+        return None
+    return fact(((current - previous) / previous) * 100, "yf.derived", fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
+
+
 def stockanalysis_quote_fact(sa_payload, key):
     quote = ((sa_payload or {}).get("normalized") or {}).get("quote") or {}
     return fact(quote.get(key), "stockanalysis.quote", fetched_at=(sa_payload or {}).get("fetched_at"))
 
 
-def stockanalysis_overview_fact(sa_payload, key):
+def stockanalysis_overview_fact(sa_payload, key, unit=None):
     overview = ((sa_payload or {}).get("normalized") or {}).get("overview") or {}
     value = overview.get(key)
     parsed = number(value)
-    return fact(parsed if parsed is not None else value, "stockanalysis.overview", fetched_at=(sa_payload or {}).get("fetched_at"))
+    return fact(parsed if parsed is not None else value, "stockanalysis.overview", fetched_at=(sa_payload or {}).get("fetched_at"), unit=unit)
 
 
-def slick_fact(slick_payload, key):
+def slick_fact(slick_payload, key, unit=None):
     current = (slick_payload or {}).get("current") or {}
-    return fact(current.get(key), "slickcharts", as_of=(slick_payload or {}).get("updated"))
+    return fact(current.get(key), "slickcharts", as_of=(slick_payload or {}).get("updated"), unit=unit)
 
 
 def slick_market_cap_fact(slick_payload):
@@ -138,34 +193,37 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
     if (sa_payload or {}).get("asset_type") == "etf" or str(info.get("quoteType") or "").upper() == "ETF":
         asset_type = "etf"
 
-    price = first_fact(
+    price = resolve_fact(
+        "price",
         yf_fact(yf_payload, "currentPrice"),
         yf_fast_fact(yf_payload, "last_price"),
         stockanalysis_quote_fact(sa_payload, "p"),
         slick_fact(slick_payload, "price"),
     )
-    market_cap = first_fact(
+    market_cap = resolve_fact(
+        "market_cap",
         yf_fact(yf_payload, "marketCap"),
         stockanalysis_overview_fact(sa_payload, "marketCap"),
         slick_market_cap_fact(slick_payload),
     )
-    total_assets = first_fact(
+    total_assets = resolve_fact(
+        "total_assets",
         yf_fact(yf_payload, "totalAssets"),
         stockanalysis_overview_fact(sa_payload, "aum"),
     )
 
     facts = {
         "price": price,
-        "previous_close": first_fact(yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "pd")),
-        "change": first_fact(stockanalysis_quote_fact(sa_payload, "c")),
-        "change_pct": first_fact(stockanalysis_quote_fact(sa_payload, "cp")),
+        "previous_close": resolve_fact("previous_close", yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "pd")),
+        "change": resolve_fact("change", stockanalysis_quote_fact(sa_payload, "c"), yf_fact(yf_payload, "regularMarketChange"), yf_derived_change_fact(yf_payload)),
+        "change_pct": resolve_fact("change_pct", stockanalysis_quote_fact(sa_payload, "cp"), yf_fact(yf_payload, "regularMarketChangePercent"), yf_derived_change_pct_fact(yf_payload)),
         "market_cap": market_cap,
         "total_assets": total_assets,
-        "trailing_pe": first_fact(yf_fact(yf_payload, "trailingPE"), slick_fact(slick_payload, "pe_trailing")),
-        "forward_pe": first_fact(yf_fact(yf_payload, "forwardPE"), stockanalysis_overview_fact(sa_payload, "forwardPE"), slick_fact(slick_payload, "pe_forward")),
-        "dividend_yield": first_fact(yf_fact(yf_payload, "dividendYield"), stockanalysis_overview_fact(sa_payload, "dividendYield"), slick_fact(slick_payload, "dividend_yield")),
-        "beta": first_fact(yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")),
-        "expense_ratio": first_fact(yf_fact(yf_payload, "netExpenseRatio"), stockanalysis_overview_fact(sa_payload, "expenseRatio")),
+        "trailing_pe": resolve_fact("trailing_pe", yf_fact(yf_payload, "trailingPE"), slick_fact(slick_payload, "pe_trailing")),
+        "forward_pe": resolve_fact("forward_pe", yf_fact(yf_payload, "forwardPE"), stockanalysis_overview_fact(sa_payload, "forwardPE"), slick_fact(slick_payload, "pe_forward")),
+        "dividend_yield": resolve_fact("dividend_yield", yf_percent_fact(yf_payload, "dividendYield"), stockanalysis_overview_fact(sa_payload, "dividendYield", unit="percent_points"), slick_fact(slick_payload, "dividend_yield", unit="percent_points")),
+        "beta": resolve_fact("beta", yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")),
+        "expense_ratio": resolve_fact("expense_ratio", yf_percent_fact(yf_payload, "netExpenseRatio"), stockanalysis_overview_fact(sa_payload, "expenseRatio", unit="percent_points")),
     }
     facts = {key: value for key, value in facts.items() if value is not None}
 
@@ -206,23 +264,27 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
             ),
             "slickcharts": f"slickcharts/stocks/{ticker}.json" if slick_payload else None,
         },
+        "resolver": {
+            "version": "market-facts-resolver/v1",
+            "field_source_policy": FIELD_SOURCE_POLICY,
+            "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value.",
+        },
     }
 
 
 def main() -> None:
     yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
-    sa_files = {}
-    for folder in ("etfs", "stocks"):
-        for p in (DATA / "stockanalysis" / folder).glob("*.json"):
-            sa_files[p.stem] = p
+    sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
+    sa_stock_files = {p.stem: p for p in (DATA / "stockanalysis" / "stocks").glob("*.json")}
     slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
-    tickers = sorted(set(yf_files) | set(sa_files) | set(slick_files))
+    tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(slick_files))
 
     rows = []
     generated_at = now_iso()
     for ticker in tickers:
         yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
-        sa_payload = load_json(sa_files[ticker]) if ticker in sa_files else None
+        sa_path = sa_etf_files.get(ticker) or sa_stock_files.get(ticker)
+        sa_payload = load_json(sa_path) if sa_path else None
         slick_payload = load_json(slick_files[ticker]) if ticker in slick_files else None
         payload = build_one(ticker, yf_payload, sa_payload, slick_payload)
         payload["generated_at"] = generated_at
@@ -246,6 +308,10 @@ def main() -> None:
             "stockanalysis/stocks/*.json",
             "slickcharts/stocks/*.json",
         ],
+        "resolver": {
+            "version": "market-facts-resolver/v1",
+            "field_source_policy": FIELD_SOURCE_POLICY,
+        },
         "coverage": {
             "yf": sum(1 for row in rows if row["sources"]["yf"]),
             "stockanalysis": sum(1 for row in rows if row["sources"]["stockanalysis"]),

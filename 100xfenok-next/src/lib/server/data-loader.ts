@@ -44,6 +44,7 @@ type DataFolderKey =
   | "computed"
   | "sentiment"
   | "slickcharts"
+  | "stockanalysis"
   | "damodaran"
   | "global-scouter"
   | "indices"
@@ -169,6 +170,11 @@ function getConsumerLane(publicPath: string, category: string) {
   if (category === "calendar" || category === "computed") return "explore";
   if (category === "sec-13f") return "superinvestors";
   if (category === "yf") return "stock";
+  if (category === "stockanalysis") {
+    if (publicPath.includes("/backfill/")) return "admin";
+    if (publicPath.includes("/etf_universe.json")) return "explore";
+    return "stock";
+  }
   if (category === "global-scouter") {
     if (publicPath.includes("/stocks/detail/")) return "stock";
     if (publicPath.includes("/raw/") || publicPath.includes("/indicators/")) return "screener";
@@ -197,6 +203,13 @@ function getContentClass(publicPath: string, category: string) {
   if (key.includes("schema.json") || key.includes("manifest.json") || category === "root" || category === "metadata") return "metadata";
   if (category === "sec-13f") return key.includes("/investors/") ? "investor-history" : "investor-analytics";
   if (category === "yf") return "ticker-finance";
+  if (category === "stockanalysis") {
+    if (key.includes("/etf_universe.json")) return "etf-universe";
+    if (key.includes("/backfill/")) return "fetch-audit";
+    if (key.includes("/etfs/")) return "etf-holdings";
+    if (key.includes("/stocks/")) return "stock-overview";
+    return "ticker-finance";
+  }
   if (key.includes("/stocks/detail/")) return "ticker-detail";
   if (key.includes("/stocks/")) return "ticker-slickcharts";
   if (category === "benchmarks") return "valuation-history";
