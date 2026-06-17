@@ -98,7 +98,8 @@ External sources
     `data/manifest.json`, and refreshes the Next static data-route manifest in
     the required order;
   - runs an audit preflight first and stops unless `ready_for_finalize=true`
-    (`--allow-incomplete` is an explicit override for local experiments only).
+    (`--check-only` verifies readiness without writes; `--allow-incomplete` is
+    an explicit override for local experiments only).
 - `scripts/build-market-source-parity.py`
   - reads `computed/market_facts/tickers/*.json` candidates and summarizes
     selected-source counts, candidate-source counts, top divergences, and

@@ -88,6 +88,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Allow finalize steps even when audit is not ready_for_finalize.",
     )
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Run the finalize readiness preflight only; write no generated outputs.",
+    )
     return parser.parse_args()
 
 
@@ -95,6 +100,8 @@ def main() -> None:
     args = parse_args()
     python = sys.executable
     assert_ready_for_finalize(python, args.allow_incomplete, args.dry_run)
+    if args.check_only:
+        return
     run_step([python, "scripts/build-market-facts.py"], ROOT, args.dry_run)
     run_step([python, "scripts/build-market-source-parity.py"], ROOT, args.dry_run)
     run_step(
