@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import json
 import re
+import argparse
 from collections import Counter
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
+NEXT_PUBLIC_DATA = ROOT / "100xfenok-next" / "public" / "data"
 CHUNK_RE = re.compile(r"^index_offset_(\d+)_limit_(\d+)\.json$")
 
 
@@ -46,7 +48,7 @@ def expected_backfill_chunks(universe_count: int) -> list[dict[str, int]]:
     return chunks
 
 
-def main() -> None:
+def build_payload() -> dict:
     universe = load_json(DATA / "stockanalysis" / "etf_universe.json") or {}
     universe_count = int(((universe.get("counts") or {}).get("records") or len(universe.get("records") or [])) or 0)
     etf_files = sorted((DATA / "stockanalysis" / "etfs").glob("*.json"))
@@ -152,7 +154,7 @@ def main() -> None:
                 if len(values) > 1 and max(values) / min(values) >= 50:
                     percent_scale_warnings += 1
 
-    print(json.dumps({
+    return {
         "stockanalysis": {
             "universe_records": universe_count,
             "etf_detail_files": len(etf_files),
@@ -185,7 +187,48 @@ def main() -> None:
             "policy_mismatch_fields": policy_mismatch_fields,
             "percent_scale_warnings": percent_scale_warnings,
         },
-    }, ensure_ascii=False, indent=2))
+    }
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Audit market data integration state.")
+    parser.add_argument(
+        "--output",
+        help="Optional JSON output path. Relative paths are resolved from repo root.",
+    )
+    parser.add_argument(
+        "--mirror-public",
+        action="store_true",
+        help="Also mirror --output under 100xfenok-next/public/data/ when output is inside data/.",
+    )
+    return parser.parse_args()
+
+
+def resolve_output_path(raw_path: str) -> Path:
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        return path
+    return ROOT / path
+
+
+def write_payload(payload: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def main() -> None:
+    args = parse_args()
+    payload = build_payload()
+    if args.output:
+        output_path = resolve_output_path(args.output)
+        write_payload(payload, output_path)
+        if args.mirror_public:
+            try:
+                relative = output_path.resolve().relative_to(DATA.resolve())
+            except ValueError as exc:
+                raise SystemExit("--mirror-public requires --output to be inside data/") from exc
+            write_payload(payload, NEXT_PUBLIC_DATA / relative)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

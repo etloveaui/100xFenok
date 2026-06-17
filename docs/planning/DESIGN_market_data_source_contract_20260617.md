@@ -87,7 +87,10 @@ External sources
     market-facts coverage, resolver candidate preservation, policy-source
     mismatches, and large percent-scale candidate disagreements;
   - reports completed/missing backfill offsets, next expected offset, hard-error
-    count, and finalization readiness for the full ETF universe run.
+    count, and finalization readiness for the full ETF universe run;
+  - can publish the same audit payload to
+    `data/computed/market_data_audit.json` and the Next public data mirror when
+    called with `--output data/computed/market_data_audit.json --mirror-public`.
 - `docs/products/skills/feno-value/scripts/core/policy.py` (CCH)
   - reads `computed/market_facts` through DataPack policy as a fallback layer for
     common quote/valuation/fund fields before analyzer-specific provider work.
