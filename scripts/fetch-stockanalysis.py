@@ -498,6 +498,7 @@ def normalize_financial_statement(ticker: str, statement: str, decoded: dict) ->
             if not field or not isinstance(values, list):
                 continue
             if isinstance(periods, list) and periods:
+                # Periods are newest-first; short source rows omit trailing older history.
                 if len(values) < len(periods):
                     values = values + [None] * (len(periods) - len(values))
                 elif len(values) > len(periods):
