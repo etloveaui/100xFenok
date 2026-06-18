@@ -476,6 +476,8 @@ const Renderer = (function() {
     const selected = Number(incrementalCounts.selected ?? auditCounts.selected ?? counts.incremental_etf_backfill_selected ?? 0);
     const candidates = Number(incrementalCounts.candidates ?? auditCounts.candidates ?? counts.incremental_etf_backfill_candidates ?? 0);
     const fallbackRetry = Number(incrementalCounts.fallback_retry ?? auditCounts.fallback_retry ?? 0);
+    const cooldownSkipped = Number(incrementalCounts.cooldown_skipped ?? auditCounts.cooldown_skipped ?? counts.incremental_etf_cooldown_skipped ?? 0);
+    const cooldownActive = Number(auditCounts.pending_ledger_cooldown ?? incrementalCounts.ledger_cooldown ?? counts.incremental_etf_ledger_cooldown ?? 0);
     const fallbackOk = Number(auditCounts.etfs_yahoo_fallback_ok ?? counts.etfs_yahoo_fallback_ok ?? 0);
     const stillPending = Number(auditCounts.etfs_still_pending ?? counts.etfs_still_pending ?? 0);
     const fallbackCoverage = Number(auditCounts.market_facts_yf_fallback ?? marketFactsIndex?.coverage?.stockanalysis_yf_fallback ?? 0);
@@ -499,6 +501,8 @@ const Renderer = (function() {
         ['Candidates', candidates],
         ['Selected', selected],
         ['Retry YF', fallbackRetry],
+        ['Cooldown skip', cooldownSkipped],
+        ['Cooldown active', cooldownActive],
         ['YF fallback OK', fallbackOk],
         ['Still pending', stillPending],
         ['Facts fallback', fallbackCoverage],
