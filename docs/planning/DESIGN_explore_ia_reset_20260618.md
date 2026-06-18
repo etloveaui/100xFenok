@@ -2,7 +2,7 @@
 
 Date: 2026-06-18
 Scope: `100xfenok-next/src/app/explore`
-Status: Draft inventory; no UI implementation yet.
+Status: Inventory accepted; first cleanup slice implemented.
 
 ## Problem
 
@@ -140,8 +140,13 @@ Dedicated route or drawer surfaces:
 1. **No-code inventory gate**: agree this map with the right pane and user.
 2. **Public Explore cleanup first**: remove/collapse `SurfaceCatalogCard` and
    `DataCoverageCard` from public `/explore`; keep them in Admin Data Lab.
-   Before removal, verify `/admin/data-lab` already exposes equivalent catalog,
-   freshness, coverage, and parity views.
+   Completed in the first cleanup slice:
+   - Data Lab already exposed coverage, freshness, ETF classification,
+     backfill, market facts, and source parity.
+   - Data Lab was extended with a StockAnalysis surface catalog audit reading
+     `data/stockanalysis/surfaces/index.json`.
+   - Public `/explore` stopped rendering `SurfaceCatalogCard` and
+     `DataCoverageCard`.
 3. **ETF hub promotion**: keep `/etfs` as canonical; Explore only shows one ETF
    insight CTA such as new ETF count + top leveraged/single-stock filter counts.
 4. **SurfaceInsight collapse**: replace `StockanalysisSurfaceInsightCard` with

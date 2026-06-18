@@ -11,10 +11,8 @@ import RevisionMoversCard from "./RevisionMoversCard";
 import SlickchartsDiscoveryCard from "./SlickchartsDiscoveryCard";
 import ActionCandidatesCard from "./ActionCandidatesCard";
 import MarketStructureIndexCard from "./MarketStructureIndexCard";
-import DataCoverageCard from "./DataCoverageCard";
 import EtfUniverseCard from "./EtfUniverseCard";
 import MarketEventSurfacesCard from "./MarketEventSurfacesCard";
-import SurfaceCatalogCard from "./SurfaceCatalogCard";
 import StockanalysisSurfaceInsightCard from "./StockanalysisSurfaceInsightCard";
 
 const plexKr = IBM_Plex_Sans_KR({
@@ -57,8 +55,6 @@ export default function ExplorePage() {
           <EtfUniverseCard />
           <MarketEventSurfacesCard />
           <StockanalysisSurfaceInsightCard />
-          <SurfaceCatalogCard />
-          <DataCoverageCard />
           <MarketStructureIndexCard />
         </div>
 

@@ -292,6 +292,7 @@ const Renderer = (function() {
     sourceParity,
     stockanalysisIndex,
     etfClassification,
+    stockanalysisSurfaceIndex,
     stockanalysisIncremental,
     marketFactsIndex
   ) {
@@ -370,9 +371,60 @@ const Renderer = (function() {
         ]
       })}
       ${renderEtfClassificationAudit(etfClassification)}
+      ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
       ${renderSourceParityDetail(sourceParity)}
+    `;
+  }
+
+  function renderStockanalysisSurfaceCatalog(index) {
+    const counts = index?.counts || {};
+    const results = Array.isArray(index?.results) ? index.results : [];
+    if (!index || results.length === 0) return '';
+    const groups = new Map();
+    results.forEach((row) => {
+      const group = row?.group || 'other';
+      const current = groups.get(group) || { count: 0, rows: 0, failed: 0, samples: [] };
+      current.count += 1;
+      current.rows += Number(row?.rows || 0);
+      if (row?.status !== 'ok') current.failed += 1;
+      if (current.samples.length < 3 && row?.surface) current.samples.push(row.surface);
+      groups.set(group, current);
+    });
+    const groupRows = Array.from(groups.entries())
+      .sort((a, b) => b[1].rows - a[1].rows)
+      .slice(0, 6)
+      .map(([group, value]) => [
+        group,
+        `${Formatters.formatNumber(value.rows, 0)} rows`,
+        `${Formatters.formatNumber(value.count, 0)} surfaces`,
+        value.failed ? `${Formatters.formatNumber(value.failed, 0)} failed` : 'ok',
+        value.samples.join(', ')
+      ]);
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">StockAnalysis 표면 카탈로그</h3>
+            <p class="text-xs text-gray-500 mt-1">data/stockanalysis/surfaces/index.json</p>
+          </div>
+          <span class="px-2 py-1 rounded-full border text-xs font-bold ${Number(counts.failed || 0) === 0 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
+            ${Formatters.formatNumber(counts.ok || 0, 0)} / ${Formatters.formatNumber(counts.surfaces_requested || results.length, 0)}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          ${renderAuditMetric('Surfaces', Formatters.formatNumber(counts.surfaces_requested || results.length, 0))}
+          ${renderAuditMetric('OK', Formatters.formatNumber(counts.ok || 0, 0))}
+          ${renderAuditMetric('Tables', Formatters.formatNumber(counts.tables || 0, 0))}
+          ${renderAuditMetric('Rows', Formatters.formatNumber(counts.rows || 0, 0))}
+        </div>
+        ${renderParityTable(
+          ['Group', 'Rows', 'Surfaces', 'Status', 'Samples'],
+          groupRows.map((row) => row.map((cell) => escapeHtml(cell)))
+        )}
+      </section>
     `;
   }
 

@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.0 (Manifest + StockAnalysis audit architecture)
+> **Version**: 2.2.2 (Manifest + StockAnalysis audit architecture)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -151,6 +151,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.2 | 2026-06-18 | Added StockAnalysis surface catalog audit card from `data/stockanalysis/surfaces/index.json` so public Explore can remove catalog/coverage ops cards without losing visibility |
 | 2.2.1 | 2026-06-18 | Added automatic ETF enrichment observation: audit status, incremental backfill proof file, Yahoo fallback counts, pending detail count, and market_facts fallback coverage |
 | 2.2.0 | 2026-06-18 | Added ETF classification counts, latest StockAnalysis fetch index/backfill status, restored Source Parity detail in source, and freshness guards for classification/index/surface files |
 | 2.1.0 | 2026-06-17 | Added market data audit cards and freshness guards for StockAnalysis ETF universe + computed market source parity |

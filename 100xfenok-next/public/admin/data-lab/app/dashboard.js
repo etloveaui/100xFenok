@@ -224,10 +224,11 @@ const DataLabUI = (function() {
         throw new Error(`market_data_audit returned ${response.status}`);
       }
       const audit = await response.json();
-      const [sourceParity, stockanalysisIndex, etfClassification] = await Promise.all([
+      const [sourceParity, stockanalysisIndex, etfClassification, stockanalysisSurfaceIndex] = await Promise.all([
         fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, 'Source parity diagnostics'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis fetch index'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary')
+        fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, 'StockAnalysis surface catalog')
       ]);
       const [stockanalysisIncremental, marketFactsIndex] = await Promise.all([
         fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'StockAnalysis incremental ETF backfill'),
@@ -238,6 +239,7 @@ const DataLabUI = (function() {
         sourceParity,
         stockanalysisIndex,
         etfClassification,
+        stockanalysisSurfaceIndex,
         stockanalysisIncremental,
         marketFactsIndex
       );
