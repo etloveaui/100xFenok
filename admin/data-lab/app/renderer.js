@@ -302,6 +302,7 @@ const Renderer = (function() {
     const stockanalysis = audit?.stockanalysis || {};
     const detailCoverage = stockanalysisCoverage || stockanalysisIndex?.etf_detail_coverage || {};
     const detailCoverageCounts = detailCoverage?.counts || {};
+    const missingBySource = detailCoverageCounts.missing_by_source || {};
     const backfill = audit?.backfill || {};
     const facts = audit?.market_facts || {};
     const factsCoverage = marketFactsIndex?.coverage || facts.coverage || {};
@@ -328,6 +329,9 @@ const Renderer = (function() {
           ['기본 상세', `${Formatters.formatNumber(detailCoverageCounts.stockanalysis_detail_files ?? 0, 0)} (${Formatters.formatNumber(detailCoverageCounts.primary_stockanalysis_pct ?? 0, 2)}%)`],
           ['Yahoo 보강', detailCoverageCounts.yahoo_fallback_files],
           ['상세 누락', detailCoverageCounts.missing_detail_files],
+          ['신규 ETF 누락', missingBySource.new_etfs],
+          ['ETF 목록 누락', missingBySource.etf_universe],
+          ['스크리너 누락', missingBySource.etf_screener],
           ['대기 추적', detailCoverageCounts.pending_tracked_missing ?? detailCoverageCounts.pending_tracked]
         ]
       })}
@@ -377,11 +381,72 @@ const Renderer = (function() {
         ]
       })}
       ${renderEtfClassificationAudit(etfClassification)}
+      ${renderEtfCoverageGapAudit(detailCoverage)}
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
       ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
+    `;
+  }
+
+  function renderTickerChipList(tickers, tone) {
+    if (!tickers.length) {
+      return '<div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs font-semibold text-gray-400">표시할 티커가 없습니다.</div>';
+    }
+    const toneClass = tone === 'warn'
+      ? 'border-amber-200 bg-amber-50 text-amber-800'
+      : 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    return `
+      <div class="flex flex-wrap gap-1.5">
+        ${tickers.map((ticker) => `
+          <a
+            href="/etfs/${encodeURIComponent(String(ticker || '').trim().toUpperCase())}"
+            class="rounded-full border px-2 py-1 text-[11px] font-black ${toneClass}"
+          >${escapeHtml(ticker)}</a>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderEtfCoverageGapAudit(coverage) {
+    const samples = coverage?.samples || {};
+    const counts = coverage?.counts || {};
+    const missing = Array.isArray(samples.missing) ? samples.missing.filter(Boolean).slice(0, 36) : [];
+    const yahooFallback = Array.isArray(samples.yahoo_fallback) ? samples.yahoo_fallback.filter(Boolean).slice(0, 36) : [];
+    if (!missing.length && !yahooFallback.length) return '';
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">ETF 상세 누락 샘플</h3>
+            <p class="text-xs text-gray-500 mt-1">coverage/etf_detail.json · 신규 ETF/ETF 목록/스크리너 기준</p>
+          </div>
+          <span class="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">
+            ${Formatters.formatNumber(counts.missing_detail_files || missing.length, 0)} missing
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          ${renderAuditMetric('신규 ETF 누락', counts.missing_by_source?.new_etfs)}
+          ${renderAuditMetric('ETF 목록 누락', counts.missing_by_source?.etf_universe)}
+          ${renderAuditMetric('스크리너 누락', counts.missing_by_source?.etf_screener)}
+          ${renderAuditMetric('Yahoo 보강', counts.yahoo_fallback_files)}
+        </div>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
+            <div class="mb-3 text-xs font-black text-gray-700">상세 파일 대기</div>
+            ${renderTickerChipList(missing, 'warn')}
+          </div>
+          <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
+            <div class="mb-3 text-xs font-black text-gray-700">Yahoo 보강 적용</div>
+            ${renderTickerChipList(yahooFallback, 'ok')}
+          </div>
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          누락 티커는 상세 파일이 없더라도 ETF 페이지에서 목록/신규 상장 데이터 기준으로 먼저 표시됩니다. 다음 수집 또는 Yahoo 보강 결과가 갱신되면 이 목록도 자동으로 바뀝니다.
+        </p>
+      </section>
     `;
   }
 
