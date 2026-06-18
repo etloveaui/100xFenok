@@ -1496,6 +1496,195 @@ def load_surface_symbols(name: str) -> list[str]:
     return unique_symbols(symbols)
 
 
+def surface_rows(name: str) -> list[dict]:
+    payload = read_json(OUT_DIR / "surfaces" / f"{name}.json") or {}
+    rows = []
+    for row in payload.get("records") or []:
+        if isinstance(row, dict):
+            rows.append(row)
+    for table in payload.get("tables") or []:
+        if not isinstance(table, dict):
+            continue
+        for row in table.get("records") or []:
+            if isinstance(row, dict):
+                rows.append(row)
+    return rows
+
+
+def etf_candidate_symbol_sources() -> dict[str, set[str]]:
+    sources: dict[str, set[str]] = {}
+
+    def add_symbol(symbol: str | None, source: str) -> None:
+        if not symbol:
+            return
+        sources.setdefault(symbol, set()).add(source)
+
+    universe_payload = read_json(OUT_DIR / "etf_universe.json") or {}
+    for row in universe_payload.get("records") or []:
+        if isinstance(row, dict):
+            add_symbol(row_ticker(row), "etf_universe")
+
+    for surface_name in ("etf_screener", "new_etfs"):
+        for row in surface_rows(surface_name):
+            add_symbol(row_ticker(row), surface_name)
+
+    return sources
+
+
+def etf_detail_file_summary() -> dict:
+    detail_dir = OUT_DIR / "etfs"
+    symbols = []
+    stockanalysis_symbols = []
+    yahoo_fallback_symbols = []
+    invalid_symbols = []
+
+    if not detail_dir.exists():
+        return {
+            "symbols": symbols,
+            "stockanalysis_symbols": stockanalysis_symbols,
+            "yahoo_fallback_symbols": yahoo_fallback_symbols,
+            "invalid_symbols": invalid_symbols,
+        }
+
+    for path in sorted(detail_dir.glob("*.json")):
+        ticker = clean_symbol(path.stem)
+        if not ticker:
+            continue
+        payload = read_json(path)
+        symbols.append(ticker)
+        if not isinstance(payload, dict):
+            invalid_symbols.append(ticker)
+            continue
+        if (
+            payload.get("source") == "yahoo_finance"
+            or payload.get("source_provider") == "yahoo_finance"
+            or payload.get("detail_status") == "yf_fallback"
+        ):
+            yahoo_fallback_symbols.append(ticker)
+        elif payload.get("source") == "stockanalysis":
+            stockanalysis_symbols.append(ticker)
+        else:
+            invalid_symbols.append(ticker)
+
+    return {
+        "symbols": symbols,
+        "stockanalysis_symbols": stockanalysis_symbols,
+        "yahoo_fallback_symbols": yahoo_fallback_symbols,
+        "invalid_symbols": invalid_symbols,
+    }
+
+
+def build_etf_detail_coverage() -> dict:
+    symbol_sources = etf_candidate_symbol_sources()
+    detail_summary = etf_detail_file_summary()
+    candidate_symbols = sorted(symbol_sources)
+    detail_symbols = sorted(set(detail_summary["symbols"]))
+    detail_set = set(detail_symbols)
+    candidate_set = set(candidate_symbols)
+    covered = sorted(candidate_set & detail_set)
+    missing = sorted(candidate_set - detail_set)
+    extra = sorted(detail_set - candidate_set)
+    yahoo_fallback = sorted(set(detail_summary["yahoo_fallback_symbols"]))
+    stockanalysis_detail = sorted(set(detail_summary["stockanalysis_symbols"]))
+    invalid_detail = sorted(set(detail_summary["invalid_symbols"]))
+    pending_ledger = load_pending_ledger()
+    now_dt = datetime.now(timezone.utc)
+    pending_counts = pending_ledger_counts(
+        pending_ledger,
+        now_dt,
+        DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS,
+        DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES,
+    )
+    pending_entries = pending_ledger.get("entries") if isinstance(pending_ledger.get("entries"), dict) else {}
+
+    source_breakdown = {
+        source: sum(1 for sources in symbol_sources.values() if source in sources)
+        for source in ("etf_universe", "etf_screener", "new_etfs")
+    }
+    missing_by_source = {
+        source: sum(1 for ticker in missing if source in symbol_sources.get(ticker, set()))
+        for source in ("etf_universe", "etf_screener", "new_etfs")
+    }
+    coverage_pct = round((len(covered) / len(candidate_symbols)) * 100, 2) if candidate_symbols else 0.0
+    primary_pct = round((len(set(stockanalysis_detail) & candidate_set) / len(candidate_symbols)) * 100, 2) if candidate_symbols else 0.0
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "asset_type": "etf_detail_coverage",
+        "generated_at": now_iso(),
+        "status": "pass" if not missing and not invalid_detail else "warn",
+        "policy": {
+            "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
+            "detail_file": "data/stockanalysis/etfs/{TICKER}.json",
+            "note": "Yahoo fallback files count as covered detail files but remain retry candidates for primary StockAnalysis detail.",
+        },
+        "paths": {
+            "coverage": "coverage/etf_detail.json",
+            "etf_universe": "etf_universe.json",
+            "etf_screener": "surfaces/etf_screener.json",
+            "new_etfs": "surfaces/new_etfs.json",
+            "pending_ledger": PENDING_LEDGER_REL_PATH,
+        },
+        "counts": {
+            "candidate_total": len(candidate_symbols),
+            "source_breakdown": source_breakdown,
+            "detail_files": len(detail_symbols),
+            "covered_detail_files": len(covered),
+            "missing_detail_files": len(missing),
+            "extra_detail_files": len(extra),
+            "stockanalysis_detail_files": len(stockanalysis_detail),
+            "yahoo_fallback_files": len(yahoo_fallback),
+            "invalid_detail_files": len(invalid_detail),
+            "coverage_pct": coverage_pct,
+            "primary_stockanalysis_pct": primary_pct,
+            "missing_by_source": missing_by_source,
+            "pending_tracked": pending_counts.get("tracked", 0),
+            "pending_cooldown": pending_counts.get("cooldown", 0),
+            "pending_tracked_missing": sum(1 for ticker in missing if ticker in pending_entries),
+        },
+        "missing_tickers": missing,
+        "yahoo_fallback_tickers": yahoo_fallback,
+        "invalid_detail_tickers": invalid_detail,
+        "extra_detail_tickers": extra,
+        "samples": {
+            "missing": missing[:50],
+            "yahoo_fallback": yahoo_fallback[:50],
+            "extra": extra[:50],
+        },
+    }
+
+
+def write_etf_detail_coverage(mirror_public: bool) -> dict:
+    coverage = build_etf_detail_coverage()
+    write_payload("coverage/etf_detail.json", coverage, mirror_public)
+    return coverage
+
+
+def attach_etf_detail_coverage_to_index(coverage: dict, mirror_public: bool) -> None:
+    index = read_json(OUT_DIR / "index.json")
+    if not isinstance(index, dict):
+        return
+    counts = coverage.get("counts") if isinstance(coverage.get("counts"), dict) else {}
+    index_counts = index.get("counts") if isinstance(index.get("counts"), dict) else {}
+    index["counts"] = {
+        **index_counts,
+        "etf_candidate_total": counts.get("candidate_total", 0),
+        "etf_detail_files": counts.get("detail_files", 0),
+        "etf_detail_covered": counts.get("covered_detail_files", 0),
+        "etf_detail_missing": counts.get("missing_detail_files", 0),
+        "etf_detail_coverage_pct": counts.get("coverage_pct", 0),
+        "etf_detail_primary_pct": counts.get("primary_stockanalysis_pct", 0),
+    }
+    index["etf_detail_coverage"] = {
+        "path": "coverage/etf_detail.json",
+        "generated_at": coverage.get("generated_at"),
+        "status": coverage.get("status"),
+        "counts": counts,
+    }
+    write_payload("index.json", index, mirror_public)
+
+
 def incremental_etf_backfill_candidates(
     universe_payload: dict | None,
     limit: int,
@@ -1861,6 +2050,7 @@ def main() -> None:
     parser.add_argument("--universe-only", action="store_true", help="only refresh etf_universe.json; do not deep-fetch ETF payloads")
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
     parser.add_argument("--incremental-etf-backfill", action="store_true", help="auto deep-fetch new/missing/stale ETF details without a full universe run")
+    parser.add_argument("--coverage-only", action="store_true", help="rebuild local ETF detail coverage proof without network fetches")
     parser.add_argument("--incremental-etf-limit", type=int, default=DEFAULT_INCREMENTAL_ETF_LIMIT, help="maximum incremental ETF detail retries per run")
     parser.add_argument("--incremental-etf-max-age-hours", type=float, default=DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS, help="existing StockAnalysis ETF detail age before it becomes stale")
     parser.add_argument("--incremental-etf-cooldown-days", type=float, default=DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS, help="days to skip ETFs after repeated expected-missing failures")
@@ -1888,6 +2078,7 @@ def main() -> None:
             args.fetch_surfaces,
             args.universe_backfill,
             args.incremental_etf_backfill,
+            args.coverage_only,
             args.stocks_only,
             args.etfs,
             args.stocks,
@@ -1897,6 +2088,20 @@ def main() -> None:
     if classify_catalogs_requested and no_other_work:
         classification_summary = classify_existing_etf_catalogs(mirror_public)
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
+        return
+
+    if args.coverage_only:
+        coverage = write_etf_detail_coverage(mirror_public)
+        attach_etf_detail_coverage_to_index(coverage, mirror_public)
+        counts = coverage["counts"]
+        print(
+            "[etf-detail-coverage] "
+            f"covered={counts['covered_detail_files']}/{counts['candidate_total']} "
+            f"missing={counts['missing_detail_files']} "
+            f"yahoo_fallback={counts['yahoo_fallback_files']} "
+            f"status={coverage['status']}",
+            flush=True,
+        )
         return
 
     universe_payload = None
@@ -1914,6 +2119,8 @@ def main() -> None:
         surface_summary = fetch_surfaces(surface_names, args.timeout, args.sleep, mirror_public)
 
     if args.universe_only or args.surfaces_only:
+        coverage = write_etf_detail_coverage(mirror_public)
+        attach_etf_detail_coverage_to_index(coverage, mirror_public)
         return
 
     explicit_etfs = parse_symbols(args.etfs)
@@ -2006,12 +2213,20 @@ def main() -> None:
         incremental_summary["counts"]["ledger_cooldown"] = (pending_ledger_summary.get("counts") or {}).get("cooldown", 0)
         write_payload("backfill/incremental_latest.json", incremental_summary, mirror_public)
 
+    etf_detail_coverage = write_etf_detail_coverage(mirror_public)
+    etf_detail_coverage_counts = etf_detail_coverage.get("counts") or {}
     summary = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
         "generated_at": now_iso(),
         "counts": {
             "etf_universe": (universe_payload or {}).get("counts", {}).get("records"),
+            "etf_candidate_total": etf_detail_coverage_counts.get("candidate_total", 0),
+            "etf_detail_files": etf_detail_coverage_counts.get("detail_files", 0),
+            "etf_detail_covered": etf_detail_coverage_counts.get("covered_detail_files", 0),
+            "etf_detail_missing": etf_detail_coverage_counts.get("missing_detail_files", 0),
+            "etf_detail_coverage_pct": etf_detail_coverage_counts.get("coverage_pct", 0),
+            "etf_detail_primary_pct": etf_detail_coverage_counts.get("primary_stockanalysis_pct", 0),
             "etfs_requested": len(etfs),
             "stocks_requested": len(stocks),
             "surfaces_requested": (surface_summary or {}).get("counts", {}).get("surfaces_requested", 0),
@@ -2036,6 +2251,12 @@ def main() -> None:
             "incremental_etf_ledger_cooldown": (incremental_summary or {}).get("counts", {}).get("ledger_cooldown", 0),
         },
         "results": results,
+        "etf_detail_coverage": {
+            "path": "coverage/etf_detail.json",
+            "generated_at": etf_detail_coverage.get("generated_at"),
+            "status": etf_detail_coverage.get("status"),
+            "counts": etf_detail_coverage_counts,
+        },
         "surface_results": (surface_summary or {}).get("results"),
         "incremental_etf_backfill": incremental_summary,
         "pending_ledger": (

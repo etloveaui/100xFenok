@@ -22,7 +22,13 @@
     "incremental_etf_backfill_selected": 120,
     "incremental_etf_cooldown_skipped": 0,
     "incremental_etf_ledger_tracked": 45,
-    "incremental_etf_ledger_cooldown": 0
+    "incremental_etf_ledger_cooldown": 0,
+    "etf_candidate_total": 5347,
+    "etf_detail_files": 4900,
+    "etf_detail_covered": 4900,
+    "etf_detail_missing": 447,
+    "etf_detail_coverage_pct": 91.64,
+    "etf_detail_primary_pct": 85.28
   },
   "results": [
     {
@@ -2979,5 +2985,35 @@
       "cleared": 0
     }
   },
-  "stop_reason": null
+  "stop_reason": null,
+  "etf_detail_coverage": {
+    "path": "coverage/etf_detail.json",
+    "generated_at": "2026-06-18T14:57:10Z",
+    "status": "warn",
+    "counts": {
+      "candidate_total": 5347,
+      "source_breakdown": {
+        "etf_universe": 5280,
+        "etf_screener": 5347,
+        "new_etfs": 100
+      },
+      "detail_files": 4900,
+      "covered_detail_files": 4900,
+      "missing_detail_files": 447,
+      "extra_detail_files": 0,
+      "stockanalysis_detail_files": 4560,
+      "yahoo_fallback_files": 340,
+      "invalid_detail_files": 0,
+      "coverage_pct": 91.64,
+      "primary_stockanalysis_pct": 85.28,
+      "missing_by_source": {
+        "etf_universe": 381,
+        "etf_screener": 447,
+        "new_etfs": 31
+      },
+      "pending_tracked": 45,
+      "pending_cooldown": 0,
+      "pending_tracked_missing": 45
+    }
+  }
 }

@@ -538,13 +538,15 @@ export async function getStockanalysisManifest() {
   const stocksDir = path.join(baseDir, "stocks");
   const financialsDir = path.join(baseDir, "financials");
   const backfillDir = path.join(baseDir, "backfill");
+  const coverageDir = path.join(baseDir, "coverage");
   const surfacesDir = path.join(baseDir, "surfaces");
   const universePath = path.join(baseDir, "etf_universe.json");
   const indexPath = path.join(baseDir, "index.json");
   const latestBackfillPath = path.join(backfillDir, "latest.json");
+  const etfCoveragePath = path.join(coverageDir, "etf_detail.json");
   const surfaceIndexPath = path.join(surfacesDir, "index.json");
 
-  const [meta, topLevel, etfs, stocks, financials, backfill, surfaces, universe, index, latestBackfill, surfaceIndex] =
+  const [meta, topLevel, etfs, stocks, financials, backfill, coverage, surfaces, universe, index, latestBackfill, etfCoverage, surfaceIndex] =
     await Promise.all([
       getBaseMeta("stockanalysis"),
       buildJsonSample(baseDir, "/data/stockanalysis", 20),
@@ -552,10 +554,12 @@ export async function getStockanalysisManifest() {
       buildJsonSample(stocksDir, "/data/stockanalysis/stocks", 30),
       buildJsonSample(financialsDir, "/data/stockanalysis/financials", 30),
       buildJsonSample(backfillDir, "/data/stockanalysis/backfill", 20),
+      buildJsonSample(coverageDir, "/data/stockanalysis/coverage", 10),
       buildJsonSample(surfacesDir, "/data/stockanalysis/surfaces", 30),
       readOptionalJsonRecord(universePath),
       readOptionalJsonRecord(indexPath),
       readOptionalJsonRecord(latestBackfillPath),
+      readOptionalJsonRecord(etfCoveragePath),
       readOptionalJsonRecord(surfaceIndexPath),
     ]);
 
@@ -585,16 +589,19 @@ export async function getStockanalysisManifest() {
       stockFileCount: stocks.count,
       financialFileCount: financials.count,
       backfillFileCount: backfill.count,
+      coverageFileCount: coverage.count,
       surfaceFileCount: surfaces.count,
       topLevelSample: topLevel.sample,
       etfSample: etfs.sample,
       stockSample: stocks.sample,
       financialSample: financials.sample,
       backfillSample: backfill.sample,
+      coverageSample: coverage.sample,
       surfaceSample: surfaces.sample,
       etfUniverse: universe ? "/data/stockanalysis/etf_universe.json" : null,
       index: index ? "/data/stockanalysis/index.json" : null,
       latestBackfill: latestBackfill ? "/data/stockanalysis/backfill/latest.json" : null,
+      etfCoverage: etfCoverage ? "/data/stockanalysis/coverage/etf_detail.json" : null,
       surfaceIndex: surfaceIndex ? "/data/stockanalysis/surfaces/index.json" : null,
     },
     universe: universe
@@ -620,6 +627,14 @@ export async function getStockanalysisManifest() {
           counts: latestBackfill.counts ?? null,
           stop_reason: latestBackfill.stop_reason ?? null,
           sample_results: latestBackfillResults,
+        }
+      : null,
+    coverage: etfCoverage
+      ? {
+          generated_at: etfCoverage.generated_at ?? null,
+          status: etfCoverage.status ?? null,
+          counts: etfCoverage.counts ?? null,
+          samples: etfCoverage.samples ?? null,
         }
       : null,
     surfaces: surfaceIndex

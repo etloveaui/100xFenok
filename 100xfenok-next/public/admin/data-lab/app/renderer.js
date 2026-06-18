@@ -291,6 +291,7 @@ const Renderer = (function() {
     audit,
     sourceParity,
     stockanalysisIndex,
+    stockanalysisCoverage,
     etfClassification,
     stockanalysisSurfaceIndex,
     stockanalysisIncremental,
@@ -299,6 +300,8 @@ const Renderer = (function() {
   ) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
+    const detailCoverage = stockanalysisCoverage || stockanalysisIndex?.etf_detail_coverage || {};
+    const detailCoverageCounts = detailCoverage?.counts || {};
     const backfill = audit?.backfill || {};
     const facts = audit?.market_facts || {};
     const factsCoverage = marketFactsIndex?.coverage || facts.coverage || {};
@@ -320,10 +323,12 @@ const Renderer = (function() {
         status: ready ? 'pass' : 'warn',
         code: ready ? 'READY' : 'CHECK',
         rows: [
-          ['전체 ETF', stockanalysis.universe_records],
-          ['상세 파일', `${Formatters.formatNumber(stockanalysis.etf_detail_files || 0, 0)} (${escapeHtml(stockanalysis.etf_backfill_progress || '-')})`],
-          ['확인 행', backfill.rows_seen],
-          ['원천 미제공', backfill.error_kinds?.http_404]
+          ['전체 후보', detailCoverageCounts.candidate_total ?? stockanalysis.universe_records],
+          ['상세 파일', `${Formatters.formatNumber(detailCoverageCounts.covered_detail_files ?? stockanalysis.etf_detail_files ?? 0, 0)} (${Formatters.formatNumber(detailCoverageCounts.coverage_pct ?? 0, 2)}%)`],
+          ['기본 상세', `${Formatters.formatNumber(detailCoverageCounts.stockanalysis_detail_files ?? 0, 0)} (${Formatters.formatNumber(detailCoverageCounts.primary_stockanalysis_pct ?? 0, 2)}%)`],
+          ['Yahoo 보강', detailCoverageCounts.yahoo_fallback_files],
+          ['상세 누락', detailCoverageCounts.missing_detail_files],
+          ['대기 추적', detailCoverageCounts.pending_tracked_missing ?? detailCoverageCounts.pending_tracked]
         ]
       })}
       ${renderMarketAuditCard({

@@ -21,12 +21,18 @@ ETF detail pages self-heal without a manual freshness step. Full holdings/histor
 backfill remains intentionally chunked with `--universe-backfill --offset
 --limit-etfs` to avoid large request bursts.
 
+Latest measured ETF detail coverage (2026-06-18): 5,347 candidate ETF symbols
+from `union(etf_universe, etf_screener, new_etfs)`, 4,900 detail files, 447
+missing detail files, 340 Yahoo fallback detail files, 91.64% detail coverage,
+and 85.28% primary StockAnalysis detail coverage. This proof lives in
+`coverage/etf_detail.json` and is intentionally `warn` while detail files are
+missing.
+
 Latest measured incremental run (2026-06-18): 728 eligible candidates
-(563 missing, 165 fallback retry), 120 selected, 166 total ETF requests
+(450 missing, 278 fallback retry), 120 selected, 166 total ETF requests
 including the default focus set, 158 OK, 8 still pending, 0 hard failures. Of the
 OK records, 43 came from StockAnalysis and 115 were source-tagged Yahoo Finance
-ETF/fund fallbacks. The generated audit state is intentionally `warn` while
-`pending_details_remain` is true.
+ETF/fund fallbacks.
 
 Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
@@ -46,6 +52,8 @@ stockanalysis/
 │   ├── incremental_latest.json
 │   ├── pending_ledger.json
 │   └── ...
+├── coverage/
+│   └── etf_detail.json
 ├── etf_universe.json
 ├── etfs/
 │   ├── SPY.json
@@ -143,6 +151,28 @@ the ticker is skipped for 7 days before becoming eligible again. This keeps each
 incremental chunk focused on undiscovered detail candidates instead of spending
 slots on the same hard-tail tickers. The ledger only cools down expected missing
 detail failures; hard failures still surface through the fetch index and audit.
+
+ETF detail coverage is rebuilt from local files and does not call the network.
+The denominator is the union of the lightweight ETF list, ETF screener, and new
+ETF launch surface so newly listed ETFs such as single-stock or leveraged funds
+are visible before a full detail endpoint exists.
+
+```json
+{
+  "schema_version": "stockanalysis/v1",
+  "asset_type": "etf_detail_coverage",
+  "status": "warn",
+  "counts": {
+    "candidate_total": 5347,
+    "covered_detail_files": 4900,
+    "missing_detail_files": 447,
+    "yahoo_fallback_files": 340,
+    "coverage_pct": 91.64,
+    "primary_stockanalysis_pct": 85.28
+  },
+  "missing_tickers": ["AAAD", "ACII", "..."]
+}
+```
 
 Universe payload:
 
@@ -245,4 +275,7 @@ python3 scripts/fetch-stockanalysis.py --universe-backfill --offset 0 --limit-et
 python3 scripts/fetch-stockanalysis.py --discover-etf-universe --fetch-surfaces \
   --incremental-etf-backfill --incremental-etf-limit 120 \
   --incremental-etf-max-age-hours 720 --yf-etf-fallback
+
+# Rebuild ETF detail coverage proof without network fetches
+python3 scripts/fetch-stockanalysis.py --coverage-only
 ```

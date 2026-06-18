@@ -71,6 +71,13 @@ ETF universe has 5,280 records and classification counts: leveraged 649,
 inverse 246, single-stock 107. This belongs to `/etfs` as the canonical surface;
 Explore should not render the full ETF working surface.
 
+ETF detail coverage must use the broader candidate denominator from
+`union(etf_universe, etf_screener, new_etfs)`, currently 5,347 symbols. The
+2026-06-18 local proof shows 4,900 covered detail files, 447 missing detail
+files, 340 Yahoo fallback detail files, 91.64% detail coverage, and 85.28%
+primary StockAnalysis detail coverage. This belongs in `/etfs` and
+`/admin/data-lab`, not as a dense Explore catalog.
+
 ## Diagnosis
 
 The page feels long because it now mixes four different jobs at the same level:

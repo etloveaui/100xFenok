@@ -338,6 +338,54 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["BETA"])
         self.assertEqual(summary["counts"]["cooldown_skipped"], 0)
 
+    def test_etf_detail_coverage_uses_union_candidate_universe(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "etf_universe.json").write_text(
+                    json.dumps({"records": [{"ticker": "AAA"}, {"ticker": "BBB"}]}),
+                    encoding="utf-8",
+                )
+                (out_dir / "surfaces" / "etf_screener.json").write_text(
+                    json.dumps({"records": [{"s": "BBB"}, {"s": "CCC"}]}),
+                    encoding="utf-8",
+                )
+                (out_dir / "surfaces" / "new_etfs.json").write_text(
+                    json.dumps({"records": [{"s": "DDD"}]}),
+                    encoding="utf-8",
+                )
+                (out_dir / "backfill" / "pending_ledger.json").write_text(
+                    json.dumps({"entries": {"DDD": {"ticker": "DDD", "consecutive_failures": 1}}}),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "AAA.json").write_text(
+                    json.dumps({"source": "stockanalysis", "asset_type": "etf"}),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "CCC.json").write_text(
+                    json.dumps({"source": "yahoo_finance", "detail_status": "yf_fallback"}),
+                    encoding="utf-8",
+                )
+
+                coverage = self.fetcher.build_etf_detail_coverage()
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual(coverage["counts"]["candidate_total"], 4)
+        self.assertEqual(coverage["counts"]["covered_detail_files"], 2)
+        self.assertEqual(coverage["counts"]["missing_detail_files"], 2)
+        self.assertEqual(coverage["counts"]["source_breakdown"]["etf_universe"], 2)
+        self.assertEqual(coverage["counts"]["source_breakdown"]["etf_screener"], 2)
+        self.assertEqual(coverage["counts"]["source_breakdown"]["new_etfs"], 1)
+        self.assertEqual(coverage["counts"]["yahoo_fallback_files"], 1)
+        self.assertEqual(coverage["counts"]["pending_tracked_missing"], 1)
+        self.assertEqual(coverage["missing_tickers"], ["BBB", "DDD"])
+
     def test_incremental_etf_backfill_prioritizes_unattempted_missing_before_prior_failures(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
