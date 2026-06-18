@@ -128,6 +128,8 @@ export function classifyLearnerFacingTurn(turn: MonaVnextTurn) {
   return {
     isControl: turn.intent === "next_material"
       || turn.intent === "english_visibility"
+      || turn.intent === "hold_current"
+      || turn.intent === "difficulty"
       || turn.intent === "repair"
       || turn.intent === "meta_question"
       || turn.intent === "stop",

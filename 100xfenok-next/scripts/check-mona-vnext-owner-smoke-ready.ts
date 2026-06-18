@@ -55,7 +55,9 @@ function walkTextFiles(relDir: string) {
 function checkSourceInvariants(): Check[] {
   const winddown = readRel("src/app/winddown/page.tsx");
   const winddownVnext = readRel("src/app/winddown-vnext/page.tsx");
+  const winddownLegacy = readRel("src/app/winddown-legacy/page.tsx");
   const adminLiveBench = readRel("src/components/admin-live/AdminLiveBench.tsx");
+  const monaVoiceCoachApp = readRel("src/features/mona-vnext/MonaVoiceCoachApp.tsx");
   const liveSetup = readRel("src/features/mona-vnext/server/liveSetup.ts");
   const wrangler = readRel("wrangler.jsonc");
   const storage = readRel("src/features/mona-vnext/storage/objectStore.ts");
@@ -65,6 +67,7 @@ function checkSourceInvariants(): Check[] {
   const vnextFiles = [
     ...walkTextFiles("src/features/mona-vnext"),
     ...walkTextFiles("src/app/api/mona-vnext"),
+    ...walkTextFiles("src/app/winddown"),
     ...walkTextFiles("src/app/winddown-vnext"),
   ];
   const forbidden = [
@@ -83,19 +86,42 @@ function checkSourceInvariants(): Check[] {
 
   return [
     check(
-      "winddown-current-runtime",
-      winddown.includes("<AdminLiveBench initialMode=\"mona\" simpleUi") ? "PASS" : "FAIL",
-      "/winddown still renders AdminLiveBench initialMode=\"mona\" simpleUi",
+      "winddown-vnext-main-runtime",
+      winddown.includes("MonaVoiceCoachApp")
+        && winddown.includes("surface=\"winddown\"")
+        && !winddown.includes("AdminLiveBench")
+        ? "PASS"
+        : "FAIL",
+      "/winddown renders MonaVoiceCoachApp surface=\"winddown\" without AdminLiveBench import",
     ),
     check(
-      "vnext-no-admin-core",
-      winddownVnext.includes("MonaVoiceCoachApp") && !winddownVnext.includes("AdminLiveBench") ? "PASS" : "FAIL",
-      "/winddown-vnext renders MonaVoiceCoachApp without AdminLiveBench import",
+      "winddown-vnext-design-shell",
+      monaVoiceCoachApp.includes("MonaWindDown")
+        && monaVoiceCoachApp.includes("surface === \"winddown\"")
+        ? "PASS"
+        : "FAIL",
+      "/winddown vNext surface reuses the MonaWindDown design shell",
+    ),
+    check(
+      "winddown-vnext-debug-route",
+      winddownVnext.includes("MonaVoiceCoachApp")
+        && winddownVnext.includes("surface=\"debug\"")
+        && !winddownVnext.includes("AdminLiveBench")
+        ? "PASS"
+        : "FAIL",
+      "/winddown-vnext keeps the debug surface without AdminLiveBench import",
+    ),
+    check(
+      "winddown-legacy-rollback",
+      winddownLegacy.includes("<AdminLiveBench initialMode=\"mona\" simpleUi")
+        ? "PASS"
+        : "FAIL",
+      "/winddown-legacy keeps the previous AdminLiveBench rollback runtime",
     ),
     check(
       "settings-vnext-entry",
       vnextEntryInSettings ? "PASS" : "FAIL",
-      "/winddown Mona settings renders MonaVnextEntry without owner-tester visibility gate",
+      "legacy Mona settings still renders MonaVnextEntry without owner-tester visibility gate",
     ),
     check(
       "vnext-no-production-write-path",
@@ -144,8 +170,16 @@ async function checkRouteReadiness(): Promise<Check[]> {
 
   const checks: Check[] = [];
   try {
-    const page = await fetch(`${baseUrl}/winddown-vnext/`, { cache: "no-store" });
-    checks.push(check("route-smoke", page.ok ? "PASS" : "FAIL", `/winddown-vnext/ HTTP ${page.status}`));
+    const routes = ["/winddown/", "/winddown-vnext/", "/winddown-legacy/"];
+    const results = await Promise.all(routes.map(async (route) => {
+      const page = await fetch(`${baseUrl}${route}`, { cache: "no-store" });
+      return { route, ok: page.ok, status: page.status };
+    }));
+    checks.push(check(
+      "route-smoke",
+      results.every((result) => result.ok) ? "PASS" : "FAIL",
+      results.map((result) => `${result.route} HTTP ${result.status}`).join("; "),
+    ));
   } catch (error) {
     checks.push(check("route-smoke", "FAIL", error instanceof Error ? error.message : "route fetch failed"));
   }

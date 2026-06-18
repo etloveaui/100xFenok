@@ -68,6 +68,9 @@ function checkSetupShape(): Result {
     && raw.includes("내 말이 좀 말이 됐으면 좋겠어.")
     && raw.includes("I hope that makes sense.")
     && raw.includes(`Prepared expression count for direct meta questions: ${MONA_VNEXT_EXPRESSION_BANK.length}.`)
+    && raw.includes("Only switch material when Mona clearly says")
+    && raw.includes("teacher-friend mode")
+    && raw.includes("do not auto-advance")
     && raw.includes("coachTurn") === false
     && !("tools" in setup);
   return ok
@@ -325,23 +328,61 @@ function checkStrictStopIntent(): Result {
 
 function checkSkipComplaintIntent(): Result {
   const conversationId = createMonaVnextConversationId(new Date("2026-06-17T00:00:00Z"));
+  const lesson = createInitialLessonState();
   const result = applyMonaVnextServerContent(createMonaVnextTranscriptState(conversationId), {
     inputTranscription: { text: "지금 왜 뛰어넘냐고 묻잖아" },
     outputTranscription: { text: "미안, 먼저 확인할게." },
     turnComplete: true,
   }, "2026-06-17T00:00:02.000Z");
   const turn = result.finalizedTurn;
-  const ok = turn?.intent === "repair";
+  if (!turn) return fail("skip-complaint-hold", "turn did not finalize");
+  const evaluation = evaluateMonaVnextTurn(turn, lesson);
+  const next = applyMonaVnextLessonEvaluation(lesson, evaluation);
+  const ok = turn.intent === "hold_current"
+    && evaluation.pedagogyAction === "hold"
+    && next.expression.id === lesson.expression.id
+    && next.expression.state === "repair";
   return ok
-    ? pass("skip-complaint-repair", "why-skip complaint is classified as repair, not next")
-    : fail("skip-complaint-repair", JSON.stringify(turn));
+    ? pass("skip-complaint-hold", "why-skip complaint holds current material instead of advancing")
+    : fail("skip-complaint-hold", JSON.stringify({ turn, evaluation, next }));
+}
+
+function checkDifficultyIntent(): Result {
+  const lesson = createInitialLessonState();
+  const turn = {
+    conversationId: "c",
+    turnSeq: 1,
+    userText: "어렵다. 천천히 힌트 줘.",
+    modelText: "좋아, 쪼개볼게.",
+    intent: detectMonaVnextIntent("어렵다. 천천히 힌트 줘."),
+    sttDrift: false,
+    interrupted: false,
+    startedAtIso: "2026-06-18T00:00:00.000Z",
+    completedAtIso: "2026-06-18T00:00:01.000Z",
+  };
+  const evaluation = evaluateMonaVnextTurn(turn, lesson);
+  const next = applyMonaVnextLessonEvaluation(lesson, evaluation);
+  const srs = buildMonaVnextSrsAdvisory(turn, evaluation);
+  const explicitNextIntent = detectMonaVnextIntent("어렵지만 다음 문장으로 넘어가자");
+  const ok = turn.intent === "difficulty"
+    && explicitNextIntent === "next_material"
+    && evaluation.pedagogyAction === "teach_slow"
+    && !evaluation.shouldAdvancePrompt
+    && !evaluation.lessonAttempt
+    && next.expression.id === lesson.expression.id
+    && next.expression.state === "repair"
+    && srs.best3Candidates.length === 0
+    && srs.weakNoteCandidates.length === 0;
+  return ok
+    ? pass("difficulty-teacher-mode", "difficulty intent keeps current sentence and requests slow chunking")
+    : fail("difficulty-teacher-mode", JSON.stringify({ turn, evaluation, next, srs }));
 }
 
 function checkLessonAttemptExposure(): Result {
   const makeTurn = (turnSeq: number) => ({
     conversationId: "c",
     turnSeq,
-    userText: "잘 모르겠어",
+    userText: "I hope it makes sense.",
     modelText: "다시 해보자.",
     intent: "lesson_attempt" as const,
     sttDrift: false,
@@ -362,9 +403,10 @@ function checkLessonAttemptExposure(): Result {
   const ok = afterOne === 2
     && afterTwo === MONA_VNEXT_MAX_SAME_PROMPT
     && beforeAdvance.expression.id === firstExpression
-    && lesson.expression.id !== firstExpression;
+    && lesson.expression.id === firstExpression
+    && lesson.expression.state === "repair";
   return ok
-    ? pass("lesson-attempt-exposure", `promptHistory ${firstExpression}: 1 -> ${afterOne} -> ${afterTwo} -> advance`)
+    ? pass("lesson-attempt-exposure", `promptHistory ${firstExpression}: 1 -> ${afterOne} -> ${afterTwo} -> intervention`)
     : fail("lesson-attempt-exposure", JSON.stringify({ afterOne, afterTwo, beforeAdvance, lesson }));
 }
 
@@ -396,7 +438,7 @@ function checkRepeatLimit(): Result {
   const turn = {
     conversationId: "c",
     turnSeq: 3,
-    userText: "잘 모르겠어",
+    userText: "I hope it makes sense.",
     modelText: "다시 해보자.",
     intent: "lesson_attempt" as const,
     sttDrift: false,
@@ -406,10 +448,22 @@ function checkRepeatLimit(): Result {
   };
   const evaluation = evaluateMonaVnextTurn(turn, lesson);
   const next = applyMonaVnextLessonEvaluation(lesson, evaluation);
-  const ok = evaluation.samePromptCount >= MONA_VNEXT_MAX_SAME_PROMPT && next.expression.id !== lesson.expression.id;
+  const explicitNext = {
+    ...turn,
+    turnSeq: 4,
+    userText: "다음 문장으로 넘어가자",
+    intent: "next_material" as const,
+  };
+  const advanced = applyMonaVnextLessonEvaluation(next, evaluateMonaVnextTurn(explicitNext, next));
+  const ok = evaluation.samePromptCount >= MONA_VNEXT_MAX_SAME_PROMPT
+    && evaluation.pedagogyAction === "intervene"
+    && !evaluation.shouldAdvancePrompt
+    && next.expression.id === lesson.expression.id
+    && next.expression.state === "repair"
+    && advanced.expression.id !== lesson.expression.id;
   return ok
-    ? pass("repeat-limit", `samePromptCount=${evaluation.samePromptCount}`)
-    : fail("repeat-limit", "same prompt limit did not force prompt advance");
+    ? pass("repeat-limit", `samePromptCount=${evaluation.samePromptCount}; intervention then explicit next advances`)
+    : fail("repeat-limit", JSON.stringify({ evaluation, next, advanced }));
 }
 
 function checkControlLeakage(): Result {
@@ -435,9 +489,12 @@ function checkRepairIntent(): Result {
   };
   const evaluation = evaluateMonaVnextTurn(turn, lesson);
   const next = applyMonaVnextLessonEvaluation(lesson, evaluation);
-  return evaluation.repairRequested && next.expression.id !== lesson.expression.id
-    ? pass("repair-intent", "frustration/profanity repair switches material")
-    : fail("repair-intent", "repair/frustration was not handled as control intent");
+  return evaluation.repairRequested
+    && evaluation.pedagogyAction === "repair"
+    && next.expression.id === lesson.expression.id
+    && next.expression.state === "repair"
+    ? pass("repair-intent", "frustration/profanity repairs current material without auto-switching")
+    : fail("repair-intent", JSON.stringify({ evaluation, next }));
 }
 
 function checkInterruptionFlushSource(): Result {
@@ -543,6 +600,7 @@ const results = [
   checkMetaQuestionIntent(),
   checkStrictStopIntent(),
   checkSkipComplaintIntent(),
+  checkDifficultyIntent(),
   checkLessonAttemptExposure(),
   checkEnglishVisibilityIntent(),
   checkRepeatLimit(),

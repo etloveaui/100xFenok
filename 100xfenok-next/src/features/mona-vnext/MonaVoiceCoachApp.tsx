@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
+import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 import {
   createInitialLessonState,
   type MonaVnextLessonState,
@@ -8,7 +10,7 @@ import {
 } from "@/features/mona-vnext/coach/coachPolicy";
 import { MONA_VNEXT_BASELINE_LOG, MONA_VNEXT_BASELINE_PROMPT_POLICY } from "@/features/mona-vnext/coach/baselineEvidence";
 import { applyMonaVnextLessonEvaluation } from "@/features/mona-vnext/coach/lessonFlow";
-import { evaluateMonaVnextTurn } from "@/features/mona-vnext/coach/postTurnEvaluator";
+import { evaluateMonaVnextTurn, type MonaVnextPostTurnEvaluation } from "@/features/mona-vnext/coach/postTurnEvaluator";
 import {
   MONA_VNEXT_DEFAULT_GEMINI_MODEL,
   MONA_VNEXT_GEMINI_MODELS,
@@ -48,6 +50,12 @@ const DEFAULT_SETTINGS = {
 // Durable event buffer cap, matched to the writer's events.slice(-1000).
 const MAX_PENDING_EVENTS = 1000;
 
+type MonaVoiceCoachSurface = "winddown" | "debug";
+
+type Props = {
+  surface?: MonaVoiceCoachSurface;
+};
+
 type PersistResult = {
   ok?: unknown;
   file?: unknown;
@@ -71,7 +79,40 @@ function appendEvent(events: MonaVnextLogEvent[], event: MonaVnextLogEvent) {
   return [...events, event].slice(-40);
 }
 
-export default function MonaVoiceCoachApp() {
+function mapWindDownPhase(status: ReturnType<typeof useGeminiLiveSession>["status"]): WindDownPhase {
+  if (status === "listening") return "live";
+  if (status === "connecting" || status === "setup-wait" || status === "stopping") return "connecting";
+  if (status === "blocked" || status === "error") return "blocked";
+  if (status === "stopped") return "stopped";
+  return "ready";
+}
+
+function buildWindDownMessage(status: ReturnType<typeof useGeminiLiveSession>["status"]) {
+  if (status === "connecting" || status === "setup-wait") return "연결하고 있어. 잠깐만 기다려줘.";
+  if (status === "listening") return "천천히 말하면 듣고 있어.";
+  if (status === "stopping") return "대화를 정리하고 있어.";
+  if (status === "stopped") return "저장까지 마쳤어. 다시 시작해도 돼.";
+  if (status === "blocked" || status === "error") return "지금은 시작할 수 없어. 설정이나 권한을 확인해야 해.";
+  return "마이크를 켜면 오늘 문장부터 바로 시작할게.";
+}
+
+function buildWindDownCard(lessonState: MonaVnextLessonState): ExpressionCard {
+  const isRepair = lessonState.expression.state === "repair";
+  const state: ExpressionCard["state"] = isRepair
+    ? "drill"
+    : lessonState.englishVisible || lessonState.expression.state === "reveal"
+      ? "reveal"
+      : "prompt";
+  return {
+    state,
+    ko: lessonState.expression.ko,
+    ...(state !== "prompt" ? { en: lessonState.expression.en } : {}),
+    ...(isRepair ? { drillHint: "천천히 다시 잡아보자" } : {}),
+    updatedAt: Date.now(),
+  };
+}
+
+export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   const [transcriptState, setTranscriptState] = useState<MonaVnextTranscriptState>(
     () => createMonaVnextTranscriptState(createMonaVnextConversationId()),
   );
@@ -81,6 +122,8 @@ export default function MonaVoiceCoachApp() {
   // conversation saves can set it; partial-event logging never does.
   const [persistenceState, setPersistenceState] = useState(() => createInitialPersistenceState());
   const [selectedModel, setSelectedModel] = useState<MonaVnextGeminiModel>(MONA_VNEXT_DEFAULT_GEMINI_MODEL);
+  const [voiceName, setVoiceName] = useState<string>(DEFAULT_SETTINGS.voiceName);
+  const [vadPreset, setVadPreset] = useState<"relaxed" | "balanced">(DEFAULT_SETTINGS.vadPreset);
   const sessionRef = useRef<{
     sessionId: string;
     conversationId: string;
@@ -94,6 +137,7 @@ export default function MonaVoiceCoachApp() {
   const finalizeSessionRef = useRef<(options: FinalizeOptions) => void>(() => undefined);
   const sessionFinalizedRef = useRef(false);
   const hardStopHandledRef = useRef(false);
+  const autoStartConversationRef = useRef<string | null>(null);
   // Best-effort events (partials, lifecycle) accumulate here and are flushed
   // into the next turn/final log POST, instead of one POST per partial.
   const pendingEventsRef = useRef<MonaVnextLogEvent[]>([]);
@@ -101,8 +145,10 @@ export default function MonaVoiceCoachApp() {
   const sessionSettings = useMemo(() => ({
     ...DEFAULT_SETTINGS,
     model: selectedModel,
+    voiceName,
+    vadPreset,
     activeExpressionId: lessonState.expression.id,
-  }), [lessonState.expression.id, selectedModel]);
+  }), [lessonState.expression.id, selectedModel, vadPreset, voiceName]);
 
   const applyPersistOutcome = useCallback((
     kind: MonaVnextPersistKind,
@@ -183,6 +229,7 @@ export default function MonaVoiceCoachApp() {
       detail: {
         turnSeq: turn.turnSeq,
         intent: evaluation.intent,
+        pedagogyAction: evaluation.pedagogyAction,
         promptId: evaluation.promptId,
         nextPromptId: nextLesson.expression.id,
         materialChanged: nextLesson.expression.id !== currentLesson.expression.id,
@@ -190,13 +237,17 @@ export default function MonaVoiceCoachApp() {
         sttDrift: evaluation.sttDrift,
       },
     };
-    const controlEvent: MonaVnextLogEvent | null = evaluation.repairRequested
+    const controlEvent: MonaVnextLogEvent | null = evaluation.pedagogyAction === "hold"
+      || evaluation.pedagogyAction === "teach_slow"
+      || evaluation.pedagogyAction === "repair"
+      || evaluation.pedagogyAction === "intervene"
       ? {
-        type: "repair-control-injected",
-        message: "사용자 불만/무시/인식오류 신호 감지. 다음 진행 금지, 들은 내용 확인 후 다시 시도하도록 Live 모델에 주입.",
+        type: "pedagogy-control-injected",
+        message: `Mona vNext pedagogy action injected: ${evaluation.pedagogyAction}.`,
         atIso: new Date().toISOString(),
         detail: {
           turnSeq: turn.turnSeq,
+          pedagogyAction: evaluation.pedagogyAction,
           userText: turn.userText,
           modelText: turn.modelText,
         },
@@ -222,6 +273,41 @@ export default function MonaVoiceCoachApp() {
     ].join(" ")
   ), []);
 
+  const buildPedagogyControlPrompt = useCallback((
+    evaluation: MonaVnextPostTurnEvaluation,
+    currentLesson: MonaVnextLessonState,
+  ) => {
+    const current = currentLesson.expression;
+    const firstHint = current.en.split(/\s+/).slice(0, 2).join(" ");
+    const base = [
+      "[CONTROL]",
+      `현재 문장을 유지해: "${current.ko}" / "${current.en}"`,
+      "새 문장으로 넘어가지 마. 한 번에 하나만 말하고 모나의 대답을 기다려.",
+    ];
+    if (evaluation.pedagogyAction === "hold") {
+      return [
+        ...base,
+        "모나가 아직 하지 않았거나 넘어가지 말라고 했다. 짧게 인정하고 기다려.",
+      ].join(" ");
+    }
+    if (evaluation.pedagogyAction === "teach_slow") {
+      return [
+        ...base,
+        `선생님처럼 아주 천천히 쪼개. 첫 힌트는 "${firstHint}" 정도만 주고 기다려.`,
+      ].join(" ");
+    }
+    if (evaluation.pedagogyAction === "intervene") {
+      return [
+        ...base,
+        `반복 한계에 닿았다. 자동으로 넘기지 말고 "${firstHint}" 힌트만 주고, 계속할지 다음으로 갈지 모나가 직접 말하게 해.`,
+      ].join(" ");
+    }
+    return [
+      ...base,
+      "불만이나 인식오류를 먼저 수습해. 사과는 짧게, 현재 문장으로 다시 잡아줘.",
+    ].join(" ");
+  }, []);
+
   const persistTurn = useCallback((
     turn: MonaVnextTurn,
     currentLesson: MonaVnextLessonState,
@@ -232,14 +318,7 @@ export default function MonaVoiceCoachApp() {
     setEvents((current) => appendEvent(current, event));
     if (controlEvent) {
       setEvents((current) => appendEvent(current, controlEvent));
-      sendControlTextRef.current(
-        [
-          "[CONTROL]",
-          "사용자가 방금 진행을 무시했다고 지적했다.",
-          "새 문장으로 넘어가지 말고, 네가 들은 한국어 내용을 짧게 확인한 뒤 다시 한 번 말해달라고 해라.",
-          "절대 '해 볼래?', '어때?'처럼 진행하지 마라.",
-        ].join(" "),
-      );
+      sendControlTextRef.current(buildPedagogyControlPrompt(evaluation, currentLesson));
     }
     // Flush buffered partial/lifecycle events together with this turn into a
     // single durable log POST. The writer accumulates events server-side.
@@ -274,7 +353,6 @@ export default function MonaVoiceCoachApp() {
     }
     if (
       nextLesson.expression.id !== currentLesson.expression.id
-      && !evaluation.repairRequested
       && !evaluation.stopRequested
     ) {
       sendControlTextRef.current(buildNextLessonPrompt(nextLesson));
@@ -282,6 +360,7 @@ export default function MonaVoiceCoachApp() {
   }, [
     buildMetaQuestionAnswer,
     buildNextLessonPrompt,
+    buildPedagogyControlPrompt,
     buildPostTurnArtifacts,
     drainPendingEvents,
     postConversationLog,
@@ -312,6 +391,7 @@ export default function MonaVoiceCoachApp() {
       sessionFinalizedRef.current = false;
       hardStopHandledRef.current = false;
       setPersistenceState(createInitialPersistenceState());
+      autoStartConversationRef.current = null;
       bufferEvent({
         type: "session-ready",
         message: "Mona vNext owner-test session ready.",
@@ -456,6 +536,39 @@ export default function MonaVoiceCoachApp() {
   const stopSession = useCallback(() => {
     finalizeSession({ reason: "manual-stop" });
   }, [finalizeSession]);
+
+  useEffect(() => {
+    if (surface !== "winddown") return;
+    if (live.status !== "listening" || !live.session) return;
+    if (autoStartConversationRef.current === live.session.conversationId) return;
+    if (live.sendText("시작. 한 문장씩 천천히 해줘.")) {
+      autoStartConversationRef.current = live.session.conversationId;
+    }
+  }, [live, surface]);
+
+  const windDownCard = useMemo(() => buildWindDownCard(lessonState), [lessonState]);
+  const latestCoachLine = transcriptState.current.modelText
+    || [...transcriptState.turns].reverse().find((turn) => Boolean(turn.modelText))?.modelText
+    || null;
+  const windDownError = persistenceState.conversationSaveError ?? live.metrics.lastError;
+
+  if (surface === "winddown") {
+    return (
+      <MonaWindDown
+        phase={mapWindDownPhase(live.status)}
+        message={buildWindDownMessage(live.status)}
+        card={live.session ? windDownCard : null}
+        coachLine={latestCoachLine}
+        errorText={windDownError}
+        voiceName={voiceName}
+        vadPreset={vadPreset}
+        onVoiceChange={setVoiceName}
+        onVadChange={setVadPreset}
+        onStart={live.start}
+        onStop={stopSession}
+      />
+    );
+  }
 
   return (
     <WindDownVnextShell

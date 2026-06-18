@@ -1,7 +1,6 @@
 import {
   pickNextExpression,
   recordPromptExposure,
-  shouldForcePromptAdvance,
   type MonaVnextLessonState,
 } from "@/features/mona-vnext/coach/coachPolicy";
 import type { MonaVnextPostTurnEvaluation } from "@/features/mona-vnext/coach/postTurnEvaluator";
@@ -23,7 +22,7 @@ export function applyMonaVnextLessonEvaluation(
     };
   }
 
-  if (evaluation.nextMaterialRequested || evaluation.repairRequested || shouldForcePromptAdvance(state)) {
+  if (evaluation.pedagogyAction === "advance") {
     const next = pickNextExpression(state.expression.id, state.promptHistory, state.expressionBank);
     return recordPromptExposure(
       {
@@ -32,9 +31,23 @@ export function applyMonaVnextLessonEvaluation(
       },
       {
         ...next,
-        state: evaluation.repairRequested ? "repair" : "prompt",
+        state: "prompt",
       },
     );
+  }
+
+  if (evaluation.pedagogyAction === "hold"
+    || evaluation.pedagogyAction === "teach_slow"
+    || evaluation.pedagogyAction === "repair"
+    || evaluation.pedagogyAction === "intervene") {
+    return {
+      ...state,
+      englishVisible: true,
+      expression: {
+        ...state.expression,
+        state: "repair",
+      },
+    };
   }
 
   if (evaluation.lessonAttempt) {

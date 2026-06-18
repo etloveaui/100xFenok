@@ -2,6 +2,8 @@ export type MonaVnextIntent =
   | "lesson_attempt"
   | "next_material"
   | "english_visibility"
+  | "hold_current"
+  | "difficulty"
   | "repair"
   | "meta_question"
   | "stop"
@@ -25,6 +27,26 @@ const ENGLISH_VISIBILITY_PATTERNS = [
   /\bshow\b.*\benglish\b/i,
 ];
 
+const HOLD_CURRENT_PATTERNS = [
+  /아직.*(?:안|않).*(?:했|말했|했다|말했다|한|함)/,
+  /(?:내가|내 말|내 차례).*(?:아직|할게|해볼게|하고 있어|하는 중)/,
+  /(?:넘어가지|넘어가면|스킵하지|건너뛰지).*(?:마|말)/,
+  /왜.*(?:넘어가|넘어갔|넘어갈|뛰어넘|뛰어났|건너뛰|스킵)/,
+];
+
+const DIFFICULTY_PATTERNS = [
+  /어렵/,
+  /모르겠/,
+  /천천히/,
+  /너무 빨/,
+  /단어.*(?:하나|씩)/,
+  /쪼개/,
+  /힌트/,
+  /\btoo hard\b/i,
+  /\bslow(?:er)?\b/i,
+  /\bhint\b/i,
+];
+
 const REPAIR_PATTERNS = [
   /짜증/,
   /빡/,
@@ -36,8 +58,6 @@ const REPAIR_PATTERNS = [
   /이해.*못/,
   /말.*이해/,
   /내 말.*(?:안|못).*듣/,
-  /왜.*(?:넘어가|넘어갔|넘어갈|뛰어넘|뛰어났|건너뛰|스킵)/,
-  /(?:넘어가|넘어갔|넘어갈|뛰어넘|뛰어났|건너뛰|스킵).*왜/,
   /왜.*반복/,
   /왜.*계속/,
   /못 알아듣/,
@@ -91,8 +111,10 @@ export function detectMonaVnextIntent(text: string | null | undefined): MonaVnex
   if (META_QUESTION_PATTERNS.some((pattern) => pattern.test(normalized))) return "meta_question";
   if (STOP_PATTERNS.some((pattern) => pattern.test(normalized))) return "stop";
   if (ENGLISH_VISIBILITY_PATTERNS.some((pattern) => pattern.test(normalized))) return "english_visibility";
-  if (REPAIR_PATTERNS.some((pattern) => pattern.test(normalized))) return "repair";
+  if (HOLD_CURRENT_PATTERNS.some((pattern) => pattern.test(normalized))) return "hold_current";
   if (NEXT_PATTERNS.some((pattern) => pattern.test(normalized))) return "next_material";
+  if (DIFFICULTY_PATTERNS.some((pattern) => pattern.test(normalized))) return "difficulty";
+  if (REPAIR_PATTERNS.some((pattern) => pattern.test(normalized))) return "repair";
   return "lesson_attempt";
 }
 

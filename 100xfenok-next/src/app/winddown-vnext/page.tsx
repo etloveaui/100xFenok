@@ -45,7 +45,7 @@ export default async function WindDownVnextPage() {
 
   return (
     <div data-immersive-route="winddown-vnext" className={fraunces.variable}>
-      <MonaVoiceCoachApp />
+      <MonaVoiceCoachApp surface="debug" />
     </div>
   );
 }
