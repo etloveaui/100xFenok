@@ -224,13 +224,15 @@ const DataLabUI = (function() {
         throw new Error(`market_data_audit returned ${response.status}`);
       }
       const audit = await response.json();
-      const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers] = await Promise.all([
+      const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers, stockanalysisEtfUniverse, stockanalysisNewEtfs] = await Promise.all([
         fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, '소스 일치성 진단'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis 수집 인덱스'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/coverage/etf_detail.json`, 'ETF 상세 커버리지'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF 분류 요약'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, '시장 데이터 수집 현황'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/surface_consumers.json`, '시장 데이터 화면 연결')
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surface_consumers.json`, '시장 데이터 화면 연결'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/etf_universe.json`, 'ETF 전체 목록'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/new_etfs.json`, '신규 ETF 목록')
       ]);
       const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
       const [stockanalysisIncremental, stockanalysisPendingLedger, marketFactsIndex] = await Promise.all([
@@ -248,6 +250,8 @@ const DataLabUI = (function() {
         etfClassification,
         stockanalysisSurfaceIndex,
         stockanalysisSurfaceConsumers,
+        stockanalysisEtfUniverse,
+        stockanalysisNewEtfs,
         stockanalysisIncremental,
         stockanalysisPendingLedger,
         marketFactsIndex

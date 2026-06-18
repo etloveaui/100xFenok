@@ -295,6 +295,8 @@ const Renderer = (function() {
     etfClassification,
     stockanalysisSurfaceIndex,
     stockanalysisSurfaceConsumers,
+    stockanalysisEtfUniverse,
+    stockanalysisNewEtfs,
     stockanalysisIncremental,
     stockanalysisPendingLedger,
     marketFactsIndex
@@ -382,12 +384,91 @@ const Renderer = (function() {
         ]
       })}
       ${renderEtfClassificationAudit(etfClassification)}
+      ${renderEtfUniverseSnapshot(stockanalysisEtfUniverse, stockanalysisNewEtfs, detailCoverage)}
       ${renderEtfCoverageGapAudit(detailCoverage)}
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
       ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
+    `;
+  }
+
+  function renderEtfUniverseSnapshot(universe, newEtfs, coverage) {
+    const universeCounts = universe?.counts || {};
+    const classification = universeCounts.classification || {};
+    const newRows = Array.isArray(newEtfs?.records) ? newEtfs.records : [];
+    const coverageCounts = coverage?.counts || {};
+    const sourceBreakdown = coverageCounts.source_breakdown || {};
+    const missingBySource = coverageCounts.missing_by_source || {};
+    if (!universe && !newRows.length) return '';
+
+    const newestRows = [...newRows]
+      .filter((row) => row?.s)
+      .sort((a, b) => String(b?.inceptionDate || '').localeCompare(String(a?.inceptionDate || '')) || String(a?.s || '').localeCompare(String(b?.s || '')))
+      .slice(0, 8);
+    const latestDate = newestRows[0]?.inceptionDate || newEtfs?.fetched_at || '-';
+    const fetchedAt = newEtfs?.fetched_at || universe?.generated_at || '-';
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">ETF 목록·신규 상장 스냅샷</h3>
+            <p class="text-xs text-gray-500 mt-1">etf_universe.json · surfaces/new_etfs.json · coverage/etf_detail.json</p>
+          </div>
+          <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
+            ${escapeHtml(fetchedAt).slice(0, 10)}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-2">
+          ${renderAuditMetric('전체 ETF', universeCounts.records ?? sourceBreakdown.etf_universe)}
+          ${renderAuditMetric('신규 상장', newEtfs?.counts?.records ?? newRows.length)}
+          ${renderAuditMetric('최신 상장일', escapeHtml(latestDate).slice(0, 10))}
+          ${renderAuditMetric('신규 상세 대기', missingBySource.new_etfs)}
+          ${renderAuditMetric('레버리지', classification.leveraged)}
+          ${renderAuditMetric('단일종목', classification.single_stock)}
+          ${renderAuditMetric('인버스', classification.inverse)}
+          ${renderAuditMetric('상세 커버리지', `${Formatters.formatNumber(coverageCounts.coverage_pct || 0, 2)}%`)}
+        </div>
+        ${newestRows.length ? `
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+            ${newestRows.map((row) => renderNewEtfMiniCard(row)).join('')}
+          </div>
+        ` : `
+          <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs font-semibold text-gray-400">표시할 신규 ETF가 없습니다.</div>
+        `}
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          신규 ETF 행은 공개 ETF 화면과 같은 수집 파일을 봅니다. 상세 파일이 아직 없으면 공개 상세는 요약/가격 우선 상태로 열리고, 다음 데이터 갱신에서 보유 구성과 분류가 자동 보강됩니다.
+        </p>
+      </section>
+    `;
+  }
+
+  function renderNewEtfMiniCard(row) {
+    const ticker = String(row?.s || '').trim().toUpperCase();
+    const name = String(row?.n || ticker || '-').trim();
+    const date = String(row?.inceptionDate || '-').slice(0, 10);
+    const price = typeof row?.price === 'number' && Number.isFinite(row.price)
+      ? `$${Formatters.formatNumber(row.price, 2)}`
+      : '-';
+    const change = typeof row?.change === 'number' && Number.isFinite(row.change)
+      ? `${row.change >= 0 ? '+' : ''}${Formatters.formatNumber(row.change, 2)}%`
+      : '-';
+    return `
+      <a href="/etfs/${encodeURIComponent(ticker)}" class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-3 transition hover:border-cyan-200 hover:bg-white">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="truncate text-sm font-black text-gray-800" title="${escapeHtml(name)}">${escapeHtml(ticker || '-')}</div>
+            <div class="mt-1 truncate text-[11px] font-semibold text-gray-500" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+          </div>
+          <span class="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-1 text-[10px] font-black text-gray-500">${escapeHtml(date)}</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between gap-2 text-[11px] font-black">
+          <span class="text-gray-500">${escapeHtml(price)}</span>
+          <span class="${String(change).startsWith('-') ? 'text-rose-600' : 'text-emerald-600'}">${escapeHtml(change)}</span>
+        </div>
+      </a>
     `;
   }
 

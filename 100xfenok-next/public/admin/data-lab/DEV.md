@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.9 (operator copy polish)
+> **Version**: 2.2.18 (ETF universe snapshot)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -69,6 +69,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **Reactive state** | Observer pattern for automatic UI updates |
 | **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, and source parity |
 | **StockAnalysis audit** | Reads `data/stockanalysis/index.json`, `coverage/etf_detail.json`, and `classification/latest.json` for ETF detail coverage, backfill, and leverage/inverse/single-stock classification visibility |
+| **ETF universe snapshot** | Reads `etf_universe.json`, `surfaces/new_etfs.json`, and `coverage/etf_detail.json` together so operators can see total ETF count, newest launches, and new-ETF detail gaps from live data |
 | **ETF coverage gap drilldown** | Shows new-ETF/universe/screener missing counts and sample tickers from `coverage/etf_detail.json` |
 
 ---
@@ -139,6 +140,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF queue visibility**: `data/stockanalysis/backfill/pending_ledger.json` is fetched directly for Admin-only drilldown rows. This shows pending/retry/failure tickers from the data refresh artifacts instead of static copy.
 - **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 - **ETF gap drilldown**: Data Lab reads `counts.missing_by_source` and `samples` from `coverage/etf_detail.json` so operators can see which new/listed ETFs still rely on fallback surfaces.
+- **ETF universe snapshot**: Data Lab reads the full ETF universe and new-ETF surface directly, then joins those counts with `coverage/etf_detail.json`; the card must stay data-driven and must not use static launch counts.
 - **ETF missing reasons**: `coverage/etf_detail.json` also exposes `missing_reason_summary` and `missing_status_summary`; Data Lab renders those as source-neutral Korean buckets (`외부 분류 불일치`, `아직 수집 전`, `재시도 대기`) while raw provider evidence remains in JSON.
 - **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
 - **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json` and active route/component files.
@@ -159,6 +161,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.18 | 2026-06-19 | Added Data Lab ETF universe/new-launch snapshot from live StockAnalysis files, including newest ETF rows and new-ETF detail gap counts |
 | 2.2.17 | 2026-06-19 | Hardened `qa:surface-consumers` so every declared StockAnalysis consumer must map to an active route/component contract, including `/market/events` and `/stock/[ticker]` |
 | 2.2.16 | 2026-06-19 | Wired StockAnalysis refresh CI to Data Lab UI QA gates (`qa:surface-consumers`, `qa:market-audit`, `qa:copy`) so generated data updates cannot silently regress admin labels or surface contracts |
 | 2.2.15 | 2026-06-19 | Polished remaining Data Lab visible labels in mirror/usage and market-audit cards, and extended `qa:copy` to block the awkward `데이터 묶음` regression |
