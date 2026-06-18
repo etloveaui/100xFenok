@@ -1796,11 +1796,12 @@ def incremental_etf_backfill_candidates(
     sources = [
         ("new_etfs", load_surface_symbols("new_etfs")),
         ("etf_universe", [row.get("ticker") for row in (universe_payload or {}).get("records") or []] or load_etf_universe_symbols()),
+        ("etf_screener", load_surface_symbols("etf_screener")),
     ]
     candidates = []
     cooldown_rows = []
     seen = set()
-    source_priority = {"new_etfs": 0, "etf_universe": 1}
+    source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
     reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "stale": 2}
 
     for source_name, symbols in sources:
@@ -1857,7 +1858,7 @@ def incremental_etf_backfill_candidates(
             "max_age_hours": max_age_hours,
             "cooldown_days": cooldown_days,
             "cooldown_failure_threshold": cooldown_failure_threshold,
-            "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason/failure bucket",
+            "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows",
         },
         "counts": {
             "candidates": len(candidates),

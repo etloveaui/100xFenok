@@ -293,6 +293,33 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["ADIU", "BETA"])
         self.assertEqual([row["reason"] for row in summary["selected"]], ["missing", "missing"])
 
+    def test_incremental_etf_backfill_includes_screener_only_missing(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "surfaces" / "etf_screener.json").write_text(
+                    json.dumps({"records": [{"s": "AMJB", "n": "ALERIAN MLP INDEX ETNS"}]}),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": []},
+                    limit=10,
+                    max_age_hours=720,
+                    exclude=set(),
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["AMJB"])
+        self.assertEqual(summary["selected"][0]["source"], "etf_screener")
+        self.assertEqual(summary["selected"][0]["reason"], "missing")
+        self.assertEqual(summary["counts"]["missing"], 1)
+
     def test_incremental_etf_backfill_skips_pending_ledger_cooldown(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:
