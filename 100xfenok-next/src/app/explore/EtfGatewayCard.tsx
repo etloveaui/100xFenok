@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import {
   asOfDate,
+  cleanCategory,
   formatNumber,
   isInverseEtf,
   isLeveragedEtf,
   isSingleStockLeveragedEtf,
   type EtfUniverseRecord,
-} from "./EtfUniverseCard";
+} from "./etfUniverseUtils";
 
 interface EtfUniverseDoc {
   generated_at?: string | null;
@@ -72,11 +73,6 @@ function loadGatewayData(): Promise<EtfGatewayData> {
     return gatewayCache;
   });
   return gatewayPending;
-}
-
-function cleanCategory(value: string | null | undefined): string {
-  const text = typeof value === "string" ? value.trim() : "";
-  return text && text !== "-" ? text : "미분류";
 }
 
 function compactMoney(value: number | null | undefined): string {

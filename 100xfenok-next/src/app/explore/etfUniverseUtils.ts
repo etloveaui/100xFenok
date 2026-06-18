@@ -1,0 +1,129 @@
+export interface EtfUniverseRecord {
+  ticker?: string;
+  name?: string;
+  category?: string;
+  aum_raw?: string;
+  aum?: number;
+  classification?: EtfClassification;
+  is_leveraged?: boolean;
+  leverage_factor?: number | null;
+  is_inverse?: boolean;
+  is_single_stock?: boolean;
+  underlying?: string | null;
+}
+
+export interface EtfClassification {
+  is_leveraged?: boolean;
+  leverage_factor?: number | null;
+  is_inverse?: boolean;
+  is_single_stock?: boolean;
+  underlying?: string | null;
+  source?: string;
+  confidence?: string;
+}
+
+export type EtfTypeFilter = "전체" | "레버리지" | "단일종목 레버리지" | "인버스";
+
+export const ETF_TYPE_PARAM: Record<EtfTypeFilter, string | null> = {
+  "전체": null,
+  "레버리지": "leveraged",
+  "단일종목 레버리지": "single-stock",
+  "인버스": "inverse",
+};
+
+export function cleanCategory(value: string | null | undefined): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  return text && text !== "-" ? text : "미분류";
+}
+
+export function formatNumber(value: number | null | undefined): string {
+  return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
+}
+
+export function formatAum(row: EtfUniverseRecord): string {
+  if (typeof row.aum_raw === "string" && row.aum_raw.trim() && row.aum_raw.trim() !== "-") return row.aum_raw.trim();
+  const value = typeof row.aum === "number" && Number.isFinite(row.aum) ? row.aum : null;
+  if (value === null) return "—";
+  if (value >= 1_000_000_000_000) return `${(value / 1_000_000_000_000).toFixed(2)}T`;
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  return value.toLocaleString("en-US");
+}
+
+export function asOfDate(value: string | null | undefined): string {
+  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
+}
+
+function etfSearchText(row: EtfUniverseRecord): string {
+  return [row.ticker, row.name, row.category, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
+}
+
+function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
+  if (row.classification && typeof row.classification === "object") return row.classification;
+  if (
+    typeof row.is_leveraged === "boolean" ||
+    typeof row.is_inverse === "boolean" ||
+    typeof row.is_single_stock === "boolean" ||
+    typeof row.leverage_factor === "number" ||
+    typeof row.underlying === "string"
+  ) {
+    return {
+      is_leveraged: row.is_leveraged,
+      leverage_factor: row.leverage_factor,
+      is_inverse: row.is_inverse,
+      is_single_stock: row.is_single_stock,
+      underlying: row.underlying,
+    };
+  }
+  return null;
+}
+
+export function isLeveragedEtf(row: EtfUniverseRecord): boolean {
+  const classification = rowClassification(row);
+  if (typeof classification?.is_leveraged === "boolean") return classification.is_leveraged;
+  const text = etfSearchText(row);
+  return (
+    /\b(?:1\.25x|1\.5x|2x|3x|4x)\b/i.test(text) ||
+    /\bleveraged\b/i.test(text) ||
+    /\bultrapro\b/i.test(text) ||
+    /\bmicrosectors\b.*\b3x\b/i.test(text) ||
+    /\bdaily\b.*\b(?:bull|bear|target|long|short)\b/i.test(text) ||
+    /\b(?:bull|bear|long|short)\b.*\b(?:2x|3x|daily)\b/i.test(text)
+  );
+}
+
+export function isSingleStockLeveragedEtf(row: EtfUniverseRecord): boolean {
+  const classification = rowClassification(row);
+  if (typeof classification?.is_single_stock === "boolean") return classification.is_single_stock;
+  if (!isLeveragedEtf(row)) return false;
+  const text = etfSearchText(row);
+  return (
+    /\bsingle[- ]stock\b/i.test(text) ||
+    /\b(?:aapl|apple|nvda|nvidia|tsla|tesla|amd|amzn|amazon|msft|microsoft|meta|googl?|google|coin|coinbase|mstr|microstrategy|pltr|palantir|smci|super micro|avgo|broadcom|mu|nflx|netflix|hood|arm|intc|baba|aal|aaoi|abnb)\b/i.test(text)
+  );
+}
+
+export function isInverseEtf(row: EtfUniverseRecord): boolean {
+  const classification = rowClassification(row);
+  if (typeof classification?.is_inverse === "boolean") return classification.is_inverse;
+  const text = etfSearchText(row);
+  return /\b(?:inverse|bear)\b/i.test(text) || /\bproshares\s+ultrashort\b/i.test(text);
+}
+
+export function formatTypeHint(row: EtfUniverseRecord): string {
+  const classification = rowClassification(row);
+  const parts = [row.ticker, row.category];
+  const factor = classification?.leverage_factor;
+  if (typeof factor === "number" && Number.isFinite(factor)) {
+    parts.push(`${factor.toFixed(factor % 1 === 0 ? 0 : 2)}x`);
+  } else if (isLeveragedEtf(row)) {
+    parts.push("레버리지");
+  }
+  if (classification?.is_single_stock) {
+    parts.push(classification.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
+  }
+  if (classification?.is_inverse) {
+    parts.push("인버스");
+  }
+  return parts.filter(Boolean).join(" · ");
+}

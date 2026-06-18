@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
-import EtfUniverseCard, { type EtfTypeFilter } from "../explore/EtfUniverseCard";
+import EtfUniverseCard from "../explore/EtfUniverseCard";
+import type { EtfTypeFilter } from "../explore/etfUniverseUtils";
 import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
 
 interface Props {
