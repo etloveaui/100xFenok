@@ -82,9 +82,12 @@ Conversation logs:
 
 Mona vNext owner-test logs:
 
-- `/winddown-vnext` is an owner-test surface. It must keep
-  `productionWriteEnabled: false` until the owner explicitly approves
-  promotion.
+- `/winddown` is the owner-facing vNext main surface and reuses the legacy
+  `MonaWindDown` design shell. `/winddown-vnext` remains the debug/test
+  dashboard, and `/winddown-legacy` keeps the previous `AdminLiveBench`
+  rollback runtime.
+- vNext must keep `productionWriteEnabled: false` until the owner explicitly
+  approves production Mona writes.
 - vNext does not write to current Mona production study files. It writes
   isolated logs through the Cloudflare KV binding `MONA_VNEXT_KV`.
 - The KV log key shape is
@@ -102,11 +105,14 @@ Mona vNext owner-test logs:
 - Post-06-18 owner-log gates require the vNext behavior scorer to cover:
   active-expression prompt injection, direct no-advance `meta_question` answers,
   strict-stop partial hard finalize without broad `/끝/` false positives,
-  lesson-attempt repeat exposure advance at 3, and final pending-turn flush with
-  dedupe.
+  lesson-attempt repeat exposure intervention at 3 without auto-advance, and
+  final pending-turn flush with dedupe.
 - Dynamic-bank gates require the scorer to cover normalized Mona-life artifact
   uniqueness, deterministic 20-expression session sampling, client/server bank
   parity, and selected bank metadata in log settings.
+- Pedagogy-action gates require the scorer to cover explicit-next-only advance,
+  hold-current anti-skip, slow teacher mode for difficulty, repair without
+  auto-switch, and max-3 intervention with explicit-next escape.
 
 ## Local Verification
 
