@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
 import StockDetailClient from "./StockDetailClient";
 
 interface Props {
   params: Promise<{ ticker: string }>;
 }
-
-const plexKr = IBM_Plex_Sans_KR({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
@@ -25,7 +18,7 @@ export default async function StockDetailPage({ params }: Props) {
   const { ticker } = await params;
   const symbol = ticker.toUpperCase();
   return (
-    <div className={`fnk-shell ${plexKr.className}`}>
+    <div className="fnk-shell">
       <AppShell title={symbol} backHref={`/screener?ticker=${encodeURIComponent(symbol)}`}>
         <StockDetailClient ticker={symbol} />
       </AppShell>

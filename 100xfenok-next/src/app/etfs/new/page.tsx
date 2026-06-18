@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import NewEtfsList from "./NewEtfsList";
@@ -13,12 +12,6 @@ export const metadata: Metadata = {
   description: "최근 상장된 ETF 목록을 확인하고 상세 페이지로 이동합니다.",
 };
 
-const plexKr = IBM_Plex_Sans_KR({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
-
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -27,7 +20,7 @@ export default async function NewEtfsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
 
   return (
-    <div className={`fnk-shell ${plexKr.className}`}>
+    <div className="fnk-shell">
       <AppShell active="etfs" title="신규 상장 ETF">
         <section className="panel">
           <div className="data-shell-header">

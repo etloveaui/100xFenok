@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
 import SuperinvestorsClient from "./SuperinvestorsClient";
 import type { SuperInvestorsTab } from "@/lib/superinvestors/types";
@@ -12,12 +11,6 @@ export const metadata: Metadata = {
   title: "기관 공시 인텔리전스 | 100xFenok",
   description: "주요 투자자의 분기 공시 보유, 매매, 집중도, 종목별 보유 현황을 탐색합니다.",
 };
-
-const plexKr = IBM_Plex_Sans_KR({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const VALID_TABS = new Set<SuperInvestorsTab>(["consensus", "gurus", "by-ticker", "trades", "insights"]);
 
@@ -32,7 +25,7 @@ export default async function SuperinvestorsPage({ searchParams }: Props) {
   const initialTicker = firstParam(params.ticker ?? params.symbol).trim().toUpperCase();
   const initialGuru = firstParam(params.guru).trim();
   return (
-    <div className={`fnk-shell ${plexKr.className}`}>
+    <div className="fnk-shell">
       <AppShell active="superinvestors" title="투자자">
         <SuperinvestorsClient
           initialTab={initialTab ?? (initialTicker ? "by-ticker" : initialGuru ? "gurus" : undefined)}

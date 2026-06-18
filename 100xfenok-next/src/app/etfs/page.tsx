@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
@@ -14,12 +13,6 @@ export const metadata: Metadata = {
   title: "ETF 센터 | 100xFenok",
   description: "ETF 목록, 신규 상장, 레버리지·단일종목 ETF를 확인합니다.",
 };
-
-const plexKr = IBM_Plex_Sans_KR({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
 
 function typeFilterFromParams(params: Record<string, string | string[] | undefined>): EtfTypeFilter {
   const rawType = params.type;
@@ -42,7 +35,7 @@ export default async function EtfsPage({ searchParams }: Props) {
   const initialNewOnly = newOnlyFromParams(params);
 
   return (
-    <div className={`fnk-shell ${plexKr.className}`}>
+    <div className="fnk-shell">
       <AppShell active="etfs" title="ETF">
         <section className="panel">
           <div className="data-shell-header">
