@@ -13,6 +13,8 @@ const FATAL_MARKERS = [
 const PAGE_ROUTES = [
   "/explore",
   "/etfs",
+  "/etfs/new",
+  "/etfs/new?type=single-stock&days=14&sort=change",
   "/etfs/IEFA",
   "/etfs/ADIU",
   "/market/events",

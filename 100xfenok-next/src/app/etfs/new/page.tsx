@@ -4,6 +4,10 @@ import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import NewEtfsList from "./NewEtfsList";
 
+interface Props {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
+
 export const metadata: Metadata = {
   title: "신규 상장 ETF | 100xFenok",
   description: "최근 상장된 ETF 목록을 확인하고 상세 페이지로 이동합니다.",
@@ -15,7 +19,13 @@ const plexKr = IBM_Plex_Sans_KR({
   display: "swap",
 });
 
-export default function NewEtfsPage() {
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function NewEtfsPage({ searchParams }: Props) {
+  const params = searchParams ? await searchParams : {};
+
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
       <AppShell active="etfs" title="신규 상장 ETF">
@@ -37,7 +47,13 @@ export default function NewEtfsPage() {
         </section>
 
         <div style={{ marginTop: "var(--s4)" }}>
-          <NewEtfsList />
+          <NewEtfsList
+            initialQuery={firstParam(params.q)}
+            initialType={firstParam(params.type)}
+            initialDays={firstParam(params.days)}
+            initialIssuer={firstParam(params.issuer)}
+            initialSort={firstParam(params.sort)}
+          />
         </div>
       </AppShell>
     </div>
