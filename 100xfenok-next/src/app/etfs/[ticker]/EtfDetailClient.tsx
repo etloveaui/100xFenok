@@ -226,8 +226,8 @@ function weightedRowValue(row: WeightedRow): number | null {
 }
 
 function detailStatusText(status: string | null) {
-  if (status === "surface_only" || status === "universe_only") return "요약 정보 우선 표시 중입니다. 보유 구성은 데이터 갱신 시 자동으로 보강됩니다.";
-  if (status === "yf_fallback") return "가격 정보 우선 표시 중입니다. 보유·분류 지표는 데이터 갱신 시 자동으로 보강됩니다.";
+  if (status === "surface_only" || status === "universe_only") return "아직 보유 구성은 준비 중이며, 요약 정보부터 확인할 수 있습니다. 데이터가 갱신되면 자동으로 보강됩니다.";
+  if (status === "yf_fallback") return "가격 정보는 연결됐고, 보유·분류 지표는 데이터 갱신 시 자동으로 보강됩니다.";
   return null;
 }
 

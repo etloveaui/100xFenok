@@ -122,15 +122,15 @@ function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "ful
 }
 
 function detailStatusLabel(status: "full" | "partial" | "pending"): string {
-  if (status === "pending") return "요약 우선";
-  if (status === "partial") return "가격 포함";
-  return "상세 이동";
+  if (status === "pending") return "요약 제공";
+  if (status === "partial") return "가격 제공";
+  return "상세 가능";
 }
 
 function detailStatusHint(status: "full" | "partial" | "pending"): string {
-  if (status === "pending") return "요약 정보 우선 표시";
-  if (status === "partial") return "가격 정보 포함";
-  return "상세 화면으로 이동";
+  if (status === "pending") return "요약 정보 제공";
+  if (status === "partial") return "가격 정보 제공";
+  return "상세 화면 준비됨";
 }
 
 function typeFromParam(value: string | null | undefined): EtfTypeFilter {

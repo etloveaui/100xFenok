@@ -1637,9 +1637,9 @@ function EtfDataPanel({
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
   const detailStatusText = detailStatus === "surface_only"
-    ? "보유 구성 준비 중 · 신규 상장 목록 기준으로 먼저 표시"
+    ? "보유 구성 준비 중 · 신규 상장 정보로 요약 표시"
     : detailStatus === "universe_only"
-      ? "보유 구성 준비 중 · ETF 목록 기준으로 먼저 표시"
+      ? "보유 구성 준비 중 · ETF 기본 정보로 요약 표시"
       : null;
 
   const cards = [
@@ -1647,8 +1647,8 @@ function EtfDataPanel({
     { label: "당일 변화", value: fmtEtfSignedPct(changePct), note: rawText(quote.ex) },
     { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "운용자산" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
-    { label: "보수율", value: expenseRatio !== null ? fmtEtfPct(expenseRatio) : rawText(overview.expenseRatio), note: "Expense" },
-    { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "Yield" },
+    { label: "보수율", value: expenseRatio !== null ? fmtEtfPct(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
+    { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "민감도" },
     { label: "설정일", value: rawText(overview.inception), note: "Inception" },
     { label: "표시 종목", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: fmtDateish(holdingsUpdated) },
@@ -1660,7 +1660,7 @@ function EtfDataPanel({
       <SectionCard title="ETF 상세">
         <div className="py-8 text-center">
           <p className="text-sm font-black text-slate-700">ETF 상세 데이터는 아직 없습니다</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 보유 구성이 열리기 전까지 목록과 가격 정보를 먼저 표시합니다.</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 상세 데이터가 열리기 전에도 목록과 가격 정보를 먼저 확인할 수 있습니다.</p>
         </div>
       </SectionCard>
     );
