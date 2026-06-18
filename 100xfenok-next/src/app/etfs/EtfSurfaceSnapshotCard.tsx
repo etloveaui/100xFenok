@@ -133,7 +133,7 @@ function EtfLink({
     </>
   );
   return symbol ? (
-    <TransitionLink href={`/stock/${encodeURIComponent(symbol)}`} className="mv-row">
+    <TransitionLink href={`/etfs/${encodeURIComponent(symbol)}`} className="mv-row">
       {body}
     </TransitionLink>
   ) : (
