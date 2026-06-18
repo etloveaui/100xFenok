@@ -139,9 +139,10 @@ External sources
     annual or quarterly income, balance sheet, cash-flow, and ratios rows without
     touching the active ETF backfill fetcher;
   - supports `--fixture scripts/fixtures/stockanalysis/aapl_income_annual__data.fixture.json`
-    plus `scripts/test-stockanalysis-financials-fixtures.py` so the devalue
-    decoder and normalized row contract can be checked without live network
-    access.
+    plus `scripts/test-stockanalysis-financials-fixtures.py`; the fixture suite
+    now covers annual/quarterly income, balance sheet, cash-flow, ratios, and a
+    JPM bank balance sheet with row-schema/key-field invariants, so the devalue
+    decoder can be checked without live network access.
 - `scripts/test_fetch_stockanalysis_fixtures.py`
   - validates the main fetcher's devalue surface decoder, ETF universe HTML
     parser, generic table parser, and surface-name validation against local
@@ -182,7 +183,7 @@ External sources
 - `100xfenok-next/src/app/explore/EtfUniverseCard.tsx`
   - reads `stockanalysis/etf_universe.json` from the local public DataPack and
     renders a searchable/category-filterable ETF universe on Explore;
-  - links each ETF row to `/stock/{TICKER}`, where the ticker-level ETF tab reads
+  - links each ETF row to `/etfs/{TICKER}`, where the ETF detail route reads
     the latest available holdings/quote/history payload.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
@@ -235,12 +236,11 @@ StockAnalysis all remain visible when their values overlap.
 5. Keep shipped StockAnalysis surfaces actively visible in Explore/Admin/Data Lab
    and guarded by contract tests so committed surface data does not become dead
    DataPack weight.
-6. Expand the StockAnalysis financial fixture suite to balance sheet,
-   cash-flow, ratios, quarterly periods, and schema checks before promoting the
-   probe into the main fetcher after the ETF backfill run is closed.
-6. Add consumer routes/cards for `stockanalysis/surfaces`:
+6. Promote the StockAnalysis financial probe into the main fetcher only after the
+   ETF backfill run is closed and the fixture/schema gate remains passing.
+7. Add consumer routes/cards for `stockanalysis/surfaces`:
    ETF launch radar, earnings calendar, corporate actions, IPO radar, and
    industry maps.
-7. Extend analyzer-specific feno-value providers beyond the common DataPack
+8. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
-8. Keep direct provider scraping as explicit fallback, not the normal path.
+9. Keep direct provider scraping as explicit fallback, not the normal path.

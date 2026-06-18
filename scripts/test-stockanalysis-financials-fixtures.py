@@ -23,6 +23,22 @@ FIXTURE_CASES = [
     ("jpm", "balance_sheet", "annual", 30, 5),
 ]
 
+EXPECTED_NORMALIZED_STATEMENTS = {
+    "income": "income-statement",
+    "balance_sheet": "balance-sheet",
+    "cash_flow": "cash-flow-statement",
+    "ratios": "ratios",
+}
+
+REQUIRED_FIELDS_BY_STATEMENT = {
+    # These keys intentionally pin the current probe normalization contract.
+    # If upstream field aliases change, update fixtures and this map together.
+    "income": {"revenue", "grossProfit", "operatingIncome", "netIncome", "epsDiluted"},
+    "balance_sheet": {"cashneq", "assets", "liabilities", "equity", "liabilitiesequity"},
+    "cash_flow": {"cash_flow_statement_net_income", "ncfo", "capex", "ncf", "fcf"},
+    "ratios": {"marketCap", "pe", "pb", "roe", "dividendyield"},
+}
+
 
 def load_probe_module():
     spec = importlib.util.spec_from_file_location("stockanalysis_financials_probe", PROBE_PATH)
@@ -52,6 +68,28 @@ def assert_descending_periods(periods: list[str], label: str) -> None:
     assert_true(dated == sorted(dated, reverse=True), f"{label}: dated periods are not descending")
 
 
+def assert_row_schema(rows: list[dict], statement: str, label: str) -> None:
+    seen_fields = set()
+    for row in rows:
+        field = row.get("field")
+        title = row.get("title")
+        values = row.get("values")
+        assert_true(isinstance(field, str) and field, f"{label}: row field missing")
+        assert_true(field not in seen_fields, f"{label}:{field}: duplicate field")
+        seen_fields.add(field)
+        assert_true(isinstance(title, str) and title, f"{label}:{field}: row title missing")
+        assert_true(isinstance(values, list), f"{label}:{field}: values is not a list")
+        for index, value in enumerate(values):
+            assert_true(
+                value is None or (isinstance(value, (int, float)) and not isinstance(value, bool)),
+                f"{label}:{field}[{index}]: value must be numeric or null",
+            )
+
+    required = REQUIRED_FIELDS_BY_STATEMENT[statement]
+    missing = sorted(required - seen_fields)
+    assert_true(not missing, f"{label}: required fields missing: {', '.join(missing)}")
+
+
 def main() -> None:
     probe = load_probe_module()
 
@@ -65,15 +103,21 @@ def main() -> None:
         rows = normalized.get("rows") or []
 
         assert_true(normalized["ticker"] == ticker.upper(), f"{label}: ticker mismatch")
+        assert_true(normalized["statement"] == EXPECTED_NORMALIZED_STATEMENTS[statement], f"{label}: statement mismatch")
         assert_true(normalized["period"] == expected_period, f"{label}: period mismatch")
+        assert_true(isinstance(normalized.get("head"), dict), f"{label}: head missing")
+        assert_true(isinstance(normalized.get("details"), dict), f"{label}: details missing")
+        assert_true(bool(normalized["head"].get("title")), f"{label}: head title missing")
+        assert_true(bool(normalized["head"].get("url")), f"{label}: head url missing")
         assert_true(normalized["field_count"] >= min_fields, f"{label}: field_count below floor")
         assert_true(len(periods) >= min_periods, f"{label}: period_count below floor")
+        assert_true(normalized["field_count"] == len(rows), f"{label}: field_count does not match row count")
         assert_descending_periods(periods, label)
+        assert_row_schema(rows, statement, label)
 
         for row in rows:
             field = row.get("field")
             values = row.get("values")
-            assert_true(isinstance(values, list), f"{label}:{field}: values is not a list")
             assert_true(len(values) == len(periods), f"{label}:{field}: values length does not match periods")
 
         fixture_probe = probe.build_fixture_probe(ticker, statement, path)
