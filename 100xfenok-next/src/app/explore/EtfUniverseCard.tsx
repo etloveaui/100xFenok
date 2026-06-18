@@ -38,6 +38,12 @@ interface EtfUniverseDoc {
 let universeCache: EtfUniverseDoc | null = null;
 let universePending: Promise<EtfUniverseDoc | null> | null = null;
 export type EtfTypeFilter = "전체" | "레버리지" | "단일종목 레버리지" | "인버스";
+const ETF_TYPE_PARAM: Record<EtfTypeFilter, string | null> = {
+  "전체": null,
+  "레버리지": "leveraged",
+  "단일종목 레버리지": "single-stock",
+  "인버스": "inverse",
+};
 
 function loadUniverse(): Promise<EtfUniverseDoc | null> {
   if (universeCache) return Promise.resolve(universeCache);
@@ -130,7 +136,8 @@ export function isSingleStockLeveragedEtf(row: EtfUniverseRecord): boolean {
 export function isInverseEtf(row: EtfUniverseRecord): boolean {
   const classification = rowClassification(row);
   if (typeof classification?.is_inverse === "boolean") return classification.is_inverse;
-  return /\b(?:inverse|short|bear)\b/i.test(etfSearchText(row));
+  const text = etfSearchText(row);
+  return /\b(?:inverse|bear)\b/i.test(text) || /\bproshares\s+ultrashort\b/i.test(text);
 }
 
 function formatTypeHint(row: EtfUniverseRecord): string {
@@ -142,9 +149,10 @@ function formatTypeHint(row: EtfUniverseRecord): string {
   } else if (isLeveragedEtf(row)) {
     parts.push("레버리지");
   }
-  if (classification?.is_single_stock && classification.underlying) {
-    parts.push(`단일종목 ${classification.underlying}`);
-  } else if (classification?.is_inverse) {
+  if (classification?.is_single_stock) {
+    parts.push(classification.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
+  }
+  if (classification?.is_inverse) {
     parts.push("인버스");
   }
   return parts.filter(Boolean).join(" · ");
@@ -154,9 +162,10 @@ interface EtfUniverseCardProps {
   limit?: number;
   showOpenLink?: boolean;
   initialTypeFilter?: EtfTypeFilter;
+  syncTypeParam?: boolean;
 }
 
-export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initialTypeFilter = "전체" }: EtfUniverseCardProps) {
+export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initialTypeFilter = "전체", syncTypeParam = false }: EtfUniverseCardProps) {
   const [doc, setDoc] = useState<EtfUniverseDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
@@ -175,6 +184,10 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    setTypeFilter(initialTypeFilter);
+  }, [initialTypeFilter]);
 
   const rows = useMemo(() => {
     const sourceRows = Array.isArray(doc?.records) ? doc.records : [];
@@ -225,6 +238,22 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
 
   const total = doc?.counts?.records ?? rows.length;
   const topCategory = categories[0];
+  const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number | null }> = [
+    { value: "전체", label: "전체", count: total },
+    { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
+    { value: "단일종목 레버리지", label: "단일종목", count: typeCounts.singleStock },
+    { value: "인버스", label: "인버스", count: typeCounts.inverse },
+  ];
+
+  const handleTypeFilterChange = (nextFilter: EtfTypeFilter) => {
+    setTypeFilter(nextFilter);
+    if (!syncTypeParam || typeof window === "undefined") return;
+    const nextUrl = new URL(window.location.href);
+    const param = ETF_TYPE_PARAM[nextFilter];
+    if (param) nextUrl.searchParams.set("type", param);
+    else nextUrl.searchParams.delete("type");
+    window.history.replaceState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+  };
 
   return (
     <section className="panel">
@@ -233,7 +262,7 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
         <span className="desc">{asOfDate(doc?.generated_at)} · {formatNumber(total)}개</span>
       </div>
       <div className="panel-b">
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_190px]">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_170px]">
           <label className="sr-only" htmlFor="etf-universe-search">ETF 검색</label>
           <input
             id="etf-universe-search"
@@ -254,18 +283,27 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
               <option key={item.name} value={item.name}>{item.name}</option>
             ))}
           </select>
-          <label className="sr-only" htmlFor="etf-universe-type">ETF 유형</label>
-          <select
-            id="etf-universe-type"
-            value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value as EtfTypeFilter)}
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
-          >
-            <option value="전체">전체 유형</option>
-            <option value="레버리지">레버리지 · {formatNumber(typeCounts.leveraged)}</option>
-            <option value="단일종목 레버리지">단일종목 레버리지 · {formatNumber(typeCounts.singleStock)}</option>
-            <option value="인버스">인버스 · {formatNumber(typeCounts.inverse)}</option>
-          </select>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="ETF 유형">
+          {typeOptions.map((option) => {
+            const selected = typeFilter === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleTypeFilterChange(option.value)}
+                aria-pressed={selected}
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
+                  selected
+                    ? "border-brand-interactive bg-brand-interactive text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
+                }`}
+              >
+                <span>{option.label}</span>
+                <span className={selected ? "text-white/80" : "text-slate-400"}>{formatNumber(option.count)}</span>
+              </button>
+            );
+          })}
         </div>
 
         {topCategory ? (

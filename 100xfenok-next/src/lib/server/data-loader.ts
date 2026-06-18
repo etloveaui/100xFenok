@@ -640,6 +640,11 @@ export async function getStockanalysisAsset(
   return readOptionalJsonRecord(assetPath);
 }
 
+export async function getStockanalysisEtfUniverse() {
+  const universePath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", "etf_universe.json");
+  return readOptionalJsonRecord(universePath);
+}
+
 export async function getStockanalysisSurface(surfaceName: string) {
   const surfacePath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", "surfaces", `${surfaceName}.json`);
   return readOptionalJsonRecord(surfacePath);

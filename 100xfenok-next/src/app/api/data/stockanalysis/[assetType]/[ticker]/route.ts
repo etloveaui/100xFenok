@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getStockanalysisAsset,
+  getStockanalysisEtfUniverse,
   getStockanalysisSurface,
   normalizeStockanalysisAssetKind,
   normalizeStockanalysisTicker,
@@ -71,6 +72,12 @@ function parseNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function cleanText(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  return text && text !== "-" ? text : null;
+}
+
 async function getEtfSurfaceFallback(ticker: string) {
   const matches: Array<{
     surface: string;
@@ -92,31 +99,42 @@ async function getEtfSurfaceFallback(ticker: string) {
     }
   }
 
+  const universe = asRecord(await getStockanalysisEtfUniverse());
+  const universeRow = rowsFromSurface(universe).find((row) => cleanTicker(row.ticker) === ticker) ?? null;
+  const universeFetchedAt = typeof universe?.generated_at === "string" ? universe.generated_at : null;
   const primary = matches[0];
-  if (!primary) return null;
+  if (!primary && !universeRow) return null;
 
-  const row = primary.row;
+  const row = primary?.row ?? universeRow!;
   const price = parseNumber(row.price ?? row.stock_price);
   const changePct = parseNumber(row.change ?? row.pct_change);
   const holdingCount = parseNumber(row.holdings);
   const overview: JsonRecord = {};
-  const aum = row.aum ?? row.assets;
+  const aum = row.aum ?? row.assets ?? universeRow?.aum ?? universeRow?.aum_raw;
   const expenseRatio = row.exp_ratio;
   const dividendYield = row.div_yield;
   const inception = row.inceptionDate;
+  const name = cleanText(row.n) ?? cleanText(row.fund_name) ?? cleanText(row.name) ?? cleanText(universeRow?.name);
+  const category = cleanText(row.assetClass) ?? cleanText(row.category) ?? cleanText(universeRow?.category);
+  if (name) overview.name = name;
+  if (category) overview.category = category;
   if (aum !== undefined && aum !== null) overview.aum = aum;
   if (expenseRatio !== undefined && expenseRatio !== null) overview.expenseRatio = expenseRatio;
   if (dividendYield !== undefined && dividendYield !== null) overview.dividendYield = dividendYield;
   if (inception !== undefined && inception !== null) overview.inception = inception;
+  const fetchedAt = primary?.fetched_at ?? universeFetchedAt ?? new Date().toISOString();
+  const detailStatus = primary ? "surface_only" : "universe_only";
 
   return {
     schema_version: "stockanalysis/v1",
     source: "stockanalysis",
     asset_type: "etf",
     ticker,
-    fetched_at: primary.fetched_at ?? new Date().toISOString(),
-    role: "surface-only ETF fallback; per-ETF detail JSON not yet available",
-    detail_status: "surface_only",
+    fetched_at: fetchedAt,
+    role: primary
+      ? "surface-only ETF fallback; per-ETF detail JSON not yet available"
+      : "universe-only ETF fallback; per-ETF detail JSON not yet available",
+    detail_status: detailStatus,
     normalized: {
       holdings: [],
       holding_count: holdingCount,
@@ -124,8 +142,8 @@ async function getEtfSurfaceFallback(ticker: string) {
       quote: {
         p: price,
         cp: changePct,
-        u: primary.fetched_at,
-        ex: "stockanalysis surface",
+        u: fetchedAt,
+        ex: primary ? "stockanalysis surface" : "stockanalysis ETF universe",
       },
       surface_fallback: {
         match_count: matches.length,
@@ -135,9 +153,21 @@ async function getEtfSurfaceFallback(ticker: string) {
           row: match.row,
         })),
       },
+      universe_fallback: universeRow
+        ? {
+            fetched_at: universeFetchedAt,
+            row: universeRow,
+          }
+        : null,
     },
     raw: {
       surface_fallback: matches,
+      universe_fallback: universeRow
+        ? {
+            fetched_at: universeFetchedAt,
+            row: universeRow,
+          }
+        : null,
     },
   };
 }

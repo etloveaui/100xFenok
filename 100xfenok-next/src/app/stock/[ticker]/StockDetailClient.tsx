@@ -130,6 +130,7 @@ interface StockanalysisEtfPayload {
   ticker?: string;
   asset_type?: string;
   fetched_at?: string;
+  detail_status?: string;
   normalized?: {
     holdings?: StockanalysisEtfHolding[];
     asset_allocation?: StockanalysisWeightedRow[] | null;
@@ -840,10 +841,11 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
     if (marketFacts || etfData || hasEtfSurfaceData) {
       const identity = marketFacts?.identity ?? {};
       const quote = etfData?.normalized?.quote ?? {};
-      const displayAssetName = identity.name ?? etfSurface.name;
+      const etfOverview = etfData?.normalized?.overview ?? {};
+      const displayAssetName = identity.name ?? cleanSurfaceText(etfOverview.name) ?? etfSurface.name;
       const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null) ?? etfSurface.price;
       const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null) ?? etfSurface.changePct;
-      const category = identity.category ?? etfSurface.category;
+      const category = identity.category ?? cleanSurfaceText(etfOverview.category) ?? etfSurface.category;
       const delayText = fmtDateish(quote.u) !== "—"
         ? fmtDateish(quote.u)
         : etfSurface.inceptionDate
@@ -1491,6 +1493,12 @@ function EtfDataPanel({
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const totalWeight = holdings.reduce((sum, item) => sum + (isFiniteNumber(item.weight_pct) ? item.weight_pct : 0), 0);
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
+  const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
+  const detailStatusText = detailStatus === "surface_only"
+    ? "상세 원장 백필 전 · 표면 데이터 기준"
+    : detailStatus === "universe_only"
+      ? "상세 원장 백필 전 · 유니버스 목록 기준"
+      : null;
 
   const cards = [
     { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: fmtDateish(quote.u) },
@@ -1519,6 +1527,11 @@ function EtfDataPanel({
   return (
     <div className="space-y-4">
       <SectionCard title="ETF 원장 스냅샷">
+        {detailStatusText ? (
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-black text-amber-800">
+            {detailStatusText}
+          </div>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
             <div key={`${card.label}-${card.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">

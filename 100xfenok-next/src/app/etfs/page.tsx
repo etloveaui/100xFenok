@@ -55,7 +55,7 @@ export default async function EtfsPage({ searchParams }: Props) {
         </div>
 
         <div style={{ marginTop: "var(--s4)" }}>
-          <EtfUniverseCard limit={80} showOpenLink={false} initialTypeFilter={initialTypeFilter} />
+          <EtfUniverseCard limit={80} showOpenLink={false} initialTypeFilter={initialTypeFilter} syncTypeParam />
         </div>
       </AppShell>
     </div>
