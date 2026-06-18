@@ -50,6 +50,10 @@ The `/market/events` industry tab consumes `industries_all`,
 rows and the fields required by the industry map, sort/filter controls, and CSV
 export.
 
+The ETF snapshot API enriches the `new_etfs` rows with classification joined
+from `etf_screener` or `etf_universe` by ticker. New ETF filtering should prefer
+this joined classification over name-pattern inference when it is present.
+
 ## Structure
 
 ```

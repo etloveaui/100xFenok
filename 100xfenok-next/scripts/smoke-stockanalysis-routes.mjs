@@ -74,8 +74,11 @@ async function checkPage(root, route) {
 
 async function checkEtfSnapshot(root) {
   const payload = await fetchJson(`${root}/api/data/stockanalysis/etf-snapshot`);
+  const newEtfRecords = payload?.newEtfs?.records ?? [];
+  const classifiedNewEtfs = newEtfRecords.filter((row) => row?.classification);
+  const adiuNewEtf = newEtfRecords.find((row) => row?.s === "ADIU");
   const counts = {
-    newEtfs: payload?.newEtfs?.records?.length ?? 0,
+    newEtfs: newEtfRecords.length,
     screener: payload?.screener?.records?.length ?? 0,
     blackrock: payload?.blackrock?.records?.length ?? 0,
     proshares: payload?.proshares?.records?.length ?? 0,
@@ -86,7 +89,13 @@ async function checkEtfSnapshot(root) {
   assert(counts.blackrock === 20, `blackrock expected 20, got ${counts.blackrock}`);
   assert(counts.proshares === 20, `proshares expected 20, got ${counts.proshares}`);
   assert(counts.bitcoin === 20, `bitcoin expected 20, got ${counts.bitcoin}`);
-  return counts;
+  assert(classifiedNewEtfs.length > 0, "new ETF snapshot must include joined classification rows");
+  if (adiuNewEtf) {
+    assert(adiuNewEtf.classification?.is_leveraged === true, "ADIU new ETF snapshot leveraged classification missing");
+    assert(adiuNewEtf.classification?.is_single_stock === true, "ADIU new ETF snapshot single-stock classification missing");
+    assert(adiuNewEtf.classification?.underlying === "ADI", `ADIU new ETF snapshot underlying mismatch: ${adiuNewEtf.classification?.underlying}`);
+  }
+  return { ...counts, classifiedNewEtfs: classifiedNewEtfs.length };
 }
 
 async function checkEtfDetails(root) {

@@ -6,6 +6,7 @@ import {
   isInverseEtf,
   isLeveragedEtf,
   isSingleStockLeveragedEtf,
+  type EtfClassification,
   type EtfTypeFilter,
   type EtfUniverseRecord,
 } from "../../explore/etfUniverseUtils";
@@ -16,6 +17,7 @@ interface NewEtfRow {
   inceptionDate?: string;
   price?: number;
   change?: number;
+  classification?: EtfClassification;
 }
 
 interface EtfSnapshotPayload {
@@ -46,6 +48,7 @@ interface RadarRow extends Required<Pick<NewEtfRow, "s" | "n">> {
   inceptionDate?: string;
   price?: number;
   change?: number;
+  classification?: EtfClassification;
   detailStatus: "full" | "partial" | "pending";
   issuer: string;
   typeTags: string[];
@@ -157,7 +160,7 @@ function issuerName(name: string): string {
   return firstWords || "미분류";
 }
 
-function toUniverseRecord(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "price" | "change">): EtfUniverseRecord {
+function toUniverseRecord(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "price" | "change" | "classification">): EtfUniverseRecord {
   return {
     ticker: row.s,
     name: row.n,
@@ -165,11 +168,12 @@ function toUniverseRecord(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "pri
     inceptionDate: row.inceptionDate,
     price: row.price,
     change: row.change,
+    classification: row.classification,
     is_new: true,
   };
 }
 
-function typeTags(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "price" | "change">): string[] {
+function typeTags(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "price" | "change" | "classification">): string[] {
   const record = toUniverseRecord(row);
   const tags: string[] = [];
   if (isLeveragedEtf(record)) tags.push("레버리지");
