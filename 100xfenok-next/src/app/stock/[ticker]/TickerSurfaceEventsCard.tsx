@@ -93,7 +93,7 @@ function rowLine(section: SectionKey, row: Record<string, unknown>): string {
     return `${text(row.assetClass ?? row.inceptionDate ?? row.exp_ratio)} · AUM ${text(row.aum ?? row.assets)} · 보유 ${text(row.holdings)}`;
   }
   if (section === "ipo") {
-    return `${dateText(row.ipo_date ?? row.date)} · ${text(row.price_range ?? row.price)} · ${text(row.deal_size ?? row.market_cap)}`;
+    return `${dateText(row.ipo_date ?? row.withdrawn_date ?? row.date)} · ${text(row.price_range ?? row.price)} · ${text(row.deal_size ?? row.market_cap ?? row.shares_offered)}`;
   }
   return `시총 ${text(row.market_cap)} · 매출 ${text(row.revenue)} · ${text(row.pct_change)}`;
 }

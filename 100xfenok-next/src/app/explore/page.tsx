@@ -50,13 +50,16 @@ export default function ExplorePage() {
             <WeekAheadCard />
             <RevisionMoversCard />
             <SlickchartsDiscoveryCard />
-            <EtfUniverseCard />
-            <MarketEventSurfacesCard />
-            <StockanalysisSurfaceInsightCard />
-            <SurfaceCatalogCard />
-            <DataCoverageCard />
-            <MarketStructureIndexCard />
           </div>
+        </div>
+
+        <div className="surface-grid" aria-label="시장 데이터 표면">
+          <EtfUniverseCard />
+          <MarketEventSurfacesCard />
+          <StockanalysisSurfaceInsightCard />
+          <SurfaceCatalogCard />
+          <DataCoverageCard />
+          <MarketStructureIndexCard />
         </div>
 
         <div className="f13-wrap-outer" style={{ marginTop: "var(--s4)" }}>
