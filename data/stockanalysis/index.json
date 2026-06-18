@@ -1,16 +1,16 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-06-18T19:17:29Z",
+  "generated_at": "2026-06-18T19:31:57Z",
   "counts": {
     "etf_universe": null,
     "etf_candidate_total": 5347,
-    "etf_detail_files": 5204,
-    "etf_detail_covered": 5204,
-    "etf_detail_missing": 143,
-    "etf_detail_coverage_pct": 97.33,
+    "etf_detail_files": 5209,
+    "etf_detail_covered": 5209,
+    "etf_detail_missing": 138,
+    "etf_detail_coverage_pct": 97.42,
     "etf_detail_primary_pct": 85.28,
-    "etfs_requested": 30,
+    "etfs_requested": 120,
     "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
@@ -18,43 +18,472 @@
     "financials_requested": 0,
     "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 1,
-    "failed": 29,
+    "ok": 82,
+    "failed": 38,
     "hard_failed": 0,
     "etfs_stockanalysis_ok": 0,
-    "etfs_yahoo_fallback_ok": 1,
-    "etfs_still_pending": 29,
-    "incremental_etf_backfill_candidates": 715,
-    "incremental_etf_backfill_selected": 30,
-    "incremental_etf_cooldown_skipped": 15,
-    "incremental_etf_ledger_tracked": 90,
-    "incremental_etf_ledger_cooldown": 44
+    "etfs_yahoo_fallback_ok": 82,
+    "etfs_still_pending": 38,
+    "incremental_etf_backfill_candidates": 686,
+    "incremental_etf_backfill_selected": 120,
+    "incremental_etf_cooldown_skipped": 44,
+    "incremental_etf_ledger_tracked": 86,
+    "incremental_etf_ledger_cooldown": 81
   },
   "results": [
     {
-      "ticker": "MIVL",
+      "ticker": "IDEQ",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 2127,
+      "latency_ms": 2559,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "NGIF",
+      "ticker": "JHLN",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
       "path": null,
-      "latency_ms": 1237,
+      "latency_ms": 1322,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "NUDG",
+      "ticker": "JPO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1473,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "KRYP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1322,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "NISM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1296,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "NVDB",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/NVDB.json",
+      "financials_path": null,
+      "latency_ms": 1461,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "PCEB",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/PCEB.json",
+      "financials_path": null,
+      "latency_ms": 1475,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "PHYS",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1592,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "PRIZ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1298,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "PSLV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1492,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RAAR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1394,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RAAY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1299,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RCLR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1303,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RCLY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1280,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RWEM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1433,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "RWLC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1414,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SFGV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1402,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SHRD",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1292,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SLON",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1321,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SLWS",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1329,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SPPP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1485,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "STXF",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/STXF.json",
+      "financials_path": null,
+      "latency_ms": 1552,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "TEMR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1397,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TOT",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1318,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TRUI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1301,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TRUO",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/TRUO.json",
+      "financials_path": null,
+      "latency_ms": 1444,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "UFOX",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1499,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "UGLD",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1294,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "USLV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1299,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "UXRP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1323,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "WAMA",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1296,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "WTIB",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1365,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLCI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1323,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLFI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1305,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLII",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1322,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLRI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1341,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLVI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1318,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLYI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1351,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XRP",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XRP.json",
+      "financials_path": null,
+      "latency_ms": 1463,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XRPZ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1375,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "YCLO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1302,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ZINC",
       "asset_type": "etf",
       "status": "error",
       "provider": "yahoo_finance",
@@ -65,306 +494,867 @@
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "SNK",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1245,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SPAL",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1239,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SPCG",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1696,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SPCH",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1244,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SPCQ",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1223,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SPCU",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1272,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SSPC",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1249,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "TELG",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1251,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "TILC",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1233,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "TISC",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1239,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "TPUT",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1238,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "TSEG",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1215,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "XSHP",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1232,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "AAAD",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1240,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "ACII",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1257,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "ACYS",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1235,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "ADDS",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1218,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "AFGR",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1344,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "BAVA",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1227,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "BTCU",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1273,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "CLNK",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1264,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "CLOO",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1241,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "EDGQ",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1262,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "EDGX",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1263,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "ESUM",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1268,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "EVMU",
-      "asset_type": "etf",
-      "status": "error",
-      "provider": "yahoo_finance",
-      "path": null,
-      "latency_ms": 1245,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "IBIM",
+      "ticker": "ACGO",
       "asset_type": "etf",
       "status": "fallback_ok",
       "provider": "yahoo_finance",
-      "path": "etfs/IBIM.json",
+      "path": "etfs/ACGO.json",
       "financials_path": null,
-      "latency_ms": 1418,
+      "latency_ms": 2027,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "AQLG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/AQLG.json",
+      "financials_path": null,
+      "latency_ms": 1427,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BGEG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BGEG.json",
+      "financials_path": null,
+      "latency_ms": 1450,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BGIA",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BGIA.json",
+      "financials_path": null,
+      "latency_ms": 1444,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BRZX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BRZX.json",
+      "financials_path": null,
+      "latency_ms": 1532,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BSGR",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BSGR.json",
+      "financials_path": null,
+      "latency_ms": 1435,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BSGT",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": "yahoo_finance",
+      "path": null,
+      "latency_ms": 1259,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTS",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BSTS.json",
+      "financials_path": null,
+      "latency_ms": 1422,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BTCK",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BTCK.json",
+      "financials_path": null,
+      "latency_ms": 1428,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CBIL",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CBIL.json",
+      "financials_path": null,
+      "latency_ms": 1433,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CCPX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CCPX.json",
+      "financials_path": null,
+      "latency_ms": 1432,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CGOV",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CGOV.json",
+      "financials_path": null,
+      "latency_ms": 1517,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CHYG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CHYG.json",
+      "financials_path": null,
+      "latency_ms": 1458,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CIEI",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CIEI.json",
+      "financials_path": null,
+      "latency_ms": 1431,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CIVG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CIVG.json",
+      "financials_path": null,
+      "latency_ms": 1493,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "CUST",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/CUST.json",
+      "financials_path": null,
+      "latency_ms": 1429,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "DRMP",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/DRMP.json",
+      "financials_path": null,
+      "latency_ms": 1439,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "EMXX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/EMXX.json",
+      "financials_path": null,
+      "latency_ms": 1436,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "EUVX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/EUVX.json",
+      "financials_path": null,
+      "latency_ms": 1443,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "FPAA",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/FPAA.json",
+      "financials_path": null,
+      "latency_ms": 1427,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "HBMX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/HBMX.json",
+      "financials_path": null,
+      "latency_ms": 2045,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "HYPG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/HYPG.json",
+      "financials_path": null,
+      "latency_ms": 1440,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "INFH",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/INFH.json",
+      "financials_path": null,
+      "latency_ms": 2038,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "KRWX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/KRWX.json",
+      "financials_path": null,
+      "latency_ms": 1488,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "MGKX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/MGKX.json",
+      "financials_path": null,
+      "latency_ms": 1427,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "MJUN",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/MJUN.json",
+      "financials_path": null,
+      "latency_ms": 1463,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "MMAR",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/MMAR.json",
+      "financials_path": null,
+      "latency_ms": 1522,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "MUZ",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/MUZ.json",
+      "financials_path": null,
+      "latency_ms": 1546,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "NXPG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/NXPG.json",
+      "financials_path": null,
+      "latency_ms": 1433,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "ONG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/ONG.json",
+      "financials_path": null,
+      "latency_ms": 1483,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "OWN",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/OWN.json",
+      "financials_path": null,
+      "latency_ms": 1447,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "PCPP",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/PCPP.json",
+      "financials_path": null,
+      "latency_ms": 1455,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "QTUP",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/QTUP.json",
+      "financials_path": null,
+      "latency_ms": 1446,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "TAJX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/TAJX.json",
+      "financials_path": null,
+      "latency_ms": 1528,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "USX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/USX.json",
+      "financials_path": null,
+      "latency_ms": 1446,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "VBX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/VBX.json",
+      "financials_path": null,
+      "latency_ms": 1443,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "VELL",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/VELL.json",
+      "financials_path": null,
+      "latency_ms": 1449,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "VOOX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/VOOX.json",
+      "financials_path": null,
+      "latency_ms": 1446,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "WEBX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/WEBX.json",
+      "financials_path": null,
+      "latency_ms": 1550,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "WX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/WX.json",
+      "financials_path": null,
+      "latency_ms": 1516,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "WYFL",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/WYFL.json",
+      "financials_path": null,
+      "latency_ms": 1430,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XAGI",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XAGI.json",
+      "financials_path": null,
+      "latency_ms": 1464,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XBIX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XBIX.json",
+      "financials_path": null,
+      "latency_ms": 1437,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XEUR",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XEUR.json",
+      "financials_path": null,
+      "latency_ms": 1453,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XHOA",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XHOA.json",
+      "financials_path": null,
+      "latency_ms": 1427,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XIWC",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XIWC.json",
+      "financials_path": null,
+      "latency_ms": 1434,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XKRE",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XKRE.json",
+      "financials_path": null,
+      "latency_ms": 1449,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLBX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLBX.json",
+      "financials_path": null,
+      "latency_ms": 1425,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLEX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLEX.json",
+      "financials_path": null,
+      "latency_ms": 1440,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLFX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLFX.json",
+      "financials_path": null,
+      "latency_ms": 1420,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLIX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLIX.json",
+      "financials_path": null,
+      "latency_ms": 1452,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLKX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLKX.json",
+      "financials_path": null,
+      "latency_ms": 1540,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLPX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLPX.json",
+      "financials_path": null,
+      "latency_ms": 1501,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLUX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLUX.json",
+      "financials_path": null,
+      "latency_ms": 1437,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLVX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLVX.json",
+      "financials_path": null,
+      "latency_ms": 1525,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XLYX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XLYX.json",
+      "financials_path": null,
+      "latency_ms": 1415,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XPAV",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XPAV.json",
+      "financials_path": null,
+      "latency_ms": 1446,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XSEM",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XSEM.json",
+      "financials_path": null,
+      "latency_ms": 2051,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XTAI",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XTAI.json",
+      "financials_path": null,
+      "latency_ms": 2231,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XVO",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XVO.json",
+      "financials_path": null,
+      "latency_ms": 2173,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XVUG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XVUG.json",
+      "financials_path": null,
+      "latency_ms": 2032,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "XW",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/XW.json",
+      "financials_path": null,
+      "latency_ms": 2030,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "AXTU",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/AXTU.json",
+      "financials_path": null,
+      "latency_ms": 1446,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BABW",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BABW.json",
+      "financials_path": null,
+      "latency_ms": 1476,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BALT",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BALT.json",
+      "financials_path": null,
+      "latency_ms": 1533,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BAPR",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BAPR.json",
+      "financials_path": null,
+      "latency_ms": 1623,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BAR",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BAR.json",
+      "financials_path": null,
+      "latency_ms": 1694,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BAUG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BAUG.json",
+      "financials_path": null,
+      "latency_ms": 1547,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BBB",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BBB.json",
+      "financials_path": null,
+      "latency_ms": 1487,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BCCC",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BCCC.json",
+      "financials_path": null,
+      "latency_ms": 1481,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BCEM",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BCEM.json",
+      "financials_path": null,
+      "latency_ms": 1444,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BDEC",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BDEC.json",
+      "financials_path": null,
+      "latency_ms": 1601,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BETE",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BETE.json",
+      "financials_path": null,
+      "latency_ms": 1575,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BETH",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BETH.json",
+      "financials_path": null,
+      "latency_ms": 1658,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BEX",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BEX.json",
+      "financials_path": null,
+      "latency_ms": 1450,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BEZ",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BEZ.json",
+      "financials_path": null,
+      "latency_ms": 1450,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BFEB",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BFEB.json",
+      "financials_path": null,
+      "latency_ms": 1612,
+      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+      "error": null
+    },
+    {
+      "ticker": "BGCG",
+      "asset_type": "etf",
+      "status": "fallback_ok",
+      "provider": "yahoo_finance",
+      "path": "etfs/BGCG.json",
+      "financials_path": null,
+      "latency_ms": 1435,
       "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
       "error": null
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-06-18T19:17:29Z",
+    "generated_at": "2026-06-18T19:31:57Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5347,
@@ -373,23 +1363,23 @@
         "etf_screener": 5347,
         "new_etfs": 100
       },
-      "detail_files": 5204,
-      "covered_detail_files": 5204,
-      "missing_detail_files": 143,
+      "detail_files": 5209,
+      "covered_detail_files": 5209,
+      "missing_detail_files": 138,
       "extra_detail_files": 0,
       "stockanalysis_detail_files": 4560,
-      "yahoo_fallback_files": 644,
+      "yahoo_fallback_files": 649,
       "invalid_detail_files": 0,
-      "coverage_pct": 97.33,
+      "coverage_pct": 97.42,
       "primary_stockanalysis_pct": 85.28,
       "missing_by_source": {
-        "etf_universe": 77,
-        "etf_screener": 143,
+        "etf_universe": 72,
+        "etf_screener": 138,
         "new_etfs": 31
       },
-      "pending_tracked": 90,
-      "pending_cooldown": 44,
-      "pending_tracked_missing": 86
+      "pending_tracked": 86,
+      "pending_cooldown": 81,
+      "pending_tracked_missing": 81
     }
   },
   "surface_results": null,
@@ -397,172 +1387,28 @@
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-06-18T19:16:30Z",
+    "generated_at": "2026-06-18T19:27:44Z",
     "policy": {
-      "limit": 30,
+      "limit": 120,
       "max_age_hours": 720,
       "cooldown_days": 7,
       "cooldown_failure_threshold": 3,
       "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason/failure bucket"
     },
     "counts": {
-      "candidates": 715,
-      "selected": 30,
-      "missing": 72,
-      "fallback_retry": 643,
+      "candidates": 686,
+      "selected": 120,
+      "missing": 42,
+      "fallback_retry": 644,
       "stale": 0,
-      "cooldown_skipped": 15,
-      "prior_failed_candidates": 76,
-      "ledger_tracked": 90,
-      "ledger_cooldown": 44
+      "cooldown_skipped": 44,
+      "prior_failed_candidates": 46,
+      "ledger_tracked": 86,
+      "ledger_cooldown": 81
     },
     "selected": [
       {
-        "ticker": "MIVL",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "NGIF",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "NUDG",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SNK",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SPAL",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SPCG",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SPCH",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SPCQ",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SPCU",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "SSPC",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "TELG",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "TILC",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "TISC",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "TPUT",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "TSEG",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "XSHP",
-        "source": "new_etfs",
-        "reason": "missing",
-        "age_hours": null,
-        "prior_failures": 2,
-        "priority": 0,
-        "reason_priority": 0
-      },
-      {
-        "ticker": "AAAD",
+        "ticker": "IDEQ",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -571,7 +1417,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "ACII",
+        "ticker": "JHLN",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -580,7 +1426,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "ACYS",
+        "ticker": "JPO",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -589,7 +1435,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "ADDS",
+        "ticker": "KRYP",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -598,7 +1444,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "AFGR",
+        "ticker": "NISM",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -607,7 +1453,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "BAVA",
+        "ticker": "NVDB",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -616,7 +1462,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "BTCU",
+        "ticker": "PCEB",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -625,7 +1471,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "CLNK",
+        "ticker": "PHYS",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -634,7 +1480,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "CLOO",
+        "ticker": "PRIZ",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -643,7 +1489,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "EDGQ",
+        "ticker": "PSLV",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -652,7 +1498,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "EDGX",
+        "ticker": "RAAR",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -661,7 +1507,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "ESUM",
+        "ticker": "RAAY",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -670,7 +1516,7 @@
         "reason_priority": 0
       },
       {
-        "ticker": "EVMU",
+        "ticker": "RCLR",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
@@ -679,13 +1525,967 @@
         "reason_priority": 0
       },
       {
-        "ticker": "IBIM",
+        "ticker": "RCLY",
         "source": "etf_universe",
         "reason": "missing",
         "age_hours": null,
         "prior_failures": 2,
         "priority": 1,
         "reason_priority": 0
+      },
+      {
+        "ticker": "RWEM",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "RWLC",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SFGV",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SHRD",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SLON",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SLWS",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "SPPP",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "STXF",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "TEMR",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "TOT",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "TRUI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "TRUO",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "UFOX",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "UGLD",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "USLV",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "UXRP",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "WAMA",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "WTIB",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLCI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLFI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLII",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLRI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLVI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XLYI",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XRP",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "XRPZ",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "YCLO",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "ZINC",
+        "source": "etf_universe",
+        "reason": "missing",
+        "age_hours": null,
+        "prior_failures": 2,
+        "priority": 1,
+        "reason_priority": 0
+      },
+      {
+        "ticker": "ACGO",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "AQLG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BGEG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BGIA",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BRZX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BSGR",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BSGT",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.22,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BSTS",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BTCK",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CBIL",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CCPX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CGOV",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CHYG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CIEI",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.21,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CIVG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "CUST",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "DRMP",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "EMXX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "EUVX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "FPAA",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "HBMX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "HYPG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "INFH",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "KRWX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "MGKX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "MJUN",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "MMAR",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "MUZ",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "NXPG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "ONG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "OWN",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "PCPP",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "QTUP",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "TAJX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "USX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "VBX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.2,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "VELL",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "VOOX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "WEBX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "WX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "WYFL",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XAGI",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XBIX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XEUR",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XHOA",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XIWC",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XKRE",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLBX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLEX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLFX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLIX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLKX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLPX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLUX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLVX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XLYX",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XPAV",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XSEM",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.19,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XTAI",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.18,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XVO",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.18,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XVUG",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.18,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "XW",
+        "source": "new_etfs",
+        "reason": "fallback_retry",
+        "age_hours": 2.18,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "AXTU",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BABW",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BALT",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BAPR",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BAR",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BAUG",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BBB",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BCCC",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BCEM",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BDEC",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.05,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BETE",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.04,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BETH",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.04,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BEX",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.04,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BEZ",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.04,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BFEB",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.04,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
+      },
+      {
+        "ticker": "BGCG",
+        "source": "etf_universe",
+        "reason": "fallback_retry",
+        "age_hours": 8.04,
+        "prior_failures": 0,
+        "priority": 1,
+        "reason_priority": 1
       }
     ],
     "cooldown": [
@@ -732,6 +2532,27 @@
         "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
+        "ticker": "TELG",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "TSEG",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "XSHP",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
         "ticker": "GCSH",
         "source": "new_etfs",
         "consecutive_failures": 3,
@@ -760,6 +2581,55 @@
         "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
+        "ticker": "SNK",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "SPAL",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "SPCH",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "SSPC",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "TILC",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "TISC",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "SPCQ",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
         "ticker": "CSEN",
         "source": "new_etfs",
         "consecutive_failures": 3,
@@ -767,10 +2637,38 @@
         "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
+        "ticker": "SPCG",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "SPCU",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "TPUT",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
         "ticker": "BRSM",
         "source": "new_etfs",
         "consecutive_failures": 3,
         "next_attempt_after_utc": "2026-06-25T17:17:44Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "MIVL",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
         "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       },
       {
@@ -793,26 +2691,131 @@
         "consecutive_failures": 3,
         "next_attempt_after_utc": "2026-06-25T17:17:44Z",
         "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "NGIF",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "NUDG",
+        "source": "new_etfs",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "AAAD",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "ACII",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "ACYS",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "ADDS",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "AFGR",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "BAVA",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "BTCU",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "CLNK",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "CLOO",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "EDGQ",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "EDGX",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "ESUM",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+      },
+      {
+        "ticker": "EVMU",
+        "source": "etf_universe",
+        "consecutive_failures": 3,
+        "next_attempt_after_utc": "2026-06-25T19:17:28Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
       }
     ],
     "pending_ledger": {
       "path": "backfill/pending_ledger.json",
-      "generated_at": "2026-06-18T19:17:28Z",
+      "generated_at": "2026-06-18T19:31:56Z",
       "counts": {
-        "tracked": 90,
-        "cooldown": 44,
-        "updated": 29,
-        "cleared": 1
+        "tracked": 86,
+        "cooldown": 81,
+        "updated": 38,
+        "cleared": 5
       }
     }
   },
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
     "counts": {
-      "tracked": 90,
-      "cooldown": 44,
-      "updated": 29,
-      "cleared": 1
+      "tracked": 86,
+      "cooldown": 81,
+      "updated": 38,
+      "cleared": 5
     }
   },
   "stop_reason": null
