@@ -22,17 +22,18 @@ backfill remains intentionally chunked with `--universe-backfill --offset
 --limit-etfs` to avoid large request bursts.
 
 Latest measured ETF detail coverage (2026-06-19 KST / 2026-06-18 UTC): 5,347
-candidate ETF symbols from `union(etf_universe, etf_screener, new_etfs)`, 5,012
-detail files, 335 missing detail files, 452 Yahoo fallback detail files, 93.73%
+candidate ETF symbols from `union(etf_universe, etf_screener, new_etfs)`, 5,112
+detail files, 235 missing detail files, 552 Yahoo fallback detail files, 95.61%
 detail coverage, and 85.28% primary StockAnalysis detail coverage. This proof
 lives in `coverage/etf_detail.json` and is intentionally `warn` while detail
 files are missing.
 
-Latest measured incremental run (2026-06-19 KST / 2026-06-18 UTC): 728 eligible
-candidates (390 missing, 338 fallback retry), 120 selected, 166 total ETF
-requests including the default focus set, 157 OK, 9 still pending, 0 hard
-failures. Of the OK records, 43 came from StockAnalysis and 114 were
-source-tagged Yahoo Finance ETF/fund fallbacks.
+Latest measured incremental-only run (2026-06-19 KST / 2026-06-18 UTC): 730
+eligible candidates (278 missing, 452 fallback retry), 120 selected, 120 total
+ETF requests with the default focus set skipped, 100 OK, 20 still pending, 0
+hard failures. All 100 OK records were source-tagged Yahoo Finance ETF/fund
+fallbacks because StockAnalysis detail endpoints for that tail batch still
+returned expected 404-style responses.
 
 Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
@@ -164,10 +165,10 @@ are visible before a full detail endpoint exists.
   "status": "warn",
   "counts": {
     "candidate_total": 5347,
-    "covered_detail_files": 5012,
-    "missing_detail_files": 335,
-    "yahoo_fallback_files": 452,
-    "coverage_pct": 93.73,
+    "covered_detail_files": 5112,
+    "missing_detail_files": 235,
+    "yahoo_fallback_files": 552,
+    "coverage_pct": 95.61,
     "primary_stockanalysis_pct": 85.28
   },
   "missing_tickers": ["AAAD", "ACII", "..."]
@@ -274,6 +275,11 @@ python3 scripts/fetch-stockanalysis.py --universe-backfill --offset 0 --limit-et
 # Scheduled-style incremental ETF detail self-heal
 python3 scripts/fetch-stockanalysis.py --discover-etf-universe --fetch-surfaces \
   --incremental-etf-backfill --incremental-etf-limit 120 \
+  --incremental-etf-max-age-hours 720 --yf-etf-fallback
+
+# Incremental-only candidate batch after universe/surfaces are already fresh
+python3 scripts/fetch-stockanalysis.py --incremental-etf-backfill \
+  --incremental-etf-only --incremental-etf-limit 120 \
   --incremental-etf-max-age-hours 720 --yf-etf-fallback
 
 # Rebuild ETF detail coverage proof without network fetches
