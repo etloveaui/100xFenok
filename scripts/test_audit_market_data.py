@@ -146,6 +146,7 @@ class MarketDataAuditTest(unittest.TestCase):
             {
                 "generated_at": "2026-06-18T01:01:00Z",
                 "counts": {
+                    "incremental_etf_backfill_selected": 2,
                     "etfs_stockanalysis_ok": 1,
                     "etfs_yahoo_fallback_ok": 1,
                     "etfs_still_pending": 0,
@@ -164,6 +165,32 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertEqual(payload["incremental_etf"]["counts"]["selected"], 2)
         self.assertEqual(payload["incremental_etf"]["counts"]["market_facts_yf_fallback"], 1)
         self.assertEqual(payload["incremental_etf"]["notes"], [])
+
+    def test_incremental_etf_audit_warns_when_proof_not_reflected_in_fetch_index(self) -> None:
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_latest.json",
+            {
+                "generated_at": "2026-06-18T01:00:00Z",
+                "counts": {"candidates": 2, "selected": 2},
+            },
+        )
+        write_json(
+            self.data / "stockanalysis" / "index.json",
+            {
+                "generated_at": "2026-06-18T01:01:00Z",
+                "counts": {
+                    "etfs_stockanalysis_ok": 2,
+                    "etfs_yahoo_fallback_ok": 0,
+                    "etfs_still_pending": 0,
+                    "hard_failed": 0,
+                },
+            },
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "warn")
+        self.assertIn("incremental_not_reflected_in_fetch_index", payload["incremental_etf"]["notes"])
 
     def test_incremental_etf_audit_warns_when_fetch_index_is_missing(self) -> None:
         (self.data / "stockanalysis" / "index.json").unlink()

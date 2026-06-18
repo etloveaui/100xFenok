@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.2 (Manifest + StockAnalysis audit architecture)
+> **Version**: 2.2.3 (Manifest + StockAnalysis audit architecture)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -134,7 +134,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Read-only**: No data modification
 - **Validation-first**: Field/record change warnings
 - **Separation**: Feature experiments in Valuation Lab, data monitoring in Data Lab
-- **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` can be 404 before the first scheduled/dispatch incremental ETF run; Data Lab treats that as waiting, not failure.
+- **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` is optional until the first scheduled/dispatch incremental ETF run. Data Lab fetches it only when audit says `proof_file_exists=true`, so missing proof stays `WAITING` without console 404.
 
 ---
 
@@ -151,6 +151,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.3 | 2026-06-18 | Guarded optional incremental proof fetch behind `market_data_audit.incremental_etf.proof_file_exists` and added audit warn when proof exists but fetch index omits incremental selected count |
 | 2.2.2 | 2026-06-18 | Added StockAnalysis surface catalog audit card from `data/stockanalysis/surfaces/index.json` so public Explore can remove catalog/coverage ops cards without losing visibility |
 | 2.2.1 | 2026-06-18 | Added automatic ETF enrichment observation: audit status, incremental backfill proof file, Yahoo fallback counts, pending detail count, and market_facts fallback coverage |
 | 2.2.0 | 2026-06-18 | Added ETF classification counts, latest StockAnalysis fetch index/backfill status, restored Source Parity detail in source, and freshness guards for classification/index/surface files |

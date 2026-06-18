@@ -230,8 +230,11 @@ const DataLabUI = (function() {
         fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, 'StockAnalysis surface catalog')
       ]);
+      const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
       const [stockanalysisIncremental, marketFactsIndex] = await Promise.all([
-        fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'StockAnalysis incremental ETF backfill'),
+        shouldFetchIncremental
+          ? fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'StockAnalysis incremental ETF backfill')
+          : Promise.resolve(null),
         fetchOptionalJson(`${basePath}/data/computed/market_facts/index.json`, 'Market facts index')
       ]);
       Renderer.renderMarketDataAudit(

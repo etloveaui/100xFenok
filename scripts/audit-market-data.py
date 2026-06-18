@@ -73,6 +73,7 @@ def build_incremental_etf_audit(index_payload: dict | None, incremental_payload:
     incremental_counts = (incremental_payload or {}).get("counts") or {}
     selected = as_int(incremental_counts.get("selected", index_counts.get("incremental_etf_backfill_selected")))
     candidates = as_int(incremental_counts.get("candidates", index_counts.get("incremental_etf_backfill_candidates")))
+    index_selected = as_int(index_counts.get("incremental_etf_backfill_selected"))
     fallback_ok = as_int(index_counts.get("etfs_yahoo_fallback_ok"))
     still_pending = as_int(index_counts.get("etfs_still_pending"))
     hard_failed = as_int(index_counts.get("hard_failed"))
@@ -84,6 +85,8 @@ def build_incremental_etf_audit(index_payload: dict | None, incremental_payload:
         notes.append("stockanalysis_index_missing")
     if not proof_file_exists:
         notes.append("incremental_latest_missing")
+    if proof_file_exists and selected > 0 and index_selected <= 0:
+        notes.append("incremental_not_reflected_in_fetch_index")
     if still_pending > 0:
         notes.append("pending_details_remain")
     if fallback_ok > 0 and facts_fallback <= 0:
@@ -92,7 +95,12 @@ def build_incremental_etf_audit(index_payload: dict | None, incremental_payload:
         status = "fail"
     elif not has_run_evidence:
         status = "waiting"
-    elif not index_file_exists or still_pending > 0 or (fallback_ok > 0 and facts_fallback <= 0):
+    elif (
+        not index_file_exists
+        or (proof_file_exists and selected > 0 and index_selected <= 0)
+        or still_pending > 0
+        or (fallback_ok > 0 and facts_fallback <= 0)
+    ):
         status = "warn"
     else:
         status = "pass"
