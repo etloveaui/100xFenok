@@ -240,6 +240,14 @@ const OpsConsole = (function() {
       withBasePath: true
     }));
 
+    checks.push(await probeRoute({
+      label: 'ETF 목록 API',
+      path: '/api/data/stockanalysis/etf-universe',
+      expectedStatus: 200,
+      requireJson: true,
+      withBasePath: false
+    }));
+
     if (isWorkers) {
       checks.push({
         label: 'Legacy /100xFenok prefix',

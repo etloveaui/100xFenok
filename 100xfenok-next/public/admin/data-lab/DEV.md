@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.19 (ETF universe API coverage)
+> **Version**: 2.2.20 (ETF universe API ops smoke)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -145,6 +145,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
 - **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json` and active route/component files.
 - **Update QA gate**: The StockAnalysis refresh workflow runs `qa:surface-consumers`, `qa:market-audit`, and `qa:copy` after generated data is rebuilt, so Data Lab structure, public labels, and active surface consumers fail before the data commit is pushed.
+- **ETF API route smoke**: Ops Console probes `/api/data/stockanalysis/etf-universe` as JSON so the Admin surface catches route-level failures separately from static `etf_universe.json` freshness.
 
 ---
 
@@ -158,9 +159,10 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ---
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.20 | 2026-06-19 | Added Ops Console route smoke for the joined ETF list API |
+| 2.2.19 | 2026-06-19 | Added ETF list API coverage metrics for price, volume, holdings, and screener-only rows |
 | 2.2.18 | 2026-06-19 | Added Data Lab ETF universe/new-launch snapshot from live StockAnalysis files, including newest ETF rows and new-ETF detail gap counts |
 | 2.2.17 | 2026-06-19 | Hardened `qa:surface-consumers` so every declared StockAnalysis consumer must map to an active route/component contract, including `/market/events` and `/stock/[ticker]` |
 | 2.2.16 | 2026-06-19 | Wired StockAnalysis refresh CI to Data Lab UI QA gates (`qa:surface-consumers`, `qa:market-audit`, `qa:copy`) so generated data updates cannot silently regress admin labels or surface contracts |
