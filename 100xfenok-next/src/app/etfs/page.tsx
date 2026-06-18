@@ -47,7 +47,7 @@ export default async function EtfsPage({ searchParams }: Props) {
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
-              <p className="data-shell-kicker">ETF Search</p>
+              <p className="data-shell-kicker">ETF 검색</p>
               <h1 className="data-shell-title">ETF 검색</h1>
               <p className="data-shell-desc">
                 ETF 목록, 운용자산, 유형 필터를 한곳에서 보고 각 행에서 상세 페이지로 이동합니다.

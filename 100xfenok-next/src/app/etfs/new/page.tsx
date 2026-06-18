@@ -22,7 +22,7 @@ export default function NewEtfsPage() {
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
-              <p className="data-shell-kicker">New ETFs</p>
+              <p className="data-shell-kicker">신규 ETF</p>
               <h1 className="data-shell-title">신규 상장 ETF</h1>
               <p className="data-shell-desc">
                 최근 상장된 ETF를 한곳에서 보고 각 항목에서 상세 페이지로 이동합니다.

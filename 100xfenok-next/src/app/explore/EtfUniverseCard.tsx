@@ -218,7 +218,7 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number | null }> = [
     { value: "전체", label: "전체", count: total },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
-    { value: "단일종목 레버리지", label: "단일주 레버리지", count: typeCounts.singleStock },
+    { value: "단일종목 레버리지", label: "단일종목 레버리지", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
   ];
 
