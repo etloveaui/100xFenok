@@ -74,6 +74,34 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertGreaterEqual(len(normalized["periods"]), 3)
         self.assertTrue(all(len(row["values"]) == len(normalized["periods"]) for row in normalized["rows"]))
 
+    def test_devalue_negative_special_values_decode_as_none(self) -> None:
+        decoded = self.fetcher.decode_svelte_data([
+            {"value": -6, "ref": 1},
+            "ok",
+        ])
+
+        self.assertIsNone(decoded["value"])
+        self.assertEqual(decoded["ref"], "ok")
+
+    def test_financial_rows_are_padded_to_period_count(self) -> None:
+        normalized = self.fetcher.normalize_financial_statement(
+            "GOOGL",
+            "ratios",
+            {
+                "statement": "ratios",
+                "period": "quarterly",
+                "financialData": {
+                    "datekey": ["2026-03-31", "2025-12-31", "2025-09-30"],
+                    "assetturnover": [0.82, 0.81],
+                },
+                "map": [
+                    {"id": "assetturnover", "title": "Asset Turnover", "format": "ratio"},
+                ],
+            },
+        )
+
+        self.assertEqual(normalized["rows"][0]["values"], [0.82, 0.81, None])
+
     def test_financial_statement_floor_blocks_empty_payloads(self) -> None:
         with self.assertRaises(ValueError):
             self.fetcher.validate_financial_statement(

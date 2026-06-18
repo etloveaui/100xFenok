@@ -36,6 +36,8 @@ def decode_svelte_data(data: list) -> object:
     def dec_ref(index: int):
         if index == -1:
             return None
+        if index < -1:
+            return None
         if not isinstance(index, int) or index < 0 or index >= len(data):
             raise ValueError(f"devalue reference out of range: {index!r}")
         if index in seen:
@@ -93,6 +95,11 @@ def normalize_statement(ticker: str, statement: str, decoded: dict) -> dict:
             values = financial_data.get(field) if isinstance(financial_data, dict) else None
             if not field or not isinstance(values, list):
                 continue
+            if isinstance(periods, list) and periods:
+                if len(values) < len(periods):
+                    values = values + [None] * (len(periods) - len(values))
+                elif len(values) > len(periods):
+                    values = values[: len(periods)]
             rows.append(
                 {
                     "field": field,

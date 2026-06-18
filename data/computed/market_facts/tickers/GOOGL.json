@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "GOOGL",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T23:49:22Z",
+  "generated_at": "2026-06-18T01:55:16Z",
   "identity": {
     "name": "Alphabet Inc.",
     "exchange": "NMS",
@@ -34,6 +34,13 @@
           "confidence": "observed"
         },
         {
+          "value": 363.79,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
+        },
+        {
           "value": 380.34,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -41,7 +48,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "previous_close": {
       "value": 357.77,
@@ -60,22 +67,36 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:43:33Z",
           "confidence": "observed"
+        },
+        {
+          "value": 363.79,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
-      "value": 1.910000000000025,
-      "source": "yf.derived",
+      "value": -9.46,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:43:33Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T01:54:18Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -9.46,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
+        },
         {
           "value": 1.910000000000025,
           "source": "yf.derived",
@@ -84,20 +105,27 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
-      "value": 0.5338625373843601,
-      "source": "yf.derived",
+      "value": -2.53,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:43:33Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T01:54:18Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -2.53,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.5338625373843601,
           "source": "yf.derived",
@@ -106,7 +134,7 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "market_cap": {
       "value": 4386274148352,
@@ -128,6 +156,13 @@
           "confidence": "observed"
         },
         {
+          "value": 4440000000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
+        },
+        {
           "value": 4586910000000.0,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -135,7 +170,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "trailing_pe": {
       "value": 27.477463,
@@ -185,6 +220,13 @@
           "confidence": "observed"
         },
         {
+          "value": 29.11,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
+        },
+        {
           "value": 25.86,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -192,7 +234,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "dividend_yield": {
       "value": 0.24,
@@ -243,22 +285,84 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:43:33Z",
           "confidence": "observed"
+        },
+        {
+          "value": 1.24,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": null,
-  "financials": null,
+  "financials": {
+    "stockanalysis": {
+      "available": true,
+      "role": "cross-check candidate; not valuation SSOT",
+      "fetched_at": "2026-06-18T01:54:17Z",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 42,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 54,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 37,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 42,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 54,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 39,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 36,
+            "period_count": 21,
+            "period": "quarterly"
+          }
+        }
+      },
+      "source_file": "stockanalysis/financials/GOOGL.json"
+    }
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "slickcharts": true
+    "stockanalysis": true,
+    "slickcharts": true,
+    "stockanalysis_financials": true
   },
   "source_files": {
     "yf": "yf/finance/GOOGL.json",
-    "stockanalysis": null,
-    "slickcharts": "slickcharts/stocks/GOOGL.json"
+    "stockanalysis": "stockanalysis/stocks/GOOGL.json",
+    "slickcharts": "slickcharts/stocks/GOOGL.json",
+    "stockanalysis_financials": "stockanalysis/financials/GOOGL.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",

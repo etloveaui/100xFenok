@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "KO",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T23:49:22Z",
+  "generated_at": "2026-06-18T01:55:16Z",
   "identity": {
     "name": "The Coca-Cola Company",
     "exchange": "NYQ",
@@ -34,6 +34,13 @@
           "confidence": "observed"
         },
         {
+          "value": 79.93,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
+        },
+        {
           "value": 79.01,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -41,7 +48,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "previous_close": {
       "value": 82.53,
@@ -60,22 +67,36 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:46:14Z",
           "confidence": "observed"
+        },
+        {
+          "value": 79.93,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
-      "value": 0.09000000000000341,
-      "source": "yf.derived",
+      "value": -0.35,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:46:14Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T01:54:49Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -0.35,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.09000000000000341,
           "source": "yf.derived",
@@ -84,20 +105,27 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
-      "value": 0.10905125408942615,
-      "source": "yf.derived",
+      "value": -0.44,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:46:14Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T01:54:49Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -0.44,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.10905125408942615,
           "source": "yf.derived",
@@ -106,7 +134,7 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "market_cap": {
       "value": 355471097856,
@@ -128,6 +156,13 @@
           "confidence": "observed"
         },
         {
+          "value": 343900000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
+        },
+        {
           "value": 339940000000.0,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -135,7 +170,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "trailing_pe": {
       "value": 25.981133,
@@ -185,6 +220,13 @@
           "confidence": "observed"
         },
         {
+          "value": 24.3,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
+        },
+        {
           "value": 22.66,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -192,7 +234,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "dividend_yield": {
       "value": 2.57,
@@ -243,22 +285,84 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:46:14Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.35,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T01:54:49Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": null,
-  "financials": null,
+  "financials": {
+    "stockanalysis": {
+      "available": true,
+      "role": "cross-check candidate; not valuation SSOT",
+      "fetched_at": "2026-06-18T01:54:47Z",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 38,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 40,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 32,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 40,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 32,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      },
+      "source_file": "stockanalysis/financials/KO.json"
+    }
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "slickcharts": true
+    "stockanalysis": true,
+    "slickcharts": true,
+    "stockanalysis_financials": true
   },
   "source_files": {
     "yf": "yf/finance/KO.json",
-    "stockanalysis": null,
-    "slickcharts": "slickcharts/stocks/KO.json"
+    "stockanalysis": "stockanalysis/stocks/KO.json",
+    "slickcharts": "slickcharts/stocks/KO.json",
+    "stockanalysis_financials": "stockanalysis/financials/KO.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
