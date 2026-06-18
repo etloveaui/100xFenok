@@ -397,7 +397,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
         <div className="mv-col">
           {stats.length ? stats.map((row) => {
             const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.name)}`, `${dateText(row.date)} · IPO 활동 포착`, text(row.exchange), symbol ? stockHref(symbol) : undefined);
+            return makeRow(row, `${symbol} · ${text(row.name)}`, "최근 IPO 통계에 포함된 상장", dateText(row.date), symbol ? stockHref(symbol) : undefined);
           }) : <EmptyRows label="IPO 활동 데이터가 없습니다." />}
         </div>
       </section>
