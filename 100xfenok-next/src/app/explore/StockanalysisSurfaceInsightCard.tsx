@@ -20,6 +20,9 @@ interface MarketMover {
   symbol?: string;
   company_name?: string;
   pct_change?: string;
+  change_1w?: string;
+  change_1m?: string;
+  change_ytd?: string;
   stock_price?: string;
   volume?: string;
   market_cap?: string;
@@ -28,9 +31,11 @@ interface MarketMover {
 
 interface IpoRow {
   ipo_date?: string;
+  filing_date?: string;
   symbol?: string;
   company_name?: string;
   price_range?: string;
+  shares_offered?: string;
   deal_size?: string;
   market_cap?: string;
   revenue?: string;
@@ -52,8 +57,12 @@ interface SurfaceInsightsData {
   gainers: SurfaceDoc<MarketMover> | null;
   losers: SurfaceDoc<MarketMover> | null;
   active: SurfaceDoc<MarketMover> | null;
+  gainersWeek: SurfaceDoc<MarketMover> | null;
+  gainersMonth: SurfaceDoc<MarketMover> | null;
+  losersYtd: SurfaceDoc<MarketMover> | null;
   ipoCalendar: SurfaceDoc<IpoRow> | null;
   ipoRecent: SurfaceDoc<IpoRow> | null;
+  ipoFilings: SurfaceDoc<IpoRow> | null;
   industries: SurfaceDoc<IndustryRow> | null;
   semiconductors: SurfaceDoc<MarketMover> | null;
 }
@@ -74,12 +83,16 @@ function loadSurfaceInsights(): Promise<SurfaceInsightsData> {
     loadJson<MarketMover>("market_gainers"),
     loadJson<MarketMover>("market_losers"),
     loadJson<MarketMover>("market_active"),
+    loadJson<MarketMover>("market_gainers_week"),
+    loadJson<MarketMover>("market_gainers_month"),
+    loadJson<MarketMover>("market_losers_ytd"),
     loadJson<IpoRow>("ipos_calendar"),
     loadJson<IpoRow>("ipos_recent"),
+    loadJson<IpoRow>("ipos_filings"),
     loadJson<IndustryRow>("industries_all"),
     loadJson<MarketMover>("industry_semiconductors"),
-  ]).then(([gainers, losers, active, ipoCalendar, ipoRecent, industries, semiconductors]) => {
-    insightsCache = { gainers, losers, active, ipoCalendar, ipoRecent, industries, semiconductors };
+  ]).then(([gainers, losers, active, gainersWeek, gainersMonth, losersYtd, ipoCalendar, ipoRecent, ipoFilings, industries, semiconductors]) => {
+    insightsCache = { gainers, losers, active, gainersWeek, gainersMonth, losersYtd, ipoCalendar, ipoRecent, ipoFilings, industries, semiconductors };
     return insightsCache;
   });
   return insightsPending;
@@ -110,6 +123,10 @@ function short(value: string | null | undefined, max = 28): string {
 
 function cleanSymbol(value: string | null | undefined): string {
   return String(value || "").replace(/^\$/, "").trim().toUpperCase();
+}
+
+function moverPct(row: MarketMover): string {
+  return row.pct_change || row.change_1w || row.change_1m || row.change_ytd || "-";
 }
 
 function parsePct(value: string | null | undefined): number {
@@ -172,8 +189,12 @@ export default function StockanalysisSurfaceInsightCard() {
   const gainers = useMemo(() => rows(data?.gainers).slice(0, 3), [data]);
   const losers = useMemo(() => rows(data?.losers).slice(0, 2), [data]);
   const active = useMemo(() => rows(data?.active).slice(0, 2), [data]);
+  const gainersWeek = useMemo(() => rows(data?.gainersWeek).slice(0, 4), [data]);
+  const gainersMonth = useMemo(() => rows(data?.gainersMonth).slice(0, 4), [data]);
+  const losersYtd = useMemo(() => rows(data?.losersYtd).slice(0, 4), [data]);
   const ipoCalendar = useMemo(() => rows(data?.ipoCalendar).slice(0, 3), [data]);
   const ipoRecent = useMemo(() => rows(data?.ipoRecent).slice(0, 2), [data]);
+  const ipoFilings = useMemo(() => rows(data?.ipoFilings).slice(0, 4), [data]);
   const industryLeaders = useMemo(
     () => rows(data?.industries)
       .filter((row) => row.industry_name)
@@ -187,8 +208,12 @@ export default function StockanalysisSurfaceInsightCard() {
     (countRows(data?.gainers) ?? 0)
     + (countRows(data?.losers) ?? 0)
     + (countRows(data?.active) ?? 0)
+    + (countRows(data?.gainersWeek) ?? 0)
+    + (countRows(data?.gainersMonth) ?? 0)
+    + (countRows(data?.losersYtd) ?? 0)
     + (countRows(data?.ipoCalendar) ?? 0)
     + (countRows(data?.ipoRecent) ?? 0)
+    + (countRows(data?.ipoFilings) ?? 0)
     + (countRows(data?.industries) ?? 0)
     + (countRows(data?.semiconductors) ?? 0);
 
@@ -242,6 +267,48 @@ export default function StockanalysisSurfaceInsightCard() {
             ))}
           </div>
 
+          {(gainersWeek.length > 0 || gainersMonth.length > 0 || losersYtd.length > 0) && (
+            <div className="mv-col">
+              <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">기간 모멘텀</div>
+              {gainersWeek.length > 0 && (
+                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">주간 상승</div>
+              )}
+              {gainersWeek.map((row) => (
+                <StockLink
+                  key={`gw-${row.symbol}`}
+                  symbol={row.symbol}
+                  name={row.company_name}
+                  detail={`가격 ${row.stock_price || "-"} · 거래 ${row.volume || "-"}`}
+                  value={moverPct(row)}
+                />
+              ))}
+              {gainersMonth.length > 0 && (
+                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">월간 상승</div>
+              )}
+              {gainersMonth.map((row) => (
+                <StockLink
+                  key={`gm-${row.symbol}`}
+                  symbol={row.symbol}
+                  name={row.company_name}
+                  detail={`가격 ${row.stock_price || "-"} · 거래 ${row.volume || "-"}`}
+                  value={moverPct(row)}
+                />
+              ))}
+              {losersYtd.length > 0 && (
+                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">YTD 하락</div>
+              )}
+              {losersYtd.map((row) => (
+                <StockLink
+                  key={`ly-${row.symbol}`}
+                  symbol={row.symbol}
+                  name={row.company_name}
+                  detail={`가격 ${row.stock_price || "-"} · 거래 ${row.volume || "-"}`}
+                  value={moverPct(row)}
+                />
+              ))}
+            </div>
+          )}
+
           <div className="mv-col">
             <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">IPO 파이프라인</div>
             {ipoCalendar.map((row) => (
@@ -260,6 +327,18 @@ export default function StockanalysisSurfaceInsightCard() {
                 name={row.company_name}
                 detail={`최근 IPO · 현재 ${row.current || "-"}`}
                 value={row.return || "-"}
+              />
+            ))}
+            {ipoFilings.length > 0 && (
+              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">예정 상장(파일링)</div>
+            )}
+            {ipoFilings.map((row) => (
+              <StockLink
+                key={`ipo-f-${row.symbol}`}
+                symbol={row.symbol}
+                name={row.company_name}
+                detail={`${row.filing_date || "-"} · ${row.price_range || "-"}`}
+                value={row.shares_offered || row.deal_size || "-"}
               />
             ))}
           </div>
