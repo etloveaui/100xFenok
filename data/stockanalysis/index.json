@@ -1,381 +1,815 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-06-18T02:43:16Z",
+  "generated_at": "2026-06-18T06:03:08Z",
   "counts": {
     "etf_universe": null,
-    "etfs_requested": 0,
-    "stocks_requested": 40,
+    "etfs_requested": 99,
+    "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
     "surfaces_failed": 0,
-    "financials_requested": 40,
-    "financials_ok": 40,
+    "financials_requested": 0,
+    "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 40,
-    "failed": 0,
+    "ok": 2,
+    "failed": 97,
     "hard_failed": 0
   },
   "results": [
     {
-      "ticker": "AAPL",
-      "asset_type": "stock",
+      "ticker": "ADIU",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 337,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "APHG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 223,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "AXTL",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 225,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FNG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "KEYG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 234,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "MCHG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 220,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TELG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TSEG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XSHP",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 233,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GCSH",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GISC",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HRSK",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 230,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "LOFF",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 220,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SNK",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 240,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SPAL",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SPCH",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SSPC",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TILC",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 234,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TISC",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 236,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SPCQ",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CSEN",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 234,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "JCAL",
+      "asset_type": "etf",
       "status": "ok",
-      "path": "stocks/AAPL.json",
-      "financials_path": "financials/AAPL.json",
-      "latency_ms": 3634,
+      "path": "etfs/JCAL.json",
+      "financials_path": null,
+      "latency_ms": 1581,
       "error": null
     },
     {
-      "ticker": "NVDA",
-      "asset_type": "stock",
+      "ticker": "SPCG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 223,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "SPCU",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 234,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "MJUN",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 232,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "MMAR",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 225,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSCA",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSGR",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 229,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSGT",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 224,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSJY",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 296,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTS",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTU",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTV",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DRMP",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 258,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "TPUT",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BITA",
+      "asset_type": "etf",
       "status": "ok",
-      "path": "stocks/NVDA.json",
-      "financials_path": "financials/NVDA.json",
-      "latency_ms": 3368,
+      "path": "etfs/BITA.json",
+      "financials_path": null,
+      "latency_ms": 1598,
       "error": null
     },
     {
-      "ticker": "PLTR",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/PLTR.json",
-      "financials_path": "financials/PLTR.json",
-      "latency_ms": 2944,
-      "error": null
+      "ticker": "AQLG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "MSFT",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/MSFT.json",
-      "financials_path": "financials/MSFT.json",
-      "latency_ms": 3132,
-      "error": null
+      "ticker": "MUZ",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "AMZN",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/AMZN.json",
-      "financials_path": "financials/AMZN.json",
-      "latency_ms": 3129,
-      "error": null
+      "ticker": "QTUP",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 230,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "GOOGL",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/GOOGL.json",
-      "financials_path": "financials/GOOGL.json",
-      "latency_ms": 3887,
-      "error": null
+      "ticker": "FPAA",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "META",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/META.json",
-      "financials_path": "financials/META.json",
-      "latency_ms": 3084,
-      "error": null
+      "ticker": "PCPP",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 217,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TSLA",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/TSLA.json",
-      "financials_path": "financials/TSLA.json",
-      "latency_ms": 3099,
-      "error": null
+      "ticker": "BRSM",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 223,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "AVGO",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/AVGO.json",
-      "financials_path": "financials/AVGO.json",
-      "latency_ms": 3200,
-      "error": null
+      "ticker": "CBIL",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 223,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "AMD",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/AMD.json",
-      "financials_path": "financials/AMD.json",
-      "latency_ms": 3035,
-      "error": null
+      "ticker": "CGOV",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 237,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "JPM",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/JPM.json",
-      "financials_path": "financials/JPM.json",
-      "latency_ms": 2982,
-      "error": null
+      "ticker": "CHYG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 230,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "UNH",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/UNH.json",
-      "financials_path": "financials/UNH.json",
-      "latency_ms": 2931,
-      "error": null
+      "ticker": "CIEI",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 260,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "XOM",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/XOM.json",
-      "financials_path": "financials/XOM.json",
-      "latency_ms": 2958,
-      "error": null
+      "ticker": "CIVG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 230,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "COST",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/COST.json",
-      "financials_path": "financials/COST.json",
-      "latency_ms": 2983,
-      "error": null
+      "ticker": "CUST",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 232,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "KO",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/KO.json",
-      "financials_path": "financials/KO.json",
-      "latency_ms": 3221,
-      "error": null
+      "ticker": "INFH",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 223,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "PG",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/PG.json",
-      "financials_path": "financials/PG.json",
-      "latency_ms": 2935,
-      "error": null
+      "ticker": "MIVL",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 221,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "GOOG",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/GOOG.json",
-      "financials_path": "financials/GOOG.json",
-      "latency_ms": 2955,
-      "error": null
+      "ticker": "VELL",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TSM",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/TSM.json",
-      "financials_path": "financials/TSM.json",
-      "latency_ms": 3427,
-      "error": null
+      "ticker": "AIQD",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 240,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "MU",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/MU.json",
-      "financials_path": "financials/MU.json",
-      "latency_ms": 2903,
-      "error": null
+      "ticker": "AIQU",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 224,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "BRK.B",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/BRK.B.json",
-      "financials_path": "financials/BRK.B.json",
-      "latency_ms": 3486,
-      "error": null
+      "ticker": "BRZX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "LLY",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/LLY.json",
-      "financials_path": "financials/LLY.json",
-      "latency_ms": 2993,
-      "error": null
+      "ticker": "BTCK",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 220,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "BRK.A",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/BRK.A.json",
-      "financials_path": "financials/BRK.A.json",
-      "latency_ms": 2969,
-      "error": null
+      "ticker": "CCPX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "WMT",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/WMT.json",
-      "financials_path": "financials/WMT.json",
-      "latency_ms": 2972,
-      "error": null
+      "ticker": "EMXX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "ASML",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/ASML.json",
-      "financials_path": "financials/ASML.json",
-      "latency_ms": 2783,
-      "error": null
+      "ticker": "EUVX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 220,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "INTC",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/INTC.json",
-      "financials_path": "financials/INTC.json",
-      "latency_ms": 3451,
-      "error": null
+      "ticker": "HYPG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "V",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/V.json",
-      "financials_path": "financials/V.json",
-      "latency_ms": 3075,
-      "error": null
+      "ticker": "KRWX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 216,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "JNJ",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/JNJ.json",
-      "financials_path": "financials/JNJ.json",
-      "latency_ms": 3470,
-      "error": null
+      "ticker": "MGKX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 229,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "ORCL",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/ORCL.json",
-      "financials_path": "financials/ORCL.json",
-      "latency_ms": 2968,
-      "error": null
+      "ticker": "OWN",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 237,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "CSCO",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/CSCO.json",
-      "financials_path": "financials/CSCO.json",
-      "latency_ms": 3591,
-      "error": null
+      "ticker": "TAJX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 231,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "LRCX",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/LRCX.json",
-      "financials_path": "financials/LRCX.json",
-      "latency_ms": 2901,
-      "error": null
+      "ticker": "USX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 214,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "AMAT",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/AMAT.json",
-      "financials_path": "financials/AMAT.json",
-      "latency_ms": 3189,
-      "error": null
+      "ticker": "VBX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "MA",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/MA.json",
-      "financials_path": "financials/MA.json",
-      "latency_ms": 2907,
-      "error": null
+      "ticker": "VOOX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "CAT",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/CAT.json",
-      "financials_path": "financials/CAT.json",
-      "latency_ms": 3120,
-      "error": null
+      "ticker": "WEBX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 221,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "ARM",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/ARM.json",
-      "financials_path": "financials/ARM.json",
-      "latency_ms": 2715,
-      "error": null
+      "ticker": "WX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 390,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "ABBV",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/ABBV.json",
-      "financials_path": "financials/ABBV.json",
-      "latency_ms": 2986,
-      "error": null
+      "ticker": "WYFL",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 216,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "BAC",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/BAC.json",
-      "financials_path": "financials/BAC.json",
-      "latency_ms": 2831,
-      "error": null
+      "ticker": "XAGI",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "CVX",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/CVX.json",
-      "financials_path": "financials/CVX.json",
-      "latency_ms": 2936,
-      "error": null
+      "ticker": "XBIX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "GE",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/GE.json",
-      "financials_path": "financials/GE.json",
-      "latency_ms": 3002,
-      "error": null
+      "ticker": "XEUR",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 230,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "NFLX",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/NFLX.json",
-      "financials_path": "financials/NFLX.json",
-      "latency_ms": 3148,
-      "error": null
+      "ticker": "XHOA",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 218,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "MS",
-      "asset_type": "stock",
-      "status": "ok",
-      "path": "stocks/MS.json",
-      "financials_path": "financials/MS.json",
-      "latency_ms": 3223,
-      "error": null
+      "ticker": "XIWC",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XKRE",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLBX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 219,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLEX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 229,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLFX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 216,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLIX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 226,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLKX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 217,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLPX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 237,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLUX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 233,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLVX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 229,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XLYX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 222,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XPAV",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 223,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XSEM",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 238,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XTAI",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 221,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XVO",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XVUG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 224,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "XW",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 225,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ACGO",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 241,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BGEG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 240,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BGIA",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HBMX",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "INYY",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 235,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "NGIF",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 229,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "NUDG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 227,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "NXPG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 224,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ONG",
+      "asset_type": "etf",
+      "status": "error",
+      "path": null,
+      "latency_ms": 228,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     }
   ],
   "surface_results": null,
