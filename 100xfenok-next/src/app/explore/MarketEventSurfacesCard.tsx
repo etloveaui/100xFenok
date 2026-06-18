@@ -30,6 +30,9 @@ interface SurfaceDoc<T> {
     rows?: number | null;
   } | null;
   records?: T[];
+  tables?: Array<{
+    records?: T[];
+  }>;
 }
 
 interface NewEtfRecord {
@@ -55,7 +58,20 @@ interface ActionRecord {
   type?: string;
   symbol?: string;
   name?: string;
+  company_name?: string;
   text?: string;
+  split_ratio?: string;
+}
+
+interface SessionMoverRecord {
+  symbol?: string;
+  company_name?: string;
+  pct_change?: string;
+  premkt_price?: string;
+  afterhr_price?: string;
+  afterhr_close?: string;
+  pre_volume?: string;
+  market_cap?: string;
 }
 
 interface SurfaceRadarData {
@@ -63,6 +79,9 @@ interface SurfaceRadarData {
   newEtfs: SurfaceDoc<NewEtfRecord> | null;
   earnings: SurfaceDoc<EarningsRecord> | null;
   actions: SurfaceDoc<ActionRecord> | null;
+  splits: SurfaceDoc<ActionRecord> | null;
+  premarket: SurfaceDoc<SessionMoverRecord> | null;
+  afterhours: SurfaceDoc<SessionMoverRecord> | null;
 }
 
 let radarCache: SurfaceRadarData | null = null;
@@ -82,8 +101,11 @@ function loadRadarData(): Promise<SurfaceRadarData> {
     loadJson<SurfaceDoc<NewEtfRecord>>("/api/data/stockanalysis/surfaces/new_etfs"),
     loadJson<SurfaceDoc<EarningsRecord>>("/api/data/stockanalysis/surfaces/earnings_calendar"),
     loadJson<SurfaceDoc<ActionRecord>>("/api/data/stockanalysis/surfaces/actions_recent"),
-  ]).then(([manifest, newEtfs, earnings, actions]) => {
-    radarCache = { manifest, newEtfs, earnings, actions };
+    loadJson<SurfaceDoc<ActionRecord>>("/api/data/stockanalysis/surfaces/actions_splits"),
+    loadJson<SurfaceDoc<SessionMoverRecord>>("/api/data/stockanalysis/surfaces/market_premarket"),
+    loadJson<SurfaceDoc<SessionMoverRecord>>("/api/data/stockanalysis/surfaces/market_afterhours"),
+  ]).then(([manifest, newEtfs, earnings, actions, splits, premarket, afterhours]) => {
+    radarCache = { manifest, newEtfs, earnings, actions, splits, premarket, afterhours };
     return radarCache;
   });
   return radarPending;
@@ -117,6 +139,18 @@ function rowsForGroup(group: string, manifest: StockanalysisManifest | null): nu
   return rows.length ? rows.reduce((sum, value) => sum + value, 0) : null;
 }
 
+function surfaceRows<T>(doc: SurfaceDoc<T> | null | undefined): T[] {
+  if (Array.isArray(doc?.records)) return doc.records;
+  if (Array.isArray(doc?.tables)) {
+    return doc.tables.flatMap((table) => (Array.isArray(table.records) ? table.records : []));
+  }
+  return [];
+}
+
+function cleanTicker(value: string | null | undefined): string {
+  return String(value || "").replace(/^\$/, "").trim().toUpperCase();
+}
+
 export default function MarketEventSurfacesCard() {
   const [data, setData] = useState<SurfaceRadarData | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -146,8 +180,11 @@ export default function MarketEventSurfacesCard() {
       .slice(0, 3);
   }, [data]);
 
-  const latestActions = useMemo(() => (data?.actions?.records ?? []).slice(0, 3), [data]);
-  const latestEtfs = useMemo(() => (data?.newEtfs?.records ?? []).slice(0, 3), [data]);
+  const latestActions = useMemo(() => surfaceRows(data?.actions).slice(0, 3), [data]);
+  const latestEtfs = useMemo(() => surfaceRows(data?.newEtfs).slice(0, 3), [data]);
+  const latestSplit = useMemo(() => surfaceRows(data?.splits)[0] ?? null, [data]);
+  const premarketTop = useMemo(() => surfaceRows(data?.premarket)[0] ?? null, [data]);
+  const afterhoursTop = useMemo(() => surfaceRows(data?.afterhours)[0] ?? null, [data]);
 
   const summary = [
     {
@@ -227,6 +264,38 @@ export default function MarketEventSurfacesCard() {
           ))
         )}
       </div>
+
+      {loaded && (premarketTop || afterhoursTop || latestSplit) ? (
+        <div className="mv-col mt-3">
+          {premarketTop ? (
+            <TransitionLink href={`/stock/${encodeURIComponent(cleanTicker(premarketTop.symbol))}`} className="mv-row">
+              <span className="co">
+                <div className="n">장전 {cleanTicker(premarketTop.symbol)}</div>
+                <div className="tk">{shortName(premarketTop.company_name)} · 거래 {premarketTop.pre_volume || "—"}</div>
+              </span>
+              <span className="pc num up">{premarketTop.pct_change || premarketTop.premkt_price || "—"}</span>
+            </TransitionLink>
+          ) : null}
+          {afterhoursTop ? (
+            <TransitionLink href={`/stock/${encodeURIComponent(cleanTicker(afterhoursTop.symbol))}`} className="mv-row">
+              <span className="co">
+                <div className="n">장후 {cleanTicker(afterhoursTop.symbol)}</div>
+                <div className="tk">{shortName(afterhoursTop.company_name)} · 종가 {afterhoursTop.afterhr_close || "—"}</div>
+              </span>
+              <span className="pc num up">{afterhoursTop.pct_change || afterhoursTop.afterhr_price || "—"}</span>
+            </TransitionLink>
+          ) : null}
+          {latestSplit ? (
+            <TransitionLink href={`/stock/${encodeURIComponent(cleanTicker(latestSplit.symbol))}`} className="mv-row">
+              <span className="co">
+                <div className="n">분할 {cleanTicker(latestSplit.symbol)}</div>
+                <div className="tk">{datePart(latestSplit.date)} · {shortName(latestSplit.company_name || latestSplit.name)}</div>
+              </span>
+              <span className="pc num neutral">{latestSplit.split_ratio || latestSplit.type || "—"}</span>
+            </TransitionLink>
+          ) : null}
+        </div>
+      ) : null}
 
       {upcomingEarnings[0] || latestActions[0] || latestEtfs[0] ? (
         <div className="panel-foot">
