@@ -132,6 +132,79 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(stock_payload["normalized"]["financials"]["path"], "financials/AAPL.json")
         self.assertEqual(stock_payload["normalized"]["financials"]["summary"], financials["summary"])
 
+    def test_etf_payload_includes_classification_candidate(self) -> None:
+        def fake_fetch_json(path: str, _timeout: int) -> dict:
+            if path.endswith("/overview"):
+                return {
+                    "status": 200,
+                    "data": {
+                        "description": (
+                            "The fund provides 2x leveraged exposure, less fees and expenses, "
+                            "to the daily price movement for shares of NVIDIA Corporation stock."
+                        ),
+                        "aum": "$1.0B",
+                    },
+                }
+            if path.endswith("/holdings"):
+                return {"status": 200, "data": {"holdings": [], "count": 0}}
+            return {"status": 200, "data": {}}
+
+        original_fetch_json = self.fetcher.fetch_json
+        self.fetcher.fetch_json = fake_fetch_json
+        try:
+            payload = self.fetcher.fetch_etf("NVDL", timeout=1)
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        classification = payload["normalized"]["classification"]
+        self.assertTrue(classification["is_leveraged"])
+        self.assertEqual(classification["leverage_factor"], 2.0)
+        self.assertTrue(classification["is_single_stock"])
+        self.assertEqual(classification["underlying"], "NVIDIA Corporation")
+
+    def test_etf_classification_separates_index_and_single_stock_leverage(self) -> None:
+        index_etf = self.fetcher.classify_etf(
+            {"ticker": "TQQQ", "name": "ProShares UltraPro QQQ"},
+            overview={
+                "description": (
+                    "The fund provides 3x leveraged exposure to a modified "
+                    "market-cap-weighted index tracking 100 of the largest firms."
+                )
+            },
+            holdings=[],
+        )
+        single_stock = self.fetcher.classify_etf(
+            {"ticker": "NVDL", "name": "GraniteShares 2x Long NVDA Daily ETF"},
+            overview={
+                "description": (
+                    "The fund provides 2x leveraged exposure, less fees and expenses, "
+                    "to the daily price movement for shares of NVIDIA Corporation stock."
+                )
+            },
+            holdings=[],
+        )
+        inverse_1x = self.fetcher.classify_etf(
+            {"ticker": "AAPD", "name": "Direxion Daily AAPL Bear 1X ETF"},
+            overview={
+                "description": (
+                    "The fund provides inverse exposure to the daily price movement "
+                    "for shares of Apple stock."
+                )
+            },
+            holdings=[],
+        )
+
+        self.assertTrue(index_etf["is_leveraged"])
+        self.assertEqual(index_etf["leverage_factor"], 3.0)
+        self.assertFalse(index_etf["is_single_stock"])
+        self.assertTrue(single_stock["is_leveraged"])
+        self.assertEqual(single_stock["leverage_factor"], 2.0)
+        self.assertTrue(single_stock["is_single_stock"])
+        self.assertEqual(single_stock["underlying"], "NVIDIA Corporation")
+        self.assertFalse(inverse_1x["is_leveraged"])
+        self.assertTrue(inverse_1x["is_inverse"])
+        self.assertFalse(inverse_1x["is_single_stock"])
+
 
 if __name__ == "__main__":
     unittest.main()

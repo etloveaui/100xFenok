@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
   "schema_version": "stockanalysis/v1",
-  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, and market event surfaces.",
+  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, market event surfaces, and heuristic ETF classification candidates.",
   "primary_paths": {
     "index": "index.json",
     "etf_universe": "etf_universe.json",
@@ -9,7 +9,8 @@
     "stock": "stocks/{TICKER}.json",
     "financials": "financials/{TICKER}.json",
     "surface_index": "surfaces/index.json",
-    "surface": "surfaces/{NAME}.json"
+    "surface": "surfaces/{NAME}.json",
+    "classification": "classification/latest.json"
   },
   "fields": {
     "schema_version": "string",
@@ -19,6 +20,7 @@
     "fetched_at": "ISO-8601 UTC timestamp",
     "endpoints": "object of endpoint paths",
     "normalized": "DataPack-facing normalized subset",
+    "normalized.classification": "ETF-only heuristic classification candidate derived from StockAnalysis overview/list text and holdings labels; display/filter use only, not valuation input",
     "raw": "raw endpoint payloads",
     "financials_path": "optional path to financials/{TICKER}.json when stock financial candidates were fetched"
   },
@@ -51,6 +53,8 @@
     "records[].category": "StockAnalysis asset class/category label",
     "records[].aum_raw": "source AUM string",
     "records[].aum": "AUM normalized to numeric dollars where parseable",
-    "records[].source_page": "StockAnalysis ETF list page number"
+    "records[].source_page": "StockAnalysis ETF list page number",
+    "records[].classification": "heuristic ETF classification candidate with is_leveraged, leverage_factor, is_inverse, is_single_stock, underlying, source, confidence",
+    "counts.classification": "leveraged/inverse/single_stock counts computed from records[].classification"
   }
 }

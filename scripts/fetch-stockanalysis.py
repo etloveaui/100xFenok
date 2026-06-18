@@ -36,6 +36,20 @@ SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
+SINGLE_STOCK_UNDERLYING_TICKERS = {
+    "AA", "AAL", "AAPL", "ABNB", "ADBE", "AMD", "AMZN", "APP", "ARM", "AVGO",
+    "BABA", "COIN", "CRWD", "EL", "F", "GOOG", "GOOGL", "HOOD", "INTC", "LLY",
+    "META", "MSTR", "MSFT", "MU", "NFLX", "NKE", "NVDA", "ORCL", "PLTR", "SMCI",
+    "TSLA", "TSM", "UNH", "WMT",
+}
+ETF_CLASSIFICATION_ROW_KEYS = {
+    "classification",
+    "is_leveraged",
+    "leverage_factor",
+    "is_inverse",
+    "is_single_stock",
+    "underlying",
+}
 
 DEFAULT_ETFS = [
     "SPY", "QQQ", "DIA", "IWM", "VOO", "VTI", "SMH", "SOXX",
@@ -703,6 +717,148 @@ def parse_suffix_number(value):
         return None
 
 
+def row_ticker(row: dict) -> str | None:
+    for key in ("ticker", "s", "symbol"):
+        value = row.get(key)
+        if isinstance(value, str):
+            return clean_symbol(value.lstrip("$"))
+    return None
+
+
+def classification_text(row: dict | None, overview: dict | None, _holdings: list | None) -> str:
+    chunks = []
+    if isinstance(row, dict):
+        for key in ("ticker", "s", "symbol", "name", "n", "category", "assetClass"):
+            value = row.get(key)
+            if isinstance(value, str):
+                chunks.append(value)
+    if isinstance(overview, dict):
+        for key in ("type", "description"):
+            value = overview.get(key)
+            if isinstance(value, str):
+                chunks.append(value)
+    return " ".join(chunks)
+
+
+def extract_leverage_factor(text: str) -> float | None:
+    matches = re.findall(r"(?<!\d)([1-9](?:\.\d+)?)\s*x\b", text, flags=re.IGNORECASE)
+    if matches:
+        try:
+            return float(matches[0])
+        except ValueError:
+            pass
+    lower = text.lower()
+    if "ultrapro" in lower:
+        return 3.0
+    if re.search(r"\bultra\b", lower):
+        return 2.0
+    return None
+
+
+def extract_single_stock_underlying(text: str) -> str | None:
+    patterns = (
+        r"daily price movement for shares of ([A-Za-z0-9 .,&'-]+?) stock",
+        r"daily performance of ([A-Za-z0-9 .,&'-]+?) stock",
+        r"daily investment results of ([A-Za-z0-9 .,&'-]+?) stock",
+        r"shares of ([A-Za-z0-9 .,&'-]+?) stock",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            return normalize_space(match.group(1)).rstrip(".,")
+
+    for ticker in sorted(SINGLE_STOCK_UNDERLYING_TICKERS, key=len, reverse=True):
+        if re.search(rf"\b{re.escape(ticker)}\b", text, flags=re.IGNORECASE):
+            return ticker
+    return None
+
+
+def classify_etf(row: dict | None = None, overview: dict | None = None, holdings: list | None = None) -> dict:
+    text = classification_text(row, overview, holdings)
+    lower = text.lower()
+    factor = extract_leverage_factor(text)
+    daily_geared = bool(
+        re.search(r"\bdaily\b.*\b(?:bull|bear|target|long|short)\b", lower)
+        or re.search(r"\b(?:bull|bear|long|short)\b.*\bdaily\b", lower)
+    )
+    is_leveraged = bool(
+        (factor is not None and factor > 1)
+        or "leveraged" in lower
+        or "ultrapro" in lower
+        or (factor is None and daily_geared)
+    )
+    is_inverse = bool(re.search(r"\b(?:inverse|short|bear)\b", lower))
+    underlying = extract_single_stock_underlying(text) if is_leveraged else None
+    index_like = bool(
+        re.search(r"\bbased on the\b.*\bindex\b", lower)
+        or re.search(r"\bindex tracking\b", lower)
+        or re.search(r"\bindex of\b", lower)
+    )
+    single_stock = bool(underlying and not index_like)
+    source = "stockanalysis.overview.description" if isinstance(overview, dict) and overview.get("description") else "stockanalysis.etf_list.name"
+    confidence = "high" if source == "stockanalysis.overview.description" else "medium" if is_leveraged else "low"
+    return {
+        "is_leveraged": is_leveraged,
+        "leverage_factor": factor,
+        "is_inverse": is_inverse,
+        "is_single_stock": single_stock,
+        "underlying": underlying if single_stock else None,
+        "source": source,
+        "confidence": confidence,
+    }
+
+
+def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = None) -> dict:
+    base_row = {key: value for key, value in row.items() if key not in ETF_CLASSIFICATION_ROW_KEYS}
+    ticker = row_ticker(base_row)
+    payload = (detail_index or {}).get(ticker or "") or {}
+    raw_overview = (payload.get("raw") or {}).get("overview") if isinstance(payload, dict) else {}
+    overview = raw_overview if isinstance(raw_overview, dict) else {}
+    normalized_holdings = ((payload.get("normalized") or {}).get("holdings") or []) if isinstance(payload, dict) else []
+    classification = classify_etf(base_row, overview=overview, holdings=normalized_holdings)
+    if not (
+        classification["is_leveraged"]
+        or classification["is_inverse"]
+        or classification["is_single_stock"]
+        or classification["leverage_factor"] is not None
+        or classification["underlying"]
+    ):
+        return base_row
+    return {
+        **base_row,
+        "classification": classification,
+    }
+
+
+def etf_classification_counts(records: list[dict]) -> dict:
+    return {
+        "leveraged": sum(1 for row in records if (row.get("classification") or {}).get("is_leveraged") or row.get("is_leveraged")),
+        "inverse": sum(1 for row in records if (row.get("classification") or {}).get("is_inverse") or row.get("is_inverse")),
+        "single_stock": sum(1 for row in records if (row.get("classification") or {}).get("is_single_stock") or row.get("is_single_stock")),
+    }
+
+
+def load_etf_detail_index() -> dict[str, dict]:
+    etf_dir = OUT_DIR / "etfs"
+    if not etf_dir.exists():
+        return {}
+    details: dict[str, dict] = {}
+    for path in etf_dir.glob("*.json"):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        ticker = clean_symbol(str(payload.get("ticker") or path.stem))
+        if ticker:
+            details[ticker] = payload
+    return details
+
+
+def enrich_etf_records(records: list[dict], detail_index: dict[str, dict] | None = None) -> list[dict]:
+    details = detail_index if detail_index is not None else load_etf_detail_index()
+    return [add_etf_classification(row, details) for row in records]
+
+
 def normalize_holdings(rows):
     out = []
     for row in rows if isinstance(rows, list) else []:
@@ -787,6 +943,8 @@ def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
     else:
         decoded = extract_svelte_node(payload, ("data",))
         records = decoded.get("data") if isinstance(decoded.get("data"), list) else []
+        if name == "etf_screener":
+            records = enrich_etf_records(records)
         metadata = {
             key: value
             for key, value in decoded.items()
@@ -797,6 +955,15 @@ def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
     field_count = len(data_points) if isinstance(data_points, (list, dict)) else None
     day_count = len(metadata.get("days") or []) if isinstance(metadata.get("days"), list) else None
     week_count = len(metadata.get("weeks") or []) if isinstance(metadata.get("weeks"), list) else None
+    classification_counts = etf_classification_counts(records) if name == "etf_screener" else None
+    counts = {
+        "records": len(records),
+        "fields": field_count,
+        "days": day_count,
+        "weeks": week_count,
+    }
+    if classification_counts is not None:
+        counts["classification"] = classification_counts
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -809,12 +976,7 @@ def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
         "endpoint": path,
         "url": f"{BASE_URL}{page_path}",
         "format": "svelte_devalue",
-        "counts": {
-            "records": len(records),
-            "fields": field_count,
-            "days": day_count,
-            "weeks": week_count,
-        },
+        "counts": counts,
         "records": records,
         "metadata": {key: value for key, value in metadata.items() if value is not None},
     }
@@ -952,6 +1114,8 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         time.sleep(sleep)
 
     records.sort(key=lambda row: row["ticker"])
+    records = enrich_etf_records(records)
+    classification_counts = etf_classification_counts(records)
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -962,6 +1126,7 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
             "records": len(records),
             "pages": len(pages),
             "duplicate_rows_removed": sum(page["record_count"] for page in pages) - len(records),
+            "classification": classification_counts,
         },
         "warnings": warnings,
         "pages": pages,
@@ -998,6 +1163,12 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
     holdings_data = raw["holdings"] if isinstance(raw.get("holdings"), dict) else {}
     overview_data = raw["overview"] if isinstance(raw.get("overview"), dict) else {}
     holdings = holdings_data.get("holdings") or (overview_data.get("holdingsTable") or {}).get("holdings")
+    normalized_holdings = normalize_holdings(holdings)
+    classification = classify_etf(
+        {"ticker": ticker},
+        overview=overview_data,
+        holdings=normalized_holdings,
+    )
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -1006,12 +1177,13 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
         "fetched_at": now_iso(),
         "endpoints": paths,
         "normalized": {
-            "holdings": normalize_holdings(holdings),
+            "holdings": normalized_holdings,
             "asset_allocation": holdings_data.get("asset_allocation"),
             "sectors": holdings_data.get("sectors"),
             "countries": holdings_data.get("countries"),
             "holding_count": holdings_data.get("count") or overview_data.get("holdings"),
             "holdings_updated": holdings_data.get("date") or (overview_data.get("holdingsTable") or {}).get("updated"),
+            "classification": classification,
             "overview": {
                 key: overview_data.get(key)
                 for key in (
@@ -1083,6 +1255,45 @@ def write_payload(rel_path: str, payload: dict, mirror_public: bool) -> None:
         write_json(PUBLIC_DIR / rel_path, payload)
 
 
+def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | None:
+    path = OUT_DIR / rel_path
+    if not path.exists():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    records = payload.get("records")
+    if not isinstance(records, list):
+        return None
+    enriched = enrich_etf_records(records)
+    payload["records"] = enriched
+    counts = payload.get("counts") if isinstance(payload.get("counts"), dict) else {}
+    counts["classification"] = etf_classification_counts(enriched)
+    payload["counts"] = counts
+    payload["classification_refreshed_at"] = now_iso()
+    write_payload(rel_path, payload, mirror_public)
+    return {
+        "path": rel_path,
+        "records": len(enriched),
+        "classification": counts["classification"],
+    }
+
+
+def classify_existing_etf_catalogs(mirror_public: bool) -> dict:
+    results = []
+    for rel_path in ("etf_universe.json", "surfaces/etf_screener.json"):
+        result = classify_existing_etf_catalog(rel_path, mirror_public)
+        if result is not None:
+            results.append(result)
+    summary = {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "generated_at": now_iso(),
+        "operation": "classify_existing_etf_catalogs",
+        "results": results,
+    }
+    write_payload("classification/latest.json", summary, mirror_public)
+    return summary
+
+
 def run_one(kind: str, ticker: str, timeout: int, mirror_public: bool, include_financials: bool = False) -> dict:
     start = time.perf_counter()
     try:
@@ -1136,6 +1347,7 @@ def main() -> None:
     parser.add_argument("--stocks-only", action="store_true", help="skip ETF payload refresh and fetch only stock payloads")
     parser.add_argument("--fetch-financials", action="store_true", help="also fetch stock financial statements for the stock focus set")
     parser.add_argument("--discover-etf-universe", action="store_true", help="scrape /etf/ list pages into etf_universe.json")
+    parser.add_argument("--classify-etf-catalogs", action="store_true", help="classify existing ETF universe/screener catalogs from local ETF detail payloads")
     parser.add_argument("--universe-only", action="store_true", help="only refresh etf_universe.json; do not deep-fetch ETF payloads")
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
     parser.add_argument("--fetch-surfaces", action="store_true", help="refresh high-value public table surfaces into surfaces/*.json")
@@ -1153,6 +1365,23 @@ def main() -> None:
     args = parser.parse_args()
 
     mirror_public = not args.no_public_mirror
+    if args.classify_etf_catalogs:
+        classification_summary = classify_existing_etf_catalogs(mirror_public)
+        print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
+        no_other_work = not any(
+            (
+                args.discover_etf_universe,
+                args.fetch_surfaces,
+                args.universe_backfill,
+                args.stocks_only,
+                args.etfs,
+                args.stocks,
+                args.fetch_financials,
+            )
+        )
+        if no_other_work:
+            return
+
     universe_payload = None
     if args.discover_etf_universe:
         universe_payload = fetch_etf_universe(args.max_universe_pages, args.timeout, args.sleep)
