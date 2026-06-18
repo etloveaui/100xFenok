@@ -166,6 +166,21 @@ interface StockanalysisFinancialPayload {
   summary?: Record<string, Record<string, { field_count?: number | null; period_count?: number | null; period?: string | null } | null | undefined>>;
 }
 
+interface StockanalysisStockPayload {
+  ticker?: string;
+  asset_type?: string;
+  fetched_at?: string;
+  normalized?: {
+    overview?: Record<string, unknown> | null;
+    quote?: Record<string, unknown> | null;
+    history?: StockanalysisHistoryPoint[];
+    financials?: {
+      fetched_at?: string | null;
+      summary?: StockanalysisFinancialPayload["summary"];
+    } | null;
+  };
+}
+
 function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload | null> {
   const symbol = ticker.trim().toUpperCase();
   if (!symbol) return Promise.resolve(null);
@@ -174,6 +189,19 @@ function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload |
     .then((data) => (
       data && typeof data === "object" && !Array.isArray(data)
         ? data as StockanalysisEtfPayload
+        : null
+    ))
+    .catch(() => null);
+}
+
+function loadStockanalysisStock(ticker: string): Promise<StockanalysisStockPayload | null> {
+  const symbol = ticker.trim().toUpperCase();
+  if (!symbol) return Promise.resolve(null);
+  return fetch(`/api/data/stockanalysis/stocks/${encodeURIComponent(symbol)}`, { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => (
+      data && typeof data === "object" && !Array.isArray(data)
+        ? data as StockanalysisStockPayload
         : null
     ))
     .catch(() => null);
@@ -728,6 +756,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
   const [stockTab, setStockTab] = useState<StockTab>("overview");
   const [etfData, setEtfData] = useState<StockanalysisEtfPayload | null | undefined>(undefined);
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
+  const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
 
@@ -774,6 +803,21 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
     loadTickerSurfaces(symbol, "etf").then((d) => { if (!cancelled) setEtfSurfaceData(d); });
     return () => { cancelled = true; };
   }, [assetHint, marketFactsAssetType, symbol]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (assetHint === "etf" || !canLoadStockData) {
+      Promise.resolve().then(() => {
+        if (!cancelled) setStockAuxData(null);
+      });
+      return () => { cancelled = true; };
+    }
+    Promise.resolve().then(() => {
+      if (!cancelled) setStockAuxData(undefined);
+    });
+    loadStockanalysisStock(symbol).then((d) => { if (!cancelled) setStockAuxData(d); });
+    return () => { cancelled = true; };
+  }, [assetHint, canLoadStockData, symbol]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1263,6 +1307,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
                   ))}
                 </div>
               </SectionCard>
+              <StockAuxiliaryPanel data={stockAuxData} loading={stockAuxData === undefined} currency={displayCurrency} />
             </>
           ) : (
             <SectionCard>
@@ -1338,6 +1383,90 @@ function formatCandidateMetric(value: number | null, currency: string, kind: "mo
 
 function fmtCandidateCount(value: unknown): string {
   return isFiniteNumber(value) ? value.toLocaleString("ko-KR") : "—";
+}
+
+function stockOverviewText(value: unknown): string {
+  return rawText(value);
+}
+
+function quoteMoney(value: unknown, currency: string): string {
+  return isFiniteNumber(value) ? formatMoney(value, currency) : rawText(value);
+}
+
+function StockAuxiliaryPanel({
+  data,
+  loading,
+  currency,
+}: {
+  data: StockanalysisStockPayload | null | undefined;
+  loading: boolean;
+  currency: string;
+}) {
+  if (loading) {
+    return (
+      <SectionCard title="보조 데이터 체크">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((item) => <div key={item} className="h-20 rounded-xl bg-slate-100" />)}
+        </div>
+      </SectionCard>
+    );
+  }
+
+  if (!data) {
+    return (
+      <SectionCard title="보조 데이터 체크">
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4">
+          <p className="text-sm font-semibold text-slate-500">보조 데이터 수집 전입니다.</p>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  const overview = data.normalized?.overview ?? {};
+  const quote = data.normalized?.quote ?? {};
+  const financials = data.normalized?.financials;
+  const financialSummary = financials?.summary;
+  const annualFieldCount = Object.values(financialSummary?.annual ?? {})
+    .reduce((sum, item) => sum + (isFiniteNumber(item?.field_count) ? item.field_count : 0), 0);
+  const quarterlyFieldCount = Object.values(financialSummary?.quarterly ?? {})
+    .reduce((sum, item) => sum + (isFiniteNumber(item?.field_count) ? item.field_count : 0), 0);
+  const metrics = [
+    { label: "최근가", value: quoteMoney(quote.p, currency), note: fmtDateish(quote.u) },
+    { label: "시가총액", value: stockOverviewText(overview.marketCap), note: "보조 데이터" },
+    { label: "매출", value: stockOverviewText(overview.revenue), note: stockOverviewText(overview.revenue_type).toUpperCase() },
+    { label: "순이익", value: stockOverviewText(overview.netIncome), note: "최근 12개월" },
+    { label: "EPS", value: stockOverviewText(overview.eps), note: "희석 기준" },
+    { label: "PER", value: stockOverviewText(overview.peRatio), note: "현재" },
+    { label: "Forward PER", value: stockOverviewText(overview.forwardPE), note: "시장 예상" },
+    { label: "목표가", value: stockOverviewText(overview.target), note: stockOverviewText(overview.analysts) },
+    { label: "배당", value: stockOverviewText(overview.dividend), note: "예상/최근 기준" },
+    { label: "베타", value: stockOverviewText(overview.beta), note: "시장 민감도" },
+  ].filter((item) => item.value !== "—");
+
+  return (
+    <SectionCard title="보조 데이터 체크">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold text-slate-500">주요 지표를 기존 분석 데이터와 교차 확인합니다.</p>
+        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
+          {fmtDateish(data.fetched_at)}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {metrics.map((metric) => (
+          <div key={`${metric.label}-${metric.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{metric.label}</p>
+            <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{metric.value}</p>
+            {metric.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{metric.note}</p> : null}
+          </div>
+        ))}
+      </div>
+      {(annualFieldCount > 0 || quarterlyFieldCount > 0) ? (
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
+          재무 보강 파일: 연간 {annualFieldCount.toLocaleString("ko-KR")}필드 · 분기 {quarterlyFieldCount.toLocaleString("ko-KR")}필드
+        </div>
+      ) : null}
+    </SectionCard>
+  );
 }
 
 function FinancialCandidatePanel({

@@ -67,3 +67,11 @@ The public forbidden-term grep now leaves only internal identifiers such as
 - The same Data Lab renderer/dashboard changes must live in the tracked
   `admin/data-lab/app/*` source as well as the public mirror; `npm run dev`
   runs `sync-static` and will overwrite the mirror from that source.
+
+## 2026-06-18 Stock Detail Follow-Up
+
+- Stock detail overview now reads the collected stock overview API and renders
+  it as `보조 데이터 체크`, not as provider-branded copy.
+- Public copy should keep this framing: the card is a cross-check layer for
+  price, market cap, revenue, net income, EPS, PER, target price, dividend, and
+  beta; source/provider names stay in Admin/API metadata only.
