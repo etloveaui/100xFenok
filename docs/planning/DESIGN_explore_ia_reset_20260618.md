@@ -168,7 +168,11 @@ Dedicated route or drawer surfaces:
    industry, earnings, and corporate actions need dedicated destination
    surfaces first, then Explore may route to them with one chosen headline.
    - Public `/explore` no longer renders `StockanalysisSurfaceInsightCard`.
-   - IPO/industry/movers route design remains pending data-contract review.
+   - `/market/events` is the first dedicated destination for earnings,
+     corporate actions, IPO, industry, and market-mover surfaces. It reads the
+     surface JSON/API directly and keeps Explore out of the catalog role.
+   - Remaining route design: decide whether IPO, industry, and movers deserve
+     their own deeper subroutes after `/market/events` stabilizes.
 5. **Event module merge**: combine `WeekAheadCard` and
    `MarketEventSurfacesCard` into one "Event Risk" preview.
    Completed in the fourth cleanup slice:

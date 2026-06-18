@@ -495,6 +495,9 @@ export default function MarketValuationClient() {
               {sourceDate}
             </span>
           ) : null}
+          <TransitionLink href="/market/events" className="data-shell-link">
+            이벤트
+          </TransitionLink>
           <TransitionLink href="/explore" className="data-shell-link">
             탐색
           </TransitionLink>

@@ -64,3 +64,6 @@ The public forbidden-term grep now leaves only internal identifiers such as
 - Admin Data Lab now reads ETF collection queue details from
   `index.json`, `incremental_latest.json`, and `pending_ledger.json` instead
   of static copy, so pending/retry/failure rows update with each data refresh.
+- The same Data Lab renderer/dashboard changes must live in the tracked
+  `admin/data-lab/app/*` source as well as the public mirror; `npm run dev`
+  runs `sync-static` and will overwrite the mirror from that source.

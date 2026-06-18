@@ -294,6 +294,7 @@ const Renderer = (function() {
     etfClassification,
     stockanalysisSurfaceIndex,
     stockanalysisIncremental,
+    stockanalysisPendingLedger,
     marketFactsIndex
   ) {
     if (!elements?.marketAuditContainer) return;
@@ -315,47 +316,47 @@ const Renderer = (function() {
 
     elements.marketAuditContainer.innerHTML = `
       ${renderMarketAuditCard({
-        title: 'ETF 백필',
+        title: 'ETF 상세 수집',
         status: ready ? 'pass' : 'warn',
         code: ready ? 'READY' : 'CHECK',
         rows: [
-          ['Universe', stockanalysis.universe_records],
-          ['Detail', `${Formatters.formatNumber(stockanalysis.etf_detail_files || 0, 0)} (${escapeHtml(stockanalysis.etf_backfill_progress || '-')})`],
-          ['Rows seen', backfill.rows_seen],
-          ['404 expected', backfill.error_kinds?.http_404]
+          ['전체 ETF', stockanalysis.universe_records],
+          ['상세 파일', `${Formatters.formatNumber(stockanalysis.etf_detail_files || 0, 0)} (${escapeHtml(stockanalysis.etf_backfill_progress || '-')})`],
+          ['확인 행', backfill.rows_seen],
+          ['원천 미제공', backfill.error_kinds?.http_404]
         ]
       })}
       ${renderMarketAuditCard({
-        title: '백필 무결성',
+        title: '수집 무결성',
         status: Number(backfill.hard_error_count || 0) === 0 && ready ? 'pass' : 'warn',
         code: Number(backfill.hard_error_count || 0) === 0 ? 'HARD 0' : 'HARD',
         rows: [
-          ['OK', backfill.status_counts?.ok],
-          ['Error', backfill.status_counts?.error],
-          ['Hard', backfill.hard_error_count],
-          ['Missing', Array.isArray(backfill.missing_offsets) ? backfill.missing_offsets.length : '-']
+          ['성공', backfill.status_counts?.ok],
+          ['오류', backfill.status_counts?.error],
+          ['치명 오류', backfill.hard_error_count],
+          ['빈 구간', Array.isArray(backfill.missing_offsets) ? backfill.missing_offsets.length : '-']
         ]
       })}
       ${renderMarketAuditCard({
-        title: 'DataPack 위생',
+        title: '데이터 묶음 정리',
         status: transientFileCount === 0 ? 'pass' : 'warn',
         code: transientFileCount === 0 ? 'CLEAN' : `${Formatters.formatNumber(transientFileCount, 0)} TEMP`,
         rows: [
-          ['Raw chunks', backfill.raw_chunk_files],
-          ['Ignored', ignoredChunkCount],
-          ['Temp files', transientFileCount],
-          ['Finalize', backfill.ready_for_finalize === true ? 'yes' : 'no']
+          ['원본 묶음', backfill.raw_chunk_files],
+          ['제외 묶음', ignoredChunkCount],
+          ['임시 파일', transientFileCount],
+          ['마감 가능', backfill.ready_for_finalize === true ? 'yes' : 'no']
         ]
       })}
       ${renderMarketAuditCard({
-        title: 'Market Facts',
+        title: '시장 데이터 정규화',
         status: Number(facts.count || 0) >= 5000 ? 'pass' : 'warn',
         code: `${Formatters.formatNumber(facts.count || 0, 0)} facts`,
         rows: [
           ['ETF', factsCoverage.etf],
-          ['Stock', factsCoverage.stock],
+          ['주식', factsCoverage.stock],
           ['보조 데이터', factsCoverage.stockanalysis],
-          ['SA→YF fallback', factsCoverage.stockanalysis_yf_fallback],
+          ['Yahoo 보강', factsCoverage.stockanalysis_yf_fallback],
           ['Yahoo', factsCoverage.yf]
         ]
       })}
@@ -374,6 +375,7 @@ const Renderer = (function() {
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
+      ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
     `;
   }
@@ -407,7 +409,7 @@ const Renderer = (function() {
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="font-semibold text-gray-800">StockAnalysis 표면 카탈로그</h3>
+            <h3 class="font-semibold text-gray-800">StockAnalysis 수집 카탈로그</h3>
             <p class="text-xs text-gray-500 mt-1">data/stockanalysis/surfaces/index.json</p>
           </div>
           <span class="px-2 py-1 rounded-full border text-xs font-bold ${Number(counts.failed || 0) === 0 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
@@ -415,13 +417,13 @@ const Renderer = (function() {
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-          ${renderAuditMetric('Surfaces', Formatters.formatNumber(counts.surfaces_requested || results.length, 0))}
+          ${renderAuditMetric('수집 목록', Formatters.formatNumber(counts.surfaces_requested || results.length, 0))}
           ${renderAuditMetric('OK', Formatters.formatNumber(counts.ok || 0, 0))}
-          ${renderAuditMetric('Tables', Formatters.formatNumber(counts.tables || 0, 0))}
-          ${renderAuditMetric('Rows', Formatters.formatNumber(counts.rows || 0, 0))}
+          ${renderAuditMetric('테이블', Formatters.formatNumber(counts.tables || 0, 0))}
+          ${renderAuditMetric('행', Formatters.formatNumber(counts.rows || 0, 0))}
         </div>
         ${renderParityTable(
-          ['Group', 'Rows', 'Surfaces', 'Status', 'Samples'],
+          ['분류', '행', '수집 목록', '상태', '예시'],
           groupRows.map((row) => row.map((cell) => escapeHtml(cell)))
         )}
       </section>
@@ -457,14 +459,14 @@ const Renderer = (function() {
       ? index.results.filter((row) => String(row?.error || '').includes('404')).length
       : failed;
     return renderMarketAuditCard({
-      title: '신규 ETF 상세',
+      title: '신규 ETF 상세 수집',
       status: hardFailed === 0 ? 'pass' : 'warn',
-      code: `${Formatters.formatNumber(ok, 0)} detail / ${Formatters.formatNumber(source404, 0)} source 404`,
+      code: `${Formatters.formatNumber(ok, 0)}건 상세 / ${Formatters.formatNumber(source404, 0)}건 원천 미제공`,
       rows: [
-        ['Requested', requested],
-        ['Detail OK', ok],
-        ['Upstream n/a', source404],
-        ['Hard fail', hardFailed]
+        ['요청', requested],
+        ['상세 성공', ok],
+        ['원천 미제공', source404],
+        ['치명 오류', hardFailed]
       ]
     });
   }
@@ -496,20 +498,139 @@ const Renderer = (function() {
       status,
       code,
       rows: [
-        ['Audit', auditStatus],
-        ['Generated', escapeHtml(generatedAt).slice(0, 10)],
-        ['Candidates', candidates],
-        ['Selected', selected],
-        ['Retry YF', fallbackRetry],
-        ['Cooldown skip', cooldownSkipped],
-        ['Cooldown active', cooldownActive],
-        ['YF fallback OK', fallbackOk],
-        ['Still pending', stillPending],
-        ['Facts fallback', fallbackCoverage],
-        ['Proof file', hasIncrementalFile ? 'yes' : 'not yet'],
-        ['Notes', notes.length ? notes.join(', ') : '-']
+        ['감사 상태', auditStatus],
+        ['생성일', escapeHtml(generatedAt).slice(0, 10)],
+        ['후보', candidates],
+        ['선택', selected],
+        ['Yahoo 재시도', fallbackRetry],
+        ['대기 제외', cooldownSkipped],
+        ['대기 중', cooldownActive],
+        ['Yahoo 보강 성공', fallbackOk],
+        ['아직 대기', stillPending],
+        ['정규화 보강', fallbackCoverage],
+        ['증거 파일', hasIncrementalFile ? 'yes' : 'not yet'],
+        ['메모', notes.length ? notes.join(', ') : '-']
       ]
     });
+  }
+
+  function renderEtfBackfillDrilldown(index, incremental, pendingLedger) {
+    if (!index && !incremental && !pendingLedger) return '';
+    const counts = index?.counts || {};
+    const incrementalCounts = incremental?.counts || index?.incremental_etf_backfill?.counts || {};
+    const selected = Array.isArray(incremental?.selected)
+      ? incremental.selected
+      : (Array.isArray(index?.incremental_etf_backfill?.selected) ? index.incremental_etf_backfill.selected : []);
+    const failedResults = Array.isArray(index?.results)
+      ? index.results.filter((row) => row?.status && row.status !== 'ok')
+      : [];
+    const ledgerRows = normalizePendingLedgerRows(pendingLedger);
+    const generatedAt = incremental?.generated_at || index?.incremental_etf_backfill?.generated_at || index?.generated_at || '-';
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">ETF 수집 대기열</h3>
+            <p class="text-xs text-gray-500 mt-1">index.json · incremental_latest.json · pending_ledger.json</p>
+          </div>
+          <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
+            ${escapeHtml(generatedAt).slice(0, 10)}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          ${renderAuditMetric('다음 선택', incrementalCounts.selected ?? selected.length)}
+          ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
+          ${renderAuditMetric('Yahoo 재시도 후보', incrementalCounts.fallback_retry)}
+          ${renderAuditMetric('실패 추적', pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked)}
+        </div>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          ${renderBackfillMiniTable(
+            '다음 수집 대상',
+            ['티커', '이유', '소스', '실패'],
+            selected.slice(0, 12).map((row) => [
+              escapeHtml(row?.ticker ?? '-'),
+              escapeHtml(formatBackfillReason(row?.reason)),
+              escapeHtml(formatBackfillSource(row?.source)),
+              escapeHtml(Formatters.formatNumber(row?.prior_failures || 0, 0))
+            ])
+          )}
+          ${renderBackfillMiniTable(
+            '이번 실행 미해결',
+            ['티커', '제공처', '상태', '오류'],
+            failedResults.slice(0, 12).map((row) => [
+              escapeHtml(row?.ticker ?? '-'),
+              escapeHtml(formatBackfillSource(row?.provider)),
+              escapeHtml(row?.status ?? '-'),
+              escapeHtml(shortenError(row?.error || row?.stockanalysis_error))
+            ])
+          )}
+          ${renderBackfillMiniTable(
+            '실패 추적',
+            ['티커', '상태', '제공처', '사유'],
+            ledgerRows.slice(0, 12).map((row) => [
+              escapeHtml(row.ticker),
+              escapeHtml(row.last_status || '-'),
+              escapeHtml(formatBackfillSource(row.last_provider)),
+              escapeHtml(shortenError(row.failure_reason))
+            ])
+          )}
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 다음 수집 실행이나 Yahoo 보강 결과가 갱신되면 이 표도 함께 바뀝니다.
+        </p>
+      </section>
+    `;
+  }
+
+  function normalizePendingLedgerRows(pendingLedger) {
+    const entries = pendingLedger?.entries || {};
+    if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return [];
+    return Object.entries(entries)
+      .map(([ticker, value]) => ({
+        ticker,
+        ...(value && typeof value === 'object' && !Array.isArray(value) ? value : {})
+      }))
+      .sort((a, b) => {
+        const aFailures = Number(a.consecutive_failures || 0);
+        const bFailures = Number(b.consecutive_failures || 0);
+        if (aFailures !== bFailures) return bFailures - aFailures;
+        return String(b.last_attempt_utc || '').localeCompare(String(a.last_attempt_utc || ''));
+      });
+  }
+
+  function renderBackfillMiniTable(title, headers, rows) {
+    const body = rows.length
+      ? renderParityTable(headers, rows)
+      : '<div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs font-semibold text-gray-400">표시할 항목이 없습니다.</div>';
+    return `
+      <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
+        <div class="mb-3 text-xs font-black text-gray-700">${escapeHtml(title)}</div>
+        ${body}
+      </div>
+    `;
+  }
+
+  function formatBackfillReason(reason) {
+    const value = String(reason || '').trim();
+    if (value === 'missing') return '상세 없음';
+    if (value === 'fallback_retry') return 'Yahoo 재시도';
+    if (value === 'stale') return '오래된 파일';
+    return value || '-';
+  }
+
+  function formatBackfillSource(source) {
+    const value = String(source || '').trim();
+    if (value === 'etf_universe') return 'ETF 목록';
+    if (value === 'stockanalysis') return 'StockAnalysis';
+    if (value === 'yahoo_finance') return 'Yahoo';
+    return value || '-';
+  }
+
+  function shortenError(value) {
+    const text = String(value || '').replace(/\s+/g, ' ').trim();
+    if (!text) return '-';
+    return text.length > 86 ? `${text.slice(0, 83)}...` : text;
   }
 
   function findClassificationResult(report, path) {
