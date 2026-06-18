@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  MONA_VNEXT_EXPRESSION_BANK,
   createInitialLessonState,
   type MonaVnextLessonState,
 } from "@/features/mona-vnext/coach/coachPolicy";
@@ -26,9 +27,11 @@ import { buildMonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvis
 import {
   applyMonaVnextServerContent,
   createMonaVnextTranscriptState,
+  finalizePendingMonaVnextTurn,
   type MonaVnextTranscriptState,
 } from "@/features/mona-vnext/transcript/transcriptStore";
 import { createMonaVnextConversationId, type MonaVnextTurn } from "@/features/mona-vnext/transcript/turnBoundary";
+import { hasStrictMonaVnextStopIntent } from "@/features/mona-vnext/transcript/intentHints";
 import { WindDownVnextShell } from "@/features/mona-vnext/ui/WindDownVnextShell";
 
 const BUILD_VERSION = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 9) ?? "local-vnext";
@@ -51,6 +54,12 @@ type PersistResult = {
   error?: unknown;
 };
 
+type FinalizeReason = "manual-stop" | "strict-stop";
+
+type FinalizeOptions = {
+  reason: FinalizeReason;
+};
+
 function appendEvent(events: MonaVnextLogEvent[], event: MonaVnextLogEvent) {
   return [...events, event].slice(-40);
 }
@@ -67,8 +76,12 @@ export default function MonaVoiceCoachApp() {
   const [selectedModel, setSelectedModel] = useState<MonaVnextGeminiModel>(MONA_VNEXT_DEFAULT_GEMINI_MODEL);
   const sessionRef = useRef<{ sessionId: string; conversationId: string; startedAt: string } | null>(null);
   const lessonStateRef = useRef(lessonState);
+  const transcriptStateRef = useRef(transcriptState);
   const metricsRef = useRef<MonaVnextSessionMetrics | null>(null);
   const sendControlTextRef = useRef<(text: string) => boolean>(() => false);
+  const finalizeSessionRef = useRef<(options: FinalizeOptions) => void>(() => undefined);
+  const sessionFinalizedRef = useRef(false);
+  const hardStopHandledRef = useRef(false);
   // Best-effort events (partials, lifecycle) accumulate here and are flushed
   // into the next turn/final log POST, instead of one POST per partial.
   const pendingEventsRef = useRef<MonaVnextLogEvent[]>([]);
@@ -76,7 +89,8 @@ export default function MonaVoiceCoachApp() {
   const sessionSettings = useMemo(() => ({
     ...DEFAULT_SETTINGS,
     model: selectedModel,
-  }), [selectedModel]);
+    activeExpressionId: lessonState.expression.id,
+  }), [lessonState.expression.id, selectedModel]);
 
   const applyPersistOutcome = useCallback((
     kind: MonaVnextPersistKind,
@@ -143,12 +157,10 @@ export default function MonaVoiceCoachApp() {
     return drained;
   }, []);
 
-  const persistTurn = useCallback((
+  const buildPostTurnArtifacts = useCallback((
     turn: MonaVnextTurn,
     currentLesson: MonaVnextLessonState,
   ) => {
-    const session = sessionRef.current;
-    if (!session) return;
     const evaluation = evaluateMonaVnextTurn(turn, currentLesson);
     const advisory = buildMonaVnextSrsAdvisory(turn, evaluation);
     const nextLesson = applyMonaVnextLessonEvaluation(currentLesson, evaluation);
@@ -178,6 +190,33 @@ export default function MonaVoiceCoachApp() {
         },
       }
       : null;
+    return { evaluation, advisory, nextLesson, event, controlEvent };
+  }, []);
+
+  const buildMetaQuestionAnswer = useCallback((currentLesson: MonaVnextLessonState) => (
+    [
+      `지금 준비된 문장은 ${MONA_VNEXT_EXPRESSION_BANK.length}개야.`,
+      `현재 문장은 "${currentLesson.expression.ko}"이고, 영어 목표는 "${currentLesson.expression.en}"야.`,
+      "짧게 직접 답한 뒤 이 문장으로 돌아와.",
+    ].join(" ")
+  ), []);
+
+  const buildNextLessonPrompt = useCallback((nextLesson: MonaVnextLessonState) => (
+    [
+      "새 문장으로 자연스럽게 넘어가.",
+      `한국어로 먼저 물어볼 문장: "${nextLesson.expression.ko}"`,
+      `모나가 시도한 뒤 알려줄 자연스러운 영어: "${nextLesson.expression.en}"`,
+      "한 턴에 하나만 묻고, 모나가 답할 때까지 기다려.",
+    ].join(" ")
+  ), []);
+
+  const persistTurn = useCallback((
+    turn: MonaVnextTurn,
+    currentLesson: MonaVnextLessonState,
+  ) => {
+    const session = sessionRef.current;
+    if (!session || sessionFinalizedRef.current) return;
+    const { evaluation, advisory, nextLesson, event, controlEvent } = buildPostTurnArtifacts(turn, currentLesson);
     setEvents((current) => appendEvent(current, event));
     if (controlEvent) {
       setEvents((current) => appendEvent(current, controlEvent));
@@ -200,6 +239,7 @@ export default function MonaVoiceCoachApp() {
       events: turnEvents,
       settings: {
         ...sessionSettings,
+        activeExpressionId: nextLesson.expression.id,
         promptId: nextLesson.expression.id,
         englishVisible: nextLesson.englishVisible,
       },
@@ -213,7 +253,26 @@ export default function MonaVoiceCoachApp() {
 
     lessonStateRef.current = nextLesson;
     setLessonState(nextLesson);
-  }, [drainPendingEvents, postConversationLog, postMemoryAdvisory, sessionSettings]);
+    if (evaluation.metaQuestionRequested) {
+      sendControlTextRef.current(buildMetaQuestionAnswer(currentLesson));
+      return;
+    }
+    if (
+      nextLesson.expression.id !== currentLesson.expression.id
+      && !evaluation.repairRequested
+      && !evaluation.stopRequested
+    ) {
+      sendControlTextRef.current(buildNextLessonPrompt(nextLesson));
+    }
+  }, [
+    buildMetaQuestionAnswer,
+    buildNextLessonPrompt,
+    buildPostTurnArtifacts,
+    drainPendingEvents,
+    postConversationLog,
+    postMemoryAdvisory,
+    sessionSettings,
+  ]);
 
   const live = useGeminiLiveSession({
     settings: sessionSettings,
@@ -224,11 +283,15 @@ export default function MonaVoiceCoachApp() {
         conversationId: session.conversationId,
         startedAt: session.startedAt,
       };
-      setTranscriptState(createMonaVnextTranscriptState(session.conversationId));
+      const nextTranscript = createMonaVnextTranscriptState(session.conversationId);
+      transcriptStateRef.current = nextTranscript;
+      setTranscriptState(nextTranscript);
       const nextLesson = createInitialLessonState();
       lessonStateRef.current = nextLesson;
       setLessonState(nextLesson);
       pendingEventsRef.current = [];
+      sessionFinalizedRef.current = false;
+      hardStopHandledRef.current = false;
       setPersistenceState(createInitialPersistenceState());
       bufferEvent({
         type: "session-ready",
@@ -244,6 +307,9 @@ export default function MonaVoiceCoachApp() {
     onServerContent: (serverContent) => {
       setTranscriptState((current) => {
         const result = applyMonaVnextServerContent(current, serverContent);
+        transcriptStateRef.current = result.state;
+        const shouldHardStop = !hardStopHandledRef.current
+          && hasStrictMonaVnextStopIntent(result.state.current.userText);
         result.events.forEach((event) => {
           if (event.type === "input-partial" || event.type === "output-partial") {
             bufferEvent({
@@ -263,6 +329,12 @@ export default function MonaVoiceCoachApp() {
             atIso: event.atIso,
           });
         });
+        if (shouldHardStop) {
+          hardStopHandledRef.current = true;
+          queueMicrotask(() => {
+            finalizeSessionRef.current({ reason: "strict-stop" });
+          });
+        }
         return result.state;
       });
     },
@@ -277,28 +349,90 @@ export default function MonaVoiceCoachApp() {
   }, [lessonState]);
 
   useEffect(() => {
+    transcriptStateRef.current = transcriptState;
+  }, [transcriptState]);
+
+  useEffect(() => {
     metricsRef.current = live.metrics;
   }, [live.metrics]);
 
-  const stopSession = useCallback(() => {
+  const finalizeSession = useCallback(({ reason }: FinalizeOptions) => {
     const session = sessionRef.current;
+    if (!session) {
+      live.stop("stopped");
+      return;
+    }
+    if (sessionFinalizedRef.current) {
+      live.stop("stopped");
+      return;
+    }
+    sessionFinalizedRef.current = true;
+    const stoppedAt = new Date().toISOString();
+    const pendingTurnResult = finalizePendingMonaVnextTurn(transcriptStateRef.current, stoppedAt);
+    transcriptStateRef.current = pendingTurnResult.state;
+    setTranscriptState(pendingTurnResult.state);
+
+    const finalTurns = pendingTurnResult.finalizedTurn ? [pendingTurnResult.finalizedTurn] : [];
+    const finalTurnEvents: MonaVnextLogEvent[] = [];
+    const currentLesson = lessonStateRef.current;
+    let finalLesson = currentLesson;
+
+    if (pendingTurnResult.finalizedTurn) {
+      const { advisory, nextLesson, event } = buildPostTurnArtifacts(pendingTurnResult.finalizedTurn, currentLesson);
+      finalTurnEvents.push(event);
+      finalLesson = nextLesson;
+      lessonStateRef.current = nextLesson;
+      setLessonState(nextLesson);
+      const activeSession = sessionRef.current;
+      if (activeSession) {
+        postMemoryAdvisory({
+          conversationId: activeSession.conversationId,
+          turnSeq: pendingTurnResult.finalizedTurn.turnSeq,
+          advisory,
+        });
+      }
+    }
+
     live.stop("stopped");
-    if (!session) return;
     const finalEvent: MonaVnextLogEvent = {
       type: "session-finalized",
-      message: "Mona vNext session finalized by owner/dev control.",
-      atIso: new Date().toISOString(),
+      message: reason === "strict-stop"
+        ? "Mona vNext session finalized by strict stop phrase."
+        : "Mona vNext session finalized by owner/dev control.",
+      atIso: stoppedAt,
+      detail: { reason },
     };
     const flushed = drainPendingEvents();
     postConversationLog("final", {
       ...session,
       final: true,
-      stoppedAt: new Date().toISOString(),
-      settings: sessionSettings,
+      stoppedAt,
+      ...(finalTurns.length > 0 ? { turns: finalTurns } : {}),
+      settings: {
+        ...sessionSettings,
+        activeExpressionId: finalLesson.expression.id,
+        promptId: finalLesson.expression.id,
+        englishVisible: finalLesson.englishVisible,
+      },
       metrics: metricsRef.current ?? {},
-      events: [...flushed, finalEvent],
+      events: [...flushed, ...finalTurnEvents, finalEvent],
     });
-  }, [drainPendingEvents, live, postConversationLog, sessionSettings]);
+  }, [
+    buildPostTurnArtifacts,
+    drainPendingEvents,
+    live,
+    postConversationLog,
+    postMemoryAdvisory,
+    sessionSettings,
+  ]);
+
+  useEffect(() => {
+    finalizeSessionRef.current = finalizeSession;
+  }, [finalizeSession]);
+
+  const stopSession = useCallback(() => {
+    finalizeSession({ reason: "manual-stop" });
+  }, [finalizeSession]);
 
   return (
     <WindDownVnextShell

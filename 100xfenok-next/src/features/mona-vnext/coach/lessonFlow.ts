@@ -10,7 +10,7 @@ export function applyMonaVnextLessonEvaluation(
   state: MonaVnextLessonState,
   evaluation: MonaVnextPostTurnEvaluation,
 ): MonaVnextLessonState {
-  if (evaluation.stopRequested) return state;
+  if (evaluation.stopRequested || evaluation.metaQuestionRequested) return state;
 
   if (evaluation.englishVisibilityRequested) {
     return {
@@ -35,6 +35,10 @@ export function applyMonaVnextLessonEvaluation(
         state: evaluation.repairRequested ? "repair" : "prompt",
       },
     );
+  }
+
+  if (evaluation.lessonAttempt) {
+    return recordPromptExposure(state, state.expression);
   }
 
   return state;

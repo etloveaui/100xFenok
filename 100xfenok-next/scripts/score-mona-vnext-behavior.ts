@@ -3,6 +3,7 @@ import path from "node:path";
 import { buildMonaVnextLiveSetup } from "../src/features/mona-vnext/server/liveSetup";
 import { MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE } from "../src/features/mona-vnext/live/generationOptions";
 import {
+  MONA_VNEXT_EXPRESSION_BANK,
   MONA_VNEXT_MAX_SAME_PROMPT,
   createInitialLessonState,
   recordPromptExposure,
@@ -11,11 +12,17 @@ import { applyMonaVnextLessonEvaluation } from "../src/features/mona-vnext/coach
 import { evaluateMonaVnextTurn } from "../src/features/mona-vnext/coach/postTurnEvaluator";
 import { containsMonaVnextControlLeakage, scrubLearnerFacingText } from "../src/features/mona-vnext/logging/voiceLogSchema";
 import { MONA_VNEXT_NAMESPACE_POLICY } from "../src/features/mona-vnext/memory/monaVnextNamespace";
+import { buildMonaVnextSrsAdvisory } from "../src/features/mona-vnext/memory/srsAdvisory";
 import {
   applyMonaVnextServerContent,
   createMonaVnextTranscriptState,
+  finalizePendingMonaVnextTurn,
 } from "../src/features/mona-vnext/transcript/transcriptStore";
 import { createMonaVnextConversationId } from "../src/features/mona-vnext/transcript/turnBoundary";
+import {
+  detectMonaVnextIntent,
+  hasStrictMonaVnextStopIntent,
+} from "../src/features/mona-vnext/transcript/intentHints";
 import {
   createInitialPersistenceState,
   reducePersistence,
@@ -42,6 +49,7 @@ function checkSetupShape(): Result {
     lowVoice: true,
     interruptionMode: "no-interrupt",
     englishVisible: true,
+    activeExpressionId: "hope-that-makes-sense",
   });
   const raw = JSON.stringify(setup);
   const ok = raw.includes("\"responseModalities\":[\"AUDIO\"]")
@@ -51,10 +59,14 @@ function checkSetupShape(): Result {
     && raw.includes("\"NO_INTERRUPTION\"")
     && raw.includes("\"inputAudioTranscription\"")
     && raw.includes("\"outputAudioTranscription\"")
+    && raw.includes("Active Korean prompt")
+    && raw.includes("내 말이 좀 말이 됐으면 좋겠어.")
+    && raw.includes("I hope that makes sense.")
+    && raw.includes(`Prepared expression count for direct meta questions: ${MONA_VNEXT_EXPRESSION_BANK.length}.`)
     && raw.includes("coachTurn") === false
     && !("tools" in setup);
   return ok
-    ? pass("setup-shape", "AUDIO/default-temp/no-interrupt/no tools/no coachTurn")
+    ? pass("setup-shape", "AUDIO/default-temp/no-interrupt/active-expression/no tools/no coachTurn")
     : fail("setup-shape", "setup payload includes forbidden or missing fields");
 }
 
@@ -159,6 +171,23 @@ function checkCumulativeTranscriptMerge(): Result {
     : fail("cumulative-transcript-merge", JSON.stringify(turn));
 }
 
+function checkFinalPendingFlush(): Result {
+  const conversationId = createMonaVnextConversationId(new Date("2026-06-18T00:00:00Z"));
+  const pending = applyMonaVnextServerContent(createMonaVnextTranscriptState(conversationId), {
+    inputTranscription: { text: "지금 영어 문장들이 우리가 준비했던 것들이 맞는지 확인해" },
+  }, "2026-06-18T00:00:01.000Z").state;
+  const flushed = finalizePendingMonaVnextTurn(pending, "2026-06-18T00:00:02.000Z");
+  const secondFlush = finalizePendingMonaVnextTurn(flushed.state, "2026-06-18T00:00:03.000Z");
+  const ok = flushed.finalizedTurn?.intent === "meta_question"
+    && flushed.finalizedTurn.userText?.includes("준비했던")
+    && flushed.state.turns.length === 1
+    && secondFlush.finalizedTurn === null
+    && secondFlush.state.turns.length === 1;
+  return ok
+    ? pass("final-pending-flush", "pending input becomes one final turn and second flush dedupes")
+    : fail("final-pending-flush", JSON.stringify({ flushed, secondFlush }));
+}
+
 function checkNextIntent(): Result {
   const lesson = createInitialLessonState();
   const turn = {
@@ -180,6 +209,46 @@ function checkNextIntent(): Result {
     : fail("next-intent", "next/new intent did not advance material");
 }
 
+function checkMetaQuestionIntent(): Result {
+  const lesson = createInitialLessonState();
+  const result = applyMonaVnextServerContent(createMonaVnextTranscriptState("c"), {
+    inputTranscription: { text: "오늘 준비된 문장은 수가 몇 개야?" },
+    outputTranscription: { text: "5개야." },
+    turnComplete: true,
+  }, "2026-06-18T00:00:02.000Z");
+  const turn = result.finalizedTurn;
+  if (!turn) return fail("meta-question-intent", "turn did not finalize");
+  const evaluation = evaluateMonaVnextTurn(turn, lesson);
+  const next = applyMonaVnextLessonEvaluation(lesson, evaluation);
+  const srs = buildMonaVnextSrsAdvisory(turn, evaluation);
+  const writerSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/logging/voiceLogWriter.ts"), "utf8");
+  const ok = turn.intent === "meta_question"
+    && evaluation.metaQuestionRequested
+    && !evaluation.lessonAttempt
+    && next.expression.id === lesson.expression.id
+    && next.promptHistory[lesson.expression.id] === lesson.promptHistory[lesson.expression.id]
+    && writerSource.includes('value.intent === "meta_question"')
+    && srs.best3Candidates.length === 0
+    && srs.weakNoteCandidates.length === 0
+    && srs.nextSessionSuggestions.length === 0;
+  return ok
+    ? pass("meta-question-intent", "counts/log/prompt questions classify as no-advance meta_question")
+    : fail("meta-question-intent", JSON.stringify({ turn, evaluation, next }));
+}
+
+function checkStrictStopIntent(): Result {
+  const ok = hasStrictMonaVnextStopIntent("그만")
+    && hasStrictMonaVnextStopIntent("그만할래.")
+    && hasStrictMonaVnextStopIntent("stop")
+    && !hasStrictMonaVnextStopIntent("끝나면 뭐해")
+    && !hasStrictMonaVnextStopIntent("끝내주게 좋다")
+    && detectMonaVnextIntent("그만") === "stop"
+    && detectMonaVnextIntent("오늘 준비된 문장은 몇 개야?") === "meta_question";
+  return ok
+    ? pass("strict-stop-intent", "partial guard has high-confidence subset; meta beats broad stop fallback")
+    : fail("strict-stop-intent", "strict stop or meta intent classification is unsafe");
+}
+
 function checkSkipComplaintIntent(): Result {
   const conversationId = createMonaVnextConversationId(new Date("2026-06-17T00:00:00Z"));
   const result = applyMonaVnextServerContent(createMonaVnextTranscriptState(conversationId), {
@@ -192,6 +261,37 @@ function checkSkipComplaintIntent(): Result {
   return ok
     ? pass("skip-complaint-repair", "why-skip complaint is classified as repair, not next")
     : fail("skip-complaint-repair", JSON.stringify(turn));
+}
+
+function checkLessonAttemptExposure(): Result {
+  const makeTurn = (turnSeq: number) => ({
+    conversationId: "c",
+    turnSeq,
+    userText: "잘 모르겠어",
+    modelText: "다시 해보자.",
+    intent: "lesson_attempt" as const,
+    sttDrift: false,
+    interrupted: false,
+    startedAtIso: "2026-06-15T00:00:00.000Z",
+    completedAtIso: "2026-06-15T00:00:01.000Z",
+  });
+
+  let lesson = createInitialLessonState();
+  const firstExpression = lesson.expression.id;
+  lesson = applyMonaVnextLessonEvaluation(lesson, evaluateMonaVnextTurn(makeTurn(1), lesson));
+  const afterOne = lesson.promptHistory[firstExpression];
+  lesson = applyMonaVnextLessonEvaluation(lesson, evaluateMonaVnextTurn(makeTurn(2), lesson));
+  const afterTwo = lesson.promptHistory[firstExpression];
+  const beforeAdvance = lesson;
+  lesson = applyMonaVnextLessonEvaluation(lesson, evaluateMonaVnextTurn(makeTurn(3), lesson));
+
+  const ok = afterOne === 2
+    && afterTwo === MONA_VNEXT_MAX_SAME_PROMPT
+    && beforeAdvance.expression.id === firstExpression
+    && lesson.expression.id !== firstExpression;
+  return ok
+    ? pass("lesson-attempt-exposure", `promptHistory ${firstExpression}: 1 -> ${afterOne} -> ${afterTwo} -> advance`)
+    : fail("lesson-attempt-exposure", JSON.stringify({ afterOne, afterTwo, beforeAdvance, lesson }));
 }
 
 function checkEnglishVisibilityIntent(): Result {
@@ -363,8 +463,12 @@ const results = [
   checkTranscriptCollapse(),
   checkChunkedTranscriptMerge(),
   checkCumulativeTranscriptMerge(),
+  checkFinalPendingFlush(),
   checkNextIntent(),
+  checkMetaQuestionIntent(),
+  checkStrictStopIntent(),
   checkSkipComplaintIntent(),
+  checkLessonAttemptExposure(),
   checkEnglishVisibilityIntent(),
   checkRepeatLimit(),
   checkControlLeakage(),

@@ -6,6 +6,9 @@ import {
 } from "@/lib/server/admin-session";
 import { normalizeMonaVnextGeminiModel } from "@/features/mona-vnext/live/modelOptions";
 import {
+  getMonaVnextExpressionById,
+} from "@/features/mona-vnext/coach/coachPolicy";
+import {
   MONA_VNEXT_LIVE_THINKING_LEVEL,
   normalizeMonaVnextLiveTemperature,
 } from "@/features/mona-vnext/live/generationOptions";
@@ -85,6 +88,7 @@ export async function POST(request: Request) {
   const englishVisible = body?.englishVisible !== false;
   const temperature = normalizeMonaVnextLiveTemperature(body?.temperature);
   const clientBuildVersion = normalizeClientBuildVersion(body?.clientBuildVersion);
+  const activeExpression = getMonaVnextExpressionById(body?.activeExpressionId);
 
   if (!apiKey) {
     return noStoreJson(
@@ -118,6 +122,7 @@ export async function POST(request: Request) {
     interruptionMode,
     englishVisible,
     temperature,
+    activeExpressionId: activeExpression.id,
   });
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
@@ -180,6 +185,7 @@ export async function POST(request: Request) {
       lowVoice,
       interruptionMode,
       temperature,
+      activeExpressionId: activeExpression.id,
       thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
       namespace: "mona-vnext",
       productionWriteEnabled: false,

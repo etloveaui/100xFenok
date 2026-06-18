@@ -152,3 +152,59 @@ export function applyMonaVnextServerContent(
 
   return { state: nextState, events, finalizedTurn };
 }
+
+function isSameTurnPayload(left: MonaVnextTurn, right: MonaVnextTurn) {
+  return left.userText === right.userText
+    && left.modelText === right.modelText
+    && left.intent === right.intent;
+}
+
+export function finalizePendingMonaVnextTurn(
+  state: MonaVnextTranscriptState,
+  completedAtIso = new Date().toISOString(),
+) {
+  const finalizedTurn = finalizeMonaVnextTurn({
+    conversationId: state.conversationId,
+    nextTurnSeq: state.nextTurnSeq,
+    current: state.current,
+    completedAtIso,
+  });
+
+  const emptyCurrent = {
+    userText: "",
+    modelText: "",
+    interrupted: false,
+    startedAtIso: null,
+  };
+
+  if (!finalizedTurn) {
+    return {
+      state: {
+        ...state,
+        current: emptyCurrent,
+      },
+      finalizedTurn: null,
+    };
+  }
+
+  const lastTurn = state.turns.at(-1);
+  if (lastTurn && isSameTurnPayload(lastTurn, finalizedTurn)) {
+    return {
+      state: {
+        ...state,
+        current: emptyCurrent,
+      },
+      finalizedTurn: null,
+    };
+  }
+
+  return {
+    state: {
+      conversationId: state.conversationId,
+      nextTurnSeq: state.nextTurnSeq + 1,
+      current: emptyCurrent,
+      turns: [...state.turns, finalizedTurn],
+    },
+    finalizedTurn,
+  };
+}

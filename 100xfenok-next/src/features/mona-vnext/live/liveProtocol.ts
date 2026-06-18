@@ -32,6 +32,7 @@ export type MonaVnextSessionResponse = {
     lowVoice: boolean;
     interruptionMode: string;
     temperature: number;
+    activeExpressionId?: string;
     thinkingLevel: string;
     namespace: string;
     productionWriteEnabled: false;

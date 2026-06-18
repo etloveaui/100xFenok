@@ -57,6 +57,14 @@ export function createInitialLessonState(): MonaVnextLessonState {
   };
 }
 
+export function getMonaVnextExpressionById(value: unknown): MonaVnextExpression {
+  if (typeof value === "string") {
+    const found = MONA_VNEXT_EXPRESSION_BANK.find((item) => item.id === value.trim());
+    if (found) return found;
+  }
+  return MONA_VNEXT_EXPRESSION_BANK[0];
+}
+
 export function pickNextExpression(currentId: string, promptHistory: Record<string, number>) {
   const currentIndex = MONA_VNEXT_EXPRESSION_BANK.findIndex((item) => item.id === currentId);
   for (let offset = 1; offset <= MONA_VNEXT_EXPRESSION_BANK.length; offset += 1) {
@@ -84,7 +92,11 @@ export function shouldForcePromptAdvance(state: MonaVnextLessonState) {
 
 export function classifyLearnerFacingTurn(turn: MonaVnextTurn) {
   return {
-    isControl: turn.intent === "next_material" || turn.intent === "english_visibility" || turn.intent === "repair" || turn.intent === "stop",
+    isControl: turn.intent === "next_material"
+      || turn.intent === "english_visibility"
+      || turn.intent === "repair"
+      || turn.intent === "meta_question"
+      || turn.intent === "stop",
     isLessonAttempt: turn.intent === "lesson_attempt",
   };
 }

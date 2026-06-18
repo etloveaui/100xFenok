@@ -39,6 +39,7 @@ export type MonaVnextSessionSettings = {
   interruptionMode: "no-interrupt" | "barge-in";
   englishVisible: boolean;
   temperature: MonaVnextLiveTemperature;
+  activeExpressionId: string;
 };
 
 type Options = {

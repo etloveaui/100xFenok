@@ -1,5 +1,9 @@
 import { buildMonaVnextSystemPrompt } from "@/features/mona-vnext/coach/coachPrompt";
 import {
+  MONA_VNEXT_EXPRESSION_BANK,
+  getMonaVnextExpressionById,
+} from "@/features/mona-vnext/coach/coachPolicy";
+import {
   MONA_VNEXT_DEFAULT_GEMINI_MODEL,
   MONA_VNEXT_GEMINI_MODELS,
   normalizeMonaVnextGeminiModel,
@@ -96,10 +100,12 @@ export function buildMonaVnextLiveSetup(options: {
   interruptionMode: MonaVnextInterruptionMode;
   englishVisible: boolean;
   temperature?: unknown;
+  activeExpressionId?: unknown;
 }) {
   const vad = VAD_PRESETS[options.vadPreset];
   const model = normalizeMonaVnextGeminiModel(options.model);
   const temperature = normalizeMonaVnextLiveTemperature(options.temperature);
+  const activeExpression = getMonaVnextExpressionById(options.activeExpressionId);
   return {
     model: `models/${model}`,
     generationConfig: {
@@ -120,6 +126,8 @@ export function buildMonaVnextLiveSetup(options: {
           text: buildMonaVnextSystemPrompt({
             lowVoice: options.lowVoice,
             englishVisible: options.englishVisible,
+            activeExpression,
+            expressionBankSize: MONA_VNEXT_EXPRESSION_BANK.length,
           }),
         },
       ],

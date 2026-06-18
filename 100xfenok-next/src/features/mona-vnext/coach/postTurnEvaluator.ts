@@ -10,6 +10,7 @@ export type MonaVnextPostTurnEvaluation = {
   nextMaterialRequested: boolean;
   englishVisibilityRequested: boolean;
   repairRequested: boolean;
+  metaQuestionRequested: boolean;
   stopRequested: boolean;
   sttDrift: boolean;
   promptId: string;
@@ -26,6 +27,7 @@ export function evaluateMonaVnextTurn(
   const nextMaterialRequested = turn.intent === "next_material";
   const englishVisibilityRequested = turn.intent === "english_visibility";
   const repairRequested = turn.intent === "repair";
+  const metaQuestionRequested = turn.intent === "meta_question";
   const stopRequested = turn.intent === "stop";
   const shouldAdvancePrompt = nextMaterialRequested || repairRequested || samePromptCount >= MONA_VNEXT_MAX_SAME_PROMPT;
 
@@ -35,6 +37,7 @@ export function evaluateMonaVnextTurn(
     nextMaterialRequested,
     englishVisibilityRequested,
     repairRequested,
+    metaQuestionRequested,
     stopRequested,
     sttDrift: turn.sttDrift,
     promptId: lessonState.expression.id,
@@ -44,6 +47,7 @@ export function evaluateMonaVnextTurn(
       nextMaterialRequested,
       englishVisibilityRequested,
       repairRequested,
+      metaQuestionRequested,
       stopRequested,
       sttDrift: turn.sttDrift,
       shouldAdvancePrompt,
@@ -55,11 +59,13 @@ function buildAdvisory(args: {
   nextMaterialRequested: boolean;
   englishVisibilityRequested: boolean;
   repairRequested: boolean;
+  metaQuestionRequested: boolean;
   stopRequested: boolean;
   sttDrift: boolean;
   shouldAdvancePrompt: boolean;
 }) {
   if (args.stopRequested) return "stop-softly";
+  if (args.metaQuestionRequested) return "answer-meta-question-directly";
   if (args.englishVisibilityRequested) return "keep-english-visible-and-explain-briefly";
   if (args.repairRequested) return "repair-first-and-switch-material";
   if (args.nextMaterialRequested) return "switch-material-within-one-turn";

@@ -48,6 +48,7 @@ function normalizeTurn(value: unknown, conversationId: string): MonaVnextTurn | 
     intent: value.intent === "next_material"
       || value.intent === "english_visibility"
       || value.intent === "repair"
+      || value.intent === "meta_question"
       || value.intent === "stop"
       || value.intent === "lesson_attempt"
       ? value.intent
