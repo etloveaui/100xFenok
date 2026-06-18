@@ -5,7 +5,6 @@ import ExploreHotTopics from "./ExploreHotTopics";
 import ExploreDashboard from "./ExploreDashboard";
 import MarketThermometer from "./MarketThermometer";
 import SignalStrip from "./SignalStrip";
-import WeekAheadCard from "./WeekAheadCard";
 import MyWatchlistStrip from "./MyWatchlistStrip";
 import RevisionMoversCard from "./RevisionMoversCard";
 import SlickchartsDiscoveryCard from "./SlickchartsDiscoveryCard";
@@ -45,7 +44,6 @@ export default function ExplorePage() {
           </div>
           <div className="col-b">
             <MyWatchlistStrip />
-            <WeekAheadCard />
             <RevisionMoversCard />
             <SlickchartsDiscoveryCard />
           </div>

@@ -10,6 +10,24 @@ interface SurfaceResult {
   status?: string | null;
 }
 
+interface CalendarEvent {
+  date_kst: string;
+  time_kst: string;
+  importance: "H" | "M" | "L";
+  category_label: string;
+  title_ko: string;
+  title_en?: string;
+}
+
+interface PrevValuesDoc {
+  aliases?: Record<string, string>;
+  values?: Record<string, { value?: string; asOf?: string; series?: string; key?: string; source?: string }>;
+}
+
+interface CalendarDoc {
+  events?: CalendarEvent[];
+}
+
 interface StockanalysisManifest {
   surfaces?: {
     generated_at?: string | null;
@@ -33,14 +51,6 @@ interface SurfaceDoc<T> {
   tables?: Array<{
     records?: T[];
   }>;
-}
-
-interface NewEtfRecord {
-  s?: string;
-  n?: string;
-  inceptionDate?: string;
-  price?: number;
-  change?: number;
 }
 
 interface EarningsRecord {
@@ -76,16 +86,18 @@ interface SessionMoverRecord {
 
 interface SurfaceRadarData {
   manifest: StockanalysisManifest | null;
-  newEtfs: SurfaceDoc<NewEtfRecord> | null;
   earnings: SurfaceDoc<EarningsRecord> | null;
   actions: SurfaceDoc<ActionRecord> | null;
   splits: SurfaceDoc<ActionRecord> | null;
   premarket: SurfaceDoc<SessionMoverRecord> | null;
   afterhours: SurfaceDoc<SessionMoverRecord> | null;
+  calendar: CalendarDoc | null;
+  prevValues: PrevValuesDoc | null;
 }
 
 let radarCache: SurfaceRadarData | null = null;
 let radarPending: Promise<SurfaceRadarData> | null = null;
+type EventTab = "macro" | "corporate" | "session";
 
 function loadJson<T>(path: string): Promise<T | null> {
   return fetch(path, { cache: "no-store" })
@@ -98,14 +110,15 @@ function loadRadarData(): Promise<SurfaceRadarData> {
   if (radarPending) return radarPending;
   radarPending = Promise.all([
     loadJson<StockanalysisManifest>("/api/data/stockanalysis"),
-    loadJson<SurfaceDoc<NewEtfRecord>>("/api/data/stockanalysis/surfaces/new_etfs"),
     loadJson<SurfaceDoc<EarningsRecord>>("/api/data/stockanalysis/surfaces/earnings_calendar"),
     loadJson<SurfaceDoc<ActionRecord>>("/api/data/stockanalysis/surfaces/actions_recent"),
     loadJson<SurfaceDoc<ActionRecord>>("/api/data/stockanalysis/surfaces/actions_splits"),
     loadJson<SurfaceDoc<SessionMoverRecord>>("/api/data/stockanalysis/surfaces/market_premarket"),
     loadJson<SurfaceDoc<SessionMoverRecord>>("/api/data/stockanalysis/surfaces/market_afterhours"),
-  ]).then(([manifest, newEtfs, earnings, actions, splits, premarket, afterhours]) => {
-    radarCache = { manifest, newEtfs, earnings, actions, splits, premarket, afterhours };
+    loadJson<CalendarDoc>("/data/calendar/usd-calendar.json"),
+    loadJson<PrevValuesDoc>("/data/calendar/prev-values.json"),
+  ]).then(([manifest, earnings, actions, splits, premarket, afterhours, calendar, prevValues]) => {
+    radarCache = { manifest, earnings, actions, splits, premarket, afterhours, calendar, prevValues };
     return radarCache;
   });
   return radarPending;
@@ -130,6 +143,28 @@ function datePart(value: string | null | undefined): string {
   return text;
 }
 
+function todayKST(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+  }).format(new Date());
+}
+
+function shortDate(dateStr: string): string {
+  const [, m, d] = dateStr.split("-");
+  return `${parseInt(m)}/${parseInt(d)}`;
+}
+
+function ddayInfo(dateStr: string, today: string): { big: string; small: string; cls: string } {
+  if (dateStr === today) return { big: "오늘", small: shortDate(dateStr), cls: "today" };
+  const diff =
+    (new Date(`${dateStr}T00:00:00+09:00`).getTime() -
+      new Date(`${today}T00:00:00+09:00`).getTime()) /
+    86400000;
+  if (diff === 1) return { big: "내일", small: shortDate(dateStr), cls: "soon" };
+  if (diff <= 3) return { big: `D-${diff}`, small: shortDate(dateStr), cls: "soon" };
+  return { big: `D-${diff}`, small: shortDate(dateStr), cls: "" };
+}
+
 function shortName(value: string | null | undefined, fallback = "—", max = 34): string {
   const text = typeof value === "string" ? value.trim() : "";
   if (!text) return fallback;
@@ -140,14 +175,6 @@ function rowsFor(surface: string, manifest: StockanalysisManifest | null): numbe
   const results = manifest?.surfaces?.sample_results ?? [];
   const hit = results.find((item) => item.surface === surface);
   return typeof hit?.rows === "number" ? hit.rows : null;
-}
-
-function rowsForGroup(group: string, manifest: StockanalysisManifest | null): number | null {
-  const results = manifest?.surfaces?.sample_results ?? [];
-  const rows = results
-    .filter((item) => item.group === group && item.status === "ok")
-    .map((item) => (typeof item.rows === "number" ? item.rows : 0));
-  return rows.length ? rows.reduce((sum, value) => sum + value, 0) : null;
 }
 
 function surfaceRows<T>(doc: SurfaceDoc<T> | null | undefined): T[] {
@@ -188,6 +215,31 @@ function earningsDetail(row: EarningsRecord): string {
   return `${datePart(row.date)} · ${timingLabel(row.timing)} · ${eps} · ${revenue}`;
 }
 
+function normalizePrevKey(value: unknown): string {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9가-힣]+/g, " ")
+    .trim()
+    .replace(/\s+/g, "_");
+}
+
+function previousForEvent(event: CalendarEvent, doc: PrevValuesDoc | null) {
+  const values = doc?.values ?? {};
+  const aliases = doc?.aliases ?? {};
+  const candidates = [event.title_en, event.title_ko]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .flatMap((value) => [value, normalizePrevKey(value), aliases[value], aliases[normalizePrevKey(value)]])
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  for (const key of candidates) {
+    const resolved = aliases[key] ?? key;
+    const match = values[resolved] ?? values[key];
+    if (match?.value) return match;
+  }
+  return null;
+}
+
 function TickerRowLink({ symbol, children }: { symbol?: string | null; children: ReactNode }) {
   const ticker = cleanTicker(symbol);
   if (!ticker) return <div className="mv-row">{children}</div>;
@@ -201,6 +253,7 @@ function TickerRowLink({ symbol, children }: { symbol?: string | null; children:
 export default function MarketEventSurfacesCard() {
   const [data, setData] = useState<SurfaceRadarData | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<EventTab>("macro");
 
   useEffect(() => {
     let cancelled = false;
@@ -227,18 +280,24 @@ export default function MarketEventSurfacesCard() {
       .slice(0, 3);
   }, [data]);
 
+  const upcomingMacroEvents = useMemo(() => {
+    const today = todayKST();
+    return (data?.calendar?.events ?? [])
+      .filter((event) => event.date_kst >= today && (event.importance === "H" || event.importance === "M"))
+      .slice(0, 3);
+  }, [data]);
+
   const latestActions = useMemo(() => surfaceRows(data?.actions).slice(0, 3), [data]);
-  const latestEtfs = useMemo(() => surfaceRows(data?.newEtfs).slice(0, 3), [data]);
   const latestSplit = useMemo(() => surfaceRows(data?.splits)[0] ?? null, [data]);
   const premarketTop = useMemo(() => surfaceRows(data?.premarket)[0] ?? null, [data]);
   const afterhoursTop = useMemo(() => surfaceRows(data?.afterhours)[0] ?? null, [data]);
 
   const summary = [
     {
-      label: "신규 ETF",
-      detail: latestEtfs[0]?.s ? `${latestEtfs[0].s} 최근 등록` : "상장 감시",
-      value: fmtNumber(rowsFor("new_etfs", data?.manifest ?? null) ?? data?.newEtfs?.counts?.records),
-      tone: "up",
+      label: "미국 일정",
+      detail: upcomingMacroEvents[0]?.title_ko ? `${upcomingMacroEvents[0].title_ko} 다음 이벤트` : "매크로 캘린더",
+      value: fmtNumber(upcomingMacroEvents.length),
+      tone: upcomingMacroEvents[0]?.importance === "H" ? "up" : "neutral",
     },
     {
       label: "어닝 일정",
@@ -253,49 +312,39 @@ export default function MarketEventSurfacesCard() {
       tone: "neutral",
     },
     {
-      label: "ETF 스크리너",
-      detail: "AUM·자산군·보유수",
-      value: fmtNumber(rowsFor("etf_screener", data?.manifest ?? null)),
-      tone: "up",
-    },
-    {
-      label: "IPO 레이더",
-      detail: "상장·철회·통계",
-      value: fmtNumber(rowsForGroup("ipo", data?.manifest ?? null)),
-      tone: "neutral",
-    },
-    {
-      label: "시장 무버",
-      detail: "장전·장후·주간·월간",
-      value: fmtNumber(rowsForGroup("market_movers", data?.manifest ?? null)),
-      tone: "neutral",
-    },
-    {
-      label: "산업 지도",
-      detail: "섹터·업종 구성",
-      value: fmtNumber(rowsForGroup("industry", data?.manifest ?? null)),
+      label: "분할/액션",
+      detail: latestSplit?.symbol ? `${latestSplit.symbol} 최근 분할` : "스플릿 테이프",
+      value: fmtNumber(rowsFor("actions_splits", data?.manifest ?? null) ?? data?.splits?.counts?.records),
       tone: "up",
     },
   ];
 
-  const asOf =
-    datePart(data?.manifest?.surfaces?.generated_at)
-    || datePart(data?.newEtfs?.fetched_at)
-    || datePart(data?.earnings?.fetched_at);
+  const generatedAt = datePart(data?.manifest?.surfaces?.generated_at);
+  const earningsAsOf = datePart(data?.earnings?.fetched_at);
+  const asOf = generatedAt !== "—" ? generatedAt : earningsAsOf;
+  const tabs: Array<{ key: EventTab; label: string; count: number }> = [
+    { key: "macro", label: "매크로", count: upcomingMacroEvents.length },
+    { key: "corporate", label: "기업", count: upcomingEarnings.length + latestActions.length },
+    {
+      key: "session",
+      label: "세션",
+      count: Number(Boolean(premarketTop)) + Number(Boolean(afterhoursTop)) + Number(Boolean(latestSplit)),
+    },
+  ];
 
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>시장 이벤트 레이더</h2>
-        <span className="desc">{asOf} · {fmtNumber(data?.manifest?.surfaces?.counts?.surfaces_requested)}개 표면</span>
+        <h2>이벤트 리스크</h2>
+        <span className="desc">{asOf} · KST + 어닝</span>
       </div>
 
       <div className="mv-col">
         {!loaded ? (
           <div className="mv-row">
             <span className="co">
-              <div className="n">이벤트 데이터 확인 중</div>
-              <div className="tk">로컬 데이터팩을 읽고 있습니다</div>
+              <div className="n">이벤트 리스크 확인 중</div>
+              <div className="tk">일정·어닝·기업 액션을 읽고 있습니다</div>
             </span>
             <span className="pc num neutral">...</span>
           </div>
@@ -312,7 +361,67 @@ export default function MarketEventSurfacesCard() {
         )}
       </div>
 
-      {loaded && (premarketTop || afterhoursTop || latestSplit) ? (
+      {loaded ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              aria-pressed={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`min-h-9 rounded-full border px-3 text-[11px] font-black uppercase tracking-wide transition ${
+                activeTab === tab.key
+                  ? "border-brand-interactive bg-brand-interactive text-white"
+                  : "border-slate-200 bg-white text-slate-500 hover:border-brand-interactive hover:text-brand-interactive"
+              }`}
+            >
+              {tab.label} · {fmtNumber(tab.count)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {loaded && activeTab === "macro" ? (
+        <div className="mv-col mt-3">
+          {upcomingMacroEvents.length > 0 ? (
+            upcomingMacroEvents.map((event, index) => {
+              const dd = ddayInfo(event.date_kst, todayKST());
+              const chipCls = dd.cls === "today" ? "today" : dd.cls === "soon" ? "tom" : "";
+              const previous = previousForEvent(event, data?.prevValues ?? null);
+              return (
+                <div key={`${event.date_kst}-${event.time_kst}-${index}`} className="cal-row">
+                  <span className={`dchip ${chipCls}`}>
+                    <span className="dd">{dd.big}</span>
+                    <small>{dd.small}</small>
+                  </span>
+                  <span className="ev">
+                    <div className="t">{event.title_ko}</div>
+                    <div className="m">
+                      {event.category_label}
+                      {previous?.value ? (
+                        <span className="prev num"> · 직전 {previous.value}{previous.asOf ? ` · ${previous.asOf}` : ""}</span>
+                      ) : null}
+                    </div>
+                  </span>
+                  <span className={`imp ${event.importance === "H" ? "high" : "mid"}`}>
+                    {event.importance === "H" ? "중요" : "보통"}
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <div className="mv-row">
+              <span className="co">
+                <div className="n">표시할 주요 일정 없음</div>
+                <div className="tk">KST 기준 H/M 이벤트가 없습니다</div>
+              </span>
+              <span className="pc num neutral">—</span>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {loaded && activeTab === "session" ? (
         <div className="mv-col mt-3">
           {premarketTop ? (
             <TickerRowLink symbol={premarketTop.symbol}>
@@ -341,10 +450,19 @@ export default function MarketEventSurfacesCard() {
               <span className="pc num neutral">{latestSplit.split_ratio || latestSplit.type || "—"}</span>
             </TickerRowLink>
           ) : null}
+          {!premarketTop && !afterhoursTop && !latestSplit ? (
+            <div className="mv-row">
+              <span className="co">
+                <div className="n">표시할 세션 이벤트 없음</div>
+                <div className="tk">장전·장후·분할 테이프가 비어 있습니다</div>
+              </span>
+              <span className="pc num neutral">—</span>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {loaded && (upcomingEarnings.length > 0 || latestActions.length > 0) ? (
+      {loaded && activeTab === "corporate" ? (
         <div className="panel-b grid gap-3 lg:grid-cols-2">
           {upcomingEarnings.length > 0 ? (
             <div className="mv-col">
@@ -375,15 +493,25 @@ export default function MarketEventSurfacesCard() {
               ))}
             </div>
           ) : null}
+
+          {upcomingEarnings.length === 0 && latestActions.length === 0 ? (
+            <div className="mv-row lg:col-span-2">
+              <span className="co">
+                <div className="n">표시할 기업 이벤트 없음</div>
+                <div className="tk">어닝·액션 테이프가 비어 있습니다</div>
+              </span>
+              <span className="pc num neutral">—</span>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {upcomingEarnings[0] || latestActions[0] || latestEtfs[0] ? (
+      {loaded && (upcomingMacroEvents[0] || upcomingEarnings[0] || latestActions[0]) ? (
         <div className="panel-foot">
-          {upcomingEarnings[0] ? (
+          {upcomingMacroEvents[0] ? (
+            <span>다음 일정 {upcomingMacroEvents[0].title_ko} · {shortDate(upcomingMacroEvents[0].date_kst)}</span>
+          ) : upcomingEarnings[0] ? (
             <span>다음 어닝 {upcomingEarnings[0].symbol} · {datePart(upcomingEarnings[0].date)}</span>
-          ) : latestEtfs[0] ? (
-            <span>최근 ETF {latestEtfs[0].s} · {shortName(latestEtfs[0].n)}</span>
           ) : latestActions[0] ? (
             <span>최근 이벤트 {latestActions[0].symbol} · {shortName(latestActions[0].text)}</span>
           ) : null}

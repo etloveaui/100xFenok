@@ -167,6 +167,14 @@ Dedicated route or drawer surfaces:
      links to `/screener`, `/market-valuation`, and `/sectors`.
 5. **Event module merge**: combine `WeekAheadCard` and
    `MarketEventSurfacesCard` into one "Event Risk" preview.
+   Completed in the fourth cleanup slice:
+   - `MarketEventSurfacesCard` now reads both macro calendar JSON
+     (`usd-calendar.json`, `prev-values.json`) and StockAnalysis event
+     surfaces through one loader/cache.
+   - Public `/explore` no longer renders a separate `WeekAheadCard`.
+   - The merged card uses compact tabs for Macro, Corporate, and Session risk,
+     keeping mobile height controlled while preserving drilldown rows and Data
+     Lab evidence access.
 6. **Stock workbench merge**: combine `RevisionMoversCard`,
    `ActionCandidatesCard`, and selected StockAnalysis movers into one preview.
 7. **Mobile smoke gate**: 390px and 1440px `/explore`, overflow 0, first-screen
