@@ -407,7 +407,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     fund_like = is_fund_like(info)
     data["info"] = {k: info.get(k) for k in INFO_KEYS if info.get(k) is not None} or None
 
-    if fund_like:
+    if fund_like or profile == "etf":
         for key in STOCK_ONLY_KEYS:
             data[key] = None
     else:
@@ -425,7 +425,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
         lambda: {_iso(k): float(v) for k, v in t.dividends.tail(DIVIDEND_ENTRIES).items()} or None
     )
 
-    if not fund_like:
+    if not fund_like and profile != "etf":
         data["income_statement"] = safe(lambda: curated_statement(t.income_stmt, INCOME_ITEMS, ANNUAL_PERIODS))
         data["quarterly_income_statement"] = safe(lambda: curated_statement(t.quarterly_income_stmt, INCOME_ITEMS, QUARTERLY_PERIODS))
         data["balance_sheet"] = safe(lambda: curated_statement(t.balance_sheet, BALANCE_ITEMS, ANNUAL_PERIODS))
@@ -440,7 +440,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
         data["capital_gains"] = safe(lambda: small_series(t.capital_gains, DIVIDEND_ENTRIES))
         if fund_like:
             data["funds_data"] = safe(lambda: fund_data_records(t))
-        else:
+        elif profile != "etf":
             data["recommendations_summary"] = safe(lambda: small_df(t.recommendations_summary))
             data["upgrades_downgrades"] = safe(lambda: small_df(t.upgrades_downgrades, UPGRADES_ENTRIES))
             data["earnings_dates"] = safe(lambda: small_df(t.earnings_dates, EARNINGS_DATES_ENTRIES))

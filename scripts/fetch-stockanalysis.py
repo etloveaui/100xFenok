@@ -1922,7 +1922,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
 
 def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
     module = load_yf_finance_module()
-    data, _latency_ms, error = module.fetch_with_retry(ticker, profile="etf", retries=1, backoffs=(3,))
+    data, _latency_ms, error = module.fetch_with_retry(ticker, profile="etf", retries=0, backoffs=())
     if error is not None or data is None:
         raise RuntimeError(error or "Yahoo fallback returned no data")
     fetched_at = now_iso()
