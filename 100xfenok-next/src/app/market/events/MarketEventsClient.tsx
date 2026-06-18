@@ -25,11 +25,15 @@ interface EventData {
   ipoWithdrawn: SurfaceDoc;
   industries: SurfaceDoc;
   technology: SurfaceDoc;
+  semiconductors: SurfaceDoc;
   gainers: SurfaceDoc;
   losers: SurfaceDoc;
   active: SurfaceDoc;
   premarket: SurfaceDoc;
   afterhours: SurfaceDoc;
+  gainersWeek: SurfaceDoc;
+  gainersMonth: SurfaceDoc;
+  losersYtd: SurfaceDoc;
 }
 
 const SURFACES: Record<keyof EventData, string> = {
@@ -43,11 +47,15 @@ const SURFACES: Record<keyof EventData, string> = {
   ipoWithdrawn: "ipos_withdrawn",
   industries: "industries_all",
   technology: "sector_technology",
+  semiconductors: "industry_semiconductors",
   gainers: "market_gainers",
   losers: "market_losers",
   active: "market_active",
   premarket: "market_premarket",
   afterhours: "market_afterhours",
+  gainersWeek: "market_gainers_week",
+  gainersMonth: "market_gainers_month",
+  losersYtd: "market_losers_ytd",
 };
 
 const TABS: Array<{ key: EventTab; label: string }> = [
@@ -141,6 +149,14 @@ function pctClass(value: unknown): string {
   return "neutral";
 }
 
+function firstText(row: EventRow, keys: string[], fallback = "-"): string {
+  for (const key of keys) {
+    const value = text(row[key]);
+    if (value !== "-") return value;
+  }
+  return fallback;
+}
+
 function makeRow(row: EventRow, title: string, detail: string, value: string, href?: string, valueClass = "neutral") {
   const content = (
     <>
@@ -196,8 +212,8 @@ export default function MarketEventsClient() {
     earnings: countRows(data?.earnings),
     actions: countRows(data?.actions) + countRows(data?.splits),
     ipo: countRows(data?.ipoCalendar) + countRows(data?.ipoRecent) + countRows(data?.ipoFilings) + countRows(data?.ipoStats) + countRows(data?.ipoWithdrawn),
-    industry: countRows(data?.industries),
-    movers: countRows(data?.gainers) + countRows(data?.losers) + countRows(data?.active),
+    industry: countRows(data?.industries) + countRows(data?.technology) + countRows(data?.semiconductors),
+    movers: countRows(data?.gainers) + countRows(data?.losers) + countRows(data?.active) + countRows(data?.premarket) + countRows(data?.afterhours) + countRows(data?.gainersWeek) + countRows(data?.gainersMonth) + countRows(data?.losersYtd),
   }), [data]);
 
   return (
@@ -402,10 +418,11 @@ function IpoPanel({ data }: { data: EventData | null }) {
 
 function IndustryPanel({ data }: { data: EventData | null }) {
   const industries = rowsOf(data?.industries).slice(0, 30);
-  const tech = rowsOf(data?.technology).slice(0, 10);
+  const tech = rowsOf(data?.technology).slice(0, 8);
+  const semiconductors = rowsOf(data?.semiconductors).slice(0, 8);
   return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
-      <section className="panel">
+    <div className="grid gap-4 xl:grid-cols-3">
+      <section className="panel xl:col-span-1">
         <div className="panel-h">
           <h2>산업 지도</h2>
           <span className="desc">{dateText(data?.industries?.fetched_at)} · {countRows(data?.industries).toLocaleString("ko-KR")}개</span>
@@ -428,17 +445,32 @@ function IndustryPanel({ data }: { data: EventData | null }) {
           }) : <EmptyRows label="기술 섹터 데이터가 없습니다." />}
         </div>
       </section>
+      <section className="panel">
+        <div className="panel-h">
+          <h2>반도체 상위</h2>
+          <span className="desc">{countRows(data?.semiconductors).toLocaleString("ko-KR")}개</span>
+        </div>
+        <div className="mv-col">
+          {semiconductors.length ? semiconductors.map((row) => {
+            const symbol = rowSymbol(row);
+            return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
+          }) : <EmptyRows label="반도체 산업 데이터가 없습니다." />}
+        </div>
+      </section>
     </div>
   );
 }
 
 function MoversPanel({ data }: { data: EventData | null }) {
   const groups = [
-    { title: "상승", doc: data?.gainers, rows: rowsOf(data?.gainers).slice(0, 10) },
-    { title: "하락", doc: data?.losers, rows: rowsOf(data?.losers).slice(0, 10) },
-    { title: "거래량", doc: data?.active, rows: rowsOf(data?.active).slice(0, 10) },
-    { title: "프리마켓", doc: data?.premarket, rows: rowsOf(data?.premarket).slice(0, 8) },
-    { title: "애프터마켓", doc: data?.afterhours, rows: rowsOf(data?.afterhours).slice(0, 8) },
+    { title: "당일 상승", doc: data?.gainers, rows: rowsOf(data?.gainers).slice(0, 10), valueKey: "pct_change" },
+    { title: "당일 하락", doc: data?.losers, rows: rowsOf(data?.losers).slice(0, 10), valueKey: "pct_change" },
+    { title: "거래량", doc: data?.active, rows: rowsOf(data?.active).slice(0, 10), valueKey: "pct_change" },
+    { title: "장전 거래", doc: data?.premarket, rows: rowsOf(data?.premarket).slice(0, 8), valueKey: "pct_change", priceKeys: ["premkt_price", "stock_price"], volumeKeys: ["pre_volume", "volume"] },
+    { title: "장 마감 후", doc: data?.afterhours, rows: rowsOf(data?.afterhours).slice(0, 8), valueKey: "pct_change", priceKeys: ["afterhr_price", "stock_price"], volumeKeys: ["volume"], extraKeys: ["afterhr_close"] },
+    { title: "이번 주 상승", doc: data?.gainersWeek, rows: rowsOf(data?.gainersWeek).slice(0, 8), valueKey: "change_1w" },
+    { title: "한 달 상승", doc: data?.gainersMonth, rows: rowsOf(data?.gainersMonth).slice(0, 8), valueKey: "change_1m" },
+    { title: "연초 이후 하락", doc: data?.losersYtd, rows: rowsOf(data?.losersYtd).slice(0, 8), valueKey: "change_ytd" },
   ];
   return (
     <div className="grid gap-4 xl:grid-cols-2">
@@ -451,7 +483,12 @@ function MoversPanel({ data }: { data: EventData | null }) {
           <div className="mv-col">
             {group.rows.length ? group.rows.map((row) => {
               const symbol = rowSymbol(row);
-              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `가격 ${text(row.stock_price)} · 거래량 ${text(row.volume)} · 시총 ${text(row.market_cap)}`, text(row.pct_change), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
+              const value = text(row[group.valueKey]);
+              const price = firstText(row, group.priceKeys ?? ["stock_price"]);
+              const volume = firstText(row, group.volumeKeys ?? ["volume"]);
+              const extra = firstText(row, group.extraKeys ?? []);
+              const activity = extra !== "-" ? `기준가 ${extra}` : `거래량 ${volume}`;
+              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `가격 ${price} · ${activity} · 시총 ${text(row.market_cap)}`, value, symbol ? stockHref(symbol) : undefined, pctClass(value));
             }) : <EmptyRows label={`${group.title} 데이터가 없습니다.`} />}
           </div>
         </section>
