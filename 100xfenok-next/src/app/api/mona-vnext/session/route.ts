@@ -9,6 +9,10 @@ import {
   getMonaVnextExpressionById,
 } from "@/features/mona-vnext/coach/coachPolicy";
 import {
+  buildMonaVnextSessionBankSeed,
+  buildMonaVnextSessionExpressionBank,
+} from "@/features/mona-vnext/server/expressionBank";
+import {
   MONA_VNEXT_LIVE_THINKING_LEVEL,
   normalizeMonaVnextLiveTemperature,
 } from "@/features/mona-vnext/live/generationOptions";
@@ -88,7 +92,10 @@ export async function POST(request: Request) {
   const englishVisible = body?.englishVisible !== false;
   const temperature = normalizeMonaVnextLiveTemperature(body?.temperature);
   const clientBuildVersion = normalizeClientBuildVersion(body?.clientBuildVersion);
-  const activeExpression = getMonaVnextExpressionById(body?.activeExpressionId);
+  const expressionBank = buildMonaVnextSessionExpressionBank({
+    seed: buildMonaVnextSessionBankSeed({ startedAt: now, conversationId }),
+  });
+  const activeExpression = getMonaVnextExpressionById(body?.activeExpressionId, expressionBank.entries);
 
   if (!apiKey) {
     return noStoreJson(
@@ -123,6 +130,7 @@ export async function POST(request: Request) {
     englishVisible,
     temperature,
     activeExpressionId: activeExpression.id,
+    expressionBank: expressionBank.entries,
   });
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
@@ -177,6 +185,7 @@ export async function POST(request: Request) {
         : newSessionExpireTime,
     websocketEndpoint: MONA_VNEXT_LIVE_WS_ENDPOINT,
     setup,
+    expressionBank,
     settings: {
       ...(clientBuildVersion ? { clientBuildVersion } : {}),
       model,
@@ -186,6 +195,9 @@ export async function POST(request: Request) {
       interruptionMode,
       temperature,
       activeExpressionId: activeExpression.id,
+      expressionBankSize: expressionBank.entries.length,
+      expressionBankSource: expressionBank.metadata.source,
+      expressionBankSeed: expressionBank.metadata.seed,
       thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
       namespace: "mona-vnext",
       productionWriteEnabled: false,

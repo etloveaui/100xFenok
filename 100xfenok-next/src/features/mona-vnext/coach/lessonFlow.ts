@@ -24,7 +24,7 @@ export function applyMonaVnextLessonEvaluation(
   }
 
   if (evaluation.nextMaterialRequested || evaluation.repairRequested || shouldForcePromptAdvance(state)) {
-    const next = pickNextExpression(state.expression.id, state.promptHistory);
+    const next = pickNextExpression(state.expression.id, state.promptHistory, state.expressionBank);
     return recordPromptExposure(
       {
         ...state,

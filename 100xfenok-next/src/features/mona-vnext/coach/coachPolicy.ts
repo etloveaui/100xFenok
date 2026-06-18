@@ -9,8 +9,24 @@ export type MonaVnextExpression = {
   state: "prompt" | "reveal" | "repair";
 };
 
+export type MonaVnextExpressionBankMetadata = {
+  source: string;
+  updatedAt: string | null;
+  sourceEntryCount: number;
+  eligibleEntryCount: number;
+  selectedCount: number;
+  seed: string;
+  strategy: string;
+};
+
+export type MonaVnextSessionExpressionBank = {
+  metadata: MonaVnextExpressionBankMetadata;
+  entries: MonaVnextExpression[];
+};
+
 export type MonaVnextLessonState = {
   expression: MonaVnextExpression;
+  expressionBank: MonaVnextExpression[];
   promptHistory: Record<string, number>;
   englishVisible: boolean;
 };
@@ -48,30 +64,48 @@ export const MONA_VNEXT_EXPRESSION_BANK: MonaVnextExpression[] = [
   },
 ];
 
-export function createInitialLessonState(): MonaVnextLessonState {
-  const expression = MONA_VNEXT_EXPRESSION_BANK[0];
+function normalizeExpressionBank(value?: MonaVnextExpression[]) {
+  return Array.isArray(value) && value.length > 0 ? value : MONA_VNEXT_EXPRESSION_BANK;
+}
+
+export function createInitialLessonState(options: {
+  expressionBank?: MonaVnextExpression[];
+  activeExpressionId?: string;
+} = {}): MonaVnextLessonState {
+  const expressionBank = normalizeExpressionBank(options.expressionBank);
+  const expression = getMonaVnextExpressionById(options.activeExpressionId, expressionBank);
   return {
     expression,
+    expressionBank,
     promptHistory: { [expression.id]: 1 },
     englishVisible: true,
   };
 }
 
-export function getMonaVnextExpressionById(value: unknown): MonaVnextExpression {
+export function getMonaVnextExpressionById(
+  value: unknown,
+  expressionBank = MONA_VNEXT_EXPRESSION_BANK,
+): MonaVnextExpression {
+  const bank = normalizeExpressionBank(expressionBank);
   if (typeof value === "string") {
-    const found = MONA_VNEXT_EXPRESSION_BANK.find((item) => item.id === value.trim());
+    const found = bank.find((item) => item.id === value.trim());
     if (found) return found;
   }
-  return MONA_VNEXT_EXPRESSION_BANK[0];
+  return bank[0];
 }
 
-export function pickNextExpression(currentId: string, promptHistory: Record<string, number>) {
-  const currentIndex = MONA_VNEXT_EXPRESSION_BANK.findIndex((item) => item.id === currentId);
-  for (let offset = 1; offset <= MONA_VNEXT_EXPRESSION_BANK.length; offset += 1) {
-    const candidate = MONA_VNEXT_EXPRESSION_BANK[(currentIndex + offset + MONA_VNEXT_EXPRESSION_BANK.length) % MONA_VNEXT_EXPRESSION_BANK.length];
+export function pickNextExpression(
+  currentId: string,
+  promptHistory: Record<string, number>,
+  expressionBank = MONA_VNEXT_EXPRESSION_BANK,
+) {
+  const bank = normalizeExpressionBank(expressionBank);
+  const currentIndex = bank.findIndex((item) => item.id === currentId);
+  for (let offset = 1; offset <= bank.length; offset += 1) {
+    const candidate = bank[(currentIndex + offset + bank.length) % bank.length];
     if ((promptHistory[candidate.id] ?? 0) < MONA_VNEXT_MAX_SAME_PROMPT) return candidate;
   }
-  return MONA_VNEXT_EXPRESSION_BANK[(currentIndex + 1 + MONA_VNEXT_EXPRESSION_BANK.length) % MONA_VNEXT_EXPRESSION_BANK.length];
+  return bank[(currentIndex + 1 + bank.length) % bank.length];
 }
 
 export function recordPromptExposure(state: MonaVnextLessonState, expression: MonaVnextExpression): MonaVnextLessonState {

@@ -1,5 +1,7 @@
 "use client";
 
+import type { MonaVnextSessionExpressionBank } from "@/features/mona-vnext/coach/coachPolicy";
+
 export const MONA_VNEXT_INPUT_SAMPLE_RATE = 16000;
 export const MONA_VNEXT_OUTPUT_SAMPLE_RATE = 24000;
 export const MONA_VNEXT_AUDIO_MIME = `audio/pcm;rate=${MONA_VNEXT_INPUT_SAMPLE_RATE}`;
@@ -25,6 +27,7 @@ export type MonaVnextSessionResponse = {
   newSessionExpiresAt: string;
   websocketEndpoint: string;
   setup: Record<string, unknown>;
+  expressionBank: MonaVnextSessionExpressionBank;
   settings: {
     model: string;
     voiceName: string;
@@ -33,6 +36,9 @@ export type MonaVnextSessionResponse = {
     interruptionMode: string;
     temperature: number;
     activeExpressionId?: string;
+    expressionBankSize?: number;
+    expressionBankSource?: string;
+    expressionBankSeed?: string;
     thinkingLevel: string;
     namespace: string;
     productionWriteEnabled: false;

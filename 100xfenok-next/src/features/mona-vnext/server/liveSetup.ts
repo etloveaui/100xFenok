@@ -2,6 +2,7 @@ import { buildMonaVnextSystemPrompt } from "@/features/mona-vnext/coach/coachPro
 import {
   MONA_VNEXT_EXPRESSION_BANK,
   getMonaVnextExpressionById,
+  type MonaVnextExpression,
 } from "@/features/mona-vnext/coach/coachPolicy";
 import {
   MONA_VNEXT_DEFAULT_GEMINI_MODEL,
@@ -101,11 +102,13 @@ export function buildMonaVnextLiveSetup(options: {
   englishVisible: boolean;
   temperature?: unknown;
   activeExpressionId?: unknown;
+  expressionBank?: MonaVnextExpression[];
 }) {
   const vad = VAD_PRESETS[options.vadPreset];
   const model = normalizeMonaVnextGeminiModel(options.model);
   const temperature = normalizeMonaVnextLiveTemperature(options.temperature);
-  const activeExpression = getMonaVnextExpressionById(options.activeExpressionId);
+  const expressionBank = options.expressionBank?.length ? options.expressionBank : MONA_VNEXT_EXPRESSION_BANK;
+  const activeExpression = getMonaVnextExpressionById(options.activeExpressionId, expressionBank);
   return {
     model: `models/${model}`,
     generationConfig: {
@@ -127,7 +130,7 @@ export function buildMonaVnextLiveSetup(options: {
             lowVoice: options.lowVoice,
             englishVisible: options.englishVisible,
             activeExpression,
-            expressionBankSize: MONA_VNEXT_EXPRESSION_BANK.length,
+            expressionBankSize: expressionBank.length,
           }),
         },
       ],

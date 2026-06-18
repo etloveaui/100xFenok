@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { buildMonaVnextLiveSetup } from "../src/features/mona-vnext/server/liveSetup";
+import {
+  MONA_VNEXT_SESSION_EXPRESSION_COUNT,
+  buildMonaVnextSessionBankSeed,
+  buildMonaVnextSessionExpressionBank,
+} from "../src/features/mona-vnext/server/expressionBank";
 import { MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE } from "../src/features/mona-vnext/live/generationOptions";
 import {
   MONA_VNEXT_EXPRESSION_BANK,
@@ -85,6 +90,75 @@ function checkTemperatureOverride(): Result {
   return ok
     ? pass("temperature-override", "0.55 remains available only as an explicit A/B override")
     : fail("temperature-override", "temperature override was not reflected in setup");
+}
+
+function checkDynamicExpressionBank(): Result {
+  const seed = buildMonaVnextSessionBankSeed({
+    startedAt: new Date("2026-06-18T00:00:00.000Z"),
+    conversationId: "mona-vnext-test",
+  });
+  const bank = buildMonaVnextSessionExpressionBank({ seed });
+  const sameBank = buildMonaVnextSessionExpressionBank({ seed });
+  const otherBank = buildMonaVnextSessionExpressionBank({ seed: `${seed}:other` });
+  const ids = bank.entries.map((entry) => entry.id);
+  const sameIds = sameBank.entries.map((entry) => entry.id);
+  const otherIds = otherBank.entries.map((entry) => entry.id);
+  const selected = new Set(ids);
+  const fallbackIds = new Set(MONA_VNEXT_EXPRESSION_BANK.map((entry) => entry.id));
+  const lesson = createInitialLessonState({
+    expressionBank: bank.entries,
+    activeExpressionId: bank.entries[0]?.id,
+  });
+  const next = applyMonaVnextLessonEvaluation(lesson, evaluateMonaVnextTurn({
+    conversationId: "c",
+    turnSeq: 1,
+    userText: "다음 문장 넘어가",
+    modelText: "좋아.",
+    intent: "next_material",
+    sttDrift: false,
+    interrupted: false,
+    startedAtIso: "2026-06-18T00:00:00.000Z",
+    completedAtIso: "2026-06-18T00:00:01.000Z",
+  }, lesson));
+  const setup = buildMonaVnextLiveSetup({
+    voiceName: "Kore",
+    vadPreset: "relaxed",
+    lowVoice: true,
+    interruptionMode: "no-interrupt",
+    englishVisible: true,
+    activeExpressionId: lesson.expression.id,
+    expressionBank: bank.entries,
+  });
+  const setupRaw = JSON.stringify(setup);
+  const routeSource = readFileSync(path.join(process.cwd(), "src/app/api/mona-vnext/session/route.ts"), "utf8");
+  const appSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/MonaVoiceCoachApp.tsx"), "utf8");
+  const protocolSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/live/liveProtocol.ts"), "utf8");
+  const ok = ids.length === MONA_VNEXT_SESSION_EXPRESSION_COUNT
+    && selected.size === ids.length
+    && sameIds.join("|") === ids.join("|")
+    && otherIds.join("|") !== ids.join("|")
+    && bank.metadata.seed === seed
+    && bank.metadata.selectedCount === MONA_VNEXT_SESSION_EXPRESSION_COUNT
+    && bank.metadata.eligibleEntryCount > MONA_VNEXT_SESSION_EXPRESSION_COUNT
+    && ids.some((id) => !fallbackIds.has(id))
+    && lesson.expressionBank.length === MONA_VNEXT_SESSION_EXPRESSION_COUNT
+    && selected.has(next.expression.id)
+    && setupRaw.includes(`Prepared expression count for direct meta questions: ${MONA_VNEXT_SESSION_EXPRESSION_COUNT}.`)
+    && setupRaw.includes(lesson.expression.ko)
+    && routeSource.includes("buildMonaVnextSessionExpressionBank")
+    && routeSource.includes("expressionBank,")
+    && appSource.includes("session.expressionBank.entries")
+    && appSource.includes("selectedExpressionIds")
+    && protocolSource.includes("expressionBank: MonaVnextSessionExpressionBank");
+  return ok
+    ? pass("dynamic-expression-bank", `${bank.metadata.eligibleEntryCount} eligible -> ${ids.length} deterministic session expressions`)
+    : fail("dynamic-expression-bank", JSON.stringify({
+      ids: ids.length,
+      unique: selected.size,
+      seed: bank.metadata.seed,
+      first: bank.entries[0],
+      next: next.expression,
+    }));
 }
 
 function checkModelAllowlist(): Result {
@@ -459,6 +533,7 @@ function checkPersistenceSeveritySplit(): Result {
 const results = [
   checkSetupShape(),
   checkTemperatureOverride(),
+  checkDynamicExpressionBank(),
   checkModelAllowlist(),
   checkTranscriptCollapse(),
   checkChunkedTranscriptMerge(),

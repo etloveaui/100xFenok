@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  MONA_VNEXT_EXPRESSION_BANK,
   createInitialLessonState,
   type MonaVnextLessonState,
+  type MonaVnextSessionExpressionBank,
 } from "@/features/mona-vnext/coach/coachPolicy";
 import { MONA_VNEXT_BASELINE_LOG, MONA_VNEXT_BASELINE_PROMPT_POLICY } from "@/features/mona-vnext/coach/baselineEvidence";
 import { applyMonaVnextLessonEvaluation } from "@/features/mona-vnext/coach/lessonFlow";
@@ -60,6 +60,13 @@ type FinalizeOptions = {
   reason: FinalizeReason;
 };
 
+function buildExpressionBankLogSettings(expressionBank: MonaVnextSessionExpressionBank) {
+  return {
+    ...expressionBank.metadata,
+    selectedExpressionIds: expressionBank.entries.map((entry) => entry.id),
+  };
+}
+
 function appendEvent(events: MonaVnextLogEvent[], event: MonaVnextLogEvent) {
   return [...events, event].slice(-40);
 }
@@ -74,7 +81,12 @@ export default function MonaVoiceCoachApp() {
   // conversation saves can set it; partial-event logging never does.
   const [persistenceState, setPersistenceState] = useState(() => createInitialPersistenceState());
   const [selectedModel, setSelectedModel] = useState<MonaVnextGeminiModel>(MONA_VNEXT_DEFAULT_GEMINI_MODEL);
-  const sessionRef = useRef<{ sessionId: string; conversationId: string; startedAt: string } | null>(null);
+  const sessionRef = useRef<{
+    sessionId: string;
+    conversationId: string;
+    startedAt: string;
+    expressionBank: MonaVnextSessionExpressionBank;
+  } | null>(null);
   const lessonStateRef = useRef(lessonState);
   const transcriptStateRef = useRef(transcriptState);
   const metricsRef = useRef<MonaVnextSessionMetrics | null>(null);
@@ -195,7 +207,7 @@ export default function MonaVoiceCoachApp() {
 
   const buildMetaQuestionAnswer = useCallback((currentLesson: MonaVnextLessonState) => (
     [
-      `지금 준비된 문장은 ${MONA_VNEXT_EXPRESSION_BANK.length}개야.`,
+      `지금 준비된 문장은 ${currentLesson.expressionBank.length}개야.`,
       `현재 문장은 "${currentLesson.expression.ko}"이고, 영어 목표는 "${currentLesson.expression.en}"야.`,
       "짧게 직접 답한 뒤 이 문장으로 돌아와.",
     ].join(" ")
@@ -234,7 +246,9 @@ export default function MonaVoiceCoachApp() {
     const flushed = drainPendingEvents();
     const turnEvents = controlEvent ? [...flushed, event, controlEvent] : [...flushed, event];
     postConversationLog("turn", {
-      ...session,
+      sessionId: session.sessionId,
+      conversationId: session.conversationId,
+      startedAt: session.startedAt,
       turn,
       events: turnEvents,
       settings: {
@@ -242,6 +256,7 @@ export default function MonaVoiceCoachApp() {
         activeExpressionId: nextLesson.expression.id,
         promptId: nextLesson.expression.id,
         englishVisible: nextLesson.englishVisible,
+        expressionBank: buildExpressionBankLogSettings(session.expressionBank),
       },
       metrics: metricsRef.current ?? {},
     });
@@ -282,11 +297,15 @@ export default function MonaVoiceCoachApp() {
         sessionId: session.sessionId,
         conversationId: session.conversationId,
         startedAt: session.startedAt,
+        expressionBank: session.expressionBank,
       };
       const nextTranscript = createMonaVnextTranscriptState(session.conversationId);
       transcriptStateRef.current = nextTranscript;
       setTranscriptState(nextTranscript);
-      const nextLesson = createInitialLessonState();
+      const nextLesson = createInitialLessonState({
+        expressionBank: session.expressionBank.entries,
+        activeExpressionId: session.settings.activeExpressionId,
+      });
       lessonStateRef.current = nextLesson;
       setLessonState(nextLesson);
       pendingEventsRef.current = [];
@@ -300,6 +319,7 @@ export default function MonaVoiceCoachApp() {
         detail: {
           sessionId: session.sessionId,
           conversationId: session.conversationId,
+          expressionBank: buildExpressionBankLogSettings(session.expressionBank),
         },
       });
     },
@@ -404,7 +424,9 @@ export default function MonaVoiceCoachApp() {
     };
     const flushed = drainPendingEvents();
     postConversationLog("final", {
-      ...session,
+      sessionId: session.sessionId,
+      conversationId: session.conversationId,
+      startedAt: session.startedAt,
       final: true,
       stoppedAt,
       ...(finalTurns.length > 0 ? { turns: finalTurns } : {}),
@@ -413,6 +435,7 @@ export default function MonaVoiceCoachApp() {
         activeExpressionId: finalLesson.expression.id,
         promptId: finalLesson.expression.id,
         englishVisible: finalLesson.englishVisible,
+        expressionBank: buildExpressionBankLogSettings(session.expressionBank),
       },
       metrics: metricsRef.current ?? {},
       events: [...flushed, ...finalTurnEvents, finalEvent],

@@ -68,11 +68,15 @@ const EMPTY_METRICS: MonaVnextSessionMetrics = {
 function isSessionResponse(value: unknown): value is MonaVnextSessionResponse {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const record = value as Partial<MonaVnextSessionResponse>;
+  const expressionBank = record.expressionBank;
   return record.status === "LIVE_TOKEN_READY"
     && typeof record.sessionId === "string"
     && typeof record.conversationId === "string"
     && typeof record.token === "string"
     && typeof record.websocketEndpoint === "string"
+    && Boolean(expressionBank)
+    && Array.isArray(expressionBank?.entries)
+    && expressionBank.entries.length > 0
     && Boolean(record.setup);
 }
 
