@@ -231,10 +231,11 @@ const DataLabUI = (function() {
         fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, 'StockAnalysis surface catalog')
       ]);
       const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
-      const [stockanalysisIncremental, marketFactsIndex] = await Promise.all([
+      const [stockanalysisIncremental, stockanalysisPendingLedger, marketFactsIndex] = await Promise.all([
         shouldFetchIncremental
           ? fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'StockAnalysis incremental ETF backfill')
           : Promise.resolve(null),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/pending_ledger.json`, 'StockAnalysis ETF pending ledger'),
         fetchOptionalJson(`${basePath}/data/computed/market_facts/index.json`, 'Market facts index')
       ]);
       Renderer.renderMarketDataAudit(
@@ -244,6 +245,7 @@ const DataLabUI = (function() {
         etfClassification,
         stockanalysisSurfaceIndex,
         stockanalysisIncremental,
+        stockanalysisPendingLedger,
         marketFactsIndex
       );
     } catch (error) {

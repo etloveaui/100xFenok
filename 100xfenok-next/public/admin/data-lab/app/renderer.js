@@ -294,6 +294,7 @@ const Renderer = (function() {
     etfClassification,
     stockanalysisSurfaceIndex,
     stockanalysisIncremental,
+    stockanalysisPendingLedger,
     marketFactsIndex
   ) {
     if (!elements?.marketAuditContainer) return;
@@ -374,6 +375,7 @@ const Renderer = (function() {
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
+      ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
     `;
   }
@@ -510,6 +512,125 @@ const Renderer = (function() {
         ['메모', notes.length ? notes.join(', ') : '-']
       ]
     });
+  }
+
+  function renderEtfBackfillDrilldown(index, incremental, pendingLedger) {
+    if (!index && !incremental && !pendingLedger) return '';
+    const counts = index?.counts || {};
+    const incrementalCounts = incremental?.counts || index?.incremental_etf_backfill?.counts || {};
+    const selected = Array.isArray(incremental?.selected)
+      ? incremental.selected
+      : (Array.isArray(index?.incremental_etf_backfill?.selected) ? index.incremental_etf_backfill.selected : []);
+    const failedResults = Array.isArray(index?.results)
+      ? index.results.filter((row) => row?.status && row.status !== 'ok')
+      : [];
+    const ledgerRows = normalizePendingLedgerRows(pendingLedger);
+    const generatedAt = incremental?.generated_at || index?.incremental_etf_backfill?.generated_at || index?.generated_at || '-';
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">ETF 수집 대기열</h3>
+            <p class="text-xs text-gray-500 mt-1">index.json · incremental_latest.json · pending_ledger.json</p>
+          </div>
+          <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
+            ${escapeHtml(generatedAt).slice(0, 10)}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          ${renderAuditMetric('다음 선택', incrementalCounts.selected ?? selected.length)}
+          ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
+          ${renderAuditMetric('Yahoo 재시도 후보', incrementalCounts.fallback_retry)}
+          ${renderAuditMetric('실패 추적', pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked)}
+        </div>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          ${renderBackfillMiniTable(
+            '다음 수집 대상',
+            ['티커', '이유', '소스', '실패'],
+            selected.slice(0, 12).map((row) => [
+              escapeHtml(row?.ticker ?? '-'),
+              escapeHtml(formatBackfillReason(row?.reason)),
+              escapeHtml(formatBackfillSource(row?.source)),
+              escapeHtml(Formatters.formatNumber(row?.prior_failures || 0, 0))
+            ])
+          )}
+          ${renderBackfillMiniTable(
+            '이번 실행 미해결',
+            ['티커', '제공처', '상태', '오류'],
+            failedResults.slice(0, 12).map((row) => [
+              escapeHtml(row?.ticker ?? '-'),
+              escapeHtml(formatBackfillSource(row?.provider)),
+              escapeHtml(row?.status ?? '-'),
+              escapeHtml(shortenError(row?.error || row?.stockanalysis_error))
+            ])
+          )}
+          ${renderBackfillMiniTable(
+            '실패 추적',
+            ['티커', '상태', '제공처', '사유'],
+            ledgerRows.slice(0, 12).map((row) => [
+              escapeHtml(row.ticker),
+              escapeHtml(row.last_status || '-'),
+              escapeHtml(formatBackfillSource(row.last_provider)),
+              escapeHtml(shortenError(row.failure_reason))
+            ])
+          )}
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 다음 수집 실행이나 Yahoo 보강 결과가 갱신되면 이 표도 함께 바뀝니다.
+        </p>
+      </section>
+    `;
+  }
+
+  function normalizePendingLedgerRows(pendingLedger) {
+    const entries = pendingLedger?.entries || {};
+    if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return [];
+    return Object.entries(entries)
+      .map(([ticker, value]) => ({
+        ticker,
+        ...(value && typeof value === 'object' && !Array.isArray(value) ? value : {})
+      }))
+      .sort((a, b) => {
+        const aFailures = Number(a.consecutive_failures || 0);
+        const bFailures = Number(b.consecutive_failures || 0);
+        if (aFailures !== bFailures) return bFailures - aFailures;
+        return String(b.last_attempt_utc || '').localeCompare(String(a.last_attempt_utc || ''));
+      });
+  }
+
+  function renderBackfillMiniTable(title, headers, rows) {
+    const body = rows.length
+      ? renderParityTable(headers, rows)
+      : '<div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs font-semibold text-gray-400">표시할 항목이 없습니다.</div>';
+    return `
+      <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
+        <div class="mb-3 text-xs font-black text-gray-700">${escapeHtml(title)}</div>
+        ${body}
+      </div>
+    `;
+  }
+
+  function formatBackfillReason(reason) {
+    const value = String(reason || '').trim();
+    if (value === 'missing') return '상세 없음';
+    if (value === 'fallback_retry') return 'Yahoo 재시도';
+    if (value === 'stale') return '오래된 파일';
+    return value || '-';
+  }
+
+  function formatBackfillSource(source) {
+    const value = String(source || '').trim();
+    if (value === 'etf_universe') return 'ETF 목록';
+    if (value === 'stockanalysis') return 'StockAnalysis';
+    if (value === 'yahoo_finance') return 'Yahoo';
+    return value || '-';
+  }
+
+  function shortenError(value) {
+    const text = String(value || '').replace(/\s+/g, ' ').trim();
+    if (!text) return '-';
+    return text.length > 86 ? `${text.slice(0, 83)}...` : text;
   }
 
   function findClassificationResult(report, path) {

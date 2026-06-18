@@ -61,3 +61,6 @@ The public forbidden-term grep now leaves only internal identifiers such as
 - Data Lab remains allowed to show provider/source names, but its StockAnalysis
   audit cards should prefer Korean operational labels over public-product
   jargon such as "surface", "DataPack", and raw error phrasing.
+- Admin Data Lab now reads ETF collection queue details from
+  `index.json`, `incremental_latest.json`, and `pending_ledger.json` instead
+  of static copy, so pending/retry/failure rows update with each data refresh.
