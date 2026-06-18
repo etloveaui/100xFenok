@@ -224,7 +224,24 @@ const DataLabUI = (function() {
         throw new Error(`market_data_audit returned ${response.status}`);
       }
       const audit = await response.json();
-      Renderer.renderMarketDataAudit(audit);
+
+      // Source Parity v1 diagnostics — fetched separately so a failure here
+      // never blocks the core audit cards from rendering.
+      let sourceParity = null;
+      try {
+        const parityResponse = await fetch(`${basePath}/data/computed/market_source_parity.json`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!parityResponse.ok) {
+          throw new Error(`market_source_parity returned ${parityResponse.status}`);
+        }
+        sourceParity = await parityResponse.json();
+      } catch (parityError) {
+        console.warn('[DataLab] Source parity diagnostics unavailable:', parityError);
+        sourceParity = null;
+      }
+
+      Renderer.renderMarketDataAudit(audit, sourceParity);
     } catch (error) {
       console.warn('[DataLab] Market data audit unavailable:', error);
       Renderer.renderMarketAuditUnavailable(error instanceof Error ? error.message : String(error));

@@ -287,7 +287,7 @@ const Renderer = (function() {
     `;
   }
 
-  function renderMarketDataAudit(audit) {
+  function renderMarketDataAudit(audit, sourceParity) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
     const backfill = audit?.backfill || {};
@@ -361,7 +361,142 @@ const Renderer = (function() {
           ['Scale warn', facts.percent_scale_warnings]
         ]
       })}
+      ${renderSourceParityDetail(sourceParity)}
     `;
+  }
+
+  /**
+   * Source Parity v1 detail block: diagnosis-count strip, Top Stale and
+   * Top Sign Divergence tables, plus a user-readable explainer line.
+   * Rendered from the live computed/market_source_parity.json. Optional —
+   * when absent, shows a small "no data" note instead of crashing.
+   */
+  function renderSourceParityDetail(sourceParity) {
+    if (!sourceParity) {
+      return `
+        <div class="xl:col-span-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+          Source Parity 상세 데이터 없음 (computed/market_source_parity.json)
+        </div>
+      `;
+    }
+
+    const summary = sourceParity.summary || {};
+    const counts = summary.diagnosis_counts || {};
+    const diagItems = [
+      ['stale', 'Stale'],
+      ['scale_mismatch', 'Scale mismatch'],
+      ['sign_divergence', 'Sign divergence'],
+      ['value_drift', 'Value drift'],
+      ['agreement', 'Agreement']
+    ];
+    const diagStrip = diagItems
+      .map(([key, label]) => renderAuditMetric(label, Formatters.formatNumber(counts[key] || 0, 0)))
+      .join('');
+
+    const topStale = Array.isArray(sourceParity.top_stale) ? sourceParity.top_stale.slice(0, 8) : [];
+    const topSignDiv = Array.isArray(sourceParity.top_sign_divergences)
+      ? sourceParity.top_sign_divergences.slice(0, 6)
+      : [];
+
+    const staleTable = topStale.length
+      ? renderParityTable(
+          ['Ticker', 'Field', 'Selected', 'Stale sources', 'Spread %', 'Freshness'],
+          topStale.map((row) => [
+            escapeHtml(row.ticker ?? '-'),
+            escapeHtml(row.field ?? '-'),
+            escapeHtml(row.selected_source ?? '-'),
+            escapeHtml((Array.isArray(row.stale_sources) ? row.stale_sources : []).join(', ') || '-'),
+            escapeHtml(formatSpreadPct(row.relative_spread_pct)),
+            escapeHtml(formatFreshness(row.freshness))
+          ])
+        )
+      : '<div class="text-xs text-gray-400">No stale rows.</div>';
+
+    const signTable = topSignDiv.length
+      ? renderParityTable(
+          ['Ticker', 'Field', 'Values', 'Spread %'],
+          topSignDiv.map((row) => [
+            escapeHtml(row.ticker ?? '-'),
+            escapeHtml(row.field ?? '-'),
+            escapeHtml(formatParityValues(row.values)),
+            escapeHtml(formatSpreadPct(row.relative_spread_pct))
+          ])
+        )
+      : '<div class="text-xs text-gray-400">No sign divergences.</div>';
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">Source Parity 진단 상세</h3>
+            <p class="text-xs text-gray-500 mt-1">computed/market_source_parity.json</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">진단 분포</div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2">${diagStrip}</div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
+            Top Stale (소스 간 시점 차이 상위)
+          </div>
+          ${staleTable}
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
+            Top Sign Divergence (부호 불일치 상위)
+          </div>
+          ${signTable}
+        </div>
+
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          상대 staleness = 소스 간 시점 차이(가장 신선한 후보 대비). 절대적인 데이터 노후 여부는 별도 freshness/audit 책임입니다.
+        </p>
+      </section>
+    `;
+  }
+
+  function renderParityTable(headers, rows) {
+    return `
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead>
+            <tr class="border-b border-gray-200 text-left text-[11px] font-semibold text-gray-400">
+              ${headers.map((h) => `<th class="py-1.5 pr-3 whitespace-nowrap">${escapeHtml(h)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((cells) => `
+              <tr class="border-b border-gray-50">
+                ${cells.map((cell) => `<td class="py-1.5 pr-3 align-top text-gray-700">${cell}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function formatSpreadPct(value) {
+    if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+    return `${Formatters.formatNumber(Number(value), 1)}%`;
+  }
+
+  function formatFreshness(freshness) {
+    if (!freshness || typeof freshness !== 'object') return '-';
+    const parts = Object.entries(freshness)
+      .map(([source, age]) => `${source}=${Formatters.formatNumber(Number(age) || 0, 1)}d`);
+    return parts.length ? parts.join(', ') : '-';
+  }
+
+  function formatParityValues(values) {
+    if (!Array.isArray(values) || !values.length) return '-';
+    return values
+      .map((entry) => `${entry?.source ?? '?'}=${Formatters.formatNumber(Number(entry?.value) || 0, 2)}`)
+      .join(', ');
   }
 
   function renderMarketAuditUnavailable(message) {
