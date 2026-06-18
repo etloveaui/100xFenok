@@ -15,6 +15,11 @@ import {
 } from "@/features/mona-vnext/live/modelOptions";
 import { MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE } from "@/features/mona-vnext/live/generationOptions";
 import { useGeminiLiveSession, type MonaVnextSessionMetrics } from "@/features/mona-vnext/live/useGeminiLiveSession";
+import {
+  createInitialPersistenceState,
+  reducePersistence,
+  type MonaVnextPersistKind,
+} from "@/features/mona-vnext/logging/persistenceState";
 import type { MonaVnextLogEvent } from "@/features/mona-vnext/logging/voiceLogSchema";
 import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import { buildMonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvisory";
@@ -37,6 +42,9 @@ const DEFAULT_SETTINGS = {
   temperature: MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE,
 } as const;
 
+// Durable event buffer cap, matched to the writer's events.slice(-1000).
+const MAX_PENDING_EVENTS = 1000;
+
 type PersistResult = {
   ok?: unknown;
   file?: unknown;
@@ -53,34 +61,37 @@ export default function MonaVoiceCoachApp() {
   );
   const [lessonState, setLessonState] = useState<MonaVnextLessonState>(() => createInitialLessonState());
   const [events, setEvents] = useState<MonaVnextLogEvent[]>([]);
-  const [lastPersistedFile, setLastPersistedFile] = useState<string | null>(null);
-  const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  // Single source of truth for the "저장 실패" banner. Only turn/final
+  // conversation saves can set it; partial-event logging never does.
+  const [persistenceState, setPersistenceState] = useState(() => createInitialPersistenceState());
   const [selectedModel, setSelectedModel] = useState<MonaVnextGeminiModel>(MONA_VNEXT_DEFAULT_GEMINI_MODEL);
   const sessionRef = useRef<{ sessionId: string; conversationId: string; startedAt: string } | null>(null);
   const lessonStateRef = useRef(lessonState);
   const metricsRef = useRef<MonaVnextSessionMetrics | null>(null);
   const sendControlTextRef = useRef<(text: string) => boolean>(() => false);
+  // Best-effort events (partials, lifecycle) accumulate here and are flushed
+  // into the next turn/final log POST, instead of one POST per partial.
+  const pendingEventsRef = useRef<MonaVnextLogEvent[]>([]);
 
   const sessionSettings = useMemo(() => ({
     ...DEFAULT_SETTINGS,
     model: selectedModel,
   }), [selectedModel]);
 
-  const recordPersistenceError = useCallback((target: string, error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error || "UNKNOWN_PERSISTENCE_ERROR");
-    const readable = `${target}: ${message}`;
-    setPersistenceError(readable);
-    setEvents((current) => appendEvent(current, {
-      type: "persist-error",
-      message: readable.slice(0, 500),
-      atIso: new Date().toISOString(),
-    }));
+  const applyPersistOutcome = useCallback((
+    kind: MonaVnextPersistKind,
+    ok: boolean,
+    opts?: { file?: string; error?: string },
+  ) => {
+    setPersistenceState((current) => reducePersistence(current, { kind, ok, ...opts }));
   }, []);
 
-  const persistPayload = useCallback((target: "/api/mona-vnext/log/" | "/api/mona-vnext/memory/", body: Record<string, unknown>) => {
+  // Durable conversation save (turn/final). This is the only POST whose
+  // success/failure drives the user-facing banner.
+  const postConversationLog = useCallback((kind: "turn" | "final", body: Record<string, unknown>) => {
     void (async () => {
       try {
-        const response = await fetch(target, {
+        const response = await fetch("/api/mona-vnext/log/", {
           method: "POST",
           cache: "no-store",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -94,25 +105,43 @@ export default function MonaVoiceCoachApp() {
         if (typeof payload.file !== "string" || !payload.file) {
           throw new Error("PERSISTED_FILE_MISSING");
         }
-        setPersistenceError(null);
-        setLastPersistedFile(payload.file);
+        applyPersistOutcome(kind, true, { file: payload.file });
       } catch (error) {
-        recordPersistenceError(target, error);
+        applyPersistOutcome(kind, false, {
+          error: error instanceof Error ? error.message : String(error || "UNKNOWN_PERSISTENCE_ERROR"),
+        });
       }
     })();
-  }, [recordPersistenceError]);
+  }, [applyPersistOutcome]);
 
-  const persistEvent = useCallback((event: MonaVnextLogEvent) => {
+  // SRS advisory checkpoint. Best-effort: a failure here is NOT a conversation
+  // save failure and must never raise the banner (advisory can be retried).
+  const postMemoryAdvisory = useCallback((body: Record<string, unknown>) => {
+    void (async () => {
+      try {
+        await fetch("/api/mona-vnext/memory/", {
+          method: "POST",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body),
+        });
+      } catch {
+        // Advisory is best-effort; swallow without surfacing a save error.
+      }
+    })();
+  }, []);
+
+  // Buffer an event for the UI panel + the durable flush. No per-event POST.
+  const bufferEvent = useCallback((event: MonaVnextLogEvent) => {
     setEvents((current) => appendEvent(current, event));
-    const session = sessionRef.current;
-    if (!session) return;
-    persistPayload("/api/mona-vnext/log/", {
-      ...session,
-      event,
-      settings: sessionSettings,
-      metrics: metricsRef.current ?? {},
-    });
-  }, [persistPayload, sessionSettings]);
+    pendingEventsRef.current = [...pendingEventsRef.current, event].slice(-MAX_PENDING_EVENTS);
+  }, []);
+
+  const drainPendingEvents = useCallback(() => {
+    const drained = pendingEventsRef.current;
+    pendingEventsRef.current = [];
+    return drained;
+  }, []);
 
   const persistTurn = useCallback((
     turn: MonaVnextTurn,
@@ -161,10 +190,14 @@ export default function MonaVoiceCoachApp() {
         ].join(" "),
       );
     }
-    persistPayload("/api/mona-vnext/log/", {
+    // Flush buffered partial/lifecycle events together with this turn into a
+    // single durable log POST. The writer accumulates events server-side.
+    const flushed = drainPendingEvents();
+    const turnEvents = controlEvent ? [...flushed, event, controlEvent] : [...flushed, event];
+    postConversationLog("turn", {
       ...session,
       turn,
-      events: controlEvent ? [event, controlEvent] : [event],
+      events: turnEvents,
       settings: {
         ...sessionSettings,
         promptId: nextLesson.expression.id,
@@ -172,7 +205,7 @@ export default function MonaVoiceCoachApp() {
       },
       metrics: metricsRef.current ?? {},
     });
-    persistPayload("/api/mona-vnext/memory/", {
+    postMemoryAdvisory({
       conversationId: session.conversationId,
       turnSeq: turn.turnSeq,
       advisory,
@@ -180,7 +213,7 @@ export default function MonaVoiceCoachApp() {
 
     lessonStateRef.current = nextLesson;
     setLessonState(nextLesson);
-  }, [persistPayload, sessionSettings]);
+  }, [drainPendingEvents, postConversationLog, postMemoryAdvisory, sessionSettings]);
 
   const live = useGeminiLiveSession({
     settings: sessionSettings,
@@ -195,7 +228,9 @@ export default function MonaVoiceCoachApp() {
       const nextLesson = createInitialLessonState();
       lessonStateRef.current = nextLesson;
       setLessonState(nextLesson);
-      persistEvent({
+      pendingEventsRef.current = [];
+      setPersistenceState(createInitialPersistenceState());
+      bufferEvent({
         type: "session-ready",
         message: "Mona vNext owner-test session ready.",
         atIso: new Date().toISOString(),
@@ -205,13 +240,13 @@ export default function MonaVoiceCoachApp() {
         },
       });
     },
-    onEvent: persistEvent,
+    onEvent: bufferEvent,
     onServerContent: (serverContent) => {
       setTranscriptState((current) => {
         const result = applyMonaVnextServerContent(current, serverContent);
         result.events.forEach((event) => {
           if (event.type === "input-partial" || event.type === "output-partial") {
-            persistEvent({
+            bufferEvent({
               type: event.type,
               message: event.text,
               atIso: event.atIso,
@@ -222,7 +257,7 @@ export default function MonaVoiceCoachApp() {
             persistTurn(event.turn, lessonStateRef.current);
             return;
           }
-          persistEvent({
+          bufferEvent({
             type: event.type,
             message: event.type,
             atIso: event.atIso,
@@ -249,19 +284,21 @@ export default function MonaVoiceCoachApp() {
     const session = sessionRef.current;
     live.stop("stopped");
     if (!session) return;
-    persistPayload("/api/mona-vnext/log/", {
+    const finalEvent: MonaVnextLogEvent = {
+      type: "session-finalized",
+      message: "Mona vNext session finalized by owner/dev control.",
+      atIso: new Date().toISOString(),
+    };
+    const flushed = drainPendingEvents();
+    postConversationLog("final", {
       ...session,
       final: true,
       stoppedAt: new Date().toISOString(),
       settings: sessionSettings,
       metrics: metricsRef.current ?? {},
-      event: {
-        type: "session-finalized",
-        message: "Mona vNext session finalized by owner/dev control.",
-        atIso: new Date().toISOString(),
-      },
+      events: [...flushed, finalEvent],
     });
-  }, [live, persistPayload, sessionSettings]);
+  }, [drainPendingEvents, live, postConversationLog, sessionSettings]);
 
   return (
     <WindDownVnextShell
@@ -277,8 +314,8 @@ export default function MonaVoiceCoachApp() {
       lessonState={lessonState}
       transcriptState={transcriptState}
       events={events}
-      lastPersistedFile={lastPersistedFile}
-      persistenceError={persistenceError}
+      lastPersistedFile={persistenceState.lastPersistedFile}
+      persistenceError={persistenceState.conversationSaveError}
       onStart={live.start}
       onStop={stopSession}
       onSendStart={() => live.sendText("시작. 한 문장씩 천천히 해줘.")}

@@ -16,6 +16,10 @@ import {
   createMonaVnextTranscriptState,
 } from "../src/features/mona-vnext/transcript/transcriptStore";
 import { createMonaVnextConversationId } from "../src/features/mona-vnext/transcript/turnBoundary";
+import {
+  createInitialPersistenceState,
+  reducePersistence,
+} from "../src/features/mona-vnext/logging/persistenceState";
 
 type Result = {
   id: string;
@@ -289,8 +293,11 @@ function checkPersistenceFailureVisibility(): Result {
   const sessionRouteSource = readFileSync(path.join(process.cwd(), "src/app/api/mona-vnext/session/route.ts"), "utf8");
   const storageSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/storage/objectStore.ts"), "utf8");
   const wranglerSource = readFileSync(path.join(process.cwd(), "wrangler.jsonc"), "utf8");
-  const ok = appSource.includes("recordPersistenceError")
-    && appSource.includes("persist-error")
+  const ok = appSource.includes("reducePersistence")
+    && appSource.includes("postConversationLog")
+    && appSource.includes("bufferEvent")
+    && !appSource.includes("persistEvent")
+    && appSource.includes("conversationSaveError")
     && appSource.includes("PERSISTED_FILE_MISSING")
     && appSource.includes("!response.ok")
     && !appSource.includes(".catch(() => undefined)")
@@ -305,8 +312,48 @@ function checkPersistenceFailureVisibility(): Result {
     && wranglerSource.includes("\"binding\": \"MONA_VNEXT_KV\"")
     && wranglerSource.includes("9ca9cc74a4f341aeaa231fa67db65302");
   return ok
-    ? pass("persistence-failure-visible", "write failures surface and Cloudflare storage readiness is gated")
-    : fail("persistence-failure-visible", "persistence failure can still be silent or unscored");
+    ? pass("persistence-failure-visible", "turn/final save failures surface via reducer; partials buffered (no per-partial POST)")
+    : fail("persistence-failure-visible", "severity split missing or conversation-save failure can be silent");
+}
+
+function checkPersistenceSeveritySplit(): Result {
+  // A partial-event log POST failure must NOT surface as a conversation-save failure.
+  const afterPartialFail = reducePersistence(createInitialPersistenceState(), {
+    kind: "partial",
+    ok: false,
+    error: "NETWORK_BLIP",
+  });
+  if (afterPartialFail.conversationSaveError !== null) {
+    return fail("persistence-severity-split", "partial log failure surfaced as conversation save failure");
+  }
+
+  // A turn-save failure MUST surface (this is real conversation data).
+  const afterTurnFail = reducePersistence(createInitialPersistenceState(), {
+    kind: "turn",
+    ok: false,
+    error: "HTTP_500",
+  });
+  if (!afterTurnFail.conversationSaveError || !afterTurnFail.conversationSaveError.includes("HTTP_500")) {
+    return fail("persistence-severity-split", "turn-save failure did not surface as conversation save failure");
+  }
+
+  // Regression gate (d): 80 partial failures then a successful final save = green banner.
+  let state = createInitialPersistenceState();
+  for (let i = 0; i < 80; i += 1) {
+    state = reducePersistence(state, { kind: "partial", ok: false, error: "NETWORK_BLIP" });
+  }
+  state = reducePersistence(state, { kind: "final", ok: true, file: "data/voice-logs-vnext/owner-test/x.json" });
+  if (state.conversationSaveError !== null) {
+    return fail("persistence-severity-split", "80 partial drops + successful final did not clear conversation-save banner");
+  }
+  if (state.lastPersistedFile !== "data/voice-logs-vnext/owner-test/x.json") {
+    return fail("persistence-severity-split", "successful final save did not record lastPersistedFile");
+  }
+
+  return pass(
+    "persistence-severity-split",
+    "partial log drops never surface; turn/final govern the conversation-save banner",
+  );
 }
 
 const results = [
@@ -325,6 +372,7 @@ const results = [
   checkInterruptionFlushSource(),
   checkNamespace(),
   checkPersistenceFailureVisibility(),
+  checkPersistenceSeveritySplit(),
 ];
 
 for (const result of results) {
