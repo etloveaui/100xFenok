@@ -398,11 +398,11 @@ const Renderer = (function() {
     return renderMarketAuditCard({
       title: '신규 ETF 상세',
       status: hardFailed === 0 ? 'pass' : 'warn',
-      code: `${Formatters.formatNumber(ok, 0)}/${Formatters.formatNumber(requested, 0)} OK`,
+      code: `${Formatters.formatNumber(ok, 0)} detail / ${Formatters.formatNumber(source404, 0)} source 404`,
       rows: [
         ['Requested', requested],
-        ['OK', ok],
-        ['Source 404', source404],
+        ['Detail OK', ok],
+        ['Upstream n/a', source404],
         ['Hard fail', hardFailed]
       ]
     });
