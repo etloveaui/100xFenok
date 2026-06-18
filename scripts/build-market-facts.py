@@ -26,17 +26,17 @@ OUT = DATA / "computed" / "market_facts"
 PUBLIC_OUT = ROOT / "100xfenok-next" / "public" / "data" / "computed" / "market_facts"
 SCHEMA_VERSION = "market-facts/v1"
 FIELD_SOURCE_POLICY = {
-    "price": ["yf", "yf.fast_info", "stockanalysis.quote", "slickcharts"],
-    "previous_close": ["yf", "stockanalysis.quote"],
-    "change": ["stockanalysis.quote", "yf", "yf.derived"],
-    "change_pct": ["stockanalysis.quote", "yf", "yf.derived"],
+    "price": ["yf", "yf.fast_info", "stockanalysis.quote", "yf.stockanalysis_fallback.quote", "slickcharts"],
+    "previous_close": ["yf", "stockanalysis.quote", "yf.stockanalysis_fallback.quote"],
+    "change": ["stockanalysis.quote", "yf", "yf.derived", "yf.stockanalysis_fallback.quote"],
+    "change_pct": ["stockanalysis.quote", "yf", "yf.derived", "yf.stockanalysis_fallback.quote"],
     "market_cap": ["yf", "stockanalysis.overview", "slickcharts"],
-    "total_assets": ["yf", "stockanalysis.overview"],
+    "total_assets": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
     "trailing_pe": ["yf", "slickcharts"],
-    "forward_pe": ["yf", "stockanalysis.overview", "slickcharts"],
-    "dividend_yield": ["yf", "stockanalysis.overview", "slickcharts"],
-    "beta": ["yf", "stockanalysis.overview"],
-    "expense_ratio": ["yf", "stockanalysis.overview"],
+    "forward_pe": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "slickcharts"],
+    "dividend_yield": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "slickcharts"],
+    "beta": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
+    "expense_ratio": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
 }
 
 
@@ -162,14 +162,20 @@ def yf_derived_change_pct_fact(yf_payload):
 
 def stockanalysis_quote_fact(sa_payload, key):
     quote = ((sa_payload or {}).get("normalized") or {}).get("quote") or {}
-    return fact(quote.get(key), "stockanalysis.quote", fetched_at=(sa_payload or {}).get("fetched_at"))
+    source = "stockanalysis.quote"
+    if (sa_payload or {}).get("source_provider") == "yahoo_finance" or (sa_payload or {}).get("source") == "yahoo_finance":
+        source = "yf.stockanalysis_fallback.quote"
+    return fact(quote.get(key), source, fetched_at=(sa_payload or {}).get("fetched_at"))
 
 
 def stockanalysis_overview_fact(sa_payload, key, unit=None):
     overview = ((sa_payload or {}).get("normalized") or {}).get("overview") or {}
     value = overview.get(key)
     parsed = number(value)
-    return fact(parsed if parsed is not None else value, "stockanalysis.overview", fetched_at=(sa_payload or {}).get("fetched_at"), unit=unit)
+    source = "stockanalysis.overview"
+    if (sa_payload or {}).get("source_provider") == "yahoo_finance" or (sa_payload or {}).get("source") == "yahoo_finance":
+        source = "yf.stockanalysis_fallback.overview"
+    return fact(parsed if parsed is not None else value, source, fetched_at=(sa_payload or {}).get("fetched_at"), unit=unit)
 
 
 def slick_fact(slick_payload, key, unit=None):
@@ -188,6 +194,8 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     sa_norm = (sa_payload or {}).get("normalized") or {}
+    sa_provider = (sa_payload or {}).get("source_provider") or (sa_payload or {}).get("source")
+    sa_is_yahoo_fallback = sa_provider == "yahoo_finance"
 
     asset_type = "stock"
     if (sa_payload or {}).get("asset_type") == "etf" or str(info.get("quoteType") or "").upper() == "ETF":
@@ -255,7 +263,8 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
         "financials": None,
         "sources": {
             "yf": bool(yf_payload),
-            "stockanalysis": bool(sa_payload),
+            "stockanalysis": bool(sa_payload and not sa_is_yahoo_fallback),
+            "stockanalysis_yf_fallback": bool(sa_payload and sa_is_yahoo_fallback),
             "slickcharts": bool(slick_payload),
         },
         "source_files": {
@@ -332,6 +341,7 @@ def main() -> None:
         "coverage": {
             "yf": sum(1 for row in rows if row["sources"]["yf"]),
             "stockanalysis": sum(1 for row in rows if row["sources"]["stockanalysis"]),
+            "stockanalysis_yf_fallback": sum(1 for row in rows if row["sources"].get("stockanalysis_yf_fallback")),
             "stockanalysis_financials": sum(1 for row in rows if row["sources"].get("stockanalysis_financials")),
             "slickcharts": sum(1 for row in rows if row["sources"]["slickcharts"]),
             "etf": sum(1 for row in rows if row["asset_type"] == "etf"),

@@ -29,6 +29,22 @@ on:
         description: 'Deep-fetch ETF payloads from the universe list (manual chunked runs only)'
         required: false
         default: 'false'
+      incremental_etf_backfill:
+        description: 'Auto-fetch new/missing/stale ETF details without a full universe run'
+        required: false
+        default: 'true'
+      incremental_etf_limit:
+        description: 'Maximum incremental ETF detail retries per run'
+        required: false
+        default: '120'
+      incremental_etf_max_age_hours:
+        description: 'Existing StockAnalysis ETF detail age before stale retry'
+        required: false
+        default: '720'
+      yf_etf_fallback:
+        description: 'Use Yahoo ETF/fund fallback when StockAnalysis ETF detail endpoints are 404'
+        required: false
+        default: 'true'
       fetch_surfaces:
         description: 'Refresh high-value StockAnalysis public table/devalue surfaces'
         required: false
@@ -70,6 +86,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install optional Yahoo fallback dependency
+        run: pip install yfinance
+
       - name: Run StockAnalysis fetch
         env:
           INPUT_ETFS: ${{ github.event.inputs.etfs }}
@@ -77,6 +96,10 @@ jobs:
           INPUT_FETCH_FINANCIALS: ${{ github.event.inputs.fetch_financials }}
           INPUT_DISCOVER_UNIVERSE: ${{ github.event.inputs.discover_universe }}
           INPUT_UNIVERSE_BACKFILL: ${{ github.event.inputs.universe_backfill }}
+          INPUT_INCREMENTAL_ETF_BACKFILL: ${{ github.event.inputs.incremental_etf_backfill }}
+          INPUT_INCREMENTAL_ETF_LIMIT: ${{ github.event.inputs.incremental_etf_limit }}
+          INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
+          INPUT_YF_ETF_FALLBACK: ${{ github.event.inputs.yf_etf_fallback }}
           INPUT_FETCH_SURFACES: ${{ github.event.inputs.fetch_surfaces }}
           INPUT_SURFACE_SET: ${{ github.event.inputs.surface_set }}
           INPUT_SURFACES: ${{ github.event.inputs.surfaces }}
@@ -88,6 +111,10 @@ jobs:
           ARGS="--sleep ${INPUT_SLEEP:-0.25} --classify-etf-catalogs"
           if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
           if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
+          if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-true}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi
+          if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then ARGS="$ARGS --yf-etf-fallback"; fi
+          if [ -n "$INPUT_INCREMENTAL_ETF_LIMIT" ]; then ARGS="$ARGS --incremental-etf-limit $INPUT_INCREMENTAL_ETF_LIMIT"; fi
+          if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
           if [ "${INPUT_FETCH_SURFACES:-true}" = "true" ]; then ARGS="$ARGS --fetch-surfaces"; fi
           if [ -n "$INPUT_SURFACE_SET" ]; then ARGS="$ARGS --surface-set $INPUT_SURFACE_SET"; fi
           if [ -n "$INPUT_SURFACES" ]; then ARGS="$ARGS --surfaces $INPUT_SURFACES"; fi
@@ -131,7 +158,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stockanalysis data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
+          git add data/stockanalysis data/yf/finance data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/yf/finance 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
           git pull --rebase origin main
           git push

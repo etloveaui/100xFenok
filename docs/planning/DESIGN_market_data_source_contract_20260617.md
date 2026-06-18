@@ -80,6 +80,12 @@ External sources
     `etf_screener`, `actions_recent`, and `earnings_calendar`;
   - captures additional HTML table surfaces for IPO, market mover, ETF provider,
     thematic list, and industry pages;
+  - supports scheduled incremental ETF detail self-heal with
+    `--incremental-etf-backfill --incremental-etf-limit --incremental-etf-max-age-hours`;
+  - retries new/missing/stale and prior `yf_fallback` ETF detail files against
+    StockAnalysis automatically before writing any fallback;
+  - supports source-tagged `--yf-etf-fallback` when StockAnalysis ETF detail
+    endpoints return 404 but Yahoo exposes a valid ETF/fund profile;
   - supports chunked universe backfill with `--universe-backfill --offset --limit-etfs`;
   - supports `--fetch-surfaces --surface-set core --surfaces-only` for event/radar
     refreshes without waiting for ETF universe backfills;
@@ -92,6 +98,8 @@ External sources
   - builds `data/computed/market_facts/tickers/{TICKER}.json`;
   - merges Yahoo, StockAnalysis, and SlickCharts availability flags;
   - resolves overlapping fields with an explicit per-field source policy;
+  - preserves Yahoo-filled StockAnalysis fallback files as
+    `stockanalysis_yf_fallback`, never as normal StockAnalysis coverage;
   - preserves all non-null source candidates under each selected fact so
     discarded-but-available data remains inspectable;
   - prefers `stockanalysis/etfs/{TICKER}.json` over the stock folder on any
@@ -197,16 +205,16 @@ This keeps UI consumption simple while preserving overlapping source evidence.
 
 | Field | Priority |
 |---|---|
-| price | Yahoo → Yahoo fast_info → StockAnalysis quote → SlickCharts |
-| previous_close | Yahoo → StockAnalysis quote |
-| change / change_pct | StockAnalysis quote → Yahoo → Yahoo-derived current vs previous close |
+| price | Yahoo → Yahoo fast_info → StockAnalysis quote → Yahoo StockAnalysis-fallback quote → SlickCharts |
+| previous_close | Yahoo → StockAnalysis quote → Yahoo StockAnalysis-fallback quote |
+| change / change_pct | StockAnalysis quote → Yahoo → Yahoo-derived current vs previous close → Yahoo StockAnalysis-fallback quote |
 | market_cap | Yahoo → StockAnalysis overview → SlickCharts |
-| total_assets | Yahoo → StockAnalysis overview |
+| total_assets | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
 | trailing_pe | Yahoo → SlickCharts |
-| forward_pe | Yahoo → StockAnalysis overview → SlickCharts |
-| dividend_yield | Yahoo → StockAnalysis overview → SlickCharts |
-| beta | Yahoo → StockAnalysis overview |
-| expense_ratio | Yahoo → StockAnalysis overview |
+| forward_pe | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview → SlickCharts |
+| dividend_yield | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview → SlickCharts |
+| beta | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
+| expense_ratio | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
 
 This is intentionally not a single-provider takeover. Yahoo, SlickCharts, and
 StockAnalysis all remain visible when their values overlap.
@@ -214,14 +222,16 @@ StockAnalysis all remain visible when their values overlap.
 ## Next Contract
 
 1. Add parity checks for Yahoo vs StockAnalysis vs SlickCharts where fields overlap.
-2. Complete full ETF universe backfill through chunked manual/workflow dispatch;
+2. Keep the weekly scheduled incremental ETF detail self-heal enabled; full
+   universe backfill remains chunked/manual for large historical closure only.
+3. Complete full ETF universe backfill through chunked manual/workflow dispatch;
    finalize only when audit reports no missing offsets and no hard errors.
-3. Run `scripts/finalize-market-data.py` after full backfill, then commit the
+4. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-4. Keep shipped StockAnalysis surfaces actively visible in Explore/Admin/Data Lab
+5. Keep shipped StockAnalysis surfaces actively visible in Explore/Admin/Data Lab
    and guarded by contract tests so committed surface data does not become dead
    DataPack weight.
-5. Expand the StockAnalysis financial fixture suite to balance sheet,
+6. Expand the StockAnalysis financial fixture suite to balance sheet,
    cash-flow, ratios, quarterly periods, and schema checks before promoting the
    probe into the main fetcher after the ETF backfill run is closed.
 6. Add consumer routes/cards for `stockanalysis/surfaces`:

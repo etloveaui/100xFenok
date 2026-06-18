@@ -15,8 +15,11 @@ market event surfaces such as new ETFs, IPOs, corporate actions, earnings
 calendars, market movers, and industry maps.
 
 The full ETF universe is stored separately from deep ETF payloads. Universe
-refresh is lightweight; deep holdings/history backfill is intentionally chunked
-with `--universe-backfill --offset --limit-etfs` to avoid large request bursts.
+refresh is lightweight. Routine scheduled runs now add an incremental detail
+backfill for new, missing, previously Yahoo-filled, and stale ETF records so new
+ETF detail pages self-heal without a manual freshness step. Full holdings/history
+backfill remains intentionally chunked with `--universe-backfill --offset
+--limit-etfs` to avoid large request bursts.
 
 Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
@@ -32,6 +35,9 @@ statement SSOTs.
 ```
 stockanalysis/
 ├── index.json
+├── backfill/
+│   ├── incremental_latest.json
+│   └── ...
 ├── etf_universe.json
 ├── etfs/
 │   ├── SPY.json
@@ -86,6 +92,31 @@ Each file keeps both normalized fields and raw endpoint payloads:
   "raw": {}
 }
 ```
+
+When StockAnalysis ETF REST endpoints are not indexed yet but Yahoo Finance
+already exposes a valid ETF/fund profile, the same `etfs/{TICKER}.json` path may
+temporarily hold a source-tagged fallback payload:
+
+```json
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "yahoo_finance",
+  "source_provider": "yahoo_finance",
+  "detail_status": "yf_fallback",
+  "asset_type": "etf",
+  "ticker": "BSJY",
+  "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
+  "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
+  "normalized": {
+    "overview": {},
+    "quote": {"ex": "yahoo_finance"}
+  }
+}
+```
+
+The next scheduled incremental run still retries those fallback records against
+StockAnalysis first; once the StockAnalysis endpoint starts returning detail
+JSON, the fallback file is replaced by a normal StockAnalysis payload.
 
 Universe payload:
 
@@ -183,4 +214,9 @@ python3 scripts/probe-stockanalysis-financials.py AAPL --statement income \
 
 # Controlled full ETF backfill chunk
 python3 scripts/fetch-stockanalysis.py --universe-backfill --offset 0 --limit-etfs 100 --sleep 0.25
+
+# Scheduled-style incremental ETF detail self-heal
+python3 scripts/fetch-stockanalysis.py --discover-etf-universe --fetch-surfaces \
+  --incremental-etf-backfill --incremental-etf-limit 120 \
+  --incremental-etf-max-age-hours 720 --yf-etf-fallback
 ```

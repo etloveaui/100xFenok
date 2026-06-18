@@ -6,7 +6,9 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+import tempfile
 import unittest
+import urllib.error
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -161,6 +163,100 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(classification["leverage_factor"], 2.0)
         self.assertTrue(classification["is_single_stock"])
         self.assertEqual(classification["underlying"], "NVIDIA Corporation")
+
+    def test_incremental_etf_backfill_selects_missing_fallback_and_stale(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "stockanalysis"
+            self.fetcher.OUT_DIR = out_dir
+            (out_dir / "surfaces").mkdir(parents=True)
+            (out_dir / "etfs").mkdir(parents=True)
+            (out_dir / "surfaces" / "new_etfs.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {"s": "ADIU", "n": "Leverage Shares 2X Long ADI Daily ETF"},
+                            {"s": "FNG", "n": "FNG ETF"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (out_dir / "etfs" / "FNG.json").write_text(
+                json.dumps(
+                    {
+                        "source": "yahoo_finance",
+                        "source_provider": "yahoo_finance",
+                        "detail_status": "yf_fallback",
+                        "fetched_at": "2026-06-18T00:00:00Z",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (out_dir / "etfs" / "OLD.json").write_text(
+                json.dumps(
+                    {
+                        "source": "stockanalysis",
+                        "asset_type": "etf",
+                        "fetched_at": "2020-01-01T00:00:00Z",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            summary = self.fetcher.incremental_etf_backfill_candidates(
+                universe_payload={"records": [{"ticker": "OLD"}]},
+                limit=10,
+                max_age_hours=1,
+                exclude=set(),
+            )
+        self.fetcher.OUT_DIR = original_out_dir
+
+        selected = {row["ticker"]: row["reason"] for row in summary["selected"]}
+        self.assertEqual(selected["ADIU"], "missing")
+        self.assertEqual(selected["FNG"], "fallback_retry")
+        self.assertEqual(selected["OLD"], "stale")
+        self.assertEqual(summary["counts"]["selected"], 3)
+
+    def test_etf_404_uses_yahoo_fallback_when_enabled(self) -> None:
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_fallback = self.fetcher.fetch_yahoo_etf_fallback
+        original_write_payload = self.fetcher.write_payload
+        writes = []
+
+        def fake_fetch_etf(_ticker: str, _timeout: int) -> dict:
+            raise urllib.error.URLError("HTTP Error 404: Not Found")
+
+        def fake_fallback(ticker: str, _mirror_public: bool) -> dict:
+            return {
+                "schema_version": self.fetcher.SCHEMA_VERSION,
+                "source": "yahoo_finance",
+                "source_provider": "yahoo_finance",
+                "detail_status": "yf_fallback",
+                "asset_type": "etf",
+                "ticker": ticker,
+                "fetched_at": "2026-06-18T00:00:00Z",
+                "normalized": {"quote": {"p": 14.5, "ex": "yahoo_finance"}},
+            }
+
+        def fake_write_payload(rel_path: str, payload: dict, _mirror_public: bool) -> None:
+            writes.append((rel_path, payload))
+
+        self.fetcher.fetch_etf = fake_fetch_etf
+        self.fetcher.fetch_yahoo_etf_fallback = fake_fallback
+        self.fetcher.write_payload = fake_write_payload
+        try:
+            result = self.fetcher.run_one("etf", "ADIU", timeout=1, mirror_public=False, yf_fallback=True)
+        finally:
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.fetch_yahoo_etf_fallback = original_fallback
+            self.fetcher.write_payload = original_write_payload
+
+        self.assertEqual(result["status"], "fallback_ok")
+        self.assertEqual(result["provider"], "yahoo_finance")
+        self.assertIn("HTTP Error 404", result["stockanalysis_error"])
+        self.assertEqual(writes[0][0], "etfs/ADIU.json")
+        self.assertEqual(writes[0][1]["source_provider"], "yahoo_finance")
 
     def test_etf_classification_separates_index_and_single_stock_leverage(self) -> None:
         index_etf = self.fetcher.classify_etf(
