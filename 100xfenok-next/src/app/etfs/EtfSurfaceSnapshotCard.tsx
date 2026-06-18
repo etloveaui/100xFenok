@@ -59,6 +59,8 @@ interface EtfSurfaceData {
   bitcoin: SurfaceDoc<BitcoinEtfRow> | null;
 }
 
+type CollectionKey = "largeProvider" | "strategy" | "bitcoin";
+
 let etfSurfaceCache: EtfSurfaceData | null = null;
 let etfSurfacePending: Promise<EtfSurfaceData | null> | null = null;
 
@@ -111,6 +113,20 @@ function asOf(...values: Array<string | null | undefined>): string {
   return hit ? hit.slice(0, 10) : "-";
 }
 
+function providerDetail(row: ProviderRow): string {
+  return `보수 ${row.exp_ratio || "-"} · 배당 ${row.div_yield || "-"} · 1년 ${row.change_1y || "-"}`;
+}
+
+function bitcoinDetail(row: BitcoinEtfRow): string {
+  return `가격 ${row.stock_price || "-"} · 운용자산 ${row.assets || "-"}`;
+}
+
+function collectionLabel(key: CollectionKey): string {
+  if (key === "largeProvider") return "대형 운용사";
+  if (key === "strategy") return "레버리지·전략";
+  return "디지털자산";
+}
+
 function EtfLink({
   ticker,
   name,
@@ -144,6 +160,7 @@ function EtfLink({
 export default function EtfSurfaceSnapshotCard() {
   const [data, setData] = useState<EtfSurfaceData | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [collectionKey, setCollectionKey] = useState<CollectionKey>("largeProvider");
 
   useEffect(() => {
     let cancelled = false;
@@ -165,6 +182,27 @@ export default function EtfSurfaceSnapshotCard() {
     [data],
   );
   const bitcoinEtfs = useMemo(() => rows(data?.bitcoin).slice(0, 4), [data]);
+  const collections = useMemo(
+    () => ({
+      largeProvider: {
+        rows: rows(data?.blackrock),
+        total: countRows(data?.blackrock),
+        fetchedAt: data?.blackrock?.fetched_at,
+      },
+      strategy: {
+        rows: rows(data?.proshares),
+        total: countRows(data?.proshares),
+        fetchedAt: data?.proshares?.fetched_at,
+      },
+      bitcoin: {
+        rows: rows(data?.bitcoin),
+        total: countRows(data?.bitcoin),
+        fetchedAt: data?.bitcoin?.fetched_at,
+      },
+    }),
+    [data],
+  );
+  const activeCollection = collections[collectionKey];
 
   return (
     <section className="panel">
@@ -217,13 +255,13 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용사별 대표 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">대형 운용사 ETF</div>
             {providerLeaders.map((row) => (
               <EtfLink
                 key={`provider-${row.symbol}`}
                 ticker={row.symbol}
                 name={row.fund_name}
-                detail={`보수 ${row.exp_ratio || "-"} · 배당 ${row.div_yield || "-"} · 1년 ${row.change_1y || "-"}`}
+                detail={providerDetail(row)}
                 value={row.assets || "-"}
               />
             ))}
@@ -236,10 +274,64 @@ export default function EtfSurfaceSnapshotCard() {
                 key={`btc-${row.symbol}`}
                 ticker={row.symbol}
                 name={row.fund_name}
-                detail={`가격 ${row.stock_price || "-"} · 운용자산 ${row.assets || "-"}`}
+                detail={bitcoinDetail(row)}
                 value={row.pct_change || "-"}
               />
             ))}
+          </div>
+
+          <div className="mv-col lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-[var(--panel-pad)] pb-2">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">ETF 모음</div>
+                <div className="mt-1 text-xs font-semibold text-slate-500">
+                  {collectionLabel(collectionKey)} · {fmtNumber(activeCollection.total)}개 중 {fmtNumber(activeCollection.rows.length)}개 표시
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(["largeProvider", "strategy", "bitcoin"] as CollectionKey[]).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setCollectionKey(key)}
+                    className={`min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
+                      collectionKey === key
+                        ? "border-brand-interactive bg-brand-interactive text-white"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
+                    }`}
+                  >
+                    {collectionLabel(key)} {fmtNumber(collections[key].total)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {activeCollection.rows.map((row) => {
+              if (collectionKey === "bitcoin") {
+                const bitcoinRow = row as BitcoinEtfRow;
+                return (
+                  <EtfLink
+                    key={`collection-btc-${bitcoinRow.symbol}`}
+                    ticker={bitcoinRow.symbol}
+                    name={bitcoinRow.fund_name}
+                    detail={bitcoinDetail(bitcoinRow)}
+                    value={bitcoinRow.pct_change || "-"}
+                  />
+                );
+              }
+              const providerRow = row as ProviderRow;
+              return (
+                <EtfLink
+                  key={`collection-provider-${providerRow.symbol}`}
+                  ticker={providerRow.symbol}
+                  name={providerRow.fund_name}
+                  detail={providerDetail(providerRow)}
+                  value={providerRow.assets || "-"}
+                />
+              );
+            })}
+            <div className="px-[var(--panel-pad)] py-2 text-[10px] font-bold text-slate-400">
+              기준일 {asOf(activeCollection.fetchedAt)}
+            </div>
           </div>
         </div>
       )}

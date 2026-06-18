@@ -65,9 +65,9 @@ export async function GET() {
       const [newEtfs, screener, blackrock, proshares, bitcoin] = await Promise.all([
         summarizeSurface("new_etfs", ["s", "n", "inceptionDate", "price", "change"], 100),
         summarizeSurface("etf_screener", ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings"], 5),
-        summarizeSurface("etf_provider_blackrock", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 3),
-        summarizeSurface("etf_provider_proshares", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 3),
-        summarizeSurface("list_bitcoin_etfs", ["symbol", "fund_name", "assets", "stock_price", "pct_change"], 4),
+        summarizeSurface("etf_provider_blackrock", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
+        summarizeSurface("etf_provider_proshares", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
+        summarizeSurface("list_bitcoin_etfs", ["symbol", "fund_name", "assets", "stock_price", "pct_change"], 20),
       ]);
 
       return NextResponse.json(
