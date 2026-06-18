@@ -176,7 +176,17 @@ Dedicated route or drawer surfaces:
      keeping mobile height controlled while preserving drilldown rows and Data
      Lab evidence access.
 6. **Stock workbench merge**: combine `RevisionMoversCard`,
-   `ActionCandidatesCard`, and selected StockAnalysis movers into one preview.
+   `ActionCandidatesCard`, and the returns/dividend/mover leaderboard into one
+   preview.
+   Completed in the fifth cleanup slice:
+   - Public `/explore` now renders a single `StockWorkbenchCard` instead of
+     separate `ActionCandidatesCard`, `RevisionMoversCard`, and
+     `SlickchartsDiscoveryCard` cards.
+   - The merged card keeps compact tabs for Action, Revision, Movers, and
+     Returns/Dividends. Action retains the guru/value/index sub-filters without
+     expanding the whole page.
+   - Daily StockAnalysis mover gateways stay in `StockanalysisSurfaceInsightCard`
+     to avoid duplicate same-page fetch/render of the same market mover rows.
 7. **Mobile smoke gate**: 390px and 1440px `/explore`, overflow 0, first-screen
    contains L1 + at least one L2 signal, no metadata-only cards.
 

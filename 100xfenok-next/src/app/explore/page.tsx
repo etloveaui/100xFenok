@@ -6,9 +6,7 @@ import ExploreDashboard from "./ExploreDashboard";
 import MarketThermometer from "./MarketThermometer";
 import SignalStrip from "./SignalStrip";
 import MyWatchlistStrip from "./MyWatchlistStrip";
-import RevisionMoversCard from "./RevisionMoversCard";
-import SlickchartsDiscoveryCard from "./SlickchartsDiscoveryCard";
-import ActionCandidatesCard from "./ActionCandidatesCard";
+import StockWorkbenchCard from "./StockWorkbenchCard";
 import MarketStructureIndexCard from "./MarketStructureIndexCard";
 import EtfGatewayCard from "./EtfGatewayCard";
 import MarketEventSurfacesCard from "./MarketEventSurfacesCard";
@@ -40,12 +38,10 @@ export default function ExplorePage() {
           <div className="col-a">
             <MarketThermometer />
             <ExploreDashboard />
-            <ActionCandidatesCard />
           </div>
           <div className="col-b">
             <MyWatchlistStrip />
-            <RevisionMoversCard />
-            <SlickchartsDiscoveryCard />
+            <StockWorkbenchCard />
           </div>
         </div>
 
