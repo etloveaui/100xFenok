@@ -232,12 +232,14 @@ const OpsConsole = (function() {
     }));
 
     if (isWorkers) {
-      checks.push(await probeRoute({
+      checks.push({
         label: 'Legacy /100xFenok prefix',
-        path: '/100xFenok/data/manifest.json',
-        expectedStatus: 404,
-        withBasePath: false
-      }));
+        status: basePathOk ? 'pass' : 'fail',
+        code: basePathOk ? 'not-requested' : 'base-path',
+        detail: basePathOk
+          ? 'Runtime base path is root; legacy prefix is not requested to avoid intentional console 404 noise.'
+          : 'Runtime base path is not root, so Data Lab may still request the legacy prefix.'
+      });
     } else {
       checks.push({
         label: 'Legacy /100xFenok prefix',
