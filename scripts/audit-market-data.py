@@ -66,7 +66,12 @@ def list_transient_files(directory: Path, base_dir: Path) -> list[str]:
     return files
 
 
-def build_incremental_etf_audit(index_payload: dict | None, incremental_payload: dict | None, market_coverage: dict) -> dict:
+def build_incremental_etf_audit(
+    index_payload: dict | None,
+    incremental_payload: dict | None,
+    market_coverage: dict,
+    pending_ledger: dict | None,
+) -> dict:
     index_file_exists = index_payload is not None
     index_payload = index_payload or {}
     index_counts = index_payload.get("counts") or {}
@@ -78,6 +83,10 @@ def build_incremental_etf_audit(index_payload: dict | None, incremental_payload:
     still_pending = as_int(index_counts.get("etfs_still_pending"))
     hard_failed = as_int(index_counts.get("hard_failed"))
     facts_fallback = as_int(market_coverage.get("stockanalysis_yf_fallback"))
+    ledger_counts = (pending_ledger or {}).get("counts") or {}
+    cooldown_skipped = as_int(incremental_counts.get("cooldown_skipped", index_counts.get("incremental_etf_cooldown_skipped")))
+    ledger_tracked = as_int(ledger_counts.get("tracked", index_counts.get("incremental_etf_ledger_tracked")))
+    ledger_cooldown = as_int(ledger_counts.get("cooldown", index_counts.get("incremental_etf_ledger_cooldown")))
     proof_file_exists = incremental_payload is not None
     has_run_evidence = proof_file_exists or selected > 0 or fallback_ok > 0 or facts_fallback > 0
     notes = []
@@ -93,6 +102,9 @@ def build_incremental_etf_audit(index_payload: dict | None, incremental_payload:
         notes.append("fallback_not_reflected_in_market_facts")
     if hard_failed > 0:
         status = "fail"
+    elif ledger_cooldown > 0:
+        notes.append("cooldown_active")
+        status = "warn"
     elif not has_run_evidence:
         status = "waiting"
     elif (
@@ -118,6 +130,9 @@ def build_incremental_etf_audit(index_payload: dict | None, incremental_payload:
             "missing": as_int(incremental_counts.get("missing")),
             "fallback_retry": as_int(incremental_counts.get("fallback_retry")),
             "stale": as_int(incremental_counts.get("stale")),
+            "cooldown_skipped": cooldown_skipped,
+            "pending_ledger_tracked": ledger_tracked,
+            "pending_ledger_cooldown": ledger_cooldown,
             "etfs_stockanalysis_ok": as_int(index_counts.get("etfs_stockanalysis_ok")),
             "etfs_yahoo_fallback_ok": fallback_ok,
             "etfs_still_pending": still_pending,
@@ -206,6 +221,7 @@ def build_payload() -> dict:
 
     stockanalysis_index = load_json(DATA / "stockanalysis" / "index.json")
     incremental_latest = load_json(DATA / "stockanalysis" / "backfill" / "incremental_latest.json")
+    pending_ledger = load_json(DATA / "stockanalysis" / "backfill" / "pending_ledger.json")
     market_index = load_json(DATA / "computed" / "market_facts" / "index.json") or {}
     market_rows = market_index.get("rows") or []
     market_coverage = market_index.get("coverage") or {}
@@ -285,7 +301,7 @@ def build_payload() -> dict:
             "generated_at": source_parity.get("generated_at"),
             "summary": source_parity.get("summary"),
         },
-        "incremental_etf": build_incremental_etf_audit(stockanalysis_index, incremental_latest, market_coverage),
+        "incremental_etf": build_incremental_etf_audit(stockanalysis_index, incremental_latest, market_coverage, pending_ledger),
     }
 
 

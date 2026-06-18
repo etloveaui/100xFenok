@@ -43,6 +43,7 @@ stockanalysis/
 ├── index.json
 ├── backfill/
 │   ├── incremental_latest.json
+│   ├── pending_ledger.json
 │   └── ...
 ├── etf_universe.json
 ├── etfs/
@@ -123,6 +124,18 @@ temporarily hold a source-tagged fallback payload:
 The next scheduled incremental run still retries those fallback records against
 StockAnalysis first; once the StockAnalysis endpoint starts returning detail
 JSON, the fallback file is replaced by a normal StockAnalysis payload.
+
+Incremental selection prioritizes never-fetched missing ETF detail records before
+retrying existing Yahoo fallback records. `new_etfs` still wins within the same
+reason bucket, but fallback retries must not starve ETF universe records that do
+not have any local detail yet.
+
+Repeated expected-missing ETF detail failures are tracked in
+`backfill/pending_ledger.json`. After 3 consecutive expected 404-style failures,
+the ticker is skipped for 7 days before becoming eligible again. This keeps each
+incremental chunk focused on undiscovered detail candidates instead of spending
+slots on the same hard-tail tickers. The ledger only cools down expected missing
+detail failures; hard failures still surface through the fetch index and audit.
 
 Universe payload:
 

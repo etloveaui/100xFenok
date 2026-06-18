@@ -218,6 +218,178 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(selected["OLD"], "stale")
         self.assertEqual(summary["counts"]["selected"], 3)
 
+    def test_incremental_etf_backfill_prioritizes_missing_universe_before_fallback_retry(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "stockanalysis"
+            self.fetcher.OUT_DIR = out_dir
+            (out_dir / "surfaces").mkdir(parents=True)
+            (out_dir / "etfs").mkdir(parents=True)
+            (out_dir / "surfaces" / "new_etfs.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {"s": "ADIU", "n": "Leverage Shares 2X Long ADI Daily ETF"},
+                            {"s": "FNG", "n": "FNG ETF"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (out_dir / "etfs" / "FNG.json").write_text(
+                json.dumps(
+                    {
+                        "source": "yahoo_finance",
+                        "source_provider": "yahoo_finance",
+                        "detail_status": "yf_fallback",
+                        "fetched_at": "2026-06-18T00:00:00Z",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            summary = self.fetcher.incremental_etf_backfill_candidates(
+                universe_payload={"records": [{"ticker": "BETA"}]},
+                limit=2,
+                max_age_hours=720,
+                exclude=set(),
+            )
+        self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["ADIU", "BETA"])
+        self.assertEqual([row["reason"] for row in summary["selected"]], ["missing", "missing"])
+
+    def test_incremental_etf_backfill_skips_pending_ledger_cooldown(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "backfill" / "pending_ledger.json").write_text(
+                    json.dumps(
+                        {
+                            "entries": {
+                                "BETA": {
+                                    "ticker": "BETA",
+                                    "last_attempt_utc": "2026-06-18T00:00:00Z",
+                                    "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+                                    "consecutive_failures": 3,
+                                    "next_attempt_after_utc": "2026-06-25T00:00:00Z",
+                                }
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": [{"ticker": "BETA"}, {"ticker": "GAMMA"}]},
+                    limit=10,
+                    max_age_hours=720,
+                    exclude=set(),
+                    now_dt=self.fetcher.parse_iso_timestamp("2026-06-18T12:00:00Z"),
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["GAMMA"])
+        self.assertEqual(summary["counts"]["cooldown_skipped"], 1)
+        self.assertEqual(summary["cooldown"][0]["ticker"], "BETA")
+
+    def test_incremental_etf_backfill_allows_expired_pending_ledger(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "backfill" / "pending_ledger.json").write_text(
+                    json.dumps(
+                        {
+                            "entries": {
+                                "BETA": {
+                                    "ticker": "BETA",
+                                    "last_attempt_utc": "2026-06-01T00:00:00Z",
+                                    "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+                                    "consecutive_failures": 3,
+                                    "next_attempt_after_utc": "2026-06-08T00:00:00Z",
+                                }
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": [{"ticker": "BETA"}]},
+                    limit=10,
+                    max_age_hours=720,
+                    exclude=set(),
+                    now_dt=self.fetcher.parse_iso_timestamp("2026-06-18T12:00:00Z"),
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["BETA"])
+        self.assertEqual(summary["counts"]["cooldown_skipped"], 0)
+
+    def test_pending_ledger_updates_expected_missing_and_clears_on_success(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                public_dir = Path(tmp) / "public" / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.PUBLIC_DIR = public_dir
+                selected = [{"ticker": "BETA"}]
+                first = self.fetcher.update_pending_ledger(
+                    results=[
+                        {
+                            "ticker": "BETA",
+                            "asset_type": "etf",
+                            "status": "error",
+                            "provider": "yahoo_finance",
+                            "error": "HTTPError: HTTP Error 404: Not Found",
+                            "fallback_error": "RuntimeError: Yahoo fallback returned no data",
+                        }
+                    ],
+                    selected_rows=selected,
+                    cooldown_days=7,
+                    failure_threshold=1,
+                    mirror_public=False,
+                )
+                self.assertEqual(first["counts"]["tracked"], 1)
+                self.assertEqual(first["counts"]["cooldown"], 1)
+                self.assertEqual(first["entries"]["BETA"]["consecutive_failures"], 1)
+
+                second = self.fetcher.update_pending_ledger(
+                    results=[
+                        {
+                            "ticker": "BETA",
+                            "asset_type": "etf",
+                            "status": "ok",
+                            "provider": "stockanalysis",
+                            "error": None,
+                        }
+                    ],
+                    selected_rows=selected,
+                    cooldown_days=7,
+                    failure_threshold=1,
+                    mirror_public=False,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
+        self.assertEqual(second["counts"]["tracked"], 0)
+        self.assertEqual(second["cleared"], ["BETA"])
+
     def test_etf_404_uses_yahoo_fallback_when_enabled(self) -> None:
         original_fetch_etf = self.fetcher.fetch_etf
         original_fallback = self.fetcher.fetch_yahoo_etf_fallback

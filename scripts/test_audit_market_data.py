@@ -133,6 +133,50 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertTrue(payload["incremental_etf"]["proof_file_exists"])
         self.assertIn("pending_details_remain", payload["incremental_etf"]["notes"])
 
+    def test_incremental_etf_audit_reports_pending_ledger_cooldown(self) -> None:
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_latest.json",
+            {
+                "generated_at": "2026-06-18T01:00:00Z",
+                "counts": {
+                    "candidates": 4,
+                    "selected": 2,
+                    "missing": 2,
+                    "fallback_retry": 0,
+                    "stale": 0,
+                    "cooldown_skipped": 3,
+                },
+            },
+        )
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "pending_ledger.json",
+            {
+                "counts": {"tracked": 5, "cooldown": 3},
+                "entries": {},
+            },
+        )
+        write_json(
+            self.data / "stockanalysis" / "index.json",
+            {
+                "generated_at": "2026-06-18T01:01:00Z",
+                "counts": {
+                    "incremental_etf_backfill_selected": 2,
+                    "etfs_stockanalysis_ok": 2,
+                    "etfs_yahoo_fallback_ok": 0,
+                    "etfs_still_pending": 0,
+                    "hard_failed": 0,
+                },
+            },
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "warn")
+        self.assertEqual(payload["incremental_etf"]["counts"]["cooldown_skipped"], 3)
+        self.assertEqual(payload["incremental_etf"]["counts"]["pending_ledger_tracked"], 5)
+        self.assertEqual(payload["incremental_etf"]["counts"]["pending_ledger_cooldown"], 3)
+        self.assertIn("cooldown_active", payload["incremental_etf"]["notes"])
+
     def test_incremental_etf_audit_passes_when_proof_has_no_pending_or_hard_failures(self) -> None:
         write_json(
             self.data / "stockanalysis" / "backfill" / "incremental_latest.json",

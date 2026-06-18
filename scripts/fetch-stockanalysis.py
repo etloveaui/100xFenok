@@ -19,7 +19,7 @@ Output:
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 import importlib.util
 import json
@@ -41,6 +41,9 @@ SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
 DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
+DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
+DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
+PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 NON_DIRECTIONAL_SHORT_RE = re.compile(
     r"\b(?:"
     r"short[-\s]?(?:term|duration|maturity|intermediate)"
@@ -416,8 +419,12 @@ class HTMLTableParser(HTMLParser):
         self._in_tr = False
 
 
+def utc_iso(value: datetime) -> str:
+    return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
 def now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return utc_iso(datetime.now(timezone.utc))
 
 
 def normalize_space(value: str | None) -> str:
@@ -1326,6 +1333,132 @@ def payload_age_hours(payload: dict | None) -> float | None:
     return (datetime.now(timezone.utc) - fetched).total_seconds() / 3600
 
 
+def load_pending_ledger() -> dict:
+    payload = read_json(OUT_DIR / PENDING_LEDGER_REL_PATH)
+    if not isinstance(payload, dict):
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "source": "stockanalysis",
+            "operation": "incremental_etf_pending_ledger",
+            "entries": {},
+        }
+    entries = payload.get("entries") if isinstance(payload.get("entries"), dict) else {}
+    normalized_entries = {}
+    for raw_ticker, raw_entry in entries.items():
+        ticker = clean_symbol(str(raw_ticker or ""))
+        if not ticker or not isinstance(raw_entry, dict):
+            continue
+        normalized_entries[ticker] = {**raw_entry, "ticker": ticker}
+    payload["entries"] = normalized_entries
+    return payload
+
+
+def pending_entry_in_cooldown(
+    entry: dict | None,
+    now_dt: datetime,
+    cooldown_days: float,
+    failure_threshold: int,
+) -> bool:
+    if not isinstance(entry, dict) or cooldown_days <= 0 or failure_threshold <= 0:
+        return False
+    failures = parse_int(entry.get("consecutive_failures")) or 0
+    if failures < failure_threshold:
+        return False
+    next_attempt = parse_iso_timestamp(entry.get("next_attempt_after_utc"))
+    if next_attempt is not None:
+        return now_dt < next_attempt
+    last_attempt = parse_iso_timestamp(entry.get("last_attempt_utc"))
+    if last_attempt is None:
+        return False
+    return now_dt - last_attempt < timedelta(days=cooldown_days)
+
+
+def pending_ledger_counts(payload: dict, now_dt: datetime, cooldown_days: float, failure_threshold: int) -> dict:
+    entries = payload.get("entries") if isinstance(payload.get("entries"), dict) else {}
+    cooldown = sum(
+        1
+        for entry in entries.values()
+        if pending_entry_in_cooldown(entry, now_dt, cooldown_days, failure_threshold)
+    )
+    return {
+        "tracked": len(entries),
+        "cooldown": cooldown,
+    }
+
+
+def update_pending_ledger(
+    results: list[dict],
+    selected_rows: list[dict],
+    cooldown_days: float,
+    failure_threshold: int,
+    mirror_public: bool,
+) -> dict:
+    now_dt = datetime.now(timezone.utc)
+    selected = {
+        clean_symbol(str(row.get("ticker") or ""))
+        for row in selected_rows
+        if isinstance(row, dict)
+    }
+    selected.discard(None)
+    ledger = load_pending_ledger()
+    entries = ledger.get("entries") if isinstance(ledger.get("entries"), dict) else {}
+    updated = []
+    cleared = []
+
+    for result in results:
+        if result.get("asset_type") != "etf":
+            continue
+        ticker = clean_symbol(str(result.get("ticker") or ""))
+        if not ticker or ticker not in selected:
+            continue
+        error = result.get("error")
+        if error is None:
+            if ticker in entries:
+                entries.pop(ticker, None)
+                cleared.append(ticker)
+            continue
+        if not is_expected_missing_error(error):
+            continue
+
+        existing = entries.get(ticker) if isinstance(entries.get(ticker), dict) else {}
+        failures = (parse_int(existing.get("consecutive_failures")) or 0) + 1
+        next_attempt = None
+        if failures >= failure_threshold and cooldown_days > 0:
+            next_attempt = utc_iso(now_dt + timedelta(days=cooldown_days))
+        entries[ticker] = {
+            "ticker": ticker,
+            "last_attempt_utc": utc_iso(now_dt),
+            "failure_reason": result.get("fallback_error") or error,
+            "consecutive_failures": failures,
+            "next_attempt_after_utc": next_attempt,
+            "last_status": result.get("status"),
+            "last_provider": result.get("provider"),
+        }
+        updated.append(ticker)
+
+    ledger = {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "operation": "incremental_etf_pending_ledger",
+        "generated_at": utc_iso(now_dt),
+        "policy": {
+            "cooldown_days": cooldown_days,
+            "failure_threshold": failure_threshold,
+            "rule": "skip ETF detail candidates after consecutive expected-missing failures until next_attempt_after_utc",
+        },
+        "counts": {
+            **pending_ledger_counts({"entries": entries}, now_dt, cooldown_days, failure_threshold),
+            "updated": len(updated),
+            "cleared": len(cleared),
+        },
+        "updated": sorted(updated),
+        "cleared": sorted(cleared),
+        "entries": dict(sorted(entries.items())),
+    }
+    write_payload(PENDING_LEDGER_REL_PATH, ledger, mirror_public)
+    return ledger
+
+
 def etf_detail_backfill_reason(ticker: str, max_age_hours: float) -> tuple[str | None, float | None]:
     payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
     if payload is None:
@@ -1368,13 +1501,21 @@ def incremental_etf_backfill_candidates(
     limit: int,
     max_age_hours: float,
     exclude: set[str] | None = None,
+    pending_ledger: dict | None = None,
+    cooldown_days: float = DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS,
+    cooldown_failure_threshold: int = DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES,
+    now_dt: datetime | None = None,
 ) -> dict:
     exclude = exclude or set()
+    now_dt = now_dt or datetime.now(timezone.utc)
+    pending_ledger = pending_ledger if isinstance(pending_ledger, dict) else load_pending_ledger()
+    pending_entries = pending_ledger.get("entries") if isinstance(pending_ledger.get("entries"), dict) else {}
     sources = [
         ("new_etfs", load_surface_symbols("new_etfs")),
         ("etf_universe", [row.get("ticker") for row in (universe_payload or {}).get("records") or []] or load_etf_universe_symbols()),
     ]
     candidates = []
+    cooldown_rows = []
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1}
     reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "stale": 2}
@@ -1382,6 +1523,19 @@ def incremental_etf_backfill_candidates(
     for source_name, symbols in sources:
         for ticker in unique_symbols(symbols):
             if ticker in seen or ticker in exclude:
+                continue
+            pending_entry = pending_entries.get(ticker)
+            if pending_entry_in_cooldown(pending_entry, now_dt, cooldown_days, cooldown_failure_threshold):
+                seen.add(ticker)
+                cooldown_rows.append(
+                    {
+                        "ticker": ticker,
+                        "source": source_name,
+                        "consecutive_failures": pending_entry.get("consecutive_failures"),
+                        "next_attempt_after_utc": pending_entry.get("next_attempt_after_utc"),
+                        "failure_reason": pending_entry.get("failure_reason"),
+                    }
+                )
                 continue
             reason, age_hours = etf_detail_backfill_reason(ticker, max_age_hours)
             if reason is None:
@@ -1400,8 +1554,8 @@ def incremental_etf_backfill_candidates(
 
     candidates.sort(
         key=lambda row: (
-            row["priority"],
             row["reason_priority"],
+            row["priority"],
             -(row["age_hours"] or 0),
             row["ticker"],
         )
@@ -1415,7 +1569,9 @@ def incremental_etf_backfill_candidates(
         "policy": {
             "limit": limit,
             "max_age_hours": max_age_hours,
-            "selection": "new_etfs first, then ETF universe; missing and Yahoo fallback retries before stale records",
+            "cooldown_days": cooldown_days,
+            "cooldown_failure_threshold": cooldown_failure_threshold,
+            "selection": "never-fetched missing ETF details first, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason",
         },
         "counts": {
             "candidates": len(candidates),
@@ -1423,8 +1579,10 @@ def incremental_etf_backfill_candidates(
             "missing": sum(1 for row in candidates if row["reason"] == "missing"),
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
             "stale": sum(1 for row in candidates if row["reason"] == "stale"),
+            "cooldown_skipped": len(cooldown_rows),
         },
         "selected": selected,
+        "cooldown": cooldown_rows,
     }
 
 
@@ -1701,6 +1859,8 @@ def main() -> None:
     parser.add_argument("--incremental-etf-backfill", action="store_true", help="auto deep-fetch new/missing/stale ETF details without a full universe run")
     parser.add_argument("--incremental-etf-limit", type=int, default=DEFAULT_INCREMENTAL_ETF_LIMIT, help="maximum incremental ETF detail retries per run")
     parser.add_argument("--incremental-etf-max-age-hours", type=float, default=DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS, help="existing StockAnalysis ETF detail age before it becomes stale")
+    parser.add_argument("--incremental-etf-cooldown-days", type=float, default=DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS, help="days to skip ETFs after repeated expected-missing failures")
+    parser.add_argument("--incremental-etf-cooldown-failures", type=int, default=DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES, help="consecutive expected-missing failures before ETF cooldown")
     parser.add_argument("--yf-etf-fallback", action="store_true", help="fallback to Yahoo ETF/fund data when StockAnalysis ETF detail endpoints return 404")
     parser.add_argument("--fetch-surfaces", action="store_true", help="refresh high-value public table surfaces into surfaces/*.json")
     parser.add_argument("--surface-set", choices=sorted(SURFACE_SETS), default="core", help="named surface bundle to fetch")
@@ -1775,6 +1935,8 @@ def main() -> None:
             limit=args.incremental_etf_limit,
             max_age_hours=args.incremental_etf_max_age_hours,
             exclude=set(etfs),
+            cooldown_days=args.incremental_etf_cooldown_days,
+            cooldown_failure_threshold=args.incremental_etf_cooldown_failures,
         )
         incremental_etfs = [row["ticker"] for row in incremental_summary["selected"]]
         etfs = unique_symbols(etfs + incremental_etfs)
@@ -1785,7 +1947,8 @@ def main() -> None:
             f"candidates={incremental_summary['counts']['candidates']} "
             f"missing={incremental_summary['counts']['missing']} "
             f"fallback_retry={incremental_summary['counts']['fallback_retry']} "
-            f"stale={incremental_summary['counts']['stale']}",
+            f"stale={incremental_summary['counts']['stale']} "
+            f"cooldown_skipped={incremental_summary['counts']['cooldown_skipped']}",
             flush=True,
         )
     stocks = parse_symbols(args.stocks)
@@ -1821,6 +1984,24 @@ def main() -> None:
         if stop_reason:
             break
 
+    pending_ledger_summary = None
+    if incremental_summary is not None:
+        pending_ledger_summary = update_pending_ledger(
+            results=results,
+            selected_rows=incremental_summary.get("selected") or [],
+            cooldown_days=args.incremental_etf_cooldown_days,
+            failure_threshold=args.incremental_etf_cooldown_failures,
+            mirror_public=mirror_public,
+        )
+        incremental_summary["pending_ledger"] = {
+            "path": PENDING_LEDGER_REL_PATH,
+            "generated_at": pending_ledger_summary.get("generated_at"),
+            "counts": pending_ledger_summary.get("counts"),
+        }
+        incremental_summary["counts"]["ledger_tracked"] = (pending_ledger_summary.get("counts") or {}).get("tracked", 0)
+        incremental_summary["counts"]["ledger_cooldown"] = (pending_ledger_summary.get("counts") or {}).get("cooldown", 0)
+        write_payload("backfill/incremental_latest.json", incremental_summary, mirror_public)
+
     summary = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -1846,10 +2027,21 @@ def main() -> None:
             "etfs_still_pending": sum(1 for item in results if item.get("asset_type") == "etf" and item["error"] is not None and is_expected_missing_error(item["error"])),
             "incremental_etf_backfill_candidates": (incremental_summary or {}).get("counts", {}).get("candidates", 0),
             "incremental_etf_backfill_selected": (incremental_summary or {}).get("counts", {}).get("selected", 0),
+            "incremental_etf_cooldown_skipped": (incremental_summary or {}).get("counts", {}).get("cooldown_skipped", 0),
+            "incremental_etf_ledger_tracked": (incremental_summary or {}).get("counts", {}).get("ledger_tracked", 0),
+            "incremental_etf_ledger_cooldown": (incremental_summary or {}).get("counts", {}).get("ledger_cooldown", 0),
         },
         "results": results,
         "surface_results": (surface_summary or {}).get("results"),
         "incremental_etf_backfill": incremental_summary,
+        "pending_ledger": (
+            {
+                "path": PENDING_LEDGER_REL_PATH,
+                "counts": pending_ledger_summary.get("counts"),
+            }
+            if pending_ledger_summary is not None
+            else None
+        ),
         "stop_reason": stop_reason,
     }
     if args.universe_backfill:

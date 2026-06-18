@@ -135,6 +135,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Validation-first**: Field/record change warnings
 - **Separation**: Feature experiments in Valuation Lab, data monitoring in Data Lab
 - **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` is optional until the first scheduled/dispatch incremental ETF run. Data Lab fetches it only when audit says `proof_file_exists=true`, so missing proof stays `WAITING` without console 404.
+- **ETF cooldown visibility**: Repeated expected-missing ETF detail failures are summarized through `market_data_audit.incremental_etf.counts`; Data Lab does not fetch the ledger file directly.
 
 ---
 
@@ -151,6 +152,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.5 | 2026-06-18 | Added incremental ETF cooldown skip/active counts from `market_data_audit.json` so repeated expected-missing detail failures are visible without extra optional fetches |
 | 2.2.4 | 2026-06-18 | Removed the intentional legacy `/100xFenok/data/manifest.json` negative network probe from route smoke; workers.dev now uses base-path/root-manifest proof without console 404 noise |
 | 2.2.3 | 2026-06-18 | Guarded optional incremental proof fetch behind `market_data_audit.incremental_etf.proof_file_exists` and added audit warn when proof exists but fetch index omits incremental selected count |
 | 2.2.2 | 2026-06-18 | Added StockAnalysis surface catalog audit card from `data/stockanalysis/surfaces/index.json` so public Explore can remove catalog/coverage ops cards without losing visibility |
