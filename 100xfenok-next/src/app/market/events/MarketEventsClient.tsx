@@ -86,6 +86,9 @@ interface MarketEventsClientProps {
   initialFrom?: string;
   initialTo?: string;
   initialSort?: string;
+  initialIndustryQuery?: string;
+  initialIndustryTrend?: string;
+  initialIndustrySort?: string;
 }
 
 const SURFACES: Record<keyof EventData, string> = {
@@ -205,6 +208,16 @@ function eventRangeFromParam(value: string | null | undefined): EventDateRange {
 function eventTabFromParam(value: string | null | undefined): EventTab {
   if (value === "actions" || value === "ipo" || value === "industry" || value === "movers") return value;
   return "earnings";
+}
+
+function industrySortFromParam(value: string | null | undefined): IndustrySort {
+  if (value === "oneYear" || value === "oneDay" || value === "stocks" || value === "profitMargin" || value === "peRatio") return value;
+  return "marketCap";
+}
+
+function industryTrendFromParam(value: string | null | undefined): IndustryTrend {
+  if (value === "up" || value === "down" || value === "profitable" || value === "large") return value;
+  return "all";
 }
 
 function rowSymbol(row: EventRow): string {
@@ -332,7 +345,7 @@ function filterIndustryRows(rows: IndustryMapRow[], query: string, trend: Indust
 }
 
 function downloadIndustryCsv(rows: IndustryMapRow[]) {
-  const header = ["산업", "종목 수", "시가총액", "배당수익률", "PER", "이익률", "1일 변화", "1년 변화", "참고 링크"];
+  const header = ["산업", "종목 수", "시가총액", "배당수익률", "PER", "순이익률", "1일 변화", "1년 변화", "참고 링크"];
   const lines = [
     header.map(csvCell).join(","),
     ...rows.map((row) => [
@@ -397,6 +410,9 @@ export default function MarketEventsClient({
   initialFrom,
   initialTo,
   initialSort,
+  initialIndustryQuery,
+  initialIndustryTrend,
+  initialIndustrySort,
 }: MarketEventsClientProps) {
   const [data, setData] = useState<EventData | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -533,7 +549,17 @@ export default function MarketEventsClient({
       </section>
 
       <div style={{ marginTop: "var(--s4)" }}>
-        {!loaded ? <LoadingPanel /> : <TabPanel tab={tab} data={data} />}
+        {!loaded ? (
+          <LoadingPanel />
+        ) : (
+          <TabPanel
+            tab={tab}
+            data={data}
+            initialIndustryQuery={initialIndustryQuery}
+            initialIndustryTrend={initialIndustryTrend}
+            initialIndustrySort={initialIndustrySort}
+          />
+        )}
       </div>
 
       <div style={{ marginTop: "var(--s4)" }}>
@@ -576,11 +602,32 @@ function LoadingPanel() {
   );
 }
 
-function TabPanel({ tab, data }: { tab: EventTab; data: EventData | null }) {
+function TabPanel({
+  tab,
+  data,
+  initialIndustryQuery,
+  initialIndustryTrend,
+  initialIndustrySort,
+}: {
+  tab: EventTab;
+  data: EventData | null;
+  initialIndustryQuery?: string;
+  initialIndustryTrend?: string;
+  initialIndustrySort?: string;
+}) {
   if (tab === "earnings") return <EarningsPanel data={data} />;
   if (tab === "actions") return <ActionsPanel data={data} />;
   if (tab === "ipo") return <IpoPanel data={data} />;
-  if (tab === "industry") return <IndustryPanel data={data} />;
+  if (tab === "industry") {
+    return (
+      <IndustryPanel
+        data={data}
+        initialQuery={initialIndustryQuery}
+        initialTrend={initialIndustryTrend}
+        initialSort={initialIndustrySort}
+      />
+    );
+  }
   return <MoversPanel data={data} />;
 }
 
@@ -709,7 +756,7 @@ function buildDrilldownRows(data: EventData | null): DrilldownRow[] {
   pushRows("industries_all", "산업", data.industries, (row) => ({
     symbol: "",
     title: text(row.industry_name),
-    detail: `${text(row.stocks)}개 종목 · 이익률 ${text(row.profit_margin)} · 1년 ${text(row["1y_change"])}`,
+    detail: `${text(row.stocks)}개 종목 · 순이익률 ${text(row.profit_margin)} · 1년 ${text(row["1y_change"])}`,
     value: text(row.market_cap),
     valueClass: pctClass(row["1y_change"]),
   }));
@@ -926,7 +973,7 @@ function EventDrilldown({
             disabled={!rows.length}
             className="min-h-10 rounded-lg border border-slate-200 bg-slate-900 px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            CSV
+            CSV 저장
           </button>
         </div>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -1121,11 +1168,41 @@ function IpoPanel({ data }: { data: EventData | null }) {
   );
 }
 
-function IndustryPanel({ data }: { data: EventData | null }) {
-  const [industryQuery, setIndustryQuery] = useState("");
-  const [industryTrend, setIndustryTrend] = useState<IndustryTrend>("all");
-  const [industrySort, setIndustrySort] = useState<IndustrySort>("marketCap");
+function IndustryPanel({
+  data,
+  initialQuery,
+  initialTrend,
+  initialSort,
+}: {
+  data: EventData | null;
+  initialQuery?: string;
+  initialTrend?: string;
+  initialSort?: string;
+}) {
+  const [industryQuery, setIndustryQuery] = useState((initialQuery ?? "").trim());
+  const [industryTrend, setIndustryTrend] = useState<IndustryTrend>(industryTrendFromParam(initialTrend));
+  const [industrySort, setIndustrySort] = useState<IndustrySort>(industrySortFromParam(initialSort));
   const [industryLimit, setIndustryLimit] = useState(36);
+  const syncIndustryParams = useCallback((next: {
+    query?: string;
+    trend?: IndustryTrend;
+    sort?: IndustrySort;
+  }) => {
+    if (typeof window === "undefined") return;
+    const nextQuery = next.query ?? industryQuery;
+    const nextTrend = next.trend ?? industryTrend;
+    const nextSort = next.sort ?? industrySort;
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", "industry");
+    if (nextQuery.trim()) params.set("industry_q", nextQuery.trim());
+    else params.delete("industry_q");
+    if (nextTrend === "all") params.delete("industry_trend");
+    else params.set("industry_trend", nextTrend);
+    if (nextSort === "marketCap") params.delete("industry_sort");
+    else params.set("industry_sort", nextSort);
+    const queryString = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`);
+  }, [industryQuery, industrySort, industryTrend]);
   const industryRows = useMemo(() => buildIndustryMapRows(data), [data]);
   const filteredIndustries = useMemo(() => (
     sortIndustryRows(filterIndustryRows(industryRows, industryQuery, industryTrend), industrySort)
@@ -1162,16 +1239,18 @@ function IndustryPanel({ data }: { data: EventData | null }) {
               <div className="mt-0.5 text-xs font-bold text-emerald-700">전체 산업 기준</div>
             </div>
             <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
-              <div className="text-[11px] font-black text-sky-600">흑자 산업</div>
+              <div className="text-[11px] font-black text-sky-600">순이익률 플러스</div>
               <div className="mt-1 text-sm font-black text-sky-800">{profitableCount.toLocaleString("ko-KR")}개 산업</div>
-              <div className="mt-0.5 text-xs font-bold text-sky-700">이익률 0% 초과</div>
+              <div className="mt-0.5 text-xs font-bold text-sky-700">순이익률 0% 초과</div>
             </div>
           </div>
           <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_9rem_10rem_7rem]">
             <input
               value={industryQuery}
               onChange={(event) => {
-                setIndustryQuery(event.target.value);
+                const value = event.target.value;
+                setIndustryQuery(value);
+                syncIndustryParams({ query: value });
                 setIndustryLimit(36);
               }}
               placeholder="산업명 검색"
@@ -1180,7 +1259,9 @@ function IndustryPanel({ data }: { data: EventData | null }) {
             <select
               value={industryTrend}
               onChange={(event) => {
-                setIndustryTrend(event.target.value as IndustryTrend);
+                const value = event.target.value as IndustryTrend;
+                setIndustryTrend(value);
+                syncIndustryParams({ trend: value });
                 setIndustryLimit(36);
               }}
               className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
@@ -1189,12 +1270,16 @@ function IndustryPanel({ data }: { data: EventData | null }) {
               <option value="all">전체 조건</option>
               <option value="up">1년 상승</option>
               <option value="down">1년 하락</option>
-              <option value="profitable">흑자 산업</option>
-              <option value="large">대형 산업</option>
+              <option value="profitable">순이익률 플러스</option>
+              <option value="large">시총 1조 달러 이상</option>
             </select>
             <select
               value={industrySort}
-              onChange={(event) => setIndustrySort(event.target.value as IndustrySort)}
+              onChange={(event) => {
+                const value = event.target.value as IndustrySort;
+                setIndustrySort(value);
+                syncIndustryParams({ sort: value });
+              }}
               className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
               aria-label="산업 정렬"
             >
@@ -1202,7 +1287,7 @@ function IndustryPanel({ data }: { data: EventData | null }) {
               <option value="oneYear">1년 변화순</option>
               <option value="oneDay">1일 변화순</option>
               <option value="stocks">종목 수순</option>
-              <option value="profitMargin">이익률순</option>
+              <option value="profitMargin">순이익률순</option>
               <option value="peRatio">PER 낮은순</option>
             </select>
             <button
@@ -1211,7 +1296,7 @@ function IndustryPanel({ data }: { data: EventData | null }) {
               disabled={!filteredIndustries.length}
               className="min-h-10 rounded-lg border border-slate-200 bg-slate-900 px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              내보내기
+              CSV 저장
             </button>
           </div>
         </div>
@@ -1219,6 +1304,7 @@ function IndustryPanel({ data }: { data: EventData | null }) {
           <div className="grid auto-rows-[116px] gap-2 md:grid-cols-3 xl:grid-cols-4">
             {visibleIndustries.length ? visibleIndustries.map((row) => {
               const tone = positiveNegativeClass(row.oneYearChange);
+              const trendLabel = tone === "up" ? "상승" : tone === "down" ? "하락" : "보합";
               const spanClass = row.marketCap !== null && row.marketCap >= 5_000_000_000_000
                 ? "md:col-span-2 md:row-span-2"
                 : row.marketCap !== null && row.marketCap >= 1_000_000_000_000
@@ -1229,11 +1315,9 @@ function IndustryPanel({ data }: { data: EventData | null }) {
                 : tone === "down"
                   ? "border-rose-200 bg-rose-50 text-rose-950"
                   : "border-slate-200 bg-slate-50 text-slate-800";
-              return (
-                <div
-                  key={row.id}
-                  className={`flex min-w-0 flex-col justify-between rounded-lg border p-3 ${toneClass} ${spanClass}`}
-                >
+              const tileClass = `flex min-w-0 flex-col justify-between rounded-lg border p-3 transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive ${toneClass} ${spanClass}`;
+              const tileContent = (
+                <>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-black">{row.name}</div>
                     <div className="mt-1 text-[11px] font-bold opacity-75">
@@ -1243,8 +1327,8 @@ function IndustryPanel({ data }: { data: EventData | null }) {
                   <div>
                     <div className="grid grid-cols-3 gap-2 text-[11px] font-black">
                       <span>1일 {row.oneDayRaw}</span>
-                      <span>1년 {row.oneYearRaw}</span>
-                      <span>이익률 {row.profitMarginRaw}</span>
+                      <span>{trendLabel} · 1년 {row.oneYearRaw}</span>
+                      <span>순이익률 {row.profitMarginRaw}</span>
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/70">
                       <div
@@ -1253,6 +1337,22 @@ function IndustryPanel({ data }: { data: EventData | null }) {
                       />
                     </div>
                   </div>
+                </>
+              );
+              return row.href ? (
+                <a
+                  key={row.id}
+                  href={row.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={tileClass}
+                  aria-label={`${row.name} 산업 원문 열기`}
+                >
+                  {tileContent}
+                </a>
+              ) : (
+                <div key={row.id} className={tileClass}>
+                  {tileContent}
                 </div>
               );
             }) : <EmptyRows label="조건에 맞는 산업이 없습니다." />}

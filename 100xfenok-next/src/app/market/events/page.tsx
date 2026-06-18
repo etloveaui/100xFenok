@@ -29,6 +29,9 @@ export default async function MarketEventsPage({ searchParams }: Props) {
           initialFrom={firstParam(params.from)}
           initialTo={firstParam(params.to)}
           initialSort={firstParam(params.sort)}
+          initialIndustryQuery={firstParam(params.industry_q)}
+          initialIndustryTrend={firstParam(params.industry_trend)}
+          initialIndustrySort={firstParam(params.industry_sort)}
         />
       </AppShell>
     </div>
