@@ -1,23 +1,47 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "GLD",
-  "asset_type": "stock",
-  "generated_at": "2026-06-18T11:57:18Z",
+  "asset_type": "etf",
+  "generated_at": "2026-06-18T12:52:36Z",
   "identity": {
     "name": "SPDR Gold Shares",
     "exchange": "PCX",
     "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "State Street Investment Management",
+    "category": "Commodities Focused"
   },
   "facts": {
+    "price": {
+      "value": 388.6000061035156,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T12:38:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 388.6000061035156,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
     "previous_close": {
-      "value": 386.32,
+      "value": 397.63,
       "source": "yf",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:43:17Z",
+      "fetched_at": "2026-06-18T12:38:23Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -26,20 +50,102 @@
       ],
       "candidates": [
         {
-          "value": 386.32,
+          "value": 397.63,
           "source": "yf",
           "as_of": null,
-          "fetched_at": "2026-06-13T23:43:17Z",
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 397.63,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": -9.02999389648437,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T12:38:23Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -9.02999389648437,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
+    "change_pct": {
+      "value": -2.2709538758354175,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T12:38:23Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -2.2709538758354175,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 150367518720,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T12:38:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 150367518720,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 150367518720.0,
+          "source": "yf.stockanalysis_fallback.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
     "dividend_yield": {
       "value": 0.0,
       "source": "yf",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:43:17Z",
+      "fetched_at": "2026-06-18T12:38:23Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -53,26 +159,112 @@
           "value": 0.0,
           "source": "yf",
           "as_of": null,
-          "fetched_at": "2026-06-13T23:43:17Z",
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.0,
+          "source": "yf.stockanalysis_fallback.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "beta": {
+      "value": 0.16,
+      "source": "yf.stockanalysis_fallback.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-18T12:38:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.16,
+          "source": "yf.stockanalysis_fallback.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed"
+        }
+      ],
       "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.4,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T12:38:23Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.4,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.4,
+          "source": "yf.stockanalysis_fallback.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": null,
+    "holdings_updated": "2026-06-18T12:38:23Z",
+    "top_holdings": [],
+    "asset_allocation": {
+      "cashPosition": 0.0,
+      "stockPosition": 0.0,
+      "bondPosition": 0.0,
+      "preferredPosition": 0.0,
+      "convertiblePosition": 0.0,
+      "otherPosition": 1.0
+    },
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": true
+  },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": false,
-    "stockanalysis_yf_fallback": false,
+    "stockanalysis_yf_fallback": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/GLD.json",
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": null,
+    "stockanalysis_yf_fallback": "stockanalysis/etfs/GLD.json",
     "slickcharts": null
   },
   "resolver": {
