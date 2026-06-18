@@ -22,6 +22,15 @@ interface NewEtfRow {
   inceptionDate?: string;
   price?: number;
   change?: number;
+  classification?: EtfClassification;
+}
+
+interface EtfClassification {
+  is_leveraged?: boolean;
+  leverage_factor?: number | null;
+  is_inverse?: boolean;
+  is_single_stock?: boolean;
+  underlying?: string | null;
 }
 
 interface EtfScreenerRow {
@@ -123,6 +132,21 @@ function providerDetail(row: ProviderRow): string {
 
 function bitcoinDetail(row: BitcoinEtfRow): string {
   return `가격 ${row.stock_price || "-"} · 운용자산 ${row.assets || "-"}`;
+}
+
+function classificationDetail(row: NewEtfRow): string | null {
+  const classification = row.classification;
+  if (!classification) return null;
+  const labels: string[] = [];
+  if (classification.is_leveraged) {
+    const factor = classification.leverage_factor;
+    labels.push(typeof factor === "number" && Number.isFinite(factor) ? `${factor}x` : "레버리지");
+  }
+  if (classification.is_single_stock) {
+    labels.push(classification.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
+  }
+  if (classification.is_inverse) labels.push("인버스");
+  return labels.length ? labels.join(" · ") : null;
 }
 
 function collectionLabel(key: CollectionKey): string {
@@ -235,15 +259,18 @@ export default function EtfSurfaceSnapshotCard() {
                 {countLabel(newEtfCount)} 전체 보기
               </TransitionLink>
             </div>
-            {newEtfs.map((row) => (
-              <EtfLink
-                key={`new-${row.s}`}
-                ticker={row.s}
-                name={row.n}
-                detail={`상장일 ${row.inceptionDate || "-"} · 가격 ${row.price ?? "-"}`}
-                value={typeof row.change === "number" ? `${row.change.toFixed(2)}%` : "-"}
-              />
-            ))}
+            {newEtfs.map((row) => {
+              const classHint = classificationDetail(row);
+              return (
+                <EtfLink
+                  key={`new-${row.s}`}
+                  ticker={row.s}
+                  name={row.n}
+                  detail={`${classHint ? `${classHint} · ` : ""}상장일 ${row.inceptionDate || "-"} · 가격 ${row.price ?? "-"}`}
+                  value={typeof row.change === "number" ? `${row.change.toFixed(2)}%` : "-"}
+                />
+              );
+            })}
           </div>
 
           <div className="mv-col">

@@ -52,7 +52,9 @@ export.
 
 The ETF snapshot API enriches the `new_etfs` rows with classification joined
 from `etf_screener` or `etf_universe` by ticker. New ETF filtering should prefer
-this joined classification over name-pattern inference when it is present.
+this joined classification over name-pattern inference when it is present. The
+ETF center summary card also surfaces these joined hints for new leveraged,
+single-stock, and inverse ETFs.
 
 ## Structure
 
