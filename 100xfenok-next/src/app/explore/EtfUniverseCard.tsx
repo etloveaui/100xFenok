@@ -17,6 +17,13 @@ import {
 } from "./etfUniverseUtils";
 
 export type { EtfClassification, EtfTypeFilter, EtfUniverseRecord } from "./etfUniverseUtils";
+export {
+  asOfDate,
+  formatNumber,
+  isInverseEtf,
+  isLeveragedEtf,
+  isSingleStockLeveragedEtf,
+} from "./etfUniverseUtils";
 
 interface EtfUniverseDoc {
   generated_at?: string | null;
