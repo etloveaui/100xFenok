@@ -47,7 +47,7 @@ const SURFACE_SPECS: SurfaceSpec[] = [
   },
   {
     surface: "market_gainers",
-    label: "상승 무버",
+    label: "상승률 상위",
     section: "markets",
     tickerKeys: ["symbol"],
     fields: ["symbol", "company_name", "pct_change", "stock_price", "volume", "market_cap"],
@@ -55,7 +55,7 @@ const SURFACE_SPECS: SurfaceSpec[] = [
   },
   {
     surface: "market_losers",
-    label: "하락 무버",
+    label: "하락률 상위",
     section: "markets",
     tickerKeys: ["symbol"],
     fields: ["symbol", "company_name", "pct_change", "stock_price", "volume", "market_cap"],
@@ -63,7 +63,7 @@ const SURFACE_SPECS: SurfaceSpec[] = [
   },
   {
     surface: "market_active",
-    label: "거래량 무버",
+    label: "거래량 상위",
     section: "markets",
     tickerKeys: ["symbol"],
     fields: ["symbol", "company_name", "pct_change", "stock_price", "volume", "market_cap"],
@@ -143,7 +143,7 @@ const SURFACE_SPECS: SurfaceSpec[] = [
   },
   {
     surface: "list_bitcoin_etfs",
-    label: "Bitcoin ETF",
+    label: "비트코인 ETF",
     section: "etfs",
     tickerKeys: ["symbol", "s"],
     fields: ["symbol", "s", "fund_name", "n", "stock_price", "pct_change", "assets"],
@@ -167,7 +167,7 @@ const SURFACE_SPECS: SurfaceSpec[] = [
   },
   {
     surface: "ipos_filings",
-    label: "IPO filing",
+    label: "IPO 신청",
     section: "ipo",
     tickerKeys: ["symbol", "s"],
     fields: ["date", "symbol", "company_name", "price_range", "deal_size", "market_cap"],

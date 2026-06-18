@@ -964,6 +964,19 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
         </div>
       );
     }
+    if (assetHint === "etf") {
+      return (
+        <div className="stock-shell">
+          <div className="panel stock-empty">
+            <p className="text-lg font-black text-slate-700">ETF 상세 데이터 준비 중</p>
+            <p className="mt-2 text-sm font-semibold text-slate-500">
+              {symbol} — 목록에는 잡혔지만 보유 구성·가격 보강 데이터가 아직 연결되지 않았습니다.
+            </p>
+            <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="stock-shell">
         <div className="panel stock-empty">
