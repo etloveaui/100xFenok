@@ -229,7 +229,18 @@ const DataLabUI = (function() {
         fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis fetch index'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary')
       ]);
-      Renderer.renderMarketDataAudit(audit, sourceParity, stockanalysisIndex, etfClassification);
+      const [stockanalysisIncremental, marketFactsIndex] = await Promise.all([
+        fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'StockAnalysis incremental ETF backfill'),
+        fetchOptionalJson(`${basePath}/data/computed/market_facts/index.json`, 'Market facts index')
+      ]);
+      Renderer.renderMarketDataAudit(
+        audit,
+        sourceParity,
+        stockanalysisIndex,
+        etfClassification,
+        stockanalysisIncremental,
+        marketFactsIndex
+      );
     } catch (error) {
       console.warn('[DataLab] Market data audit unavailable:', error);
       Renderer.renderMarketAuditUnavailable(error instanceof Error ? error.message : String(error));

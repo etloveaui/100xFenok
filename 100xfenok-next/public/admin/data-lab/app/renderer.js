@@ -287,11 +287,19 @@ const Renderer = (function() {
     `;
   }
 
-  function renderMarketDataAudit(audit, sourceParity, stockanalysisIndex, etfClassification) {
+  function renderMarketDataAudit(
+    audit,
+    sourceParity,
+    stockanalysisIndex,
+    etfClassification,
+    stockanalysisIncremental,
+    marketFactsIndex
+  ) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
     const backfill = audit?.backfill || {};
     const facts = audit?.market_facts || {};
+    const factsCoverage = marketFactsIndex?.coverage || facts.coverage || {};
     const parity = audit?.market_source_parity?.summary || audit?.market_source_parity || {};
     const transientFileCount = Number(backfill.transient_file_count || 0);
     const ignoredChunkCount = Array.isArray(backfill.ignored_chunks) ? backfill.ignored_chunks.length : 0;
@@ -343,11 +351,11 @@ const Renderer = (function() {
         status: Number(facts.count || 0) >= 5000 ? 'pass' : 'warn',
         code: `${Formatters.formatNumber(facts.count || 0, 0)} facts`,
         rows: [
-          ['ETF', facts.coverage?.etf],
-          ['Stock', facts.coverage?.stock],
-          ['보조 데이터', facts.coverage?.stockanalysis],
-          ['재무 후보', facts.coverage?.stockanalysis_financials],
-          ['Yahoo', facts.coverage?.yf]
+          ['ETF', factsCoverage.etf],
+          ['Stock', factsCoverage.stock],
+          ['보조 데이터', factsCoverage.stockanalysis],
+          ['SA→YF fallback', factsCoverage.stockanalysis_yf_fallback],
+          ['Yahoo', factsCoverage.yf]
         ]
       })}
       ${renderMarketAuditCard({
@@ -363,6 +371,7 @@ const Renderer = (function() {
       })}
       ${renderEtfClassificationAudit(etfClassification)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
+      ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex)}
       ${renderSourceParityDetail(sourceParity)}
     `;
   }
@@ -404,6 +413,39 @@ const Renderer = (function() {
         ['Detail OK', ok],
         ['Upstream n/a', source404],
         ['Hard fail', hardFailed]
+      ]
+    });
+  }
+
+  function renderIncrementalBackfillAudit(index, incremental, marketFactsIndex) {
+    const counts = index?.counts || {};
+    const incrementalCounts = incremental?.counts || {};
+    const selected = Number(incrementalCounts.selected ?? counts.incremental_etf_backfill_selected ?? 0);
+    const candidates = Number(incrementalCounts.candidates ?? counts.incremental_etf_backfill_candidates ?? 0);
+    const fallbackOk = Number(counts.etfs_yahoo_fallback_ok || 0);
+    const stillPending = Number(counts.etfs_still_pending || 0);
+    const fallbackCoverage = Number(marketFactsIndex?.coverage?.stockanalysis_yf_fallback || 0);
+    const generatedAt = incremental?.generated_at || index?.generated_at || '-';
+    const hasIncrementalFile = Boolean(incremental);
+    const hasRunEvidence = hasIncrementalFile || selected > 0 || fallbackOk > 0 || fallbackCoverage > 0;
+    const status = hasRunEvidence && Number(counts.hard_failed || 0) === 0 && stillPending === 0 ? 'pass' : 'warn';
+    const code = hasRunEvidence
+      ? `${Formatters.formatNumber(selected, 0)} selected`
+      : 'WAITING';
+
+    return renderMarketAuditCard({
+      title: '자동 ETF 보강',
+      status,
+      code,
+      rows: [
+        ['Generated', escapeHtml(generatedAt).slice(0, 10)],
+        ['Candidates', candidates],
+        ['Selected', selected],
+        ['Retry YF', incrementalCounts.fallback_retry],
+        ['YF fallback OK', fallbackOk],
+        ['Still pending', stillPending],
+        ['Facts fallback', fallbackCoverage],
+        ['Proof file', hasIncrementalFile ? 'yes' : 'not yet']
       ]
     });
   }

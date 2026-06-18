@@ -134,6 +134,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Read-only**: No data modification
 - **Validation-first**: Field/record change warnings
 - **Separation**: Feature experiments in Valuation Lab, data monitoring in Data Lab
+- **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` can be 404 before the first scheduled/dispatch incremental ETF run; Data Lab treats that as waiting, not failure.
 
 ---
 
@@ -150,6 +151,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.1 | 2026-06-18 | Added automatic ETF enrichment observation: incremental backfill proof file, Yahoo fallback counts, pending detail count, and market_facts fallback coverage |
 | 2.2.0 | 2026-06-18 | Added ETF classification counts, latest StockAnalysis fetch index/backfill status, restored Source Parity detail in source, and freshness guards for classification/index/surface files |
 | 2.1.0 | 2026-06-17 | Added market data audit cards and freshness guards for StockAnalysis ETF universe + computed market source parity |
 | 2.0.1 | 2026-04-14 | Added `embed=1` shell mode to hide legacy header/footer inside Next.js iframe bridge (#269) |
