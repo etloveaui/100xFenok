@@ -27,7 +27,17 @@ export default function Navbar() {
 
   const isDashboard = pathname === '/';
   const isMarket = pathname === '/market' || pathname === '/market-valuation' || pathname === '/alpha-scout';
-  const isAnalytics = pathname === '/multichart' || pathname === '/radar' || pathname === '/posts' || pathname === '/explore' || pathname === '/sectors' || pathname === '/screener';
+  const isAnalytics =
+    pathname === '/multichart' ||
+    pathname === '/radar' ||
+    pathname === '/posts' ||
+    pathname === '/explore' ||
+    pathname === '/sectors' ||
+    pathname === '/screener' ||
+    pathname === '/superinvestors' ||
+    pathname === '/portfolio' ||
+    pathname === '/etfs' ||
+    pathname.startsWith('/etfs/');
   const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -404,6 +414,22 @@ export default function Navbar() {
                       <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">탐색</span>
                     </Link>
+                    <Link href="/etfs" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-layer-group text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">ETF</span>
+                    </Link>
+                    <Link href="/sectors" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-table-cells-large text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">섹터</span>
+                    </Link>
+                    <Link href="/screener" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-filter text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">스크리너</span>
+                    </Link>
+                    <Link href="/superinvestors" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                      <i className="fas fa-user-tie text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-700">투자자</span>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -554,6 +580,10 @@ export default function Navbar() {
                 <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
                 <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
                 <Link href="/explore" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">탐색</Link>
+                <Link href="/etfs" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">ETF</Link>
+                <Link href="/sectors" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">섹터</Link>
+                <Link href="/screener" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">스크리너</Link>
+                <Link href="/superinvestors" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">투자자</Link>
               </div>
             </details>
 

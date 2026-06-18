@@ -33,6 +33,12 @@ const dockItems = [
       pathname === '/sectors',
   },
   {
+    href: '/etfs',
+    label: 'ETF',
+    icon: '▤',
+    isActive: (pathname: string) => pathname === '/etfs' || pathname.startsWith('/etfs/'),
+  },
+  {
     href: '/multichart',
     label: 'ANALYTICS',
     icon: '▦',
@@ -67,6 +73,12 @@ function isDockRoute(pathname: string) {
     normalized === '/market-valuation' ||
     normalized === '/alpha-scout' ||
     normalized === '/sectors' ||
+    normalized === '/etfs' ||
+    normalized.startsWith('/etfs/') ||
+    normalized === '/explore' ||
+    normalized === '/screener' ||
+    normalized === '/superinvestors' ||
+    normalized === '/portfolio' ||
     normalized === '/posts' ||
     normalized.startsWith('/posts/') ||
     normalized === '/multichart' ||

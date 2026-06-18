@@ -225,9 +225,8 @@ function weightedRowValue(row: WeightedRow): number | null {
 }
 
 function detailStatusText(status: string | null) {
-  if (status === "surface_only") return "보유 구성 준비 중 · 신규 상장 목록 기준으로 먼저 표시";
-  if (status === "universe_only") return "보유 구성 준비 중 · ETF 목록 기준으로 먼저 표시";
-  if (status === "yf_fallback") return "보조 가격 원장 기준으로 먼저 표시";
+  if (status === "surface_only" || status === "universe_only") return "상세 데이터를 준비 중입니다. 확인 가능한 요약 정보부터 먼저 표시합니다.";
+  if (status === "yf_fallback") return "일부 지표를 준비 중입니다. 확인 가능한 가격 정보부터 먼저 표시합니다.";
   return null;
 }
 
@@ -447,14 +446,14 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const metrics = [
     { label: "가격", value: formatMoney(price, currency), note: fmtDateish(updateDate) },
     { label: "당일 변화", value: fmtSignedPercentPoints(changePct), note: metricValue(quote.ex, exchange) },
-    { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "AUM" },
-    { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "Expense" },
-    { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "Yield" },
+    { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "총 운용자산" },
+    { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
+    { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "시장 민감도" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
-    { label: "PER", value: trailingPe !== null ? trailingPe.toFixed(1) : rawText(overview.peRatio), note: "Trailing" },
-    { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatMoney(quote.h52, currency) : "—", note: "52W High" },
-    { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatMoney(quote.l52, currency) : "—", note: "52W Low" },
+    { label: "PER", value: trailingPe !== null ? trailingPe.toFixed(1) : rawText(overview.peRatio), note: "최근 실적 기준" },
+    { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatMoney(quote.h52, currency) : "—", note: "최근 52주 고점" },
+    { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatMoney(quote.l52, currency) : "—", note: "최근 52주 저점" },
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((metric) => metric.value !== "—");

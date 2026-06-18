@@ -91,6 +91,18 @@ function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "ful
   return "full";
 }
 
+function detailStatusLabel(status: "full" | "partial" | "pending"): string {
+  if (status === "pending") return "요약 우선";
+  if (status === "partial") return "일부 준비";
+  return "상세 가능";
+}
+
+function detailStatusHint(status: "full" | "partial" | "pending"): string {
+  if (status === "pending") return "요약 정보 우선 표시";
+  if (status === "partial") return "일부 상세 지표 준비 중";
+  return "상세 페이지 이동 가능";
+}
+
 export default function NewEtfsList() {
   const [state, setState] = useState<NewEtfsState>({ snapshot: null, coverage: null });
   const [loaded, setLoaded] = useState(false);
@@ -140,9 +152,16 @@ export default function NewEtfsList() {
             <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
               <span className="co">
                 <div className="n">{row.n}</div>
-                <div className="tk">{row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)}</div>
+                <div className="tk">
+                  {row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)} · {detailStatusHint(row.detailStatus)}
+                </div>
               </span>
-              <span className={`pc num ${(row.change ?? 0) >= 0 ? "up" : "down"}`}>{fmtChange(row.change)}</span>
+              <span className="flex min-w-[82px] flex-col items-end gap-1">
+                <span className={`pc num ${(row.change ?? 0) >= 0 ? "up" : "down"}`}>{fmtChange(row.change)}</span>
+                <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-500">
+                  {detailStatusLabel(row.detailStatus)}
+                </span>
+              </span>
             </TransitionLink>
           ))}
         </div>

@@ -32,6 +32,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 };
 
 const SECTION_ORDER: SectionKey[] = ["earnings", "actions", "markets", "etfs", "ipo", "industry"];
+const ETF_SECTION_ORDER: SectionKey[] = ["etfs", "markets", "actions", "industry"];
 
 const surfaceCache: Record<string, TickerSurfacePayload | null> = {};
 const surfacePending: Record<string, Promise<TickerSurfacePayload | null>> = {};
@@ -90,7 +91,7 @@ function rowLine(section: SectionKey, row: Record<string, unknown>): string {
     return `${text(row.pct_change ?? row.change_1w ?? row.change_1m ?? row.change_ytd)} · 가격 ${text(row.stock_price)} · 거래 ${text(row.volume)}`;
   }
   if (section === "etfs") {
-    return `${text(row.assetClass ?? row.inceptionDate ?? row.exp_ratio)} · AUM ${text(row.aum ?? row.assets)} · 보유 ${text(row.holdings)}`;
+    return `${text(row.assetClass ?? row.inceptionDate ?? row.exp_ratio)} · 운용자산 ${text(row.aum ?? row.assets)} · 보유 ${text(row.holdings)}`;
   }
   if (section === "ipo") {
     return `${dateText(row.ipo_date ?? row.withdrawn_date ?? row.date)} · ${text(row.price_range ?? row.price)} · ${text(row.deal_size ?? row.market_cap ?? row.shares_offered)}`;
@@ -137,10 +138,10 @@ export default function TickerSurfaceEventsCard({
   const payload = loaded ? state.payload : null;
 
   const sections = useMemo(
-    () => SECTION_ORDER
+    () => (assetKind === "etf" ? ETF_SECTION_ORDER : SECTION_ORDER)
       .map((section) => ({ section, rows: flattenSection(payload, section).slice(0, compact ? 2 : 4) }))
       .filter((item) => item.rows.length > 0),
-    [payload, compact],
+    [payload, compact, assetKind],
   );
   const rowsReturned = payload?.counts?.rows_returned ?? 0;
 

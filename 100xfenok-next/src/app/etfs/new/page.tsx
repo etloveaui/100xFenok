@@ -18,7 +18,7 @@ const plexKr = IBM_Plex_Sans_KR({
 export default function NewEtfsPage() {
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
-      <AppShell active="etfs" title="ETF">
+      <AppShell active="etfs" title="신규 상장 ETF">
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
