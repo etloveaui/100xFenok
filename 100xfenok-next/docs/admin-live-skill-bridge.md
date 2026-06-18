@@ -91,8 +91,9 @@ Mona vNext owner-test logs:
   `data/voice-logs-vnext/owner-test/{date}_mona-vnext_{conversationId}.json`.
   The date segment is derived from the session `startedAt` timestamp.
 - Each log records the selected Gemini model, `temperature`, `thinkingLevel`,
-  active expression id, metrics, events, turn transcript, and finalized status
-  so owner smokes can compare runs without guessing the generation setup.
+  active expression id, dynamic expression-bank source/seed/selected ids,
+  metrics, events, turn transcript, and finalized status so owner smokes can
+  compare runs without guessing the generation setup.
 - Current default generation settings are Gemini `gemini-3.1-flash-live-preview`,
   `temperature: 1`, and `thinkingLevel: low`. `temperature: 0.55` remains only
   as an explicit A/B override, not the default.
@@ -103,6 +104,9 @@ Mona vNext owner-test logs:
   strict-stop partial hard finalize without broad `/끝/` false positives,
   lesson-attempt repeat exposure advance at 3, and final pending-turn flush with
   dedupe.
+- Dynamic-bank gates require the scorer to cover normalized Mona-life artifact
+  uniqueness, deterministic 20-expression session sampling, client/server bank
+  parity, and selected bank metadata in log settings.
 
 ## Local Verification
 
