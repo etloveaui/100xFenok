@@ -156,6 +156,7 @@ jobs:
 
       - name: Validate StockAnalysis UI QA
         run: |
+          npm --prefix 100xfenok-next run qa:etf-universe
           npm --prefix 100xfenok-next run qa:surface-consumers
           npm --prefix 100xfenok-next run qa:market-audit
           npm --prefix 100xfenok-next run qa:copy

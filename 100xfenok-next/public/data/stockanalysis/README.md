@@ -61,6 +61,14 @@ the full screener surface separately. The snapshot API also uses `etf_screener`
 for the `/etfs` AUM, volume, and absolute-change leaderboards so the lightweight
 ETF list is visible before users open a detail page.
 
+`npm --prefix 100xfenok-next run qa:etf-universe` is the serverless contract
+gate for that joined ETF catalog. It rebuilds the same universe+screener merge
+from the local DataPack, verifies public/source mirror parity, checks coverage
+minimums, and keeps regression tickers such as IEFA, TQQQ, SQQQ, and TSLL
+available with the expected detail and classification fields. The scheduled
+`fetch-stockanalysis.yml` workflow runs this gate before committing refreshed
+data.
+
 ## Structure
 
 ```
@@ -288,6 +296,9 @@ python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
 
 # Validate fetcher surface definitions against current DataPack outputs
 python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+
+# Validate the serverless ETF universe merge contract used by /etfs
+npm --prefix 100xfenok-next run qa:etf-universe
 
 # Inspect a saved financial __data.json fixture through the probe
 python3 scripts/probe-stockanalysis-financials.py AAPL --statement income \
