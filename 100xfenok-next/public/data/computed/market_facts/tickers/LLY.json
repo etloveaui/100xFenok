@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "LLY",
   "asset_type": "stock",
-  "generated_at": "2026-06-18T01:55:16Z",
+  "generated_at": "2026-06-18T02:43:30Z",
   "identity": {
     "name": "Eli Lilly and Company",
     "exchange": "NYQ",
@@ -34,6 +34,13 @@
           "confidence": "observed"
         },
         {
+          "value": 1112,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
+        },
+        {
           "value": 1105,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -41,7 +48,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "previous_close": {
       "value": 1160.95,
@@ -60,22 +67,36 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:46:45Z",
           "confidence": "observed"
+        },
+        {
+          "value": 1112,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
-      "value": -27.950000000000045,
-      "source": "yf.derived",
+      "value": -10.5,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:46:45Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T02:42:15Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -10.5,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
+        },
         {
           "value": -27.950000000000045,
           "source": "yf.derived",
@@ -84,20 +105,27 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
-      "value": -2.4075110900555616,
-      "source": "yf.derived",
+      "value": -0.94,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:46:45Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T02:42:15Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -0.94,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
+        },
         {
           "value": -2.4075110900555616,
           "source": "yf.derived",
@@ -106,7 +134,7 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "market_cap": {
       "value": 1010342952960,
@@ -128,6 +156,13 @@
           "confidence": "observed"
         },
         {
+          "value": 991620000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
+        },
+        {
           "value": 1040619999999.9999,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -135,7 +170,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "trailing_pe": {
       "value": 40.320286,
@@ -185,6 +220,13 @@
           "confidence": "observed"
         },
         {
+          "value": 29.83,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
+        },
+        {
           "value": 24.8,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -192,7 +234,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "dividend_yield": {
       "value": 0.61,
@@ -243,22 +285,84 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:46:45Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.52,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:15Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": null,
-  "financials": null,
+  "financials": {
+    "stockanalysis": {
+      "available": true,
+      "role": "cross-check candidate; not valuation SSOT",
+      "fetched_at": "2026-06-18T02:42:14Z",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 37,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 41,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 37,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 41,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 33,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      },
+      "source_file": "stockanalysis/financials/LLY.json"
+    }
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "slickcharts": true
+    "stockanalysis": true,
+    "slickcharts": true,
+    "stockanalysis_financials": true
   },
   "source_files": {
     "yf": "yf/finance/LLY.json",
-    "stockanalysis": null,
-    "slickcharts": "slickcharts/stocks/LLY.json"
+    "stockanalysis": "stockanalysis/stocks/LLY.json",
+    "slickcharts": "slickcharts/stocks/LLY.json",
+    "stockanalysis_financials": "stockanalysis/financials/LLY.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",

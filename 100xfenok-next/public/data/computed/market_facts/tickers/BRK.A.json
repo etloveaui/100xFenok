@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BRK.A",
   "asset_type": "stock",
-  "generated_at": "2026-06-18T01:55:16Z",
+  "generated_at": "2026-06-18T02:43:30Z",
   "identity": {
     "name": "Berkshire Hathaway Inc.",
     "exchange": "NYQ",
@@ -32,9 +32,16 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:36:01Z",
           "confidence": "observed"
+        },
+        {
+          "value": 737300,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "previous_close": {
       "value": 726581.0,
@@ -53,22 +60,36 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:36:01Z",
           "confidence": "observed"
+        },
+        {
+          "value": 737300,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
-      "value": 5519.0,
-      "source": "yf.derived",
+      "value": -5086,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:36:01Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T02:42:18Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -5086,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
+        },
         {
           "value": 5519.0,
           "source": "yf.derived",
@@ -77,20 +98,27 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
-      "value": 0.7595849602453133,
-      "source": "yf.derived",
+      "value": -0.69,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-13T23:36:01Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-18T02:42:18Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
         "yf.derived"
       ],
       "candidates": [
+        {
+          "value": -0.69,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.7595849602453133,
           "source": "yf.derived",
@@ -99,7 +127,7 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "market_cap": {
       "value": 1052688777216,
@@ -119,9 +147,16 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:36:01Z",
           "confidence": "observed"
+        },
+        {
+          "value": 1060000000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "trailing_pe": {
       "value": 14.5348835,
@@ -162,9 +197,16 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:36:01Z",
           "confidence": "observed"
+        },
+        {
+          "value": 23.93,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "beta": {
       "value": 0.617,
@@ -183,22 +225,84 @@
           "as_of": null,
           "fetched_at": "2026-06-13T23:36:01Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.62,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T02:42:18Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": null,
-  "financials": null,
+  "financials": {
+    "stockanalysis": {
+      "available": true,
+      "role": "cross-check candidate; not valuation SSOT",
+      "fetched_at": "2026-06-18T02:42:17Z",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 38,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 31,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 34,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 31,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 34,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      },
+      "source_file": "stockanalysis/financials/BRK.A.json"
+    }
+  },
   "sources": {
     "yf": true,
-    "stockanalysis": false,
-    "slickcharts": false
+    "stockanalysis": true,
+    "slickcharts": false,
+    "stockanalysis_financials": true
   },
   "source_files": {
     "yf": "yf/finance/BRK.A.json",
-    "stockanalysis": null,
-    "slickcharts": null
+    "stockanalysis": "stockanalysis/stocks/BRK.A.json",
+    "slickcharts": null,
+    "stockanalysis_financials": "stockanalysis/financials/BRK.A.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",

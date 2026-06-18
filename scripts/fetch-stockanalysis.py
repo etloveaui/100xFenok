@@ -2,11 +2,12 @@
 """
 StockAnalysis source fetcher — REST JSON layer and public table surfaces.
 
-The stock financial-statement pages use SvelteKit/devalue payloads and are
-intentionally left for a later parser. This fetcher keeps the stable REST-shaped
-endpoints first: ETF holdings/overview/history/quote and stock overview/history/quote.
-It also captures high-value public HTML table surfaces such as new ETFs, IPOs,
-corporate actions, market movers, industry maps, and ETF provider pages.
+The stock financial-statement pages use SvelteKit/devalue payloads; this fetcher
+normalizes those pages as cross-check candidates while keeping StockAnalysis as
+candidate data, not valuation SSOT. It also captures stable REST-shaped endpoints
+for ETF holdings/overview/history/quote and stock overview/history/quote, plus
+high-value public table surfaces such as new ETFs, IPOs, corporate actions,
+market movers, industry maps, and ETF provider pages.
 
 Output:
   data/stockanalysis/etfs/{TICKER}.json
@@ -47,6 +48,9 @@ DEFAULT_ETFS = [
 DEFAULT_STOCKS = [
     "AAPL", "NVDA", "PLTR", "MSFT", "AMZN", "GOOGL", "META", "TSLA",
     "AVGO", "AMD", "JPM", "UNH", "XOM", "COST", "KO", "PG",
+    "GOOG", "TSM", "MU", "BRK.B", "LLY", "BRK.A", "WMT", "ASML",
+    "INTC", "V", "JNJ", "ORCL", "CSCO", "LRCX", "AMAT", "MA",
+    "CAT", "ARM", "ABBV", "BAC", "CVX", "GE", "NFLX", "MS",
 ]
 FINANCIAL_STATEMENT_PATHS = {
     "income": "financials",
