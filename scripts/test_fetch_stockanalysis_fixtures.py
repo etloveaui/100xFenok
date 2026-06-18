@@ -64,6 +64,40 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.fetcher.parse_surface_names("missing_surface", "core")
 
+    def test_select_base_etfs_uses_default_focus_set_without_incremental_only(self) -> None:
+        etfs = self.fetcher.select_base_etfs(
+            [],
+            stocks_only=False,
+            universe_backfill=False,
+            incremental_etf_backfill=True,
+            incremental_etf_only=False,
+        )
+
+        self.assertIn("SPY", etfs)
+        self.assertIn("QQQ", etfs)
+
+    def test_select_base_etfs_incremental_only_skips_default_focus_set(self) -> None:
+        etfs = self.fetcher.select_base_etfs(
+            [],
+            stocks_only=False,
+            universe_backfill=False,
+            incremental_etf_backfill=True,
+            incremental_etf_only=True,
+        )
+
+        self.assertEqual(etfs, [])
+
+    def test_select_base_etfs_incremental_only_keeps_explicit_etfs(self) -> None:
+        etfs = self.fetcher.select_base_etfs(
+            ["AAA", "BBB"],
+            stocks_only=False,
+            universe_backfill=False,
+            incremental_etf_backfill=True,
+            incremental_etf_only=True,
+        )
+
+        self.assertEqual(etfs, ["AAA", "BBB"])
+
     def test_financial_statement_fixture_contract(self) -> None:
         payload = json.loads((FIXTURE_DIR / "aapl_income_annual__data.fixture.json").read_text(encoding="utf-8"))
         decoded = self.fetcher.extract_financial_node(payload)

@@ -674,6 +674,29 @@ def parse_symbols(value: str) -> list[str]:
     return out
 
 
+def select_base_etfs(
+    explicit_etfs: list[str],
+    *,
+    stocks_only: bool,
+    universe_backfill: bool,
+    incremental_etf_backfill: bool,
+    incremental_etf_only: bool,
+    universe_payload: dict | None = None,
+) -> list[str]:
+    if stocks_only:
+        return []
+    if universe_backfill:
+        etfs = explicit_etfs or load_etf_universe_symbols()
+        if not etfs and universe_payload:
+            etfs = [row["ticker"] for row in universe_payload.get("records") or []]
+        if not etfs:
+            raise SystemExit("ETF universe is empty. Run --discover-etf-universe first.")
+        return etfs
+    if incremental_etf_backfill and incremental_etf_only:
+        return explicit_etfs[:]
+    return explicit_etfs or DEFAULT_ETFS[:]
+
+
 def fetch_json(rel_path: str, timeout: int) -> dict:
     url = f"{BASE_URL}{rel_path}"
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -2050,6 +2073,7 @@ def main() -> None:
     parser.add_argument("--universe-only", action="store_true", help="only refresh etf_universe.json; do not deep-fetch ETF payloads")
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
     parser.add_argument("--incremental-etf-backfill", action="store_true", help="auto deep-fetch new/missing/stale ETF details without a full universe run")
+    parser.add_argument("--incremental-etf-only", action="store_true", help="with --incremental-etf-backfill, skip the default focus ETF refresh and fetch only explicit --etfs plus selected incremental candidates")
     parser.add_argument("--coverage-only", action="store_true", help="rebuild local ETF detail coverage proof without network fetches")
     parser.add_argument("--incremental-etf-limit", type=int, default=DEFAULT_INCREMENTAL_ETF_LIMIT, help="maximum incremental ETF detail retries per run")
     parser.add_argument("--incremental-etf-max-age-hours", type=float, default=DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS, help="existing StockAnalysis ETF detail age before it becomes stale")
@@ -2069,6 +2093,9 @@ def main() -> None:
     parser.add_argument("--fail-on-error", action="store_true", help="exit non-zero when any ticker fails")
     parser.add_argument("--stop-on-hard-error", action="store_true", help="stop chunk on non-404 fetch errors")
     args = parser.parse_args()
+
+    if args.incremental_etf_only and not args.incremental_etf_backfill:
+        raise SystemExit("--incremental-etf-only requires --incremental-etf-backfill")
 
     mirror_public = not args.no_public_mirror
     classify_catalogs_requested = args.classify_etf_catalogs
@@ -2124,16 +2151,14 @@ def main() -> None:
         return
 
     explicit_etfs = parse_symbols(args.etfs)
-    if args.stocks_only:
-        etfs = []
-    elif args.universe_backfill:
-        etfs = explicit_etfs or load_etf_universe_symbols()
-        if not etfs and universe_payload:
-            etfs = [row["ticker"] for row in universe_payload.get("records") or []]
-        if not etfs:
-            raise SystemExit("ETF universe is empty. Run --discover-etf-universe first.")
-    else:
-        etfs = explicit_etfs or DEFAULT_ETFS
+    etfs = select_base_etfs(
+        explicit_etfs,
+        stocks_only=args.stocks_only,
+        universe_backfill=args.universe_backfill,
+        incremental_etf_backfill=args.incremental_etf_backfill,
+        incremental_etf_only=args.incremental_etf_only,
+        universe_payload=universe_payload,
+    )
 
     if args.offset:
         etfs = etfs[args.offset:]
