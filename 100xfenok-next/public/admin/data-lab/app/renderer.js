@@ -345,8 +345,8 @@ const Renderer = (function() {
         rows: [
           ['ETF', facts.coverage?.etf],
           ['Stock', facts.coverage?.stock],
-          ['StockAnalysis', facts.coverage?.stockanalysis],
-          ['SA financials', facts.coverage?.stockanalysis_financials],
+          ['보조 데이터', facts.coverage?.stockanalysis],
+          ['재무 후보', facts.coverage?.stockanalysis_financials],
           ['Yahoo', facts.coverage?.yf]
         ]
       })}

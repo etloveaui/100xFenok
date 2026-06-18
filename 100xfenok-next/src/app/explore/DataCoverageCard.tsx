@@ -15,6 +15,7 @@ interface StockanalysisManifest {
   files?: {
     etfFileCount?: number | null;
     stockFileCount?: number | null;
+    financialFileCount?: number | null;
     backfillFileCount?: number | null;
   };
   universe?: {
@@ -119,6 +120,7 @@ export default function DataCoverageCard() {
     const universeCount = stock?.universe?.counts?.records ?? null;
     const etfFileCount = stock?.files?.etfFileCount ?? null;
     const stockFileCount = stock?.files?.stockFileCount ?? null;
+    const financialFileCount = stock?.files?.financialFileCount ?? null;
     const chunks = backfill?.chunk_files ?? stock?.files?.backfillFileCount ?? null;
     const expectedChunks = backfill?.expected_chunk_files ?? null;
 
@@ -134,6 +136,12 @@ export default function DataCoverageCard() {
         detail: "개요·시세·히스토리",
         value: fmtNumber(stockFileCount),
         tone: "neutral",
+      },
+      {
+        label: "재무 후보",
+        detail: "교차검증용 · 자동 갱신",
+        value: fmtNumber(financialFileCount),
+        tone: financialFileCount && financialFileCount > 0 ? "up" : "neutral",
       },
       {
         label: "백필 진행",
