@@ -160,7 +160,7 @@ const Renderer = (function() {
       ${renderOpsCard({
         title: 'Freshness Guard',
         icon: 'fa-clock-rotate-left',
-        description: 'Internal JSON timestamps used by live data surfaces',
+        description: '실제 화면이 읽는 JSON 기준 시각',
         items: results.freshness || []
       })}
     `;
@@ -469,9 +469,9 @@ const Renderer = (function() {
       .slice(0, 6)
       .map(([group, value]) => [
         group,
-        `${Formatters.formatNumber(value.rows, 0)} rows`,
-        `${Formatters.formatNumber(value.count, 0)} surfaces`,
-        value.failed ? `${Formatters.formatNumber(value.failed, 0)} failed` : 'ok',
+        `${Formatters.formatNumber(value.rows, 0)}행`,
+        `${Formatters.formatNumber(value.count, 0)}개 항목`,
+        value.failed ? `${Formatters.formatNumber(value.failed, 0)}개 오류` : '정상',
         value.samples.join(', ')
       ]);
 
@@ -479,7 +479,7 @@ const Renderer = (function() {
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="font-semibold text-gray-800">StockAnalysis 수집 카탈로그</h3>
+            <h3 class="font-semibold text-gray-800">시장 데이터 수집 카탈로그</h3>
             <p class="text-xs text-gray-500 mt-1">data/stockanalysis/surfaces/index.json</p>
           </div>
           <span class="px-2 py-1 rounded-full border text-xs font-bold ${Number(counts.failed || 0) === 0 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
@@ -488,7 +488,7 @@ const Renderer = (function() {
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
           ${renderAuditMetric('수집 목록', Formatters.formatNumber(counts.surfaces_requested || results.length, 0))}
-          ${renderAuditMetric('OK', Formatters.formatNumber(counts.ok || 0, 0))}
+          ${renderAuditMetric('정상', Formatters.formatNumber(counts.ok || 0, 0))}
           ${renderAuditMetric('테이블', Formatters.formatNumber(counts.tables || 0, 0))}
           ${renderAuditMetric('행', Formatters.formatNumber(counts.rows || 0, 0))}
         </div>
@@ -510,10 +510,10 @@ const Renderer = (function() {
       status: 'pass',
       code: escapeHtml(generatedAt).slice(0, 10),
       rows: [
-        ['Universe L/I/S', formatClassificationCounts(universe?.classification)],
-        ['Screener L/I/S', formatClassificationCounts(screener?.classification)],
-        ['Universe rows', universe?.records],
-        ['Screener rows', screener?.records]
+        ['전체 목록 L/I/S', formatClassificationCounts(universe?.classification)],
+        ['스크리너 L/I/S', formatClassificationCounts(screener?.classification)],
+        ['전체 목록 행', universe?.records],
+        ['스크리너 행', screener?.records]
       ]
     });
   }
@@ -971,7 +971,7 @@ const Renderer = (function() {
 
         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="text-xs text-gray-500">
-            ${Formatters.formatNumber(rows.length, 0)} fields · ${Formatters.formatNumber(stockFieldView.page + 1, 0)} / ${Formatters.formatNumber(pageCount, 0)}
+            ${Formatters.formatNumber(rows.length, 0)}개 필드 · ${Formatters.formatNumber(stockFieldView.page + 1, 0)} / ${Formatters.formatNumber(pageCount, 0)}
           </div>
           <div class="flex gap-2">
             <button

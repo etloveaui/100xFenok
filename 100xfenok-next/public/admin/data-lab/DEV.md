@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.7 (ETF coverage gap drilldown)
+> **Version**: 2.2.9 (operator copy polish)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -156,6 +156,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.9 | 2026-06-19 | Polished visible Data Lab operator copy for StockAnalysis catalog, freshness labels, and route-smoke labels while preserving raw JSON paths |
 | 2.2.8 | 2026-06-19 | Neutralized visible ETF fallback, waiting-state, and source-parity wording while preserving raw provider evidence in JSON |
 | 2.2.7 | 2026-06-19 | Added ETF coverage gap drilldown: new ETF/list/screener missing counts plus missing and auxiliary-fallback ticker chips linked to ETF detail pages |
 | 2.2.6 | 2026-06-18 | Added ETF detail coverage proof from `coverage/etf_detail.json`; Data Lab now shows candidate total, covered detail files, primary-detail coverage, auxiliary fallback count, and missing detail count from the same generated contract |

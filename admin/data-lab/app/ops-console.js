@@ -116,7 +116,7 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
-      label: 'StockAnalysis surface index',
+      label: '시장 데이터 수집 목록',
       path: '/data/stockanalysis/surfaces/index.json',
       datePath: 'generated_at',
       minCountPath: 'counts.rows',
@@ -125,7 +125,7 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
-      label: 'StockAnalysis earnings surface',
+      label: '어닝 일정 데이터',
       path: '/data/stockanalysis/surfaces/earnings_calendar.json',
       datePath: 'fetched_at',
       minCountPath: 'counts.records',
@@ -134,7 +134,7 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
-      label: 'StockAnalysis new ETF surface',
+      label: '신규 ETF 데이터',
       path: '/data/stockanalysis/surfaces/new_etfs.json',
       datePath: 'fetched_at',
       minCountPath: 'counts.records',
