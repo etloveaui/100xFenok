@@ -25,7 +25,7 @@ export async function GET(
     return NextResponse.json(
       {
         error: "STOCKANALYSIS_BAD_REQUEST",
-        message: "Use /api/data/stockanalysis/etfs/SPY or /api/data/stockanalysis/stocks/AAPL.",
+        message: "Use /api/data/stockanalysis/etfs/SPY, /stocks/AAPL, or /financials/AAPL.",
       },
       { status: 400, headers: { "Cache-Control": "no-store" } },
     );

@@ -17,7 +17,8 @@ What this script updates:
   - manifest_version: bumped once when the hybrid registry is introduced
 
 What this script never rewrites:
-  - version, update_frequency, source, schema, description
+  - update_frequency, source, schema, description, except when a known default
+    folder is explicitly promoted to a newer schema/default version
   - existing recent_changes entries (it only inserts the one-time hybrid note)
 
 New folder behavior:
@@ -77,11 +78,11 @@ DEFAULT_FOLDER_META = {
         "description": "Verified USD macro, Fed policy, filing, and market calendar events mirrored from BujaBot Google Calendar.",
     },
     "stockanalysis": {
-        "version": "1.0.0",
+        "version": "1.1.0",
         "update_frequency": "weekly / on-demand",
         "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
         "schema": True,
-        "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock overview snapshots, and market event surfaces.",
+        "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces.",
     },
 }
 
@@ -156,6 +157,41 @@ def read_schema_version(folder: Path, fallback: str) -> str:
         return version
 
     return fallback
+
+
+def refresh_default_folder_metadata(
+    folder_name: str,
+    folder_path: Path,
+    entry: dict[str, object],
+) -> list[str]:
+    """Promote known folder metadata when the checked-in schema/default advances."""
+    defaults = DEFAULT_FOLDER_META.get(folder_name)
+    if not defaults:
+        return []
+
+    current_version = str(entry.get("version") or "0.0.0")
+    default_version = str(defaults.get("version") or "1.0.0")
+    schema_version = (
+        read_schema_version(folder_path, default_version)
+        if defaults.get("schema")
+        else default_version
+    )
+    target_version = max(
+        (current_version, default_version, schema_version),
+        key=parse_semver,
+    )
+
+    reasons: list[str] = []
+    if parse_semver(target_version) > parse_semver(current_version):
+        entry["version"] = target_version
+        reasons.append(f"version {current_version}→{target_version}")
+
+        default_description = defaults.get("description")
+        if isinstance(default_description, str) and entry.get("description") != default_description:
+            entry["description"] = default_description
+            reasons.append("description refreshed")
+
+    return reasons
 
 
 # Top-level / nested metadata keys that carry a real data timestamp.
@@ -472,6 +508,11 @@ def update_manifest(dry_run: bool = False) -> int:
 
         if folder_name in folders_meta:
             entry = folders_meta[folder_name]
+            metadata_reasons = refresh_default_folder_metadata(folder_name, folder_path, entry)
+            if metadata_reasons:
+                manifest_changed = True
+                updated_entries.append(f"{folder_name}: {', '.join(metadata_reasons)}")
+
             old_count = entry.get("file_count", 0)
             old_updated = entry.get("updated")
             count_diff = old_count != actual_count

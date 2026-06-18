@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 NEXT_PUBLIC_DATA = ROOT / "100xfenok-next" / "public" / "data"
 CHUNK_RE = re.compile(r"^index_offset_(\d+)_limit_(\d+)\.json$")
+TRANSIENT_FILE_RE = re.compile(r"(\.partial\.|\.ignored$)")
 
 
 def load_json(path: Path):
@@ -48,14 +49,29 @@ def expected_backfill_chunks(universe_count: int) -> list[dict[str, int]]:
     return chunks
 
 
+def list_transient_files(directory: Path, base_dir: Path) -> list[str]:
+    if not directory.exists():
+        return []
+    files = []
+    for path in sorted(directory.iterdir()):
+        if path.is_file() and TRANSIENT_FILE_RE.search(path.name):
+            files.append(path.relative_to(base_dir).as_posix())
+    return files
+
+
 def build_payload() -> dict:
     universe = load_json(DATA / "stockanalysis" / "etf_universe.json") or {}
     universe_count = int(((universe.get("counts") or {}).get("records") or len(universe.get("records") or [])) or 0)
     etf_files = sorted((DATA / "stockanalysis" / "etfs").glob("*.json"))
     stock_files = sorted((DATA / "stockanalysis" / "stocks").glob("*.json"))
+    financial_files = sorted((DATA / "stockanalysis" / "financials").glob("*.json"))
 
     backfill_dir = DATA / "stockanalysis" / "backfill"
+    public_backfill_dir = NEXT_PUBLIC_DATA / "stockanalysis" / "backfill"
     backfill_files = sorted(backfill_dir.glob("index_offset_*_limit_*.json"))
+    source_transient_files = list_transient_files(backfill_dir, DATA / "stockanalysis")
+    public_transient_files = list_transient_files(public_backfill_dir, NEXT_PUBLIC_DATA / "stockanalysis")
+    transient_file_count = len(set(source_transient_files + public_transient_files))
     expected_chunks = expected_backfill_chunks(universe_count)
     expected_limits = {row["offset"]: row["limit"] for row in expected_chunks}
     results = []
@@ -160,6 +176,7 @@ def build_payload() -> dict:
             "universe_records": universe_count,
             "etf_detail_files": len(etf_files),
             "stock_detail_files": len(stock_files),
+            "financial_detail_files": len(financial_files),
             "etf_backfill_progress": pct(len(etf_files), universe_count),
         },
         "backfill": {
@@ -174,8 +191,13 @@ def build_payload() -> dict:
             "completed_offsets": sorted(completed_offsets),
             "missing_offsets": missing_offsets,
             "next_expected_offset": next_expected_offset,
-            "ready_for_finalize": next_expected_offset is None and only_expected_404_errors,
+            "ready_for_finalize": next_expected_offset is None and only_expected_404_errors and transient_file_count == 0,
             "detail_minus_backfill_ok": len(etf_files) - int(status_counts.get("ok") or 0),
+            "transient_file_count": transient_file_count,
+            "transient_files": {
+                "source": source_transient_files,
+                "public": public_transient_files,
+            },
             "chunks": chunk_summaries,
             "ignored_chunks": ignored_chunk_summaries,
         },

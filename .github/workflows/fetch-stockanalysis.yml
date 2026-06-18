@@ -17,6 +17,10 @@ on:
         description: 'Comma-separated stock symbols'
         required: false
         default: ''
+      fetch_financials:
+        description: 'Fetch stock financial statements for the stock focus set'
+        required: false
+        default: 'true'
       discover_universe:
         description: 'Refresh the full StockAnalysis ETF universe list'
         required: false
@@ -70,6 +74,7 @@ jobs:
         env:
           INPUT_ETFS: ${{ github.event.inputs.etfs }}
           INPUT_STOCKS: ${{ github.event.inputs.stocks }}
+          INPUT_FETCH_FINANCIALS: ${{ github.event.inputs.fetch_financials }}
           INPUT_DISCOVER_UNIVERSE: ${{ github.event.inputs.discover_universe }}
           INPUT_UNIVERSE_BACKFILL: ${{ github.event.inputs.universe_backfill }}
           INPUT_FETCH_SURFACES: ${{ github.event.inputs.fetch_surfaces }}
@@ -88,6 +93,7 @@ jobs:
           if [ -n "$INPUT_SURFACES" ]; then ARGS="$ARGS --surfaces $INPUT_SURFACES"; fi
           if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
           if [ -n "$INPUT_STOCKS" ]; then ARGS="$ARGS --stocks $INPUT_STOCKS"; fi
+          if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then ARGS="$ARGS --fetch-financials"; fi
           if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
           if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
           if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
@@ -102,14 +108,30 @@ jobs:
       - name: Build normalized market facts
         run: python3 scripts/build-market-facts.py
 
+      - name: Build market source parity
+        run: python3 scripts/build-market-source-parity.py
+
+      - name: Build market data audit
+        run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
+
       - name: Update manifest
         run: python3 scripts/update-manifest.py
+
+      - name: Update static route manifest
+        run: npm --prefix 100xfenok-next run build:static-route-manifest
+
+      - name: Validate StockAnalysis contracts
+        run: |
+          python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
+          python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+          python3 scripts/test-stockanalysis-financials-fixtures.py
+          python3 -m unittest scripts/test_audit_market_data.py
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stockanalysis data/computed/market_facts data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/manifest.json
+          git add data/stockanalysis data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
           git pull --rebase origin main
           git push

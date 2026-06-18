@@ -293,10 +293,13 @@ const Renderer = (function() {
     const backfill = audit?.backfill || {};
     const facts = audit?.market_facts || {};
     const parity = audit?.market_source_parity?.summary || audit?.market_source_parity || {};
+    const transientFileCount = Number(backfill.transient_file_count || 0);
+    const ignoredChunkCount = Array.isArray(backfill.ignored_chunks) ? backfill.ignored_chunks.length : 0;
     const ready = backfill.ready_for_finalize === true
       && Number(backfill.hard_error_count || 0) === 0
       && Array.isArray(backfill.missing_offsets)
       && backfill.missing_offsets.length === 0
+      && transientFileCount === 0
       && Number(facts.policy_mismatch_fields || 0) === 0
       && Number(facts.percent_scale_warnings || 0) === 0;
     const generatedAt = audit?.market_source_parity?.generated_at || audit?.generated_at || '-';
@@ -325,6 +328,17 @@ const Renderer = (function() {
         ]
       })}
       ${renderMarketAuditCard({
+        title: 'DataPack 위생',
+        status: transientFileCount === 0 ? 'pass' : 'warn',
+        code: transientFileCount === 0 ? 'CLEAN' : `${Formatters.formatNumber(transientFileCount, 0)} TEMP`,
+        rows: [
+          ['Raw chunks', backfill.raw_chunk_files],
+          ['Ignored', ignoredChunkCount],
+          ['Temp files', transientFileCount],
+          ['Finalize', backfill.ready_for_finalize === true ? 'yes' : 'no']
+        ]
+      })}
+      ${renderMarketAuditCard({
         title: 'Market Facts',
         status: Number(facts.count || 0) >= 5000 ? 'pass' : 'warn',
         code: `${Formatters.formatNumber(facts.count || 0, 0)} facts`,
@@ -332,6 +346,7 @@ const Renderer = (function() {
           ['ETF', facts.coverage?.etf],
           ['Stock', facts.coverage?.stock],
           ['StockAnalysis', facts.coverage?.stockanalysis],
+          ['SA financials', facts.coverage?.stockanalysis_financials],
           ['Yahoo', facts.coverage?.yf]
         ]
       })}

@@ -44,6 +44,19 @@ DEFAULT_ETFS = [
     "ELIL", "CRWL", "ORCX", "MUU", "TSMG", "APPX", "MSTU",
     "OKLL", "CWVX", "BITU", "ETHT", "STRC", "SGOV", "BIL", "BILS",
 ]
+DEFAULT_STOCKS = ["AAPL", "NVDA", "PLTR"]
+FINANCIAL_STATEMENT_PATHS = {
+    "income": "financials",
+    "balance_sheet": "financials/balance-sheet",
+    "cash_flow": "financials/cash-flow-statement",
+    "ratios": "financials/ratios",
+}
+FINANCIAL_PERIODS = ("annual", "quarterly")
+MIN_FINANCIAL_FIELD_COUNT = 20
+MIN_FINANCIAL_PERIOD_COUNT = {
+    "annual": 3,
+    "quarterly": 4,
+}
 
 SURFACE_DEFINITIONS = {
     "new_etfs": {
@@ -405,7 +418,7 @@ def decode_svelte_data(data: list) -> object:
         if index == -1:
             return None
         if not isinstance(index, int) or index < 0 or index >= len(data):
-            return index
+            raise ValueError(f"devalue reference out of range: {index!r}")
         if index in seen:
             return seen[index]
         raw = data[index]
@@ -449,6 +462,112 @@ def extract_svelte_node(payload: dict, required_keys: tuple[str, ...] = ()) -> d
     if isinstance(fallback, dict):
         return fallback
     raise ValueError("Svelte data node not found")
+
+
+def extract_financial_node(payload: dict) -> dict:
+    candidates = []
+    nodes = payload.get("nodes") or []
+    for node in nodes:
+        data = node.get("data") if isinstance(node, dict) else None
+        if not isinstance(data, list) or not data:
+            continue
+        decoded = decode_svelte_data(data)
+        if isinstance(decoded, dict) and "financialData" in decoded:
+            candidates.append(decoded)
+    if not candidates:
+        raise ValueError(f"financialData node not found in {len(nodes)} nodes")
+    return candidates[-1]
+
+
+def normalize_financial_statement(ticker: str, statement: str, decoded: dict) -> dict:
+    financial_data = decoded.get("financialData") or {}
+    row_map = decoded.get("map") or []
+    periods = financial_data.get("datekey") if isinstance(financial_data, dict) else []
+    rows = []
+    if isinstance(row_map, list):
+        for meta in row_map:
+            if not isinstance(meta, dict):
+                continue
+            field = meta.get("id")
+            values = financial_data.get(field) if isinstance(financial_data, dict) else None
+            if not field or not isinstance(values, list):
+                continue
+            rows.append(
+                {
+                    "field": field,
+                    "title": meta.get("title") or field,
+                    "format": meta.get("format"),
+                    "values": values,
+                }
+            )
+
+    return {
+        "ticker": ticker.upper(),
+        "statement": decoded.get("statement") or statement,
+        "period": decoded.get("period"),
+        "head": decoded.get("head"),
+        "details": decoded.get("details"),
+        "periods": periods if isinstance(periods, list) else [],
+        "fiscal_years": financial_data.get("fiscalYear") if isinstance(financial_data, dict) else None,
+        "rows": rows,
+        "field_count": len(rows),
+    }
+
+
+def validate_financial_statement(statement: dict) -> None:
+    period = statement.get("period")
+    rows = statement.get("rows") or []
+    periods = statement.get("periods") or []
+    min_periods = MIN_FINANCIAL_PERIOD_COUNT.get(str(period), 1)
+    if len(rows) < MIN_FINANCIAL_FIELD_COUNT:
+        raise ValueError(f"financial statement below field floor: {statement.get('statement')} {period} rows={len(rows)}")
+    if len(periods) < min_periods:
+        raise ValueError(f"financial statement below period floor: {statement.get('statement')} {period} periods={len(periods)}")
+    for row in rows:
+        values = row.get("values")
+        if not isinstance(values, list) or len(values) != len(periods):
+            raise ValueError(f"financial row value/period mismatch: {statement.get('statement')} {period} {row.get('field')}")
+
+
+def fetch_financial_statement(ticker: str, statement: str, period: str, timeout: int) -> dict:
+    path = FINANCIAL_STATEMENT_PATHS[statement]
+    suffix = "?p=quarterly" if period == "quarterly" else ""
+    endpoint = f"/stocks/{ticker.lower()}/{path}/__data.json{suffix}"
+    payload = fetch_json(endpoint, timeout)
+    decoded = extract_financial_node(payload)
+    normalized = normalize_financial_statement(ticker, statement, decoded)
+    normalized["endpoint"] = endpoint
+    validate_financial_statement(normalized)
+    return normalized
+
+
+def fetch_financials(ticker: str, timeout: int) -> dict:
+    statements = {}
+    for period in FINANCIAL_PERIODS:
+        period_statements = {}
+        for statement in FINANCIAL_STATEMENT_PATHS:
+            period_statements[statement] = fetch_financial_statement(ticker, statement, period, timeout)
+        statements[period] = period_statements
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "asset_type": "stock",
+        "ticker": ticker.upper(),
+        "fetched_at": now_iso(),
+        "role": "financial statement cross-check candidate; not valuation SSOT",
+        "statements": statements,
+        "summary": {
+            period: {
+                statement: {
+                    "field_count": payload.get("field_count"),
+                    "period_count": len(payload.get("periods") or []),
+                    "period": payload.get("period"),
+                }
+                for statement, payload in period_statements.items()
+            }
+            for period, period_statements in statements.items()
+        },
+    }
 
 
 def flatten_earnings_calendar(decoded: dict) -> list[dict]:
@@ -894,7 +1013,7 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
     }
 
 
-def fetch_stock(ticker: str, timeout: int) -> dict:
+def fetch_stock(ticker: str, timeout: int, financials: dict | None = None) -> dict:
     paths = {
         "overview": f"/api/symbol/s/{ticker}/overview",
         "history": f"/api/symbol/s/{ticker}/history?range=1Y&period=Monthly",
@@ -902,6 +1021,29 @@ def fetch_stock(ticker: str, timeout: int) -> dict:
     }
     raw = {name: pick_data(fetch_json(path, timeout)) for name, path in paths.items()}
     overview = raw["overview"] if isinstance(raw.get("overview"), dict) else {}
+    normalized = {
+        "overview": {
+            key: overview.get(key)
+            for key in (
+                "marketCap", "revenue", "revenue_type", "netIncome",
+                "sharesOut", "eps", "peRatio", "forwardPE", "dividend",
+                "beta", "analysts", "target", "earningsDate",
+            )
+            if overview.get(key) is not None
+        },
+        "quote": raw.get("quote"),
+        "history": raw.get("history"),
+    }
+    financials_path = None
+    if financials is not None:
+        financials_path = f"financials/{ticker}.json"
+        normalized["financials"] = {
+            "path": financials_path,
+            "fetched_at": financials.get("fetched_at"),
+            "role": financials.get("role"),
+            "summary": financials.get("summary"),
+        }
+
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -909,19 +1051,8 @@ def fetch_stock(ticker: str, timeout: int) -> dict:
         "ticker": ticker,
         "fetched_at": now_iso(),
         "endpoints": paths,
-        "normalized": {
-            "overview": {
-                key: overview.get(key)
-                for key in (
-                    "marketCap", "revenue", "revenue_type", "netIncome",
-                    "sharesOut", "eps", "peRatio", "forwardPE", "dividend",
-                    "beta", "analysts", "target", "earningsDate",
-                )
-                if overview.get(key) is not None
-            },
-            "quote": raw.get("quote"),
-            "history": raw.get("history"),
-        },
+        "normalized": normalized,
+        "financials_path": financials_path,
         "raw": raw,
     }
 
@@ -937,25 +1068,32 @@ def write_payload(rel_path: str, payload: dict, mirror_public: bool) -> None:
         write_json(PUBLIC_DIR / rel_path, payload)
 
 
-def run_one(kind: str, ticker: str, timeout: int, mirror_public: bool) -> dict:
+def run_one(kind: str, ticker: str, timeout: int, mirror_public: bool, include_financials: bool = False) -> dict:
     start = time.perf_counter()
     try:
         if kind == "etf":
             payload = fetch_etf(ticker, timeout)
             rel_path = f"etfs/{ticker}.json"
+            financials = None
+            financials_rel_path = None
         else:
-            payload = fetch_stock(ticker, timeout)
+            financials = fetch_financials(ticker, timeout) if include_financials else None
+            financials_rel_path = f"financials/{ticker}.json" if financials is not None else None
+            payload = fetch_stock(ticker, timeout, financials)
             rel_path = f"stocks/{ticker}.json"
         write_payload(rel_path, payload, mirror_public)
+        if financials is not None and financials_rel_path is not None:
+            write_payload(financials_rel_path, financials, mirror_public)
         return {
             "ticker": ticker,
             "asset_type": kind,
             "status": "ok",
             "path": rel_path,
+            "financials_path": financials_rel_path,
             "latency_ms": round((time.perf_counter() - start) * 1000),
             "error": None,
         }
-    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
         return {
             "ticker": ticker,
             "asset_type": kind,
@@ -980,6 +1118,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--etfs", default="", help="comma-separated ETF override; default focus ETF list")
     parser.add_argument("--stocks", default="", help="comma-separated stock symbols")
+    parser.add_argument("--stocks-only", action="store_true", help="skip ETF payload refresh and fetch only stock payloads")
+    parser.add_argument("--fetch-financials", action="store_true", help="also fetch stock financial statements for the stock focus set")
     parser.add_argument("--discover-etf-universe", action="store_true", help="scrape /etf/ list pages into etf_universe.json")
     parser.add_argument("--universe-only", action="store_true", help="only refresh etf_universe.json; do not deep-fetch ETF payloads")
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
@@ -1016,7 +1156,9 @@ def main() -> None:
         return
 
     explicit_etfs = parse_symbols(args.etfs)
-    if args.universe_backfill:
+    if args.stocks_only:
+        etfs = []
+    elif args.universe_backfill:
         etfs = explicit_etfs or load_etf_universe_symbols()
         if not etfs and universe_payload:
             etfs = [row["ticker"] for row in universe_payload.get("records") or []]
@@ -1030,12 +1172,14 @@ def main() -> None:
     if args.limit_etfs:
         etfs = etfs[: args.limit_etfs]
     stocks = parse_symbols(args.stocks)
+    if args.fetch_financials and not stocks:
+        stocks = DEFAULT_STOCKS[:]
 
     results = []
     stop_reason = None
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
-            result = run_one(kind, ticker, args.timeout, mirror_public)
+            result = run_one(kind, ticker, args.timeout, mirror_public, include_financials=(kind == "stock" and args.fetch_financials))
             results.append(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
             print(f"[{kind} {idx}/{len(symbols)}] {ticker} {status} {result['latency_ms']}ms", flush=True)
@@ -1062,6 +1206,12 @@ def main() -> None:
             "surfaces_requested": (surface_summary or {}).get("counts", {}).get("surfaces_requested", 0),
             "surfaces_ok": (surface_summary or {}).get("counts", {}).get("ok", 0),
             "surfaces_failed": (surface_summary or {}).get("counts", {}).get("failed", 0),
+            "financials_requested": len(stocks) if args.fetch_financials else 0,
+            "financials_ok": sum(1 for item in results if item.get("asset_type") == "stock" and item.get("financials_path") and item["error"] is None),
+            "financials_failed": (
+                (len(stocks) if args.fetch_financials else 0)
+                - sum(1 for item in results if item.get("asset_type") == "stock" and item.get("financials_path") and item["error"] is None)
+            ),
             "ok": sum(1 for item in results if item["error"] is None),
             "failed": sum(1 for item in results if item["error"] is not None),
             "hard_failed": sum(1 for item in results if is_hard_error(item["error"])),

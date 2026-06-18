@@ -62,6 +62,48 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.fetcher.parse_surface_names("missing_surface", "core")
 
+    def test_financial_statement_fixture_contract(self) -> None:
+        payload = json.loads((FIXTURE_DIR / "aapl_income_annual__data.fixture.json").read_text(encoding="utf-8"))
+        decoded = self.fetcher.extract_financial_node(payload)
+        normalized = self.fetcher.normalize_financial_statement("AAPL", "income", decoded)
+
+        self.fetcher.validate_financial_statement(normalized)
+        self.assertEqual(normalized["ticker"], "AAPL")
+        self.assertEqual(normalized["period"], "annual")
+        self.assertGreaterEqual(normalized["field_count"], 20)
+        self.assertGreaterEqual(len(normalized["periods"]), 3)
+        self.assertTrue(all(len(row["values"]) == len(normalized["periods"]) for row in normalized["rows"]))
+
+    def test_financial_statement_floor_blocks_empty_payloads(self) -> None:
+        with self.assertRaises(ValueError):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "EMPTY",
+                    "statement": "income",
+                    "period": "annual",
+                    "periods": ["2025-12-31"],
+                    "rows": [],
+                    "field_count": 0,
+                }
+            )
+
+    def test_stock_payload_links_financials_summary_when_supplied(self) -> None:
+        financials = {
+            "fetched_at": "2026-06-18T00:00:00Z",
+            "role": "financial statement cross-check candidate; not valuation SSOT",
+            "summary": {"annual": {"income": {"field_count": 30, "period_count": 5}}},
+        }
+        original_fetch_json = self.fetcher.fetch_json
+        self.fetcher.fetch_json = lambda _path, _timeout: {"status": 200, "data": {}}
+        try:
+            stock_payload = self.fetcher.fetch_stock("AAPL", timeout=1, financials=financials)
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        self.assertEqual(stock_payload["financials_path"], "financials/AAPL.json")
+        self.assertEqual(stock_payload["normalized"]["financials"]["path"], "financials/AAPL.json")
+        self.assertEqual(stock_payload["normalized"]["financials"]["summary"], financials["summary"])
+
 
 if __name__ == "__main__":
     unittest.main()

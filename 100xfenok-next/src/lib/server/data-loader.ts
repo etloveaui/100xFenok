@@ -62,7 +62,7 @@ type JsonFileEntry = {
 
 type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
 type JsonRecord = Record<string, unknown>;
-export type StockanalysisAssetKind = "etfs" | "stocks";
+export type StockanalysisAssetKind = "etfs" | "stocks" | "financials";
 
 async function readJson<T>(filePath: string, schema: z.ZodType<T>): Promise<T> {
   const raw = await readPublicDataFile(filePath);
@@ -109,7 +109,7 @@ async function readOptionalJsonRecord(filePath: string): Promise<JsonRecord | nu
 
 export function normalizeStockanalysisAssetKind(value: string): StockanalysisAssetKind | null {
   const normalized = value.trim().toLowerCase();
-  if (normalized === "etfs" || normalized === "stocks") return normalized;
+  if (normalized === "etfs" || normalized === "stocks" || normalized === "financials") return normalized;
   return null;
 }
 
@@ -536,6 +536,7 @@ export async function getStockanalysisManifest() {
   const baseDir = path.join(PUBLIC_DATA_ROOT, "stockanalysis");
   const etfsDir = path.join(baseDir, "etfs");
   const stocksDir = path.join(baseDir, "stocks");
+  const financialsDir = path.join(baseDir, "financials");
   const backfillDir = path.join(baseDir, "backfill");
   const surfacesDir = path.join(baseDir, "surfaces");
   const universePath = path.join(baseDir, "etf_universe.json");
@@ -543,12 +544,13 @@ export async function getStockanalysisManifest() {
   const latestBackfillPath = path.join(backfillDir, "latest.json");
   const surfaceIndexPath = path.join(surfacesDir, "index.json");
 
-  const [meta, topLevel, etfs, stocks, backfill, surfaces, universe, index, latestBackfill, surfaceIndex] =
+  const [meta, topLevel, etfs, stocks, financials, backfill, surfaces, universe, index, latestBackfill, surfaceIndex] =
     await Promise.all([
       getBaseMeta("stockanalysis"),
       buildJsonSample(baseDir, "/data/stockanalysis", 20),
       buildJsonSample(etfsDir, "/data/stockanalysis/etfs", 30),
       buildJsonSample(stocksDir, "/data/stockanalysis/stocks", 30),
+      buildJsonSample(financialsDir, "/data/stockanalysis/financials", 30),
       buildJsonSample(backfillDir, "/data/stockanalysis/backfill", 20),
       buildJsonSample(surfacesDir, "/data/stockanalysis/surfaces", 30),
       readOptionalJsonRecord(universePath),
@@ -581,11 +583,13 @@ export async function getStockanalysisManifest() {
       topLevelCount: topLevel.count,
       etfFileCount: etfs.count,
       stockFileCount: stocks.count,
+      financialFileCount: financials.count,
       backfillFileCount: backfill.count,
       surfaceFileCount: surfaces.count,
       topLevelSample: topLevel.sample,
       etfSample: etfs.sample,
       stockSample: stocks.sample,
+      financialSample: financials.sample,
       backfillSample: backfill.sample,
       surfaceSample: surfaces.sample,
       etfUniverse: universe ? "/data/stockanalysis/etf_universe.json" : null,

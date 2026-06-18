@@ -10,8 +10,9 @@
 
 This folder preserves StockAnalysis as a separate 100x DataPack source layer.
 It is used for ETF holdings, ETF metadata, quote/history cross-checks, stock
-overview snapshots, and market event surfaces such as new ETFs, IPOs,
-corporate actions, earnings calendars, market movers, and industry maps.
+overview snapshots, stock financial statement cross-check candidates, and
+market event surfaces such as new ETFs, IPOs, corporate actions, earnings
+calendars, market movers, and industry maps.
 
 The full ETF universe is stored separately from deep ETF payloads. Universe
 refresh is lightweight; deep holdings/history backfill is intentionally chunked
@@ -20,9 +21,11 @@ with `--universe-backfill --offset --limit-etfs` to avoid large request bursts.
 Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
 confirmed stable payloads (`new_etfs`, `etf_screener`, `actions_recent`,
-`earnings_calendar`). Stock financial statements remain in the probe phase until
-schema coverage is promoted, but the probe now has a fixture smoke path for the
-devalue decoder and normalized statement rows.
+`earnings_calendar`). v1.1 promotes stock financial statements for a scoped
+stock focus set into `financials/{TICKER}.json` with runtime field-count and
+period-count sentinels. Those statements are preserved as cross-check
+candidates and must not override Yahoo/current or future SEC EDGAR financial
+statement SSOTs.
 
 ## Structure
 
@@ -35,6 +38,9 @@ stockanalysis/
 │   ├── TQQQ.json
 │   └── ...
 ├── stocks/
+│   ├── AAPL.json
+│   └── ...
+├── financials/
 │   ├── AAPL.json
 │   └── ...
 └── surfaces/
@@ -54,8 +60,8 @@ stockanalysis/
 - Market movers and industry maps: cross-check/source-enrichment layer.
 - ETF quote/history/overview: cross-check and fallback to Yahoo Finance.
 - Stock overview/quote/history: cross-check and fallback only.
-- Stock financial statements: not covered in v1; use existing Yahoo/Global
-  Scouter/SEC paths until the devalue parser is promoted.
+- Stock financial statements: cross-check candidate only. Use existing
+  Yahoo/current and future SEC EDGAR paths as valuation SSOTs.
 
 ## Normalized Payload
 
@@ -124,6 +130,29 @@ Surface payload:
 }
 ```
 
+Financials payload:
+
+```json
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "AAPL",
+  "role": "financial statement cross-check candidate; not valuation SSOT",
+  "statements": {
+    "annual": {
+      "income": {
+        "periods": ["2025-09-27", "2024-09-28"],
+        "rows": [
+          {"field": "revenue", "title": "Revenue", "values": [391035000000, 383285000000]}
+        ]
+      }
+    }
+  },
+  "summary": {}
+}
+```
+
 ## Update Modes
 
 ```bash
@@ -132,6 +161,9 @@ python3 scripts/fetch-stockanalysis.py --discover-etf-universe --universe-only
 
 # Normal focused refresh: universe + default focus ETF list + selected stocks
 python3 scripts/fetch-stockanalysis.py --discover-etf-universe --stocks AAPL,NVDA,PLTR
+
+# Focused stock financial statement refresh
+python3 scripts/fetch-stockanalysis.py --stocks AAPL,NVDA,PLTR --fetch-financials
 
 # Refresh high-value source surfaces only
 python3 scripts/fetch-stockanalysis.py --fetch-surfaces --surface-set core --surfaces-only

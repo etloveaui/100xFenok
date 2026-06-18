@@ -251,6 +251,7 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
             "countries": sa_norm.get("countries"),
             "yahoo_funds_data_available": bool(data.get("funds_data")),
         } if asset_type == "etf" else None,
+        "financials": None,
         "sources": {
             "yf": bool(yf_payload),
             "stockanalysis": bool(sa_payload),
@@ -276,8 +277,9 @@ def main() -> None:
     yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
     sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
     sa_stock_files = {p.stem: p for p in (DATA / "stockanalysis" / "stocks").glob("*.json")}
+    sa_financial_files = {p.stem: p for p in (DATA / "stockanalysis" / "financials").glob("*.json")}
     slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
-    tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(slick_files))
+    tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files))
 
     rows = []
     generated_at = now_iso()
@@ -285,9 +287,22 @@ def main() -> None:
         yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
         sa_path = sa_etf_files.get(ticker) or sa_stock_files.get(ticker)
         sa_payload = load_json(sa_path) if sa_path else None
+        sa_financials = load_json(sa_financial_files[ticker]) if ticker in sa_financial_files else None
         slick_payload = load_json(slick_files[ticker]) if ticker in slick_files else None
         payload = build_one(ticker, yf_payload, sa_payload, slick_payload)
         payload["generated_at"] = generated_at
+        if sa_financials and payload["asset_type"] != "etf":
+            payload["financials"] = {
+                "stockanalysis": {
+                    "available": True,
+                    "role": "cross-check candidate; not valuation SSOT",
+                    "fetched_at": sa_financials.get("fetched_at"),
+                    "summary": sa_financials.get("summary"),
+                    "source_file": f"stockanalysis/financials/{ticker}.json",
+                }
+            }
+            payload["sources"]["stockanalysis_financials"] = True
+            payload["source_files"]["stockanalysis_financials"] = f"stockanalysis/financials/{ticker}.json"
         rel = Path("tickers") / f"{ticker}.json"
         write_json(OUT / rel, payload)
         write_json(PUBLIC_OUT / rel, payload)
@@ -306,6 +321,7 @@ def main() -> None:
             "yf/finance/*.json",
             "stockanalysis/etfs/*.json",
             "stockanalysis/stocks/*.json",
+            "stockanalysis/financials/*.json",
             "slickcharts/stocks/*.json",
         ],
         "resolver": {
@@ -315,6 +331,7 @@ def main() -> None:
         "coverage": {
             "yf": sum(1 for row in rows if row["sources"]["yf"]),
             "stockanalysis": sum(1 for row in rows if row["sources"]["stockanalysis"]),
+            "stockanalysis_financials": sum(1 for row in rows if row["sources"].get("stockanalysis_financials")),
             "slickcharts": sum(1 for row in rows if row["sources"]["slickcharts"]),
             "etf": sum(1 for row in rows if row["asset_type"] == "etf"),
             "stock": sum(1 for row in rows if row["asset_type"] == "stock"),

@@ -1,12 +1,13 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "schema_version": "stockanalysis/v1",
-  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, quote/history cross-checks, and market event surfaces.",
+  "description": "StockAnalysis source layer for ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, and market event surfaces.",
   "primary_paths": {
     "index": "index.json",
     "etf_universe": "etf_universe.json",
     "etf": "etfs/{TICKER}.json",
     "stock": "stocks/{TICKER}.json",
+    "financials": "financials/{TICKER}.json",
     "surface_index": "surfaces/index.json",
     "surface": "surfaces/{NAME}.json"
   },
@@ -18,7 +19,18 @@
     "fetched_at": "ISO-8601 UTC timestamp",
     "endpoints": "object of endpoint paths",
     "normalized": "DataPack-facing normalized subset",
-    "raw": "raw endpoint payloads"
+    "raw": "raw endpoint payloads",
+    "financials_path": "optional path to financials/{TICKER}.json when stock financial candidates were fetched"
+  },
+  "financial_fields": {
+    "role": "financial statement cross-check candidate; not valuation SSOT",
+    "statements.annual": "annual income, balance_sheet, cash_flow, ratios rows",
+    "statements.quarterly": "quarterly income, balance_sheet, cash_flow, ratios rows",
+    "statements.*.*.periods": "statement period axis, descending with optional TTM first",
+    "statements.*.*.rows[].field": "source financial field identifier",
+    "statements.*.*.rows[].title": "source financial row title",
+    "statements.*.*.rows[].values": "values aligned to periods",
+    "summary": "field_count and period_count sentinels per statement"
   },
   "surface_fields": {
     "surface": "surface identifier such as etf_screener, actions_recent, earnings_calendar",
