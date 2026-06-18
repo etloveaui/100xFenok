@@ -21,6 +21,7 @@ interface EventData {
   ipoCalendar: SurfaceDoc;
   ipoRecent: SurfaceDoc;
   ipoFilings: SurfaceDoc;
+  ipoStats: SurfaceDoc;
   ipoWithdrawn: SurfaceDoc;
   industries: SurfaceDoc;
   technology: SurfaceDoc;
@@ -38,6 +39,7 @@ const SURFACES: Record<keyof EventData, string> = {
   ipoCalendar: "ipos_calendar",
   ipoRecent: "ipos_recent",
   ipoFilings: "ipos_filings",
+  ipoStats: "ipos_statistics",
   ipoWithdrawn: "ipos_withdrawn",
   industries: "industries_all",
   technology: "sector_technology",
@@ -193,7 +195,7 @@ export default function MarketEventsClient() {
   const tabCounts = useMemo(() => ({
     earnings: countRows(data?.earnings),
     actions: countRows(data?.actions) + countRows(data?.splits),
-    ipo: countRows(data?.ipoCalendar) + countRows(data?.ipoRecent) + countRows(data?.ipoFilings) + countRows(data?.ipoWithdrawn),
+    ipo: countRows(data?.ipoCalendar) + countRows(data?.ipoRecent) + countRows(data?.ipoFilings) + countRows(data?.ipoStats) + countRows(data?.ipoWithdrawn),
     industry: countRows(data?.industries),
     movers: countRows(data?.gainers) + countRows(data?.losers) + countRows(data?.active),
   }), [data]);
@@ -334,6 +336,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
   const calendar = rowsOf(data?.ipoCalendar).slice(0, 12);
   const recent = rowsOf(data?.ipoRecent).slice(0, 10);
   const filings = rowsOf(data?.ipoFilings).slice(0, 10);
+  const stats = rowsOf(data?.ipoStats).slice(0, 8);
   const withdrawn = rowsOf(data?.ipoWithdrawn).slice(0, 6);
   return (
     <div className="grid gap-4 xl:grid-cols-2">
@@ -368,6 +371,18 @@ function IpoPanel({ data }: { data: EventData | null }) {
           {filings.length ? filings.map((row) => (
             makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.filing_date)} · ${text(row.price_range)}`, text(row.shares_offered))
           )) : <EmptyRows label="신규 신청 목록이 없습니다." />}
+        </div>
+      </section>
+      <section className="panel">
+        <div className="panel-h">
+          <h2>IPO 활동</h2>
+          <span className="desc">{dateText(data?.ipoStats?.fetched_at)} · {countRows(data?.ipoStats).toLocaleString("ko-KR")}개</span>
+        </div>
+        <div className="mv-col">
+          {stats.length ? stats.map((row) => {
+            const symbol = rowSymbol(row);
+            return makeRow(row, `${symbol} · ${text(row.name)}`, `${dateText(row.date)} · IPO 활동 포착`, text(row.exchange), symbol ? stockHref(symbol) : undefined);
+          }) : <EmptyRows label="IPO 활동 데이터가 없습니다." />}
         </div>
       </section>
       <section className="panel">

@@ -171,18 +171,20 @@ Dedicated route or drawer surfaces:
    - `/market/events` is the first dedicated destination for earnings,
      corporate actions, IPO, industry, and market-mover surfaces. It reads the
      surface JSON/API directly and keeps Explore out of the catalog role.
+   - The IPO tab now consumes the collected `ipos_statistics` surface as an
+     IPO activity panel, so the dedicated route uses every IPO surface gathered
+     in the first StockAnalysis pass instead of leaving it catalog-only.
    - Remaining route design: decide whether IPO, industry, and movers deserve
      their own deeper subroutes after `/market/events` stabilizes.
-5. **Event module merge**: combine `WeekAheadCard` and
-   `MarketEventSurfacesCard` into one "Event Risk" preview.
-   Completed in the fourth cleanup slice:
-   - `MarketEventSurfacesCard` now reads both macro calendar JSON
-     (`usd-calendar.json`, `prev-values.json`) and StockAnalysis event
-     surfaces through one loader/cache.
-   - Public `/explore` no longer renders a separate `WeekAheadCard`.
-   - The merged card uses compact tabs for Macro, Corporate, and Session risk,
-     keeping mobile height controlled while preserving drilldown rows and Data
-     Lab evidence access.
+5. **Event module split**: keep event data complete in a dedicated route before
+   deciding what, if anything, re-enters Explore.
+   Current route state:
+   - Public `/explore` no longer renders `WeekAheadCard` or
+     `MarketEventSurfacesCard`.
+   - `/market/events` is the canonical event workspace for earnings, corporate
+     actions, IPO, industry, and market movers.
+   - A future Explore event teaser must be one compact headline that links to
+     `/market/events`, not another embedded catalog.
 6. **Stock workbench merge**: combine `RevisionMoversCard`,
    `ActionCandidatesCard`, and the returns/dividend/mover leaderboard into one
    preview.
@@ -193,8 +195,8 @@ Dedicated route or drawer surfaces:
    - The merged card keeps compact tabs for Action, Revision, Movers, and
      Returns/Dividends. Action retains the guru/value/index sub-filters without
      expanding the whole page.
-   - Daily StockAnalysis mover gateways stay in `StockanalysisSurfaceInsightCard`
-     to avoid duplicate same-page fetch/render of the same market mover rows.
+   - Daily mover data now belongs in `/market/events`; Explore should avoid
+     duplicate same-page fetch/render of the same market mover rows.
 7. **Mobile smoke gate**: 390px and 1440px `/explore`, overflow 0, first-screen
    contains L1 + at least one L2 signal, no metadata-only cards.
 8. **Dedicated tab gate before Explore re-entry**: a data family can return to

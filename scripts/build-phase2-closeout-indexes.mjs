@@ -103,6 +103,7 @@ const CATEGORY_USAGE = {
   "sec-13f": "superinvestors, smart money panels, screener action reasons",
   sentiment: "dashboard, market valuation sentiment pulses, signal strip",
   slickcharts: "leaderboards, index structure, holdings, returns, dividends, action reasons",
+  stockanalysis: "ETF workspace, market event route, ticker fallback APIs, Admin Data Lab collection visibility",
   yardney: "bond-yield valuation card",
   yf: "portfolio and stock detail quote fallbacks",
 };
@@ -127,6 +128,31 @@ const DYNAMIC_PATTERNS = [
     pattern: "yf/finance/*.json",
     category: "yf",
     usage: "Portfolio and stock detail quote fallbacks load ticker finance files on demand",
+  },
+  {
+    pattern: "stockanalysis/etfs/*.json",
+    category: "stockanalysis",
+    usage: "ETF detail pages and StockAnalysis asset API load per-ETF detail files on demand",
+  },
+  {
+    pattern: "stockanalysis/stocks/*.json",
+    category: "stockanalysis",
+    usage: "StockAnalysis asset API loads per-stock overview files on demand",
+  },
+  {
+    pattern: "stockanalysis/financials/*.json",
+    category: "stockanalysis",
+    usage: "StockAnalysis financials API loads per-ticker financial files on demand",
+  },
+  {
+    pattern: "stockanalysis/surfaces/*.json",
+    category: "stockanalysis",
+    usage: "Market events, ETF snapshot, and ticker surface APIs load collected StockAnalysis surfaces on demand",
+  },
+  {
+    pattern: "stockanalysis/backfill/*.json",
+    category: "stockanalysis",
+    usage: "Admin Data Lab reads ETF backfill index, incremental proof, and pending ledger artifacts",
   },
 ];
 

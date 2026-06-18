@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-18T14:05:35.261Z",
+  "generated_at": "2026-06-18T14:37:59.071Z",
   "totals": {
     "rootJsonCount": 14371,
     "publicJsonCount": 14424,
@@ -8,7 +8,7 @@
     "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 54,
     "directDataFetchCount": 108,
-    "dynamicPatternCount": 4
+    "dynamicPatternCount": 9
   },
   "mirror_sync_status": "partial",
   "generatedIndexes": [
@@ -231,10 +231,10 @@
       "rootJsonCount": 5026,
       "publicJsonCount": 5026,
       "directFetchCount": 7,
-      "dynamicPatternCount": 0,
+      "dynamicPatternCount": 5,
       "generatedSourceCount": 0,
       "status": "active",
-      "usage": "manifest/catalog coverage"
+      "usage": "ETF workspace, market event route, ticker fallback APIs, Admin Data Lab collection visibility"
     },
     {
       "category": "yardney",
@@ -1146,6 +1146,31 @@
       "pattern": "yf/finance/*.json",
       "category": "yf",
       "usage": "Portfolio and stock detail quote fallbacks load ticker finance files on demand"
+    },
+    {
+      "pattern": "stockanalysis/etfs/*.json",
+      "category": "stockanalysis",
+      "usage": "ETF detail pages and StockAnalysis asset API load per-ETF detail files on demand"
+    },
+    {
+      "pattern": "stockanalysis/stocks/*.json",
+      "category": "stockanalysis",
+      "usage": "StockAnalysis asset API loads per-stock overview files on demand"
+    },
+    {
+      "pattern": "stockanalysis/financials/*.json",
+      "category": "stockanalysis",
+      "usage": "StockAnalysis financials API loads per-ticker financial files on demand"
+    },
+    {
+      "pattern": "stockanalysis/surfaces/*.json",
+      "category": "stockanalysis",
+      "usage": "Market events, ETF snapshot, and ticker surface APIs load collected StockAnalysis surfaces on demand"
+    },
+    {
+      "pattern": "stockanalysis/backfill/*.json",
+      "category": "stockanalysis",
+      "usage": "Admin Data Lab reads ETF backfill index, incremental proof, and pending ledger artifacts"
     }
   ],
   "component_as_of": {
