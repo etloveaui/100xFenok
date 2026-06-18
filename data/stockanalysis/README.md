@@ -44,6 +44,12 @@ period-count sentinels. Those statements are preserved as cross-check
 candidates and must not override Yahoo/current or future SEC EDGAR financial
 statement SSOTs.
 
+The `/market/events` industry tab consumes `industries_all`,
+`sector_technology`, and `industry_semiconductors` directly. The
+`qa:stockanalysis` route smoke verifies that those surfaces still contain enough
+rows and the fields required by the industry map, sort/filter controls, and CSV
+export.
+
 ## Structure
 
 ```

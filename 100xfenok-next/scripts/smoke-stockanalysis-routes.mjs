@@ -128,10 +128,39 @@ async function checkSurfaceContracts(root) {
   const firstWeekly = weekly?.tables?.[0]?.records?.[0];
   assert(firstWeekly?.change_1w, "weekly gainer first row missing change_1w");
 
+  const industries = await fetchJson(`${root}/api/data/stockanalysis/surfaces/industries_all`);
+  const industryRows = industries?.tables?.[0]?.records ?? [];
+  const firstIndustry = industryRows[0];
+  assert(industries?.counts?.rows >= 100, `industry map rows unexpectedly low: ${industries?.counts?.rows}`);
+  assert(firstIndustry?.industry_name, "industry map first row missing industry_name");
+  assert(firstIndustry?.market_cap, "industry map first row missing market_cap");
+  assert(firstIndustry?.["1y_change"], "industry map first row missing 1y_change");
+  assert(firstIndustry?.profit_margin, "industry map first row missing profit_margin");
+
+  const technology = await fetchJson(`${root}/api/data/stockanalysis/surfaces/sector_technology`);
+  const firstTechnology = technology?.tables?.[0]?.records?.[0];
+  assert(technology?.counts?.rows >= 100, `technology sector rows unexpectedly low: ${technology?.counts?.rows}`);
+  assert(firstTechnology?.symbol, "technology sector first row missing symbol");
+  assert(firstTechnology?.company_name, "technology sector first row missing company_name");
+  assert(firstTechnology?.market_cap, "technology sector first row missing market_cap");
+
+  const semiconductors = await fetchJson(`${root}/api/data/stockanalysis/surfaces/industry_semiconductors`);
+  const firstSemiconductor = semiconductors?.tables?.[0]?.records?.[0];
+  assert(semiconductors?.counts?.rows >= 50, `semiconductor industry rows unexpectedly low: ${semiconductors?.counts?.rows}`);
+  assert(firstSemiconductor?.symbol, "semiconductor industry first row missing symbol");
+  assert(firstSemiconductor?.company_name, "semiconductor industry first row missing company_name");
+  assert(firstSemiconductor?.market_cap, "semiconductor industry first row missing market_cap");
+
   return {
     index: index.counts,
     premarket: { rows: premarket?.counts?.rows, first: firstPremarket?.symbol },
     weekly: { rows: weekly?.counts?.rows, first: firstWeekly?.symbol },
+    industry: {
+      rows: industries?.counts?.rows,
+      first: firstIndustry?.industry_name,
+      technologyRows: technology?.counts?.rows,
+      semiconductorRows: semiconductors?.counts?.rows,
+    },
   };
 }
 

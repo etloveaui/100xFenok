@@ -181,6 +181,10 @@ Dedicated route or drawer surfaces:
    - The IPO tab now consumes the collected `ipos_statistics` surface as an
      IPO activity panel, so the dedicated route uses every IPO surface gathered
      in the first StockAnalysis pass instead of leaving it catalog-only.
+   - The industry tab owns the industry map, condition filter, metric sort, and
+     CSV export for `industries_all`, with technology and semiconductor
+     drilldowns beside it. `qa:stockanalysis` verifies the backing industry
+     surfaces and required fields.
    - Remaining route design: decide whether IPO, industry, and movers deserve
      their own deeper subroutes after `/market/events` stabilizes.
 5. **Event module split**: keep event data complete in a dedicated route before
