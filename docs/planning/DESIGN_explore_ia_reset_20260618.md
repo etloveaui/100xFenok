@@ -2,7 +2,7 @@
 
 Date: 2026-06-18
 Scope: `100xfenok-next/src/app/explore`
-Status: Inventory accepted; first cleanup slice implemented.
+Status: Inventory accepted; first cleanup slices implemented.
 
 ## Problem
 
@@ -151,6 +151,12 @@ Dedicated route or drawer surfaces:
    insight CTA such as new ETF count + top leveraged/single-stock filter counts.
 4. **SurfaceInsight collapse**: replace `StockanalysisSurfaceInsightCard` with
    either a compact "Market movers / IPO / Industry" gateway or drilldown links.
+   Completed in the second cleanup slice:
+   - Existing StockAnalysis surface API reads were retained.
+   - Public `/explore` now renders the surface block as three data-driven
+     gateways: movers, IPO, and industry.
+   - Detail-heavy rows were collapsed into counts, 1-3 examples, and route
+     links to `/screener`, `/market-valuation`, and `/sectors`.
 5. **Event module merge**: combine `WeekAheadCard` and
    `MarketEventSurfacesCard` into one "Event Risk" preview.
 6. **Stock workbench merge**: combine `RevisionMoversCard`,

@@ -140,10 +140,6 @@ function cleanSymbol(value: string | null | undefined): string {
   return String(value || "").replace(/^\$/, "").trim().toUpperCase();
 }
 
-function moverPct(row: MarketMover): string {
-  return row.pct_change || row.change_1w || row.change_1m || row.change_ytd || "-";
-}
-
 function parsePct(value: string | null | undefined): number {
   const parsed = Number(String(value || "").replace("%", "").replace(",", "").trim());
   return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
@@ -222,42 +218,43 @@ export default function StockanalysisSurfaceInsightCard() {
   }, []);
 
   const gainers = useMemo(() => rows(data?.gainers).slice(0, 3), [data]);
-  const losers = useMemo(() => rows(data?.losers).slice(0, 2), [data]);
-  const active = useMemo(() => rows(data?.active).slice(0, 2), [data]);
-  const gainersWeek = useMemo(() => rows(data?.gainersWeek).slice(0, 4), [data]);
-  const gainersMonth = useMemo(() => rows(data?.gainersMonth).slice(0, 4), [data]);
-  const losersYtd = useMemo(() => rows(data?.losersYtd).slice(0, 4), [data]);
-  const ipoCalendar = useMemo(() => rows(data?.ipoCalendar).slice(0, 3), [data]);
-  const ipoRecent = useMemo(() => rows(data?.ipoRecent).slice(0, 2), [data]);
-  const ipoFilings = useMemo(() => rows(data?.ipoFilings).slice(0, 4), [data]);
-  const ipoStatistics = useMemo(() => rows(data?.ipoStatistics).slice(0, 3), [data]);
-  const ipoWithdrawn = useMemo(() => rows(data?.ipoWithdrawn).slice(0, 3), [data]);
+  const losers = useMemo(() => rows(data?.losers).slice(0, 1), [data]);
+  const active = useMemo(() => rows(data?.active).slice(0, 1), [data]);
+  const ipoCalendar = useMemo(() => rows(data?.ipoCalendar).slice(0, 1), [data]);
+  const ipoRecent = useMemo(() => rows(data?.ipoRecent).slice(0, 1), [data]);
+  const ipoFilings = useMemo(() => rows(data?.ipoFilings).slice(0, 1), [data]);
   const industryLeaders = useMemo(
     () => rows(data?.industriesAll)
       .filter((row) => row.industry_name)
       .sort((a, b) => parsePct(b["1y_change"]) - parsePct(a["1y_change"]))
-      .slice(0, 3),
+      .slice(0, 2),
     [data],
   );
-  const semis = useMemo(() => rows(data?.semiconductors).slice(0, 3), [data]);
+  const semis = useMemo(() => rows(data?.semiconductors).slice(0, 1), [data]);
   const groupedIndustryTables = countTables(data?.industriesGrouped);
   const groupedIndustryRows = countRows(data?.industriesGrouped);
-
-  const totalRows =
+  const moverRows =
     (countRows(data?.gainers) ?? 0)
     + (countRows(data?.losers) ?? 0)
     + (countRows(data?.active) ?? 0)
     + (countRows(data?.gainersWeek) ?? 0)
     + (countRows(data?.gainersMonth) ?? 0)
-    + (countRows(data?.losersYtd) ?? 0)
-    + (countRows(data?.ipoCalendar) ?? 0)
+    + (countRows(data?.losersYtd) ?? 0);
+  const ipoRows =
+    (countRows(data?.ipoCalendar) ?? 0)
     + (countRows(data?.ipoRecent) ?? 0)
     + (countRows(data?.ipoFilings) ?? 0)
     + (countRows(data?.ipoStatistics) ?? 0)
-    + (countRows(data?.ipoWithdrawn) ?? 0)
-    + (countRows(data?.industriesAll) ?? 0)
+    + (countRows(data?.ipoWithdrawn) ?? 0);
+  const industryRows =
+    (countRows(data?.industriesAll) ?? 0)
     + (countRows(data?.industriesGrouped) ?? 0)
     + (countRows(data?.semiconductors) ?? 0);
+
+  const totalRows =
+    moverRows
+    + ipoRows
+    + industryRows;
 
   return (
     <section className="panel">
@@ -277,10 +274,13 @@ export default function StockanalysisSurfaceInsightCard() {
           <span className="pc num neutral">...</span>
         </div>
       ) : (
-        <div className="panel-b grid gap-3 lg:grid-cols-2">
+        <div className="panel-b grid gap-3 lg:grid-cols-3">
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">오늘 무버</div>
-            {gainers.map((row) => (
+            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
+              <span>무버 게이트</span>
+              <span>{fmtCount(moverRows)}행</span>
+            </div>
+            {gainers.slice(0, 2).map((row) => (
               <StockLink
                 key={`g-${row.symbol}`}
                 symbol={row.symbol}
@@ -298,7 +298,7 @@ export default function StockanalysisSurfaceInsightCard() {
                 value={row.pct_change}
               />
             ))}
-            {active.slice(0, 1).map((row) => (
+            {active.map((row) => (
               <StockLink
                 key={`a-${row.symbol}`}
                 symbol={row.symbol}
@@ -307,52 +307,21 @@ export default function StockanalysisSurfaceInsightCard() {
                 value={row.pct_change}
               />
             ))}
+            <InfoRow
+              name="기간 모멘텀 표면"
+              detail={`주간 ${fmtCount(countRows(data?.gainersWeek))} · 월간 ${fmtCount(countRows(data?.gainersMonth))} · YTD ${fmtCount(countRows(data?.losersYtd))}`}
+              value={asOf(data?.gainersWeek?.fetched_at, data?.gainersMonth?.fetched_at, data?.losersYtd?.fetched_at)}
+            />
+            <TransitionLink href="/screener" className="text-[11px] font-black text-brand-interactive hover:underline">
+              스크리너로 이동
+            </TransitionLink>
           </div>
 
-          {(gainersWeek.length > 0 || gainersMonth.length > 0 || losersYtd.length > 0) && (
-            <div className="mv-col">
-              <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">기간 모멘텀</div>
-              {gainersWeek.length > 0 && (
-                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">주간 상승</div>
-              )}
-              {gainersWeek.map((row) => (
-                <StockLink
-                  key={`gw-${row.symbol}`}
-                  symbol={row.symbol}
-                  name={row.company_name}
-                  detail={`가격 ${row.stock_price || "-"} · 거래 ${row.volume || "-"}`}
-                  value={moverPct(row)}
-                />
-              ))}
-              {gainersMonth.length > 0 && (
-                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">월간 상승</div>
-              )}
-              {gainersMonth.map((row) => (
-                <StockLink
-                  key={`gm-${row.symbol}`}
-                  symbol={row.symbol}
-                  name={row.company_name}
-                  detail={`가격 ${row.stock_price || "-"} · 거래 ${row.volume || "-"}`}
-                  value={moverPct(row)}
-                />
-              ))}
-              {losersYtd.length > 0 && (
-                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">YTD 하락</div>
-              )}
-              {losersYtd.map((row) => (
-                <StockLink
-                  key={`ly-${row.symbol}`}
-                  symbol={row.symbol}
-                  name={row.company_name}
-                  detail={`가격 ${row.stock_price || "-"} · 거래 ${row.volume || "-"}`}
-                  value={moverPct(row)}
-                />
-              ))}
-            </div>
-          )}
-
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">IPO 파이프라인</div>
+            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
+              <span>IPO 게이트</span>
+              <span>{fmtCount(ipoRows)}행</span>
+            </div>
             {ipoCalendar.map((row) => (
               <StockLink
                 key={`ipo-c-${row.symbol}`}
@@ -371,9 +340,6 @@ export default function StockanalysisSurfaceInsightCard() {
                 value={row.return || "-"}
               />
             ))}
-            {ipoFilings.length > 0 && (
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">예정 상장(파일링)</div>
-            )}
             {ipoFilings.map((row) => (
               <StockLink
                 key={`ipo-f-${row.symbol}`}
@@ -383,32 +349,21 @@ export default function StockanalysisSurfaceInsightCard() {
                 value={row.shares_offered || row.deal_size || "-"}
               />
             ))}
-            {ipoStatistics.length > 0 && (
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">IPO 통계 표면</div>
-            )}
-            {ipoStatistics.map((row) => (
-              <InfoRow
-                key={`ipo-s-${row.symbol || row.date}`}
-                name={row.name || row.company_name || row.symbol}
-                detail={`${row.date || row.ipo_date || "-"} · ${row.symbol || "-"}`}
-                value="통계"
-              />
-            ))}
-            {ipoWithdrawn.length > 0 && (
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">철회 IPO</div>
-            )}
-            {ipoWithdrawn.map((row) => (
-              <InfoRow
-                key={`ipo-w-${row.symbol || row.withdrawn_date || row.date}`}
-                name={row.company_name || row.name || row.symbol}
-                detail={`${row.withdrawn_date || row.date || "-"} · ${row.symbol || "-"}`}
-                value={row.shares_offered || row.price_range || "-"}
-              />
-            ))}
+            <InfoRow
+              name="IPO 통계·철회 표면"
+              detail={`통계 ${fmtCount(countRows(data?.ipoStatistics))} · 철회 ${fmtCount(countRows(data?.ipoWithdrawn))}`}
+              value={asOf(data?.ipoStatistics?.fetched_at, data?.ipoWithdrawn?.fetched_at)}
+            />
+            <TransitionLink href="/market-valuation" className="text-[11px] font-black text-brand-interactive hover:underline">
+              시장 원장으로 이동
+            </TransitionLink>
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">산업 1년 강세</div>
+            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
+              <span>산업 게이트</span>
+              <span>{fmtCount(industryRows)}행</span>
+            </div>
             {industryLeaders.map((row) => (
               <div key={`ind-${row.industry_name}`} className="mv-row">
                 <span className="co">
@@ -430,10 +385,6 @@ export default function StockanalysisSurfaceInsightCard() {
                 />
               </>
             ) : null}
-          </div>
-
-          <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">반도체 표면</div>
             {semis.map((row) => (
               <StockLink
                 key={`semi-${row.symbol}`}
@@ -443,6 +394,9 @@ export default function StockanalysisSurfaceInsightCard() {
                 value={row.pct_change}
               />
             ))}
+            <TransitionLink href="/sectors" className="text-[11px] font-black text-brand-interactive hover:underline">
+              섹터로 이동
+            </TransitionLink>
           </div>
         </div>
       )}
