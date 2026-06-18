@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type SectionKey = "earnings" | "actions" | "markets" | "etfs" | "ipo" | "industry";
-type AssetKind = "stock" | "etf";
+export type SectionKey = "earnings" | "actions" | "markets" | "etfs" | "ipo" | "industry";
+export type AssetKind = "stock" | "etf";
 
-type SurfaceMatch = {
+export type SurfaceMatch = {
   surface: string;
   label: string;
   fetched_at?: string | null;
@@ -13,7 +13,7 @@ type SurfaceMatch = {
   matches: Array<Record<string, unknown>>;
 };
 
-type TickerSurfacePayload = {
+export type TickerSurfacePayload = {
   ticker: string;
   generated_at?: string | null;
   counts?: {
@@ -36,7 +36,7 @@ const SECTION_ORDER: SectionKey[] = ["earnings", "actions", "markets", "etfs", "
 const surfaceCache: Record<string, TickerSurfacePayload | null> = {};
 const surfacePending: Record<string, Promise<TickerSurfacePayload | null>> = {};
 
-function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promise<TickerSurfacePayload | null> {
+export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promise<TickerSurfacePayload | null> {
   const symbol = ticker.trim().toUpperCase();
   const cacheKey = `${symbol}:${assetKind ?? "all"}`;
   if (!symbol) return Promise.resolve(null);

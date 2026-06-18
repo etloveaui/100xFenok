@@ -22,7 +22,7 @@ import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loa
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
-import TickerSurfaceEventsCard from "./TickerSurfaceEventsCard";
+import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -279,6 +279,48 @@ function rawText(value: unknown): string {
 function factNumber(source: any, key: string): number | null {
   const value = source?.facts?.[key]?.value;
   return isFiniteNumber(value) ? value : null;
+}
+
+function surfaceRowsReturned(payload: TickerSurfacePayload | null | undefined): number {
+  const value = payload?.counts?.rows_returned;
+  return isFiniteNumber(value) ? value : 0;
+}
+
+function parseSurfaceNumber(value: unknown): number | null {
+  if (isFiniteNumber(value)) return value;
+  if (typeof value !== "string") return null;
+  const parsed = Number(value.replace(/[%,$]/g, "").replace(/,/g, "").trim());
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function cleanSurfaceText(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  return text && text !== "-" ? text : null;
+}
+
+function firstEtfSurfaceRow(payload: TickerSurfacePayload | null | undefined): { label: string | null; row: Record<string, unknown> } | null {
+  const surfaces = payload?.sections?.etfs ?? [];
+  for (const surface of surfaces) {
+    for (const row of surface.matches ?? []) {
+      if (row && typeof row === "object" && !Array.isArray(row)) {
+        return { label: surface.label ?? null, row };
+      }
+    }
+  }
+  return null;
+}
+
+function etfSurfaceFallback(payload: TickerSurfacePayload | null | undefined, symbol: string) {
+  const match = firstEtfSurfaceRow(payload);
+  const row = match?.row ?? null;
+  return {
+    name: cleanSurfaceText(row?.n) ?? cleanSurfaceText(row?.fund_name) ?? cleanSurfaceText(row?.name) ?? symbol,
+    category: cleanSurfaceText(row?.assetClass) ?? match?.label ?? "ETF 표면",
+    price: parseSurfaceNumber(row?.price ?? row?.stock_price),
+    changePct: parseSurfaceNumber(row?.change ?? row?.pct_change),
+    inceptionDate: cleanSurfaceText(row?.inceptionDate),
+  };
 }
 
 function toFractionSeries(data: NumberSeries | null | undefined): NumberSeries {
@@ -655,10 +697,10 @@ function KV({ label, value }: { label: string; value: string }) {
 // StockDetailClient main
 // ---------------------------------------------------------------------------
 
-export default function StockDetailClient({ ticker }: { ticker: string }) {
+export default function StockDetailClient({ ticker, assetHint }: { ticker: string; assetHint?: "stock" | "etf" }) {
   const symbol = ticker.trim().toUpperCase();
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
-  const { data: marketFacts, loading: marketFactsLoading } = useMarketFacts(symbol);
+  const { data: marketFacts, loading: marketFactsLoading } = useMarketFacts(symbol, assetHint !== "etf");
   const canLoadStockData = row !== undefined && row !== null;
   const { detail, loading: detailLoading } = useStockDetail(symbol, canLoadStockData);
   const f13Entries = use13FData(symbol);
@@ -670,15 +712,23 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    if (assetHint === "etf") {
+      Promise.resolve().then(() => {
+        if (!cancelled) setRow(null);
+      });
+      return () => { cancelled = true; };
+    }
     loadAnalyzer().then((map) => { if (!cancelled) setRow(map?.[symbol] ?? null); });
     return () => { cancelled = true; };
-  }, [symbol]);
+  }, [assetHint, symbol]);
 
   const rowLoading = row === undefined;
   const [yfData, setYfData] = useState<any | undefined>(undefined);
   const [stockTab, setStockTab] = useState<StockTab>("overview");
   const [etfData, setEtfData] = useState<StockanalysisEtfPayload | null | undefined>(undefined);
+  const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
+  const marketFactsAssetType = marketFacts?.asset_type;
 
   useEffect(() => {
     let cancelled = false;
@@ -694,21 +744,50 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    const shouldLoadEtfData = assetHint === "etf" || marketFactsAssetType === "etf";
+    if (!shouldLoadEtfData) {
+      Promise.resolve().then(() => {
+        if (!cancelled) setEtfData(null);
+      });
+      return () => { cancelled = true; };
+    }
     Promise.resolve().then(() => {
       if (!cancelled) setEtfData(undefined);
     });
     loadStockanalysisEtf(symbol).then((d) => { if (!cancelled) setEtfData(d); });
     return () => { cancelled = true; };
-  }, [symbol]);
+  }, [assetHint, marketFactsAssetType, symbol]);
 
   useEffect(() => {
     let cancelled = false;
+    const shouldLoadEtfSurfaceData = assetHint === "etf" || marketFactsAssetType === "etf";
+    if (!shouldLoadEtfSurfaceData) {
+      Promise.resolve().then(() => {
+        if (!cancelled) setEtfSurfaceData(null);
+      });
+      return () => { cancelled = true; };
+    }
+    Promise.resolve().then(() => {
+      if (!cancelled) setEtfSurfaceData(undefined);
+    });
+    loadTickerSurfaces(symbol, "etf").then((d) => { if (!cancelled) setEtfSurfaceData(d); });
+    return () => { cancelled = true; };
+  }, [assetHint, marketFactsAssetType, symbol]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (assetHint === "etf") {
+      Promise.resolve().then(() => {
+        if (!cancelled) setFinancialCandidate(null);
+      });
+      return () => { cancelled = true; };
+    }
     Promise.resolve().then(() => {
       if (!cancelled) setFinancialCandidate(undefined);
     });
     loadStockanalysisFinancials(symbol).then((d) => { if (!cancelled) setFinancialCandidate(d); });
     return () => { cancelled = true; };
-  }, [symbol]);
+  }, [assetHint, symbol]);
 
   const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
   useEffect(() => {
@@ -724,7 +803,9 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
-  const isEtfAsset = marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf";
+  const hasEtfSurfaceData = surfaceRowsReturned(etfSurfaceData) > 0;
+  const etfSurface = etfSurfaceFallback(etfSurfaceData, symbol);
+  const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
   const isEtfOnlyAsset = isEtfAsset && !row;
   const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf"
     ? "overview"
@@ -746,7 +827,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
   // Unknown ticker
   if (!rowLoading && !row) {
-    if (marketFactsLoading || etfData === undefined) {
+    if (marketFactsLoading || etfData === undefined || etfSurfaceData === undefined) {
       return (
         <div className="stock-shell">
           <div className="panel stock-empty">
@@ -756,12 +837,18 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         </div>
       );
     }
-    if (marketFacts || etfData) {
+    if (marketFacts || etfData || hasEtfSurfaceData) {
       const identity = marketFacts?.identity ?? {};
       const quote = etfData?.normalized?.quote ?? {};
-      const displayAssetName = identity.name ?? symbol;
-      const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null);
-      const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null);
+      const displayAssetName = identity.name ?? etfSurface.name;
+      const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null) ?? etfSurface.price;
+      const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null) ?? etfSurface.changePct;
+      const category = identity.category ?? etfSurface.category;
+      const delayText = fmtDateish(quote.u) !== "—"
+        ? fmtDateish(quote.u)
+        : etfSurface.inceptionDate
+          ? `신규 ETF ${etfSurface.inceptionDate}`
+          : "데이터 지연 가능";
       return (
         <div className="stock-shell">
           <section className="stock-entity panel">
@@ -780,10 +867,10 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                       <span>{isEtfAsset ? "ETF" : marketFacts?.asset_type}</span>
                     </>
                   ) : null}
-                  {identity.category ? (
+                  {category ? (
                     <>
                       <span className="x">·</span>
-                      <span>{identity.category}</span>
+                      <span>{category}</span>
                     </>
                   ) : null}
                 </div>
@@ -791,7 +878,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               <div className="stock-price">
                 <span className="big num">{price !== null ? formatMoney(price, identity.currency ?? "USD") : "—"}</span>
                 {changePct !== null ? <span className={`stock-chip num ${changePct >= 0 ? "up" : "down"}`}>{fmtEtfSignedPct(changePct)}</span> : null}
-                <span className="delay">{fmtDateish(quote.u) !== "—" ? fmtDateish(quote.u) : "데이터 지연 가능"}</span>
+                <span className="delay">{delayText}</span>
               </div>
             </div>
             <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
@@ -812,7 +899,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           <div className="stock-body">
             {activeStockTab === "etf" ? (
               <div className="stock-summary-stack">
-                <MarketFactsDepth ticker={symbol} compact />
+                {marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
                 <TickerSurfaceEventsCard ticker={symbol} assetKind="etf" compact />
               </div>
             ) : null}
@@ -1079,7 +1166,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
               industry={industryBench}
             />
           ) : null}
-          <MarketFactsDepth ticker={symbol} compact />
+          {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
           <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
       </div>
 
@@ -1422,8 +1509,8 @@ function EtfDataPanel({
     return (
       <SectionCard title="ETF 원장">
         <div className="py-8 text-center">
-          <p className="text-sm font-black text-slate-700">ETF 원장 데이터가 없습니다</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">데이터 백필 또는 `/api/data/stockanalysis/etfs/{ticker}` 경로를 확인해 주세요.</p>
+          <p className="text-sm font-black text-slate-700">ETF 상세 원장은 아직 없습니다</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 상세 endpoint가 열리기 전까지 표면 이벤트와 신규 ETF 리스트를 먼저 표시합니다.</p>
         </div>
       </SectionCard>
     );

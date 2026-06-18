@@ -28,7 +28,7 @@ export default async function EtfDetailPage({ params }: Props) {
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
       <AppShell active="etfs" title={symbol} backHref="/etfs">
-        <StockDetailClient ticker={symbol} />
+        <StockDetailClient ticker={symbol} assetHint="etf" />
       </AppShell>
     </div>
   );
