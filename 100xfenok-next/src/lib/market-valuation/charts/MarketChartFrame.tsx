@@ -78,7 +78,7 @@ const FRAME_PALETTE = [
 const DEFAULT_RANGES: readonly MarketChartRange[] = [
   { id: "1Y", label: "1Y", count: 12 },
   { id: "5Y", label: "5Y", count: 60 },
-  { id: "MAX", label: "MAX" },
+  { id: "MAX", label: "전체" },
 ];
 
 function orderedLabels(series: readonly MarketChartSeries[]): string[] {

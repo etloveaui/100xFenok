@@ -104,7 +104,7 @@ const COUNTRY_LABEL: Record<string, string> = {
 
 const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left" | "right" }> = [
   { key: "ticker", label: "티커", align: "left" },
-  { key: "actionScore", label: "액션", align: "left" },
+  { key: "actionScore", label: "투자 신호", align: "left" },
   { key: "name", label: "종목", align: "left" },
   { key: "sector", label: "섹터", align: "left" },
   { key: "country", label: "국가", align: "left" },
@@ -122,8 +122,8 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "momentum3m", label: "3M 모멘텀", align: "right" },
   { key: "momentum6m", label: "6M", align: "right" },
   { key: "momentum12m", label: "12M", align: "right" },
-  { key: "rank", label: "Rank", align: "right" },
-  { key: "guruHolders", label: "구루", align: "right" },
+  { key: "rank", label: "순위", align: "right" },
+  { key: "guruHolders", label: "대가 보유", align: "right" },
   { key: "perBandCurrent", label: "PER밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
@@ -196,12 +196,12 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
 
 const PRESET_LABEL: Record<ColumnPreset, string> = {
   basic: "기본",
-  action: "액션",
+  action: "투자 신호",
   value: "밸류",
   estimate: "추정치",
   momentum: "모멘텀",
   dividend: "배당",
-  guru: "구루픽",
+  guru: "대가 관심",
 };
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -846,7 +846,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
           <p className="data-shell-kicker">Stock Screener</p>
           <h1 className="data-shell-title">종목 스크리너</h1>
           <p className="data-shell-desc">
-            글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 거르고 줄세웁니다.
+            글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
           </p>
         </div>
         <div className="data-shell-head-actions">
@@ -924,7 +924,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">FY+1 PER 최대</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">예상 PER 상한</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -1014,13 +1014,13 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">액션</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">투자 신호</span>
               <select
                 value={actionFilter}
                 onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
                 className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
               >
-                <option value="">전체 액션</option>
+                <option value="">전체 신호</option>
                 <option value="smart_money">기관/고수 주목</option>
                 <option value="value_momentum">저평가+모멘텀</option>
                 <option value="index_core">지수 핵심</option>

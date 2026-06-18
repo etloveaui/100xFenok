@@ -144,7 +144,7 @@ export function ErpHistoryPanel() {
       ranges={[
         { id: "20Y", label: "20Y", count: 20 },
         { id: "40Y", label: "40Y", count: 40 },
-        { id: "MAX", label: "MAX" },
+        { id: "MAX", label: "전체" },
       ]}
       defaultRangeId="MAX"
       footnote="Damodaran 내재 ERP · 좌축 %, S&P는 우축 · 토글로 비교"
@@ -187,10 +187,10 @@ export function AnnualReturnsChartPanel() {
       ranges={[
         { id: "10Y", label: "10Y", count: 10 },
         { id: "30Y", label: "30Y", count: 30 },
-        { id: "MAX", label: "MAX" },
+        { id: "MAX", label: "전체" },
       ]}
       defaultRangeId="MAX"
-      footnote="SlickCharts 연간 총수익률 · 반응형 차트로 카드 넘침 해소"
+      footnote="연간 총수익률 · 반응형 차트로 카드 넘침 해소"
     />
   );
 }
@@ -256,10 +256,10 @@ export function YardeniOverlayChartPanel() {
         ranges={[
           { id: "1Y", label: "1Y", count: 52 },
           { id: "5Y", label: "5Y", count: 260 },
-          { id: "MAX", label: "MAX" },
+          { id: "MAX", label: "전체" },
         ]}
         defaultRangeId="5Y"
-        footnote={`Yardney 원천 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · MAX로 1990년 이후 전체`}
+        footnote={`야데니 원천 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
       />
 
       <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-5">
@@ -347,10 +347,10 @@ export function PmiActivityChartPanel() {
         ranges={[
           { id: "1Y", label: "1Y", count: 12 },
           { id: "5Y", label: "5Y", count: 60 },
-          { id: "MAX", label: "MAX" },
+          { id: "MAX", label: "전체" },
         ]}
         defaultRangeId="5Y"
-        footnote={`activity-surveys ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"} records · MAX로 전체 월간 깊이`}
+        footnote={`경기 설문 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}개 관측치 · 전체 기간은 월간 원천 데이터 기준`}
       />
 
       <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">

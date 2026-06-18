@@ -112,7 +112,7 @@ export default function MarketStructureIndexCard() {
       <div className="panel-foot">
         CNN 약한 축 {weakSentiment.map((item) => `${labelComponent(item.id)} ${fmt(item.value)}`).join(" · ") || "—"}
         <TransitionLink href="/market-valuation" style={{ marginLeft: 8, fontWeight: 900 }}>
-          시장 원장
+          시장 상세
         </TransitionLink>
       </div>
     </section>

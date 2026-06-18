@@ -25,8 +25,8 @@ type MobileView = "heatmap" | "etf" | "valuation" | "guru";
 const MOBILE_VIEWS: ReadonlyArray<{ key: MobileView; label: string }> = [
   { key: "heatmap", label: "흐름" },
   { key: "etf", label: "ETF" },
-  { key: "valuation", label: "밸류" },
-  { key: "guru", label: "구루" },
+  { key: "valuation", label: "가치" },
+  { key: "guru", label: "13F" },
 ];
 
 function dateOnly(value: string | null | undefined): string | null {
@@ -154,7 +154,7 @@ function SourceLine({ sourceMeta }: { sourceMeta: SectorSourceMeta }) {
     sourceMeta.valuationLatestDate ? `밸류 ${sourceMeta.valuationLatestDate}` : null,
     sourceMeta.smartMoneyQuarter ? `13F ${sourceMeta.smartMoneyQuarter}` : null,
   ].filter(Boolean);
-  return <span>{parts.length > 0 ? parts.join(" · ") : "소스 확인 중"}</span>;
+  return <span>{parts.length > 0 ? parts.join(" · ") : "기준일 확인 중"}</span>;
 }
 
 function MobileViewSwitch({

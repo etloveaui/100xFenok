@@ -317,7 +317,7 @@ function etfSurfaceFallback(payload: TickerSurfacePayload | null | undefined, sy
   const row = match?.row ?? null;
   return {
     name: cleanSurfaceText(row?.n) ?? cleanSurfaceText(row?.fund_name) ?? cleanSurfaceText(row?.name) ?? symbol,
-    category: cleanSurfaceText(row?.assetClass) ?? match?.label ?? "ETF 표면",
+    category: cleanSurfaceText(row?.assetClass) ?? match?.label ?? "ETF 목록",
     price: parseSurfaceNumber(row?.price ?? row?.stock_price),
     changePct: parseSurfaceNumber(row?.change ?? row?.pct_change),
     inceptionDate: cleanSurfaceText(row?.inceptionDate),
@@ -545,7 +545,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           ))}
         </tbody>
       </table>
-      <p className="mt-1 text-[9px] font-semibold text-slate-400">E = 추정 (컨센서스)</p>
+      <p className="mt-1 text-[9px] font-semibold text-slate-400">E = 시장 예상치</p>
     </div>
   );
 }
@@ -595,17 +595,17 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
 
   return (
     <section>
-      <h2 className="mb-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-500">구루 동향</h2>
+      <h2 className="mb-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-500">투자 대가 동향</h2>
       <div className="mb-3 flex flex-wrap gap-2">
         {tradesChip?.bought ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-emerald-700">
-            최근 분기 구루 순매수 {isFiniteNumber(tradesChip.bought.rank) ? `#${tradesChip.bought.rank} · ` : ""}{tradeAmount(tradesChip.bought.amount)} ({tradesChip.bought.investors_count}명)
+            최근 분기 투자 대가 순매수 {isFiniteNumber(tradesChip.bought.rank) ? `#${tradesChip.bought.rank} · ` : ""}{tradeAmount(tradesChip.bought.amount)} ({tradesChip.bought.investors_count}명)
             {tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}명` : ""}
             {tradeInvestorName(tradesChip.bought.top_investor) ? ` · 대표 ${tradeInvestorName(tradesChip.bought.top_investor)}` : ""}
           </span>
         ) : tradesChip?.sold ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-rose-700">
-            최근 분기 구루 순매도 {isFiniteNumber(tradesChip.sold.rank) ? `#${tradesChip.sold.rank} · ` : ""}{tradeAmount(tradesChip.sold.amount)} ({tradesChip.sold.investors_count}명)
+            최근 분기 투자 대가 순매도 {isFiniteNumber(tradesChip.sold.rank) ? `#${tradesChip.sold.rank} · ` : ""}{tradeAmount(tradesChip.sold.amount)} ({tradesChip.sold.investors_count}명)
             {tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}명` : ""}
             {tradeInvestorName(tradesChip.sold.top_investor) ? ` · 대표 ${tradeInvestorName(tradesChip.sold.top_investor)}` : ""}
           </span>
@@ -616,7 +616,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
           <table className="w-full min-w-[320px] text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                <th className="px-2 py-1.5 text-left">구루</th>
+                <th className="px-2 py-1.5 text-left">투자자</th>
                 <th className="px-2 py-1.5 text-right">주식수</th>
                 <th className="px-2 py-1.5 text-right">비중</th>
               </tr>
@@ -895,7 +895,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
                   {t.label}
                 </button>
               ))}
-              {etfData === undefined ? <span className="stock-tab-note">ETF 원장 로딩 중...</span> : null}
+              {etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : null}
             </div>
           </section>
           <div className="stock-body">
@@ -1072,7 +1072,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
             ) : null}
 
             {activeStockTab === "estimates" ? (
-              <SectionCard title="리비전·추정치">
+              <SectionCard title="추정치 변화">
                 <RevisionPulse detail={detail} />
                 <CompactFinancialTable detail={detail} years={years} />
               </SectionCard>
@@ -1090,13 +1090,13 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
           <SectionCard>
             <div className="py-8 text-center">
               <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">/data/global-scouter/stocks/detail/{symbol}.json 을 확인해 주세요.</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">상세 데이터를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
             </div>
           </SectionCard>
         )}
         <footer className="stock-footer">
           <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-          <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
+          <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
         </footer>
       </div>
     );
@@ -1146,7 +1146,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
               {t.label}
             </button>
           ))}
-          {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 원장 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">보조 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">보조 데이터 수집 전</span> : null}
+          {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">보조 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">보조 데이터 수집 전</span> : null}
         </div>
       </section>
 
@@ -1212,7 +1212,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
             {f13Entries && f13Entries.length > 0 ? (
               <div className="mt-3 border-t border-slate-100 pt-3">
                 <a href="#guru-section" className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.06em] text-amber-700 transition hover:bg-amber-100">
-                  구루 {new Set(f13Entries.map((e) => e.investor)).size}명 보유
+                  투자 대가 {new Set(f13Entries.map((e) => e.investor)).size}명 보유
                 </a>
               </div>
             ) : null}
@@ -1246,10 +1246,10 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-4">
                   {[
-                    ["재무", "매출·FCF·원자료"],
+                    ["재무", "매출·FCF·상세"],
                     ["통계", "밸류·수익성"],
-                    ["추정치", "FY+1~3·리비전"],
-                    ["보유기관", "13F 구루"],
+                    ["추정치", "FY+1~3·변화"],
+                    ["보유기관", "13F 투자자"],
                   ].map(([label, desc]) => (
                     <button
                       key={label}
@@ -1268,14 +1268,14 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
             <SectionCard>
               <div className="py-8 text-center">
                 <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">/data/global-scouter/stocks/detail/{symbol}.json 을 확인해 주세요.</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">상세 데이터를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
               </div>
             </SectionCard>
           )}
 
           <footer className="stock-footer">
             <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-            <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">구루 보유 보기</TransitionLink>
+            <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
           </footer>
         </div>
       </div>
@@ -1363,8 +1363,8 @@ function FinancialCandidatePanel({
   if (!data) {
     return (
       <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
-        <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 후보 원장</p>
-        <p className="mt-1 text-sm font-semibold text-slate-500">교차검증용 원장 수집 전입니다.</p>
+        <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 보강 데이터</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">교차검증용 재무 데이터 수집 전입니다.</p>
       </div>
     );
   }
@@ -1406,7 +1406,7 @@ function FinancialCandidatePanel({
     <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 후보 원장</p>
+          <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 보강 데이터</p>
           <p className="mt-1 text-xs font-semibold text-slate-500">교차검증용 · 가치평가 입력 아님</p>
         </div>
         <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
@@ -1495,9 +1495,9 @@ function EtfDataPanel({
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
   const detailStatusText = detailStatus === "surface_only"
-    ? "상세 원장 백필 전 · 표면 데이터 기준"
+    ? "상세 구성 수집 전 · 신규 상장 목록 기준"
     : detailStatus === "universe_only"
-      ? "상세 원장 백필 전 · 유니버스 목록 기준"
+      ? "상세 구성 수집 전 · ETF 목록 기준"
       : null;
 
   const cards = [
@@ -1509,16 +1509,16 @@ function EtfDataPanel({
     { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "Yield" },
     { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "민감도" },
     { label: "설정일", value: rawText(overview.inception), note: "Inception" },
-    { label: "보유 행", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: fmtDateish(holdingsUpdated) },
-    { label: "보유 비중합", value: holdings.length > 0 ? fmtEtfPct(totalWeight) : "—", note: "표시 행 기준" },
+    { label: "표시 종목", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: fmtDateish(holdingsUpdated) },
+    { label: "표시 비중 합계", value: holdings.length > 0 ? fmtEtfPct(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((card) => card.value !== "—");
 
   if (!data && !marketFacts) {
     return (
-      <SectionCard title="ETF 원장">
+      <SectionCard title="ETF 상세">
         <div className="py-8 text-center">
-          <p className="text-sm font-black text-slate-700">ETF 상세 원장은 아직 없습니다</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 상세 endpoint가 열리기 전까지 표면 이벤트와 신규 ETF 리스트를 먼저 표시합니다.</p>
+          <p className="text-sm font-black text-slate-700">ETF 상세 데이터는 아직 없습니다</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 보유 구성이 열리기 전까지 목록과 가격 정보를 먼저 표시합니다.</p>
         </div>
       </SectionCard>
     );
@@ -1526,7 +1526,7 @@ function EtfDataPanel({
 
   return (
     <div className="space-y-4">
-      <SectionCard title="ETF 원장 스냅샷">
+      <SectionCard title="ETF 핵심 지표">
         {detailStatusText ? (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-black text-amber-800">
             {detailStatusText}
@@ -1548,14 +1548,14 @@ function EtfDataPanel({
             rel="noreferrer"
             className="mt-3 inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 transition hover:border-brand-interactive hover:bg-white hover:text-brand-interactive"
           >
-            운용사 원문 열기
+            운용사 웹사이트
           </a>
         ) : null}
       </SectionCard>
 
-      <SectionCard title="보유·스왑 원장">
+      <SectionCard title="보유·스왑 구성">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
-          <span>{ticker} · 표시 {holdings.length.toLocaleString()}행</span>
+          <span>{ticker} · {holdings.length.toLocaleString()}개 표시</span>
           <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
         </div>
         <EtfHoldingsTable holdings={holdings} currency={currency} />

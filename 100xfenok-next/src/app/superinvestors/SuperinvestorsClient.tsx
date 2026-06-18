@@ -530,7 +530,7 @@ function TradeRankingPanel({
               <th className="px-2 py-2 text-left">종목</th>
               <th className="px-2 py-2 text-left">섹터</th>
               <th className="px-2 py-2 text-right">금액</th>
-              <th className="px-2 py-2 text-right">구루</th>
+              <th className="px-2 py-2 text-right">투자자</th>
               <th className="px-2 py-2 text-left">{topLabel}</th>
             </tr>
           </thead>
@@ -722,7 +722,7 @@ export default function SuperinvestorsClient({
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">기관 공시 인텔리전스</p>
+          <p className="data-shell-kicker">기관 공시 분석</p>
           <h1 className="data-shell-title">거장 보유 현황</h1>
           <p className="data-shell-desc">
             분기 공시로 공개되는 주요 투자자의 보유·매매·집중도를 함께 탐색합니다.
@@ -738,7 +738,7 @@ export default function SuperinvestorsClient({
           <span className="data-shell-note">{delayLabel}</span>
           {excludedStale.length > 0 ? (
             <span className="data-shell-note warn">
-              제외된 stale: {excludedStale.join(", ")}
+              최신 분기에서 제외: {excludedStale.join(", ")}
             </span>
           ) : null}
         </div>
@@ -753,10 +753,10 @@ export default function SuperinvestorsClient({
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-1">
         {[
-          { id: "consensus" as const, label: "컨센서스" },
-          { id: "gurus" as const, label: "구루 리스트" },
+          { id: "consensus" as const, label: "공통 보유" },
+          { id: "gurus" as const, label: "투자자 목록" },
           { id: "by-ticker" as const, label: "종목별 보유" },
-          { id: "trades" as const, label: "매매랭킹" },
+          { id: "trades" as const, label: "매매 순위" },
           { id: "insights" as const, label: "인사이트" },
         ].map((t) => (
           <button
@@ -812,7 +812,7 @@ export default function SuperinvestorsClient({
                   {pvData.total.treemap.length > 0 ? (
                     <PortfolioTreemap rows={pvData.total.treemap} quarterLabel={pvData.metadata.quarter} />
                   ) : (
-                    <EmptyState title="포트폴리오 차트 데이터가 없습니다" desc="portfolio_views.json 의 total.treemap 을 확인해 주세요." />
+                    <EmptyState title="포트폴리오 차트 데이터가 없습니다" desc="차트 데이터가 아직 준비되지 않았습니다." />
                   )}
                   {pvData.metadata.disclaimer ? (
                     <p className="text-[10px] font-semibold text-slate-400">{pvData.metadata.disclaimer}</p>
@@ -876,7 +876,7 @@ export default function SuperinvestorsClient({
               onClick={() => setConsensusSortDir((d) => (d === "desc" ? "asc" : "desc"))}
               className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
             >
-              보유 구루 수 {consensusSortDir === "desc" ? "내림차순" : "오름차순"}
+              보유 투자자 수 {consensusSortDir === "desc" ? "내림차순" : "오름차순"}
             </button>
           </div>
 
@@ -890,7 +890,7 @@ export default function SuperinvestorsClient({
                     <th className="px-3 py-2 text-right">보유자</th>
                     <th className="px-3 py-2 text-right">주식 기준</th>
                     <th className="px-3 py-2 text-left">보유자 목록</th>
-                    <th className="px-3 py-2 text-right">액션</th>
+                    <th className="px-3 py-2 text-right">동작</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1036,7 +1036,7 @@ export default function SuperinvestorsClient({
           {!dataReady ? (
             <SkeletonCards count={6} />
           ) : guruEntries.length === 0 ? (
-            <EmptyState title="구루가 없습니다" desc="스타일 필터를 변경해 보세요." />
+            <EmptyState title="투자자가 없습니다" desc="스타일 필터를 변경해 보세요." />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {guruEntries.map(([id, inv]) => {
@@ -1140,7 +1140,7 @@ export default function SuperinvestorsClient({
                 <div className="h-4 w-2/3 rounded bg-slate-200" />
               </div>
             ) : !search.trim() ? (
-              <EmptyState title="티커를 입력하세요" desc="보유 구루를 확인할 종목 코드를 검색해 주세요." />
+              <EmptyState title="티커를 입력하세요" desc="보유 투자자를 확인할 종목 코드를 검색해 주세요." />
             ) : !byTickerEntry ? (
               <EmptyState
                 title={`${search.trim().toUpperCase()} 데이터 없음`}
@@ -1149,7 +1149,7 @@ export default function SuperinvestorsClient({
             ) : byTickerEntry.holder_details.length === 0 ? (
               <EmptyState
                 title={`${search.trim().toUpperCase()}에 보유자가 없습니다`}
-                desc="현재 공시 코호트에서 이 종목을 보유한 투자자가 없습니다."
+                desc="현재 추적 중인 투자자 중 이 종목 보유자가 없습니다."
               />
             ) : (
               <div className="space-y-3">

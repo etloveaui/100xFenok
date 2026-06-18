@@ -33,7 +33,7 @@ export default async function SuperinvestorsPage({ searchParams }: Props) {
   const initialGuru = firstParam(params.guru).trim();
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
-      <AppShell active="superinvestors" title="구루">
+      <AppShell active="superinvestors" title="투자자">
         <SuperinvestorsClient
           initialTab={initialTab ?? (initialTicker ? "by-ticker" : initialGuru ? "gurus" : undefined)}
           initialSearch={initialTicker}

@@ -34,7 +34,7 @@ function buildTopics(data: TradesRankingData): Topic[] {
       key: "bought",
       chip: "최다 매수",
       badgeCls: "buy",
-      text: `${topBought.ticker} — 구루 ${topBought.investors_count}명 매수 (최대: ${topBought.top_investor.name})`,
+      text: `${topBought.ticker} — 투자 대가 ${topBought.investors_count}명 매수 (최대: ${topBought.top_investor.name})`,
       amount: fmtAmount(topBought.amount),
       amountCls: "up",
     });
@@ -44,7 +44,7 @@ function buildTopics(data: TradesRankingData): Topic[] {
       key: "sold",
       chip: "최다 매도",
       badgeCls: "sell",
-      text: `${topSold.ticker} — 구루 ${topSold.investors_count}명 매도 (최대: ${topSold.top_investor.name})`,
+      text: `${topSold.ticker} — 투자 대가 ${topSold.investors_count}명 매도 (최대: ${topSold.top_investor.name})`,
       amount: fmtAmount(topSold.amount),
       amountCls: "down",
     });
@@ -54,7 +54,7 @@ function buildTopics(data: TradesRankingData): Topic[] {
       key: "new",
       chip: "신규 편입",
       badgeCls: "new",
-      text: `${topNew.ticker} — 구루 ${topNew.new_count}명 신규 편입`,
+      text: `${topNew.ticker} — 투자 대가 ${topNew.new_count}명 신규 편입`,
       amount: fmtAmount(topNew.amount),
       amountCls: "",
     });
@@ -91,7 +91,7 @@ export default function ExploreHotTopics() {
       <section className="panel f13-wrap">
         <div className="panel-h">
           <h2>13F 핫토픽</h2>
-          <span className="desc">구루 매매 동향</span>
+          <span className="desc">투자 대가 매매 동향</span>
         </div>
         <div className="panel-b text-sm font-semibold text-slate-500">
           {loading ? "13F 핫토픽 확인 중" : "13F 핫토픽 데이터를 불러오지 못했습니다."}
@@ -118,7 +118,7 @@ export default function ExploreHotTopics() {
       <div className="panel-h">
         <h2>13F 핫토픽</h2>
         <span className="desc">{data.metadata.quarter} 기준</span>
-        <TransitionLink href="/superinvestors" className="act">구루 전체 →</TransitionLink>
+        <TransitionLink href="/superinvestors" className="act">투자자 전체 →</TransitionLink>
       </div>
       <div className="f13-grid">
         {topics.map((t) => (

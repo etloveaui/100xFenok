@@ -194,10 +194,10 @@ export default function MarketStructureDetailClient({
             </span>
           ) : null}
           <TransitionLink href="/market-valuation" className="data-shell-link">
-            원장
+            시장 밸류에이션
           </TransitionLink>
           <TransitionLink href="/explore" className="data-shell-link">
-            Explore
+            탐색
           </TransitionLink>
         </div>
       </section>
@@ -219,52 +219,52 @@ export default function MarketStructureDetailClient({
           <SummaryStrip model={model} />
 
           <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-            <SlotShell id="benchmark" title="이익 × 멀티플 매트릭스" subtitle="7 benchmarks">
+            <SlotShell id="benchmark" title="이익 × 멀티플 매트릭스" subtitle="7개 벤치마크">
               {slots.benchmark ? (
                 slots.benchmark(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-benchmark 슬롯
+                  벤치마크 상세 패널 준비 중
                   <br />
-                  props: {"{ model }"} · `model.benchmarkMatrix.rows` 전체 7개 벤치마크
+                  7개 벤치마크의 이익과 멀티플을 비교합니다
                 </Placeholder>
               )}
             </SlotShell>
 
-            <SlotShell id="credit" title="신용등급 스프레드" subtitle="3 Damodaran tables">
+            <SlotShell id="credit" title="신용등급 스프레드" subtitle="신용 스프레드 표 3개">
               {slots.credit ? (
                 slots.credit(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-credit 슬롯
+                  신용등급 상세 패널 준비 중
                   <br />
-                  props: {"{ model }"} · `model.creditRatings.tables` 3개 테이블
+                  등급별 스프레드 변화를 비교합니다
                 </Placeholder>
               )}
             </SlotShell>
           </div>
 
           <div className="grid min-w-0 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-            <SlotShell id="mag7" title="Magnificent 7 리더십" subtitle="weight · market cap">
+            <SlotShell id="mag7" title="Magnificent 7 리더십" subtitle="비중·시총">
               {slots.mag7 ? (
                 slots.mag7(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-mag7 슬롯
+                  대형 기술주 리더십 패널 준비 중
                   <br />
-                  props: {"{ model }"} · `model.magnificent7.holdings` 리더십 패널
+                  지수 내 비중과 시가총액 변화를 보여줍니다
                 </Placeholder>
               )}
             </SlotShell>
 
-            <SlotShell id="membership" title="지수 편입·제외" subtitle="membership changes">
+            <SlotShell id="membership" title="지수 편입·제외" subtitle="편입·편출">
               {slots.membership ? (
                 slots.membership(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-membership 슬롯
+                  편입·제외 이벤트 패널 준비 중
                   <br />
-                  props: {"{ model }"} · `model.membershipChanges.recent` 이벤트 원장
+                  최근 지수 편입과 제외 종목을 정리합니다
                 </Placeholder>
               )}
             </SlotShell>
@@ -276,47 +276,47 @@ export default function MarketStructureDetailClient({
                 slots.liquidity(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-liquidity 슬롯
+                  유동성 상세 패널 준비 중
                   <br />
-                  props: {"{ model }"} · 패널은 `model.liquidity[*].loadFull()`로 MAX를 연결
+                  재무부 잔고와 스테이블코인 흐름을 비교합니다
                 </Placeholder>
               )}
             </SlotShell>
 
-            <SlotShell id="sentiment" title="CNN 하위 심리" subtitle="7 components">
+            <SlotShell id="sentiment" title="CNN 하위 심리" subtitle="7개 구성 지표">
               {slots.sentiment ? (
                 slots.sentiment(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-sentiment 슬롯
+                  투자심리 상세 패널 준비 중
                   <br />
-                  props: {"{ model }"} · 패널은 component별 explicit adapter 사용
+                  심리 구성 요소별 강약을 보여줍니다
                 </Placeholder>
               )}
             </SlotShell>
           </div>
 
           <div className="grid min-w-0 gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-            <SlotShell id="aaii" title="AAII 개인투자자 심리" subtitle="bull · bear · spread">
+            <SlotShell id="aaii" title="AAII 개인투자자 심리" subtitle="강세·약세·스프레드">
               {slots.aaii ? (
                 slots.aaii(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-aaii 슬롯
+                  개인투자자 심리 패널 준비 중
                   <br />
-                  props: {"{ model }"} · MAX는 `model.aaii.loadFull()`
+                  강세와 약세 응답의 차이를 추적합니다
                 </Placeholder>
               )}
             </SlotShell>
 
-            <SlotShell id="concentration" title="지수 집중도" subtitle="SlickCharts holdings">
+            <SlotShell id="concentration" title="지수 집중도" subtitle="보유비중 기준">
               {slots.concentration ? (
                 slots.concentration(slotProps)
               ) : (
                 <Placeholder>
-                  market-structure-concentration 슬롯
+                  지수 집중도 패널 준비 중
                   <br />
-                  props: {"{ model }"} · 집중도/리더 보유비중 패널
+                  상위 종목 비중과 쏠림 정도를 보여줍니다
                 </Placeholder>
               )}
             </SlotShell>

@@ -126,7 +126,7 @@ export default function DataCoverageCard() {
 
     return [
       {
-        label: "ETF 유니버스",
+        label: "ETF 목록",
         detail: `${fmtNumber(etfFileCount)}개 저장`,
         value: fmtNumber(universeCount),
         tone: "up",
@@ -144,8 +144,8 @@ export default function DataCoverageCard() {
         tone: financialFileCount && financialFileCount > 0 ? "up" : "neutral",
       },
       {
-        label: "백필 진행",
-        detail: `${fmtNumber(chunks)} / ${fmtNumber(expectedChunks)} 청크`,
+        label: "수집 진행",
+        detail: `${fmtNumber(chunks)} / ${fmtNumber(expectedChunks)} 묶음`,
         value: pct(chunks, expectedChunks),
         tone: backfill?.ready_for_finalize ? "up" : "neutral",
       },
@@ -201,7 +201,7 @@ export default function DataCoverageCard() {
         ))}
       </div>
       <div className="panel-foot">
-        소스 비교 경고 {fmtNumber(parityWarnings)}
+        데이터 비교 경고 {fmtNumber(parityWarnings)}
         <TransitionLink href="/admin/data-lab" style={{ marginLeft: 8, fontWeight: 900 }}>
           데이터 랩
         </TransitionLink>

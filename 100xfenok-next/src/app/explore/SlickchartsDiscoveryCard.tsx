@@ -160,7 +160,7 @@ export default function SlickchartsDiscoveryCard() {
     dividends: dividendsAsOf,
   };
   const tabLabel: Record<DiscoveryTab, string> = {
-    movers: "무버",
+    movers: "급등락",
     returns: "수익률",
     dividends: "배당",
   };
@@ -184,10 +184,10 @@ export default function SlickchartsDiscoveryCard() {
     <section className="panel">
       <div className="panel-h">
         <h2>수익률 리더보드</h2>
-        <span className="desc">{asOf} · {doc.universe?.uniqueCount ?? "—"}개 유니버스</span>
+        <span className="desc">{asOf} · {doc.universe?.uniqueCount ?? "—"}개 종목</span>
         <div className="seg" style={{ marginLeft: "auto" }}>
           {[
-            ["movers", "무버"],
+            ["movers", "급등락"],
             ["returns", "수익률"],
             ["dividends", "배당"],
           ].map(([key, label]) => (
@@ -237,7 +237,7 @@ export default function SlickchartsDiscoveryCard() {
         </div>
       ) : null}
 
-      <div className="panel-foot">원본 무버 히스토리는 약 5.7MB라 요약 인덱스만 로드합니다</div>
+      <div className="panel-foot">대용량 히스토리는 요약 데이터만 표시합니다</div>
     </section>
   );
 }

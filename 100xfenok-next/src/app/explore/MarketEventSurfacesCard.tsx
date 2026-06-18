@@ -307,13 +307,13 @@ export default function MarketEventSurfacesCard() {
     },
     {
       label: "기업 이벤트",
-      detail: latestActions[0]?.type ? String(latestActions[0].type) : "액션 테이프",
+      detail: latestActions[0]?.type ? String(latestActions[0].type) : "기업 이벤트",
       value: fmtNumber(rowsFor("actions_recent", data?.manifest ?? null) ?? data?.actions?.counts?.records),
       tone: "neutral",
     },
     {
-      label: "분할/액션",
-      detail: latestSplit?.symbol ? `${latestSplit.symbol} 최근 분할` : "스플릿 테이프",
+      label: "주식분할",
+      detail: latestSplit?.symbol ? `${latestSplit.symbol} 최근 분할` : "분할 일정",
       value: fmtNumber(rowsFor("actions_splits", data?.manifest ?? null) ?? data?.splits?.counts?.records),
       tone: "up",
     },
@@ -327,7 +327,7 @@ export default function MarketEventSurfacesCard() {
     { key: "corporate", label: "기업", count: upcomingEarnings.length + latestActions.length },
     {
       key: "session",
-      label: "세션",
+      label: "장전/장후",
       count: Number(Boolean(premarketTop)) + Number(Boolean(afterhoursTop)) + Number(Boolean(latestSplit)),
     },
   ];
@@ -344,7 +344,7 @@ export default function MarketEventSurfacesCard() {
           <div className="mv-row">
             <span className="co">
               <div className="n">이벤트 리스크 확인 중</div>
-              <div className="tk">일정·어닝·기업 액션을 읽고 있습니다</div>
+              <div className="tk">일정·어닝·기업 이벤트를 읽고 있습니다</div>
             </span>
             <span className="pc num neutral">...</span>
           </div>
@@ -498,7 +498,7 @@ export default function MarketEventSurfacesCard() {
             <div className="mv-row lg:col-span-2">
               <span className="co">
                 <div className="n">표시할 기업 이벤트 없음</div>
-                <div className="tk">어닝·액션 테이프가 비어 있습니다</div>
+                <div className="tk">어닝·기업 이벤트가 비어 있습니다</div>
               </span>
               <span className="pc num neutral">—</span>
             </div>

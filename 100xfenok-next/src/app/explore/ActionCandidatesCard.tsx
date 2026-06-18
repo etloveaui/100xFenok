@@ -130,11 +130,11 @@ export default function ActionCandidatesCard() {
     return (
       <section className="panel">
         <div className="panel-h">
-          <h2>액션 후보</h2>
+          <h2>투자 후보</h2>
           <span className="desc">스코어 계산</span>
         </div>
         <div className="panel-b text-sm font-semibold text-slate-500">
-          {loaded ? "액션 후보 데이터를 불러오지 못했습니다." : "액션 후보 계산 중"}
+          {loaded ? "투자 후보 데이터를 불러오지 못했습니다." : "투자 후보 계산 중"}
         </div>
       </section>
     );
@@ -143,13 +143,13 @@ export default function ActionCandidatesCard() {
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>액션 후보</h2>
+        <h2>투자 후보</h2>
         <span className="desc">{doc.coverage?.indexed_stock_count ?? "—"}개 · 13F {doc.coverage?.conviction_matched_count ?? "—"}건</span>
         <div className="seg" style={{ marginLeft: "auto" }}>
           {[
-            ["smart_money", "구루"],
-            ["value_momentum", "밸류"],
-            ["index_core", "지수"],
+            ["smart_money", "기관·고수"],
+            ["value_momentum", "밸류+모멘텀"],
+            ["index_core", "지수 핵심"],
           ].map(([key, label]) => (
             <button key={key} type="button" className={tab === key ? "on" : ""} onClick={() => setTab(key as ActionTab)}>
               {label}

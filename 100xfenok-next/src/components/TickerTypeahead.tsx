@@ -113,7 +113,7 @@ interface TickerTypeaheadProps {
 }
 
 export default function TickerTypeahead({
-  placeholder = "티커 또는 구루 검색…",
+  placeholder = "티커 또는 투자자 검색…",
   className = "",
   onSubmit,
   showButton = false,
@@ -274,7 +274,7 @@ export default function TickerTypeahead({
                     <>
                       <span className="text-xs">👤</span>
                       <span className="text-sm font-bold text-amber-700">{s.guru.name}</span>
-                      <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-700">구루</span>
+                      <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-700">투자자</span>
                     </>
                   ) : null}
                 </li>

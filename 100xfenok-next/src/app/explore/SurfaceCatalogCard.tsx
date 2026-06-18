@@ -55,7 +55,7 @@ function groupLabel(value: string | null | undefined): string {
     case "corporate_actions":
       return "기업 이벤트";
     case "market_movers":
-      return "시장 무버";
+      return "시장 급등락";
     case "earnings":
       return "어닝";
     case "industry":
@@ -118,7 +118,7 @@ export default function SurfaceCatalogCard() {
           <div className="mv-row">
             <span className="co">
               <div className="n">카탈로그 확인 중</div>
-              <div className="tk">로컬 데이터팩을 읽고 있습니다</div>
+              <div className="tk">데이터 묶음을 읽고 있습니다</div>
             </span>
             <span className="pc num neutral">...</span>
           </div>
@@ -141,7 +141,7 @@ export default function SurfaceCatalogCard() {
         <div className="panel-foot">
           <span>{fmtNumber(grouped.reduce((sum, bucket) => sum + bucket.items.length, 0))}개 데이터 묶음</span>
           <a href="/data/stockanalysis/surfaces/index.json" style={{ marginLeft: 8, fontWeight: 900 }}>
-            JSON
+            데이터 보기
           </a>
         </div>
       ) : null}

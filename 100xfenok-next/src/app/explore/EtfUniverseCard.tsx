@@ -145,7 +145,7 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>ETF 유니버스</h2>
+        <h2>ETF 검색</h2>
         <span className="desc">{asOfDate(doc?.generated_at)} · {formatNumber(total)}개</span>
       </div>
       <div className="panel-b">
@@ -166,8 +166,8 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
             className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체</option>
-            {categories.slice(0, 16).map((item) => (
-              <option key={item.name} value={item.name}>{item.name}</option>
+            {categories.map((item) => (
+              <option key={item.name} value={item.name}>{item.name} ({formatNumber(item.count)})</option>
             ))}
           </select>
         </div>
@@ -205,7 +205,7 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
           <div className="mv-row">
             <span className="co">
               <div className="n">ETF 목록 확인 중</div>
-              <div className="tk">로컬 데이터팩을 읽고 있습니다</div>
+              <div className="tk">목록과 분류 데이터를 읽고 있습니다</div>
             </span>
             <span className="pc num neutral">...</span>
           </div>
@@ -230,7 +230,7 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
         )}
       </div>
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
-        <span>AUM 상위 표시 · 각 행은 ETF 상세 탭으로 이동</span>
+        <span>현재 조건에서 AUM순 {formatNumber(limit)}개 표시 · 각 행은 상세 페이지로 이동</span>
         {showOpenLink ? (
           <TransitionLink href="/etfs" className="font-black text-brand-interactive hover:underline">
             ETF 전체 보기

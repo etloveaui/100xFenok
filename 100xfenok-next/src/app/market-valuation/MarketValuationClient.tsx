@@ -120,12 +120,12 @@ function StructureDetailEntry() {
       className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_58%,#eef6ff_100%)] px-4 py-3 shadow-[0_10px_36px_-20px_rgba(15,23,42,0.28)] transition hover:border-brand-interactive hover:shadow-[0_14px_42px_-24px_rgba(27,115,211,0.42)]"
     >
       <span className="min-w-0">
-        <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-brand-interactive">Market Structure Detail</span>
-        <span className="mt-1 block text-base font-black text-slate-950">시장구조 상세로 이동</span>
+        <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-brand-interactive">시장 구조 상세</span>
+        <span className="mt-1 block text-base font-black text-slate-950">시장 구조 자세히 보기</span>
         <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">집중도, 벤치마크 매트릭스, 유동성, 심리 하위 지표를 더 크게 확인합니다.</span>
       </span>
       <span className="shrink-0 rounded-full border border-brand-interactive/30 bg-white px-3 py-2 text-xs font-black text-brand-interactive transition group-hover:bg-brand-interactive group-hover:text-white">
-        상세 보기
+        열기
       </span>
     </TransitionLink>
   );
@@ -194,7 +194,7 @@ function MacroPulsePanel({ items }: { items: MarketMacroPulse[] }) {
 
 function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
   return (
-    <PanelShell title="유동성·리스크 신호" subtitle="computed signals">
+    <PanelShell title="유동성·리스크 신호" subtitle="종합 신호">
       {items.length === 0 ? (
         <EmptyPanel label="가공 신호 없음" />
       ) : (
@@ -287,7 +287,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
   const isEmpty = trends.length === 0 && structures.length === 0 && !doc;
 
   return (
-    <PanelShell title="시장 구조" subtitle="indices · slickcharts">
+    <PanelShell title="시장 구조" subtitle="지수·보유비중">
       {isEmpty ? (
         <EmptyPanel label="시장 구조 데이터 없음" />
       ) : (
@@ -372,7 +372,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
 
 function EventRiskPanel({ items }: { items: MarketEventRisk[] }) {
   return (
-    <PanelShell title="이벤트 리스크" subtitle="USD calendar">
+    <PanelShell title="이벤트 리스크" subtitle="미국 경제일정">
       {items.length === 0 ? (
         <EmptyPanel label="다가오는 주요 이벤트 없음" />
       ) : (
@@ -496,7 +496,7 @@ export default function MarketValuationClient() {
             </span>
           ) : null}
           <TransitionLink href="/explore" className="data-shell-link">
-            Explore
+            탐색
           </TransitionLink>
         </div>
       </section>

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const symbol = ticker.toUpperCase();
   return {
     title: `${symbol} ETF 상세 | 100xFenok`,
-    description: `${symbol} ETF 보유·스왑 원장, 섹터/국가 분해, 가격 히스토리`,
+    description: `${symbol} ETF 보유·스왑 구성, 섹터/국가 분해, 가격 히스토리`,
   };
 }
 

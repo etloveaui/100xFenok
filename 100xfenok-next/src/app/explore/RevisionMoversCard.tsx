@@ -70,11 +70,11 @@ export default function RevisionMoversCard() {
     return (
       <section className="panel">
         <div className="panel-h">
-          <h2>리비전 무버</h2>
+          <h2>실적 추정치 변화</h2>
           <span className="desc">추정치 변화</span>
         </div>
         <div className="panel-b text-sm font-semibold text-slate-500">
-          {loaded ? "표시할 리비전 무버가 없습니다." : "리비전 데이터 확인 중"}
+          {loaded ? "표시할 추정치 변화가 없습니다." : "추정치 변화 확인 중"}
         </div>
       </section>
     );
@@ -83,14 +83,14 @@ export default function RevisionMoversCard() {
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>리비전 무버</h2>
+        <h2>실적 추정치 변화</h2>
         <span className="desc">추정치 변화</span>
       </div>
       <div className="mv-split">
         <MoverList rows={up} tone="up" />
         <MoverList rows={down} tone="down" />
       </div>
-      <div className="panel-foot">FY+1 EPS 컨센서스 1주 변화율 · 기저가 0에 가까우면 %가 과장될 수 있음</div>
+      <div className="panel-foot">FY+1 EPS 시장 예상 1주 변화율 · 기저가 0에 가까우면 %가 과장될 수 있음</div>
     </section>
   );
 }

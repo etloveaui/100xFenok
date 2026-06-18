@@ -196,7 +196,7 @@ function ConcentrationPanel({ model }: MarketStructureSlotProps) {
       type="bar"
       ranges={[]}
       formatValue={(value) => (value === null ? "—" : `${value.toFixed(1)}%`)}
-      footnote="SlickCharts 보유 비중 기준"
+      footnote="보유 비중 기준"
     />
   );
 }

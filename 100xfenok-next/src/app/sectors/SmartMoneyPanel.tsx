@@ -45,11 +45,11 @@ export default function SmartMoneyPanel({
           13F {quarter}{cohort}
         </span>
         <TransitionLink href="/superinvestors" className="ml-auto text-[11px] font-black text-brand-interactive hover:underline">
-          구루 보기 →
+          투자 대가 보기 →
         </TransitionLink>
       </div>
       <p className="mt-1 text-[10px] font-semibold text-slate-400">
-        {generated ? `${generated} 생성 · ` : ""}{sourceMeta.smartMoneyDisclaimer ?? "13F 장기 보유 포지션 기준 섹터 비중"}
+        {generated ? `${generated} 생성 · ` : ""}{sourceMeta.smartMoneyDisclaimer ?? "13F 공시 기반 장기 보유 포지션만 집계합니다. 공시는 최대 45일 늦게 반영됩니다."}
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {smartRows.map(({ row, smart }) => (

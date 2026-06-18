@@ -675,7 +675,7 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
       <div className="flex min-w-0 items-start justify-between gap-2">
         <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
         <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
-          {candidateCount}개 후보
+          출처 {candidateCount}곳 확인
         </span>
       </div>
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">
@@ -746,15 +746,15 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       {data.asset_type === "etf" ? (
         <div className="mt-3 grid min-w-0 gap-2 md:grid-cols-3">
           <EtfBreakdownStrip title="자산 배분" rows={data.etf?.asset_allocation} limit={breakdownLimit} />
-          <EtfBreakdownStrip title="섹터 분해" rows={data.etf?.sectors} limit={breakdownLimit} />
-          <EtfBreakdownStrip title="국가 분해" rows={data.etf?.countries} limit={breakdownLimit} />
+          <EtfBreakdownStrip title="섹터 비중" rows={data.etf?.sectors} limit={breakdownLimit} />
+          <EtfBreakdownStrip title="국가 비중" rows={data.etf?.countries} limit={breakdownLimit} />
         </div>
       ) : null}
 
       {topHoldings.length > 0 ? (
         <div className="mt-3 min-w-0">
           <div className="mb-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">ETF 상위 보유</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">ETF 상위 보유 종목</p>
             <span className="text-[10px] font-bold text-slate-400">
               {data.etf?.holdings_updated ?? "—"} · {data.etf?.holdings_count ?? topHoldings.length}개
             </span>
@@ -1210,8 +1210,8 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">리비전·컨센서스</h4>
-        <span className="text-[10px] font-bold text-slate-400">EPS weekly consensus</span>
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">추정치 변화·시장 예상</h4>
+        <span className="text-[10px] font-bold text-slate-400">EPS 주간 예상</span>
       </div>
       {epsRows.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-3">
@@ -1292,7 +1292,7 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">실적·추정 원자료</h4>
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">실적·예상치 상세</h4>
         <span className="text-[10px] font-bold text-slate-400">FY-4 ~ FY+3 표준화 데이터</span>
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
@@ -1469,7 +1469,7 @@ export function PriceDividendHistoryDepth({
       <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">가격·배당 히스토리</h4>
         <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
-          {latestMetric?.date ?? data.updated?.slice(0, 10) ?? "—"} · 529개 종목 기준
+          {latestMetric?.date ?? data.updated?.slice(0, 10) ?? "—"} · 수집 데이터 기준
         </span>
       </div>
 

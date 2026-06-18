@@ -25,7 +25,7 @@ export type TickerSurfacePayload = {
 const SECTION_LABELS: Record<SectionKey, string> = {
   earnings: "어닝",
   actions: "이벤트",
-  markets: "무버",
+  markets: "급등락",
   etfs: "ETF",
   ipo: "IPO",
   industry: "산업",
@@ -147,9 +147,9 @@ export default function TickerSurfaceEventsCard({
   if (!loaded) {
     return (
       <section className="panel stock-section">
-        <div className="panel-h"><h2>표면 이벤트</h2></div>
+        <div className="panel-h"><h2>관련 이벤트</h2></div>
         <div className="panel-b">
-          <p className="text-xs font-semibold text-slate-400">티커별 표면 데이터를 확인하고 있습니다.</p>
+          <p className="text-xs font-semibold text-slate-400">티커별 관련 이벤트를 확인하고 있습니다.</p>
         </div>
       </section>
     );
@@ -160,8 +160,8 @@ export default function TickerSurfaceEventsCard({
   return (
     <section className="panel stock-section">
       <div className="panel-h">
-        <h2>표면 이벤트</h2>
-        <span className="desc">{payload.ticker} · {rowsReturned.toLocaleString("ko-KR")}행</span>
+        <h2>관련 이벤트</h2>
+        <span className="desc">{payload.ticker} · {rowsReturned.toLocaleString("ko-KR")}개</span>
       </div>
       <div className="panel-b space-y-3">
         {sections.map(({ section, rows }) => (
@@ -189,7 +189,7 @@ export default function TickerSurfaceEventsCard({
           </div>
         ))}
         <p className="text-[9px] font-semibold text-slate-400">
-          전체 surface JSON은 서버에서 티커별로 필터링되어 전송됩니다.
+          관련 이벤트는 서버에서 티커별로 정리해 표시합니다.
         </p>
       </div>
     </section>

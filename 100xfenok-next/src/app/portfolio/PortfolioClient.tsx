@@ -228,7 +228,7 @@ export default function PortfolioClient() {
       let doc: Portfolio;
       if (parsed.portfolios && typeof parsed.portfolios === "object" && !Array.isArray(parsed.portfolios)) {
         const entries = Object.entries(parsed.portfolios) as [string, { cash?: number; holdings?: Array<{ ticker: string; shares: number; avg_cost: number }> }][];
-        if (entries.length === 0) throw new Error("portfolios가 비어 있습니다");
+        if (entries.length === 0) throw new Error("백업에 포트폴리오가 없습니다");
         const [name, data] = entries[0];
         doc = {
           id: newId(),
@@ -246,14 +246,14 @@ export default function PortfolioClient() {
           holdings: (parsed.portfolios[0]?.holdings ?? []).map((h: Holding) => ({ ticker: h.ticker.toUpperCase(), shares: h.shares, avg_cost: h.avg_cost })),
         };
       } else {
-        throw new Error("지원하지 않는 형식입니다");
+        throw new Error("지원하지 않는 백업 형식입니다");
       }
       const next = [...portfolios, doc];
       savePortfolios(next);
       setActiveId(doc.id);
       setImportText("");
-    } catch (e) {
-      setImportError(e instanceof Error ? e.message : "JSON 파싱 실패");
+    } catch {
+      setImportError("백업 내용을 읽지 못했습니다. 내보낸 백업 내용을 그대로 붙여넣어 주세요.");
     }
   }
 
@@ -462,7 +462,7 @@ export default function PortfolioClient() {
       {/* Import / Export */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-          <h2 className="text-sm font-black tracking-tight text-slate-900">JSON 내보내기</h2>
+          <h2 className="text-sm font-black tracking-tight text-slate-900">백업 내보내기</h2>
           <button
             type="button"
             onClick={handleExport}
@@ -479,14 +479,14 @@ export default function PortfolioClient() {
           )}
         </div>
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-          <h2 className="text-sm font-black tracking-tight text-slate-900">JSON 가져오기</h2>
+          <h2 className="text-sm font-black tracking-tight text-slate-900">백업 가져오기</h2>
           <textarea
             value={importText}
             onChange={(e) => {
               setImportText(e.target.value);
               setImportError(null);
             }}
-            placeholder='{"portfolios": {"내 포트폴리오": {"cash": 0, "holders": [...]}}} 또는 {"version":1, "portfolios":[...]}'
+            placeholder="백업 내용을 붙여넣으세요"
             className="mt-2 h-32 w-full rounded-xl border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 outline-none focus:border-brand-interactive"
           />
           {importError && <p className="mt-1 text-[10px] font-bold text-rose-600">{importError}</p>}
@@ -619,7 +619,7 @@ function HoldingsTable({
 function Disclaimer() {
   return (
     <p className="text-[10px] font-semibold text-slate-400">
-      기기 내 저장(localStorage) · 서버 전송 없음 · 시세는 주간 데이터 기준으로 지연될 수 있음
+      이 브라우저에만 저장 · 서버 전송 없음 · 시세는 주간 데이터 기준으로 지연될 수 있음
     </p>
   );
 }

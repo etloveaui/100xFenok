@@ -83,7 +83,7 @@ const NAV: Array<{ id: ShellPage; label: string; href: string; icon: ReactNode }
   },
   {
     id: "superinvestors",
-    label: "구루",
+    label: "투자자",
     href: "/superinvestors",
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">

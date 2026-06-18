@@ -169,17 +169,17 @@ export default function EtfSurfaceSnapshotCard() {
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>ETF 표면 데이터</h2>
+        <h2>ETF 한눈에 보기</h2>
         <span className="desc">
-          {asOf(data?.newEtfs?.fetched_at, data?.screener?.fetched_at)} · {fmtNumber(countRows(data?.screener))}개 스크리너
+          {asOf(data?.newEtfs?.fetched_at, data?.screener?.fetched_at)} · {fmtNumber(countRows(data?.screener))}개 ETF
         </span>
       </div>
 
       {!loaded ? (
         <div className="mv-row">
           <span className="co">
-            <div className="n">ETF 표면 확인 중</div>
-            <div className="tk">신규·운용사·테마 데이터를 읽고 있습니다</div>
+            <div className="n">ETF 현황 확인 중</div>
+            <div className="tk">신규 상장·AUM·테마 목록을 읽고 있습니다</div>
           </span>
           <span className="pc num neutral">...</span>
         </div>
@@ -187,7 +187,7 @@ export default function EtfSurfaceSnapshotCard() {
         <div className="panel-b grid gap-3 lg:grid-cols-2">
           <div className="mv-col">
             <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">
-              신규 ETF · {fmtNumber(countRows(data?.newEtfs))}개
+              신규 상장 ETF · {fmtNumber(countRows(data?.newEtfs))}개
             </div>
             {newEtfs.map((row) => (
               <EtfLink
@@ -214,7 +214,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용사 표면</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용사별 대표 ETF</div>
             {providerLeaders.map((row) => (
               <EtfLink
                 key={`provider-${row.symbol}`}
@@ -241,8 +241,11 @@ export default function EtfSurfaceSnapshotCard() {
         </div>
       )}
 
-      <div className="panel-foot">
-        <span>ETF 표면 원본은 서버에서 요약되어 전송됩니다</span>
+      <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
+        <span>목록과 상세 페이지는 데이터 갱신 시 자동으로 바뀝니다</span>
+        <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
+          신규 상장 전체 보기
+        </TransitionLink>
       </div>
     </section>
   );

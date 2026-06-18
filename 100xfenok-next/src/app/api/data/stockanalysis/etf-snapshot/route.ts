@@ -63,7 +63,7 @@ export async function GET() {
     300,
     async () => {
       const [newEtfs, screener, blackrock, proshares, bitcoin] = await Promise.all([
-        summarizeSurface("new_etfs", ["s", "n", "inceptionDate", "price", "change"], 5),
+        summarizeSurface("new_etfs", ["s", "n", "inceptionDate", "price", "change"], 100),
         summarizeSurface("etf_screener", ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings"], 5),
         summarizeSurface("etf_provider_blackrock", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 3),
         summarizeSurface("etf_provider_proshares", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 3),
@@ -74,7 +74,7 @@ export async function GET() {
         {
           schema_version: "stockanalysis-etf-snapshot/v1",
           generated_at: new Date().toISOString(),
-          source: "stockanalysis ETF surfaces summarized from local DataPack",
+          source: "local ETF data snapshot",
           newEtfs,
           screener,
           blackrock,

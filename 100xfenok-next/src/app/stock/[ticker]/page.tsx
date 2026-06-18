@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
   return {
     title: `${ticker.toUpperCase()} 종목 상세 | 100xFenok`,
-    description: `${ticker.toUpperCase()} 종목 상세 분석 — PER 밴드, 매출/EPS 추이, 13F 구루 보유 현황`,
+    description: `${ticker.toUpperCase()} 종목 상세 분석 — PER 밴드, 매출/EPS 추이, 13F 투자자 보유 현황`,
   };
 }
 

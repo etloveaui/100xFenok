@@ -276,18 +276,18 @@ export default function StockWorkbenchCard() {
   const revisionCount = (data?.revisions?.up?.length ?? 0) + (data?.revisions?.down?.length ?? 0);
   const returnsCount = data?.discovery?.universe?.uniqueCount ?? null;
   const tabs: Array<{ key: WorkbenchTab; label: string; count: number | null }> = [
-    { key: "action", label: "액션", count: allActions.length },
-    { key: "revision", label: "리비전", count: revisionCount },
-    { key: "movers", label: "무버", count: moverCount },
+    { key: "action", label: "이벤트", count: allActions.length },
+    { key: "revision", label: "추정치", count: revisionCount },
+    { key: "movers", label: "급등락", count: moverCount },
     { key: "returns", label: "수익/배당", count: returnsCount },
   ];
 
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>종목 작업대</h2>
+        <h2>종목 후보</h2>
         <span className="desc">
-          {datePart(data?.actions?.generated_at ?? data?.revisions?.generated_at ?? data?.discovery?.generated_at)} · 후보/리비전/무버
+          {datePart(data?.actions?.generated_at ?? data?.revisions?.generated_at ?? data?.discovery?.generated_at)} · 이벤트/추정치/급등락
         </span>
       </div>
 
@@ -295,7 +295,7 @@ export default function StockWorkbenchCard() {
         <div className="mv-row">
           <span className="co">
             <div className="n">종목 후보 확인 중</div>
-            <div className="tk">액션·리비전·무버·수익률 데이터를 읽고 있습니다</div>
+            <div className="tk">이벤트·추정치·급등락·수익률 데이터를 읽고 있습니다</div>
           </span>
           <span className="pc num neutral">...</span>
         </div>
@@ -323,9 +323,9 @@ export default function StockWorkbenchCard() {
             <div className="mt-3">
               <div className="mb-2 flex flex-wrap gap-1.5">
                 {[
-                  ["smart_money", "구루"],
-                  ["value_momentum", "밸류"],
-                  ["index_core", "지수"],
+                  ["smart_money", "기관·고수"],
+                  ["value_momentum", "밸류+모멘텀"],
+                  ["index_core", "지수 핵심"],
                 ].map(([key, label]) => (
                   <button
                     key={key}
@@ -353,7 +353,7 @@ export default function StockWorkbenchCard() {
                     tone={actionTone(row)}
                   />
                 )) : (
-                  <StockRowLink name="표시할 액션 후보 없음" detail="선택한 버킷이 비어 있습니다" tone="neutral" />
+                  <StockRowLink name="표시할 투자 후보 없음" detail="선택한 분류에 표시할 종목이 없습니다" tone="neutral" />
                 )}
               </div>
             </div>
@@ -447,7 +447,7 @@ export default function StockWorkbenchCard() {
       )}
 
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
-        <span>계산 점수·추정치 변화·시장 무버·수익/배당 요약은 데이터 갱신 시 자동 반영됩니다</span>
+        <span>계산 점수·추정치 변화·급등락 종목·수익/배당 요약은 데이터 갱신 시 자동 반영됩니다</span>
         <TransitionLink href="/screener" className="font-black text-brand-interactive hover:underline">
           스크리너로 이동
         </TransitionLink>

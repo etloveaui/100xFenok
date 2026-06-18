@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
+import TransitionLink from "@/components/TransitionLink";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
 import type { EtfTypeFilter } from "../explore/etfUniverseUtils";
 import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
@@ -10,8 +11,8 @@ interface Props {
 }
 
 export const metadata: Metadata = {
-  title: "ETF 유니버스 | 100xFenok",
-  description: "StockAnalysis 기반 ETF 유니버스와 보유 원장을 검색하고 상세 탭으로 이동합니다.",
+  title: "ETF 검색 | 100xFenok",
+  description: "ETF 목록과 보유 구성을 검색하고 상세 페이지로 이동합니다.",
 };
 
 const plexKr = IBM_Plex_Sans_KR({
@@ -39,14 +40,14 @@ export default async function EtfsPage({ searchParams }: Props) {
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
-              <p className="data-shell-kicker">ETF Universe</p>
-              <h1 className="data-shell-title">ETF 유니버스</h1>
+              <p className="data-shell-kicker">ETF Search</p>
+              <h1 className="data-shell-title">ETF 검색</h1>
               <p className="data-shell-desc">
-                ETF 목록, AUM, 카테고리를 로컬 데이터팩에서 읽고 각 행을 ETF 상세 원장으로 연결합니다.
+                ETF 목록, AUM, 유형 필터를 한곳에서 보고 각 행에서 상세 페이지로 이동합니다.
               </p>
             </div>
             <div className="data-shell-head-actions">
-              <span className="data-shell-pill ok"><span />DataPack</span>
+              <TransitionLink href="/etfs/new" className="data-shell-pill ok"><span />신규 상장</TransitionLink>
             </div>
           </div>
         </section>

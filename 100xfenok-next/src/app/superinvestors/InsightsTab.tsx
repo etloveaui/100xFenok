@@ -172,7 +172,7 @@ function BuyingPressureCard({ data, trades }: { data: BuyingPressureData | null;
         buyRows: buy,
         sellRows: sell,
         quarter: trades.metadata.quarter,
-        note: "구루 매매랭킹 기반 — 매수/매도 참여 구루 수와 거래액으로 압력 측정 (2인 이상)",
+        note: "투자 대가 매매 순위 기반 — 매수/매도 참여 투자자 수와 거래액으로 압력 측정 (2인 이상)",
       };
     }
     const legacyBuy = (data?.top_buying ?? [])
@@ -281,7 +281,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">종목</th>
-              <th className="px-2 py-1.5 text-left">구루</th>
+              <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-right">금액</th>
               <th className="px-2 py-1.5 text-right">비중</th>
             </tr>
@@ -341,7 +341,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
         <table className="w-full min-w-[400px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-              <th className="px-2 py-1.5 text-left">구루</th>
+              <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-left">티커</th>
               <th className="px-2 py-1.5 text-right">포트 비중</th>
               <th className="px-2 py-1.5 text-right">평가액</th>
@@ -370,7 +370,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
         </table>
       </div>
       <p className="mt-2 text-[10px] font-semibold text-slate-400">
-        {data.metadata.quarter} · 각 구루 포트폴리오 TOP5 포지션 (비중 기준 정렬, 상위 12개)
+        {data.metadata.quarter} · 각 투자자 포트폴리오 TOP5 포지션 (비중 기준 정렬, 상위 12개)
       </p>
     </div>
   );
@@ -445,7 +445,7 @@ function HhiCard({ data }: { data: HhiData }) {
         <table className="w-full min-w-[400px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-              <th className="px-2 py-1.5 text-left">구루</th>
+              <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-right">HHI</th>
               <th className="px-2 py-1.5 text-right">TOP1 비중</th>
               <th className="px-2 py-1.5 text-right">보유수</th>
@@ -478,7 +478,7 @@ function HhiCard({ data }: { data: HhiData }) {
         </table>
       </div>
       <p className="mt-2 text-[10px] font-semibold text-slate-400">
-        {data.metadata.quarter} · HHI (Herfindahl-Hirschman Index): 0~1, 높을수록 집중 · concentrated≥0.25, moderate≥0.15, diversified&lt;0.15
+        {data.metadata.quarter} · HHI: 0~1, 높을수록 집중 · 집중≥0.25, 보통≥0.15, 분산&lt;0.15
       </p>
     </div>
   );
@@ -548,7 +548,7 @@ export default function InsightsTab() {
           {/* 1. 매수 압력 */}
           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
-            <p className="mb-3 text-[10px] font-semibold text-slate-400">구루 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
+            <p className="mb-3 text-[10px] font-semibold text-slate-400">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
             {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <SkeletonCard />}
           </div>
 
@@ -569,7 +569,7 @@ export default function InsightsTab() {
             {/* 3. 확신 베팅 */}
             <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">확신 베팅 (TOP5)</h3>
-              <p className="mb-3 text-[10px] font-semibold text-slate-400">각 구루 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
+              <p className="mb-3 text-[10px] font-semibold text-slate-400">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
               {cv ? <ConvictionCard data={cv} /> : <SkeletonCard />}
             </div>
           </div>
