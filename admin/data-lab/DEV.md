@@ -139,6 +139,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF queue visibility**: `data/stockanalysis/backfill/pending_ledger.json` is fetched directly for Admin-only drilldown rows. This shows pending/retry/failure tickers from the data refresh artifacts instead of static copy.
 - **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 - **ETF gap drilldown**: Data Lab reads `counts.missing_by_source` and `samples` from `coverage/etf_detail.json` so operators can see which new/listed ETFs still rely on fallback surfaces.
+- **ETF missing reasons**: `coverage/etf_detail.json` also exposes `missing_reason_summary` and `missing_status_summary`; Data Lab renders those as source-neutral Korean buckets (`외부 분류 불일치`, `아직 수집 전`, `재시도 대기`) while raw provider evidence remains in JSON.
 - **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
 - **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json`.
 
@@ -157,6 +158,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.14 | 2026-06-19 | Added ETF missing-reason summary rendering so remaining uncovered details are separated into external classification mismatch, untracked, and retry-wait buckets |
 | 2.2.13 | 2026-06-19 | Clarified ETF collection queue wording and added next-attempt dates for cooldown ledger rows so operators can see why missing ETF details are not retried immediately |
 | 2.2.12 | 2026-06-19 | Added `surface_consumers.json` to Freshness Guard so missing/stale surface consumer maps are visible in Data Lab ops checks |
 | 2.2.11 | 2026-06-19 | Moved StockAnalysis surface consumer map to `data/stockanalysis/surface_consumers.json` and added `qa:surface-consumers` drift gate |

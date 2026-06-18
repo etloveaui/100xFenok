@@ -394,7 +394,18 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     encoding="utf-8",
                 )
                 (out_dir / "backfill" / "pending_ledger.json").write_text(
-                    json.dumps({"entries": {"DDD": {"ticker": "DDD", "consecutive_failures": 1}}}),
+                    json.dumps(
+                        {
+                            "entries": {
+                                "DDD": {
+                                    "ticker": "DDD",
+                                    "consecutive_failures": 3,
+                                    "next_attempt_after_utc": "2099-01-01T00:00:00Z",
+                                    "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+                                }
+                            }
+                        }
+                    ),
                     encoding="utf-8",
                 )
                 (out_dir / "etfs" / "AAA.json").write_text(
@@ -418,6 +429,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(coverage["counts"]["source_breakdown"]["new_etfs"], 1)
         self.assertEqual(coverage["counts"]["yahoo_fallback_files"], 1)
         self.assertEqual(coverage["counts"]["pending_tracked_missing"], 1)
+        self.assertEqual(coverage["missing_reason_summary"], {"external_quote_type_mismatch": 1, "untracked": 1})
+        self.assertEqual(coverage["missing_status_summary"], {"retry_cooldown": 1, "untracked": 1})
+        self.assertEqual(coverage["missing_reason_samples"]["external_quote_type_mismatch"], ["DDD"])
+        self.assertEqual(coverage["missing_reason_samples"]["untracked"], ["BBB"])
         self.assertEqual(coverage["missing_tickers"], ["BBB", "DDD"])
 
     def test_incremental_etf_backfill_prioritizes_unattempted_missing_before_prior_failures(self) -> None:

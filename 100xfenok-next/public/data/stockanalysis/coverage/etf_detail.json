@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-06-18T19:31:57Z",
+  "generated_at": "2026-06-18T19:54:02Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -37,9 +37,85 @@
       "etf_screener": 138,
       "new_etfs": 31
     },
+    "missing_status_breakdown": {
+      "retry_cooldown": 81,
+      "untracked": 57
+    },
+    "missing_failure_breakdown": {
+      "external_quote_type_mismatch": 81,
+      "untracked": 57
+    },
     "pending_tracked": 86,
     "pending_cooldown": 81,
     "pending_tracked_missing": 81
+  },
+  "missing_reason_summary": {
+    "external_quote_type_mismatch": 81,
+    "untracked": 57
+  },
+  "missing_status_summary": {
+    "retry_cooldown": 81,
+    "untracked": 57
+  },
+  "missing_reason_samples": {
+    "external_quote_type_mismatch": [
+      "AAAD",
+      "ACII",
+      "ACYS",
+      "ADDS",
+      "ADIU",
+      "AFGR",
+      "AIQD",
+      "AIQU",
+      "APHG",
+      "AXTL",
+      "BAVA",
+      "BRSM"
+    ],
+    "untracked": [
+      "AMJB",
+      "AMUB",
+      "ATMP",
+      "BDCX",
+      "BDCZ",
+      "BERZ",
+      "BNKU",
+      "BULZ",
+      "CARD",
+      "CEFD",
+      "DGP",
+      "DGZ"
+    ]
+  },
+  "missing_status_samples": {
+    "retry_cooldown": [
+      "AAAD",
+      "ACII",
+      "ACYS",
+      "ADDS",
+      "ADIU",
+      "AFGR",
+      "AIQD",
+      "AIQU",
+      "APHG",
+      "AXTL",
+      "BAVA",
+      "BRSM"
+    ],
+    "untracked": [
+      "AMJB",
+      "AMUB",
+      "ATMP",
+      "BDCX",
+      "BDCZ",
+      "BERZ",
+      "BNKU",
+      "BULZ",
+      "CARD",
+      "CEFD",
+      "DGP",
+      "DGZ"
+    ]
   },
   "missing_tickers": [
     "AAAD",
@@ -886,6 +962,48 @@
       "HDLB",
       "HRSK",
       "IDEQ"
+    ],
+    "missing_retry_cooldown": [
+      "AAAD",
+      "ACII",
+      "ACYS",
+      "ADDS",
+      "ADIU",
+      "AFGR",
+      "AIQD",
+      "AIQU",
+      "APHG",
+      "AXTL",
+      "BAVA",
+      "BRSM"
+    ],
+    "missing_untracked": [
+      "AMJB",
+      "AMUB",
+      "ATMP",
+      "BDCX",
+      "BDCZ",
+      "BERZ",
+      "BNKU",
+      "BULZ",
+      "CARD",
+      "CEFD",
+      "DGP",
+      "DGZ"
+    ],
+    "missing_external_quote_type_mismatch": [
+      "AAAD",
+      "ACII",
+      "ACYS",
+      "ADDS",
+      "ADIU",
+      "AFGR",
+      "AIQD",
+      "AIQU",
+      "APHG",
+      "AXTL",
+      "BAVA",
+      "BRSM"
     ],
     "yahoo_fallback": [
       "AAAU",

@@ -1409,6 +1409,36 @@ def pending_ledger_counts(payload: dict, now_dt: datetime, cooldown_days: float,
     }
 
 
+def classify_missing_detail_failure(entry: dict | None) -> str:
+    if not isinstance(entry, dict):
+        return "untracked"
+    reason = str(entry.get("failure_reason") or "")
+    if "quoteType is not ETF/MUTUALFUND" in reason:
+        return "external_quote_type_mismatch"
+    if "HTTP Error 404" in reason:
+        return "source_unavailable"
+    if reason:
+        return "other_error"
+    return "tracked_no_reason"
+
+
+def classify_missing_detail_status(
+    entry: dict | None,
+    now_dt: datetime,
+    cooldown_days: float,
+    failure_threshold: int,
+) -> str:
+    if not isinstance(entry, dict):
+        return "untracked"
+    if pending_entry_in_cooldown(entry, now_dt, cooldown_days, failure_threshold):
+        return "retry_cooldown"
+    return "retry_pending"
+
+
+def increment_count(payload: dict, key: str) -> None:
+    payload[key] = (payload.get(key) or 0) + 1
+
+
 def update_pending_ledger(
     results: list[dict],
     selected_rows: list[dict],
@@ -1628,6 +1658,27 @@ def build_etf_detail_coverage() -> dict:
         source: sum(1 for ticker in missing if source in symbol_sources.get(ticker, set()))
         for source in ("etf_universe", "etf_screener", "new_etfs")
     }
+    missing_status_breakdown = {}
+    missing_failure_breakdown = {}
+    missing_samples_by_status: dict[str, list[str]] = {}
+    missing_samples_by_failure: dict[str, list[str]] = {}
+    for ticker in missing:
+        pending_entry = pending_entries.get(ticker)
+        status_key = classify_missing_detail_status(
+            pending_entry,
+            now_dt,
+            DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS,
+            DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES,
+        )
+        failure_key = classify_missing_detail_failure(pending_entry)
+        increment_count(missing_status_breakdown, status_key)
+        increment_count(missing_failure_breakdown, failure_key)
+        missing_samples_by_status.setdefault(status_key, [])
+        missing_samples_by_failure.setdefault(failure_key, [])
+        if len(missing_samples_by_status[status_key]) < 12:
+            missing_samples_by_status[status_key].append(ticker)
+        if len(missing_samples_by_failure[failure_key]) < 12:
+            missing_samples_by_failure[failure_key].append(ticker)
     coverage_pct = round((len(covered) / len(candidate_symbols)) * 100, 2) if candidate_symbols else 0.0
     primary_pct = round((len(set(stockanalysis_detail) & candidate_set) / len(candidate_symbols)) * 100, 2) if candidate_symbols else 0.0
 
@@ -1662,9 +1713,21 @@ def build_etf_detail_coverage() -> dict:
             "coverage_pct": coverage_pct,
             "primary_stockanalysis_pct": primary_pct,
             "missing_by_source": missing_by_source,
+            "missing_status_breakdown": dict(sorted(missing_status_breakdown.items())),
+            "missing_failure_breakdown": dict(sorted(missing_failure_breakdown.items())),
             "pending_tracked": pending_counts.get("tracked", 0),
             "pending_cooldown": pending_counts.get("cooldown", 0),
             "pending_tracked_missing": sum(1 for ticker in missing if ticker in pending_entries),
+        },
+        "missing_reason_summary": dict(sorted(missing_failure_breakdown.items())),
+        "missing_status_summary": dict(sorted(missing_status_breakdown.items())),
+        "missing_reason_samples": {
+            key: value
+            for key, value in sorted(missing_samples_by_failure.items())
+        },
+        "missing_status_samples": {
+            key: value
+            for key, value in sorted(missing_samples_by_status.items())
         },
         "missing_tickers": missing,
         "yahoo_fallback_tickers": yahoo_fallback,
@@ -1672,6 +1735,14 @@ def build_etf_detail_coverage() -> dict:
         "extra_detail_tickers": extra,
         "samples": {
             "missing": missing[:50],
+            **{
+                f"missing_{key}": value
+                for key, value in sorted(missing_samples_by_status.items())
+            },
+            **{
+                f"missing_{key}": value
+                for key, value in sorted(missing_samples_by_failure.items())
+            },
             "yahoo_fallback": yahoo_fallback[:50],
             "extra": extra[:50],
         },

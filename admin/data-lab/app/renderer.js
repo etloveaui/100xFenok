@@ -413,7 +413,14 @@ const Renderer = (function() {
   function renderEtfCoverageGapAudit(coverage) {
     const samples = coverage?.samples || {};
     const counts = coverage?.counts || {};
+    const reasonSummary = coverage?.missing_reason_summary || counts.missing_failure_breakdown || {};
+    const statusSummary = coverage?.missing_status_summary || counts.missing_status_breakdown || {};
+    const reasonSamples = coverage?.missing_reason_samples || {};
+    const statusSamples = coverage?.missing_status_samples || {};
     const missing = Array.isArray(samples.missing) ? samples.missing.filter(Boolean).slice(0, 36) : [];
+    const mismatch = sampleTickers(reasonSamples.external_quote_type_mismatch, samples.missing_external_quote_type_mismatch, 24);
+    const untracked = sampleTickers(reasonSamples.untracked, statusSamples.untracked, samples.missing_untracked, 24);
+    const cooldown = sampleTickers(statusSamples.retry_cooldown, samples.missing_retry_cooldown, 24);
     const yahooFallback = Array.isArray(samples.yahoo_fallback) ? samples.yahoo_fallback.filter(Boolean).slice(0, 36) : [];
     if (!missing.length && !yahooFallback.length) return '';
 
@@ -433,11 +440,19 @@ const Renderer = (function() {
           ${renderAuditMetric('ETF 목록 누락', counts.missing_by_source?.etf_universe)}
           ${renderAuditMetric('스크리너 누락', counts.missing_by_source?.etf_screener)}
           ${renderAuditMetric('보조 가격 상세', counts.yahoo_fallback_files)}
+          ${renderAuditMetric('외부 분류 불일치', reasonSummary.external_quote_type_mismatch)}
+          ${renderAuditMetric('아직 수집 전', reasonSummary.untracked)}
+          ${renderAuditMetric('재시도 대기', statusSummary.retry_cooldown)}
+          ${renderAuditMetric('다음 수집 후보', statusSummary.retry_pending)}
         </div>
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
-            <div class="mb-3 text-xs font-black text-gray-700">상세 파일 대기</div>
-            ${renderTickerChipList(missing, 'warn')}
+            <div class="mb-3 text-xs font-black text-gray-700">외부 분류 불일치</div>
+            ${renderTickerChipList(mismatch.length ? mismatch : cooldown, 'warn')}
+          </div>
+          <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
+            <div class="mb-3 text-xs font-black text-gray-700">아직 수집 전</div>
+            ${renderTickerChipList(untracked.length ? untracked : missing, 'warn')}
           </div>
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
             <div class="mb-3 text-xs font-black text-gray-700">보조 가격 상세 반영</div>
@@ -445,10 +460,22 @@ const Renderer = (function() {
           </div>
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          누락 티커는 상세 파일이 없더라도 ETF 페이지에서 목록/신규 상장 데이터 기준으로 먼저 표시됩니다. 다음 수집 또는 보조 가격 상세가 갱신되면 이 목록도 자동으로 바뀝니다.
+          상세 누락은 단순 실패가 아니라 외부 데이터가 ETF로 분류하지 않는 항목과 아직 재시도 이력이 없는 항목으로 나뉩니다. ETF 페이지는 목록/신규 상장 데이터 기준으로 먼저 열리고, 다음 수집 또는 보조 가격 상세가 갱신되면 이 분류도 자동으로 바뀝니다.
         </p>
       </section>
     `;
+  }
+
+  function sampleTickers(...items) {
+    const limit = Number(items[items.length - 1]) || 24;
+    const lists = items.slice(0, -1);
+    for (const item of lists) {
+      if (Array.isArray(item)) {
+        const rows = item.filter(Boolean).slice(0, limit);
+        if (rows.length) return rows;
+      }
+    }
+    return [];
   }
 
   function renderStockanalysisSurfaceCatalog(index, consumers) {
