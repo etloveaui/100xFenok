@@ -274,10 +274,10 @@ export default function Navbar() {
               >
                 <div className={`brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95 ${adminTapFlash ? 'ring-2 ring-brand-gold ring-offset-1' : ''}`}>
                   <Image
-                    src="/favicon-96x96.png"
+                    src="/100x-fenok-logo.png"
                     alt=""
-                    width={32}
-                    height={32}
+                    width={100}
+                    height={100}
                     priority
                     sizes="(max-width: 640px) 24px, 32px"
                     className="h-6 w-6 sm:h-8 sm:w-8"

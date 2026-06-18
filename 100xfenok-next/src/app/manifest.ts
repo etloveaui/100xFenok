@@ -4,14 +4,14 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
     name: "100x Fenok",
-    short_name: "100xFenok",
+    short_name: "FenoK",
     description: "시장 분석과 투자 전략을 위한 올인원 플랫폼",
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#f8fafc",
-    theme_color: "#f8fafc",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     lang: "ko-KR",
     icons: [
       {
@@ -27,7 +27,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/pwa-icon-maskable-512-v4.png",
+        src: "/pwa-icon-maskable-512-v5.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
