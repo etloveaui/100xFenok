@@ -22,16 +22,16 @@ backfill remains intentionally chunked with `--universe-backfill --offset
 --limit-etfs` to avoid large request bursts.
 
 Latest measured ETF detail coverage (2026-06-19 KST / 2026-06-18 UTC): 5,347
-candidate ETF symbols from `union(etf_universe, etf_screener, new_etfs)`, 5,112
-detail files, 235 missing detail files, 552 Yahoo fallback detail files, 95.61%
+candidate ETF symbols from `union(etf_universe, etf_screener, new_etfs)`, 5,199
+detail files, 148 missing detail files, 639 Yahoo fallback detail files, 97.23%
 detail coverage, and 85.28% primary StockAnalysis detail coverage. This proof
 lives in `coverage/etf_detail.json` and is intentionally `warn` while detail
 files are missing.
 
 Latest measured incremental-only run (2026-06-19 KST / 2026-06-18 UTC): 730
-eligible candidates (278 missing, 452 fallback retry), 120 selected, 120 total
-ETF requests with the default focus set skipped, 100 OK, 20 still pending, 0
-hard failures. All 100 OK records were source-tagged Yahoo Finance ETF/fund
+eligible candidates (178 missing, 552 fallback retry), 120 selected, 120 total
+ETF requests with the default focus set skipped, 87 OK, 33 still pending, 0
+hard failures. All 87 OK records were source-tagged Yahoo Finance ETF/fund
 fallbacks because StockAnalysis detail endpoints for that tail batch still
 returned expected 404-style responses.
 
@@ -165,10 +165,10 @@ are visible before a full detail endpoint exists.
   "status": "warn",
   "counts": {
     "candidate_total": 5347,
-    "covered_detail_files": 5112,
-    "missing_detail_files": 235,
-    "yahoo_fallback_files": 552,
-    "coverage_pct": 95.61,
+    "covered_detail_files": 5199,
+    "missing_detail_files": 148,
+    "yahoo_fallback_files": 639,
+    "coverage_pct": 97.23,
     "primary_stockanalysis_pct": 85.28
   },
   "missing_tickers": ["AAAD", "ACII", "..."]
