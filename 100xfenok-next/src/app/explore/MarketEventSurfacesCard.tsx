@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 
 interface SurfaceResult {
@@ -162,6 +162,18 @@ function cleanTicker(value: string | null | undefined): string {
   return String(value || "").replace(/^\$/, "").trim().toUpperCase();
 }
 
+function kstDateKey(now = new Date()): string {
+  return new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function safeRowKey(prefix: string, index: number, ...parts: Array<string | number | null | undefined>): string {
+  const body = parts
+    .map((part) => (part === null || part === undefined ? "" : String(part).trim()))
+    .filter(Boolean)
+    .join("-");
+  return `${prefix}-${body || index}`;
+}
+
 function timingLabel(value: string | null | undefined): string {
   const timing = String(value || "").trim().toLowerCase();
   if (timing === "bmo") return "장전";
@@ -171,8 +183,19 @@ function timingLabel(value: string | null | undefined): string {
 
 function earningsDetail(row: EarningsRecord): string {
   const eps = typeof row.eps_estimate === "number" ? `EPS ${row.eps_estimate.toFixed(2)}` : "EPS —";
-  const revenue = `매출 ${fmtCompactMoney(row.revenue_estimate)}`;
+  const revenueEstimate = fmtCompactMoney(row.revenue_estimate);
+  const revenue = `매출 ${revenueEstimate === "—" ? "—" : `$${revenueEstimate}`}`;
   return `${datePart(row.date)} · ${timingLabel(row.timing)} · ${eps} · ${revenue}`;
+}
+
+function TickerRowLink({ symbol, children }: { symbol?: string | null; children: ReactNode }) {
+  const ticker = cleanTicker(symbol);
+  if (!ticker) return <div className="mv-row">{children}</div>;
+  return (
+    <TransitionLink href={`/stock/${encodeURIComponent(ticker)}`} className="mv-row">
+      {children}
+    </TransitionLink>
+  );
 }
 
 export default function MarketEventSurfacesCard() {
@@ -193,7 +216,7 @@ export default function MarketEventSurfacesCard() {
   }, []);
 
   const upcomingEarnings = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = kstDateKey();
     return (data?.earnings?.records ?? [])
       .filter((row) => typeof row.date === "string" && row.date >= today)
       .sort((a, b) => {
@@ -292,31 +315,31 @@ export default function MarketEventSurfacesCard() {
       {loaded && (premarketTop || afterhoursTop || latestSplit) ? (
         <div className="mv-col mt-3">
           {premarketTop ? (
-            <TransitionLink href={`/stock/${encodeURIComponent(cleanTicker(premarketTop.symbol))}`} className="mv-row">
+            <TickerRowLink symbol={premarketTop.symbol}>
               <span className="co">
-                <div className="n">장전 {cleanTicker(premarketTop.symbol)}</div>
+                <div className="n">장전 {cleanTicker(premarketTop.symbol) || "—"}</div>
                 <div className="tk">{shortName(premarketTop.company_name)} · 거래 {premarketTop.pre_volume || "—"}</div>
               </span>
               <span className="pc num up">{premarketTop.pct_change || premarketTop.premkt_price || "—"}</span>
-            </TransitionLink>
+            </TickerRowLink>
           ) : null}
           {afterhoursTop ? (
-            <TransitionLink href={`/stock/${encodeURIComponent(cleanTicker(afterhoursTop.symbol))}`} className="mv-row">
+            <TickerRowLink symbol={afterhoursTop.symbol}>
               <span className="co">
-                <div className="n">장후 {cleanTicker(afterhoursTop.symbol)}</div>
+                <div className="n">장후 {cleanTicker(afterhoursTop.symbol) || "—"}</div>
                 <div className="tk">{shortName(afterhoursTop.company_name)} · 종가 {afterhoursTop.afterhr_close || "—"}</div>
               </span>
               <span className="pc num up">{afterhoursTop.pct_change || afterhoursTop.afterhr_price || "—"}</span>
-            </TransitionLink>
+            </TickerRowLink>
           ) : null}
           {latestSplit ? (
-            <TransitionLink href={`/stock/${encodeURIComponent(cleanTicker(latestSplit.symbol))}`} className="mv-row">
+            <TickerRowLink symbol={latestSplit.symbol}>
               <span className="co">
-                <div className="n">분할 {cleanTicker(latestSplit.symbol)}</div>
+                <div className="n">분할 {cleanTicker(latestSplit.symbol) || "—"}</div>
                 <div className="tk">{datePart(latestSplit.date)} · {shortName(latestSplit.company_name || latestSplit.name)}</div>
               </span>
               <span className="pc num neutral">{latestSplit.split_ratio || latestSplit.type || "—"}</span>
-            </TransitionLink>
+            </TickerRowLink>
           ) : null}
         </div>
       ) : null}
@@ -326,14 +349,14 @@ export default function MarketEventSurfacesCard() {
           {upcomingEarnings.length > 0 ? (
             <div className="mv-col">
               <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">어닝 캘린더</div>
-              {upcomingEarnings.map((row) => (
-                <TransitionLink key={`earn-${row.symbol}-${row.date}`} href={`/stock/${encodeURIComponent(cleanTicker(row.symbol))}`} className="mv-row">
+              {upcomingEarnings.map((row, index) => (
+                <TickerRowLink key={safeRowKey("earn", index, row.symbol, row.date, row.name)} symbol={row.symbol}>
                   <span className="co">
                     <div className="n">{cleanTicker(row.symbol) || shortName(row.name)}</div>
                     <div className="tk">{earningsDetail(row)}</div>
                   </span>
                   <span className="pc num neutral">{fmtCompactMoney(row.market_cap)}</span>
-                </TransitionLink>
+                </TickerRowLink>
               ))}
             </div>
           ) : null}
@@ -341,14 +364,14 @@ export default function MarketEventSurfacesCard() {
           {latestActions.length > 0 ? (
             <div className="mv-col">
               <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">기업 이벤트</div>
-              {latestActions.map((row) => (
-                <TransitionLink key={`action-${row.symbol}-${row.date}-${row.type}`} href={`/stock/${encodeURIComponent(cleanTicker(row.symbol))}`} className="mv-row">
+              {latestActions.map((row, index) => (
+                <TickerRowLink key={safeRowKey("action", index, row.symbol, row.date, row.type, row.text)} symbol={row.symbol}>
                   <span className="co">
                     <div className="n">{cleanTicker(row.symbol) || shortName(row.name || row.company_name)}</div>
                     <div className="tk">{datePart(row.date)} · {shortName(row.text || row.name || row.company_name, "—", 46)}</div>
                   </span>
                   <span className="pc num neutral">{row.split_ratio || row.type || "—"}</span>
-                </TransitionLink>
+                </TickerRowLink>
               ))}
             </div>
           ) : null}
@@ -364,7 +387,7 @@ export default function MarketEventSurfacesCard() {
           ) : latestActions[0] ? (
             <span>최근 이벤트 {latestActions[0].symbol} · {shortName(latestActions[0].text)}</span>
           ) : null}
-          <TransitionLink href="/admin/data-lab" style={{ marginLeft: 8, fontWeight: 900 }}>
+          <TransitionLink href="/admin/data-lab" className="ml-2 font-black">
             데이터 랩
           </TransitionLink>
         </div>

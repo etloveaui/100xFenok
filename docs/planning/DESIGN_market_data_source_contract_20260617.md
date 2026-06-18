@@ -185,7 +185,9 @@ External sources
     `new_etfs`, `earnings_calendar`, `actions_recent`, `actions_splits`,
     `market_premarket`, and `market_afterhours`;
   - earnings rows show date, BMO/AMC timing, EPS estimate, revenue estimate, and
-    market cap; action rows show dated split/corporate-event text.
+    market cap; action rows show dated split/corporate-event text;
+  - upcoming earnings are filtered on a KST date key, and ticker links degrade
+    to static rows when a surface row has no symbol.
 - `100xfenok-next/src/app/explore/EtfUniverseCard.tsx`
   - reads `stockanalysis/etf_universe.json` from the local public DataPack and
     renders a searchable/category-filterable ETF universe on Explore;
