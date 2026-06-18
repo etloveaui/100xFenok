@@ -158,6 +158,13 @@ The denominator is the union of the lightweight ETF list, ETF screener, and new
 ETF launch surface so newly listed ETFs such as single-stock or leveraged funds
 are visible before a full detail endpoint exists.
 
+ETF classification is rebuilt with the lightweight catalog surfaces. The
+classifier treats newer names such as `2X Long ADI Daily ETF` as single-stock
+leveraged ETFs while excluding index, volatility, commodity, crypto, bond, and
+futures contexts. Detail API fallback responses must carry the best available
+classification from matched surfaces or `etf_universe` so new ETF pages can show
+leverage/single-stock labels before a deep detail file exists.
+
 ```json
 {
   "schema_version": "stockanalysis/v1",

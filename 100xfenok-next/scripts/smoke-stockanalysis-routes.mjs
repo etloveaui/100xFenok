@@ -100,9 +100,16 @@ async function checkEtfDetails(root) {
   assert(adiu?.asset_type === "etf", "ADIU fallback must be ETF");
   assert(["surface_only", "universe_only"].includes(adiu?.detail_status), `ADIU fallback status invalid: ${adiu?.detail_status}`);
   assert(adiu?.normalized?.overview?.name, "ADIU fallback overview name missing");
+  assert(adiu?.normalized?.classification?.is_leveraged === true, "ADIU fallback leveraged classification missing");
+  assert(adiu?.normalized?.classification?.is_single_stock === true, "ADIU fallback single-stock classification missing");
+  assert(adiu?.normalized?.classification?.underlying === "ADI", `ADIU fallback underlying mismatch: ${adiu?.normalized?.classification?.underlying}`);
   return {
     IEFA: { holdings: iefa.normalized.holdings.length },
-    ADIU: { detail_status: adiu.detail_status, name: adiu.normalized.overview.name },
+    ADIU: {
+      detail_status: adiu.detail_status,
+      name: adiu.normalized.overview.name,
+      classification: adiu.normalized.classification,
+    },
   };
 }
 

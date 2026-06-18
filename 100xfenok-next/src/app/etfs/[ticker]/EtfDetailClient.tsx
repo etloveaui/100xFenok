@@ -51,6 +51,7 @@ interface EtfPayload {
     overview?: Record<string, unknown> | null;
     quote?: Record<string, unknown> | null;
     history?: HistoryPoint[];
+    classification?: EtfClassification | null;
   };
 }
 
@@ -433,7 +434,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const history = Array.isArray(normalized.history) ? normalized.history : [];
   const statusText = detailStatusText(etfData?.detail_status ?? null);
-  const classification = marketFacts?.etf?.classification ?? null;
+  const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
   const labels = classificationLabels(classification);
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const updateDate = factDate(marketFacts, "price") ?? rawText(quote.u) ?? etfData?.fetched_at ?? marketFacts?.generated_at;

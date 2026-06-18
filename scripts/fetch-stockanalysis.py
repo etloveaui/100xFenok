@@ -60,6 +60,16 @@ SINGLE_STOCK_UNDERLYING_TICKERS = {
     "META", "MSTR", "MSFT", "MU", "NFLX", "NKE", "NVDA", "ORCL", "PLTR", "SMCI",
     "TSLA", "TSM", "UNH", "WMT",
 }
+NON_SINGLE_STOCK_UNDERLYING_TOKENS = {
+    "BTC", "ETH", "SOL", "XRP", "VIX",
+}
+NON_SINGLE_STOCK_CONTEXT_RE = re.compile(
+    r"\b(?:"
+    r"bitcoin|ethereum|ether|xrp|solana|crypto|futures?|volatility|vix"
+    r"|index|innovation\s+100|nasdaq|s&p|russell|dow|treasury|bond|gold|silver|oil|gas"
+    r")\b",
+    flags=re.IGNORECASE,
+)
 ETF_CLASSIFICATION_ROW_KEYS = {
     "classification",
     "is_leveraged",
@@ -816,6 +826,19 @@ def extract_single_stock_underlying(text: str) -> str | None:
         match = re.search(pattern, text, flags=re.IGNORECASE)
         if match:
             return normalize_space(match.group(1)).rstrip(".,")
+
+    ticker_patterns = (
+        r"\b[1-9](?:\.\d+)?\s*x\s+(?:long|short)\s+([A-Z]{1,6})\s+daily\b",
+        r"\bdaily\s+target\s+[1-9](?:\.\d+)?\s*x\s+(?:long|short)\s+([A-Z]{1,6})\b",
+        r"\bdaily\s+([A-Z]{1,6})\s+(?:bull|bear)\s+[1-9](?:\.\d+)?\s*x\b",
+    )
+    if not NON_SINGLE_STOCK_CONTEXT_RE.search(text):
+        for pattern in ticker_patterns:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+            if match:
+                candidate = match.group(1).upper()
+                if candidate not in NON_SINGLE_STOCK_UNDERLYING_TOKENS:
+                    return candidate
 
     for ticker in sorted(SINGLE_STOCK_UNDERLYING_TICKERS, key=len, reverse=True):
         if re.search(rf"\b{re.escape(ticker)}\b", text, flags=re.IGNORECASE):
