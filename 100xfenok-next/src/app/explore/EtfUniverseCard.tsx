@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 
-interface EtfUniverseRecord {
+export interface EtfUniverseRecord {
   ticker?: string;
   name?: string;
   category?: string;
@@ -17,7 +17,7 @@ interface EtfUniverseRecord {
   underlying?: string | null;
 }
 
-interface EtfClassification {
+export interface EtfClassification {
   is_leveraged?: boolean;
   leverage_factor?: number | null;
   is_inverse?: boolean;
@@ -37,7 +37,7 @@ interface EtfUniverseDoc {
 
 let universeCache: EtfUniverseDoc | null = null;
 let universePending: Promise<EtfUniverseDoc | null> | null = null;
-type EtfTypeFilter = "전체" | "레버리지" | "단일종목 레버리지" | "인버스";
+export type EtfTypeFilter = "전체" | "레버리지" | "단일종목 레버리지" | "인버스";
 
 function loadUniverse(): Promise<EtfUniverseDoc | null> {
   if (universeCache) return Promise.resolve(universeCache);
@@ -60,7 +60,7 @@ function cleanCategory(value: string | null | undefined): string {
   return text && text !== "-" ? text : "미분류";
 }
 
-function formatNumber(value: number | null | undefined): string {
+export function formatNumber(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
 }
 
@@ -74,7 +74,7 @@ function formatAum(row: EtfUniverseRecord): string {
   return value.toLocaleString("en-US");
 }
 
-function asOfDate(value: string | null | undefined): string {
+export function asOfDate(value: string | null | undefined): string {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
 }
 
@@ -102,7 +102,7 @@ function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
   return null;
 }
 
-function isLeveragedEtf(row: EtfUniverseRecord): boolean {
+export function isLeveragedEtf(row: EtfUniverseRecord): boolean {
   const classification = rowClassification(row);
   if (typeof classification?.is_leveraged === "boolean") return classification.is_leveraged;
   const text = etfSearchText(row);
@@ -116,7 +116,7 @@ function isLeveragedEtf(row: EtfUniverseRecord): boolean {
   );
 }
 
-function isSingleStockLeveragedEtf(row: EtfUniverseRecord): boolean {
+export function isSingleStockLeveragedEtf(row: EtfUniverseRecord): boolean {
   const classification = rowClassification(row);
   if (typeof classification?.is_single_stock === "boolean") return classification.is_single_stock;
   if (!isLeveragedEtf(row)) return false;
@@ -127,7 +127,7 @@ function isSingleStockLeveragedEtf(row: EtfUniverseRecord): boolean {
   );
 }
 
-function isInverseEtf(row: EtfUniverseRecord): boolean {
+export function isInverseEtf(row: EtfUniverseRecord): boolean {
   const classification = rowClassification(row);
   if (typeof classification?.is_inverse === "boolean") return classification.is_inverse;
   return /\b(?:inverse|short|bear)\b/i.test(etfSearchText(row));
@@ -153,14 +153,15 @@ function formatTypeHint(row: EtfUniverseRecord): string {
 interface EtfUniverseCardProps {
   limit?: number;
   showOpenLink?: boolean;
+  initialTypeFilter?: EtfTypeFilter;
 }
 
-export default function EtfUniverseCard({ limit = 12, showOpenLink = true }: EtfUniverseCardProps) {
+export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initialTypeFilter = "전체" }: EtfUniverseCardProps) {
   const [doc, setDoc] = useState<EtfUniverseDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
-  const [typeFilter, setTypeFilter] = useState<EtfTypeFilter>("전체");
+  const [typeFilter, setTypeFilter] = useState<EtfTypeFilter>(initialTypeFilter);
 
   useEffect(() => {
     let cancelled = false;

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
-import EtfUniverseCard from "../explore/EtfUniverseCard";
+import EtfUniverseCard, { type EtfTypeFilter } from "../explore/EtfUniverseCard";
 import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
+
+interface Props {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
 
 export const metadata: Metadata = {
   title: "ETF 유니버스 | 100xFenok",
@@ -15,7 +19,19 @@ const plexKr = IBM_Plex_Sans_KR({
   display: "swap",
 });
 
-export default function EtfsPage() {
+function typeFilterFromParams(params: Record<string, string | string[] | undefined>): EtfTypeFilter {
+  const rawType = params.type;
+  const type = Array.isArray(rawType) ? rawType[0] : rawType;
+  if (type === "leveraged") return "레버리지";
+  if (type === "single-stock") return "단일종목 레버리지";
+  if (type === "inverse") return "인버스";
+  return "전체";
+}
+
+export default async function EtfsPage({ searchParams }: Props) {
+  const params = searchParams ? await searchParams : {};
+  const initialTypeFilter = typeFilterFromParams(params);
+
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
       <AppShell active="etfs" title="ETF">
@@ -39,7 +55,7 @@ export default function EtfsPage() {
         </div>
 
         <div style={{ marginTop: "var(--s4)" }}>
-          <EtfUniverseCard limit={80} showOpenLink={false} />
+          <EtfUniverseCard limit={80} showOpenLink={false} initialTypeFilter={initialTypeFilter} />
         </div>
       </AppShell>
     </div>

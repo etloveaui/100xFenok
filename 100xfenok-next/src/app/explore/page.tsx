@@ -11,7 +11,7 @@ import RevisionMoversCard from "./RevisionMoversCard";
 import SlickchartsDiscoveryCard from "./SlickchartsDiscoveryCard";
 import ActionCandidatesCard from "./ActionCandidatesCard";
 import MarketStructureIndexCard from "./MarketStructureIndexCard";
-import EtfUniverseCard from "./EtfUniverseCard";
+import EtfGatewayCard from "./EtfGatewayCard";
 import MarketEventSurfacesCard from "./MarketEventSurfacesCard";
 import StockanalysisSurfaceInsightCard from "./StockanalysisSurfaceInsightCard";
 
@@ -52,7 +52,7 @@ export default function ExplorePage() {
         </div>
 
         <div className="surface-grid" aria-label="시장 데이터 표면">
-          <EtfUniverseCard />
+          <EtfGatewayCard />
           <MarketEventSurfacesCard />
           <StockanalysisSurfaceInsightCard />
           <MarketStructureIndexCard />

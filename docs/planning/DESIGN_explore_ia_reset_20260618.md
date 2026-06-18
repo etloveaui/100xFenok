@@ -149,6 +149,14 @@ Dedicated route or drawer surfaces:
      `DataCoverageCard`.
 3. **ETF hub promotion**: keep `/etfs` as canonical; Explore only shows one ETF
    insight CTA such as new ETF count + top leveraged/single-stock filter counts.
+   Completed in the third cleanup slice:
+   - Public `/explore` replaced the full `EtfUniverseCard` search surface with
+     a compact `EtfGatewayCard`.
+   - The gateway reads `etf_universe.json` plus the ETF snapshot API to show
+     total, leveraged, single-stock, inverse, new ETF, top category, and sample
+     rows.
+   - `/etfs` remains the canonical ETF workspace and now accepts `type`
+     deep-links for leveraged, single-stock, and inverse filters.
 4. **SurfaceInsight collapse**: replace `StockanalysisSurfaceInsightCard` with
    either a compact "Market movers / IPO / Industry" gateway or drilldown links.
    Completed in the second cleanup slice:
