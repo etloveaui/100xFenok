@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.4 (Manifest + StockAnalysis audit architecture)
+> **Version**: 2.2.6 (ETF detail coverage contract)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -68,7 +68,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **3-tier caching** | Memory → SessionStorage → Network |
 | **Reactive state** | Observer pattern for automatic UI updates |
 | **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, and source parity |
-| **StockAnalysis audit** | Reads `data/stockanalysis/index.json` and `classification/latest.json` for ETF detail backfill + leverage/inverse/single-stock classification visibility |
+| **StockAnalysis audit** | Reads `data/stockanalysis/index.json`, `coverage/etf_detail.json`, and `classification/latest.json` for ETF detail coverage, backfill, and leverage/inverse/single-stock classification visibility |
 
 ---
 
@@ -136,6 +136,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Separation**: Feature experiments in Valuation Lab, data monitoring in Data Lab
 - **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` is optional until the first scheduled/dispatch incremental ETF run. Data Lab fetches it only when audit says `proof_file_exists=true`, so missing proof stays `WAITING` without console 404.
 - **ETF queue visibility**: `data/stockanalysis/backfill/pending_ledger.json` is fetched directly for Admin-only drilldown rows. This shows pending/retry/failure tickers from the data refresh artifacts instead of static copy.
+- **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 
 ---
 
@@ -152,6 +153,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.6 | 2026-06-18 | Added ETF detail coverage proof from `coverage/etf_detail.json`; Data Lab now shows candidate total, covered detail files, StockAnalysis-primary coverage, Yahoo fallback count, and missing detail count from the same generated contract |
 | 2.2.5 | 2026-06-18 | Added ETF collection queue drilldown from `index.json`, `incremental_latest.json`, and `pending_ledger.json`; keep source `admin/data-lab/app/*` and public mirror aligned because `sync-static` copies source into public |
 | 2.2.4 | 2026-06-18 | Removed the intentional legacy `/100xFenok/data/manifest.json` negative network probe from route smoke; workers.dev now uses base-path/root-manifest proof without console 404 noise |
 | 2.2.3 | 2026-06-18 | Guarded optional incremental proof fetch behind `market_data_audit.incremental_etf.proof_file_exists` and added audit warn when proof exists but fetch index omits incremental selected count |
