@@ -271,7 +271,11 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
             "yf": f"yf/finance/{ticker}.json" if yf_payload else None,
             "stockanalysis": (
                 f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
-                if sa_payload else None
+                if sa_payload and not sa_is_yahoo_fallback else None
+            ),
+            "stockanalysis_yf_fallback": (
+                f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
+                if sa_payload and sa_is_yahoo_fallback else None
             ),
             "slickcharts": f"slickcharts/stocks/{ticker}.json" if slick_payload else None,
         },
