@@ -22,8 +22,20 @@ interface EtfSnapshotPayload {
   } | null;
 }
 
+interface EtfCoveragePayload {
+  missing_tickers?: string[];
+  yahoo_fallback_tickers?: string[];
+}
+
+interface NewEtfsState {
+  snapshot: EtfSnapshotPayload | null;
+  coverage: EtfCoveragePayload | null;
+}
+
 let cache: EtfSnapshotPayload | null = null;
 let pending: Promise<EtfSnapshotPayload | null> | null = null;
+let coverageCache: EtfCoveragePayload | null = null;
+let coveragePending: Promise<EtfCoveragePayload | null> | null = null;
 
 function loadSnapshot(): Promise<EtfSnapshotPayload | null> {
   if (cache) return Promise.resolve(cache);
@@ -36,6 +48,19 @@ function loadSnapshot(): Promise<EtfSnapshotPayload | null> {
     })
     .catch(() => null);
   return pending;
+}
+
+function loadCoverage(): Promise<EtfCoveragePayload | null> {
+  if (coverageCache) return Promise.resolve(coverageCache);
+  if (coveragePending) return coveragePending;
+  coveragePending = fetch("/data/stockanalysis/coverage/etf_detail.json", { cache: "no-store" })
+    .then((response) => (response.ok ? response.json() as Promise<EtfCoveragePayload> : null))
+    .then((payload) => {
+      coverageCache = payload;
+      return payload;
+    })
+    .catch(() => null);
+  return coveragePending;
 }
 
 function fmtDate(value: string | null | undefined): string {
@@ -57,15 +82,24 @@ function countRows(payload: EtfSnapshotPayload | null): number {
   return payload?.newEtfs?.records?.length ?? 0;
 }
 
+function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): string {
+  const symbol = ticker.trim().toUpperCase();
+  const missing = new Set((coverage?.missing_tickers ?? []).map((item) => item.trim().toUpperCase()));
+  if (missing.has(symbol)) return "상세 준비중";
+  const fallback = new Set((coverage?.yahoo_fallback_tickers ?? []).map((item) => item.trim().toUpperCase()));
+  if (fallback.has(symbol)) return "Yahoo 보강";
+  return "상세 연결됨";
+}
+
 export default function NewEtfsList() {
-  const [payload, setPayload] = useState<EtfSnapshotPayload | null>(null);
+  const [state, setState] = useState<NewEtfsState>({ snapshot: null, coverage: null });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadSnapshot().then((next) => {
+    Promise.all([loadSnapshot(), loadCoverage()]).then(([snapshot, coverage]) => {
       if (!cancelled) {
-        setPayload(next);
+        setState({ snapshot, coverage });
         setLoaded(true);
       }
     });
@@ -75,20 +109,21 @@ export default function NewEtfsList() {
   }, []);
 
   const rows = useMemo(() => {
-    return (payload?.newEtfs?.records ?? [])
+    return (state.snapshot?.newEtfs?.records ?? [])
       .filter((row) => typeof row.s === "string" && row.s.trim())
       .map((row) => ({
         ...row,
         s: row.s!.trim().toUpperCase(),
         n: typeof row.n === "string" && row.n.trim() ? row.n.trim() : row.s!.trim().toUpperCase(),
+        detailStatus: detailStatus(row.s!, state.coverage),
       }));
-  }, [payload]);
+  }, [state]);
 
   return (
     <section className="panel">
       <div className="panel-h">
         <h2>신규 상장 ETF</h2>
-        <span className="desc">{fmtDate(payload?.newEtfs?.fetched_at)} · {countRows(payload).toLocaleString("ko-KR")}개</span>
+        <span className="desc">{fmtDate(state.snapshot?.newEtfs?.fetched_at)} · {countRows(state.snapshot).toLocaleString("ko-KR")}개</span>
       </div>
 
       {!loaded ? (
@@ -105,7 +140,7 @@ export default function NewEtfsList() {
             <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
               <span className="co">
                 <div className="n">{row.n}</div>
-                <div className="tk">{row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)}</div>
+                <div className="tk">{row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)} · {row.detailStatus}</div>
               </span>
               <span className={`pc num ${(row.change ?? 0) >= 0 ? "up" : "down"}`}>{fmtChange(row.change)}</span>
             </TransitionLink>
