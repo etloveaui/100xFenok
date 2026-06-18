@@ -296,6 +296,7 @@ const Renderer = (function() {
     stockanalysisSurfaceIndex,
     stockanalysisSurfaceConsumers,
     stockanalysisEtfUniverse,
+    stockanalysisEtfUniverseApi,
     stockanalysisNewEtfs,
     stockanalysisIncremental,
     stockanalysisPendingLedger,
@@ -384,7 +385,7 @@ const Renderer = (function() {
         ]
       })}
       ${renderEtfClassificationAudit(etfClassification)}
-      ${renderEtfUniverseSnapshot(stockanalysisEtfUniverse, stockanalysisNewEtfs, detailCoverage)}
+      ${renderEtfUniverseSnapshot(stockanalysisEtfUniverse, stockanalysisEtfUniverseApi, stockanalysisNewEtfs, detailCoverage)}
       ${renderEtfCoverageGapAudit(detailCoverage)}
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
@@ -394,35 +395,40 @@ const Renderer = (function() {
     `;
   }
 
-  function renderEtfUniverseSnapshot(universe, newEtfs, coverage) {
+  function renderEtfUniverseSnapshot(universe, mergedUniverse, newEtfs, coverage) {
     const universeCounts = universe?.counts || {};
+    const mergedCounts = mergedUniverse?.counts || {};
     const classification = universeCounts.classification || {};
     const newRows = Array.isArray(newEtfs?.records) ? newEtfs.records : [];
     const coverageCounts = coverage?.counts || {};
     const sourceBreakdown = coverageCounts.source_breakdown || {};
     const missingBySource = coverageCounts.missing_by_source || {};
-    if (!universe && !newRows.length) return '';
+    if (!universe && !mergedUniverse && !newRows.length) return '';
 
     const newestRows = [...newRows]
       .filter((row) => row?.s)
       .sort((a, b) => String(b?.inceptionDate || '').localeCompare(String(a?.inceptionDate || '')) || String(a?.s || '').localeCompare(String(b?.s || '')))
       .slice(0, 8);
     const latestDate = newestRows[0]?.inceptionDate || newEtfs?.fetched_at || '-';
-    const fetchedAt = newEtfs?.fetched_at || universe?.generated_at || '-';
+    const fetchedAt = newEtfs?.fetched_at || mergedUniverse?.screener_fetched_at || universe?.generated_at || '-';
 
     return `
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
         <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div class="min-w-0">
             <h3 class="font-semibold text-gray-800">ETF 목록·신규 상장 스냅샷</h3>
-            <p class="text-xs text-gray-500 mt-1">etf_universe.json · surfaces/new_etfs.json · coverage/etf_detail.json</p>
+            <p class="text-xs text-gray-500 mt-1">ETF 목록 API · 신규 상장 데이터 · 상세 커버리지</p>
           </div>
           <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
             ${escapeHtml(fetchedAt).slice(0, 10)}
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-2">
-          ${renderAuditMetric('전체 ETF', universeCounts.records ?? sourceBreakdown.etf_universe)}
+          ${renderAuditMetric('전체 ETF', mergedCounts.records ?? universeCounts.records ?? sourceBreakdown.etf_universe)}
+          ${renderAuditMetric('가격 제공', mergedCounts.with_price)}
+          ${renderAuditMetric('거래량 제공', mergedCounts.with_volume)}
+          ${renderAuditMetric('보유종목 제공', mergedCounts.with_holdings)}
+          ${renderAuditMetric('목록 추가분', mergedCounts.screener_only)}
           ${renderAuditMetric('신규 상장', newEtfs?.counts?.records ?? newRows.length)}
           ${renderAuditMetric('최신 상장일', escapeHtml(latestDate).slice(0, 10))}
           ${renderAuditMetric('신규 상세 대기', missingBySource.new_etfs)}
@@ -439,7 +445,7 @@ const Renderer = (function() {
           <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs font-semibold text-gray-400">표시할 신규 ETF가 없습니다.</div>
         `}
         <p class="text-[11px] leading-relaxed text-gray-500">
-          신규 ETF 행은 공개 ETF 화면과 같은 수집 파일을 봅니다. 상세 파일이 아직 없으면 공개 상세는 요약/가격 우선 상태로 열리고, 다음 데이터 갱신에서 보유 구성과 분류가 자동 보강됩니다.
+          공개 ETF 목록은 ETF 목록 API에서 가격, 변동률, 거래량, 보유종목 수를 함께 읽습니다. 상세 파일이 아직 없으면 공개 상세는 요약/가격 제공 상태로 열리고, 다음 데이터 갱신에서 보유 구성과 분류가 자동 보강됩니다.
         </p>
       </section>
     `;

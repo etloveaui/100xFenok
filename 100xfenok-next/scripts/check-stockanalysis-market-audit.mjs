@@ -9,6 +9,7 @@ const PUBLIC_RENDERER_PATH = `${ROOT}/public/admin/data-lab/app/renderer.js`;
 const FORMATTERS_PATH = `${ROOT}/public/admin/shared/core/formatters.js`;
 
 const JSON_PAIRS = [
+  ["ETF universe", "../data/stockanalysis/etf_universe.json", "public/data/stockanalysis/etf_universe.json"],
   ["ETF coverage", "../data/stockanalysis/coverage/etf_detail.json", "public/data/stockanalysis/coverage/etf_detail.json"],
   ["ETF incremental proof", "../data/stockanalysis/backfill/incremental_latest.json", "public/data/stockanalysis/backfill/incremental_latest.json"],
   ["ETF pending ledger", "../data/stockanalysis/backfill/pending_ledger.json", "public/data/stockanalysis/backfill/pending_ledger.json"],
@@ -16,6 +17,8 @@ const JSON_PAIRS = [
   ["StockAnalysis classification", "../data/stockanalysis/classification/latest.json", "public/data/stockanalysis/classification/latest.json"],
   ["StockAnalysis surfaces index", "../data/stockanalysis/surfaces/index.json", "public/data/stockanalysis/surfaces/index.json"],
   ["StockAnalysis surface consumers", "../data/stockanalysis/surface_consumers.json", "public/data/stockanalysis/surface_consumers.json"],
+  ["StockAnalysis ETF screener", "../data/stockanalysis/surfaces/etf_screener.json", "public/data/stockanalysis/surfaces/etf_screener.json"],
+  ["StockAnalysis new ETFs", "../data/stockanalysis/surfaces/new_etfs.json", "public/data/stockanalysis/surfaces/new_etfs.json"],
   ["Market data audit", "../data/computed/market_data_audit.json", "public/data/computed/market_data_audit.json"],
   ["Market source parity", "../data/computed/market_source_parity.json", "public/data/computed/market_source_parity.json"],
   ["Market facts index", "../data/computed/market_facts/index.json", "public/data/computed/market_facts/index.json"],
@@ -31,6 +34,9 @@ const ACTIVE_ROUTE_PREFIXES = [
 
 const REQUIRED_RENDERED_SECTIONS = [
   "ETF 상세 수집",
+  "가격 제공",
+  "거래량 제공",
+  "보유종목 제공",
   "ETF 상세 누락 샘플",
   "시장 데이터 수집 현황",
   "ETF 수집 대기열",
@@ -146,6 +152,51 @@ function assertSurfaceConsumerContract(surfaceIndex, consumers, errors) {
   }
 }
 
+function asRows(payload) {
+  const records = Array.isArray(payload?.records) ? payload.records : [];
+  const tableRecords = Array.isArray(payload?.tables)
+    ? payload.tables.flatMap((table) => Array.isArray(table?.records) ? table.records : [])
+    : [];
+  return [...records, ...tableRecords].filter((row) => row && typeof row === "object");
+}
+
+function cleanTicker(value) {
+  return String(value ?? "").replace(/^\$/, "").trim().toUpperCase();
+}
+
+function buildEtfUniverseApiPayload(universe, screener) {
+  const rows = new Map();
+  for (const row of asRows(universe)) {
+    const ticker = cleanTicker(row.ticker ?? row.s ?? row.symbol);
+    if (ticker) rows.set(ticker, { ticker });
+  }
+  let screenerOnly = 0;
+  for (const row of asRows(screener)) {
+    const ticker = cleanTicker(row.s ?? row.ticker ?? row.symbol);
+    if (!ticker) continue;
+    if (!rows.has(ticker)) screenerOnly += 1;
+    rows.set(ticker, {
+      ...(rows.get(ticker) || {}),
+      ticker,
+      price: row.price,
+      volume: row.volume,
+      holdings: row.holdings,
+    });
+  }
+  const mergedRows = [...rows.values()];
+  return {
+    generated_at: universe?.generated_at ?? screener?.fetched_at ?? null,
+    screener_fetched_at: screener?.fetched_at ?? null,
+    counts: {
+      records: mergedRows.length,
+      with_price: mergedRows.filter((row) => typeof row.price === "number").length,
+      with_volume: mergedRows.filter((row) => typeof row.volume === "number").length,
+      with_holdings: mergedRows.filter((row) => typeof row.holdings === "number").length,
+      screener_only: screenerOnly,
+    },
+  };
+}
+
 function renderMarketAuditHtml(payloads) {
   const context = {
     console: {
@@ -169,6 +220,9 @@ function renderMarketAuditHtml(payloads) {
     payloads.classification,
     payloads.surfaceIndex,
     payloads.surfaceConsumers,
+    payloads.etfUniverse,
+    payloads.etfUniverseApi,
+    payloads.newEtfs,
     payloads.incremental,
     payloads.pendingLedger,
     payloads.marketFactsIndex,
@@ -189,6 +243,7 @@ function assertRenderedMarketAudit(payloads, errors) {
 
 const errors = [];
 
+assertMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
 assertMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
 for (const [label, sourceRelPath, publicRelPath] of JSON_PAIRS) {
   assertMirror(label, sourceRelPath, publicRelPath, errors);
@@ -202,10 +257,14 @@ const payloads = {
   classification: readJson("public/data/stockanalysis/classification/latest.json"),
   surfaceIndex: readJson("public/data/stockanalysis/surfaces/index.json"),
   surfaceConsumers: readJson("public/data/stockanalysis/surface_consumers.json"),
+  etfUniverse: readJson("public/data/stockanalysis/etf_universe.json"),
+  etfScreener: readJson("public/data/stockanalysis/surfaces/etf_screener.json"),
+  newEtfs: readJson("public/data/stockanalysis/surfaces/new_etfs.json"),
   incremental: readJson("public/data/stockanalysis/backfill/incremental_latest.json"),
   pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
   marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
 };
+payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener);
 
 assertCoverageContract(payloads.coverage, errors);
 assertBackfillContract(payloads.audit, payloads.incremental, payloads.pendingLedger, payloads.marketFactsIndex, errors);
