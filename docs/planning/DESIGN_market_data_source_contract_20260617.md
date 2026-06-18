@@ -241,9 +241,11 @@ StockAnalysis all remain visible when their values overlap.
    finalize only when audit reports no missing offsets and no hard errors.
 4. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-5. Keep shipped StockAnalysis surfaces actively visible in Explore/Admin/Data Lab
-   and guarded by contract tests so committed surface data does not become dead
-   DataPack weight.
+5. Keep shipped StockAnalysis surfaces actively reachable through canonical
+   tabs/routes, Admin, or Data Lab and guarded by contract tests so committed
+   surface data does not become dead DataPack weight. Explore is not the first
+   home for new data families; it receives only curated headlines after the
+   dedicated route is usable.
 6. Promote the StockAnalysis financial probe into the main fetcher only after the
    ETF backfill run is closed and the fixture/schema gate remains passing.
 7. Add deeper drill-down views for `stockanalysis/surfaces` beyond the Explore

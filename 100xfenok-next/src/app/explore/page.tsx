@@ -7,10 +7,6 @@ import MarketThermometer from "./MarketThermometer";
 import SignalStrip from "./SignalStrip";
 import MyWatchlistStrip from "./MyWatchlistStrip";
 import StockWorkbenchCard from "./StockWorkbenchCard";
-import MarketStructureIndexCard from "./MarketStructureIndexCard";
-import EtfGatewayCard from "./EtfGatewayCard";
-import MarketEventSurfacesCard from "./MarketEventSurfacesCard";
-import StockanalysisSurfaceInsightCard from "./StockanalysisSurfaceInsightCard";
 
 const plexKr = IBM_Plex_Sans_KR({
   weight: ["400", "500", "600", "700"],
@@ -43,13 +39,6 @@ export default function ExplorePage() {
             <MyWatchlistStrip />
             <StockWorkbenchCard />
           </div>
-        </div>
-
-        <div className="surface-grid" aria-label="시장 데이터 표면">
-          <EtfGatewayCard />
-          <MarketEventSurfacesCard />
-          <StockanalysisSurfaceInsightCard />
-          <MarketStructureIndexCard />
         </div>
 
         <div className="f13-wrap-outer" style={{ marginTop: "var(--s4)" }}>

@@ -2,12 +2,13 @@
 
 Date: 2026-06-18
 Scope: `100xfenok-next/src/app/explore`
-Status: Inventory accepted; first cleanup slices implemented.
+Status: Inventory accepted; public Explore surface grid removed pending
+dedicated-tab completion.
 
 ## Problem
 
-`/explore` is drifting from a curated 30-second guide into a long content list.
-The current route renders 14 cards:
+`/explore` drifted from a curated 30-second guide into a long content list.
+The bloated route rendered 14 cards:
 
 - Top signal strip: `SignalStrip` (`page.tsx:37-38`)
 - Two-column workspace: `MarketThermometer`, `ExploreDashboard`,
@@ -18,6 +19,13 @@ The current route renders 14 cards:
   `SurfaceCatalogCard`, `DataCoverageCard`, `MarketStructureIndexCard`
   (`page.tsx:56-63`)
 - 13F strip: `ExploreHotTopics` (`page.tsx:65-66`)
+
+Correction applied after owner review on 2026-06-18: public `/explore` no
+longer renders the StockAnalysis/market data surface grid
+(`EtfGatewayCard`, `MarketEventSurfacesCard`,
+`StockanalysisSurfaceInsightCard`, `MarketStructureIndexCard`). These data
+families must be completed in their own tabs/routes first; Explore will be
+re-selected afterward as a compact guide, not a catch-all catalog.
 
 Existing IA decisions still stand:
 
@@ -147,24 +155,20 @@ Dedicated route or drawer surfaces:
      `data/stockanalysis/surfaces/index.json`.
    - Public `/explore` stopped rendering `SurfaceCatalogCard` and
      `DataCoverageCard`.
-3. **ETF hub promotion**: keep `/etfs` as canonical; Explore only shows one ETF
-   insight CTA such as new ETF count + top leveraged/single-stock filter counts.
-   Completed in the third cleanup slice:
-   - Public `/explore` replaced the full `EtfUniverseCard` search surface with
-     a compact `EtfGatewayCard`.
-   - The gateway reads `etf_universe.json` plus the ETF snapshot API to show
-     total, leveraged, single-stock, inverse, new ETF, top category, and sample
-     rows.
-   - `/etfs` remains the canonical ETF workspace and now accepts `type`
-     deep-links for leveraged, single-stock, and inverse filters.
-4. **SurfaceInsight collapse**: replace `StockanalysisSurfaceInsightCard` with
-   either a compact "Market movers / IPO / Industry" gateway or drilldown links.
-   Completed in the second cleanup slice:
-   - Existing StockAnalysis surface API reads were retained.
-   - Public `/explore` now renders the surface block as three data-driven
-     gateways: movers, IPO, and industry.
-   - Detail-heavy rows were collapsed into counts, 1-3 examples, and route
-     links to `/screener`, `/market-valuation`, and `/sectors`.
+3. **ETF hub promotion**: keep `/etfs` as canonical. Public Explore must not
+   host the ETF working surface or a dense ETF gateway until `/etfs` itself has
+   the full owner-facing hierarchy: universe, leverage/single-stock/inverse
+   filters, new ETF radar, provider/theme views, and detail pages.
+   - `/etfs` remains the canonical ETF workspace and accepts `type` deep-links
+     for leveraged, single-stock, and inverse filters.
+   - Public `/explore` no longer renders `EtfGatewayCard`; any future ETF
+     teaser must be one compact headline chosen after the ETF tab is complete.
+4. **SurfaceInsight split, not collapse**: `StockanalysisSurfaceInsightCard`
+   should not be compressed into a public all-in-one card. Movers, IPO,
+   industry, earnings, and corporate actions need dedicated destination
+   surfaces first, then Explore may route to them with one chosen headline.
+   - Public `/explore` no longer renders `StockanalysisSurfaceInsightCard`.
+   - IPO/industry/movers route design remains pending data-contract review.
 5. **Event module merge**: combine `WeekAheadCard` and
    `MarketEventSurfacesCard` into one "Event Risk" preview.
    Completed in the fourth cleanup slice:
@@ -189,10 +193,16 @@ Dedicated route or drawer surfaces:
      to avoid duplicate same-page fetch/render of the same market mover rows.
 7. **Mobile smoke gate**: 390px and 1440px `/explore`, overflow 0, first-screen
    contains L1 + at least one L2 signal, no metadata-only cards.
+8. **Dedicated tab gate before Explore re-entry**: a data family can return to
+   Explore only after its canonical tab/route has a stable data contract,
+   freshness label, filter/sort model, empty-state behavior, and detail
+   navigation.
 
 ## Non-Negotiables
 
 - Do not hide data forever. Move it to the correct home and keep it reachable.
+- Do not use Explore as the first home for newly collected data. Canonical
+  tabs/routes come first; Explore is selected afterward.
 - Do not show provider/source names as product copy unless needed for evidence.
 - Do not expose ops metadata on public Explore as a card.
 - Every row must be generated from DataPack/API data, not static mock copy.
