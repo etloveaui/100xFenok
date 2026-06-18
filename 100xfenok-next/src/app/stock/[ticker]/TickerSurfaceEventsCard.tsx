@@ -87,7 +87,7 @@ function rowLine(section: SectionKey, row: Record<string, unknown>): string {
     return `${dateText(row.date)} · ${text(row.type)} · ${text(row.text ?? row.other ?? row.split_ratio)}`;
   }
   if (section === "markets") {
-    return `${text(row.pct_change)} · 가격 ${text(row.stock_price)} · 거래 ${text(row.volume)}`;
+    return `${text(row.pct_change ?? row.change_1w ?? row.change_1m ?? row.change_ytd)} · 가격 ${text(row.stock_price)} · 거래 ${text(row.volume)}`;
   }
   if (section === "etfs") {
     return `${text(row.assetClass ?? row.inceptionDate ?? row.exp_ratio)} · AUM ${text(row.aum ?? row.assets)} · 보유 ${text(row.holdings)}`;

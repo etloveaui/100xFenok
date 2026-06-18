@@ -30,9 +30,12 @@ interface MarketMover {
 }
 
 interface IpoRow {
+  date?: string;
   ipo_date?: string;
   filing_date?: string;
+  withdrawn_date?: string;
   symbol?: string;
+  name?: string;
   company_name?: string;
   price_range?: string;
   shares_offered?: string;
@@ -63,7 +66,10 @@ interface SurfaceInsightsData {
   ipoCalendar: SurfaceDoc<IpoRow> | null;
   ipoRecent: SurfaceDoc<IpoRow> | null;
   ipoFilings: SurfaceDoc<IpoRow> | null;
-  industries: SurfaceDoc<IndustryRow> | null;
+  ipoStatistics: SurfaceDoc<IpoRow> | null;
+  ipoWithdrawn: SurfaceDoc<IpoRow> | null;
+  industriesAll: SurfaceDoc<IndustryRow> | null;
+  industriesGrouped: SurfaceDoc<IndustryRow> | null;
   semiconductors: SurfaceDoc<MarketMover> | null;
 }
 
@@ -89,10 +95,13 @@ function loadSurfaceInsights(): Promise<SurfaceInsightsData> {
     loadJson<IpoRow>("ipos_calendar"),
     loadJson<IpoRow>("ipos_recent"),
     loadJson<IpoRow>("ipos_filings"),
+    loadJson<IpoRow>("ipos_statistics"),
+    loadJson<IpoRow>("ipos_withdrawn"),
     loadJson<IndustryRow>("industries_all"),
+    loadJson<IndustryRow>("industries"),
     loadJson<MarketMover>("industry_semiconductors"),
-  ]).then(([gainers, losers, active, gainersWeek, gainersMonth, losersYtd, ipoCalendar, ipoRecent, ipoFilings, industries, semiconductors]) => {
-    insightsCache = { gainers, losers, active, gainersWeek, gainersMonth, losersYtd, ipoCalendar, ipoRecent, ipoFilings, industries, semiconductors };
+  ]).then(([gainers, losers, active, gainersWeek, gainersMonth, losersYtd, ipoCalendar, ipoRecent, ipoFilings, ipoStatistics, ipoWithdrawn, industriesAll, industriesGrouped, semiconductors]) => {
+    insightsCache = { gainers, losers, active, gainersWeek, gainersMonth, losersYtd, ipoCalendar, ipoRecent, ipoFilings, ipoStatistics, ipoWithdrawn, industriesAll, industriesGrouped, semiconductors };
     return insightsCache;
   });
   return insightsPending;
@@ -113,6 +122,12 @@ function fmtCount(value: number | null | undefined): string {
 function countRows<T>(doc: SurfaceDoc<T> | null | undefined): number | null {
   const value = doc?.counts?.records ?? doc?.counts?.rows;
   return typeof value === "number" ? value : rows(doc).length || null;
+}
+
+function countTables<T>(doc: SurfaceDoc<T> | null | undefined): number | null {
+  const value = doc?.counts?.tables;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return Array.isArray(doc?.tables) ? doc.tables.length : null;
 }
 
 function short(value: string | null | undefined, max = 28): string {
@@ -169,6 +184,26 @@ function StockLink({
   );
 }
 
+function InfoRow({
+  name,
+  detail,
+  value,
+}: {
+  name?: string;
+  detail?: string;
+  value?: string;
+}) {
+  return (
+    <div className="mv-row">
+      <span className="co">
+        <div className="n">{short(name, 34)}</div>
+        <div className="tk">{detail || "-"}</div>
+      </span>
+      <span className="pc num neutral">{value || "-"}</span>
+    </div>
+  );
+}
+
 export default function StockanalysisSurfaceInsightCard() {
   const [data, setData] = useState<SurfaceInsightsData | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -195,14 +230,18 @@ export default function StockanalysisSurfaceInsightCard() {
   const ipoCalendar = useMemo(() => rows(data?.ipoCalendar).slice(0, 3), [data]);
   const ipoRecent = useMemo(() => rows(data?.ipoRecent).slice(0, 2), [data]);
   const ipoFilings = useMemo(() => rows(data?.ipoFilings).slice(0, 4), [data]);
+  const ipoStatistics = useMemo(() => rows(data?.ipoStatistics).slice(0, 3), [data]);
+  const ipoWithdrawn = useMemo(() => rows(data?.ipoWithdrawn).slice(0, 3), [data]);
   const industryLeaders = useMemo(
-    () => rows(data?.industries)
+    () => rows(data?.industriesAll)
       .filter((row) => row.industry_name)
       .sort((a, b) => parsePct(b["1y_change"]) - parsePct(a["1y_change"]))
       .slice(0, 3),
     [data],
   );
   const semis = useMemo(() => rows(data?.semiconductors).slice(0, 3), [data]);
+  const groupedIndustryTables = countTables(data?.industriesGrouped);
+  const groupedIndustryRows = countRows(data?.industriesGrouped);
 
   const totalRows =
     (countRows(data?.gainers) ?? 0)
@@ -214,7 +253,10 @@ export default function StockanalysisSurfaceInsightCard() {
     + (countRows(data?.ipoCalendar) ?? 0)
     + (countRows(data?.ipoRecent) ?? 0)
     + (countRows(data?.ipoFilings) ?? 0)
-    + (countRows(data?.industries) ?? 0)
+    + (countRows(data?.ipoStatistics) ?? 0)
+    + (countRows(data?.ipoWithdrawn) ?? 0)
+    + (countRows(data?.industriesAll) ?? 0)
+    + (countRows(data?.industriesGrouped) ?? 0)
     + (countRows(data?.semiconductors) ?? 0);
 
   return (
@@ -222,7 +264,7 @@ export default function StockanalysisSurfaceInsightCard() {
       <div className="panel-h">
         <h2>시장 표면 인사이트</h2>
         <span className="desc">
-          {asOf(data?.gainers?.fetched_at, data?.ipoCalendar?.fetched_at, data?.industries?.fetched_at)} · {fmtCount(totalRows)}행
+          {asOf(data?.gainers?.fetched_at, data?.ipoCalendar?.fetched_at, data?.industriesAll?.fetched_at)} · {fmtCount(totalRows)}행
         </span>
       </div>
 
@@ -341,6 +383,28 @@ export default function StockanalysisSurfaceInsightCard() {
                 value={row.shares_offered || row.deal_size || "-"}
               />
             ))}
+            {ipoStatistics.length > 0 && (
+              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">IPO 통계 표면</div>
+            )}
+            {ipoStatistics.map((row) => (
+              <InfoRow
+                key={`ipo-s-${row.symbol || row.date}`}
+                name={row.name || row.company_name || row.symbol}
+                detail={`${row.date || row.ipo_date || "-"} · ${row.symbol || "-"}`}
+                value="통계"
+              />
+            ))}
+            {ipoWithdrawn.length > 0 && (
+              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">철회 IPO</div>
+            )}
+            {ipoWithdrawn.map((row) => (
+              <InfoRow
+                key={`ipo-w-${row.symbol || row.withdrawn_date || row.date}`}
+                name={row.company_name || row.name || row.symbol}
+                detail={`${row.withdrawn_date || row.date || "-"} · ${row.symbol || "-"}`}
+                value={row.shares_offered || row.price_range || "-"}
+              />
+            ))}
           </div>
 
           <div className="mv-col">
@@ -356,6 +420,16 @@ export default function StockanalysisSurfaceInsightCard() {
                 </span>
               </div>
             ))}
+            {groupedIndustryTables ? (
+              <>
+                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">산업 그룹</div>
+                <InfoRow
+                  name="섹터별 산업 표면"
+                  detail={`그룹 ${fmtCount(groupedIndustryTables)}표 · 전체 ${fmtCount(groupedIndustryRows)}행`}
+                  value={asOf(data?.industriesGrouped?.fetched_at)}
+                />
+              </>
+            ) : null}
           </div>
 
           <div className="mv-col">
@@ -374,7 +448,7 @@ export default function StockanalysisSurfaceInsightCard() {
       )}
 
       <div className="panel-foot">
-        <span>무버·IPO·업종 JSON은 DataPack 갱신 시 자동 반영됩니다</span>
+        <span>무버·IPO 통계·철회·업종 JSON은 DataPack 갱신 시 자동 반영됩니다</span>
       </div>
     </section>
   );
