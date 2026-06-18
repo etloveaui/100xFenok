@@ -57,12 +57,14 @@ function checkSourceInvariants(): Check[] {
   const winddownVnext = readRel("src/app/winddown-vnext/page.tsx");
   const winddownLegacy = readRel("src/app/winddown-legacy/page.tsx");
   const adminLiveBench = readRel("src/components/admin-live/AdminLiveBench.tsx");
+  const monaVnextEntry = readRel("src/components/admin-live/MonaVnextEntry.tsx");
   const monaVoiceCoachApp = readRel("src/features/mona-vnext/MonaVoiceCoachApp.tsx");
   const liveSetup = readRel("src/features/mona-vnext/server/liveSetup.ts");
   const wrangler = readRel("wrangler.jsonc");
   const storage = readRel("src/features/mona-vnext/storage/objectStore.ts");
   const vnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
     && adminLiveBench.includes("<MonaVnextEntry locked={settingsLocked} />")
+    && monaVnextEntry.includes("href=\"/winddown-vnext\"")
     && !/normalizedCoachConfig\.tester === "owner"\s*\?\s*\(\s*<MonaVnextEntry/.test(adminLiveBench);
   const vnextFiles = [
     ...walkTextFiles("src/features/mona-vnext"),
@@ -121,7 +123,7 @@ function checkSourceInvariants(): Check[] {
     check(
       "settings-vnext-entry",
       vnextEntryInSettings ? "PASS" : "FAIL",
-      "legacy Mona settings still renders MonaVnextEntry without owner-tester visibility gate",
+      "Mona settings renders MonaVnextEntry to /winddown-vnext without owner-tester visibility gate",
     ),
     check(
       "vnext-no-production-write-path",

@@ -86,6 +86,12 @@ Mona vNext owner-test logs:
   `MonaWindDown` design shell. `/winddown-vnext` remains the debug/test
   dashboard, and `/winddown-legacy` keeps the previous `AdminLiveBench`
   rollback runtime.
+- The settings-sheet entry inside the Wind-Down shell must remain a test escape
+  hatch to `/winddown-vnext`; it must not point back to `/winddown` after main
+  route promotion. The owner-smoke source invariant checks this exact href.
+- Product-card redesign is still a separate follow-up: the current owner-facing
+  card is vNext lesson state rendered through the legacy-pretty `MonaWindDown`
+  shell, while debug metrics/events stay on `/winddown-vnext`.
 - vNext must keep `productionWriteEnabled: false` until the owner explicitly
   approves production Mona writes.
 - vNext does not write to current Mona production study files. It writes
