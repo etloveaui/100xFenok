@@ -459,7 +459,7 @@ function GuruDetailPanel({
         </div>
       ) : (
         <div className="mt-4">
-          <EmptyState title="상세 데이터를 불러오지 못했습니다" desc="investors/{name}.json 을 확인해 주세요." />
+          <EmptyState title="상세 데이터를 불러오지 못했습니다" desc="잠시 후 다시 시도하거나 다른 투자자를 선택해 주세요." />
         </div>
       )}
     </div>
@@ -1274,7 +1274,7 @@ export default function SuperinvestorsClient({
             </div>
           ) : tradesFailed ? (
             <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-              매매랭킹 데이터를 불러오지 못했습니다. /data/sec-13f/analytics/trades_ranking.json 을 확인해 주세요.
+              매매랭킹 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
             </div>
           ) : tradesData ? (
             <>

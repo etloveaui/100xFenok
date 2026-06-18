@@ -968,7 +968,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
       <div className="stock-shell">
         <div className="panel stock-empty">
           <p className="text-lg font-black text-slate-700">해당 티커를 찾을 수 없습니다</p>
-          <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} — stocks_analyzer.json에 존재하지 않는 티커입니다.</p>
+          <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} — 아직 데이터에 등록되지 않았거나 갱신 전인 티커입니다.</p>
           <TransitionLink href="/screener" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
       </div>
@@ -1190,7 +1190,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
               {t.label}
             </button>
           ))}
-          {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">보조 데이터 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">보조 데이터 수집 전</span> : null}
+          {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">추가 지표 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">추가 지표 준비 중</span> : null}
         </div>
       </section>
 
@@ -1404,7 +1404,7 @@ function StockAuxiliaryPanel({
 }) {
   if (loading) {
     return (
-      <SectionCard title="보조 데이터 체크">
+      <SectionCard title="추가 지표 체크">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[0, 1, 2, 3].map((item) => <div key={item} className="h-20 rounded-xl bg-slate-100" />)}
         </div>
@@ -1414,9 +1414,9 @@ function StockAuxiliaryPanel({
 
   if (!data) {
     return (
-      <SectionCard title="보조 데이터 체크">
+      <SectionCard title="추가 지표 체크">
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4">
-          <p className="text-sm font-semibold text-slate-500">보조 데이터 수집 전입니다.</p>
+          <p className="text-sm font-semibold text-slate-500">추가 지표가 아직 준비되지 않았습니다.</p>
         </div>
       </SectionCard>
     );
@@ -1432,7 +1432,7 @@ function StockAuxiliaryPanel({
     .reduce((sum, item) => sum + (isFiniteNumber(item?.field_count) ? item.field_count : 0), 0);
   const metrics = [
     { label: "최근가", value: quoteMoney(quote.p, currency), note: fmtDateish(quote.u) },
-    { label: "시가총액", value: stockOverviewText(overview.marketCap), note: "보조 데이터" },
+    { label: "시가총액", value: stockOverviewText(overview.marketCap), note: "추가 지표" },
     { label: "매출", value: stockOverviewText(overview.revenue), note: stockOverviewText(overview.revenue_type).toUpperCase() },
     { label: "순이익", value: stockOverviewText(overview.netIncome), note: "최근 12개월" },
     { label: "EPS", value: stockOverviewText(overview.eps), note: "희석 기준" },
@@ -1444,7 +1444,7 @@ function StockAuxiliaryPanel({
   ].filter((item) => item.value !== "—");
 
   return (
-    <SectionCard title="보조 데이터 체크">
+    <SectionCard title="추가 지표 체크">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold text-slate-500">주요 지표를 기존 분석 데이터와 교차 확인합니다.</p>
         <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
@@ -1493,7 +1493,7 @@ function FinancialCandidatePanel({
     return (
       <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
         <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 보강 데이터</p>
-        <p className="mt-1 text-sm font-semibold text-slate-500">교차검증용 재무 데이터 수집 전입니다.</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">재무 지표가 아직 준비되지 않았습니다.</p>
       </div>
     );
   }
@@ -1624,9 +1624,9 @@ function EtfDataPanel({
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
   const detailStatusText = detailStatus === "surface_only"
-    ? "상세 구성 수집 전 · 신규 상장 목록 기준"
+    ? "상세 구성 준비 중 · 신규 상장 목록 기준"
     : detailStatus === "universe_only"
-      ? "상세 구성 수집 전 · ETF 목록 기준"
+      ? "상세 구성 준비 중 · ETF 목록 기준"
       : null;
 
   const cards = [

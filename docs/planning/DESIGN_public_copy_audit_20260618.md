@@ -75,7 +75,19 @@ The public forbidden-term grep now leaves only internal identifiers such as
 ## 2026-06-18 Stock Detail Follow-Up
 
 - Stock detail overview now reads the collected stock overview API and renders
-  it as `보조 데이터 체크`, not as provider-branded copy.
+  it as `추가 지표 체크`, not as provider-branded copy.
 - Public copy should keep this framing: the card is a cross-check layer for
   price, market cap, revenue, net income, EPS, PER, target price, dividend, and
   beta; source/provider names stay in Admin/API metadata only.
+
+## 2026-06-18 Public Error/Source Copy Follow-Up
+
+- Removed public-facing file/path diagnostics such as `stocks_analyzer.json`,
+  `investors/{name}.json`, and `/data/sec-13f/...` from stock and guru error
+  states.
+- Source/provider labels in screener detail now map to user meanings such as
+  price/financial 기준, 추가 지표, and 지수 구성 기준. Unknown raw source
+  strings fall back to `확인 기준`.
+- Replaced remaining public `보조 데이터` / `수집 전` / `데이터 묶음` phrasing in
+  touched stock, market-event, and ETF summary surfaces with user-facing
+  readiness or item-count language.

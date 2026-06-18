@@ -594,13 +594,13 @@ export function useMarketFacts(ticker: string, enabled = true) {
 
 function sourceLabel(source?: string): string {
   if (!source) return "출처 없음";
-  if (source === "yf") return "기본 시세/재무";
-  if (source === "yf.fast_info") return "빠른 시세";
-  if (source === "stockanalysis") return "보조 데이터";
-  if (source === "stockanalysis.quote") return "보조 시세";
-  if (source === "stockanalysis.overview") return "보조 재무";
-  if (source === "slickcharts") return "지수 비중";
-  return source;
+  if (source === "yf") return "가격·재무 기준";
+  if (source === "yf.fast_info") return "빠른 가격 기준";
+  if (source === "stockanalysis") return "추가 지표";
+  if (source === "stockanalysis.quote") return "추가 가격 기준";
+  if (source === "stockanalysis.overview") return "추가 재무 기준";
+  if (source === "slickcharts") return "지수 구성 기준";
+  return "확인 기준";
 }
 
 function fmtMarketMoney(value: number, currency = "USD"): string {
@@ -675,7 +675,7 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
       <div className="flex min-w-0 items-start justify-between gap-2">
         <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
         <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
-          출처 {candidateCount}곳 확인
+          기준 {candidateCount}곳 확인
         </span>
       </div>
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">

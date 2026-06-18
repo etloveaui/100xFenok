@@ -214,7 +214,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용사별 대표 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">주요 운용사 대표 상품</div>
             {providerLeaders.map((row) => (
               <EtfLink
                 key={`provider-${row.symbol}`}
@@ -242,7 +242,7 @@ export default function EtfSurfaceSnapshotCard() {
       )}
 
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
-        <span>목록과 상세 페이지는 데이터 갱신 시 자동으로 바뀝니다</span>
+        <span>새 기준일이 반영되면 목록과 상세 화면도 함께 바뀝니다</span>
         <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
           신규 상장 전체 보기
         </TransitionLink>

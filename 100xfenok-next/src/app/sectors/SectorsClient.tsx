@@ -157,6 +157,10 @@ function SourceLine({ sourceMeta }: { sourceMeta: SectorSourceMeta }) {
   return <span>{parts.length > 0 ? parts.join(" · ") : "기준일 확인 중"}</span>;
 }
 
+function valuationSourceLine(sourceMeta: SectorSourceMeta): string {
+  return `밸류 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "확인 중"}`;
+}
+
 function MobileViewSwitch({
   value,
   onChange,
@@ -239,7 +243,7 @@ function SectorPulse({
           저평가 {cheapest ? cheapest.name : "—"} · 고평가 {richest ? richest.name : "—"}
         </p>
         <p className="mt-0.5 text-[11px] font-bold text-slate-500">
-          {sourceMeta.valuationSource ?? "valuation source"} {sourceMeta.valuationLatestDate ?? ""}
+          {valuationSourceLine(sourceMeta)}
         </p>
       </div>
       <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
@@ -676,7 +680,7 @@ export default function SectorsClient() {
           </table>
         </div>
         <p className="mt-3 text-[11px] text-slate-400">
-          {sourceMeta.valuationSource ?? "업종 지수 밸류에이션"} · {sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "날짜 확인 중"}
+          {valuationSourceLine(sourceMeta)}
         </p>
       </SectionCard>
       </div>

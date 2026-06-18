@@ -218,8 +218,8 @@ export default function MarketEventsClient() {
 
       <section className="panel">
         <div className="panel-h">
-          <h2>이벤트 탭</h2>
-          <span className="desc">{loaded ? `${Object.keys(SURFACES).length}개 데이터 묶음` : "확인 중"}</span>
+          <h2>시장 이벤트</h2>
+          <span className="desc">{loaded ? `${Object.keys(SURFACES).length}개 항목` : "확인 중"}</span>
         </div>
         <div className="panel-b">
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="시장 이벤트 분류">
