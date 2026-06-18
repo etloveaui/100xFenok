@@ -156,6 +156,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.10 | 2026-06-19 | Added StockAnalysis surface consumer check so Data Lab shows whether collected surface rows are connected to public routes |
 | 2.2.9 | 2026-06-19 | Polished visible Data Lab operator copy for StockAnalysis catalog, freshness labels, and route-smoke labels while preserving raw JSON paths |
 | 2.2.8 | 2026-06-19 | Neutralized visible ETF fallback, waiting-state, and source-parity wording while preserving raw provider evidence in JSON |
 | 2.2.7 | 2026-06-19 | Added ETF coverage gap drilldown: new ETF/list/screener missing counts plus missing and auxiliary-fallback ticker chips linked to ETF detail pages |

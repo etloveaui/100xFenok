@@ -454,6 +454,7 @@ const Renderer = (function() {
     const counts = index?.counts || {};
     const results = Array.isArray(index?.results) ? index.results : [];
     if (!index || results.length === 0) return '';
+    const consumerMap = getStockanalysisSurfaceConsumers();
     const groups = new Map();
     results.forEach((row) => {
       const group = row?.group || 'other';
@@ -474,6 +475,22 @@ const Renderer = (function() {
         value.failed ? `${Formatters.formatNumber(value.failed, 0)}개 오류` : '정상',
         value.samples.join(', ')
       ]);
+    const connected = results.filter((row) => consumerMap[row?.surface]).length;
+    const unconnected = results
+      .filter((row) => !consumerMap[row?.surface])
+      .slice(0, 8)
+      .map((row) => row.surface || '-');
+    const consumerRows = results
+      .map((row) => {
+        const consumer = consumerMap[row?.surface] || '점검 필요';
+        return [
+          row?.surface || '-',
+          consumer,
+          `${Formatters.formatNumber(row?.rows || 0, 0)}행`,
+          row?.status === 'ok' ? '정상' : '점검'
+        ];
+      })
+      .slice(0, 12);
 
     return `
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
@@ -491,13 +508,58 @@ const Renderer = (function() {
           ${renderAuditMetric('정상', Formatters.formatNumber(counts.ok || 0, 0))}
           ${renderAuditMetric('테이블', Formatters.formatNumber(counts.tables || 0, 0))}
           ${renderAuditMetric('행', Formatters.formatNumber(counts.rows || 0, 0))}
+          ${renderAuditMetric('화면 연결', `${Formatters.formatNumber(connected, 0)} / ${Formatters.formatNumber(results.length, 0)}`)}
+          ${renderAuditMetric('추가 점검', Formatters.formatNumber(unconnected.length, 0))}
         </div>
         ${renderParityTable(
           ['분류', '행', '수집 목록', '상태', '예시'],
           groupRows.map((row) => row.map((cell) => escapeHtml(cell)))
         )}
+        ${renderParityTable(
+          ['데이터 항목', '대표 화면', '행', '상태'],
+          consumerRows.map((row) => row.map((cell) => escapeHtml(cell)))
+        )}
+        ${unconnected.length ? `
+          <p class="text-[11px] leading-relaxed text-amber-700">
+            추가 점검 필요: ${escapeHtml(unconnected.join(', '))}
+          </p>
+        ` : `
+          <p class="text-[11px] leading-relaxed text-gray-500">
+            수집된 시장 데이터 항목은 공개 화면 또는 종목/ETF 상세 보조 카드와 연결되어 있습니다.
+          </p>
+        `}
       </section>
     `;
+  }
+
+  function getStockanalysisSurfaceConsumers() {
+    return {
+      actions_recent: '/market/events · 기업 이벤트',
+      actions_splits: '/market/events · 분할·병합',
+      earnings_calendar: '/market/events · 어닝',
+      etf_provider_blackrock: '/etfs · ETF 모음',
+      etf_provider_proshares: '/etfs · ETF 모음',
+      etf_screener: '/etfs · ETF 목록',
+      industries: '/market/events · 산업',
+      industries_all: '/market/events · 산업',
+      industry_semiconductors: '/market/events · 반도체',
+      ipos_calendar: '/market/events · IPO',
+      ipos_filings: '/market/events · IPO',
+      ipos_recent: '/market/events · IPO',
+      ipos_statistics: '/market/events · IPO',
+      ipos_withdrawn: '/market/events · IPO',
+      list_bitcoin_etfs: '/etfs · ETF 모음',
+      market_active: '/market/events · 급등락',
+      market_afterhours: '/market/events · 장 마감 후',
+      market_gainers: '/market/events · 급등락',
+      market_gainers_month: '/market/events · 한 달 상승',
+      market_gainers_week: '/market/events · 이번 주 상승',
+      market_losers: '/market/events · 급등락',
+      market_losers_ytd: '/market/events · 연초 이후 하락',
+      market_premarket: '/market/events · 장전 거래',
+      new_etfs: '/etfs/new · 신규 상장',
+      sector_technology: '/market/events · 기술 섹터'
+    };
   }
 
   function renderEtfClassificationAudit(report) {
