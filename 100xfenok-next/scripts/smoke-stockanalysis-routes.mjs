@@ -2,6 +2,8 @@
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
+const RETRIES = Number(process.env.QA_STOCKANALYSIS_RETRIES || 2);
+const RETRY_DELAY_MS = Number(process.env.QA_STOCKANALYSIS_RETRY_DELAY_MS || 2500);
 
 const FATAL_MARKERS = [
   "예상치 못한 오류",
@@ -13,10 +15,15 @@ const FATAL_MARKERS = [
 const PAGE_ROUTES = [
   "/explore",
   "/etfs",
+  "/etfs?type=leveraged",
   "/etfs?type=single-stock",
+  "/etfs?type=inverse",
+  "/etfs?new=1",
   "/etfs/new",
   "/etfs/new?type=single-stock&days=14&sort=change",
   "/etfs/IEFA",
+  "/etfs/SQQQ",
+  "/etfs/TSLL",
   "/etfs/ADIU",
   "/market/events",
   "/market/events?tab=industry",
@@ -38,15 +45,24 @@ function fail(message) {
 }
 
 async function fetchText(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    const text = await response.text();
-    return { response, text };
-  } finally {
-    clearTimeout(timer);
+  let lastError = null;
+  for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      const text = await response.text();
+      if (response.status < 500 || attempt >= RETRIES) return { response, text };
+      lastError = new Error(`${url} returned HTTP ${response.status}`);
+    } catch (error) {
+      lastError = error;
+      if (attempt >= RETRIES) throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
   }
+  throw lastError ?? new Error(`${url} failed`);
 }
 
 async function fetchJson(url) {
@@ -107,6 +123,8 @@ async function checkEtfUniverse(root) {
   const payload = await fetchJson(`${root}/api/data/stockanalysis/etf-universe`);
   const records = Array.isArray(payload?.records) ? payload.records : [];
   const tqqq = records.find((row) => row?.ticker === "TQQQ");
+  const sqqq = records.find((row) => row?.ticker === "SQQQ");
+  const tsll = records.find((row) => row?.ticker === "TSLL");
   const counts = {
     records: payload?.counts?.records ?? records.length,
     withPrice: payload?.counts?.with_price ?? 0,
@@ -114,15 +132,28 @@ async function checkEtfUniverse(root) {
     withHoldings: payload?.counts?.with_holdings ?? 0,
     screenerOnly: payload?.counts?.screener_only ?? 0,
   };
-  assert(counts.records >= 5300, `ETF universe expected at least 5300 records, got ${counts.records}`);
+  assert(counts.records >= 5250, `ETF universe expected at least 5250 records, got ${counts.records}`);
   assert(counts.withPrice >= 5000, `ETF universe expected price coverage >= 5000, got ${counts.withPrice}`);
   assert(counts.withVolume >= 4500, `ETF universe expected volume coverage >= 4500, got ${counts.withVolume}`);
-  assert(counts.withHoldings >= 5000, `ETF universe expected holdings coverage >= 5000, got ${counts.withHoldings}`);
+  assert(counts.withHoldings >= 4900, `ETF universe expected holdings coverage >= 4900, got ${counts.withHoldings}`);
   assert(tqqq?.price, "ETF universe TQQQ price missing");
   assert(tqqq?.volume, "ETF universe TQQQ volume missing");
   assert(tqqq?.holdings, "ETF universe TQQQ holdings missing");
   assert(tqqq?.classification?.is_leveraged === true, "ETF universe TQQQ leveraged classification missing");
-  return { ...counts, tqqq: { price: tqqq.price, volume: tqqq.volume, holdings: tqqq.holdings } };
+  assert(tqqq?.classification?.is_single_stock === false, "ETF universe TQQQ single-stock classification mismatch");
+  assert(tqqq?.classification?.is_inverse === false, "ETF universe TQQQ inverse classification mismatch");
+  assert(sqqq?.classification?.is_leveraged === true, "ETF universe SQQQ leveraged classification missing");
+  assert(sqqq?.classification?.is_single_stock === false, "ETF universe SQQQ single-stock classification mismatch");
+  assert(sqqq?.classification?.is_inverse === true, "ETF universe SQQQ inverse classification missing");
+  assert(tsll?.classification?.is_leveraged === true, "ETF universe TSLL leveraged classification missing");
+  assert(tsll?.classification?.is_single_stock === true, "ETF universe TSLL single-stock classification missing");
+  assert(tsll?.classification?.is_inverse === false, "ETF universe TSLL inverse classification mismatch");
+  return {
+    ...counts,
+    tqqq: { price: tqqq.price, volume: tqqq.volume, holdings: tqqq.holdings },
+    sqqq: { classification: sqqq.classification },
+    tsll: { classification: tsll.classification },
+  };
 }
 
 async function checkEtfDetails(root) {

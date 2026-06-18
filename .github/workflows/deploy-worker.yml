@@ -60,3 +60,11 @@ jobs:
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Smoke StockAnalysis routes
+        working-directory: 100xfenok-next
+        run: npm run qa:stockanalysis
+        env:
+          QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
+          QA_STOCKANALYSIS_RETRIES: 3
+          QA_STOCKANALYSIS_RETRY_DELAY_MS: 10000
