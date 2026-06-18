@@ -1540,6 +1540,7 @@ def incremental_etf_backfill_candidates(
             reason, age_hours = etf_detail_backfill_reason(ticker, max_age_hours)
             if reason is None:
                 continue
+            prior_failures = parse_int((pending_entry or {}).get("consecutive_failures")) or 0
             seen.add(ticker)
             candidates.append(
                 {
@@ -1547,6 +1548,7 @@ def incremental_etf_backfill_candidates(
                     "source": source_name,
                     "reason": reason,
                     "age_hours": round(age_hours, 2) if age_hours is not None else None,
+                    "prior_failures": prior_failures,
                     "priority": source_priority.get(source_name, 99),
                     "reason_priority": reason_priority.get(reason, 99),
                 }
@@ -1555,6 +1557,7 @@ def incremental_etf_backfill_candidates(
     candidates.sort(
         key=lambda row: (
             row["reason_priority"],
+            row["prior_failures"],
             row["priority"],
             -(row["age_hours"] or 0),
             row["ticker"],
@@ -1571,7 +1574,7 @@ def incremental_etf_backfill_candidates(
             "max_age_hours": max_age_hours,
             "cooldown_days": cooldown_days,
             "cooldown_failure_threshold": cooldown_failure_threshold,
-            "selection": "never-fetched missing ETF details first, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason",
+            "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason/failure bucket",
         },
         "counts": {
             "candidates": len(candidates),
@@ -1580,6 +1583,7 @@ def incremental_etf_backfill_candidates(
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
             "stale": sum(1 for row in candidates if row["reason"] == "stale"),
             "cooldown_skipped": len(cooldown_rows),
+            "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
         },
         "selected": selected,
         "cooldown": cooldown_rows,

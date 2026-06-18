@@ -338,6 +338,49 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["BETA"])
         self.assertEqual(summary["counts"]["cooldown_skipped"], 0)
 
+    def test_incremental_etf_backfill_prioritizes_unattempted_missing_before_prior_failures(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "backfill").mkdir(parents=True)
+                (out_dir / "backfill" / "pending_ledger.json").write_text(
+                    json.dumps(
+                        {
+                            "entries": {
+                                "ADIU": {
+                                    "ticker": "ADIU",
+                                    "last_attempt_utc": "2026-06-18T00:00:00Z",
+                                    "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+                                    "consecutive_failures": 1,
+                                }
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir / "surfaces" / "new_etfs.json").write_text(
+                    json.dumps({"records": [{"s": "ADIU"}, {"s": "BETA"}]}),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": [{"ticker": "GAMMA"}]},
+                    limit=3,
+                    max_age_hours=720,
+                    exclude=set(),
+                    now_dt=self.fetcher.parse_iso_timestamp("2026-06-18T12:00:00Z"),
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["BETA", "GAMMA", "ADIU"])
+        self.assertEqual([row["prior_failures"] for row in summary["selected"]], [0, 0, 1])
+        self.assertEqual(summary["counts"]["prior_failed_candidates"], 1)
+
     def test_pending_ledger_updates_expected_missing_and_clears_on_success(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         original_public_dir = self.fetcher.PUBLIC_DIR

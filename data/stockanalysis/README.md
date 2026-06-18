@@ -126,9 +126,11 @@ StockAnalysis first; once the StockAnalysis endpoint starts returning detail
 JSON, the fallback file is replaced by a normal StockAnalysis payload.
 
 Incremental selection prioritizes never-fetched missing ETF detail records before
-retrying existing Yahoo fallback records. `new_etfs` still wins within the same
-reason bucket, but fallback retries must not starve ETF universe records that do
-not have any local detail yet.
+retrying existing Yahoo fallback records. Within the same reason bucket, tickers
+with fewer prior expected-missing failures are selected first; `new_etfs` still
+wins only when the prior-failure count is the same. Fallback retries and repeated
+missing attempts must not starve ETF universe records that do not have any local
+detail yet.
 
 Repeated expected-missing ETF detail failures are tracked in
 `backfill/pending_ledger.json`. After 3 consecutive expected 404-style failures,
