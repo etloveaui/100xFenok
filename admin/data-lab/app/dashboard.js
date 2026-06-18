@@ -225,20 +225,20 @@ const DataLabUI = (function() {
       }
       const audit = await response.json();
       const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers] = await Promise.all([
-        fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, 'Source parity diagnostics'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis fetch index'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/coverage/etf_detail.json`, 'StockAnalysis ETF detail coverage'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, 'StockAnalysis surface catalog'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/surface_consumers.json`, 'StockAnalysis surface consumers')
+        fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, '소스 일치성 진단'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis 수집 인덱스'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/coverage/etf_detail.json`, 'ETF 상세 커버리지'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF 분류 요약'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, '시장 데이터 수집 현황'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surface_consumers.json`, '시장 데이터 화면 연결')
       ]);
       const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
       const [stockanalysisIncremental, stockanalysisPendingLedger, marketFactsIndex] = await Promise.all([
         shouldFetchIncremental
-          ? fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'StockAnalysis incremental ETF backfill')
+          ? fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'ETF 증분 수집')
           : Promise.resolve(null),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/pending_ledger.json`, 'StockAnalysis ETF pending ledger'),
-        fetchOptionalJson(`${basePath}/data/computed/market_facts/index.json`, 'Market facts index')
+        fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/pending_ledger.json`, 'ETF 수집 대기열'),
+        fetchOptionalJson(`${basePath}/data/computed/market_facts/index.json`, '시장 팩트 인덱스')
       ]);
       Renderer.renderMarketDataAudit(
         audit,

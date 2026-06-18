@@ -225,8 +225,8 @@ function weightedRowValue(row: WeightedRow): number | null {
 }
 
 function detailStatusText(status: string | null) {
-  if (status === "surface_only" || status === "universe_only") return "상세 데이터를 준비 중입니다. 확인 가능한 요약 정보부터 먼저 표시합니다.";
-  if (status === "yf_fallback") return "일부 지표를 준비 중입니다. 확인 가능한 가격 정보부터 먼저 표시합니다.";
+  if (status === "surface_only" || status === "universe_only") return "요약 정보 우선 표시 중입니다. 보유 구성은 데이터 갱신 시 자동으로 보강됩니다.";
+  if (status === "yf_fallback") return "가격 정보 우선 표시 중입니다. 보유·분류 지표는 데이터 갱신 시 자동으로 보강됩니다.";
   return null;
 }
 
@@ -466,7 +466,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             <span className="stock-logo">{symbol.slice(0, 1)}</span>
             <div className="stock-id">
               <div className="stock-name"><h1>{symbol}</h1></div>
-              <div className="stock-meta"><span>ETF 상세 데이터 확인 중</span></div>
+              <div className="stock-meta"><span>ETF 정보 확인 중</span></div>
             </div>
           </div>
         </section>
@@ -480,7 +480,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     return (
       <div className="stock-shell">
         <div className="panel stock-empty">
-          <p className="text-lg font-black text-slate-700">ETF 상세 데이터 준비 중</p>
+          <p className="text-lg font-black text-slate-700">ETF 정보 연결 전</p>
           <p className="mt-2 text-sm font-semibold text-slate-500">
             {symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.
           </p>

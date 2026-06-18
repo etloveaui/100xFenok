@@ -93,14 +93,14 @@ function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "ful
 
 function detailStatusLabel(status: "full" | "partial" | "pending"): string {
   if (status === "pending") return "요약 우선";
-  if (status === "partial") return "일부 준비";
-  return "상세 가능";
+  if (status === "partial") return "가격 포함";
+  return "상세 이동";
 }
 
 function detailStatusHint(status: "full" | "partial" | "pending"): string {
   if (status === "pending") return "요약 정보 우선 표시";
-  if (status === "partial") return "일부 상세 지표 준비 중";
-  return "상세 페이지 이동 가능";
+  if (status === "partial") return "가격 정보 포함";
+  return "상세 화면으로 이동";
 }
 
 export default function NewEtfsList() {
@@ -174,6 +174,14 @@ export default function NewEtfsList() {
           <span className="pc num neutral">-</span>
         </div>
       )}
+      {loaded && rows.length > 0 ? (
+        <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
+          <span>표시 중 {rows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개 · 각 행은 ETF 상세로 이동</span>
+          <TransitionLink href="/etfs" className="font-black text-brand-interactive hover:underline">
+            ETF 센터로 이동
+          </TransitionLink>
+        </div>
+      ) : null}
     </section>
   );
 }

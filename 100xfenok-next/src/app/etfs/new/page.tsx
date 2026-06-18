@@ -30,7 +30,7 @@ export default function NewEtfsPage() {
             </div>
             <div className="data-shell-head-actions">
               <TransitionLink href="/etfs" className="data-shell-link">
-                ETF 검색
+                ETF 센터
               </TransitionLink>
             </div>
           </div>

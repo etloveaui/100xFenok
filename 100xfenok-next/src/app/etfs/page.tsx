@@ -11,8 +11,8 @@ interface Props {
 }
 
 export const metadata: Metadata = {
-  title: "ETF 검색 | 100xFenok",
-  description: "ETF 목록과 보유 구성을 검색하고 상세 페이지로 이동합니다.",
+  title: "ETF 센터 | 100xFenok",
+  description: "ETF 목록, 신규 상장, 레버리지·단일종목 ETF를 확인합니다.",
 };
 
 const plexKr = IBM_Plex_Sans_KR({
@@ -47,10 +47,10 @@ export default async function EtfsPage({ searchParams }: Props) {
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
-              <p className="data-shell-kicker">ETF 검색</p>
-              <h1 className="data-shell-title">ETF 검색</h1>
+              <p className="data-shell-kicker">ETF 센터</p>
+              <h1 className="data-shell-title">ETF 센터</h1>
               <p className="data-shell-desc">
-                ETF 목록, 운용자산, 유형 필터를 한곳에서 보고 각 행에서 상세 페이지로 이동합니다.
+                ETF 목록, 신규 상장, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
               </p>
             </div>
             <div className="data-shell-head-actions">

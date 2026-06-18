@@ -89,6 +89,10 @@ function fmtNumber(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "-";
 }
 
+function countLabel(value: number | null | undefined, fallback = "전체"): string {
+  return typeof value === "number" && Number.isFinite(value) ? `${value.toLocaleString("ko-KR")}개` : fallback;
+}
+
 function fmtAum(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "-";
   if (value >= 1_000_000_000_000) return `${(value / 1_000_000_000_000).toFixed(2)}T`;
@@ -203,6 +207,7 @@ export default function EtfSurfaceSnapshotCard() {
     [data],
   );
   const activeCollection = collections[collectionKey];
+  const newEtfCount = countRows(data?.newEtfs);
 
   return (
     <section className="panel">
@@ -227,7 +232,7 @@ export default function EtfSurfaceSnapshotCard() {
             <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
               <span>신규 상장 ETF · {fmtNumber(countRows(data?.newEtfs))}개</span>
               <TransitionLink href="/etfs/new" className="text-brand-interactive hover:text-slate-950">
-                전체 보기
+                {countLabel(newEtfCount)} 전체 보기
               </TransitionLink>
             </div>
             {newEtfs.map((row) => (
@@ -339,7 +344,7 @@ export default function EtfSurfaceSnapshotCard() {
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
         <span>기준일 {asOf(data?.screener?.fetched_at, data?.newEtfs?.fetched_at)}</span>
         <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
-          신규 상장 전체 보기
+          신규 상장 {countLabel(newEtfCount)} 보기
         </TransitionLink>
       </div>
     </section>

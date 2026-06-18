@@ -524,7 +524,7 @@ const Renderer = (function() {
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="font-semibold text-gray-800">시장 데이터 수집 카탈로그</h3>
+            <h3 class="font-semibold text-gray-800">시장 데이터 수집 현황</h3>
             <p class="text-xs text-gray-500 mt-1">data/stockanalysis/surfaces/index.json</p>
           </div>
           <span class="px-2 py-1 rounded-full border text-xs font-bold ${Number(counts.failed || 0) === 0 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
@@ -532,7 +532,7 @@ const Renderer = (function() {
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-          ${renderAuditMetric('수집 목록', Formatters.formatNumber(counts.surfaces_requested || results.length, 0))}
+          ${renderAuditMetric('수집 항목', Formatters.formatNumber(counts.surfaces_requested || results.length, 0))}
           ${renderAuditMetric('정상', Formatters.formatNumber(counts.ok || 0, 0))}
           ${renderAuditMetric('테이블', Formatters.formatNumber(counts.tables || 0, 0))}
           ${renderAuditMetric('행', Formatters.formatNumber(counts.rows || 0, 0))}
@@ -540,7 +540,7 @@ const Renderer = (function() {
           ${renderAuditMetric('추가 점검', Formatters.formatNumber(unconnected.length, 0))}
         </div>
         ${renderParityTable(
-          ['분류', '행', '수집 목록', '상태', '예시'],
+          ['분류', '행', '수집 항목', '상태', '예시'],
           groupRows.map((row) => row.map((cell) => escapeHtml(cell)))
         )}
         ${renderParityTable(

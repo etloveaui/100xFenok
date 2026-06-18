@@ -267,7 +267,7 @@ export default function EtfUniverseCard({
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>ETF 검색</h2>
+        <h2>ETF 목록</h2>
         <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
       </div>
       <div className="panel-b">
@@ -385,7 +385,7 @@ export default function EtfUniverseCard({
         <span>현재 조건에서 {newOnly ? "상장일순" : "운용자산순"} {formatNumber(visibleRows.length)} / {formatNumber(filteredRows.length)}개 표시 · 각 행은 상세 페이지로 이동</span>
         {showOpenLink ? (
           <TransitionLink href="/etfs" className="font-black text-brand-interactive hover:underline">
-            ETF 전체 보기
+            ETF 센터
           </TransitionLink>
         ) : null}
       </div>

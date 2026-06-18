@@ -93,7 +93,7 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
-      label: 'StockAnalysis ETF universe',
+      label: 'ETF 전체 목록',
       path: '/data/stockanalysis/etf_universe.json',
       datePath: 'generated_at',
       minCountPath: 'counts.records',
@@ -102,14 +102,14 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
-      label: 'StockAnalysis classification',
+      label: 'ETF 분류',
       path: '/data/stockanalysis/classification/latest.json',
       datePath: 'generated_at',
       warnAfterDays: 7,
       failAfterDays: 14
     },
     {
-      label: 'StockAnalysis fetch index',
+      label: 'StockAnalysis 수집 인덱스',
       path: '/data/stockanalysis/index.json',
       datePath: 'generated_at',
       warnAfterDays: 7,
