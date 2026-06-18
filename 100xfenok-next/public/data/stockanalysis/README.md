@@ -21,6 +21,13 @@ ETF detail pages self-heal without a manual freshness step. Full holdings/histor
 backfill remains intentionally chunked with `--universe-backfill --offset
 --limit-etfs` to avoid large request bursts.
 
+Latest measured incremental run (2026-06-18): 728 eligible candidates
+(563 missing, 165 fallback retry), 120 selected, 166 total ETF requests
+including the default focus set, 158 OK, 8 still pending, 0 hard failures. Of the
+OK records, 43 came from StockAnalysis and 115 were source-tagged Yahoo Finance
+ETF/fund fallbacks. The generated audit state is intentionally `warn` while
+`pending_details_remain` is true.
+
 Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
 confirmed stable payloads (`new_etfs`, `etf_screener`, `actions_recent`,
@@ -37,6 +44,7 @@ stockanalysis/
 ├── index.json
 ├── backfill/
 │   ├── incremental_latest.json
+│   ├── pending_ledger.json
 │   └── ...
 ├── etf_universe.json
 ├── etfs/
@@ -117,6 +125,20 @@ temporarily hold a source-tagged fallback payload:
 The next scheduled incremental run still retries those fallback records against
 StockAnalysis first; once the StockAnalysis endpoint starts returning detail
 JSON, the fallback file is replaced by a normal StockAnalysis payload.
+
+Incremental selection prioritizes never-fetched missing ETF detail records before
+retrying existing Yahoo fallback records. Within the same reason bucket, tickers
+with fewer prior expected-missing failures are selected first; `new_etfs` still
+wins only when the prior-failure count is the same. Fallback retries and repeated
+missing attempts must not starve ETF universe records that do not have any local
+detail yet.
+
+Repeated expected-missing ETF detail failures are tracked in
+`backfill/pending_ledger.json`. After 3 consecutive expected 404-style failures,
+the ticker is skipped for 7 days before becoming eligible again. This keeps each
+incremental chunk focused on undiscovered detail candidates instead of spending
+slots on the same hard-tail tickers. The ledger only cools down expected missing
+detail failures; hard failures still surface through the fetch index and audit.
 
 Universe payload:
 
