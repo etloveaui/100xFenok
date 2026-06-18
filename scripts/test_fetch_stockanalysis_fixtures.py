@@ -258,6 +258,90 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(writes[0][0], "etfs/ADIU.json")
         self.assertEqual(writes[0][1]["source_provider"], "yahoo_finance")
 
+    def test_yahoo_etf_payload_normalizes_source_tags_quote_and_fund_profile(self) -> None:
+        payload = self.fetcher.yahoo_etf_payload(
+            "BSJY",
+            {
+                "ticker": "BSJY",
+                "fetched_at": "2026-06-18T07:30:51Z",
+                "data": {
+                    "info": {
+                        "quoteType": "ETF",
+                        "longName": "Invesco BulletShares 2034 High Yield Corporate Bond ETF",
+                        "currentPrice": 25.07,
+                        "previousClose": 25.205,
+                        "navPrice": 20.21,
+                        "netExpenseRatio": 0.42,
+                        "fundFamily": "Invesco",
+                        "category": "High Yield Bond",
+                        "legalType": "Exchange Traded Fund",
+                    },
+                    "funds_data": {
+                        "quote_type": "ETF",
+                        "description": "The fund tracks a high-yield corporate bond index.",
+                        "fund_overview": {
+                            "family": "Invesco",
+                            "categoryName": "High Yield Bond",
+                            "legalType": "Exchange Traded Fund",
+                        },
+                        "top_holdings": [
+                            {"_index": "CASH", "Name": "Cash", "Holding Percent": 0.125},
+                        ],
+                        "asset_classes": {"bondPosition": 0.875, "cashPosition": 0.125},
+                        "sector_weightings": {"financial_services": 0.25},
+                    },
+                    "history_1y": [{"date": "2026-06-18", "close": 25.07}],
+                },
+            },
+        )
+
+        self.assertEqual(payload["source"], "yahoo_finance")
+        self.assertEqual(payload["source_provider"], "yahoo_finance")
+        self.assertEqual(payload["detail_status"], "yf_fallback")
+        self.assertEqual(payload["normalized"]["quote"]["ex"], "yahoo_finance")
+        self.assertAlmostEqual(payload["normalized"]["quote"]["c"], -0.135)
+        self.assertEqual(payload["normalized"]["overview"]["provider_page"], "Invesco")
+        self.assertEqual(payload["normalized"]["holdings"][0]["weight_pct"], 12.5)
+        self.assertEqual(payload["normalized"]["asset_allocation"]["bondPosition"], 0.875)
+        self.assertEqual(payload["normalized"]["history"][0]["close"], 25.07)
+
+    def test_yahoo_etf_payload_rejects_non_fund_quote_type(self) -> None:
+        with self.assertRaises(ValueError):
+            self.fetcher.yahoo_etf_payload(
+                "ADIU",
+                {
+                    "ticker": "ADIU",
+                    "fetched_at": "2026-06-18T07:30:51Z",
+                    "data": {
+                        "info": {"quoteType": "EQUITY", "currentPrice": 14.5},
+                    },
+                },
+            )
+
+    def test_invalid_yahoo_fallback_does_not_write_raw_yf_payload(self) -> None:
+        original_loader = self.fetcher.load_yf_finance_module
+        original_write_json = self.fetcher.write_json
+        writes = []
+
+        class FakeYahooModule:
+            @staticmethod
+            def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,)):
+                return {"info": {"quoteType": "EQUITY", "currentPrice": 14.5}}, 10, None
+
+        def fake_write_json(path: Path, payload: dict) -> None:
+            writes.append((path, payload))
+
+        self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
+        self.fetcher.write_json = fake_write_json
+        try:
+            with self.assertRaises(ValueError):
+                self.fetcher.fetch_yahoo_etf_fallback("ADIU", mirror_public=True)
+        finally:
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.write_json = original_write_json
+
+        self.assertEqual(writes, [])
+
     def test_etf_classification_separates_index_and_single_stock_leverage(self) -> None:
         index_etf = self.fetcher.classify_etf(
             {"ticker": "TQQQ", "name": "ProShares UltraPro QQQ"},

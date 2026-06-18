@@ -1283,16 +1283,21 @@ def read_json(path: Path):
         return None
 
 
-def write_yf_payload(ticker: str, data: dict, mirror_public: bool) -> dict:
+def build_yf_payload(ticker: str, data: dict, fetched_at: str | None = None) -> dict:
     payload = {
         "schema_version": "yf-finance/v2",
         "ticker": ticker,
-        "fetched_at": now_iso(),
+        "fetched_at": fetched_at or now_iso(),
         "profile": "etf",
         "data": data,
         "source": "yahoo_finance",
         "source_context": "stockanalysis_etf_fallback",
     }
+    return payload
+
+
+def write_yf_payload(ticker: str, data: dict, mirror_public: bool, fetched_at: str | None = None) -> dict:
+    payload = build_yf_payload(ticker, data, fetched_at)
     write_json(YF_OUT_DIR / f"{ticker}.json", payload)
     if mirror_public:
         write_json(YF_PUBLIC_DIR / f"{ticker}.json", payload)
@@ -1546,8 +1551,11 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
     data, _latency_ms, error = module.fetch_with_retry(ticker, profile="etf", retries=1, backoffs=(3,))
     if error is not None or data is None:
         raise RuntimeError(error or "Yahoo fallback returned no data")
-    yf_payload = write_yf_payload(ticker, data, mirror_public)
-    return yahoo_etf_payload(ticker, yf_payload)
+    fetched_at = now_iso()
+    yf_payload = build_yf_payload(ticker, data, fetched_at)
+    etf_payload = yahoo_etf_payload(ticker, yf_payload)
+    write_yf_payload(ticker, data, mirror_public, fetched_at)
+    return etf_payload
 
 
 def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | None:
@@ -1798,7 +1806,7 @@ def main() -> None:
             )
             results.append(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
-            if result.get("provider") == "yahoo_finance":
+            if result["error"] is None and result.get("provider") == "yahoo_finance":
                 status = "YF_FALLBACK"
             print(f"[{kind} {idx}/{len(symbols)}] {ticker} {status} {result['latency_ms']}ms", flush=True)
             if args.stop_on_hard_error and is_hard_error(result["error"]):
