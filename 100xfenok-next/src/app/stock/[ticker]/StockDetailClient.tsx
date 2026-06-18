@@ -143,6 +143,28 @@ interface StockanalysisEtfPayload {
   };
 }
 
+interface StockanalysisFinancialRow {
+  field?: string | null;
+  title?: string | null;
+  values?: unknown[];
+}
+
+interface StockanalysisFinancialStatement {
+  periods?: string[];
+  rows?: StockanalysisFinancialRow[];
+}
+
+interface StockanalysisFinancialPayload {
+  ticker?: string;
+  fetched_at?: string;
+  role?: string;
+  statements?: {
+    annual?: Record<string, StockanalysisFinancialStatement | null | undefined>;
+    quarterly?: Record<string, StockanalysisFinancialStatement | null | undefined>;
+  };
+  summary?: Record<string, Record<string, { field_count?: number | null; period_count?: number | null; period?: string | null } | null | undefined>>;
+}
+
 function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload | null> {
   const symbol = ticker.trim().toUpperCase();
   if (!symbol) return Promise.resolve(null);
@@ -151,6 +173,19 @@ function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload |
     .then((data) => (
       data && typeof data === "object" && !Array.isArray(data)
         ? data as StockanalysisEtfPayload
+        : null
+    ))
+    .catch(() => null);
+}
+
+function loadStockanalysisFinancials(ticker: string): Promise<StockanalysisFinancialPayload | null> {
+  const symbol = ticker.trim().toUpperCase();
+  if (!symbol) return Promise.resolve(null);
+  return fetch(`/api/data/stockanalysis/financials/${encodeURIComponent(symbol)}`, { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => (
+      data && typeof data === "object" && !Array.isArray(data)
+        ? data as StockanalysisFinancialPayload
         : null
     ))
     .catch(() => null);
@@ -643,6 +678,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const [yfData, setYfData] = useState<any | undefined>(undefined);
   const [stockTab, setStockTab] = useState<StockTab>("overview");
   const [etfData, setEtfData] = useState<StockanalysisEtfPayload | null | undefined>(undefined);
+  const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -662,6 +698,15 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
       if (!cancelled) setEtfData(undefined);
     });
     loadStockanalysisEtf(symbol).then((d) => { if (!cancelled) setEtfData(d); });
+    return () => { cancelled = true; };
+  }, [symbol]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setFinancialCandidate(undefined);
+    });
+    loadStockanalysisFinancials(symbol).then((d) => { if (!cancelled) setFinancialCandidate(d); });
     return () => { cancelled = true; };
   }, [symbol]);
 
@@ -860,6 +905,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
                   <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
                   <CompactFinancialTable detail={detail} years={years} />
                 </div>
+                <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
                 <RawFinancialDepth detail={detail} />
               </SectionCard>
             ) : null}
@@ -1165,6 +1211,146 @@ function SkeletonSection() {
       <div className="panel-b">
       <div className="h-5 w-1/3 rounded bg-slate-200" />
       <div className="mt-3 h-32 rounded bg-slate-200" />
+      </div>
+    </div>
+  );
+}
+
+const FINANCIAL_STATEMENT_LABELS: Record<string, string> = {
+  income: "손익",
+  balance_sheet: "재무상태",
+  cash_flow: "현금흐름",
+  ratios: "비율",
+};
+
+function financialStatementLabel(key: string): string {
+  return FINANCIAL_STATEMENT_LABELS[key] ?? key.replace(/_/g, " ");
+}
+
+function findFinancialRow(statement: StockanalysisFinancialStatement | null | undefined, fields: string[]) {
+  const rows = Array.isArray(statement?.rows) ? statement.rows : [];
+  return rows.find((row) => typeof row.field === "string" && fields.includes(row.field));
+}
+
+function firstFiniteValue(row: StockanalysisFinancialRow | undefined): number | null {
+  if (!Array.isArray(row?.values)) return null;
+  for (const value of row.values) {
+    if (isFiniteNumber(value)) return value;
+  }
+  return null;
+}
+
+function formatCandidateMetric(value: number | null, currency: string, kind: "money" | "multiple" | "pct" = "money") {
+  if (!isFiniteNumber(value)) return "—";
+  if (kind === "multiple") return `${value.toFixed(value >= 10 ? 1 : 2)}x`;
+  if (kind === "pct") return fmtEtfPct(value * 100);
+  return formatCompactMoney(value, currency);
+}
+
+function fmtCandidateCount(value: unknown): string {
+  return isFiniteNumber(value) ? value.toLocaleString("ko-KR") : "—";
+}
+
+function FinancialCandidatePanel({
+  data,
+  loading,
+  currency,
+}: {
+  data: StockanalysisFinancialPayload | null | undefined;
+  loading: boolean;
+  currency: string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="h-4 w-32 rounded bg-slate-200" />
+        <div className="mt-3 grid gap-3 sm:grid-cols-4">
+          {[0, 1, 2, 3].map((item) => <div key={item} className="h-16 rounded bg-white" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
+        <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 후보 원장</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">교차검증용 원장 수집 전입니다.</p>
+      </div>
+    );
+  }
+
+  const annual = data.statements?.annual ?? {};
+  const quarterly = data.statements?.quarterly ?? {};
+  const summaryGroups = [
+    { label: "연간", data: data.summary?.annual ?? {} },
+    { label: "분기", data: data.summary?.quarterly ?? {} },
+  ];
+  const metrics = [
+    {
+      label: "TTM 매출",
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["revenue"])), currency),
+    },
+    {
+      label: "TTM 순이익",
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["netIncome", "netincCompany"])), currency),
+    },
+    {
+      label: "TTM FCF",
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.cash_flow, ["fcf", "leveredFCF", "unleveredFCF"])), currency),
+    },
+    {
+      label: "최근 PER",
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.ratios, ["pe"])), currency, "multiple"),
+    },
+    {
+      label: "최근 분기 매출",
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(quarterly.income, ["revenue"])), currency),
+    },
+    {
+      label: "최근 분기 FCF",
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(quarterly.cash_flow, ["fcf", "leveredFCF", "unleveredFCF"])), currency),
+    },
+  ];
+
+  return (
+    <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 후보 원장</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">교차검증용 · 가치평가 입력 아님</p>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
+          {fmtDateish(data.fetched_at)}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        {metrics.map((metric) => (
+          <div key={metric.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{metric.label}</p>
+            <p className="orbitron mt-1 min-w-0 break-words text-sm font-black tabular-nums text-slate-950">{metric.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        {summaryGroups.map((group) => (
+          <div key={group.label} className="rounded-lg border border-slate-200 bg-white p-3">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{group.label} 커버리지</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {Object.entries(group.data).map(([key, info]) => (
+                <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
+                  <p className="text-[10px] font-bold text-slate-500">{financialStatementLabel(key)}</p>
+                  <p className="orbitron mt-0.5 text-xs font-black tabular-nums text-slate-900">
+                    {fmtCandidateCount(info?.field_count)}필드
+                  </p>
+                  <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                    {fmtCandidateCount(info?.period_count)}기간
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
