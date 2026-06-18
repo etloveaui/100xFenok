@@ -249,6 +249,7 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
             "asset_allocation": sa_norm.get("asset_allocation"),
             "sectors": sa_norm.get("sectors"),
             "countries": sa_norm.get("countries"),
+            "classification": sa_norm.get("classification"),
             "yahoo_funds_data_available": bool(data.get("funds_data")),
         } if asset_type == "etf" else None,
         "financials": None,

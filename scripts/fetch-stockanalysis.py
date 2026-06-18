@@ -1365,22 +1365,22 @@ def main() -> None:
     args = parser.parse_args()
 
     mirror_public = not args.no_public_mirror
-    if args.classify_etf_catalogs:
+    classify_catalogs_requested = args.classify_etf_catalogs
+    no_other_work = not any(
+        (
+            args.discover_etf_universe,
+            args.fetch_surfaces,
+            args.universe_backfill,
+            args.stocks_only,
+            args.etfs,
+            args.stocks,
+            args.fetch_financials,
+        )
+    )
+    if classify_catalogs_requested and no_other_work:
         classification_summary = classify_existing_etf_catalogs(mirror_public)
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
-        no_other_work = not any(
-            (
-                args.discover_etf_universe,
-                args.fetch_surfaces,
-                args.universe_backfill,
-                args.stocks_only,
-                args.etfs,
-                args.stocks,
-                args.fetch_financials,
-            )
-        )
-        if no_other_work:
-            return
+        return
 
     universe_payload = None
     if args.discover_etf_universe:
@@ -1471,6 +1471,9 @@ def main() -> None:
         write_payload("backfill/latest.json", summary, mirror_public)
     else:
         write_payload("index.json", summary, mirror_public)
+    if classify_catalogs_requested:
+        classification_summary = classify_existing_etf_catalogs(mirror_public)
+        print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
     if stop_reason:
         raise SystemExit(2)
     if args.fail_on_error and summary["counts"]["failed"]:

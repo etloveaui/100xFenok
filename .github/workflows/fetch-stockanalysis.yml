@@ -85,7 +85,7 @@ jobs:
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
         run: |
-          ARGS="--sleep ${INPUT_SLEEP:-0.25}"
+          ARGS="--sleep ${INPUT_SLEEP:-0.25} --classify-etf-catalogs"
           if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
           if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
           if [ "${INPUT_FETCH_SURFACES:-true}" = "true" ]; then ARGS="$ARGS --fetch-surfaces"; fi
