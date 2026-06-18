@@ -80,12 +80,16 @@ async function checkEtfSnapshot(root) {
   const counts = {
     newEtfs: newEtfRecords.length,
     screener: payload?.screener?.records?.length ?? 0,
+    screenerVolume: payload?.screener?.volumeLeaders?.length ?? 0,
+    screenerChange: payload?.screener?.changeLeaders?.length ?? 0,
     blackrock: payload?.blackrock?.records?.length ?? 0,
     proshares: payload?.proshares?.records?.length ?? 0,
     bitcoin: payload?.bitcoin?.records?.length ?? 0,
   };
   assert(counts.newEtfs === 100, `newEtfs expected 100, got ${counts.newEtfs}`);
   assert(counts.screener === 5, `screener expected 5, got ${counts.screener}`);
+  assert(counts.screenerVolume === 5, `screener volume leaders expected 5, got ${counts.screenerVolume}`);
+  assert(counts.screenerChange === 5, `screener change leaders expected 5, got ${counts.screenerChange}`);
   assert(counts.blackrock === 20, `blackrock expected 20, got ${counts.blackrock}`);
   assert(counts.proshares === 20, `proshares expected 20, got ${counts.proshares}`);
   assert(counts.bitcoin === 20, `bitcoin expected 20, got ${counts.bitcoin}`);

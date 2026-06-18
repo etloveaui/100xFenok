@@ -16,6 +16,11 @@ interface SurfaceDoc<T> {
   }>;
 }
 
+interface EtfScreenerDoc extends SurfaceDoc<EtfScreenerRow> {
+  volumeLeaders?: EtfScreenerRow[];
+  changeLeaders?: EtfScreenerRow[];
+}
+
 interface NewEtfRow {
   s?: string;
   n?: string;
@@ -40,6 +45,7 @@ interface EtfScreenerRow {
   aum?: number;
   price?: number;
   change?: number;
+  volume?: number;
   holdings?: number;
 }
 
@@ -62,7 +68,7 @@ interface BitcoinEtfRow {
 
 interface EtfSurfaceData {
   newEtfs: SurfaceDoc<NewEtfRow> | null;
-  screener: SurfaceDoc<EtfScreenerRow> | null;
+  screener: EtfScreenerDoc | null;
   blackrock: SurfaceDoc<ProviderRow> | null;
   proshares: SurfaceDoc<ProviderRow> | null;
   bitcoin: SurfaceDoc<BitcoinEtfRow> | null;
@@ -108,6 +114,22 @@ function fmtAum(value: number | null | undefined): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   return value.toLocaleString("en-US");
+}
+
+function fmtPrice(value: number | null | undefined): string {
+  return typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(value >= 100 ? 0 : 2)}` : "-";
+}
+
+function fmtSignedPct(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
+function fmtVolume(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toLocaleString("ko-KR");
 }
 
 function countRows<T>(doc: SurfaceDoc<T> | null | undefined): number | null {
@@ -205,6 +227,8 @@ export default function EtfSurfaceSnapshotCard() {
 
   const newEtfs = useMemo(() => rows(data?.newEtfs).slice(0, 5), [data]);
   const largestEtfs = useMemo(() => rows(data?.screener).slice(0, 5), [data]);
+  const volumeLeaders = useMemo(() => (data?.screener?.volumeLeaders ?? []).slice(0, 5), [data]);
+  const changeLeaders = useMemo(() => (data?.screener?.changeLeaders ?? []).slice(0, 5), [data]);
   const providerLeaders = useMemo(
     () => [...rows(data?.blackrock).slice(0, 3), ...rows(data?.proshares).slice(0, 3)],
     [data],
@@ -282,6 +306,32 @@ export default function EtfSurfaceSnapshotCard() {
                 name={row.n}
                 detail={`${row.assetClass || "-"} · 보유 ${fmtNumber(row.holdings)}`}
                 value={fmtAum(row.aum)}
+              />
+            ))}
+          </div>
+
+          <div className="mv-col">
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">거래량 상위 ETF</div>
+            {volumeLeaders.map((row) => (
+              <EtfLink
+                key={`volume-${row.s}`}
+                ticker={row.s}
+                name={row.n}
+                detail={`${row.assetClass || "-"} · 가격 ${fmtPrice(row.price)} · 보유 ${fmtNumber(row.holdings)}`}
+                value={fmtVolume(row.volume)}
+              />
+            ))}
+          </div>
+
+          <div className="mv-col">
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">변동률 큰 ETF</div>
+            {changeLeaders.map((row) => (
+              <EtfLink
+                key={`change-${row.s}`}
+                ticker={row.s}
+                name={row.n}
+                detail={`${row.assetClass || "-"} · 가격 ${fmtPrice(row.price)} · 거래량 ${fmtVolume(row.volume)}`}
+                value={fmtSignedPct(row.change)}
               />
             ))}
           </div>

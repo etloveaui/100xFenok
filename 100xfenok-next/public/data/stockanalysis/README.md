@@ -54,7 +54,9 @@ The ETF snapshot API enriches the `new_etfs` rows with classification joined
 from `etf_screener` or `etf_universe` by ticker. New ETF filtering should prefer
 this joined classification over name-pattern inference when it is present. The
 ETF center summary card also surfaces these joined hints for new leveraged,
-single-stock, and inverse ETFs.
+single-stock, and inverse ETFs. The same snapshot uses `etf_screener` for the
+`/etfs` AUM, volume, and absolute-change leaderboards so the lightweight ETF
+list is visible before users open a detail page.
 
 ## Structure
 
