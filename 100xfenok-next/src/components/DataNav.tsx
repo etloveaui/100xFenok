@@ -10,7 +10,7 @@ const PAGES: Array<{ id: Page; label: string; href: string }> = [
   { id: "sectors", label: "섹터", href: "/sectors" },
   { id: "etfs", label: "ETF", href: "/etfs" },
   { id: "screener", label: "스크리너", href: "/screener" },
-  { id: "superinvestors", label: "구루", href: "/superinvestors" },
+  { id: "superinvestors", label: "투자자", href: "/superinvestors" },
   { id: "portfolio", label: "포트폴리오", href: "/portfolio" },
 ];
 

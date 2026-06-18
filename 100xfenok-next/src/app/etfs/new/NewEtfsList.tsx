@@ -82,13 +82,13 @@ function countRows(payload: EtfSnapshotPayload | null): number {
   return payload?.newEtfs?.records?.length ?? 0;
 }
 
-function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): string {
+function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "full" | "partial" | "pending" {
   const symbol = ticker.trim().toUpperCase();
   const missing = new Set((coverage?.missing_tickers ?? []).map((item) => item.trim().toUpperCase()));
-  if (missing.has(symbol)) return "상세 준비 중";
+  if (missing.has(symbol)) return "pending";
   const fallback = new Set((coverage?.yahoo_fallback_tickers ?? []).map((item) => item.trim().toUpperCase()));
-  if (fallback.has(symbol)) return "가격 보강";
-  return "상세 연결 완료";
+  if (fallback.has(symbol)) return "partial";
+  return "full";
 }
 
 export default function NewEtfsList() {
@@ -140,7 +140,7 @@ export default function NewEtfsList() {
             <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
               <span className="co">
                 <div className="n">{row.n}</div>
-                <div className="tk">{row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)} · {row.detailStatus}</div>
+                <div className="tk">{row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)}</div>
               </span>
               <span className={`pc num ${(row.change ?? 0) >= 0 ? "up" : "down"}`}>{fmtChange(row.change)}</span>
             </TransitionLink>

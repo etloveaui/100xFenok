@@ -833,7 +833,7 @@ export default function SuperinvestorsClient({
                 </div>
                 {coverage ? (
                   <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-black text-slate-500">
-                    보강률 섹터 {fmtPct(coverage.sector, 0)} · 가격 {fmtPct(coverage.price_at_filing, 0)}
+                    섹터 정보 {fmtPct(coverage.sector, 0)} · 공시 당시 가격 {fmtPct(coverage.price_at_filing, 0)}
                   </span>
                 ) : null}
               </div>
@@ -890,7 +890,7 @@ export default function SuperinvestorsClient({
                     <th className="px-3 py-2 text-right">보유자</th>
                     <th className="px-3 py-2 text-right">주식 기준</th>
                     <th className="px-3 py-2 text-left">보유자 목록</th>
-                    <th className="px-3 py-2 text-right">동작</th>
+                    <th className="px-3 py-2 text-right">보기</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -133,7 +133,7 @@ function loadTape(): Promise<TapeItem[]> {
         ["russell2000", "러셀 2000"],
         ["kospi", "코스피"],
         ["nikkei", "니케이"],
-        ["emerging", "이머징"],
+        ["emerging", "신흥국"],
       ];
       for (const [key, label] of labels) {
         const v = bench?.momentum?.[key]?.ytd;

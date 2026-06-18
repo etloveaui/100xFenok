@@ -223,8 +223,8 @@ export default function EtfSurfaceSnapshotCard() {
                 key={`provider-${row.symbol}`}
                 ticker={row.symbol}
                 name={row.fund_name}
-                detail={`보수 ${row.exp_ratio || "-"} · 배당 ${row.div_yield || "-"}`}
-                value={row.change_1y || row.assets || "-"}
+                detail={`보수 ${row.exp_ratio || "-"} · 배당 ${row.div_yield || "-"} · 1년 ${row.change_1y || "-"}`}
+                value={row.assets || "-"}
               />
             ))}
           </div>
@@ -245,7 +245,7 @@ export default function EtfSurfaceSnapshotCard() {
       )}
 
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
-        <span>새 기준일이 반영되면 목록과 상세 화면도 함께 바뀝니다</span>
+        <span>기준일 {asOf(data?.screener?.fetched_at, data?.newEtfs?.fetched_at)}</span>
         <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
           신규 상장 전체 보기
         </TransitionLink>

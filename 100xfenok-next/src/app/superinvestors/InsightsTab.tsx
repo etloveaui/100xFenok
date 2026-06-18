@@ -111,6 +111,13 @@ function classificationColor(c: string): string {
   return "bg-sky-100 text-sky-700 border-sky-200";
 }
 
+function classificationLabel(c: string): string {
+  if (c === "concentrated") return "집중";
+  if (c === "moderate") return "보통";
+  if (c === "dispersed") return "분산";
+  return c;
+}
+
 function SkeletonCard() {
   return (
     <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
@@ -469,7 +476,7 @@ function HhiCard({ data }: { data: HhiData }) {
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${classificationColor(r.classification)}`}>
-                    {r.classification}
+                    {classificationLabel(r.classification)}
                   </span>
                 </td>
               </tr>

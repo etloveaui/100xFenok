@@ -124,7 +124,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "momentum12m", label: "12M", align: "right" },
   { key: "rank", label: "순위", align: "right" },
   { key: "guruHolders", label: "대가 보유", align: "right" },
-  { key: "perBandCurrent", label: "PER밴드", align: "left" },
+  { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
   { key: "forwardPeFy1", label: "FY+1 PER", align: "right" },
@@ -197,7 +197,7 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
 const PRESET_LABEL: Record<ColumnPreset, string> = {
   basic: "기본",
   action: "투자 신호",
-  value: "밸류",
+  value: "가치",
   estimate: "추정치",
   momentum: "모멘텀",
   dividend: "배당",

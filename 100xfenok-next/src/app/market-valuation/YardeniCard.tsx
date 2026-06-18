@@ -133,7 +133,7 @@ export default function YardeniCard() {
     <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
       <div>
         <h2 className="text-sm font-black tracking-tight text-slate-900">
-          야데니 모델 (Bond PER)
+          야데니 모델 (채권 PER)
         </h2>
         <p className="mt-1 text-[11px] leading-5 text-slate-500">
           회사채 금리로 계산한 채권 PER × EPS = 주식 적정가. 국채·회사채 대비
@@ -221,10 +221,10 @@ export default function YardeniCard() {
           <div className="mt-3 grid gap-2 sm:grid-cols-5">
             {[
               ["EPS", `$${fmtNum(active.eps, 2)}`],
-              ["Bond PER", `${fmtNum(active.bond_per, 1)}x`],
+              ["채권 PER", `${fmtNum(active.bond_per, 1)}x`],
               ["AAA", `${fmtNum(active.moodys_aaa, 2)}%`],
               ["BAA", `${fmtNum(active.moodys_baa, 2)}%`],
-              ["Spread avg", `${fmtNum(active.spread_avg, 2)}%`],
+              ["평균 스프레드", `${fmtNum(active.spread_avg, 2)}%`],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>

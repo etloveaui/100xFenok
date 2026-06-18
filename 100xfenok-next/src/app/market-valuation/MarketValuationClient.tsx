@@ -196,7 +196,7 @@ function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
   return (
     <PanelShell title="유동성·리스크 신호" subtitle="종합 신호">
       {items.length === 0 ? (
-        <EmptyPanel label="가공 신호 없음" />
+        <EmptyPanel label="시장 신호 없음" />
       ) : (
         <div className="grid min-w-0 sm:grid-cols-2">
           {items.map((item) => (
@@ -510,18 +510,18 @@ export default function MarketValuationClient() {
         </div>
       ) : null}
 
-      <MarketSection index="01 Overview" title="개요" summary="시장 체온과 가공 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
+      <MarketSection index="01 개요" title="개요" summary="시장 체온과 주요 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
         <MarketThermometer />
         <SignalPulsePanel items={signalPulses} />
       </MarketSection>
 
-      <MarketSection index="02 Macro" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
+      <MarketSection index="02 매크로" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
         <PmiActivityChartPanel />
         <MacroPulsePanel items={macroPulses} />
         <BondPulsePanel items={bondPulses} />
       </MarketSection>
 
-      <MarketSection index="03 Valuation" title="밸류에이션" summary="ERP, Yardeni 모델, 지수별 멀티플 밴드를 한곳에 모았습니다." muted={!dataReady}>
+      <MarketSection index="03 밸류에이션" title="밸류에이션" summary="ERP, 야데니 모델, 지수별 평가 밴드를 한곳에 모았습니다." muted={!dataReady}>
         <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
           <ErpHistoryPanel />
           <YardeniOverlayChartPanel />
@@ -560,19 +560,19 @@ export default function MarketValuationClient() {
         </div>
       </MarketSection>
 
-      <MarketSection index="04 Structure & Sentiment" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
+      <MarketSection index="04 구조·심리" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
         <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
         <StructureDetailEntry />
         <SentimentPulsePanel items={sentimentPulses} />
       </MarketSection>
 
-      <MarketSection index="05 Context" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
+      <MarketSection index="05 맥락" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
         <AnnualReturnsChartPanel />
         <EventRiskPanel items={eventRisks} />
       </MarketSection>
 
       <p className="px-1 text-[11px] text-slate-400">
-        역사 밴드 = 2010년 이후 weekly 시계열의 min/avg/max. percentile은 현재값의 역사적 위치(높을수록 고평가). YTD 분해는 가격 변화가 EPS 개선인지 멀티플 확장/축소인지 보기 위한 가공 신호입니다.
+        역사 밴드 = 2010년 이후 주간 시계열의 최저·평균·최고 범위입니다. 백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다. 연초 이후 분해는 가격 변화가 EPS 개선에서 왔는지 평가배수 확장/축소에서 왔는지 보기 위한 보조 지표입니다.
       </p>
     </div>
   );

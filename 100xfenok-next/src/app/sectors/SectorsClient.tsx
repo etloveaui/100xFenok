@@ -26,7 +26,7 @@ const MOBILE_VIEWS: ReadonlyArray<{ key: MobileView; label: string }> = [
   { key: "heatmap", label: "흐름" },
   { key: "etf", label: "ETF" },
   { key: "valuation", label: "가치" },
-  { key: "guru", label: "13F" },
+  { key: "guru", label: "기관 보유" },
 ];
 
 function dateOnly(value: string | null | undefined): string | null {
@@ -151,14 +151,14 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
 function SourceLine({ sourceMeta }: { sourceMeta: SectorSourceMeta }) {
   const parts = [
     sourceMeta.benchmarksGenerated ? `모멘텀 ${dateOnly(sourceMeta.benchmarksGenerated)}` : null,
-    sourceMeta.valuationLatestDate ? `밸류 ${sourceMeta.valuationLatestDate}` : null,
-    sourceMeta.smartMoneyQuarter ? `13F ${sourceMeta.smartMoneyQuarter}` : null,
+    sourceMeta.valuationLatestDate ? `가치 ${sourceMeta.valuationLatestDate}` : null,
+    sourceMeta.smartMoneyQuarter ? `기관 보유 ${sourceMeta.smartMoneyQuarter}` : null,
   ].filter(Boolean);
   return <span>{parts.length > 0 ? parts.join(" · ") : "기준일 확인 중"}</span>;
 }
 
 function valuationSourceLine(sourceMeta: SectorSourceMeta): string {
-  return `밸류 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "확인 중"}`;
+  return `가치 기준 ${sourceMeta.valuationLatestDate ?? sourceMeta.valuationVersion ?? "확인 중"}`;
 }
 
 function MobileViewSwitch({
@@ -238,7 +238,7 @@ function SectorPulse({
         <p className="mt-0.5 text-[11px] font-bold text-slate-500"><SourceLine sourceMeta={sourceMeta} /></p>
       </div>
       <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">밸류 위치</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">가치 위치</p>
         <p className="mt-1 text-sm font-black text-slate-950">
           저평가 {cheapest ? cheapest.name : "—"} · 고평가 {richest ? richest.name : "—"}
         </p>
@@ -247,9 +247,9 @@ function SectorPulse({
         </p>
       </div>
       <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">13F 포지셔닝</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">기관 보유</p>
         <p className="mt-1 text-sm font-black text-slate-950">
-          {smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "13F 없음"}
+          {smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "기관 보유 없음"}
         </p>
         <p className="mt-0.5 text-[11px] font-bold text-slate-500">
           증가 {smartDeltaLeader?.smartMoney ? `${smartDeltaLeader.name} ${pp(smartDeltaLeader.smartMoney.delta4q, 1)}` : "—"}
@@ -286,7 +286,7 @@ function SectorMomentumCard({
       <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
         <span className="rounded-lg bg-white px-2 py-1">당일 {pct(row.dayChange, 2)}</span>
         <span className="rounded-lg bg-white px-2 py-1">{tone.label}</span>
-        <span className="rounded-lg bg-white px-2 py-1">13F {pct(row.smartMoney?.weight, 1)}</span>
+        <span className="rounded-lg bg-white px-2 py-1">기관 {pct(row.smartMoney?.weight, 1)}</span>
       </div>
     </article>
   );
@@ -384,7 +384,7 @@ export default function SectorsClient() {
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">섹터 인텔리전스</p>
+          <p className="data-shell-kicker">섹터 흐름</p>
           <h1 className="data-shell-title">섹터 히트맵</h1>
           <p className="data-shell-desc">
             {headerDesc}
