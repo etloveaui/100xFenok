@@ -1,7 +1,7 @@
 {
   "stockanalysis": {
     "universe_records": 5280,
-    "etf_detail_files": 4557,
+    "etf_detail_files": 4559,
     "stock_detail_files": 40,
     "financial_detail_files": 40,
     "etf_backfill_progress": "86.3%"
@@ -37,7 +37,7 @@
     "missing_offsets": [],
     "next_expected_offset": null,
     "ready_for_finalize": true,
-    "detail_minus_backfill_ok": 0,
+    "detail_minus_backfill_ok": 2,
     "transient_file_count": 0,
     "transient_files": {
       "source": [],
@@ -195,13 +195,45 @@
     "percent_scale_warnings": 0
   },
   "market_source_parity": {
-    "generated_at": "2026-06-18T02:43:36Z",
+    "generated_at": "2026-06-18T03:15:10Z",
     "summary": {
       "inspected_ticker_files": 5741,
       "fields": 11,
       "multi_candidate_fields": 2286,
       "divergence_rows": 2286,
-      "percent_scale_warnings": 0
+      "percent_scale_warnings": 0,
+      "diagnosis_counts": {
+        "agreement": 84,
+        "sign_divergence": 2,
+        "stale": 2151,
+        "value_drift": 49
+      },
+      "stale_rows": 2151,
+      "scale_mismatch_rows": 0,
+      "sign_divergence_rows": 2
     }
+  },
+  "incremental_etf": {
+    "status": "waiting",
+    "has_run_evidence": false,
+    "index_file_exists": true,
+    "proof_file_exists": false,
+    "index_generated_at": "2026-06-18T06:03:08Z",
+    "proof_generated_at": null,
+    "counts": {
+      "candidates": 0,
+      "selected": 0,
+      "missing": 0,
+      "fallback_retry": 0,
+      "stale": 0,
+      "etfs_stockanalysis_ok": 0,
+      "etfs_yahoo_fallback_ok": 0,
+      "etfs_still_pending": 0,
+      "hard_failed": 0,
+      "market_facts_yf_fallback": 0
+    },
+    "notes": [
+      "incremental_latest_missing"
+    ]
   }
 }

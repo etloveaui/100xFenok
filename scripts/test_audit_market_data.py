@@ -67,6 +67,7 @@ class MarketDataAuditTest(unittest.TestCase):
         write_json(self.data / "computed" / "market_facts" / "index.json", {"count": 3, "rows": [], "coverage": {}})
         (self.data / "computed" / "market_facts" / "tickers").mkdir(parents=True)
         write_json(self.data / "computed" / "market_source_parity.json", {"summary": {}, "generated_at": "2026-06-18T00:00:00Z"})
+        write_json(self.data / "stockanalysis" / "index.json", {"generated_at": "2026-06-18T00:00:00Z", "counts": {}})
         (self.public_data / "stockanalysis" / "backfill").mkdir(parents=True)
 
     def test_ready_when_expected_chunks_complete_and_no_transients(self) -> None:
@@ -91,6 +92,115 @@ class MarketDataAuditTest(unittest.TestCase):
             payload["backfill"]["transient_files"]["public"],
             ["backfill/index_offset_0_limit_3.json.ignored"],
         )
+
+    def test_incremental_etf_audit_waits_before_first_run(self) -> None:
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "waiting")
+        self.assertFalse(payload["incremental_etf"]["has_run_evidence"])
+        self.assertFalse(payload["incremental_etf"]["proof_file_exists"])
+        self.assertIn("incremental_latest_missing", payload["incremental_etf"]["notes"])
+
+    def test_incremental_etf_audit_warns_when_pending_details_remain(self) -> None:
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_latest.json",
+            {
+                "generated_at": "2026-06-18T01:00:00Z",
+                "counts": {"candidates": 4, "selected": 2, "missing": 1, "fallback_retry": 1, "stale": 0},
+            },
+        )
+        write_json(
+            self.data / "stockanalysis" / "index.json",
+            {
+                "generated_at": "2026-06-18T01:01:00Z",
+                "counts": {
+                    "etfs_stockanalysis_ok": 1,
+                    "etfs_yahoo_fallback_ok": 1,
+                    "etfs_still_pending": 1,
+                    "hard_failed": 0,
+                },
+            },
+        )
+        write_json(
+            self.data / "computed" / "market_facts" / "index.json",
+            {"count": 3, "rows": [], "coverage": {"stockanalysis_yf_fallback": 1}},
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "warn")
+        self.assertTrue(payload["incremental_etf"]["has_run_evidence"])
+        self.assertTrue(payload["incremental_etf"]["proof_file_exists"])
+        self.assertIn("pending_details_remain", payload["incremental_etf"]["notes"])
+
+    def test_incremental_etf_audit_passes_when_proof_has_no_pending_or_hard_failures(self) -> None:
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_latest.json",
+            {
+                "generated_at": "2026-06-18T01:00:00Z",
+                "counts": {"candidates": 2, "selected": 2, "missing": 1, "fallback_retry": 1, "stale": 0},
+            },
+        )
+        write_json(
+            self.data / "stockanalysis" / "index.json",
+            {
+                "generated_at": "2026-06-18T01:01:00Z",
+                "counts": {
+                    "etfs_stockanalysis_ok": 1,
+                    "etfs_yahoo_fallback_ok": 1,
+                    "etfs_still_pending": 0,
+                    "hard_failed": 0,
+                },
+            },
+        )
+        write_json(
+            self.data / "computed" / "market_facts" / "index.json",
+            {"count": 3, "rows": [], "coverage": {"stockanalysis_yf_fallback": 1}},
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "pass")
+        self.assertEqual(payload["incremental_etf"]["counts"]["selected"], 2)
+        self.assertEqual(payload["incremental_etf"]["counts"]["market_facts_yf_fallback"], 1)
+        self.assertEqual(payload["incremental_etf"]["notes"], [])
+
+    def test_incremental_etf_audit_warns_when_fetch_index_is_missing(self) -> None:
+        (self.data / "stockanalysis" / "index.json").unlink()
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_latest.json",
+            {
+                "generated_at": "2026-06-18T01:00:00Z",
+                "counts": {"candidates": 2, "selected": 2},
+            },
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "warn")
+        self.assertFalse(payload["incremental_etf"]["index_file_exists"])
+        self.assertIn("stockanalysis_index_missing", payload["incremental_etf"]["notes"])
+
+    def test_incremental_etf_audit_fails_on_hard_failures(self) -> None:
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_latest.json",
+            {
+                "generated_at": "2026-06-18T01:00:00Z",
+                "counts": {"candidates": 2, "selected": 2},
+            },
+        )
+        write_json(
+            self.data / "stockanalysis" / "index.json",
+            {
+                "generated_at": "2026-06-18T01:01:00Z",
+                "counts": {"hard_failed": 1, "etfs_still_pending": 0},
+            },
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "fail")
+        self.assertEqual(payload["incremental_etf"]["counts"]["hard_failed"], 1)
 
 
 if __name__ == "__main__":

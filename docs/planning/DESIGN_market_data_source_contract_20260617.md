@@ -113,6 +113,10 @@ External sources
     mismatches, and large percent-scale candidate disagreements;
   - reports completed/missing backfill offsets, next expected offset, hard-error
     count, and finalization readiness for the full ETF universe run;
+  - reports `incremental_etf.status` (`waiting|warn|pass|fail`) from
+    `stockanalysis/index.json`, optional `backfill/incremental_latest.json`,
+    and `market_facts.coverage.stockanalysis_yf_fallback` so scheduled
+    self-heal runs have a durable post-run proof surface;
   - can publish the same audit payload to
     `data/computed/market_data_audit.json` and the Next public data mirror when
     called with `--output data/computed/market_data_audit.json --mirror-public`;

@@ -371,7 +371,7 @@ const Renderer = (function() {
       })}
       ${renderEtfClassificationAudit(etfClassification)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
-      ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex)}
+      ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
       ${renderSourceParityDetail(sourceParity)}
     `;
   }
@@ -417,35 +417,41 @@ const Renderer = (function() {
     });
   }
 
-  function renderIncrementalBackfillAudit(index, incremental, marketFactsIndex) {
+  function renderIncrementalBackfillAudit(index, incremental, marketFactsIndex, auditIncremental) {
     const counts = index?.counts || {};
+    const auditCounts = auditIncremental?.counts || {};
     const incrementalCounts = incremental?.counts || {};
-    const selected = Number(incrementalCounts.selected ?? counts.incremental_etf_backfill_selected ?? 0);
-    const candidates = Number(incrementalCounts.candidates ?? counts.incremental_etf_backfill_candidates ?? 0);
-    const fallbackOk = Number(counts.etfs_yahoo_fallback_ok || 0);
-    const stillPending = Number(counts.etfs_still_pending || 0);
-    const fallbackCoverage = Number(marketFactsIndex?.coverage?.stockanalysis_yf_fallback || 0);
-    const generatedAt = incremental?.generated_at || index?.generated_at || '-';
-    const hasIncrementalFile = Boolean(incremental);
-    const hasRunEvidence = hasIncrementalFile || selected > 0 || fallbackOk > 0 || fallbackCoverage > 0;
-    const status = hasRunEvidence && Number(counts.hard_failed || 0) === 0 && stillPending === 0 ? 'pass' : 'warn';
+    const selected = Number(incrementalCounts.selected ?? auditCounts.selected ?? counts.incremental_etf_backfill_selected ?? 0);
+    const candidates = Number(incrementalCounts.candidates ?? auditCounts.candidates ?? counts.incremental_etf_backfill_candidates ?? 0);
+    const fallbackRetry = Number(incrementalCounts.fallback_retry ?? auditCounts.fallback_retry ?? 0);
+    const fallbackOk = Number(auditCounts.etfs_yahoo_fallback_ok ?? counts.etfs_yahoo_fallback_ok ?? 0);
+    const stillPending = Number(auditCounts.etfs_still_pending ?? counts.etfs_still_pending ?? 0);
+    const fallbackCoverage = Number(auditCounts.market_facts_yf_fallback ?? marketFactsIndex?.coverage?.stockanalysis_yf_fallback ?? 0);
+    const generatedAt = incremental?.generated_at || auditIncremental?.proof_generated_at || auditIncremental?.index_generated_at || index?.generated_at || '-';
+    const hasIncrementalFile = Boolean(incremental) || auditIncremental?.proof_file_exists === true;
+    const hasRunEvidence = Boolean(auditIncremental?.has_run_evidence) || hasIncrementalFile || selected > 0 || fallbackOk > 0 || fallbackCoverage > 0;
+    const auditStatus = auditIncremental?.status || (hasRunEvidence ? 'observed' : 'waiting');
+    const status = auditStatus === 'pass' ? 'pass' : 'warn';
     const code = hasRunEvidence
       ? `${Formatters.formatNumber(selected, 0)} selected`
       : 'WAITING';
+    const notes = Array.isArray(auditIncremental?.notes) ? auditIncremental.notes : [];
 
     return renderMarketAuditCard({
       title: '자동 ETF 보강',
       status,
       code,
       rows: [
+        ['Audit', auditStatus],
         ['Generated', escapeHtml(generatedAt).slice(0, 10)],
         ['Candidates', candidates],
         ['Selected', selected],
-        ['Retry YF', incrementalCounts.fallback_retry],
+        ['Retry YF', fallbackRetry],
         ['YF fallback OK', fallbackOk],
         ['Still pending', stillPending],
         ['Facts fallback', fallbackCoverage],
-        ['Proof file', hasIncrementalFile ? 'yes' : 'not yet']
+        ['Proof file', hasIncrementalFile ? 'yes' : 'not yet'],
+        ['Notes', notes.length ? notes.join(', ') : '-']
       ]
     });
   }

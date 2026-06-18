@@ -49,6 +49,13 @@ def expected_backfill_chunks(universe_count: int) -> list[dict[str, int]]:
     return chunks
 
 
+def as_int(value: object) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def list_transient_files(directory: Path, base_dir: Path) -> list[str]:
     if not directory.exists():
         return []
@@ -57,6 +64,60 @@ def list_transient_files(directory: Path, base_dir: Path) -> list[str]:
         if path.is_file() and TRANSIENT_FILE_RE.search(path.name):
             files.append(path.relative_to(base_dir).as_posix())
     return files
+
+
+def build_incremental_etf_audit(index_payload: dict | None, incremental_payload: dict | None, market_coverage: dict) -> dict:
+    index_file_exists = index_payload is not None
+    index_payload = index_payload or {}
+    index_counts = index_payload.get("counts") or {}
+    incremental_counts = (incremental_payload or {}).get("counts") or {}
+    selected = as_int(incremental_counts.get("selected", index_counts.get("incremental_etf_backfill_selected")))
+    candidates = as_int(incremental_counts.get("candidates", index_counts.get("incremental_etf_backfill_candidates")))
+    fallback_ok = as_int(index_counts.get("etfs_yahoo_fallback_ok"))
+    still_pending = as_int(index_counts.get("etfs_still_pending"))
+    hard_failed = as_int(index_counts.get("hard_failed"))
+    facts_fallback = as_int(market_coverage.get("stockanalysis_yf_fallback"))
+    proof_file_exists = incremental_payload is not None
+    has_run_evidence = proof_file_exists or selected > 0 or fallback_ok > 0 or facts_fallback > 0
+    notes = []
+    if not index_file_exists:
+        notes.append("stockanalysis_index_missing")
+    if not proof_file_exists:
+        notes.append("incremental_latest_missing")
+    if still_pending > 0:
+        notes.append("pending_details_remain")
+    if fallback_ok > 0 and facts_fallback <= 0:
+        notes.append("fallback_not_reflected_in_market_facts")
+    if hard_failed > 0:
+        status = "fail"
+    elif not has_run_evidence:
+        status = "waiting"
+    elif not index_file_exists or still_pending > 0 or (fallback_ok > 0 and facts_fallback <= 0):
+        status = "warn"
+    else:
+        status = "pass"
+
+    return {
+        "status": status,
+        "has_run_evidence": has_run_evidence,
+        "index_file_exists": index_file_exists,
+        "proof_file_exists": proof_file_exists,
+        "index_generated_at": index_payload.get("generated_at"),
+        "proof_generated_at": (incremental_payload or {}).get("generated_at"),
+        "counts": {
+            "candidates": candidates,
+            "selected": selected,
+            "missing": as_int(incremental_counts.get("missing")),
+            "fallback_retry": as_int(incremental_counts.get("fallback_retry")),
+            "stale": as_int(incremental_counts.get("stale")),
+            "etfs_stockanalysis_ok": as_int(index_counts.get("etfs_stockanalysis_ok")),
+            "etfs_yahoo_fallback_ok": fallback_ok,
+            "etfs_still_pending": still_pending,
+            "hard_failed": hard_failed,
+            "market_facts_yf_fallback": facts_fallback,
+        },
+        "notes": notes,
+    }
 
 
 def build_payload() -> dict:
@@ -135,6 +196,8 @@ def build_payload() -> dict:
     ]
     next_expected_offset = missing_offsets[0] if missing_offsets else None
 
+    stockanalysis_index = load_json(DATA / "stockanalysis" / "index.json")
+    incremental_latest = load_json(DATA / "stockanalysis" / "backfill" / "incremental_latest.json")
     market_index = load_json(DATA / "computed" / "market_facts" / "index.json") or {}
     market_rows = market_index.get("rows") or []
     market_coverage = market_index.get("coverage") or {}
@@ -214,6 +277,7 @@ def build_payload() -> dict:
             "generated_at": source_parity.get("generated_at"),
             "summary": source_parity.get("summary"),
         },
+        "incremental_etf": build_incremental_etf_audit(stockanalysis_index, incremental_latest, market_coverage),
     }
 
 
