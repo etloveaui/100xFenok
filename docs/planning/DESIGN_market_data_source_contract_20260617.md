@@ -180,6 +180,12 @@ External sources
   - surfaces ETF universe coverage, saved ETF/stock file counts, current backfill
     chunk progress, hard-error count, and parity warning count in product language
     on the Explore page.
+- `100xfenok-next/src/app/explore/MarketEventSurfacesCard.tsx`
+  - summarizes event/radar surface row counts and renders data rows from
+    `new_etfs`, `earnings_calendar`, `actions_recent`, `actions_splits`,
+    `market_premarket`, and `market_afterhours`;
+  - earnings rows show date, BMO/AMC timing, EPS estimate, revenue estimate, and
+    market cap; action rows show dated split/corporate-event text.
 - `100xfenok-next/src/app/explore/EtfUniverseCard.tsx`
   - reads `stockanalysis/etf_universe.json` from the local public DataPack and
     renders a searchable/category-filterable ETF universe on Explore;
@@ -238,9 +244,9 @@ StockAnalysis all remain visible when their values overlap.
    DataPack weight.
 6. Promote the StockAnalysis financial probe into the main fetcher only after the
    ETF backfill run is closed and the fixture/schema gate remains passing.
-7. Add consumer routes/cards for `stockanalysis/surfaces`:
-   ETF launch radar, earnings calendar, corporate actions, IPO radar, and
-   industry maps.
+7. Add deeper drill-down views for `stockanalysis/surfaces` beyond the Explore
+   summary cards: full ETF launch radar, earnings calendar, corporate actions,
+   IPO radar, and industry maps with filter/sort/export affordances.
 8. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
 9. Keep direct provider scraping as explicit fallback, not the normal path.

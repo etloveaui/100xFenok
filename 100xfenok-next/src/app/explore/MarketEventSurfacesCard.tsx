@@ -115,14 +115,25 @@ function fmtNumber(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
 }
 
-function datePart(value: string | null | undefined): string {
-  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
+function fmtCompactMoney(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  if (value >= 1_000_000_000_000) return `${(value / 1_000_000_000_000).toFixed(2)}T`;
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  return value.toLocaleString("en-US");
 }
 
-function shortName(value: string | null | undefined, fallback = "—"): string {
+function datePart(value: string | null | undefined): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text) return "—";
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+  return text;
+}
+
+function shortName(value: string | null | undefined, fallback = "—", max = 34): string {
   const text = typeof value === "string" ? value.trim() : "";
   if (!text) return fallback;
-  return text.length > 34 ? `${text.slice(0, 33)}…` : text;
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
 function rowsFor(surface: string, manifest: StockanalysisManifest | null): number | null {
@@ -149,6 +160,19 @@ function surfaceRows<T>(doc: SurfaceDoc<T> | null | undefined): T[] {
 
 function cleanTicker(value: string | null | undefined): string {
   return String(value || "").replace(/^\$/, "").trim().toUpperCase();
+}
+
+function timingLabel(value: string | null | undefined): string {
+  const timing = String(value || "").trim().toLowerCase();
+  if (timing === "bmo") return "장전";
+  if (timing === "amc") return "장후";
+  return "시간 미정";
+}
+
+function earningsDetail(row: EarningsRecord): string {
+  const eps = typeof row.eps_estimate === "number" ? `EPS ${row.eps_estimate.toFixed(2)}` : "EPS —";
+  const revenue = `매출 ${fmtCompactMoney(row.revenue_estimate)}`;
+  return `${datePart(row.date)} · ${timingLabel(row.timing)} · ${eps} · ${revenue}`;
 }
 
 export default function MarketEventSurfacesCard() {
@@ -293,6 +317,40 @@ export default function MarketEventSurfacesCard() {
               </span>
               <span className="pc num neutral">{latestSplit.split_ratio || latestSplit.type || "—"}</span>
             </TransitionLink>
+          ) : null}
+        </div>
+      ) : null}
+
+      {loaded && (upcomingEarnings.length > 0 || latestActions.length > 0) ? (
+        <div className="panel-b grid gap-3 lg:grid-cols-2">
+          {upcomingEarnings.length > 0 ? (
+            <div className="mv-col">
+              <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">어닝 캘린더</div>
+              {upcomingEarnings.map((row) => (
+                <TransitionLink key={`earn-${row.symbol}-${row.date}`} href={`/stock/${encodeURIComponent(cleanTicker(row.symbol))}`} className="mv-row">
+                  <span className="co">
+                    <div className="n">{cleanTicker(row.symbol) || shortName(row.name)}</div>
+                    <div className="tk">{earningsDetail(row)}</div>
+                  </span>
+                  <span className="pc num neutral">{fmtCompactMoney(row.market_cap)}</span>
+                </TransitionLink>
+              ))}
+            </div>
+          ) : null}
+
+          {latestActions.length > 0 ? (
+            <div className="mv-col">
+              <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">기업 이벤트</div>
+              {latestActions.map((row) => (
+                <TransitionLink key={`action-${row.symbol}-${row.date}-${row.type}`} href={`/stock/${encodeURIComponent(cleanTicker(row.symbol))}`} className="mv-row">
+                  <span className="co">
+                    <div className="n">{cleanTicker(row.symbol) || shortName(row.name || row.company_name)}</div>
+                    <div className="tk">{datePart(row.date)} · {shortName(row.text || row.name || row.company_name, "—", 46)}</div>
+                  </span>
+                  <span className="pc num neutral">{row.split_ratio || row.type || "—"}</span>
+                </TransitionLink>
+              ))}
+            </div>
           ) : null}
         </div>
       ) : null}
