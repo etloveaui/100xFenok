@@ -231,8 +231,31 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             },
             holdings=[],
         )
+        short_muni = self.fetcher.classify_etf(
+            {"ticker": "SMB", "name": "VanEck Short Muni ETF"},
+            overview={"description": "The fund tracks municipal bonds with nominal maturities of 1-6 years."},
+            holdings=[],
+        )
+        short_high_yield_muni = self.fetcher.classify_etf(
+            {"ticker": "SHYD", "name": "VanEck Short High Yield Muni ETF"},
+            overview={"description": "The fund tracks high-yield municipal bonds with 1-12 years remaining in maturity."},
+            holdings=[],
+        )
+        short_to_intermediate = self.fetcher.classify_etf(
+            {"ticker": "TMNS", "name": "T. Rowe Price Short Municipal Income ETF"},
+            overview={"description": "The fund invests in short- to intermediate-term investment grade municipal bonds."},
+            holdings=[],
+        )
 
-        for classification in (short_term_bond, ultra_short_income, vix_futures, ultra_short_treasury):
+        for classification in (
+            short_term_bond,
+            ultra_short_income,
+            vix_futures,
+            ultra_short_treasury,
+            short_muni,
+            short_high_yield_muni,
+            short_to_intermediate,
+        ):
             self.assertFalse(classification["is_leveraged"])
             self.assertIsNone(classification["leverage_factor"])
             self.assertFalse(classification["is_inverse"])

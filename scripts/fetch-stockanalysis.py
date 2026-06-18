@@ -39,6 +39,8 @@ USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
 NON_DIRECTIONAL_SHORT_RE = re.compile(
     r"\b(?:"
     r"short[-\s]?(?:term|duration|maturity|intermediate)"
+    r"|short[-\s]+to[-\s]+intermediate[-\s]+term"
+    r"|short[-\s]+(?:high[-\s]+yield[-\s]+)?(?:muni|municipal)"
     r"|short[-\s]+treasury[-\s]+index"
     r"|ultra[-\s]?short(?:[-\s]+(?:bond|duration|income|maturity|term|treasury|credit|municipal|muni|corporate|cash|government))?"
     r")\b",
