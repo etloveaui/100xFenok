@@ -382,10 +382,10 @@ export default function Navbar() {
                   ref={analyticsMenuPanelRef}
                   id="desktop-analytics-menu"
                   role="menu"
-                  aria-label="Analytics menu"
+                  aria-label="분석 메뉴"
                   className={`dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 transition-all transform z-50 ${desktopMenuOpen === 'analytics' ? '!visible !opacity-100 !translate-y-0 !pointer-events-auto' : '!invisible !opacity-0 !translate-y-[-10px] !pointer-events-none'}`}
                 >
-                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Tools & Charts</div>
+                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">도구와 차트</div>
                   <div className="grid grid-cols-3 gap-2">
                     <Link href="/multichart" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-chart-line text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
@@ -402,7 +402,7 @@ export default function Navbar() {
                     </Link>
                     <Link href="/explore" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">Explore</span>
+                      <span className="text-xs font-bold text-slate-700">탐색</span>
                     </Link>
                   </div>
                 </div>
@@ -436,7 +436,7 @@ export default function Navbar() {
                   ref={strategiesMenuPanelRef}
                   id="desktop-strategies-menu"
                   role="menu"
-                  aria-label="Strategies menu"
+                  aria-label="전략 메뉴"
                   className={`dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 transition-all transform z-50 ${desktopMenuOpen === 'strategies' ? '!visible !opacity-100 !translate-y-0 !pointer-events-auto' : '!invisible !opacity-0 !translate-y-[-10px] !pointer-events-none'}`}
                 >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Playbooks</div>
@@ -462,17 +462,17 @@ export default function Navbar() {
             </nav>
 
             {/* Tablet Icon Navigation */}
-            <nav className="nav-icon-only hidden sm:flex md:hidden items-center gap-1.5 ml-4" aria-label="Tablet navigation">
-              <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="Dashboard" aria-label="Dashboard">
+            <nav className="nav-icon-only hidden sm:flex md:hidden items-center gap-1.5 ml-4" aria-label="태블릿 내비게이션">
+              <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="홈" aria-label="홈">
                 <i className="fas fa-home" />
               </Link>
-              <Link href="/market-valuation" className={`nav-icon ${isMarket ? 'active' : ''}`} title="Market" aria-label="Market">
+              <Link href="/market-valuation" className={`nav-icon ${isMarket ? 'active' : ''}`} title="시장" aria-label="시장">
                 <i className="fas fa-chart-bar" />
               </Link>
-              <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="Analytics" aria-label="Analytics">
+              <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="분석" aria-label="분석">
                 <i className="fas fa-chart-line" />
               </Link>
-              <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="Strategies" aria-label="Strategies">
+              <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="전략" aria-label="전략">
                 <i className="fas fa-lightbulb" />
               </Link>
             </nav>
@@ -482,7 +482,7 @@ export default function Navbar() {
               type="button"
               onClick={() => setMobileMenuOpen(true)}
               className="md:hidden w-11 h-11 rounded-lg bg-slate-50 text-slate-500 hover:bg-brand-navy hover:text-white transition-all border border-slate-100 shadow-sm flex items-center justify-center"
-              aria-label="Open menu"
+              aria-label="메뉴 열기"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-panel"
             >
@@ -499,17 +499,17 @@ export default function Navbar() {
           id="mobile-navigation-panel"
           role="dialog"
           aria-modal="true"
-          aria-label="Mobile navigation menu"
+          aria-label="모바일 내비게이션 메뉴"
           className="mobile-menu open fixed inset-y-0 right-0 w-[min(22rem,100vw)] bg-white shadow-2xl z-50"
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <span className="font-bold orbitron text-slate-800">MENU</span>
+            <span className="font-bold orbitron text-slate-800">메뉴</span>
             <button
               ref={closeButtonRef}
               type="button"
               onClick={closeMobileMenu}
               className="w-11 h-11 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center"
-              aria-label="Close menu"
+              aria-label="메뉴 닫기"
             >
               <i className="fas fa-times text-slate-600" />
             </button>
@@ -526,18 +526,18 @@ export default function Navbar() {
                   : 'text-slate-700 hover:bg-slate-50'
               }`}
             >
-              <i className="fas fa-home mr-2" /> DASHBOARD
+              <i className="fas fa-home mr-2" /> 홈
             </Link>
 
             <details className="group">
               <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
                   isMarket ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
                 }`}>
-                <span><i className="fas fa-chart-bar mr-2" /> MARKET</span>
+                <span><i className="fas fa-chart-bar mr-2" /> 시장</span>
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
-                <Link href="/market-valuation" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Market Valuation</Link>
+                <Link href="/market-valuation" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">시장 밸류에이션</Link>
                 <Link href="/alpha-scout" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
               </div>
             </details>
@@ -546,14 +546,14 @@ export default function Navbar() {
               <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
                   isAnalytics ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
                 }`}>
-                <span><i className="fas fa-chart-line mr-2" /> ANALYTICS</span>
+                <span><i className="fas fa-chart-line mr-2" /> 분석</span>
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
                 <Link href="/multichart" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
                 <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
                 <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
-                <Link href="/explore" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Explore</Link>
+                <Link href="/explore" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">탐색</Link>
               </div>
             </details>
 
@@ -561,7 +561,7 @@ export default function Navbar() {
               <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
                   isStrategies ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
                 }`}>
-                <span><i className="fas fa-lightbulb mr-2" /> STRATEGIES</span>
+                <span><i className="fas fa-lightbulb mr-2" /> 전략</span>
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">

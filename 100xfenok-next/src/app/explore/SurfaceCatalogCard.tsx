@@ -118,7 +118,7 @@ function surfaceLabel(value: string | null | undefined): string {
     case "sector_technology":
       return "기술 섹터";
     default:
-      return String(value || "데이터 묶음").replaceAll("_", " ");
+      return String(value || "데이터 항목").replaceAll("_", " ");
   }
 }
 
@@ -160,7 +160,7 @@ export default function SurfaceCatalogCard() {
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>시장 데이터 카탈로그</h2>
+        <h2>시장 데이터 현황</h2>
         <span className="desc">
           {fmtNumber(counts?.ok)} / {fmtNumber(counts?.surfaces_requested)} · {fmtNumber(counts?.rows)}행
         </span>
@@ -171,7 +171,7 @@ export default function SurfaceCatalogCard() {
           <div className="mv-row">
             <span className="co">
               <div className="n">카탈로그 확인 중</div>
-              <div className="tk">데이터 묶음을 읽고 있습니다</div>
+              <div className="tk">데이터 항목을 읽고 있습니다</div>
             </span>
             <span className="pc num neutral">...</span>
           </div>
@@ -192,7 +192,7 @@ export default function SurfaceCatalogCard() {
 
       {grouped.length ? (
         <div className="panel-foot">
-          <span>{fmtNumber(grouped.reduce((sum, bucket) => sum + bucket.items.length, 0))}개 데이터 묶음</span>
+          <span>{fmtNumber(grouped.reduce((sum, bucket) => sum + bucket.items.length, 0))}개 데이터 항목</span>
           <a href="/data/stockanalysis/surfaces/index.json" style={{ marginLeft: 8, fontWeight: 900 }}>
             데이터 보기
           </a>

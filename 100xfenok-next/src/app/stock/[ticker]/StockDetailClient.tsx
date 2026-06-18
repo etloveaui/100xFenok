@@ -1637,9 +1637,9 @@ function EtfDataPanel({
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
   const detailStatusText = detailStatus === "surface_only"
-    ? "상세 구성 준비 중 · 신규 상장 목록 기준"
+    ? "보유 구성 준비 중 · 신규 상장 목록 기준으로 먼저 표시"
     : detailStatus === "universe_only"
-      ? "상세 구성 준비 중 · ETF 목록 기준"
+      ? "보유 구성 준비 중 · ETF 목록 기준으로 먼저 표시"
       : null;
 
   const cards = [

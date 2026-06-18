@@ -85,10 +85,10 @@ function countRows(payload: EtfSnapshotPayload | null): number {
 function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): string {
   const symbol = ticker.trim().toUpperCase();
   const missing = new Set((coverage?.missing_tickers ?? []).map((item) => item.trim().toUpperCase()));
-  if (missing.has(symbol)) return "상세 준비중";
+  if (missing.has(symbol)) return "상세 준비 중";
   const fallback = new Set((coverage?.yahoo_fallback_tickers ?? []).map((item) => item.trim().toUpperCase()));
-  if (fallback.has(symbol)) return "Yahoo 보강";
-  return "상세 연결됨";
+  if (fallback.has(symbol)) return "가격 보강";
+  return "상세 연결 완료";
 }
 
 export default function NewEtfsList() {

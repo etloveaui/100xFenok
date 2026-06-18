@@ -334,20 +334,20 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                 <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label} 집중도</p>
                   <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmt(item.top10Weight ?? null, 1)}%</p>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">Top3 {fmt(item.top3Weight ?? null, 1)}%</p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-500">상위 3개 {fmt(item.top3Weight ?? null, 1)}%</p>
                 </div>
               ))}
               {credit ? (
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">Credit lookup</p>
+                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신용 스프레드</p>
                   <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{fmtSignedPct(credit.medianSpread ?? null, 2)}</p>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · {doc.creditRatings?.tableCount ?? 0} tables</p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · 표 {doc.creditRatings?.tableCount ?? 0}개</p>
                 </div>
               ) : null}
               {benchmarkRows.length > 0 ? (
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">Earnings x multiple</p>
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">이익과 멀티플</p>
                     <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{doc.benchmarkMatrix?.generated ?? "—"}</span>
                   </div>
                   <div className="mt-2 grid min-w-0 gap-1">
@@ -482,7 +482,7 @@ export default function MarketValuationClient() {
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">Market Valuation</p>
+          <p className="data-shell-kicker">시장 밸류에이션</p>
           <h1 className="data-shell-title">시장 밸류에이션</h1>
           <p className="data-shell-desc">
             주요 미국 지수가 <strong className="text-slate-800">역사적으로 비싼지/싼지</strong>. Fwd P/E·P/B를 16년 밴드와 대조합니다.

@@ -102,7 +102,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
     return {
       datasets: [
         {
-          label: "Portfolio",
+          label: "포트폴리오",
           // chartjs-chart-treemap contract: `tree` (flat objects) + `key`;
           // generated leaf points expose the source object at `raw._data`.
           tree: displayRows as unknown as number[],

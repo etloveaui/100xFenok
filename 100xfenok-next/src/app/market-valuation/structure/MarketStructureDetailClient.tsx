@@ -180,7 +180,7 @@ export default function MarketStructureDetailClient({
             <span>/</span>
             <span className="text-slate-600">시장 구조</span>
           </div>
-          <p className="data-shell-kicker">Market Structure</p>
+          <p className="data-shell-kicker">시장 구조</p>
           <h1 className="data-shell-title">시장 구조 상세</h1>
           <p className="data-shell-desc">
             벤치마크 매트릭스, 신용 스프레드, Magnificent 7, 편입·제외 이벤트, 유동성, 집중도, CNN 하위 심리와 AAII까지 한 화면에서 확장합니다.

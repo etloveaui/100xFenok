@@ -275,7 +275,7 @@ export default function PortfolioClient() {
       <div className="data-shell-page">
         <section className="panel data-shell-header">
           <div className="data-shell-head-main">
-            <p className="data-shell-kicker">Portfolio</p>
+            <p className="data-shell-kicker">포트폴리오</p>
             <h1 className="data-shell-title">내 포트폴리오</h1>
             <p className="data-shell-desc">기기 안에서만 보관되는 개인 포트폴리오입니다.</p>
           </div>
@@ -311,7 +311,7 @@ export default function PortfolioClient() {
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">Portfolio</p>
+          <p className="data-shell-kicker">포트폴리오</p>
           <h1 className="data-shell-title">내 포트폴리오</h1>
           <p className="data-shell-desc">보유 종목, 현금, 손익을 기기 안에서 관리합니다.</p>
         </div>

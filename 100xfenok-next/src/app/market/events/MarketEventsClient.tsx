@@ -204,7 +204,7 @@ export default function MarketEventsClient() {
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">Market Events</p>
+          <p className="data-shell-kicker">시장 이벤트</p>
           <h1 className="data-shell-title">시장 이벤트</h1>
           <p className="data-shell-desc">
             어닝, 기업 이벤트, IPO, 산업 흐름, 급등락을 전용 화면에서 나눠 봅니다.

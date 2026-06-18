@@ -843,7 +843,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <p className="data-shell-kicker">Stock Screener</p>
+          <p className="data-shell-kicker">종목 스크리너</p>
           <h1 className="data-shell-title">종목 스크리너</h1>
           <p className="data-shell-desc">
             글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.

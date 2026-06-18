@@ -138,21 +138,21 @@ export default function DataCoverageCard() {
         tone: "neutral",
       },
       {
-        label: "재무 후보",
+        label: "재무 데이터",
         detail: "교차검증용 · 자동 갱신",
         value: fmtNumber(financialFileCount),
         tone: financialFileCount && financialFileCount > 0 ? "up" : "neutral",
       },
       {
         label: "수집 진행",
-        detail: `${fmtNumber(chunks)} / ${fmtNumber(expectedChunks)} 묶음`,
+        detail: `${fmtNumber(chunks)} / ${fmtNumber(expectedChunks)}개 파일`,
         value: pct(chunks, expectedChunks),
         tone: backfill?.ready_for_finalize ? "up" : "neutral",
       },
       {
-        label: "최근 청크",
+        label: "최근 수집",
         detail: `성공 ${fmtNumber(latestCounts?.ok)} · 실패 ${fmtNumber(latestCounts?.failed)}`,
-        value: `하드 ${fmtNumber(backfill?.hard_error_count ?? latestCounts?.hard_failed)}`,
+        value: `오류 ${fmtNumber(backfill?.hard_error_count ?? latestCounts?.hard_failed)}`,
         tone: (backfill?.hard_error_count ?? latestCounts?.hard_failed ?? 0) > 0 ? "down" : "up",
       },
     ];
@@ -187,7 +187,7 @@ export default function DataCoverageCard() {
     <section className="panel">
       <div className="panel-h">
         <h2>데이터 커버리지</h2>
-        <span className="desc">{asOf} · {ready ? "완료 대기" : "수집 중"}</span>
+        <span className="desc">{asOf} · {ready ? "점검 완료" : "수집 중"}</span>
       </div>
       <div className="mv-col">
         {rows.map((row) => (
@@ -201,7 +201,7 @@ export default function DataCoverageCard() {
         ))}
       </div>
       <div className="panel-foot">
-        데이터 비교 경고 {fmtNumber(parityWarnings)}
+        소스 비교 경고 {fmtNumber(parityWarnings)}
         <TransitionLink href="/admin/data-lab" style={{ marginLeft: 8, fontWeight: 900 }}>
           데이터 랩
         </TransitionLink>

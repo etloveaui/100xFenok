@@ -208,15 +208,15 @@ export default function YardeniCard() {
                 onMouseEnter={() => setActiveIndex(marker.index)}
                 onFocus={() => setActiveIndex(marker.index)}
               >
-                <title>{`${marker.row.date} · SPX ${fmtIndex(marker.row.spx)} · fair ${fmtIndex(marker.row.fair_value)} · premium ${fmtNum(marker.row.premium_pct)}%`}</title>
+                <title>{`${marker.row.date} · S&P 500 ${fmtIndex(marker.row.spx)} · 적정가 ${fmtIndex(marker.row.fair_value)} · 프리미엄 ${fmtNum(marker.row.premium_pct)}%`}</title>
               </circle>
             ))}
           </svg>
           <div className="mt-1 flex justify-between text-[9px] font-bold tabular-nums text-slate-300">
-            <span>min {fmtIndex(chart.minV)}</span>
+            <span>최저 {fmtIndex(chart.minV)}</span>
             <span className="text-[#1B73D3]">S&P 500</span>
-            <span className="text-slate-500">Fair value</span>
-            <span>max {fmtIndex(chart.maxV)}</span>
+            <span className="text-slate-500">적정가</span>
+            <span>최고 {fmtIndex(chart.maxV)}</span>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-5">
             {[
