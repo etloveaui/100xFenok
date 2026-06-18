@@ -27,6 +27,7 @@ export {
 
 interface EtfUniverseDoc {
   generated_at?: string | null;
+  screener_fetched_at?: string | null;
   counts?: {
     records?: number | null;
   } | null;
@@ -60,7 +61,7 @@ let snapshotPending: Promise<EtfSnapshotDoc | null> | null = null;
 function loadUniverse(): Promise<EtfUniverseDoc | null> {
   if (universeCache) return Promise.resolve(universeCache);
   if (universePending) return universePending;
-  universePending = fetch("/data/stockanalysis/etf_universe.json", { cache: "no-store" })
+  universePending = fetch("/api/data/stockanalysis/etf-universe", { cache: "no-store" })
     .then((res) => (res.ok ? res.json() as Promise<EtfUniverseDoc> : null))
     .then((doc) => {
       universeCache = doc;
@@ -154,7 +155,7 @@ export default function EtfUniverseCard({
           ...row,
           ticker,
           name: typeof row.name === "string" && row.name.trim() ? row.name.trim() : ticker,
-          category: cleanCategory(row.category),
+          category: cleanCategory(row.category ?? row.assetClass),
         });
       });
 
@@ -268,7 +269,7 @@ export default function EtfUniverseCard({
     <section className="panel">
       <div className="panel-h">
         <h2>ETF 목록</h2>
-        <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
+        <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : doc?.screener_fetched_at ?? doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
       </div>
       <div className="panel-b">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_170px]">

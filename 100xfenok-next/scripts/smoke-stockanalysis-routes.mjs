@@ -13,6 +13,7 @@ const FATAL_MARKERS = [
 const PAGE_ROUTES = [
   "/explore",
   "/etfs",
+  "/etfs?type=single-stock",
   "/etfs/new",
   "/etfs/new?type=single-stock&days=14&sort=change",
   "/etfs/IEFA",
@@ -102,6 +103,28 @@ async function checkEtfSnapshot(root) {
   return { ...counts, classifiedNewEtfs: classifiedNewEtfs.length };
 }
 
+async function checkEtfUniverse(root) {
+  const payload = await fetchJson(`${root}/api/data/stockanalysis/etf-universe`);
+  const records = Array.isArray(payload?.records) ? payload.records : [];
+  const tqqq = records.find((row) => row?.ticker === "TQQQ");
+  const counts = {
+    records: payload?.counts?.records ?? records.length,
+    withPrice: payload?.counts?.with_price ?? 0,
+    withVolume: payload?.counts?.with_volume ?? 0,
+    withHoldings: payload?.counts?.with_holdings ?? 0,
+    screenerOnly: payload?.counts?.screener_only ?? 0,
+  };
+  assert(counts.records >= 5300, `ETF universe expected at least 5300 records, got ${counts.records}`);
+  assert(counts.withPrice >= 5000, `ETF universe expected price coverage >= 5000, got ${counts.withPrice}`);
+  assert(counts.withVolume >= 4500, `ETF universe expected volume coverage >= 4500, got ${counts.withVolume}`);
+  assert(counts.withHoldings >= 5000, `ETF universe expected holdings coverage >= 5000, got ${counts.withHoldings}`);
+  assert(tqqq?.price, "ETF universe TQQQ price missing");
+  assert(tqqq?.volume, "ETF universe TQQQ volume missing");
+  assert(tqqq?.holdings, "ETF universe TQQQ holdings missing");
+  assert(tqqq?.classification?.is_leveraged === true, "ETF universe TQQQ leveraged classification missing");
+  return { ...counts, tqqq: { price: tqqq.price, volume: tqqq.volume, holdings: tqqq.holdings } };
+}
+
 async function checkEtfDetails(root) {
   const iefa = await fetchJson(`${root}/api/data/stockanalysis/etfs/IEFA`);
   assert(iefa?.ticker === "IEFA", "IEFA detail ticker mismatch");
@@ -182,6 +205,7 @@ async function main() {
   const pages = [];
   for (const route of PAGE_ROUTES) pages.push(await checkPage(root, route));
   const snapshot = await checkEtfSnapshot(root);
+  const universe = await checkEtfUniverse(root);
   const details = await checkEtfDetails(root);
   const surfaces = await checkSurfaceContracts(root);
 
@@ -190,6 +214,7 @@ async function main() {
     base_url: root,
     pages,
     snapshot,
+    universe,
     details,
     surfaces,
   }, null, 2));

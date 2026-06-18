@@ -2,11 +2,14 @@ export interface EtfUniverseRecord {
   ticker?: string;
   name?: string;
   category?: string;
+  assetClass?: string;
   aum_raw?: string;
   aum?: number;
   inceptionDate?: string;
   price?: number;
   change?: number;
+  volume?: number;
+  holdings?: number;
   is_new?: boolean;
   classification?: EtfClassification;
   is_leveraged?: boolean;
@@ -58,8 +61,25 @@ export function asOfDate(value: string | null | undefined): string {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : "—";
 }
 
+function formatPrice(value: number | null | undefined): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value >= 100 ? `$${value.toFixed(0)}` : `$${value.toFixed(2)}`;
+}
+
+function formatSignedPercent(value: number | null | undefined): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
+function formatCompactVolume(value: number | null | undefined): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toLocaleString("ko-KR");
+}
+
 function etfSearchText(row: EtfUniverseRecord): string {
-  return [row.ticker, row.name, row.category, row.inceptionDate, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
+  return [row.ticker, row.name, row.category, row.assetClass, row.inceptionDate, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
 }
 
 function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
@@ -118,7 +138,8 @@ export function isInverseEtf(row: EtfUniverseRecord): boolean {
 
 export function formatTypeHint(row: EtfUniverseRecord): string {
   const classification = rowClassification(row);
-  const parts = [row.ticker, row.category];
+  const category = row.category ?? row.assetClass;
+  const parts = [row.ticker, category];
   const factor = classification?.leverage_factor;
   if (typeof factor === "number" && Number.isFinite(factor)) {
     parts.push(`${factor.toFixed(factor % 1 === 0 ? 0 : 2)}x`);
@@ -134,6 +155,15 @@ export function formatTypeHint(row: EtfUniverseRecord): string {
   }
   if (row.is_new) {
     parts.push(row.inceptionDate ? `신규 상장 ${row.inceptionDate}` : "신규 상장");
+  }
+  const price = formatPrice(row.price);
+  const change = formatSignedPercent(row.change);
+  const volume = formatCompactVolume(row.volume);
+  if (price) parts.push(`가격 ${price}`);
+  if (change) parts.push(`변동률 ${change}`);
+  if (volume) parts.push(`거래량 ${volume}`);
+  if (typeof row.holdings === "number" && Number.isFinite(row.holdings)) {
+    parts.push(`보유 ${formatNumber(row.holdings)}`);
   }
   return parts.filter(Boolean).join(" · ");
 }

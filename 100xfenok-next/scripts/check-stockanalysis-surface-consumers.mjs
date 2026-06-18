@@ -9,6 +9,7 @@ const SOURCE_CONSUMERS_PATH = `${ROOT}/../data/stockanalysis/surface_consumers.j
 
 const CODE_FILES = [
   `${ROOT}/src/app/market/events/MarketEventsClient.tsx`,
+  `${ROOT}/src/app/api/data/stockanalysis/etf-universe/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-snapshot/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/ticker/[ticker]/surfaces/route.ts`,
@@ -27,9 +28,14 @@ const ROUTE_CONTRACTS = {
   "/api/data/stockanalysis/etf-snapshot": {
     files: ["src/app/api/data/stockanalysis/etf-snapshot/route.ts"],
   },
+  "/api/data/stockanalysis/etf-universe": {
+    files: ["src/app/api/data/stockanalysis/etf-universe/route.ts"],
+  },
   "/etfs": {
     files: [
       "src/app/etfs/page.tsx",
+      "src/app/explore/EtfUniverseCard.tsx",
+      "src/app/api/data/stockanalysis/etf-universe/route.ts",
       "src/app/etfs/EtfSurfaceSnapshotCard.tsx",
       "src/app/api/data/stockanalysis/etf-snapshot/route.ts",
     ],
