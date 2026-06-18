@@ -157,6 +157,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.13 | 2026-06-19 | Clarified ETF collection queue wording and added next-attempt dates for cooldown ledger rows so operators can see why missing ETF details are not retried immediately |
 | 2.2.12 | 2026-06-19 | Added `surface_consumers.json` to Freshness Guard so missing/stale surface consumer maps are visible in Data Lab ops checks |
 | 2.2.11 | 2026-06-19 | Moved StockAnalysis surface consumer map to `data/stockanalysis/surface_consumers.json` and added `qa:surface-consumers` drift gate |
 | 2.2.10 | 2026-06-19 | Added StockAnalysis surface consumer check so Data Lab shows whether collected surface rows are connected to public routes |

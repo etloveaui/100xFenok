@@ -634,8 +634,8 @@ const Renderer = (function() {
         ['후보', candidates],
         ['선택', selected],
         ['보조 가격 재시도', fallbackRetry],
-        ['대기 제외', cooldownSkipped],
-        ['대기 중', cooldownActive],
+        ['이번 선택 제외', cooldownSkipped],
+        ['재시도 대기', cooldownActive],
         ['보조 가격 반영', fallbackOk],
         ['아직 대기', stillPending],
         ['정규화 반영', fallbackCoverage],
@@ -673,7 +673,7 @@ const Renderer = (function() {
           ${renderAuditMetric('다음 선택', incrementalCounts.selected ?? selected.length)}
           ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
           ${renderAuditMetric('보조 가격 재시도 후보', incrementalCounts.fallback_retry)}
-          ${renderAuditMetric('실패 추적', pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked)}
+          ${renderAuditMetric('재시도 대기', pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked)}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
           ${renderBackfillMiniTable(
@@ -697,18 +697,18 @@ const Renderer = (function() {
             ])
           )}
           ${renderBackfillMiniTable(
-            '실패 추적',
-            ['티커', '상태', '제공처', '사유'],
+            '재시도 대기',
+            ['티커', '실패', '다음 시도', '사유'],
             ledgerRows.slice(0, 12).map((row) => [
               escapeHtml(row.ticker),
-              escapeHtml(row.last_status || '-'),
-              escapeHtml(formatBackfillSource(row.last_provider)),
+              escapeHtml(`${Formatters.formatNumber(row.consecutive_failures || 0, 0)}회`),
+              escapeHtml(formatBackfillDate(row.next_attempt_after_utc)),
               escapeHtml(shortenError(row.failure_reason))
             ])
           )}
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 다음 수집 실행이나 보조 가격 상세가 갱신되면 이 표도 함께 바뀝니다.
+          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 재시도 대기는 반복 미확인 항목을 일정 기간 쉬게 해 수집 슬롯 낭비를 줄이는 장치이며, 다음 수집 실행이나 보조 가격 상세가 갱신되면 이 표도 함께 바뀝니다.
         </p>
       </section>
     `;
@@ -756,6 +756,12 @@ const Renderer = (function() {
     if (value === 'stockanalysis') return '기본 상세';
     if (value === 'yahoo_finance') return '보조 가격';
     return value || '-';
+  }
+
+  function formatBackfillDate(value) {
+    const text = String(value || '').trim();
+    if (!text) return '-';
+    return text.slice(0, 10);
   }
 
   function shortenError(value) {
