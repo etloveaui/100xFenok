@@ -205,6 +205,63 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertTrue(inverse_1x["is_inverse"])
         self.assertFalse(inverse_1x["is_single_stock"])
 
+    def test_etf_classification_ignores_short_maturity_terms(self) -> None:
+        short_term_bond = self.fetcher.classify_etf(
+            {"ticker": "BSV", "name": "Vanguard Short-Term Bond ETF"},
+            overview={"description": "The fund invests in short-term investment-grade bonds."},
+            holdings=[],
+        )
+        ultra_short_income = self.fetcher.classify_etf(
+            {"ticker": "JPST", "name": "JPMorgan Ultra-Short Income ETF"},
+            overview={"description": "The fund is an ultra short duration income ETF."},
+            holdings=[],
+        )
+        vix_futures = self.fetcher.classify_etf(
+            {"ticker": "VIXY", "name": "ProShares VIX Short-Term Futures ETF"},
+            overview={"description": "The fund tracks VIX short-term futures contracts."},
+            holdings=[],
+        )
+        ultra_short_treasury = self.fetcher.classify_etf(
+            {"ticker": "VGUS", "name": "Vanguard Ultra-Short Treasury ETF"},
+            overview={
+                "description": (
+                    "The fund is based on the Bloomberg Short Treasury index, "
+                    "tracking US Treasurys with maturities of one to three months."
+                )
+            },
+            holdings=[],
+        )
+
+        for classification in (short_term_bond, ultra_short_income, vix_futures, ultra_short_treasury):
+            self.assertFalse(classification["is_leveraged"])
+            self.assertIsNone(classification["leverage_factor"])
+            self.assertFalse(classification["is_inverse"])
+
+    def test_etf_classification_preserves_directional_short_products(self) -> None:
+        short_sp500 = self.fetcher.classify_etf(
+            {"ticker": "SH", "name": "ProShares Short S&P500"},
+            overview={"description": "The fund seeks inverse exposure to the S&P 500."},
+            holdings=[],
+        )
+        ultrapro_short = self.fetcher.classify_etf(
+            {"ticker": "SQQQ", "name": "ProShares UltraPro Short QQQ"},
+            overview={"description": "The fund provides 3x inverse daily exposure to the Nasdaq-100 Index."},
+            holdings=[],
+        )
+        short_vix = self.fetcher.classify_etf(
+            {"ticker": "SVXY", "name": "ProShares Short VIX Short-Term Futures ETF"},
+            overview={"description": "The fund provides short exposure to VIX short-term futures."},
+            holdings=[],
+        )
+
+        self.assertFalse(short_sp500["is_leveraged"])
+        self.assertTrue(short_sp500["is_inverse"])
+        self.assertTrue(ultrapro_short["is_leveraged"])
+        self.assertEqual(ultrapro_short["leverage_factor"], 3.0)
+        self.assertTrue(ultrapro_short["is_inverse"])
+        self.assertFalse(short_vix["is_leveraged"])
+        self.assertTrue(short_vix["is_inverse"])
+
 
 if __name__ == "__main__":
     unittest.main()

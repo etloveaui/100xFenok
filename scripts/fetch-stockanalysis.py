@@ -36,6 +36,14 @@ SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
+NON_DIRECTIONAL_SHORT_RE = re.compile(
+    r"\b(?:"
+    r"short[-\s]?(?:term|duration|maturity|intermediate)"
+    r"|short[-\s]+treasury[-\s]+index"
+    r"|ultra[-\s]?short(?:[-\s]+(?:bond|duration|income|maturity|term|treasury|credit|municipal|muni|corporate|cash|government))?"
+    r")\b",
+    flags=re.IGNORECASE,
+)
 SINGLE_STOCK_UNDERLYING_TICKERS = {
     "AA", "AAL", "AAPL", "ABNB", "ADBE", "AMD", "AMZN", "APP", "ARM", "AVGO",
     "BABA", "COIN", "CRWD", "EL", "F", "GOOG", "GOOGL", "HOOD", "INTC", "LLY",
@@ -740,6 +748,10 @@ def classification_text(row: dict | None, overview: dict | None, _holdings: list
     return " ".join(chunks)
 
 
+def directional_classification_text(text: str) -> str:
+    return NON_DIRECTIONAL_SHORT_RE.sub(" ", text)
+
+
 def extract_leverage_factor(text: str) -> float | None:
     matches = re.findall(r"(?<!\d)([1-9](?:\.\d+)?)\s*x\b", text, flags=re.IGNORECASE)
     if matches:
@@ -750,7 +762,8 @@ def extract_leverage_factor(text: str) -> float | None:
     lower = text.lower()
     if "ultrapro" in lower:
         return 3.0
-    if re.search(r"\bultra\b", lower):
+    directional = directional_classification_text(text).lower()
+    if re.search(r"\bultra(?:short)?\b", directional):
         return 2.0
     return None
 
@@ -776,10 +789,11 @@ def extract_single_stock_underlying(text: str) -> str | None:
 def classify_etf(row: dict | None = None, overview: dict | None = None, holdings: list | None = None) -> dict:
     text = classification_text(row, overview, holdings)
     lower = text.lower()
+    directional = directional_classification_text(text).lower()
     factor = extract_leverage_factor(text)
     daily_geared = bool(
-        re.search(r"\bdaily\b.*\b(?:bull|bear|target|long|short)\b", lower)
-        or re.search(r"\b(?:bull|bear|long|short)\b.*\bdaily\b", lower)
+        re.search(r"\bdaily\b.*\b(?:bull|bear|target|long|short)\b", directional)
+        or re.search(r"\b(?:bull|bear|long|short)\b.*\bdaily\b", directional)
     )
     is_leveraged = bool(
         (factor is not None and factor > 1)
@@ -787,7 +801,7 @@ def classify_etf(row: dict | None = None, overview: dict | None = None, holdings
         or "ultrapro" in lower
         or (factor is None and daily_geared)
     )
-    is_inverse = bool(re.search(r"\b(?:inverse|short|bear)\b", lower))
+    is_inverse = bool(re.search(r"\b(?:inverse|short|bear)\b", directional))
     underlying = extract_single_stock_underlying(text) if is_leveraged else None
     index_like = bool(
         re.search(r"\bbased on the\b.*\bindex\b", lower)
