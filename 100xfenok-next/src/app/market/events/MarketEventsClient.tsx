@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 
 type EventTab = "earnings" | "actions" | "ipo" | "industry" | "movers";
@@ -14,6 +14,7 @@ interface SurfaceDoc<T = EventRow> {
 
 type EventRow = Record<string, unknown>;
 type EventSort = "date" | "symbol" | "section";
+type EventDateRange = "all" | "7" | "14" | "30";
 
 interface DrilldownRow {
   id: string;
@@ -51,6 +52,15 @@ interface EventData {
   gainersWeek: SurfaceDoc;
   gainersMonth: SurfaceDoc;
   losersYtd: SurfaceDoc;
+}
+
+interface MarketEventsClientProps {
+  initialQuery?: string;
+  initialSection?: string;
+  initialRange?: string;
+  initialFrom?: string;
+  initialTo?: string;
+  initialSort?: string;
 }
 
 const SURFACES: Record<keyof EventData, string> = {
@@ -151,6 +161,22 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function validDateInput(value: string | null | undefined): string {
+  const textValue = typeof value === "string" ? value.trim() : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(textValue)) return "";
+  return Number.isFinite(Date.parse(textValue)) ? textValue : "";
+}
+
+function eventSortFromParam(value: string | null | undefined): EventSort {
+  if (value === "symbol" || value === "section") return value;
+  return "date";
+}
+
+function eventRangeFromParam(value: string | null | undefined): EventDateRange {
+  if (value === "7" || value === "14" || value === "30") return value;
+  return "all";
+}
+
 function rowSymbol(row: EventRow): string {
   return text(row.symbol).replace(/^\$/, "").toUpperCase();
 }
@@ -207,12 +233,23 @@ function EmptyRows({ label }: { label: string }) {
   );
 }
 
-export default function MarketEventsClient() {
+export default function MarketEventsClient({
+  initialQuery,
+  initialSection,
+  initialRange,
+  initialFrom,
+  initialTo,
+  initialSort,
+}: MarketEventsClientProps) {
   const [data, setData] = useState<EventData | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<EventTab>("earnings");
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<EventSort>("date");
+  const [query, setQuery] = useState((initialQuery ?? "").trim());
+  const [sort, setSort] = useState<EventSort>(eventSortFromParam(initialSort));
+  const [sectionFilter, setSectionFilter] = useState(initialSection && initialSection.trim() ? initialSection.trim() : "전체");
+  const [dateRange, setDateRange] = useState<EventDateRange>(eventRangeFromParam(initialRange));
+  const [fromDate, setFromDate] = useState(validDateInput(initialFrom));
+  const [toDate, setToDate] = useState(validDateInput(initialTo));
   const [resultLimit, setResultLimit] = useState(40);
 
   useEffect(() => {
@@ -237,13 +274,47 @@ export default function MarketEventsClient() {
   }), [data]);
 
   const drilldownRows = useMemo(() => buildDrilldownRows(data), [data]);
+  const drilldownSections = useMemo(() => sectionOptions(drilldownRows), [drilldownRows]);
   const filteredRows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const rows = needle
-      ? drilldownRows.filter((row) => row.searchText.includes(needle))
-      : drilldownRows;
+    const rows = drilldownRows
+      .filter((row) => sectionFilter === "전체" || row.section === sectionFilter)
+      .filter((row) => isWithinDateRange(row, drilldownRows, dateRange, fromDate, toDate))
+      .filter((row) => !needle || row.searchText.includes(needle));
     return sortDrilldownRows(rows, sort);
-  }, [drilldownRows, query, sort]);
+  }, [dateRange, drilldownRows, fromDate, query, sectionFilter, sort, toDate]);
+
+  const syncParams = useCallback((next: {
+    query?: string;
+    sectionFilter?: string;
+    dateRange?: EventDateRange;
+    fromDate?: string;
+    toDate?: string;
+    sort?: EventSort;
+  }) => {
+    if (typeof window === "undefined") return;
+    const nextQuery = next.query ?? query;
+    const nextSection = next.sectionFilter ?? sectionFilter;
+    const nextRange = next.dateRange ?? dateRange;
+    const nextFrom = next.fromDate ?? fromDate;
+    const nextTo = next.toDate ?? toDate;
+    const nextSort = next.sort ?? sort;
+    const params = new URLSearchParams(window.location.search);
+    if (nextQuery.trim()) params.set("q", nextQuery.trim());
+    else params.delete("q");
+    if (nextSection === "전체") params.delete("section");
+    else params.set("section", nextSection);
+    if (nextRange === "all") params.delete("range");
+    else params.set("range", nextRange);
+    if (nextFrom) params.set("from", nextFrom);
+    else params.delete("from");
+    if (nextTo) params.set("to", nextTo);
+    else params.delete("to");
+    if (nextSort === "date") params.delete("sort");
+    else params.set("sort", nextSort);
+    const queryString = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`);
+  }, [dateRange, fromDate, query, sectionFilter, sort, toDate]);
 
   return (
     <div className="data-shell-page">
@@ -302,6 +373,16 @@ export default function MarketEventsClient() {
           setQuery={setQuery}
           sort={sort}
           setSort={setSort}
+          sectionFilter={sectionFilter}
+          setSectionFilter={setSectionFilter}
+          sections={drilldownSections}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          fromDate={fromDate}
+          setFromDate={setFromDate}
+          toDate={toDate}
+          setToDate={setToDate}
+          syncParams={syncParams}
           rows={filteredRows}
           totalRows={drilldownRows.length}
           limit={resultLimit}
@@ -508,15 +589,38 @@ function sortDrilldownRows(rows: DrilldownRow[], sort: EventSort): DrilldownRow[
   return next.sort((a, b) => eventTime(b) - eventTime(a) || a.section.localeCompare(b.section));
 }
 
-function csvCell(value: string): string {
+function sectionOptions(rows: DrilldownRow[]): Array<{ section: string; count: number }> {
+  const counts = new Map<string, number>();
+  for (const row of rows) counts.set(row.section, (counts.get(row.section) ?? 0) + 1);
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([section, count]) => ({ section, count }));
+}
+
+function isWithinDateRange(row: DrilldownRow, allRows: DrilldownRow[], dateRange: EventDateRange, fromDate: string, toDate: string): boolean {
+  if (dateRange === "all" && !fromDate && !toDate) return true;
+  const rowTime = eventTime(row);
+  if (!rowTime) return false;
+  if (fromDate && rowTime < Date.parse(fromDate)) return false;
+  if (toDate && rowTime > Date.parse(toDate)) return false;
+  if (dateRange === "all") return true;
+  const maxTime = Math.max(...allRows.map(eventTime), 0);
+  if (!maxTime) return true;
+  const days = Number(dateRange);
+  const threshold = maxTime - (days - 1) * 24 * 60 * 60 * 1000;
+  return rowTime >= threshold;
+}
+
+function csvCell(value: string | number | null | undefined): string {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
 function downloadDrilldownCsv(rows: DrilldownRow[]) {
+  const cappedRows = rows.slice(0, 500);
   const header = ["분류", "표면", "티커", "이름", "날짜", "요약", "값"];
   const lines = [
     header.map(csvCell).join(","),
-    ...rows.map((row) => [
+    ...cappedRows.map((row) => [
       row.section,
       row.source,
       row.symbol,
@@ -526,7 +630,7 @@ function downloadDrilldownCsv(rows: DrilldownRow[]) {
       row.value,
     ].map(csvCell).join(",")),
   ];
-  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob([`\uFEFF${lines.join("\n")}`], { type: "text/csv;charset=utf-8" });
   const href = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = href;
@@ -540,6 +644,16 @@ function EventDrilldown({
   setQuery,
   sort,
   setSort,
+  sectionFilter,
+  setSectionFilter,
+  sections,
+  dateRange,
+  setDateRange,
+  fromDate,
+  setFromDate,
+  toDate,
+  setToDate,
+  syncParams,
   rows,
   totalRows,
   limit,
@@ -549,6 +663,23 @@ function EventDrilldown({
   setQuery: (value: string) => void;
   sort: EventSort;
   setSort: (value: EventSort) => void;
+  sectionFilter: string;
+  setSectionFilter: (value: string) => void;
+  sections: Array<{ section: string; count: number }>;
+  dateRange: EventDateRange;
+  setDateRange: (value: EventDateRange) => void;
+  fromDate: string;
+  setFromDate: (value: string) => void;
+  toDate: string;
+  setToDate: (value: string) => void;
+  syncParams: (next: {
+    query?: string;
+    sectionFilter?: string;
+    dateRange?: EventDateRange;
+    fromDate?: string;
+    toDate?: string;
+    sort?: EventSort;
+  }) => void;
   rows: DrilldownRow[];
   totalRows: number;
   limit: number;
@@ -562,19 +693,57 @@ function EventDrilldown({
         <span className="desc">{rows.length.toLocaleString("ko-KR")} / {totalRows.toLocaleString("ko-KR")}개</span>
       </div>
       <div className="panel-b">
-        <div className="grid gap-2 md:grid-cols-[1fr_11rem_8rem]">
+        <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_11rem_10rem_11rem_8rem]">
           <input
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
+              syncParams({ query: event.target.value });
               setLimit(40);
             }}
             placeholder="티커, 기업명, 산업, 이벤트 검색"
             className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-brand-interactive"
           />
           <select
+            value={sectionFilter}
+            onChange={(event) => {
+              setSectionFilter(event.target.value);
+              syncParams({ sectionFilter: event.target.value });
+              setLimit(40);
+            }}
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+            aria-label="분류"
+          >
+            <option value="전체">전체 분류</option>
+            {sections.map((item) => (
+              <option key={item.section} value={item.section}>
+                {item.section} {item.count.toLocaleString("ko-KR")}
+              </option>
+            ))}
+          </select>
+          <select
+            value={dateRange}
+            onChange={(event) => {
+              const value = event.target.value as EventDateRange;
+              setDateRange(value);
+              syncParams({ dateRange: value });
+              setLimit(40);
+            }}
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+            aria-label="기간"
+          >
+            <option value="all">전체 기간</option>
+            <option value="7">최근 7일</option>
+            <option value="14">최근 14일</option>
+            <option value="30">최근 30일</option>
+          </select>
+          <select
             value={sort}
-            onChange={(event) => setSort(event.target.value as EventSort)}
+            onChange={(event) => {
+              const value = event.target.value as EventSort;
+              setSort(value);
+              syncParams({ sort: value });
+            }}
             className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
             aria-label="정렬"
           >
@@ -590,6 +759,36 @@ function EventDrilldown({
           >
             CSV
           </button>
+        </div>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <label className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500">
+            <span className="shrink-0">시작일</span>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(event) => {
+                const value = event.target.value;
+                setFromDate(value);
+                syncParams({ fromDate: value });
+                setLimit(40);
+              }}
+              className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-700 outline-none"
+            />
+          </label>
+          <label className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500">
+            <span className="shrink-0">종료일</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(event) => {
+                const value = event.target.value;
+                setToDate(value);
+                syncParams({ toDate: value });
+                setLimit(40);
+              }}
+              className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-700 outline-none"
+            />
+          </label>
         </div>
       </div>
       <div className="mv-col">
