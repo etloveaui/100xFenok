@@ -154,6 +154,12 @@ jobs:
           python3 scripts/test-stockanalysis-financials-fixtures.py
           python3 -m unittest scripts/test_audit_market_data.py
 
+      - name: Validate StockAnalysis UI QA
+        run: |
+          npm --prefix 100xfenok-next run qa:surface-consumers
+          npm --prefix 100xfenok-next run qa:market-audit
+          npm --prefix 100xfenok-next run qa:copy
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"

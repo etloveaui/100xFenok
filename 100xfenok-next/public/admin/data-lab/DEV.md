@@ -142,6 +142,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF missing reasons**: `coverage/etf_detail.json` also exposes `missing_reason_summary` and `missing_status_summary`; Data Lab renders those as source-neutral Korean buckets (`외부 분류 불일치`, `아직 수집 전`, `재시도 대기`) while raw provider evidence remains in JSON.
 - **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
 - **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json`.
+- **Update QA gate**: The StockAnalysis refresh workflow runs `qa:surface-consumers`, `qa:market-audit`, and `qa:copy` after generated data is rebuilt, so Data Lab structure, public labels, and active surface consumers fail before the data commit is pushed.
 
 ---
 
@@ -158,6 +159,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.16 | 2026-06-19 | Wired StockAnalysis refresh CI to Data Lab UI QA gates (`qa:surface-consumers`, `qa:market-audit`, `qa:copy`) so generated data updates cannot silently regress admin labels or surface contracts |
 | 2.2.15 | 2026-06-19 | Polished remaining Data Lab visible labels in mirror/usage and market-audit cards, and extended `qa:copy` to block the awkward `데이터 묶음` regression |
 | 2.2.14 | 2026-06-19 | Added ETF missing-reason summary rendering so remaining uncovered details are separated into external classification mismatch, untracked, and retry-wait buckets |
 | 2.2.13 | 2026-06-19 | Clarified ETF collection queue wording and added next-attempt dates for cooldown ledger rows so operators can see why missing ETF details are not retried immediately |
