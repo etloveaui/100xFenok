@@ -66,7 +66,60 @@ function groupLabel(value: string | null | undefined): string {
 }
 
 function surfaceLabel(value: string | null | undefined): string {
-  return String(value || "").replaceAll("_", " ");
+  switch (value) {
+    case "new_etfs":
+      return "신규 상장 ETF";
+    case "etf_screener":
+      return "ETF 전체 목록";
+    case "etf_provider_blackrock":
+      return "BlackRock ETF";
+    case "etf_provider_proshares":
+      return "ProShares ETF";
+    case "list_bitcoin_etfs":
+      return "비트코인 ETF";
+    case "ipos_recent":
+      return "최근 IPO";
+    case "ipos_statistics":
+      return "IPO 통계";
+    case "ipos_calendar":
+      return "IPO 일정";
+    case "ipos_filings":
+      return "IPO 신청";
+    case "ipos_withdrawn":
+      return "철회된 IPO";
+    case "actions_recent":
+      return "최근 기업 이벤트";
+    case "actions_splits":
+      return "주식분할";
+    case "market_gainers":
+      return "상승률 상위";
+    case "market_losers":
+      return "하락률 상위";
+    case "market_active":
+      return "거래대금 상위";
+    case "market_premarket":
+      return "장전 급등락";
+    case "market_afterhours":
+      return "장후 급등락";
+    case "market_gainers_week":
+      return "주간 상승률";
+    case "market_gainers_month":
+      return "월간 상승률";
+    case "market_losers_ytd":
+      return "연초 이후 하락률";
+    case "earnings_calendar":
+      return "어닝 일정";
+    case "industries":
+      return "산업 분류";
+    case "industries_all":
+      return "전체 산업";
+    case "industry_semiconductors":
+      return "반도체 산업";
+    case "sector_technology":
+      return "기술 섹터";
+    default:
+      return String(value || "데이터 묶음").replaceAll("_", " ");
+  }
 }
 
 export default function SurfaceCatalogCard() {

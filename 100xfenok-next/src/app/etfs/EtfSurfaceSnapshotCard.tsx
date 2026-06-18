@@ -186,15 +186,18 @@ export default function EtfSurfaceSnapshotCard() {
       ) : (
         <div className="panel-b grid gap-3 lg:grid-cols-2">
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">
-              신규 상장 ETF · {fmtNumber(countRows(data?.newEtfs))}개
+            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
+              <span>신규 상장 ETF · {fmtNumber(countRows(data?.newEtfs))}개</span>
+              <TransitionLink href="/etfs/new" className="text-brand-interactive hover:text-slate-950">
+                전체 보기
+              </TransitionLink>
             </div>
             {newEtfs.map((row) => (
               <EtfLink
                 key={`new-${row.s}`}
                 ticker={row.s}
                 name={row.n}
-                detail={`설정일 ${row.inceptionDate || "-"} · 가격 ${row.price ?? "-"}`}
+                detail={`상장일 ${row.inceptionDate || "-"} · 가격 ${row.price ?? "-"}`}
                 value={typeof row.change === "number" ? `${row.change.toFixed(2)}%` : "-"}
               />
             ))}
@@ -214,7 +217,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">주요 운용사 대표 상품</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용사별 대표 ETF</div>
             {providerLeaders.map((row) => (
               <EtfLink
                 key={`provider-${row.symbol}`}
@@ -227,7 +230,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">테마 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">비트코인 ETF</div>
             {bitcoinEtfs.map((row) => (
               <EtfLink
                 key={`btc-${row.symbol}`}
