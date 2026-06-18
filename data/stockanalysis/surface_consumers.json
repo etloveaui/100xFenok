@@ -1,0 +1,191 @@
+{
+  "schema_version": "stockanalysis-surface-consumers/v1",
+  "updated_at": "2026-06-19",
+  "source": "100x public route inventory",
+  "surfaces": [
+    {
+      "surface": "new_etfs",
+      "consumers": [
+        { "route": "/etfs/new", "label": "신규 상장 ETF 목록" },
+        { "route": "/etfs", "label": "ETF 요약" },
+        { "route": "/etfs/[ticker]", "label": "상세 보조 표시" },
+        { "route": "/stock/[ticker]", "label": "ETF 관련 보조 카드" }
+      ]
+    },
+    {
+      "surface": "etf_screener",
+      "consumers": [
+        { "route": "/etfs", "label": "ETF 목록" },
+        { "route": "/api/data/stockanalysis/etf-snapshot", "label": "ETF 요약 API" },
+        { "route": "/etfs/[ticker]", "label": "상세 보조 표시" },
+        { "route": "/stock/[ticker]", "label": "ETF 관련 보조 카드" }
+      ]
+    },
+    {
+      "surface": "etf_provider_blackrock",
+      "consumers": [
+        { "route": "/etfs", "label": "운용사 ETF 모음" },
+        { "route": "/api/data/stockanalysis/etf-snapshot", "label": "ETF 요약 API" },
+        { "route": "/etfs/[ticker]", "label": "상세 보조 표시" },
+        { "route": "/stock/[ticker]", "label": "ETF 관련 보조 카드" }
+      ]
+    },
+    {
+      "surface": "etf_provider_proshares",
+      "consumers": [
+        { "route": "/etfs", "label": "운용사 ETF 모음" },
+        { "route": "/api/data/stockanalysis/etf-snapshot", "label": "ETF 요약 API" },
+        { "route": "/etfs/[ticker]", "label": "상세 보조 표시" },
+        { "route": "/stock/[ticker]", "label": "ETF 관련 보조 카드" }
+      ]
+    },
+    {
+      "surface": "list_bitcoin_etfs",
+      "consumers": [
+        { "route": "/etfs", "label": "디지털자산 ETF 모음" },
+        { "route": "/api/data/stockanalysis/etf-snapshot", "label": "ETF 요약 API" },
+        { "route": "/etfs/[ticker]", "label": "상세 보조 표시" },
+        { "route": "/stock/[ticker]", "label": "ETF 관련 보조 카드" }
+      ]
+    },
+    {
+      "surface": "ipos_recent",
+      "consumers": [
+        { "route": "/market/events", "label": "IPO" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "ipos_statistics",
+      "consumers": [
+        { "route": "/market/events", "label": "IPO 통계" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "ipos_calendar",
+      "consumers": [
+        { "route": "/market/events", "label": "IPO 예정" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "ipos_filings",
+      "consumers": [
+        { "route": "/market/events", "label": "IPO 신청" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "ipos_withdrawn",
+      "consumers": [
+        { "route": "/market/events", "label": "철회 IPO" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "actions_recent",
+      "consumers": [
+        { "route": "/market/events", "label": "기업 이벤트" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "actions_splits",
+      "consumers": [
+        { "route": "/market/events", "label": "분할·병합" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_gainers",
+      "consumers": [
+        { "route": "/market/events", "label": "급등락" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_losers",
+      "consumers": [
+        { "route": "/market/events", "label": "급등락" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_active",
+      "consumers": [
+        { "route": "/market/events", "label": "거래량 상위" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_premarket",
+      "consumers": [
+        { "route": "/market/events", "label": "장전 거래" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_afterhours",
+      "consumers": [
+        { "route": "/market/events", "label": "장 마감 후" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_gainers_week",
+      "consumers": [
+        { "route": "/market/events", "label": "이번 주 상승" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_gainers_month",
+      "consumers": [
+        { "route": "/market/events", "label": "한 달 상승" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "market_losers_ytd",
+      "consumers": [
+        { "route": "/market/events", "label": "연초 이후 하락" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "earnings_calendar",
+      "consumers": [
+        { "route": "/market/events", "label": "어닝" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "industries",
+      "consumers": [
+        { "route": "/explore", "label": "시장 데이터 게이트웨이" },
+        { "route": "/admin/data-lab", "label": "수집 카탈로그" }
+      ]
+    },
+    {
+      "surface": "industries_all",
+      "consumers": [
+        { "route": "/market/events", "label": "산업" }
+      ]
+    },
+    {
+      "surface": "sector_technology",
+      "consumers": [
+        { "route": "/market/events", "label": "기술 섹터" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    },
+    {
+      "surface": "industry_semiconductors",
+      "consumers": [
+        { "route": "/market/events", "label": "반도체 산업" },
+        { "route": "/stock/[ticker]", "label": "종목 보조 카드" }
+      ]
+    }
+  ]
+}

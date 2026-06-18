@@ -140,6 +140,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 - **ETF gap drilldown**: Data Lab reads `counts.missing_by_source` and `samples` from `coverage/etf_detail.json` so operators can see which new/listed ETFs still rely on fallback surfaces.
 - **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
+- **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json`.
 
 ---
 
@@ -156,6 +157,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.11 | 2026-06-19 | Moved StockAnalysis surface consumer map to `data/stockanalysis/surface_consumers.json` and added `qa:surface-consumers` drift gate |
 | 2.2.10 | 2026-06-19 | Added StockAnalysis surface consumer check so Data Lab shows whether collected surface rows are connected to public routes |
 | 2.2.9 | 2026-06-19 | Polished visible Data Lab operator copy for StockAnalysis catalog, freshness labels, and route-smoke labels while preserving raw JSON paths |
 | 2.2.8 | 2026-06-19 | Neutralized visible ETF fallback, waiting-state, and source-parity wording while preserving raw provider evidence in JSON |

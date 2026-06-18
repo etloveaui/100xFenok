@@ -224,12 +224,13 @@ const DataLabUI = (function() {
         throw new Error(`market_data_audit returned ${response.status}`);
       }
       const audit = await response.json();
-      const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex] = await Promise.all([
+      const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers] = await Promise.all([
         fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, 'Source parity diagnostics'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis fetch index'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/coverage/etf_detail.json`, 'StockAnalysis ETF detail coverage'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, 'StockAnalysis surface catalog')
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/index.json`, 'StockAnalysis surface catalog'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surface_consumers.json`, 'StockAnalysis surface consumers')
       ]);
       const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
       const [stockanalysisIncremental, stockanalysisPendingLedger, marketFactsIndex] = await Promise.all([
@@ -246,6 +247,7 @@ const DataLabUI = (function() {
         stockanalysisCoverage,
         etfClassification,
         stockanalysisSurfaceIndex,
+        stockanalysisSurfaceConsumers,
         stockanalysisIncremental,
         stockanalysisPendingLedger,
         marketFactsIndex

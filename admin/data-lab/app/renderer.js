@@ -294,6 +294,7 @@ const Renderer = (function() {
     stockanalysisCoverage,
     etfClassification,
     stockanalysisSurfaceIndex,
+    stockanalysisSurfaceConsumers,
     stockanalysisIncremental,
     stockanalysisPendingLedger,
     marketFactsIndex
@@ -382,7 +383,7 @@ const Renderer = (function() {
       })}
       ${renderEtfClassificationAudit(etfClassification)}
       ${renderEtfCoverageGapAudit(detailCoverage)}
-      ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex)}
+      ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
       ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
@@ -450,11 +451,11 @@ const Renderer = (function() {
     `;
   }
 
-  function renderStockanalysisSurfaceCatalog(index) {
+  function renderStockanalysisSurfaceCatalog(index, consumers) {
     const counts = index?.counts || {};
     const results = Array.isArray(index?.results) ? index.results : [];
     if (!index || results.length === 0) return '';
-    const consumerMap = getStockanalysisSurfaceConsumers();
+    const consumerMap = getStockanalysisSurfaceConsumers(consumers);
     const groups = new Map();
     results.forEach((row) => {
       const group = row?.group || 'other';
@@ -475,14 +476,14 @@ const Renderer = (function() {
         value.failed ? `${Formatters.formatNumber(value.failed, 0)}개 오류` : '정상',
         value.samples.join(', ')
       ]);
-    const connected = results.filter((row) => consumerMap[row?.surface]).length;
+    const connected = results.filter((row) => (consumerMap[row?.surface] || []).length > 0).length;
     const unconnected = results
-      .filter((row) => !consumerMap[row?.surface])
+      .filter((row) => !(consumerMap[row?.surface] || []).length)
       .slice(0, 8)
       .map((row) => row.surface || '-');
     const consumerRows = results
       .map((row) => {
-        const consumer = consumerMap[row?.surface] || '점검 필요';
+        const consumer = summarizeSurfaceConsumers(consumerMap[row?.surface]);
         return [
           row?.surface || '-',
           consumer,
@@ -532,34 +533,32 @@ const Renderer = (function() {
     `;
   }
 
-  function getStockanalysisSurfaceConsumers() {
-    return {
-      actions_recent: '/market/events · 기업 이벤트',
-      actions_splits: '/market/events · 분할·병합',
-      earnings_calendar: '/market/events · 어닝',
-      etf_provider_blackrock: '/etfs · ETF 모음',
-      etf_provider_proshares: '/etfs · ETF 모음',
-      etf_screener: '/etfs · ETF 목록',
-      industries: '/market/events · 산업',
-      industries_all: '/market/events · 산업',
-      industry_semiconductors: '/market/events · 반도체',
-      ipos_calendar: '/market/events · IPO',
-      ipos_filings: '/market/events · IPO',
-      ipos_recent: '/market/events · IPO',
-      ipos_statistics: '/market/events · IPO',
-      ipos_withdrawn: '/market/events · IPO',
-      list_bitcoin_etfs: '/etfs · ETF 모음',
-      market_active: '/market/events · 급등락',
-      market_afterhours: '/market/events · 장 마감 후',
-      market_gainers: '/market/events · 급등락',
-      market_gainers_month: '/market/events · 한 달 상승',
-      market_gainers_week: '/market/events · 이번 주 상승',
-      market_losers: '/market/events · 급등락',
-      market_losers_ytd: '/market/events · 연초 이후 하락',
-      market_premarket: '/market/events · 장전 거래',
-      new_etfs: '/etfs/new · 신규 상장',
-      sector_technology: '/market/events · 기술 섹터'
-    };
+  function getStockanalysisSurfaceConsumers(payload) {
+    const map = {};
+    const rows = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
+    rows.forEach((row) => {
+      const surface = String(row?.surface || '').trim();
+      if (!surface) return;
+      const consumers = Array.isArray(row?.consumers) ? row.consumers : [];
+      map[surface] = consumers
+        .map(formatSurfaceConsumer)
+        .filter(Boolean);
+    });
+    return map;
+  }
+
+  function formatSurfaceConsumer(consumer) {
+    const route = String(consumer?.route || '').trim();
+    const label = String(consumer?.label || '').trim();
+    if (route && label) return `${route} · ${label}`;
+    return route || label;
+  }
+
+  function summarizeSurfaceConsumers(consumers) {
+    const rows = Array.isArray(consumers) ? consumers : [];
+    if (!rows.length) return '점검 필요';
+    if (rows.length <= 2) return rows.join(' / ');
+    return `${rows.slice(0, 2).join(' / ')} 외 ${rows.length - 2}`;
   }
 
   function renderEtfClassificationAudit(report) {
