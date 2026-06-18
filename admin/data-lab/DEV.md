@@ -135,10 +135,11 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Read-only**: No data modification
 - **Validation-first**: Field/record change warnings
 - **Separation**: Feature experiments in Valuation Lab, data monitoring in Data Lab
-- **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` is optional until the first scheduled/dispatch incremental ETF run. Data Lab fetches it only when audit says `proof_file_exists=true`, so missing proof stays `WAITING` without console 404.
+- **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` is optional until the first scheduled/dispatch incremental ETF run. Data Lab fetches it only when audit says `proof_file_exists=true`, so missing proof renders as a neutral waiting state without console 404.
 - **ETF queue visibility**: `data/stockanalysis/backfill/pending_ledger.json` is fetched directly for Admin-only drilldown rows. This shows pending/retry/failure tickers from the data refresh artifacts instead of static copy.
 - **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 - **ETF gap drilldown**: Data Lab reads `counts.missing_by_source` and `samples` from `coverage/etf_detail.json` so operators can see which new/listed ETFs still rely on fallback surfaces.
+- **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
 
 ---
 
@@ -155,14 +156,15 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.2.7 | 2026-06-19 | Added ETF coverage gap drilldown: new ETF/list/screener missing counts plus missing and Yahoo-fallback ticker chips linked to ETF detail pages |
-| 2.2.6 | 2026-06-18 | Added ETF detail coverage proof from `coverage/etf_detail.json`; Data Lab now shows candidate total, covered detail files, StockAnalysis-primary coverage, Yahoo fallback count, and missing detail count from the same generated contract |
+| 2.2.8 | 2026-06-19 | Neutralized visible ETF fallback, waiting-state, and source-parity wording while preserving raw provider evidence in JSON |
+| 2.2.7 | 2026-06-19 | Added ETF coverage gap drilldown: new ETF/list/screener missing counts plus missing and auxiliary-fallback ticker chips linked to ETF detail pages |
+| 2.2.6 | 2026-06-18 | Added ETF detail coverage proof from `coverage/etf_detail.json`; Data Lab now shows candidate total, covered detail files, primary-detail coverage, auxiliary fallback count, and missing detail count from the same generated contract |
 | 2.2.5 | 2026-06-18 | Added ETF collection queue drilldown from `index.json`, `incremental_latest.json`, and `pending_ledger.json`; keep source `admin/data-lab/app/*` and public mirror aligned because `sync-static` copies source into public |
 | 2.2.4 | 2026-06-18 | Removed the intentional legacy `/100xFenok/data/manifest.json` negative network probe from route smoke; workers.dev now uses base-path/root-manifest proof without console 404 noise |
 | 2.2.3 | 2026-06-18 | Guarded optional incremental proof fetch behind `market_data_audit.incremental_etf.proof_file_exists` and added audit warn when proof exists but fetch index omits incremental selected count |
 | 2.2.2 | 2026-06-18 | Added StockAnalysis surface catalog audit card from `data/stockanalysis/surfaces/index.json` so public Explore can remove catalog/coverage ops cards without losing visibility |
-| 2.2.1 | 2026-06-18 | Added automatic ETF enrichment observation: audit status, incremental backfill proof file, Yahoo fallback counts, pending detail count, and market_facts fallback coverage |
-| 2.2.0 | 2026-06-18 | Added ETF classification counts, latest StockAnalysis fetch index/backfill status, restored Source Parity detail in source, and freshness guards for classification/index/surface files |
+| 2.2.1 | 2026-06-18 | Added automatic ETF enrichment observation: audit status, incremental backfill proof file, auxiliary fallback counts, pending detail count, and market_facts fallback coverage |
+| 2.2.0 | 2026-06-18 | Added ETF classification counts, latest StockAnalysis fetch index/backfill status, restored source-consistency detail in source, and freshness guards for classification/index/surface files |
 | 2.1.0 | 2026-06-17 | Added market data audit cards and freshness guards for StockAnalysis ETF universe + computed market source parity |
 | 2.0.1 | 2026-04-14 | Added `embed=1` shell mode to hide legacy header/footer inside Next.js iframe bridge (#269) |
 | 2.0.0 | 2026-01-20 | Manifest-driven architecture, 94% code reduction (1,716→103 lines) |

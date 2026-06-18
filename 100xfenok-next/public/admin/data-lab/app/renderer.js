@@ -327,7 +327,7 @@ const Renderer = (function() {
           ['전체 후보', detailCoverageCounts.candidate_total ?? stockanalysis.universe_records],
           ['상세 파일', `${Formatters.formatNumber(detailCoverageCounts.covered_detail_files ?? stockanalysis.etf_detail_files ?? 0, 0)} (${Formatters.formatNumber(detailCoverageCounts.coverage_pct ?? 0, 2)}%)`],
           ['기본 상세', `${Formatters.formatNumber(detailCoverageCounts.stockanalysis_detail_files ?? 0, 0)} (${Formatters.formatNumber(detailCoverageCounts.primary_stockanalysis_pct ?? 0, 2)}%)`],
-          ['Yahoo 보강', detailCoverageCounts.yahoo_fallback_files],
+          ['보조 가격 상세', detailCoverageCounts.yahoo_fallback_files],
           ['상세 누락', detailCoverageCounts.missing_detail_files],
           ['신규 ETF 누락', missingBySource.new_etfs],
           ['ETF 목록 누락', missingBySource.etf_universe],
@@ -364,20 +364,20 @@ const Renderer = (function() {
         rows: [
           ['ETF', factsCoverage.etf],
           ['주식', factsCoverage.stock],
-          ['보조 데이터', factsCoverage.stockanalysis],
-          ['Yahoo 보강', factsCoverage.stockanalysis_yf_fallback],
-          ['Yahoo', factsCoverage.yf]
+          ['정규화 상세', factsCoverage.stockanalysis],
+          ['보조 가격 반영', factsCoverage.stockanalysis_yf_fallback],
+          ['가격 원천', factsCoverage.yf]
         ]
       })}
       ${renderMarketAuditCard({
-        title: 'Source Parity',
+        title: '소스 일치성',
         status: Number(facts.policy_mismatch_fields || 0) === 0 && Number(facts.percent_scale_warnings || 0) === 0 ? 'pass' : 'warn',
         code: escapeHtml(generatedAt).slice(0, 10),
         rows: [
-          ['Inspected', parity.inspected_ticker_files || facts.audited_ticker_files],
-          ['Multi-candidate', parity.multi_candidate_fields || facts.multi_candidate_fields],
-          ['Divergence', parity.divergence_rows],
-          ['Scale warn', facts.percent_scale_warnings]
+          ['검사 파일', parity.inspected_ticker_files || facts.audited_ticker_files],
+          ['복수 후보', parity.multi_candidate_fields || facts.multi_candidate_fields],
+          ['차이', parity.divergence_rows],
+          ['단위 경고', facts.percent_scale_warnings]
         ]
       })}
       ${renderEtfClassificationAudit(etfClassification)}
@@ -424,14 +424,14 @@ const Renderer = (function() {
             <p class="text-xs text-gray-500 mt-1">coverage/etf_detail.json · 신규 ETF/ETF 목록/스크리너 기준</p>
           </div>
           <span class="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">
-            ${Formatters.formatNumber(counts.missing_detail_files || missing.length, 0)} missing
+            ${Formatters.formatNumber(counts.missing_detail_files || missing.length, 0)}개 누락
           </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
           ${renderAuditMetric('신규 ETF 누락', counts.missing_by_source?.new_etfs)}
           ${renderAuditMetric('ETF 목록 누락', counts.missing_by_source?.etf_universe)}
           ${renderAuditMetric('스크리너 누락', counts.missing_by_source?.etf_screener)}
-          ${renderAuditMetric('Yahoo 보강', counts.yahoo_fallback_files)}
+          ${renderAuditMetric('보조 가격 상세', counts.yahoo_fallback_files)}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
@@ -439,12 +439,12 @@ const Renderer = (function() {
             ${renderTickerChipList(missing, 'warn')}
           </div>
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
-            <div class="mb-3 text-xs font-black text-gray-700">Yahoo 보강 적용</div>
+            <div class="mb-3 text-xs font-black text-gray-700">보조 가격 상세 반영</div>
             ${renderTickerChipList(yahooFallback, 'ok')}
           </div>
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          누락 티커는 상세 파일이 없더라도 ETF 페이지에서 목록/신규 상장 데이터 기준으로 먼저 표시됩니다. 다음 수집 또는 Yahoo 보강 결과가 갱신되면 이 목록도 자동으로 바뀝니다.
+          누락 티커는 상세 파일이 없더라도 ETF 페이지에서 목록/신규 상장 데이터 기준으로 먼저 표시됩니다. 다음 수집 또는 보조 가격 상세가 갱신되면 이 목록도 자동으로 바뀝니다.
         </p>
       </section>
     `;
@@ -559,8 +559,8 @@ const Renderer = (function() {
     const auditStatus = auditIncremental?.status || (hasRunEvidence ? 'observed' : 'waiting');
     const status = auditStatus === 'pass' ? 'pass' : 'warn';
     const code = hasRunEvidence
-      ? `${Formatters.formatNumber(selected, 0)} selected`
-      : 'WAITING';
+      ? `${Formatters.formatNumber(selected, 0)}개 선택`
+      : '대기';
     const notes = Array.isArray(auditIncremental?.notes) ? auditIncremental.notes : [];
 
     return renderMarketAuditCard({
@@ -572,13 +572,13 @@ const Renderer = (function() {
         ['생성일', escapeHtml(generatedAt).slice(0, 10)],
         ['후보', candidates],
         ['선택', selected],
-        ['Yahoo 재시도', fallbackRetry],
+        ['보조 가격 재시도', fallbackRetry],
         ['대기 제외', cooldownSkipped],
         ['대기 중', cooldownActive],
-        ['Yahoo 보강 성공', fallbackOk],
+        ['보조 가격 반영', fallbackOk],
         ['아직 대기', stillPending],
-        ['정규화 보강', fallbackCoverage],
-        ['증거 파일', hasIncrementalFile ? 'yes' : 'not yet'],
+        ['정규화 반영', fallbackCoverage],
+        ['증거 파일', hasIncrementalFile ? '있음' : '대기'],
         ['메모', notes.length ? notes.join(', ') : '-']
       ]
     });
@@ -611,7 +611,7 @@ const Renderer = (function() {
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
           ${renderAuditMetric('다음 선택', incrementalCounts.selected ?? selected.length)}
           ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
-          ${renderAuditMetric('Yahoo 재시도 후보', incrementalCounts.fallback_retry)}
+          ${renderAuditMetric('보조 가격 재시도 후보', incrementalCounts.fallback_retry)}
           ${renderAuditMetric('실패 추적', pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked)}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -647,7 +647,7 @@ const Renderer = (function() {
           )}
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 다음 수집 실행이나 Yahoo 보강 결과가 갱신되면 이 표도 함께 바뀝니다.
+          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 다음 수집 실행이나 보조 가격 상세가 갱신되면 이 표도 함께 바뀝니다.
         </p>
       </section>
     `;
@@ -684,7 +684,7 @@ const Renderer = (function() {
   function formatBackfillReason(reason) {
     const value = String(reason || '').trim();
     if (value === 'missing') return '상세 없음';
-    if (value === 'fallback_retry') return 'Yahoo 재시도';
+    if (value === 'fallback_retry') return '보조 가격 재시도';
     if (value === 'stale') return '오래된 파일';
     return value || '-';
   }
@@ -692,8 +692,8 @@ const Renderer = (function() {
   function formatBackfillSource(source) {
     const value = String(source || '').trim();
     if (value === 'etf_universe') return 'ETF 목록';
-    if (value === 'stockanalysis') return 'StockAnalysis';
-    if (value === 'yahoo_finance') return 'Yahoo';
+    if (value === 'stockanalysis') return '기본 상세';
+    if (value === 'yahoo_finance') return '보조 가격';
     return value || '-';
   }
 
@@ -718,14 +718,14 @@ const Renderer = (function() {
   }
 
   /**
-   * Source Parity v1 detail block: diagnosis-count strip, Top Stale and
-   * Top Sign Divergence tables, plus a user-readable explainer line.
+   * Source parity detail block: diagnosis-count strip and the top rows that
+   * need an operator's attention.
    */
   function renderSourceParityDetail(sourceParity) {
     if (!sourceParity) {
       return `
         <div class="xl:col-span-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-          Source Parity 상세 데이터 없음 (computed/market_source_parity.json)
+          소스 일치성 상세 데이터 없음 (computed/market_source_parity.json)
         </div>
       `;
     }
@@ -733,11 +733,11 @@ const Renderer = (function() {
     const summary = sourceParity.summary || {};
     const counts = summary.diagnosis_counts || {};
     const diagItems = [
-      ['stale', 'Stale'],
-      ['scale_mismatch', 'Scale mismatch'],
-      ['sign_divergence', 'Sign divergence'],
-      ['value_drift', 'Value drift'],
-      ['agreement', 'Agreement']
+      ['stale', '시점 차이'],
+      ['scale_mismatch', '단위 불일치'],
+      ['sign_divergence', '부호 불일치'],
+      ['value_drift', '값 차이'],
+      ['agreement', '일치']
     ];
     const diagStrip = diagItems
       .map(([key, label]) => renderAuditMetric(label, Formatters.formatNumber(counts[key] || 0, 0)))
@@ -750,7 +750,7 @@ const Renderer = (function() {
 
     const staleTable = topStale.length
       ? renderParityTable(
-          ['Ticker', 'Field', 'Selected', 'Stale sources', 'Spread %', 'Freshness'],
+          ['티커', '항목', '선택 원천', '지연 원천', '차이율', '시점'],
           topStale.map((row) => [
             escapeHtml(row.ticker ?? '-'),
             escapeHtml(row.field ?? '-'),
@@ -760,11 +760,11 @@ const Renderer = (function() {
             escapeHtml(formatFreshness(row.freshness))
           ])
         )
-      : '<div class="text-xs text-gray-400">No stale rows.</div>';
+      : '<div class="text-xs text-gray-400">시점 차이 행이 없습니다.</div>';
 
     const signTable = topSignDiv.length
       ? renderParityTable(
-          ['Ticker', 'Field', 'Values', 'Spread %'],
+          ['티커', '항목', '값', '차이율'],
           topSignDiv.map((row) => [
             escapeHtml(row.ticker ?? '-'),
             escapeHtml(row.field ?? '-'),
@@ -772,13 +772,13 @@ const Renderer = (function() {
             escapeHtml(formatSpreadPct(row.relative_spread_pct))
           ])
         )
-      : '<div class="text-xs text-gray-400">No sign divergences.</div>';
+      : '<div class="text-xs text-gray-400">부호 불일치 행이 없습니다.</div>';
 
     return `
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="font-semibold text-gray-800">Source Parity 진단 상세</h3>
+            <h3 class="font-semibold text-gray-800">소스 일치성 진단 상세</h3>
             <p class="text-xs text-gray-500 mt-1">computed/market_source_parity.json</p>
           </div>
         </div>
@@ -788,18 +788,18 @@ const Renderer = (function() {
         </div>
         <div>
           <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
-            Top Stale (소스 간 시점 차이 상위)
+            시점 차이 상위
           </div>
           ${staleTable}
         </div>
         <div>
           <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
-            Top Sign Divergence (부호 불일치 상위)
+            부호 불일치 상위
           </div>
           ${signTable}
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          상대 staleness = 소스 간 시점 차이(가장 신선한 후보 대비). 절대적인 데이터 노후 여부는 별도 freshness/audit 책임입니다.
+          상대 시점 차이는 가장 신선한 후보와 다른 원천 사이의 날짜 차이를 뜻합니다. 절대적인 데이터 노후 여부는 별도 신선도 감사에서 판단합니다.
         </p>
       </section>
     `;
