@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "NVDA",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T09:46:08Z",
+  "generated_at": "2026-06-17T23:49:22Z",
   "identity": {
     "name": "NVIDIA Corporation",
     "exchange": "NMS",
@@ -34,10 +34,10 @@
           "confidence": "observed"
         },
         {
-          "value": 207.41,
+          "value": 204.65,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         },
         {
@@ -69,20 +69,20 @@
           "confidence": "observed"
         },
         {
-          "value": 207.41,
+          "value": 204.65,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -5.04,
+      "value": -2.76,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T05:52:20Z",
+      "fetched_at": "2026-06-17T23:48:56Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -91,10 +91,10 @@
       ],
       "candidates": [
         {
-          "value": -5.04,
+          "value": -2.76,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         },
         {
@@ -108,10 +108,10 @@
       "candidate_count": 2
     },
     "change_pct": {
-      "value": -2.37,
+      "value": -1.33,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T05:52:20Z",
+      "fetched_at": "2026-06-17T23:48:56Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -120,10 +120,10 @@
       ],
       "candidates": [
         {
-          "value": -2.37,
+          "value": -1.33,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         },
         {
@@ -156,10 +156,10 @@
           "confidence": "observed"
         },
         {
-          "value": 5020000000000.0,
+          "value": 4960000000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         },
         {
@@ -220,10 +220,10 @@
           "confidence": "observed"
         },
         {
-          "value": 20.87,
+          "value": 20.59,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         },
         {
@@ -290,7 +290,7 @@
           "value": 2.2,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:20Z",
+          "fetched_at": "2026-06-17T23:48:56Z",
           "confidence": "observed"
         }
       ],
@@ -298,15 +298,71 @@
     }
   },
   "etf": null,
+  "financials": {
+    "stockanalysis": {
+      "available": true,
+      "role": "cross-check candidate; not valuation SSOT",
+      "fetched_at": "2026-06-17T23:48:55Z",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 38,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 37,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 33,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 39,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 33,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      },
+      "source_file": "stockanalysis/financials/NVDA.json"
+    }
+  },
   "sources": {
     "yf": true,
     "stockanalysis": true,
-    "slickcharts": true
+    "slickcharts": true,
+    "stockanalysis_financials": true
   },
   "source_files": {
     "yf": "yf/finance/NVDA.json",
     "stockanalysis": "stockanalysis/stocks/NVDA.json",
-    "slickcharts": "slickcharts/stocks/NVDA.json"
+    "slickcharts": "slickcharts/stocks/NVDA.json",
+    "stockanalysis_financials": "stockanalysis/financials/NVDA.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",

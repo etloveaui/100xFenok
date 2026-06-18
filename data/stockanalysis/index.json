@@ -1,384 +1,50 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-06-17T07:28:25Z",
+  "generated_at": "2026-06-17T23:48:59Z",
   "counts": {
     "etf_universe": null,
-    "etfs_requested": 46,
-    "stocks_requested": 0,
-    "ok": 43,
-    "failed": 3,
+    "etfs_requested": 0,
+    "stocks_requested": 3,
+    "surfaces_requested": 0,
+    "surfaces_ok": 0,
+    "surfaces_failed": 0,
+    "financials_requested": 3,
+    "financials_ok": 3,
+    "financials_failed": 0,
+    "ok": 3,
+    "failed": 0,
     "hard_failed": 0
   },
   "results": [
     {
-      "ticker": "SPY",
-      "asset_type": "etf",
+      "ticker": "AAPL",
+      "asset_type": "stock",
       "status": "ok",
-      "path": "etfs/SPY.json",
-      "latency_ms": 1212,
+      "path": "stocks/AAPL.json",
+      "financials_path": "financials/AAPL.json",
+      "latency_ms": 3428,
       "error": null
     },
     {
-      "ticker": "QQQ",
-      "asset_type": "etf",
+      "ticker": "NVDA",
+      "asset_type": "stock",
       "status": "ok",
-      "path": "etfs/QQQ.json",
-      "latency_ms": 1155,
+      "path": "stocks/NVDA.json",
+      "financials_path": "financials/NVDA.json",
+      "latency_ms": 3028,
       "error": null
     },
     {
-      "ticker": "DIA",
-      "asset_type": "etf",
+      "ticker": "PLTR",
+      "asset_type": "stock",
       "status": "ok",
-      "path": "etfs/DIA.json",
-      "latency_ms": 769,
-      "error": null
-    },
-    {
-      "ticker": "IWM",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/IWM.json",
-      "latency_ms": 1215,
-      "error": null
-    },
-    {
-      "ticker": "VOO",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/VOO.json",
-      "latency_ms": 1059,
-      "error": null
-    },
-    {
-      "ticker": "VTI",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/VTI.json",
-      "latency_ms": 1367,
-      "error": null
-    },
-    {
-      "ticker": "SMH",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/SMH.json",
-      "latency_ms": 752,
-      "error": null
-    },
-    {
-      "ticker": "SOXX",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/SOXX.json",
-      "latency_ms": 999,
-      "error": null
-    },
-    {
-      "ticker": "SSO",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/SSO.json",
-      "latency_ms": 1438,
-      "error": null
-    },
-    {
-      "ticker": "QLD",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/QLD.json",
-      "latency_ms": 1299,
-      "error": null
-    },
-    {
-      "ticker": "DDM",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/DDM.json",
-      "latency_ms": 784,
-      "error": null
-    },
-    {
-      "ticker": "ROM",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/ROM.json",
-      "latency_ms": 1034,
-      "error": null
-    },
-    {
-      "ticker": "UPRO",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/UPRO.json",
-      "latency_ms": 1018,
-      "error": null
-    },
-    {
-      "ticker": "TQQQ",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/TQQQ.json",
-      "latency_ms": 1014,
-      "error": null
-    },
-    {
-      "ticker": "SOXL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/SOXL.json",
-      "latency_ms": 1004,
-      "error": null
-    },
-    {
-      "ticker": "TNA",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/TNA.json",
-      "latency_ms": 1435,
-      "error": null
-    },
-    {
-      "ticker": "USD",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/USD.json",
-      "latency_ms": 1033,
-      "error": null
-    },
-    {
-      "ticker": "UWM",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/UWM.json",
-      "latency_ms": 1209,
-      "error": null
-    },
-    {
-      "ticker": "FNGU",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/FNGU.json",
-      "latency_ms": 1045,
-      "error": null
-    },
-    {
-      "ticker": "KORU",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/KORU.json",
-      "latency_ms": 1016,
-      "error": null
-    },
-    {
-      "ticker": "UTSL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/UTSL.json",
-      "latency_ms": 1038,
-      "error": null
-    },
-    {
-      "ticker": "DFEN",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/DFEN.json",
-      "latency_ms": 755,
-      "error": null
-    },
-    {
-      "ticker": "FAS",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/FAS.json",
-      "latency_ms": 761,
-      "error": null
-    },
-    {
-      "ticker": "TMF",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/TMF.json",
-      "latency_ms": 1071,
-      "error": null
-    },
-    {
-      "ticker": "NVDL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/NVDL.json",
-      "latency_ms": 1046,
-      "error": null
-    },
-    {
-      "ticker": "NVDG",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/NVDG.json",
-      "latency_ms": 1443,
-      "error": null
-    },
-    {
-      "ticker": "PTIR",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/PTIR.json",
-      "latency_ms": 1016,
-      "error": null
-    },
-    {
-      "ticker": "PLTG",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/PLTG.json",
-      "latency_ms": 987,
-      "error": null
-    },
-    {
-      "ticker": "AVGX",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/AVGX.json",
-      "latency_ms": 742,
-      "error": null
-    },
-    {
-      "ticker": "AVGG",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/AVGG.json",
-      "latency_ms": 753,
-      "error": null
-    },
-    {
-      "ticker": "TSLL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/TSLL.json",
-      "latency_ms": 1039,
-      "error": null
-    },
-    {
-      "ticker": "ELIL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/ELIL.json",
-      "latency_ms": 751,
-      "error": null
-    },
-    {
-      "ticker": "CRWL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/CRWL.json",
-      "latency_ms": 1130,
-      "error": null
-    },
-    {
-      "ticker": "ORCX",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/ORCX.json",
-      "latency_ms": 1033,
-      "error": null
-    },
-    {
-      "ticker": "MUU",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/MUU.json",
-      "latency_ms": 733,
-      "error": null
-    },
-    {
-      "ticker": "TSMG",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/TSMG.json",
-      "latency_ms": 1026,
-      "error": null
-    },
-    {
-      "ticker": "APPX",
-      "asset_type": "etf",
-      "status": "error",
-      "path": null,
-      "latency_ms": 224,
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "MSTU",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/MSTU.json",
-      "latency_ms": 1023,
-      "error": null
-    },
-    {
-      "ticker": "OKLL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/OKLL.json",
-      "latency_ms": 1076,
-      "error": null
-    },
-    {
-      "ticker": "CWVX",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/CWVX.json",
-      "latency_ms": 1130,
-      "error": null
-    },
-    {
-      "ticker": "BITU",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/BITU.json",
-      "latency_ms": 756,
-      "error": null
-    },
-    {
-      "ticker": "ETHT",
-      "asset_type": "etf",
-      "status": "error",
-      "path": null,
-      "latency_ms": 215,
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "STRC",
-      "asset_type": "etf",
-      "status": "error",
-      "path": null,
-      "latency_ms": 1025,
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "ticker": "SGOV",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/SGOV.json",
-      "latency_ms": 1053,
-      "error": null
-    },
-    {
-      "ticker": "BIL",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/BIL.json",
-      "latency_ms": 885,
-      "error": null
-    },
-    {
-      "ticker": "BILS",
-      "asset_type": "etf",
-      "status": "ok",
-      "path": "etfs/BILS.json",
-      "latency_ms": 756,
+      "path": "stocks/PLTR.json",
+      "financials_path": "financials/PLTR.json",
+      "latency_ms": 3039,
       "error": null
     }
   ],
+  "surface_results": null,
   "stop_reason": null
 }

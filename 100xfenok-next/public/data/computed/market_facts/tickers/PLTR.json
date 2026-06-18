@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "PLTR",
   "asset_type": "stock",
-  "generated_at": "2026-06-17T09:46:08Z",
+  "generated_at": "2026-06-17T23:49:22Z",
   "identity": {
     "name": "Palantir Technologies Inc.",
     "exchange": "NMS",
@@ -34,10 +34,10 @@
           "confidence": "observed"
         },
         {
-          "value": 133.25,
+          "value": 130.63,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         },
         {
@@ -69,20 +69,20 @@
           "confidence": "observed"
         },
         {
-          "value": 133.25,
+          "value": 130.63,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -1.46,
+      "value": -2.62,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T05:52:21Z",
+      "fetched_at": "2026-06-17T23:48:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -91,10 +91,10 @@
       ],
       "candidates": [
         {
-          "value": -1.46,
+          "value": -2.62,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         },
         {
@@ -108,10 +108,10 @@
       "candidate_count": 2
     },
     "change_pct": {
-      "value": -1.08,
+      "value": -1.97,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T05:52:21Z",
+      "fetched_at": "2026-06-17T23:48:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -120,10 +120,10 @@
       ],
       "candidates": [
         {
-          "value": -1.08,
+          "value": -1.97,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         },
         {
@@ -156,10 +156,10 @@
           "confidence": "observed"
         },
         {
-          "value": 319440000000.0,
+          "value": 313160000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         },
         {
@@ -220,10 +220,10 @@
           "confidence": "observed"
         },
         {
-          "value": 84.49,
+          "value": 82.83,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         },
         {
@@ -282,7 +282,7 @@
           "value": 1.52,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T05:52:21Z",
+          "fetched_at": "2026-06-17T23:48:59Z",
           "confidence": "observed"
         }
       ],
@@ -290,15 +290,71 @@
     }
   },
   "etf": null,
+  "financials": {
+    "stockanalysis": {
+      "available": true,
+      "role": "cross-check candidate; not valuation SSOT",
+      "fetched_at": "2026-06-17T23:48:58Z",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 32,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 33,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 31,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 33,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      },
+      "source_file": "stockanalysis/financials/PLTR.json"
+    }
+  },
   "sources": {
     "yf": true,
     "stockanalysis": true,
-    "slickcharts": true
+    "slickcharts": true,
+    "stockanalysis_financials": true
   },
   "source_files": {
     "yf": "yf/finance/PLTR.json",
     "stockanalysis": "stockanalysis/stocks/PLTR.json",
-    "slickcharts": "slickcharts/stocks/PLTR.json"
+    "slickcharts": "slickcharts/stocks/PLTR.json",
+    "stockanalysis_financials": "stockanalysis/financials/PLTR.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",

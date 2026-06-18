@@ -3,6 +3,7 @@
     "universe_records": 5280,
     "etf_detail_files": 4557,
     "stock_detail_files": 3,
+    "financial_detail_files": 3,
     "etf_backfill_progress": "86.3%"
   },
   "backfill": {
@@ -35,8 +36,21 @@
     ],
     "missing_offsets": [],
     "next_expected_offset": null,
-    "ready_for_finalize": true,
+    "ready_for_finalize": false,
     "detail_minus_backfill_ok": 0,
+    "transient_file_count": 3,
+    "transient_files": {
+      "source": [
+        "backfill/index_offset_4600_limit_500.json.partial.1781687582",
+        "backfill/index_offset_5100_limit_500.json.ignored",
+        "backfill/index_offset_5100_limit_500.json.partial.1781688731"
+      ],
+      "public": [
+        "backfill/index_offset_4600_limit_500.json.partial.1781687582",
+        "backfill/index_offset_5100_limit_500.json.ignored",
+        "backfill/index_offset_5100_limit_500.json.partial.1781688731"
+      ]
+    },
     "chunks": [
       {
         "file": "index_offset_0_limit_100.json",
@@ -177,6 +191,7 @@
     "coverage": {
       "yf": 1137,
       "stockanalysis": 4560,
+      "stockanalysis_financials": 3,
       "slickcharts": 529,
       "etf": 4561,
       "stock": 1180
@@ -188,7 +203,7 @@
     "percent_scale_warnings": 0
   },
   "market_source_parity": {
-    "generated_at": "2026-06-17T09:46:12Z",
+    "generated_at": "2026-06-17T23:49:28Z",
     "summary": {
       "inspected_ticker_files": 5741,
       "fields": 11,

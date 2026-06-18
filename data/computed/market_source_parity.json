@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-06-17T09:46:12Z",
+  "generated_at": "2026-06-17T23:49:28Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 5741,
@@ -151,16 +151,52 @@
   },
   "top_divergences": [
     {
+      "ticker": "AAPL",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 186.486619,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -1.1
+        },
+        {
+          "source": "yf.derived",
+          "value": 0.9513528102017385
+        }
+      ]
+    },
+    {
+      "ticker": "AAPL",
+      "asset_type": "stock",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 185.714286,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -3.29
+        },
+        {
+          "source": "yf.derived",
+          "value": 2.819999999999993
+        }
+      ]
+    },
+    {
       "ticker": "NVDA",
       "asset_type": "stock",
       "field": "change_pct",
       "selected_source": "stockanalysis.quote",
       "candidate_count": 2,
-      "relative_spread_pct": 106.590574,
+      "relative_spread_pct": 111.744106,
       "values": [
         {
           "source": "stockanalysis.quote",
-          "value": -2.37
+          "value": -1.33
         },
         {
           "source": "yf.derived",
@@ -174,11 +210,11 @@
       "field": "change",
       "selected_source": "stockanalysis.quote",
       "candidate_count": 2,
-      "relative_spread_pct": 106.349206,
+      "relative_spread_pct": 111.594203,
       "values": [
         {
           "source": "stockanalysis.quote",
-          "value": -5.04
+          "value": -2.76
         },
         {
           "source": "yf.derived",
@@ -421,24 +457,6 @@
       ]
     },
     {
-      "ticker": "PLTR",
-      "asset_type": "stock",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 54.185631,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -1.08
-        },
-        {
-          "source": "yf.derived",
-          "value": -2.3573390296002574
-        }
-      ]
-    },
-    {
       "ticker": "PYPL",
       "asset_type": "stock",
       "field": "dividend_yield",
@@ -453,24 +471,6 @@
         {
           "source": "slickcharts",
           "value": 0.63
-        }
-      ]
-    },
-    {
-      "ticker": "PLTR",
-      "asset_type": "stock",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 52.750809,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -1.46
-        },
-        {
-          "source": "yf.derived",
-          "value": -3.0900000000000176
         }
       ]
     },
@@ -961,28 +961,6 @@
       ]
     },
     {
-      "ticker": "PLTR",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 3,
-      "relative_spread_pct": 26.969659,
-      "values": [
-        {
-          "source": "yf",
-          "value": 61.703335
-        },
-        {
-          "source": "stockanalysis.overview",
-          "value": 84.49
-        },
-        {
-          "source": "slickcharts",
-          "value": 75.34
-        }
-      ]
-    },
-    {
       "ticker": "AVGO",
       "asset_type": "stock",
       "field": "trailing_pe",
@@ -1051,6 +1029,28 @@
         {
           "source": "slickcharts",
           "value": 9.56
+        }
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 25.506055,
+      "values": [
+        {
+          "source": "yf",
+          "value": 61.703335
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 82.83
+        },
+        {
+          "source": "slickcharts",
+          "value": 75.34
         }
       ]
     },
@@ -1199,28 +1199,6 @@
       ]
     },
     {
-      "ticker": "NVDA",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 3,
-      "relative_spread_pct": 22.749272,
-      "values": [
-        {
-          "source": "yf",
-          "value": 16.122227
-        },
-        {
-          "source": "stockanalysis.overview",
-          "value": 20.87
-        },
-        {
-          "source": "slickcharts",
-          "value": 17.07
-        }
-      ]
-    },
-    {
       "ticker": "ADBE",
       "asset_type": "stock",
       "field": "trailing_pe",
@@ -1307,6 +1285,28 @@
         {
           "source": "stockanalysis.overview",
           "value": 414740000.0
+        }
+      ]
+    },
+    {
+      "ticker": "NVDA",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 3,
+      "relative_spread_pct": 21.698752,
+      "values": [
+        {
+          "source": "yf",
+          "value": 16.122227
+        },
+        {
+          "source": "stockanalysis.overview",
+          "value": 20.59
+        },
+        {
+          "source": "slickcharts",
+          "value": 17.07
         }
       ]
     },
@@ -1810,7 +1810,7 @@
         },
         {
           "source": "stockanalysis.overview",
-          "value": 319440000000.0
+          "value": 313160000000.0
         },
         {
           "source": "slickcharts",
@@ -1832,7 +1832,7 @@
         },
         {
           "source": "stockanalysis.quote",
-          "value": 133.25
+          "value": 130.63
         },
         {
           "source": "slickcharts",
