@@ -13,6 +13,23 @@ interface SurfaceDoc<T = EventRow> {
 }
 
 type EventRow = Record<string, unknown>;
+type EventSort = "date" | "symbol" | "section";
+
+interface DrilldownRow {
+  id: string;
+  section: string;
+  source: string;
+  symbol: string;
+  title: string;
+  detail: string;
+  value: string;
+  date: string;
+  href?: string;
+  searchText: string;
+  valueClass?: string;
+}
+
+type DrilldownMappedRow = Pick<DrilldownRow, "title" | "detail" | "value"> & Partial<Pick<DrilldownRow, "symbol" | "href" | "valueClass">>;
 
 interface EventData {
   earnings: SurfaceDoc;
@@ -194,6 +211,9 @@ export default function MarketEventsClient() {
   const [data, setData] = useState<EventData | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<EventTab>("earnings");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<EventSort>("date");
+  const [resultLimit, setResultLimit] = useState(40);
 
   useEffect(() => {
     let cancelled = false;
@@ -215,6 +235,15 @@ export default function MarketEventsClient() {
     industry: countRows(data?.industries) + countRows(data?.technology) + countRows(data?.semiconductors),
     movers: countRows(data?.gainers) + countRows(data?.losers) + countRows(data?.active) + countRows(data?.premarket) + countRows(data?.afterhours) + countRows(data?.gainersWeek) + countRows(data?.gainersMonth) + countRows(data?.losersYtd),
   }), [data]);
+
+  const drilldownRows = useMemo(() => buildDrilldownRows(data), [data]);
+  const filteredRows = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const rows = needle
+      ? drilldownRows.filter((row) => row.searchText.includes(needle))
+      : drilldownRows;
+    return sortDrilldownRows(rows, sort);
+  }, [drilldownRows, query, sort]);
 
   return (
     <div className="data-shell-page">
@@ -266,6 +295,19 @@ export default function MarketEventsClient() {
       <div style={{ marginTop: "var(--s4)" }}>
         {!loaded ? <LoadingPanel /> : <TabPanel tab={tab} data={data} />}
       </div>
+
+      <div style={{ marginTop: "var(--s4)" }}>
+        <EventDrilldown
+          query={query}
+          setQuery={setQuery}
+          sort={sort}
+          setSort={setSort}
+          rows={filteredRows}
+          totalRows={drilldownRows.length}
+          limit={resultLimit}
+          setLimit={setResultLimit}
+        />
+      </div>
     </div>
   );
 }
@@ -290,6 +332,301 @@ function TabPanel({ tab, data }: { tab: EventTab; data: EventData | null }) {
   if (tab === "ipo") return <IpoPanel data={data} />;
   if (tab === "industry") return <IndustryPanel data={data} />;
   return <MoversPanel data={data} />;
+}
+
+function rowDate(row: EventRow): string {
+  return firstText(row, ["date", "ipo_date", "filing_date", "withdrawn_date", "week_of"], "-");
+}
+
+function drilldownId(source: string, row: EventRow, index: number): string {
+  const symbol = rowSymbol(row) || "ROW";
+  return `${source}-${symbol}-${rowDate(row)}-${index}`;
+}
+
+function makeDrilldownRow(
+  source: string,
+  section: string,
+  row: EventRow,
+  index: number,
+  title: string,
+  detail: string,
+  value: string,
+  options: { href?: string; valueClass?: string } = {},
+): DrilldownRow {
+  const symbol = rowSymbol(row);
+  const date = rowDate(row);
+  const searchText = [section, source, symbol, title, detail, value, date]
+    .join(" ")
+    .toLowerCase();
+  return {
+    id: drilldownId(source, row, index),
+    section,
+    source,
+    symbol,
+    title,
+    detail,
+    value,
+    date,
+    searchText,
+    href: options.href,
+    valueClass: options.valueClass ?? "neutral",
+  };
+}
+
+function buildDrilldownRows(data: EventData | null): DrilldownRow[] {
+  if (!data) return [];
+  const rows: DrilldownRow[] = [];
+  const pushRows = (
+    source: string,
+    section: string,
+    doc: SurfaceDoc | null | undefined,
+    mapper: (row: EventRow, index: number) => DrilldownMappedRow,
+  ) => {
+    rowsOf(doc).forEach((row, index) => {
+      const mapped = mapper(row, index);
+      rows.push(makeDrilldownRow(source, section, row, index, mapped.title, mapped.detail, mapped.value, {
+        href: mapped.href,
+        valueClass: mapped.valueClass,
+      }));
+    });
+  };
+
+  pushRows("earnings_calendar", "어닝", data.earnings, (row) => {
+    const symbol = rowSymbol(row);
+    return {
+      symbol,
+      title: `${symbol} · ${text(row.name)}`,
+      detail: `${dateText(row.date)} · ${text(row.timing).toUpperCase()} · EPS ${numberText(row.eps_estimate)} · 매출 ${numberText(row.revenue_estimate)}`,
+      value: numberText(row.market_cap),
+      href: symbol ? stockHref(symbol) : undefined,
+    };
+  });
+  pushRows("actions_recent", "기업 이벤트", data.actions, (row) => {
+    const symbol = rowSymbol(row);
+    return {
+      symbol,
+      title: `${symbol} · ${text(row.name)}`,
+      detail: `${dateText(row.date)} · ${text(row.type)} · ${text(row.text)}`,
+      value: text(row.other),
+      href: symbol ? stockHref(symbol) : undefined,
+    };
+  });
+  pushRows("actions_splits", "분할·병합", data.splits, (row) => {
+    const symbol = rowSymbol(row);
+    return {
+      symbol,
+      title: `${symbol} · ${text(row.company_name)}`,
+      detail: `${dateText(row.date)} · ${text(row.type)}`,
+      value: text(row.split_ratio),
+      href: symbol ? stockHref(symbol) : undefined,
+    };
+  });
+  pushRows("ipos_calendar", "예정 IPO", data.ipoCalendar, (row) => ({
+    symbol: rowSymbol(row),
+    title: `${rowSymbol(row)} · ${text(row.company_name)}`,
+    detail: `${dateText(row.ipo_date)} · ${text(row.exchange)} · ${text(row.price_range)}`,
+    value: text(row.deal_size),
+  }));
+  pushRows("ipos_recent", "최근 IPO", data.ipoRecent, (row) => ({
+    symbol: rowSymbol(row),
+    title: `${rowSymbol(row)} · ${text(row.company_name)}`,
+    detail: `${dateText(row.ipo_date)} · 공모가 ${text(row.ipo_price)} · 현재 ${text(row.current)}`,
+    value: text(row.return),
+    valueClass: pctClass(row.return),
+  }));
+  pushRows("ipos_filings", "IPO 신청", data.ipoFilings, (row) => ({
+    symbol: rowSymbol(row),
+    title: `${rowSymbol(row)} · ${text(row.company_name)}`,
+    detail: `${dateText(row.filing_date)} · ${text(row.price_range)}`,
+    value: text(row.shares_offered),
+  }));
+  pushRows("ipos_statistics", "IPO 활동", data.ipoStats, (row) => {
+    const symbol = rowSymbol(row);
+    return {
+      symbol,
+      title: `${symbol} · ${text(row.name)}`,
+      detail: "최근 IPO 통계에 포함된 상장",
+      value: dateText(row.date),
+      href: symbol ? stockHref(symbol) : undefined,
+    };
+  });
+  pushRows("ipos_withdrawn", "IPO 철회", data.ipoWithdrawn, (row) => ({
+    symbol: rowSymbol(row),
+    title: `${rowSymbol(row)} · ${text(row.company_name)}`,
+    detail: `${dateText(row.withdrawn_date)} · ${text(row.price_range)}`,
+    value: text(row.shares_offered),
+  }));
+  pushRows("industries_all", "산업", data.industries, (row) => ({
+    symbol: "",
+    title: text(row.industry_name),
+    detail: `${text(row.stocks)}개 종목 · 이익률 ${text(row.profit_margin)} · 1년 ${text(row["1y_change"])}`,
+    value: text(row.market_cap),
+    valueClass: pctClass(row["1y_change"]),
+  }));
+
+  [
+    ["sector_technology", "기술 섹터", data.technology],
+    ["industry_semiconductors", "반도체 산업", data.semiconductors],
+    ["market_gainers", "당일 상승", data.gainers],
+    ["market_losers", "당일 하락", data.losers],
+    ["market_active", "거래량", data.active],
+    ["market_premarket", "장전 거래", data.premarket],
+    ["market_afterhours", "장 마감 후", data.afterhours],
+    ["market_gainers_week", "이번 주 상승", data.gainersWeek],
+    ["market_gainers_month", "한 달 상승", data.gainersMonth],
+    ["market_losers_ytd", "연초 이후 하락", data.losersYtd],
+  ].forEach(([source, section, doc]) => {
+    pushRows(source as string, section as string, doc as SurfaceDoc, (row) => {
+      const symbol = rowSymbol(row);
+      const value = firstText(row, ["pct_change", "change_1w", "change_1m", "change_ytd"]);
+      return {
+        symbol,
+        title: `${symbol} · ${text(row.company_name)}`,
+        detail: `가격 ${firstText(row, ["stock_price", "premkt_price", "afterhr_price"])} · 거래량 ${firstText(row, ["volume", "pre_volume"])} · 시총 ${text(row.market_cap)}`,
+        value,
+        href: symbol ? stockHref(symbol) : undefined,
+        valueClass: pctClass(value),
+      };
+    });
+  });
+  return rows;
+}
+
+function eventTime(row: DrilldownRow): number {
+  const parsed = Date.parse(row.date);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sortDrilldownRows(rows: DrilldownRow[], sort: EventSort): DrilldownRow[] {
+  const next = [...rows];
+  if (sort === "symbol") {
+    return next.sort((a, b) => a.symbol.localeCompare(b.symbol) || a.title.localeCompare(b.title));
+  }
+  if (sort === "section") {
+    return next.sort((a, b) => a.section.localeCompare(b.section) || eventTime(b) - eventTime(a));
+  }
+  return next.sort((a, b) => eventTime(b) - eventTime(a) || a.section.localeCompare(b.section));
+}
+
+function csvCell(value: string): string {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function downloadDrilldownCsv(rows: DrilldownRow[]) {
+  const header = ["분류", "표면", "티커", "이름", "날짜", "요약", "값"];
+  const lines = [
+    header.map(csvCell).join(","),
+    ...rows.map((row) => [
+      row.section,
+      row.source,
+      row.symbol,
+      row.title,
+      row.date,
+      row.detail,
+      row.value,
+    ].map(csvCell).join(",")),
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const href = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = href;
+  anchor.download = `100x-market-events-${todayIso()}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(href);
+}
+
+function EventDrilldown({
+  query,
+  setQuery,
+  sort,
+  setSort,
+  rows,
+  totalRows,
+  limit,
+  setLimit,
+}: {
+  query: string;
+  setQuery: (value: string) => void;
+  sort: EventSort;
+  setSort: (value: EventSort) => void;
+  rows: DrilldownRow[];
+  totalRows: number;
+  limit: number;
+  setLimit: (value: number) => void;
+}) {
+  const visible = rows.slice(0, limit);
+  return (
+    <section className="panel">
+      <div className="panel-h">
+        <h2>전체 이벤트 검색</h2>
+        <span className="desc">{rows.length.toLocaleString("ko-KR")} / {totalRows.toLocaleString("ko-KR")}개</span>
+      </div>
+      <div className="panel-b">
+        <div className="grid gap-2 md:grid-cols-[1fr_11rem_8rem]">
+          <input
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setLimit(40);
+            }}
+            placeholder="티커, 기업명, 산업, 이벤트 검색"
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-brand-interactive"
+          />
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as EventSort)}
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+            aria-label="정렬"
+          >
+            <option value="date">날짜순</option>
+            <option value="symbol">티커순</option>
+            <option value="section">분류순</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => downloadDrilldownCsv(rows)}
+            disabled={!rows.length}
+            className="min-h-10 rounded-lg border border-slate-200 bg-slate-900 px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            CSV
+          </button>
+        </div>
+      </div>
+      <div className="mv-col">
+        {visible.length ? visible.map((row) => {
+          const content = (
+            <>
+              <span className="co">
+                <div className="n">{row.title}</div>
+                <div className="tk">{row.section} · {row.date} · {row.detail}</div>
+              </span>
+              <span className={`pc num ${row.valueClass ?? "neutral"}`}>{row.value}</span>
+            </>
+          );
+          return row.href ? (
+            <TransitionLink key={row.id} href={row.href} className="mv-row">
+              {content}
+            </TransitionLink>
+          ) : (
+            <div key={row.id} className="mv-row">
+              {content}
+            </div>
+          );
+        }) : <EmptyRows label="검색 결과가 없습니다." />}
+      </div>
+      {rows.length > visible.length ? (
+        <div className="panel-b">
+          <button
+            type="button"
+            onClick={() => setLimit(limit + 40)}
+            className="min-h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 hover:border-brand-interactive hover:text-brand-interactive"
+          >
+            더 보기 {visible.length.toLocaleString("ko-KR")} / {rows.length.toLocaleString("ko-KR")}
+          </button>
+        </div>
+      ) : null}
+    </section>
+  );
 }
 
 function EarningsPanel({ data }: { data: EventData | null }) {
