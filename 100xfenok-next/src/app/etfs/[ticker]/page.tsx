@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
 import AppShell from "@/components/shell/AppShell";
-import StockDetailClient from "@/app/stock/[ticker]/StockDetailClient";
+import EtfDetailClient from "./EtfDetailClient";
 
 interface Props {
   params: Promise<{ ticker: string }>;
@@ -28,7 +28,7 @@ export default async function EtfDetailPage({ params }: Props) {
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
       <AppShell active="etfs" title={symbol} backHref="/etfs">
-        <StockDetailClient ticker={symbol} assetHint="etf" />
+        <EtfDetailClient ticker={symbol} />
       </AppShell>
     </div>
   );
