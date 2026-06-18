@@ -1,0 +1,245 @@
+{
+  "schema_version": "market-facts/v1",
+  "ticker": "XLYX",
+  "asset_type": "etf",
+  "generated_at": "2026-06-18T10:44:00Z",
+  "identity": {
+    "name": "Corgi U.S. Consumer Discretionary 2x Daily ETF",
+    "exchange": "BTS",
+    "currency": "USD",
+    "sector": null,
+    "industry": null,
+    "fund_family": "Corgi Funds",
+    "category": "Trading--Leveraged Equity"
+  },
+  "facts": {
+    "price": {
+      "value": 23.969999313354492,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:19Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 23.969999313354492,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 25.2644,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:19Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 25.2644,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 25.2644,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": -1.2944006866455062,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:19Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -1.2944006866455062,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -5.1234174832788675,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:19Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -5.1234174832788675,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.45,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:19Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.45,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.45,
+          "source": "yf.stockanalysis_fallback.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:19Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    }
+  },
+  "etf": {
+    "holdings_count": null,
+    "holdings_updated": "2026-06-18T10:41:19Z",
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": true
+  },
+  "financials": null,
+  "sources": {
+    "yf": true,
+    "stockanalysis": false,
+    "stockanalysis_yf_fallback": true,
+    "slickcharts": false
+  },
+  "source_files": {
+    "yf": "yf/finance/XLYX.json",
+    "stockanalysis": null,
+    "stockanalysis_yf_fallback": "stockanalysis/etfs/XLYX.json",
+    "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
+  }
+}

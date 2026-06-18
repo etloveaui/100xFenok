@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ELIL",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Direxion Daily LLY Bull 2X Shares",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 27.59,
+      "value": 27.0675,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:04Z",
+      "fetched_at": "2026-06-18T10:34:05Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 27.59,
+          "value": 27.0675,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 27.59,
+          "value": 27.07,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.4,
+      "value": -0.52,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:04Z",
+      "fetched_at": "2026-06-18T10:34:05Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -0.4,
+          "value": -0.52,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -1.43,
+      "value": -1.89,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:04Z",
+      "fetched_at": "2026-06-18T10:34:05Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -1.43,
+          "value": -1.89,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 23220000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 11.38,
+          "value": 11.6,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -198,7 +204,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -213,7 +220,7 @@
           "value": 1.07,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:04Z",
+          "fetched_at": "2026-06-18T10:34:05Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -223,176 +230,176 @@
   },
   "etf": {
     "holdings_count": 14,
-    "holdings_updated": "Jun 11, 2026",
+    "holdings_updated": "Jun 14, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "Goldman Sachs Fin Gov 465 Institut",
-        "weight_pct": 28.25,
+        "weight_pct": 30.22,
         "shares": 6990000,
         "raw": {
           "no": 1,
           "n": "Goldman Sachs Fin Gov 465 Institut",
-          "as": "28.25%",
+          "as": "30.22%",
           "sh": "6,990,000"
         }
       },
       {
         "rank": 2,
         "name": "Dreyfus Govt Cash Man Ins",
-        "weight_pct": 20.59,
-        "shares": 5095625,
+        "weight_pct": 21.46,
+        "shares": 4964191,
         "raw": {
           "no": 2,
           "n": "Dreyfus Govt Cash Man Ins",
-          "as": "20.59%",
-          "sh": "5,095,625"
+          "as": "21.46%",
+          "sh": "4,964,191"
         }
       },
       {
         "rank": 3,
         "name": "Eli Lilly And Co Swap",
-        "weight_pct": 20.05,
+        "weight_pct": 18.01,
         "shares": 20692,
         "raw": {
           "no": 3,
           "n": "Eli Lilly And Co Swap",
-          "as": "20.05%",
+          "as": "18.01%",
           "sh": "20,692"
         }
       },
       {
         "rank": 4,
         "name": "Dreyfus Trsry Securities Cash Mgmt",
-        "weight_pct": 16.06,
+        "weight_pct": 17.17,
         "shares": 3972536,
         "raw": {
           "no": 4,
           "n": "Dreyfus Trsry Securities Cash Mgmt",
-          "as": "16.06%",
+          "as": "17.17%",
           "sh": "3,972,536"
         }
       },
       {
         "rank": 5,
         "name": "Goldman Finl Sq Trsry Inst 506",
-        "weight_pct": 15.51,
-        "shares": 3838764,
+        "weight_pct": 16.14,
+        "shares": 3733764,
         "raw": {
           "no": 5,
           "n": "Goldman Finl Sq Trsry Inst 506",
-          "as": "15.51%",
-          "sh": "3,838,764"
+          "as": "16.14%",
+          "sh": "3,733,764"
         }
       },
       {
         "rank": 6,
         "symbol": "LLY",
         "name": "Eli Lilly and Company",
-        "weight_pct": 14.4,
+        "weight_pct": 14.89,
         "shares": 3068,
         "raw": {
           "no": 6,
           "n": "Eli Lilly and Company",
           "s": "$LLY",
-          "as": "14.40%",
+          "as": "14.89%",
           "sh": "3,068"
         }
       },
       {
         "rank": 7,
         "name": "Eli Lilly And Co Swap",
-        "weight_pct": 8.16,
+        "weight_pct": 7.26,
         "shares": 8782,
         "raw": {
           "no": 7,
           "n": "Eli Lilly And Co Swap",
-          "as": "8.16%",
+          "as": "7.26%",
           "sh": "8,782"
         }
       },
       {
         "rank": 8,
         "name": "Eli Lilly And Co Swap",
-        "weight_pct": 2.98,
-        "shares": 6746,
+        "weight_pct": 2.09,
+        "shares": 6402,
         "raw": {
           "no": 8,
           "n": "Eli Lilly And Co Swap",
-          "as": "2.98%",
-          "sh": "6,746"
+          "as": "2.09%",
+          "sh": "6,402"
         }
       },
       {
         "rank": 9,
         "name": "Cash",
-        "weight_pct": 1.05,
-        "shares": 258937,
+        "weight_pct": 1.24,
+        "shares": 287055,
         "raw": {
           "no": 9,
           "n": "Cash",
-          "as": "1.05%",
-          "sh": "258,937"
+          "as": "1.24%",
+          "sh": "287,055"
         }
       },
       {
         "rank": 10,
         "name": "Eli Lilly And Co Swap",
-        "weight_pct": 0.69,
+        "weight_pct": 0.42,
         "shares": 1902,
         "raw": {
           "no": 10,
           "n": "Eli Lilly And Co Swap",
-          "as": "0.69%",
+          "as": "0.42%",
           "sh": "1,902"
         }
       },
       {
         "rank": 11,
         "name": "Citi Collateral",
-        "weight_pct": -0.2,
-        "shares": 50000,
+        "weight_pct": -0.24,
+        "shares": 55000,
         "raw": {
           "no": 11,
           "n": "Citi Collateral",
-          "as": "-0.20%",
-          "sh": "50,000"
+          "as": "-0.24%",
+          "sh": "55,000"
         }
       },
       {
         "rank": 12,
         "name": "Baml Collateral",
-        "weight_pct": -2.42,
-        "shares": 600000,
+        "weight_pct": -1.99,
+        "shares": 460000,
         "raw": {
           "no": 12,
           "n": "Baml Collateral",
-          "as": "-2.42%",
-          "sh": "600,000"
+          "as": "-1.99%",
+          "sh": "460,000"
         }
       },
       {
         "rank": 13,
         "name": "Goldman Collateral",
-        "weight_pct": -6.71,
-        "shares": 1660000,
+        "weight_pct": -8.52,
+        "shares": 1970000,
         "raw": {
           "no": 13,
           "n": "Goldman Collateral",
-          "as": "-6.71%",
-          "sh": "1,660,000"
+          "as": "-8.52%",
+          "sh": "1,970,000"
         }
       },
       {
         "rank": 14,
         "name": "Barclays Collateral",
-        "weight_pct": -18.39,
-        "shares": 4550000,
+        "weight_pct": -18.16,
+        "shares": 4200000,
         "raw": {
           "no": 14,
           "n": "Barclays Collateral",
-          "as": "-18.39%",
-          "sh": "4,550,000"
+          "as": "-18.16%",
+          "sh": "4,200,000"
         }
       }
     ],
@@ -414,17 +421,28 @@
         "country": "United States"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "Eli Lilly and Company",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/ELIL.json",
     "stockanalysis": "stockanalysis/etfs/ELIL.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -434,21 +452,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -457,7 +479,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -466,20 +489,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

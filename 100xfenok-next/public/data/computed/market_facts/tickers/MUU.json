@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MUU",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Direxion Daily MU Bull 2X Shares",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 886.92,
+      "value": 924.16,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:11:27Z",
+      "fetched_at": "2026-06-18T10:34:10Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 886.92,
+          "value": 924.16,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 886.92,
+          "value": 924.16,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -117.75,
+      "value": 37.24,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:11:27Z",
+      "fetched_at": "2026-06-18T10:34:10Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -117.75,
+          "value": 37.24,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -11.72,
+      "value": 4.2,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:11:27Z",
+      "fetched_at": "2026-06-18T10:34:10Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -11.72,
+          "value": 4.2,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 5720000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.55,
+          "value": 0.53,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -198,7 +204,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -213,7 +220,7 @@
           "value": 1.01,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:11:27Z",
+          "fetched_at": "2026-06-18T10:34:10Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -222,225 +229,201 @@
     }
   },
   "etf": {
-    "holdings_count": 18,
-    "holdings_updated": "Jun 11, 2026",
+    "holdings_count": 16,
+    "holdings_updated": "Jun 14, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "Dreyfus Govt Cash Man Ins",
-        "weight_pct": 40.91,
-        "shares": 2190901921,
+        "weight_pct": 31.41,
+        "shares": 1805383032,
         "raw": {
           "no": 1,
           "n": "Dreyfus Govt Cash Man Ins",
-          "as": "40.91%",
-          "sh": "2,190,901,921"
+          "as": "31.41%",
+          "sh": "1,805,383,032"
         }
       },
       {
         "rank": 2,
-        "name": "Cash",
-        "weight_pct": 24.19,
-        "shares": 1295614958,
+        "name": "Goldman Finl Sq Trsry Inst 506",
+        "weight_pct": 25.39,
+        "shares": 1459278215,
         "raw": {
           "no": 2,
-          "n": "Cash",
-          "as": "24.19%",
-          "sh": "1,295,614,958"
+          "n": "Goldman Finl Sq Trsry Inst 506",
+          "as": "25.39%",
+          "sh": "1,459,278,215"
         }
       },
       {
         "rank": 3,
-        "name": "Goldman Finl Sq Trsry Inst 506",
-        "weight_pct": 23.08,
-        "shares": 1236335521,
+        "name": "Goldman Sachs Fin Gov 465 Institut",
+        "weight_pct": 16.07,
+        "shares": 923730000,
         "raw": {
           "no": 3,
-          "n": "Goldman Finl Sq Trsry Inst 506",
-          "as": "23.08%",
-          "sh": "1,236,335,521"
+          "n": "Goldman Sachs Fin Gov 465 Institut",
+          "as": "16.07%",
+          "sh": "923,730,000"
         }
       },
       {
         "rank": 4,
-        "name": "Goldman Sachs Fin Gov 465 Institut",
-        "weight_pct": 15.74,
-        "shares": 842910000,
+        "name": "Dreyfus Trsry Securities Cash Mgmt",
+        "weight_pct": 14.37,
+        "shares": 825916054,
         "raw": {
           "no": 4,
-          "n": "Goldman Sachs Fin Gov 465 Institut",
-          "as": "15.74%",
-          "sh": "842,910,000"
+          "n": "Dreyfus Trsry Securities Cash Mgmt",
+          "as": "14.37%",
+          "sh": "825,916,054"
         }
       },
       {
         "rank": 5,
         "symbol": "MU",
         "name": "Micron Technology, Inc.",
-        "weight_pct": 9.32,
-        "shares": 525878,
+        "weight_pct": 9.45,
+        "shares": 553531,
         "raw": {
           "no": 5,
           "n": "Micron Technology, Inc.",
           "s": "$MU",
-          "as": "9.32%",
-          "sh": "525,878"
+          "as": "9.45%",
+          "sh": "553,531"
         }
       },
       {
         "rank": 6,
         "name": "Micron Technology Inc Swap",
-        "weight_pct": 8.2,
+        "weight_pct": 8.61,
         "shares": 1721027,
         "raw": {
           "no": 6,
           "n": "Micron Technology Inc Swap",
-          "as": "8.20%",
+          "as": "8.61%",
           "sh": "1,721,027"
         }
       },
       {
         "rank": 7,
-        "name": "Dreyfus Trsry Securities Cash Mgmt",
-        "weight_pct": 6.66,
-        "shares": 356936054,
+        "name": "Micron Technology Inc Swap",
+        "weight_pct": 4.29,
+        "shares": 3091846,
         "raw": {
           "no": 7,
-          "n": "Dreyfus Trsry Securities Cash Mgmt",
-          "as": "6.66%",
-          "sh": "356,936,054"
+          "n": "Micron Technology Inc Swap",
+          "as": "4.29%",
+          "sh": "3,091,846"
         }
       },
       {
         "rank": 8,
         "name": "Micron Technology Inc Swap",
-        "weight_pct": 4.16,
-        "shares": 516552,
+        "weight_pct": 3.24,
+        "shares": 1842970,
         "raw": {
           "no": 8,
           "n": "Micron Technology Inc Swap",
-          "as": "4.16%",
-          "sh": "516,552"
+          "as": "3.24%",
+          "sh": "1,842,970"
         }
       },
       {
         "rank": 9,
         "name": "Micron Technology Inc Swap",
-        "weight_pct": 3.1,
-        "shares": 918033,
+        "weight_pct": 2.69,
+        "shares": 2138074,
         "raw": {
           "no": 9,
           "n": "Micron Technology Inc Swap",
-          "as": "3.10%",
-          "sh": "918,033"
+          "as": "2.69%",
+          "sh": "2,138,074"
         }
       },
       {
         "rank": 10,
         "name": "Micron Technology Inc Swap",
-        "weight_pct": 2.73,
-        "shares": 2741846,
+        "weight_pct": 1.34,
+        "shares": 166552,
         "raw": {
           "no": 10,
           "n": "Micron Technology Inc Swap",
-          "as": "2.73%",
-          "sh": "2,741,846"
+          "as": "1.34%",
+          "sh": "166,552"
         }
       },
       {
         "rank": 11,
         "name": "Micron Technology Inc Swap",
-        "weight_pct": 1.52,
-        "shares": 1523173,
+        "weight_pct": -0.04,
+        "shares": 475717,
         "raw": {
           "no": 11,
           "n": "Micron Technology Inc Swap",
-          "as": "1.52%",
-          "sh": "1,523,173"
+          "as": "-0.04%",
+          "sh": "475,717"
         }
       },
       {
         "rank": 12,
-        "name": "Micron Technology Inc Swap",
-        "weight_pct": -0.2,
-        "shares": 175717,
+        "name": "Goldman Collateral",
+        "weight_pct": -1.55,
+        "shares": 88860000,
         "raw": {
           "no": 12,
-          "n": "Micron Technology Inc Swap",
-          "as": "-0.20%",
-          "sh": "175,717"
+          "n": "Goldman Collateral",
+          "as": "-1.55%",
+          "sh": "88,860,000"
         }
       },
       {
         "rank": 13,
-        "name": "Baml Collateral",
-        "weight_pct": -3.65,
-        "shares": 195550000,
+        "name": "Cash",
+        "weight_pct": -3.05,
+        "shares": 175279020,
         "raw": {
           "no": 13,
-          "n": "Baml Collateral",
-          "as": "-3.65%",
-          "sh": "195,550,000"
+          "n": "Cash",
+          "as": "-3.05%",
+          "sh": "175,279,020"
         }
       },
       {
         "rank": 14,
-        "name": "Goldman Collateral",
-        "weight_pct": -4.62,
-        "shares": 247430000,
+        "name": "Micron Technology Inc Swap",
+        "weight_pct": -3.14,
+        "shares": 1840037,
         "raw": {
           "no": 14,
-          "n": "Goldman Collateral",
-          "as": "-4.62%",
-          "sh": "247,430,000"
+          "n": "Micron Technology Inc Swap",
+          "as": "-3.14%",
+          "sh": "1,840,037"
         }
       },
       {
         "rank": 15,
-        "name": "Micron Technology Inc Swap",
-        "weight_pct": -5.33,
-        "shares": 2190037,
+        "name": "Nomura Collateral",
+        "weight_pct": -3.31,
+        "shares": 190390000,
         "raw": {
           "no": 15,
-          "n": "Micron Technology Inc Swap",
-          "as": "-5.33%",
-          "sh": "2,190,037"
+          "n": "Nomura Collateral",
+          "as": "-3.31%",
+          "sh": "190,390,000"
         }
       },
       {
         "rank": 16,
-        "name": "Barclays Collateral",
-        "weight_pct": -5.56,
-        "shares": 297720000,
+        "name": "Citi Collateral",
+        "weight_pct": -5.77,
+        "shares": 331708000,
         "raw": {
           "no": 16,
-          "n": "Barclays Collateral",
-          "as": "-5.56%",
-          "sh": "297,720,000"
-        }
-      },
-      {
-        "rank": 17,
-        "name": "Citi Collateral",
-        "weight_pct": -9.57,
-        "shares": 512466000,
-        "raw": {
-          "no": 17,
           "n": "Citi Collateral",
-          "as": "-9.57%",
-          "sh": "512,466,000"
-        }
-      },
-      {
-        "rank": 18,
-        "name": "Nomura Collateral",
-        "weight_pct": -10.68,
-        "shares": 571950000,
-        "raw": {
-          "no": 18,
-          "n": "Nomura Collateral",
-          "as": "-10.68%",
-          "sh": "571,950,000"
+          "as": "-5.77%",
+          "sh": "331,708,000"
         }
       }
     ],
@@ -462,17 +445,28 @@
         "country": "United States"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "Micron Technology, Inc",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/MUU.json",
     "stockanalysis": "stockanalysis/etfs/MUU.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -482,21 +476,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -505,7 +503,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -514,20 +513,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

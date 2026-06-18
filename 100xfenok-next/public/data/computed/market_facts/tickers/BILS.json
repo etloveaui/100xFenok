@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BILS",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "State Street SPDR Bloomberg 3-12 Month T-Bill ETF",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 99.29,
+      "value": 99.27,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:24Z",
+      "fetched_at": "2026-06-18T10:34:35Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 99.29,
+          "value": 99.27,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 99.29,
+          "value": 99.27,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.01,
+      "value": -0.02,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:24Z",
+      "fetched_at": "2026-06-18T10:34:35Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": 0.01,
+          "value": -0.02,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.01,
+      "value": -0.02,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:24Z",
+      "fetched_at": "2026-06-18T10:34:35Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": 0.01,
+          "value": -0.02,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 3910000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed"
         }
       ],
@@ -146,6 +151,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -161,7 +167,7 @@
           "value": 3.81,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -172,18 +178,19 @@
       "value": 0.01,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:24Z",
+      "fetched_at": "2026-06-18T10:34:35Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 0.01,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed"
         }
       ],
@@ -198,7 +205,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -213,7 +221,7 @@
           "value": 0.14,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:24Z",
+          "fetched_at": "2026-06-18T10:34:35Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -223,373 +231,382 @@
   },
   "etf": {
     "holdings_count": 25,
-    "holdings_updated": "Jun 15, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "B.0 09.03.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 7.04,
-        "shares": 277053000,
+        "shares": 275645000,
         "raw": {
           "no": 1,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.03.26",
           "as": "7.04%",
-          "sh": "277,053,000"
+          "sh": "275,645,000"
         }
       },
       {
         "rank": 2,
         "symbol": "B.0 10.01.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 6.86,
-        "shares": 271105000,
+        "name": "TREASURY BILL 10/26 0.00000",
+        "weight_pct": 6.87,
+        "shares": 269729000,
         "raw": {
           "no": 2,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 10/26 0.00000",
           "s": "B.0 10.01.26",
-          "as": "6.86%",
-          "sh": "271,105,000"
+          "as": "6.87%",
+          "sh": "269,729,000"
         }
       },
       {
         "rank": 3,
         "symbol": "B.0 10.29.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 10/26 0.00000",
         "weight_pct": 6.7,
-        "shares": 265227000,
+        "shares": 263879000,
         "raw": {
           "no": 3,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 10/26 0.00000",
           "s": "B.0 10.29.26",
           "as": "6.70%",
-          "sh": "265,227,000"
+          "sh": "263,879,000"
         }
       },
       {
         "rank": 4,
         "symbol": "B.0 11.27.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 11/26 0.00000",
         "weight_pct": 6.43,
-        "shares": 255633700,
+        "shares": 254335700,
         "raw": {
           "no": 4,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 11/26 0.00000",
           "s": "B.0 11.27.26",
           "as": "6.43%",
-          "sh": "255,633,700"
+          "sh": "254,335,700"
         }
       },
       {
         "rank": 5,
         "symbol": "B.0 10.08.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 10/26 0.00000",
         "weight_pct": 4.47,
-        "shares": 176636000,
+        "shares": 175740000,
         "raw": {
           "no": 5,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 10/26 0.00000",
           "s": "B.0 10.08.26",
           "as": "4.47%",
-          "sh": "176,636,000"
+          "sh": "175,740,000"
         }
       },
       {
         "rank": 6,
         "symbol": "B.0 10.15.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 10/26 0.00000",
         "weight_pct": 4.47,
-        "shares": 176636000,
+        "shares": 175740000,
         "raw": {
           "no": 6,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 10/26 0.00000",
           "s": "B.0 10.15.26",
           "as": "4.47%",
-          "sh": "176,636,000"
+          "sh": "175,740,000"
         }
       },
       {
         "rank": 7,
-        "symbol": "B.0 09.17.26",
-        "name": "United States Treasury Bills 0%",
+        "symbol": "XIB.0 09.17.26",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 4.41,
-        "shares": 173841000,
+        "shares": 172957000,
         "raw": {
           "no": 7,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 09.17.26",
+          "n": "TREASURY BILL 09/26 0.00000",
+          "s": "XIB.0 09.17.26",
           "as": "4.41%",
-          "sh": "173,841,000"
+          "sh": "172,957,000"
         }
       },
       {
         "rank": 8,
         "symbol": "B.0 09.24.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 4.4,
-        "shares": 173841000,
+        "name": "TREASURY BILL 09/26 0.00000",
+        "weight_pct": 4.41,
+        "shares": 172957000,
         "raw": {
           "no": 8,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.24.26",
-          "as": "4.40%",
-          "sh": "173,841,000"
+          "as": "4.41%",
+          "sh": "172,957,000"
         }
       },
       {
         "rank": 9,
         "symbol": "B.0 09.10.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 4.29,
-        "shares": 169035000,
+        "shares": 168175000,
         "raw": {
           "no": 9,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.10.26",
           "as": "4.29%",
-          "sh": "169,035,000"
+          "sh": "168,175,000"
         }
       },
       {
         "rank": 10,
         "symbol": "B.0 10.22.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 10/26 0.00000",
         "weight_pct": 4.21,
-        "shares": 166576000,
+        "shares": 165732000,
         "raw": {
           "no": 10,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 10/26 0.00000",
           "s": "B.0 10.22.26",
           "as": "4.21%",
-          "sh": "166,576,000"
+          "sh": "165,732,000"
         }
       },
       {
         "rank": 11,
         "symbol": "B.0 11.05.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 11/26 0.00000",
         "weight_pct": 4.17,
-        "shares": 165162000,
+        "shares": 164322000,
         "raw": {
           "no": 11,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 11/26 0.00000",
           "s": "B.0 11.05.26",
           "as": "4.17%",
-          "sh": "165,162,000"
+          "sh": "164,322,000"
         }
       },
       {
         "rank": 12,
         "symbol": "B.0 11.12.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 11/26 0.00000",
         "weight_pct": 4.16,
-        "shares": 165162000,
+        "shares": 164322000,
         "raw": {
           "no": 12,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 11/26 0.00000",
           "s": "B.0 11.12.26",
           "as": "4.16%",
-          "sh": "165,162,000"
+          "sh": "164,322,000"
         }
       },
       {
         "rank": 13,
         "symbol": "B.0 11.19.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 11/26 0.00000",
         "weight_pct": 4.16,
-        "shares": 165162000,
+        "shares": 164322000,
         "raw": {
           "no": 13,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 11/26 0.00000",
           "s": "B.0 11.19.26",
           "as": "4.16%",
-          "sh": "165,162,000"
+          "sh": "164,322,000"
         }
       },
       {
         "rank": 14,
         "symbol": "B.0 09.15.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 3.81,
-        "shares": 150143000,
+        "shares": 149379000,
         "raw": {
           "no": 14,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.15.26",
           "as": "3.81%",
-          "sh": "150,143,000"
+          "sh": "149,379,000"
         }
       },
       {
         "rank": 15,
         "symbol": "B.0 09.22.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 3.81,
-        "shares": 150143000,
+        "shares": 149379000,
         "raw": {
           "no": 15,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.22.26",
           "as": "3.81%",
-          "sh": "150,143,000"
+          "sh": "149,379,000"
         }
       },
       {
         "rank": 16,
         "symbol": "B.0 09.29.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 3.7,
-        "shares": 145925000,
+        "shares": 145185000,
         "raw": {
           "no": 16,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.29.26",
           "as": "3.70%",
-          "sh": "145,925,000"
+          "sh": "145,185,000"
         }
       },
       {
         "rank": 17,
         "symbol": "B.0 09.08.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 3.56,
-        "shares": 140130000,
+        "shares": 139418000,
         "raw": {
           "no": 17,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.08.26",
           "as": "3.56%",
-          "sh": "140,130,000"
+          "sh": "139,418,000"
         }
       },
       {
         "rank": 18,
         "symbol": "B.0 09.01.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 09/26 0.00000",
         "weight_pct": 3.05,
-        "shares": 120081000,
+        "shares": 119473000,
         "raw": {
           "no": 18,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 09/26 0.00000",
           "s": "B.0 09.01.26",
           "as": "3.05%",
-          "sh": "120,081,000"
+          "sh": "119,473,000"
         }
       },
       {
         "rank": 19,
         "symbol": "B.0 01.21.27",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 01/27 0.00000",
         "weight_pct": 2.82,
-        "shares": 112512000,
+        "shares": 111940000,
         "raw": {
           "no": 19,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 01/27 0.00000",
           "s": "B.0 01.21.27",
           "as": "2.82%",
-          "sh": "112,512,000"
+          "sh": "111,940,000"
         }
       },
       {
         "rank": 20,
         "symbol": "B.0 12.24.26",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 12/26 0.00000",
         "weight_pct": 2.8,
-        "shares": 111577000,
+        "shares": 111009000,
         "raw": {
           "no": 20,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 12/26 0.00000",
           "s": "B.0 12.24.26",
           "as": "2.80%",
-          "sh": "111,577,000"
+          "sh": "111,009,000"
         }
       },
       {
         "rank": 21,
         "symbol": "B.0 04.15.27",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 04/27 0.00000",
         "weight_pct": 2.8,
-        "shares": 112847000,
+        "shares": 112275000,
         "raw": {
           "no": 21,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 04/27 0.00000",
           "s": "B.0 04.15.27",
           "as": "2.80%",
-          "sh": "112,847,000"
+          "sh": "112,275,000"
         }
       },
       {
         "rank": 22,
         "symbol": "B.0 03.18.27",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 03/27 0.00000",
         "weight_pct": 2.63,
-        "shares": 105837000,
+        "shares": 105301000,
         "raw": {
           "no": 22,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 03/27 0.00000",
           "s": "B.0 03.18.27",
           "as": "2.63%",
-          "sh": "105,837,000"
+          "sh": "105,301,000"
         }
       },
       {
         "rank": 23,
         "symbol": "B.0 05.13.27",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 05/27 0.00000",
         "weight_pct": 2.6,
-        "shares": 105084000,
+        "shares": 104552000,
         "raw": {
           "no": 23,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 05/27 0.00000",
           "s": "B.0 05.13.27",
           "as": "2.60%",
-          "sh": "105,084,000"
+          "sh": "104,552,000"
         }
       },
       {
         "rank": 24,
         "symbol": "B.0 02.18.27",
-        "name": "United States Treasury Bills 0%",
+        "name": "TREASURY BILL 02/27 0.00000",
         "weight_pct": 2.51,
-        "shares": 100652000,
+        "shares": 100140000,
         "raw": {
           "no": 24,
-          "n": "United States Treasury Bills 0%",
+          "n": "TREASURY BILL 02/27 0.00000",
           "s": "B.0 02.18.27",
           "as": "2.51%",
-          "sh": "100,652,000"
+          "sh": "100,140,000"
         }
       },
       {
         "rank": 25,
-        "symbol": "!MUTF/GVMXX",
-        "name": "State Street Institutional U.S. Government Money Market Fund Premier Class",
-        "weight_pct": 0.16,
-        "shares": 6126643,
+        "name": "SSI US GOV MONEY MARKET CLASS",
+        "weight_pct": 0.15,
+        "shares": 5636775,
         "raw": {
           "no": 25,
-          "n": "State Street Institutional U.S. Government Money Market Fund Premier Class",
-          "s": "!mutf/GVMXX",
-          "as": "0.16%",
-          "sh": "6,126,643"
+          "n": "SSI US GOV MONEY MARKET CLASS",
+          "as": "0.15%",
+          "sh": "5,636,775"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/BILS.json",
     "stockanalysis": "stockanalysis/etfs/BILS.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -599,21 +616,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -622,7 +643,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -631,20 +653,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

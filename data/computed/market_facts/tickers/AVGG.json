@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "AVGG",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Leverage Shares 2X Long AVGO Daily ETF",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 27.45,
+      "value": 29.7,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:01Z",
+      "fetched_at": "2026-06-18T10:34:02Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 27.45,
+          "value": 29.7,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 27.45,
+          "value": 29.7,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -2.61,
+      "value": 2.25,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:01Z",
+      "fetched_at": "2026-06-18T10:34:02Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.61,
+          "value": 2.25,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -8.68,
+      "value": 8.2,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:01Z",
+      "fetched_at": "2026-06-18T10:34:02Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -8.68,
+          "value": 8.2,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 57230000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed"
         }
       ],
@@ -146,6 +151,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -158,10 +164,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 2.23,
+          "value": 2.06,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -177,7 +183,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -192,7 +199,7 @@
           "value": 0.76,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:01Z",
+          "fetched_at": "2026-06-18T10:34:02Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -206,105 +213,116 @@
     "top_holdings": [
       {
         "rank": 1,
-        "name": "BROADCOM INC SWAP - L - CLEARSTREET",
-        "weight_pct": 100.45,
-        "shares": 150949,
+        "name": "US DOLLARS",
+        "weight_pct": 95.78,
+        "shares": 54813516,
         "raw": {
           "no": 1,
-          "n": "BROADCOM INC SWAP - L - CLEARSTREET",
-          "as": "100.45%",
-          "sh": "150,949"
+          "n": "US DOLLARS",
+          "as": "95.78%",
+          "sh": "54,813,516"
         }
       },
       {
         "rank": 2,
-        "name": "US DOLLARS",
-        "weight_pct": 96.44,
-        "shares": 53924088,
+        "name": "BROADCOM INC SWAP - L - CLEARSTREET",
+        "weight_pct": 95.17,
+        "shares": 142557,
         "raw": {
           "no": 2,
-          "n": "US DOLLARS",
-          "as": "96.44%",
-          "sh": "53,924,088"
+          "n": "BROADCOM INC SWAP - L - CLEARSTREET",
+          "as": "95.17%",
+          "sh": "142,557"
         }
       },
       {
         "rank": 3,
         "name": "BROADCOM INC SWAP - L - MAREX",
-        "weight_pct": 71.46,
-        "shares": 107375,
+        "weight_pct": 68.82,
+        "shares": 103075,
         "raw": {
           "no": 3,
           "n": "BROADCOM INC SWAP - L - MAREX",
-          "as": "71.46%",
-          "sh": "107,375"
+          "as": "68.82%",
+          "sh": "103,075"
         }
       },
       {
         "rank": 4,
         "name": "BROADCOM INC SWAP - L - CANTOR",
-        "weight_pct": 39.45,
-        "shares": 59285,
+        "weight_pct": 37.98,
+        "shares": 56885,
         "raw": {
           "no": 4,
           "n": "BROADCOM INC SWAP - L - CANTOR",
-          "as": "39.45%",
-          "sh": "59,285"
+          "as": "37.98%",
+          "sh": "56,885"
         }
       },
       {
         "rank": 5,
         "symbol": "!MUTF/FXFXX",
         "name": "First American Treasury Obligations Fund Class X",
-        "weight_pct": 14.96,
-        "shares": 8362952,
+        "weight_pct": 13.01,
+        "shares": 7447632,
         "raw": {
           "no": 5,
           "n": "First American Treasury Obligations Fund Class X",
           "s": "!mutf/FXFXX",
-          "as": "14.96%",
-          "sh": "8,362,952"
+          "as": "13.01%",
+          "sh": "7,447,632"
         }
       },
       {
         "rank": 6,
         "name": "OTHER ASSETS AND LIABILITIES",
-        "weight_pct": -0.0,
-        "shares": 1630,
+        "weight_pct": -3.49,
+        "shares": 1995844,
         "raw": {
           "no": 6,
           "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-0.00%",
-          "sh": "1,630"
+          "as": "-3.49%",
+          "sh": "1,995,844"
         }
       },
       {
         "rank": 7,
         "name": "Cash Offset",
-        "weight_pct": -222.76,
-        "shares": 124553545,
+        "weight_pct": -207.27,
+        "shares": 118619673,
         "raw": {
           "no": 7,
           "n": "Cash Offset",
-          "as": "-222.76%",
-          "sh": "124,553,545"
+          "as": "-207.27%",
+          "sh": "118,619,673"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "AVGO",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/AVGG.json",
     "stockanalysis": "stockanalysis/etfs/AVGG.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -314,21 +332,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -337,7 +359,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -346,20 +369,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

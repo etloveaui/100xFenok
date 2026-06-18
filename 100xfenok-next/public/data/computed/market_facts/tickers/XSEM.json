@@ -1,0 +1,213 @@
+{
+  "schema_version": "market-facts/v1",
+  "ticker": "XSEM",
+  "asset_type": "etf",
+  "generated_at": "2026-06-18T10:44:00Z",
+  "identity": {
+    "name": "Corgi ETF Trust I - Corgi U.S. Semiconductors 2x Daily ETF",
+    "exchange": "BTS",
+    "currency": "USD",
+    "sector": null,
+    "industry": null,
+    "fund_family": null,
+    "category": null
+  },
+  "facts": {
+    "price": {
+      "value": 23.809999465942383,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:24Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 23.809999465942383,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:24Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 23.2997,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:24Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 23.2997,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:24Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 23.2997,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:24Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change": {
+      "value": 0.5102994659423814,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:24Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.5102994659423814,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:24Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 2.190154662688281,
+      "source": "yf.stockanalysis_fallback.quote",
+      "as_of": null,
+      "fetched_at": "2026-06-18T10:41:24Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 2.190154662688281,
+          "source": "yf.stockanalysis_fallback.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-18T10:41:24Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
+  "etf": {
+    "holdings_count": null,
+    "holdings_updated": "2026-06-18T10:41:24Z",
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.etf_list.name",
+      "confidence": "medium"
+    },
+    "yahoo_funds_data_available": false
+  },
+  "financials": null,
+  "sources": {
+    "yf": true,
+    "stockanalysis": false,
+    "stockanalysis_yf_fallback": true,
+    "slickcharts": false
+  },
+  "source_files": {
+    "yf": "yf/finance/XSEM.json",
+    "stockanalysis": null,
+    "stockanalysis_yf_fallback": "stockanalysis/etfs/XSEM.json",
+    "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
+  }
+}

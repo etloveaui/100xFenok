@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "PTIR",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "GraniteShares 2x Long PLTR Daily ETF",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 12.47,
+      "value": 12,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:32:04Z",
+      "fetched_at": "2026-06-18T10:33:57Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 12.47,
+          "value": 12,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:32:04Z",
+          "fetched_at": "2026-06-18T10:33:57Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 12.47,
+          "value": 12,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:32:04Z",
+          "fetched_at": "2026-06-18T10:33:57Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.3,
+      "value": -0.47,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:32:04Z",
+      "fetched_at": "2026-06-18T10:33:57Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -0.3,
+          "value": -0.47,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:32:04Z",
+          "fetched_at": "2026-06-18T10:33:57Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -2.35,
+      "value": -3.77,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:32:04Z",
+      "fetched_at": "2026-06-18T10:33:57Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.35,
+          "value": -3.77,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:32:04Z",
+          "fetched_at": "2026-06-18T10:33:57Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 328270000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:32:04Z",
+          "fetched_at": "2026-06-18T10:33:57Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -190,7 +196,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -205,7 +212,7 @@
           "value": 1.04,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:32:04Z",
+          "fetched_at": "2026-06-18T10:33:57Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -215,101 +222,101 @@
   },
   "etf": {
     "holdings_count": 19,
-    "holdings_updated": "Jun 12, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "Graniteshares Long Pltr Swap Clear Street",
-        "weight_pct": 83.42,
+        "weight_pct": 82.79,
         "shares": 2139500,
         "raw": {
           "no": 1,
           "n": "Graniteshares Long Pltr Swap Clear Street",
-          "as": "83.42%",
+          "as": "82.79%",
           "sh": "2,139,500"
         }
       },
       {
         "rank": 2,
         "name": "Recv Long 2x Pltr Trs Bmo",
-        "weight_pct": 61.82,
-        "shares": 1585583,
+        "weight_pct": 62.41,
+        "shares": 1612783,
         "raw": {
           "no": 2,
           "n": "Recv Long 2x Pltr Trs Bmo",
-          "as": "61.82%",
-          "sh": "1,585,583"
+          "as": "62.41%",
+          "sh": "1,612,783"
         }
       },
       {
         "rank": 3,
         "name": "Graniteshares Long Pltr Swap Cowen",
-        "weight_pct": 54.69,
+        "weight_pct": 54.29,
         "shares": 1402841,
         "raw": {
           "no": 3,
           "n": "Graniteshares Long Pltr Swap Cowen",
-          "as": "54.69%",
+          "as": "54.29%",
           "sh": "1,402,841"
         }
       },
       {
         "rank": 4,
         "name": "Us Dollars",
-        "weight_pct": 41.41,
-        "shares": 135950018,
+        "weight_pct": 39.8,
+        "shares": 138532834,
         "raw": {
           "no": 4,
           "n": "Us Dollars",
-          "as": "41.41%",
-          "sh": "135,950,018"
+          "as": "39.80%",
+          "sh": "138,532,834"
         }
       },
       {
         "rank": 5,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 20.34,
+        "weight_pct": 19.18,
         "shares": 66760056,
         "raw": {
           "no": 5,
           "n": "Cash & Cash Equivalents",
-          "as": "20.34%",
+          "as": "19.18%",
           "sh": "66,760,056"
         }
       },
       {
         "rank": 6,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 4.37,
+        "weight_pct": 4.12,
         "shares": 14340000,
         "raw": {
           "no": 6,
           "n": "Cash & Cash Equivalents",
-          "as": "4.37%",
+          "as": "4.12%",
           "sh": "14,340,000"
         }
       },
       {
         "rank": 7,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 2.78,
+        "weight_pct": 2.62,
         "shares": 9120000,
         "raw": {
           "no": 7,
           "n": "Cash & Cash Equivalents",
-          "as": "2.78%",
+          "as": "2.62%",
           "sh": "9,120,000"
         }
       },
       {
         "rank": 8,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 0.46,
+        "weight_pct": 0.44,
         "shares": 1523726,
         "raw": {
           "no": 8,
           "n": "Cash & Cash Equivalents",
-          "as": "0.46%",
+          "as": "0.44%",
           "sh": "1,523,726"
         }
       },
@@ -375,72 +382,72 @@
       },
       {
         "rank": 14,
-        "name": "Cash",
-        "weight_pct": -1.51,
+        "name": "Cash & Cash Equivalents",
+        "weight_pct": -3.1,
+        "shares": 10790000,
         "raw": {
           "no": 14,
-          "n": "Cash",
-          "as": "-1.51%",
-          "sh": 0
+          "n": "Cash & Cash Equivalents",
+          "as": "-3.10%",
+          "sh": "10,790,000"
         }
       },
       {
         "rank": 15,
-        "name": "Cash & Cash Equivalents",
-        "weight_pct": -3.29,
-        "shares": 10790000,
+        "name": "Cash",
+        "weight_pct": -6.37,
         "raw": {
           "no": 15,
-          "n": "Cash & Cash Equivalents",
-          "as": "-3.29%",
-          "sh": "10,790,000"
+          "n": "Cash",
+          "as": "-6.37%",
+          "sh": 0
         }
       },
       {
         "rank": 16,
         "name": "Graniteshares Long Pltr Swap Cowen",
-        "weight_pct": -30.67,
+        "weight_pct": -28.92,
         "shares": 100681899,
         "raw": {
           "no": 16,
           "n": "Graniteshares Long Pltr Swap Cowen",
-          "as": "-30.67%",
+          "as": "-28.92%",
           "sh": "100,681,899"
         }
       },
       {
         "rank": 17,
         "name": "Payb Long 2x Pltr Trs Bmo",
-        "weight_pct": -32.25,
-        "shares": 105867537,
+        "weight_pct": -31.47,
+        "shares": 109534565,
         "raw": {
           "no": 17,
           "n": "Payb Long 2x Pltr Trs Bmo",
-          "as": "-32.25%",
-          "sh": "105,867,537"
+          "as": "-31.47%",
+          "sh": "109,534,565"
         }
       },
       {
         "rank": 18,
         "name": "Graniteshares Long Pltr Swap Clear Street",
-        "weight_pct": -42.36,
+        "weight_pct": -39.94,
         "shares": 139041374,
         "raw": {
           "no": 18,
           "n": "Graniteshares Long Pltr Swap Clear Street",
-          "as": "-42.36%",
+          "as": "-39.94%",
           "sh": "139,041,374"
         }
       },
       {
         "rank": 19,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": -59.28,
+        "weight_pct": -55.9,
         "shares": 194590000,
         "raw": {
           "no": 19,
           "n": "Cash & Cash Equivalents",
-          "as": "-59.28%",
+          "as": "-55.90%",
           "sh": "194,590,000"
         }
       }
@@ -448,17 +455,28 @@
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "Palantir Technologies Inc",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/PTIR.json",
     "stockanalysis": "stockanalysis/etfs/PTIR.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -468,21 +486,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -491,7 +513,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -500,20 +523,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

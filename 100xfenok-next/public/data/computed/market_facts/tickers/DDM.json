@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "DDM",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "ProShares Ultra Dow30",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 65.09,
+      "value": 63.75,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:27:31Z",
+      "fetched_at": "2026-06-18T10:33:33Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 65.09,
+          "value": 63.75,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 65.09,
+          "value": 63.75,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.78,
+      "value": -1.34,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:27:31Z",
+      "fetched_at": "2026-06-18T10:33:33Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": 0.78,
+          "value": -1.34,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 1.21,
+      "value": -2.06,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:27:31Z",
+      "fetched_at": "2026-06-18T10:33:33Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": 1.21,
+          "value": -2.06,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 504680000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.87,
+          "value": 0.89,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -193,18 +199,19 @@
       "value": 1.74,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:27:31Z",
+      "fetched_at": "2026-06-18T10:33:33Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 1.74,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed"
         }
       ],
@@ -219,7 +226,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -234,7 +242,7 @@
           "value": 0.95,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:27:31Z",
+          "fetched_at": "2026-06-18T10:33:33Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -244,143 +252,143 @@
   },
   "etf": {
     "holdings_count": 42,
-    "holdings_updated": "Jun 12, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "SPDR DOW JONES INDUSTRIAL AVERAGE (DIA) SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-        "weight_pct": 29.19,
-        "shares": 29677,
+        "weight_pct": 30.6,
+        "shares": 31611,
         "raw": {
           "no": 1,
           "n": "SPDR DOW JONES INDUSTRIAL AVERAGE (DIA) SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-          "as": "29.19%",
-          "sh": "29,677"
+          "as": "30.60%",
+          "sh": "31,611"
         }
       },
       {
         "rank": 2,
         "name": "DJ INDUSTRIAL AVERAGE SWAP BNP PARIBAS",
-        "weight_pct": 23.98,
+        "weight_pct": 23.58,
         "shares": 2434,
         "raw": {
           "no": 2,
           "n": "DJ INDUSTRIAL AVERAGE SWAP BNP PARIBAS",
-          "as": "23.98%",
+          "as": "23.58%",
           "sh": "2,434"
         }
       },
       {
         "rank": 3,
         "name": "DJ INDUSTRIAL AVERAGE SWAP BANK OF AMERICA NA",
-        "weight_pct": 19.16,
-        "shares": 1945,
+        "weight_pct": 18.55,
+        "shares": 1915,
         "raw": {
           "no": 3,
           "n": "DJ INDUSTRIAL AVERAGE SWAP BANK OF AMERICA NA",
-          "as": "19.16%",
-          "sh": "1,945"
+          "as": "18.55%",
+          "sh": "1,915"
         }
       },
       {
         "rank": 4,
         "name": "DJ INDUSTRIAL AVERAGE SWAP CITIBANK NA",
-        "weight_pct": 16.53,
+        "weight_pct": 16.26,
         "shares": 1678,
         "raw": {
           "no": 4,
           "n": "DJ INDUSTRIAL AVERAGE SWAP CITIBANK NA",
-          "as": "16.53%",
+          "as": "16.26%",
           "sh": "1,678"
         }
       },
       {
         "rank": 5,
         "name": "DJ INDUSTRIAL AVERAGE SWAP BARCLAYS CAPITAL",
-        "weight_pct": 15.25,
+        "weight_pct": 15.0,
         "shares": 1548,
         "raw": {
           "no": 5,
           "n": "DJ INDUSTRIAL AVERAGE SWAP BARCLAYS CAPITAL",
-          "as": "15.25%",
+          "as": "15.00%",
           "sh": "1,548"
         }
       },
       {
         "rank": 6,
-        "symbol": "GS",
-        "name": "The Goldman Sachs Group, Inc.",
-        "weight_pct": 9.24,
-        "shares": 45205,
+        "name": "DJIA MINI E-CBOT EQUITY INDEX 18/SEP/2026 DMU6 INDEX",
+        "weight_pct": 9.39,
+        "shares": 192,
         "raw": {
           "no": 6,
-          "n": "The Goldman Sachs Group, Inc.",
-          "s": "$GS",
-          "as": "9.24%",
-          "sh": "45,205"
+          "n": "DJIA MINI E-CBOT EQUITY INDEX 18/SEP/2026 DMU6 INDEX",
+          "as": "9.39%",
+          "sh": "192"
         }
       },
       {
         "rank": 7,
-        "name": "DJIA MINI E-CBOT EQUITY INDEX 18/SEP/2026 DMU6 INDEX",
-        "weight_pct": 8.97,
-        "shares": 182,
-        "raw": {
-          "no": 7,
-          "n": "DJIA MINI E-CBOT EQUITY INDEX 18/SEP/2026 DMU6 INDEX",
-          "as": "8.97%",
-          "sh": "182"
-        }
-      },
-      {
-        "rank": 8,
-        "symbol": "CAT",
-        "name": "Caterpillar Inc.",
-        "weight_pct": 7.92,
+        "symbol": "GS",
+        "name": "The Goldman Sachs Group, Inc.",
+        "weight_pct": 9.19,
         "shares": 45205,
         "raw": {
-          "no": 8,
-          "n": "Caterpillar Inc.",
-          "s": "$CAT",
-          "as": "7.92%",
+          "no": 7,
+          "n": "The Goldman Sachs Group, Inc.",
+          "s": "$GS",
+          "as": "9.19%",
           "sh": "45,205"
         }
       },
       {
+        "rank": 8,
+        "name": "DJ INDUSTRIAL AVERAGE SWAP SOCIETE GENERALE",
+        "weight_pct": 8.18,
+        "shares": 844,
+        "raw": {
+          "no": 8,
+          "n": "DJ INDUSTRIAL AVERAGE SWAP SOCIETE GENERALE",
+          "as": "8.18%",
+          "sh": "844"
+        }
+      },
+      {
         "rank": 9,
-        "name": "DJ INDUSTRIAL AVERAGE SWAP UBS AG",
-        "weight_pct": 7.37,
-        "shares": 748,
+        "symbol": "CAT",
+        "name": "Caterpillar Inc.",
+        "weight_pct": 7.96,
+        "shares": 45205,
         "raw": {
           "no": 9,
-          "n": "DJ INDUSTRIAL AVERAGE SWAP UBS AG",
-          "as": "7.37%",
-          "sh": "748"
+          "n": "Caterpillar Inc.",
+          "s": "$CAT",
+          "as": "7.96%",
+          "sh": "45,205"
         }
       },
       {
         "rank": 10,
-        "name": "DJ INDUSTRIAL AVERAGE SWAP SOCIETE GENERALE",
-        "weight_pct": 7.26,
-        "shares": 737,
+        "name": "DJ INDUSTRIAL AVERAGE SWAP UBS AG",
+        "weight_pct": 7.25,
+        "shares": 748,
         "raw": {
           "no": 10,
-          "n": "DJ INDUSTRIAL AVERAGE SWAP SOCIETE GENERALE",
-          "as": "7.26%",
-          "sh": "737"
+          "n": "DJ INDUSTRIAL AVERAGE SWAP UBS AG",
+          "as": "7.25%",
+          "sh": "748"
         }
       },
       {
         "rank": 11,
         "symbol": "UNH",
         "name": "UnitedHealth Group Incorporated",
-        "weight_pct": 3.53,
+        "weight_pct": 3.43,
         "shares": 45205,
         "raw": {
           "no": 11,
           "n": "UnitedHealth Group Incorporated",
           "s": "$UNH",
-          "as": "3.53%",
+          "as": "3.43%",
           "sh": "45,205"
         }
       },
@@ -388,13 +396,13 @@
         "rank": 12,
         "symbol": "MSFT",
         "name": "Microsoft Corporation",
-        "weight_pct": 3.4,
+        "weight_pct": 3.32,
         "shares": 45205,
         "raw": {
           "no": 12,
           "n": "Microsoft Corporation",
           "s": "$MSFT",
-          "as": "3.40%",
+          "as": "3.32%",
           "sh": "45,205"
         }
       },
@@ -402,41 +410,41 @@
         "rank": 13,
         "symbol": "AMGN",
         "name": "Amgen Inc.",
-        "weight_pct": 3.09,
+        "weight_pct": 2.93,
         "shares": 45205,
         "raw": {
           "no": 13,
           "n": "Amgen Inc.",
           "s": "$AMGN",
-          "as": "3.09%",
+          "as": "2.93%",
           "sh": "45,205"
         }
       },
       {
         "rank": 14,
-        "symbol": "HD",
-        "name": "The Home Depot, Inc.",
-        "weight_pct": 2.86,
+        "symbol": "AXP",
+        "name": "American Express Company",
+        "weight_pct": 2.87,
         "shares": 45205,
         "raw": {
           "no": 14,
-          "n": "The Home Depot, Inc.",
-          "s": "$HD",
-          "as": "2.86%",
+          "n": "American Express Company",
+          "s": "$AXP",
+          "as": "2.87%",
           "sh": "45,205"
         }
       },
       {
         "rank": 15,
-        "symbol": "AXP",
-        "name": "American Express Company",
-        "weight_pct": 2.83,
+        "symbol": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight_pct": 2.84,
         "shares": 45205,
         "raw": {
           "no": 15,
-          "n": "American Express Company",
-          "s": "$AXP",
-          "as": "2.83%",
+          "n": "The Home Depot, Inc.",
+          "s": "$HD",
+          "as": "2.84%",
           "sh": "45,205"
         }
       },
@@ -444,13 +452,13 @@
         "rank": 16,
         "symbol": "V",
         "name": "Visa Inc.",
-        "weight_pct": 2.8,
+        "weight_pct": 2.81,
         "shares": 45205,
         "raw": {
           "no": 16,
           "n": "Visa Inc.",
           "s": "$V",
-          "as": "2.80%",
+          "as": "2.81%",
           "sh": "45,205"
         }
       },
@@ -472,13 +480,13 @@
         "rank": 18,
         "symbol": "SHW",
         "name": "The Sherwin-Williams Company",
-        "weight_pct": 2.76,
+        "weight_pct": 2.72,
         "shares": 45205,
         "raw": {
           "no": 18,
           "n": "The Sherwin-Williams Company",
           "s": "$SHW",
-          "as": "2.76%",
+          "as": "2.72%",
           "sh": "45,205"
         }
       },
@@ -486,13 +494,13 @@
         "rank": 19,
         "symbol": "TRV",
         "name": "The Travelers Companies, Inc.",
-        "weight_pct": 2.65,
+        "weight_pct": 2.59,
         "shares": 45209,
         "raw": {
           "no": 19,
           "n": "The Travelers Companies, Inc.",
           "s": "$TRV",
-          "as": "2.65%",
+          "as": "2.59%",
           "sh": "45,209"
         }
       },
@@ -500,13 +508,13 @@
         "rank": 20,
         "symbol": "AAPL",
         "name": "Apple Inc.",
-        "weight_pct": 2.53,
+        "weight_pct": 2.52,
         "shares": 45215,
         "raw": {
           "no": 20,
           "n": "Apple Inc.",
           "s": "$AAPL",
-          "as": "2.53%",
+          "as": "2.52%",
           "sh": "45,215"
         }
       },
@@ -514,13 +522,13 @@
         "rank": 21,
         "symbol": "MCD",
         "name": "McDonald's Corporation",
-        "weight_pct": 2.48,
+        "weight_pct": 2.43,
         "shares": 45203,
         "raw": {
           "no": 21,
           "n": "McDonald's Corporation",
           "s": "$MCD",
-          "as": "2.48%",
+          "as": "2.43%",
           "sh": "45,203"
         }
       },
@@ -528,55 +536,55 @@
         "rank": 22,
         "symbol": "IBM",
         "name": "International Business Machines Corporation",
-        "weight_pct": 2.37,
+        "weight_pct": 2.28,
         "shares": 45212,
         "raw": {
           "no": 22,
           "n": "International Business Machines Corporation",
           "s": "$IBM",
-          "as": "2.37%",
+          "as": "2.28%",
           "sh": "45,212"
         }
       },
       {
         "rank": 23,
-        "symbol": "JNJ",
-        "name": "Johnson & Johnson",
-        "weight_pct": 2.1,
-        "shares": 45211,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 2.07,
+        "shares": 45213,
         "raw": {
           "no": 23,
-          "n": "Johnson & Johnson",
-          "s": "$JNJ",
-          "as": "2.10%",
-          "sh": "45,211"
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "2.07%",
+          "sh": "45,213"
         }
       },
       {
         "rank": 24,
-        "symbol": "AMZN",
-        "name": "Amazon.com, Inc.",
-        "weight_pct": 2.08,
-        "shares": 45213,
+        "symbol": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight_pct": 1.98,
+        "shares": 45211,
         "raw": {
           "no": 24,
-          "n": "Amazon.com, Inc.",
-          "s": "$AMZN",
-          "as": "2.08%",
-          "sh": "45,213"
+          "n": "Johnson & Johnson",
+          "s": "$JNJ",
+          "as": "1.98%",
+          "sh": "45,211"
         }
       },
       {
         "rank": 25,
         "symbol": "HON",
         "name": "Honeywell International Inc.",
-        "weight_pct": 1.92,
+        "weight_pct": 1.93,
         "shares": 45214,
         "raw": {
           "no": 25,
           "n": "Honeywell International Inc.",
           "s": "$HON",
-          "as": "1.92%",
+          "as": "1.93%",
           "sh": "45,214"
         }
       }
@@ -631,17 +639,28 @@
         "country": "United States"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/DDM.json",
     "stockanalysis": "stockanalysis/etfs/DDM.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -651,21 +670,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -674,7 +697,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -683,20 +707,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

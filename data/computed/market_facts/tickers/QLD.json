@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "QLD",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "ProShares Ultra QQQ",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 95.46,
+      "value": 93.56,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:34:23Z",
+      "fetched_at": "2026-06-18T10:33:32Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 95.46,
+          "value": 93.56,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 95.46,
+          "value": 93.56,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -3.72,
+      "value": -1.9,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:34:23Z",
+      "fetched_at": "2026-06-18T10:33:32Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -3.72,
+          "value": -1.9,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -3.75,
+      "value": -1.99,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:34:23Z",
+      "fetched_at": "2026-06-18T10:33:32Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -3.75,
+          "value": -1.99,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 13200000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.12,
+          "value": 0.13,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -193,18 +199,19 @@
       "value": 2.46,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:34:23Z",
+      "fetched_at": "2026-06-18T10:33:32Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 2.46,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed"
         }
       ],
@@ -219,7 +226,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -234,7 +242,7 @@
           "value": 0.95,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:34:23Z",
+          "fetched_at": "2026-06-18T10:33:32Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -244,149 +252,149 @@
   },
   "etf": {
     "holdings_count": 125,
-    "holdings_updated": "Jun 15, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "POWERSHARES QQQ (QQQ) SWAP GOLDMAN SACHS INTERNATIONAL",
-        "weight_pct": 23.29,
-        "shares": 285223,
+        "weight_pct": 21.97,
+        "shares": 265152,
         "raw": {
           "no": 1,
           "n": "POWERSHARES QQQ (QQQ) SWAP GOLDMAN SACHS INTERNATIONAL",
-          "as": "23.29%",
-          "sh": "285,223"
+          "as": "21.97%",
+          "sh": "265,152"
         }
       },
       {
         "rank": 2,
         "name": "POWERSHARES QQQ (QQQ) SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-        "weight_pct": 14.26,
+        "weight_pct": 14.47,
         "shares": 174610,
         "raw": {
           "no": 2,
           "n": "POWERSHARES QQQ (QQQ) SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-          "as": "14.26%",
+          "as": "14.47%",
           "sh": "174,610"
         }
       },
       {
         "rank": 3,
-        "name": "NASDAQ 100 E-MINI EQUITY INDEX 18/SEP/2026 NQU6 INDEX",
-        "weight_pct": 12.87,
-        "shares": 3039,
+        "name": "NASDAQ 100 INDEX SWAP BNP PARIBAS",
+        "weight_pct": 11.97,
+        "shares": 56273,
         "raw": {
           "no": 3,
-          "n": "NASDAQ 100 E-MINI EQUITY INDEX 18/SEP/2026 NQU6 INDEX",
-          "as": "12.87%",
-          "sh": "3,039"
+          "n": "NASDAQ 100 INDEX SWAP BNP PARIBAS",
+          "as": "11.97%",
+          "sh": "56,273"
         }
       },
       {
         "rank": 4,
-        "name": "NASDAQ 100 INDEX SWAP BNP PARIBAS",
-        "weight_pct": 10.7,
-        "shares": 51063,
+        "name": "NASDAQ 100 E-MINI EQUITY INDEX 18/SEP/2026 NQU6 INDEX",
+        "weight_pct": 11.79,
+        "shares": 2739,
         "raw": {
           "no": 4,
-          "n": "NASDAQ 100 INDEX SWAP BNP PARIBAS",
-          "as": "10.70%",
-          "sh": "51,063"
+          "n": "NASDAQ 100 E-MINI EQUITY INDEX 18/SEP/2026 NQU6 INDEX",
+          "as": "11.79%",
+          "sh": "2,739"
         }
       },
       {
         "rank": 5,
         "name": "NASDAQ 100 INDEX SWAP BANK OF AMERICA NA",
-        "weight_pct": 10.06,
+        "weight_pct": 10.21,
         "shares": 47989,
         "raw": {
           "no": 5,
           "n": "NASDAQ 100 INDEX SWAP BANK OF AMERICA NA",
-          "as": "10.06%",
+          "as": "10.21%",
           "sh": "47,989"
         }
       },
       {
         "rank": 6,
-        "name": "NASDAQ 100 INDEX SWAP GOLDMAN SACHS INTERNATIONAL",
-        "weight_pct": 9.9,
-        "shares": 47250,
-        "raw": {
-          "no": 6,
-          "n": "NASDAQ 100 INDEX SWAP GOLDMAN SACHS INTERNATIONAL",
-          "as": "9.90%",
-          "sh": "47,250"
-        }
-      },
-      {
-        "rank": 7,
         "name": "NASDAQ 100 INDEX SWAP SOCIETE GENERALE",
-        "weight_pct": 9.36,
+        "weight_pct": 9.51,
         "shares": 44683,
         "raw": {
-          "no": 7,
+          "no": 6,
           "n": "NASDAQ 100 INDEX SWAP SOCIETE GENERALE",
-          "as": "9.36%",
+          "as": "9.51%",
           "sh": "44,683"
         }
       },
       {
-        "rank": 8,
+        "rank": 7,
         "name": "NASDAQ 100 INDEX SWAP JPMORGAN CHASE BANK NA",
-        "weight_pct": 8.73,
+        "weight_pct": 8.86,
         "shares": 41666,
         "raw": {
-          "no": 8,
+          "no": 7,
           "n": "NASDAQ 100 INDEX SWAP JPMORGAN CHASE BANK NA",
-          "as": "8.73%",
+          "as": "8.86%",
           "sh": "41,666"
         }
       },
       {
-        "rank": 9,
+        "rank": 8,
         "name": "NASDAQ 100 INDEX SWAP NOMURA CAPITAL",
-        "weight_pct": 8.66,
+        "weight_pct": 8.79,
         "shares": 41339,
         "raw": {
-          "no": 9,
+          "no": 8,
           "n": "NASDAQ 100 INDEX SWAP NOMURA CAPITAL",
-          "as": "8.66%",
+          "as": "8.79%",
           "sh": "41,339"
         }
       },
       {
-        "rank": 10,
+        "rank": 9,
         "name": "NASDAQ 100 INDEX SWAP CITIBANK NA",
-        "weight_pct": 8.65,
+        "weight_pct": 8.78,
         "shares": 41264,
         "raw": {
-          "no": 10,
+          "no": 9,
           "n": "NASDAQ 100 INDEX SWAP CITIBANK NA",
-          "as": "8.65%",
+          "as": "8.78%",
           "sh": "41,264"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "NASDAQ 100 INDEX SWAP GOLDMAN SACHS INTERNATIONAL",
+        "weight_pct": 8.46,
+        "shares": 39770,
+        "raw": {
+          "no": 10,
+          "n": "NASDAQ 100 INDEX SWAP GOLDMAN SACHS INTERNATIONAL",
+          "as": "8.46%",
+          "sh": "39,770"
         }
       },
       {
         "rank": 11,
         "name": "NASDAQ 100 INDEX SWAP UBS AG",
-        "weight_pct": 7.86,
+        "weight_pct": 7.98,
         "shares": 37516,
         "raw": {
           "no": 11,
           "n": "NASDAQ 100 INDEX SWAP UBS AG",
-          "as": "7.86%",
+          "as": "7.98%",
           "sh": "37,516"
         }
       },
       {
         "rank": 12,
         "name": "NASDAQ 100 INDEX SWAP BARCLAYS CAPITAL",
-        "weight_pct": 7.74,
+        "weight_pct": 7.86,
         "shares": 36939,
         "raw": {
           "no": 12,
           "n": "NASDAQ 100 INDEX SWAP BARCLAYS CAPITAL",
-          "as": "7.74%",
+          "as": "7.86%",
           "sh": "36,939"
         }
       },
@@ -394,25 +402,25 @@
         "rank": 13,
         "symbol": "NVDA",
         "name": "NVIDIA Corporation",
-        "weight_pct": 5.14,
-        "shares": 3525092,
+        "weight_pct": 5.22,
+        "shares": 3547148,
         "raw": {
           "no": 13,
           "n": "NVIDIA Corporation",
           "s": "$NVDA",
-          "as": "5.14%",
-          "sh": "3,525,092"
+          "as": "5.22%",
+          "sh": "3,547,148"
         }
       },
       {
         "rank": 14,
         "name": "NASDAQ 100 INDEX SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-        "weight_pct": 4.93,
+        "weight_pct": 5.01,
         "shares": 23536,
         "raw": {
           "no": 14,
           "n": "NASDAQ 100 INDEX SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-          "as": "4.93%",
+          "as": "5.01%",
           "sh": "23,536"
         }
       },
@@ -420,154 +428,154 @@
         "rank": 15,
         "symbol": "AAPL",
         "name": "Apple Inc.",
-        "weight_pct": 4.33,
-        "shares": 2129595,
+        "weight_pct": 4.55,
+        "shares": 2142915,
         "raw": {
           "no": 15,
           "n": "Apple Inc.",
           "s": "$AAPL",
-          "as": "4.33%",
-          "sh": "2,129,595"
+          "as": "4.55%",
+          "sh": "2,142,915"
         }
       },
       {
         "rank": 16,
         "symbol": "MU",
         "name": "Micron Technology, Inc.",
-        "weight_pct": 3.36,
-        "shares": 450758,
+        "weight_pct": 3.29,
+        "shares": 453578,
         "raw": {
           "no": 16,
           "n": "Micron Technology, Inc.",
           "s": "$MU",
-          "as": "3.36%",
-          "sh": "450,758"
+          "as": "3.29%",
+          "sh": "453,578"
         }
       },
       {
         "rank": 17,
         "symbol": "MSFT",
         "name": "Microsoft Corporation",
-        "weight_pct": 2.96,
-        "shares": 1077366,
+        "weight_pct": 3.03,
+        "shares": 1084110,
         "raw": {
           "no": 17,
           "n": "Microsoft Corporation",
           "s": "$MSFT",
-          "as": "2.96%",
-          "sh": "1,077,366"
+          "as": "3.03%",
+          "sh": "1,084,110"
         }
       },
       {
         "rank": 18,
         "symbol": "AMZN",
         "name": "Amazon.com, Inc.",
-        "weight_pct": 2.63,
-        "shares": 1557436,
+        "weight_pct": 2.74,
+        "shares": 1567180,
         "raw": {
           "no": 18,
           "n": "Amazon.com, Inc.",
           "s": "$AMZN",
-          "as": "2.63%",
-          "sh": "1,557,436"
+          "as": "2.74%",
+          "sh": "1,567,180"
         }
       },
       {
         "rank": 19,
         "symbol": "AMD",
         "name": "Advanced Micro Devices, Inc.",
-        "weight_pct": 2.45,
-        "shares": 652829,
+        "weight_pct": 2.37,
+        "shares": 656909,
         "raw": {
           "no": 19,
           "n": "Advanced Micro Devices, Inc.",
           "s": "$AMD",
-          "as": "2.45%",
-          "sh": "652,829"
+          "as": "2.37%",
+          "sh": "656,909"
         }
       },
       {
         "rank": 20,
         "symbol": "GOOGL",
         "name": "Alphabet Inc.",
-        "weight_pct": 2.14,
-        "shares": 844682,
+        "weight_pct": 2.25,
+        "shares": 849962,
         "raw": {
           "no": 20,
           "n": "Alphabet Inc.",
           "s": "$GOOGL",
-          "as": "2.14%",
-          "sh": "844,682"
+          "as": "2.25%",
+          "sh": "849,962"
         }
       },
       {
         "rank": 21,
         "symbol": "TSLA",
         "name": "Tesla, Inc.",
-        "weight_pct": 2.04,
-        "shares": 723736,
+        "weight_pct": 2.09,
+        "shares": 728260,
         "raw": {
           "no": 21,
           "n": "Tesla, Inc.",
           "s": "$TSLA",
-          "as": "2.04%",
-          "sh": "723,736"
+          "as": "2.09%",
+          "sh": "728,260"
         }
       },
       {
         "rank": 22,
         "symbol": "GOOG",
         "name": "Alphabet Inc.",
-        "weight_pct": 1.99,
-        "shares": 788877,
+        "weight_pct": 2.09,
+        "shares": 793809,
         "raw": {
           "no": 22,
           "n": "Alphabet Inc.",
           "s": "$GOOG",
-          "as": "1.99%",
-          "sh": "788,877"
+          "as": "2.09%",
+          "sh": "793,809"
         }
       },
       {
         "rank": 23,
         "symbol": "AVGO",
         "name": "Broadcom Inc.",
-        "weight_pct": 1.86,
-        "shares": 687935,
+        "weight_pct": 1.85,
+        "shares": 692243,
         "raw": {
           "no": 23,
           "n": "Broadcom Inc.",
           "s": "$AVGO",
-          "as": "1.86%",
-          "sh": "687,935"
+          "as": "1.85%",
+          "sh": "692,243"
         }
       },
       {
         "rank": 24,
-        "symbol": "INTC",
-        "name": "Intel Corporation",
-        "weight_pct": 1.75,
-        "shares": 2000441,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 1.83,
+        "shares": 430508,
         "raw": {
           "no": 24,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "1.75%",
-          "sh": "2,000,441"
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "1.83%",
+          "sh": "430,508"
         }
       },
       {
         "rank": 25,
-        "symbol": "META",
-        "name": "Meta Platforms, Inc.",
-        "weight_pct": 1.74,
-        "shares": 427832,
+        "symbol": "WMT",
+        "name": "Walmart Inc.",
+        "weight_pct": 1.69,
+        "shares": 1969546,
         "raw": {
           "no": 25,
-          "n": "Meta Platforms, Inc.",
-          "s": "$META",
-          "as": "1.74%",
-          "sh": "427,832"
+          "n": "Walmart Inc.",
+          "s": "$WMT",
+          "as": "1.69%",
+          "sh": "1,969,546"
         }
       }
     ],
@@ -654,17 +662,28 @@
         "country": "United Kingdom"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/QLD.json",
     "stockanalysis": "stockanalysis/etfs/QLD.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -674,21 +693,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -697,7 +720,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -706,20 +730,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

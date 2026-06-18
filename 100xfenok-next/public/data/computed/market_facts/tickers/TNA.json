@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "TNA",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Direxion Daily Small Cap Bull 3X Shares",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 69.53,
+      "value": 67.83,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:58:35Z",
+      "fetched_at": "2026-06-18T10:33:41Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 69.53,
+          "value": 67.83,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 69.53,
+          "value": 67.83,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -1.87,
+      "value": -1.7,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:58:35Z",
+      "fetched_at": "2026-06-18T10:33:41Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -1.87,
+          "value": -1.7,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -2.62,
+      "value": -2.44,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:58:35Z",
+      "fetched_at": "2026-06-18T10:33:41Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.62,
+          "value": -2.44,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 1450000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.39,
+          "value": 0.4,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -193,18 +199,19 @@
       "value": 3.32,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:58:35Z",
+      "fetched_at": "2026-06-18T10:33:41Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 3.32,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed"
         }
       ],
@@ -219,7 +226,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -234,7 +242,7 @@
           "value": 1.05,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:58:35Z",
+          "fetched_at": "2026-06-18T10:33:41Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -243,237 +251,249 @@
     }
   },
   "etf": {
-    "holdings_count": 19,
-    "holdings_updated": "Jun 11, 2026",
+    "holdings_count": 20,
+    "holdings_updated": "Jun 14, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "#IWM",
         "name": "iShares Russell 2000 ETF",
-        "weight_pct": 64.59,
-        "shares": 3215046,
+        "weight_pct": 67.67,
+        "shares": 3426116,
         "raw": {
           "no": 1,
           "n": "iShares Russell 2000 ETF",
           "s": "#IWM",
-          "as": "64.59%",
-          "sh": "3,215,046"
+          "as": "67.67%",
+          "sh": "3,426,116"
         }
       },
       {
         "rank": 2,
         "name": "Dreyfus Govt Cash Man Ins",
-        "weight_pct": 12.04,
-        "shares": 174110115,
+        "weight_pct": 18.3,
+        "shares": 271467353,
         "raw": {
           "no": 2,
           "n": "Dreyfus Govt Cash Man Ins",
-          "as": "12.04%",
-          "sh": "174,110,115"
+          "as": "18.30%",
+          "sh": "271,467,353"
         }
       },
       {
         "rank": 3,
-        "name": "Goldman Finl Sq Trsry Inst 506",
-        "weight_pct": 11.31,
-        "shares": 163528063,
+        "name": "Russ 2000 Indx Small Swap",
+        "weight_pct": 6.72,
+        "shares": 243257,
         "raw": {
           "no": 3,
-          "n": "Goldman Finl Sq Trsry Inst 506",
-          "as": "11.31%",
-          "sh": "163,528,063"
+          "n": "Russ 2000 Indx Small Swap",
+          "as": "6.72%",
+          "sh": "243,257"
         }
       },
       {
         "rank": 4,
         "name": "Russ 2000 Indx Small Swap",
-        "weight_pct": 6.5,
-        "shares": 243257,
+        "weight_pct": 4.94,
+        "shares": 189250,
         "raw": {
           "no": 4,
           "n": "Russ 2000 Indx Small Swap",
-          "as": "6.50%",
-          "sh": "243,257"
+          "as": "4.94%",
+          "sh": "189,250"
         }
       },
       {
         "rank": 5,
         "name": "Russ 2000 Indx Small Swap",
-        "weight_pct": 4.77,
-        "shares": 189250,
+        "weight_pct": 4.74,
+        "shares": 227979,
         "raw": {
           "no": 5,
           "n": "Russ 2000 Indx Small Swap",
-          "as": "4.77%",
-          "sh": "189,250"
+          "as": "4.74%",
+          "sh": "227,979"
         }
       },
       {
         "rank": 6,
         "name": "Russ 2000 Indx Small Swap",
-        "weight_pct": 4.5,
-        "shares": 165740,
+        "weight_pct": 4.47,
+        "shares": 203307,
         "raw": {
           "no": 6,
           "n": "Russ 2000 Indx Small Swap",
-          "as": "4.50%",
-          "sh": "165,740"
-        }
-      },
-      {
-        "rank": 7,
-        "name": "Russ 2000 Indx Small Swap",
-        "weight_pct": 4.26,
-        "shares": 203307,
-        "raw": {
-          "no": 7,
-          "n": "Russ 2000 Indx Small Swap",
-          "as": "4.26%",
+          "as": "4.47%",
           "sh": "203,307"
         }
       },
       {
+        "rank": 7,
+        "name": "Goldman Finl Sq Trsry Inst 506",
+        "weight_pct": 4.19,
+        "shares": 62078803,
+        "raw": {
+          "no": 7,
+          "n": "Goldman Finl Sq Trsry Inst 506",
+          "as": "4.19%",
+          "sh": "62,078,803"
+        }
+      },
+      {
         "rank": 8,
-        "name": "Cash",
-        "weight_pct": 3.38,
-        "shares": 48844289,
+        "name": "Russ 2000 Indx Small Swap",
+        "weight_pct": 2.8,
+        "shares": 115437,
         "raw": {
           "no": 8,
-          "n": "Cash",
-          "as": "3.38%",
-          "sh": "48,844,289"
+          "n": "Russ 2000 Indx Small Swap",
+          "as": "2.80%",
+          "sh": "115,437"
         }
       },
       {
         "rank": 9,
         "name": "Russ 2000 Indx Small Swap",
-        "weight_pct": 2.69,
-        "shares": 115437,
+        "weight_pct": 2.41,
+        "shares": 79165,
         "raw": {
           "no": 9,
           "n": "Russ 2000 Indx Small Swap",
-          "as": "2.69%",
-          "sh": "115,437"
-        }
-      },
-      {
-        "rank": 10,
-        "name": "Russ 2000 Indx Small Swap",
-        "weight_pct": 2.35,
-        "shares": 79165,
-        "raw": {
-          "no": 10,
-          "n": "Russ 2000 Indx Small Swap",
-          "as": "2.35%",
+          "as": "2.41%",
           "sh": "79,165"
         }
       },
       {
-        "rank": 11,
-        "name": "Dreyfus Trsry Securities Cash Mgmt",
+        "rank": 10,
+        "name": "Russell 2000 Index Swap",
         "weight_pct": 1.46,
-        "shares": 21050000,
+        "shares": 55000,
+        "raw": {
+          "no": 10,
+          "n": "Russell 2000 Index Swap",
+          "as": "1.46%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "Goldman Sachs Fin Gov 465 Institut",
+        "weight_pct": 1.45,
+        "shares": 21490000,
         "raw": {
           "no": 11,
-          "n": "Dreyfus Trsry Securities Cash Mgmt",
-          "as": "1.46%",
-          "sh": "21,050,000"
+          "n": "Goldman Sachs Fin Gov 465 Institut",
+          "as": "1.45%",
+          "sh": "21,490,000"
         }
       },
       {
         "rank": 12,
-        "name": "Russell 2000 Index Swap",
-        "weight_pct": 1.41,
-        "shares": 55000,
+        "name": "Dreyfus Trsry Securities Cash Mgmt",
+        "weight_pct": 1.42,
+        "shares": 21050000,
         "raw": {
           "no": 12,
-          "n": "Russell 2000 Index Swap",
-          "as": "1.41%",
-          "sh": "55,000"
+          "n": "Dreyfus Trsry Securities Cash Mgmt",
+          "as": "1.42%",
+          "sh": "21,050,000"
         }
       },
       {
         "rank": 13,
         "name": "Societe Generale Collateral",
-        "weight_pct": -1.09,
-        "shares": 15730000,
+        "weight_pct": -0.94,
+        "shares": 13990000,
         "raw": {
           "no": 13,
           "n": "Societe Generale Collateral",
-          "as": "-1.09%",
-          "sh": "15,730,000"
+          "as": "-0.94%",
+          "sh": "13,990,000"
         }
       },
       {
         "rank": 14,
         "name": "Ubs Collateral",
-        "weight_pct": -1.85,
-        "shares": 26740000,
+        "weight_pct": -1.63,
+        "shares": 24240000,
         "raw": {
           "no": 14,
           "n": "Ubs Collateral",
-          "as": "-1.85%",
-          "sh": "26,740,000"
+          "as": "-1.63%",
+          "sh": "24,240,000"
         }
       },
       {
         "rank": 15,
         "name": "Bnp Collateral",
-        "weight_pct": -1.96,
-        "shares": 28290000,
+        "weight_pct": -1.68,
+        "shares": 24980000,
         "raw": {
           "no": 15,
           "n": "Bnp Collateral",
-          "as": "-1.96%",
-          "sh": "28,290,000"
+          "as": "-1.68%",
+          "sh": "24,980,000"
         }
       },
       {
         "rank": 16,
         "name": "Jpm Collateral",
-        "weight_pct": -3.08,
-        "shares": 44526991,
+        "weight_pct": -2.57,
+        "shares": 38076991,
         "raw": {
           "no": 16,
           "n": "Jpm Collateral",
-          "as": "-3.08%",
-          "sh": "44,526,991"
+          "as": "-2.57%",
+          "sh": "38,076,991"
         }
       },
       {
         "rank": 17,
         "name": "Baml Collateral",
-        "weight_pct": -3.56,
-        "shares": 51443000,
+        "weight_pct": -3.06,
+        "shares": 45453000,
         "raw": {
           "no": 17,
           "n": "Baml Collateral",
-          "as": "-3.56%",
-          "sh": "51,443,000"
+          "as": "-3.06%",
+          "sh": "45,453,000"
         }
       },
       {
         "rank": 18,
         "name": "Citi Collateral",
-        "weight_pct": -3.76,
-        "shares": 54420001,
+        "weight_pct": -3.15,
+        "shares": 46720001,
         "raw": {
           "no": 18,
           "n": "Citi Collateral",
-          "as": "-3.76%",
-          "sh": "54,420,001"
+          "as": "-3.15%",
+          "sh": "46,720,001"
         }
       },
       {
         "rank": 19,
         "name": "Barclays Collateral",
-        "weight_pct": -3.96,
-        "shares": 57280000,
+        "weight_pct": -3.46,
+        "shares": 51350000,
         "raw": {
           "no": 19,
           "n": "Barclays Collateral",
-          "as": "-3.96%",
-          "sh": "57,280,000"
+          "as": "-3.46%",
+          "sh": "51,350,000"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "Cash",
+        "weight_pct": -4.05,
+        "shares": 60047860,
+        "raw": {
+          "no": 20,
+          "n": "Cash",
+          "as": "-4.05%",
+          "sh": "60,047,860"
         }
       }
     ],
@@ -556,17 +576,28 @@
         "country": "Japan"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 3.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/TNA.json",
     "stockanalysis": "stockanalysis/etfs/TNA.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -576,21 +607,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -599,7 +634,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -608,20 +644,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

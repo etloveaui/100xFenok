@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MSTU",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "T-Rex 2X Long MSTR Daily Target ETF",
     "exchange": "BTS",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 3.43,
+      "value": 3.09,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:10:40Z",
+      "fetched_at": "2026-06-18T10:34:16Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 3.43,
+          "value": 3.09,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:10:40Z",
+          "fetched_at": "2026-06-18T10:34:16Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 3.43,
+          "value": 3.09,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:10:40Z",
+          "fetched_at": "2026-06-18T10:34:16Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.49,
+      "value": -0.34,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:10:40Z",
+      "fetched_at": "2026-06-18T10:34:16Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -0.49,
+          "value": -0.34,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:10:40Z",
+          "fetched_at": "2026-06-18T10:34:16Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -12.5,
+      "value": -9.91,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:10:40Z",
+      "fetched_at": "2026-06-18T10:34:16Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -12.5,
+          "value": -9.91,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:10:40Z",
+          "fetched_at": "2026-06-18T10:34:16Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 414740000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:10:40Z",
+          "fetched_at": "2026-06-18T10:34:16Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -190,7 +196,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -205,7 +212,7 @@
           "value": 1.05,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:10:40Z",
+          "fetched_at": "2026-06-18T10:34:16Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -215,104 +222,104 @@
   },
   "etf": {
     "holdings_count": 9,
-    "holdings_updated": "Jun 12, 2026",
+    "holdings_updated": "Jun 15, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "MSTR",
         "name": "Strategy Inc",
-        "weight_pct": 63.08,
-        "shares": 6510184,
+        "weight_pct": 65.3,
+        "shares": 6599448,
         "raw": {
           "no": 1,
           "n": "Strategy Inc",
           "s": "$MSTR",
-          "as": "63.08%",
-          "sh": "6,510,184"
+          "as": "65.30%",
+          "sh": "6,599,448"
         }
       },
       {
         "rank": 2,
         "name": "Clear Street Pledged",
-        "weight_pct": 12.23,
-        "shares": 156490000,
+        "weight_pct": 11.64,
+        "shares": 154310000,
         "raw": {
           "no": 2,
           "n": "Clear Street Pledged",
-          "as": "12.23%",
-          "sh": "156,490,000"
+          "as": "11.64%",
+          "sh": "154,310,000"
         }
       },
       {
         "rank": 3,
         "name": "Natixis Pledged",
-        "weight_pct": 6.46,
-        "shares": 82710000,
+        "weight_pct": 5.84,
+        "shares": 77370000,
         "raw": {
           "no": 3,
           "n": "Natixis Pledged",
-          "as": "6.46%",
-          "sh": "82,710,000"
+          "as": "5.84%",
+          "sh": "77,370,000"
         }
       },
       {
         "rank": 4,
         "name": "Cantor Pledged",
-        "weight_pct": 5.08,
-        "shares": 64951535,
+        "weight_pct": 4.71,
+        "shares": 62467592,
         "raw": {
           "no": 4,
           "n": "Cantor Pledged",
-          "as": "5.08%",
-          "sh": "64,951,535"
+          "as": "4.71%",
+          "sh": "62,467,592"
         }
       },
       {
         "rank": 5,
         "name": "Marex Pledged",
         "weight_pct": 4.59,
-        "shares": 58756081,
+        "shares": 60787723,
         "raw": {
           "no": 5,
           "n": "Marex Pledged",
           "as": "4.59%",
-          "sh": "58,756,081"
+          "sh": "60,787,723"
         }
       },
       {
         "rank": 6,
         "name": "Jane Street Pledged",
-        "weight_pct": 4.03,
-        "shares": 51510000,
+        "weight_pct": 3.7,
+        "shares": 49000000,
         "raw": {
           "no": 6,
           "n": "Jane Street Pledged",
-          "as": "4.03%",
-          "sh": "51,510,000"
+          "as": "3.70%",
+          "sh": "49,000,000"
         }
       },
       {
         "rank": 7,
         "name": "Bmo Pledged",
-        "weight_pct": 2.4,
-        "shares": 30730000,
+        "weight_pct": 2.26,
+        "shares": 29910000,
         "raw": {
           "no": 7,
           "n": "Bmo Pledged",
-          "as": "2.40%",
-          "sh": "30,730,000"
+          "as": "2.26%",
+          "sh": "29,910,000"
         }
       },
       {
         "rank": 8,
         "name": "Nbc Pledged",
-        "weight_pct": 2.13,
-        "shares": 27289231,
+        "weight_pct": 1.97,
+        "shares": 26049231,
         "raw": {
           "no": 8,
           "n": "Nbc Pledged",
-          "as": "2.13%",
-          "sh": "27,289,231"
+          "as": "1.97%",
+          "sh": "26,049,231"
         }
       },
       {
@@ -348,17 +355,28 @@
         "country": "United States"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/MSTU.json",
     "stockanalysis": "stockanalysis/etfs/MSTU.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -368,21 +386,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -391,7 +413,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -400,20 +423,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

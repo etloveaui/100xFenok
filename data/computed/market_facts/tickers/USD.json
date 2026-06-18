@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "USD",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "ProShares Ultra Semiconductors",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 97.88,
+      "value": 99.11,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:17:06Z",
+      "fetched_at": "2026-06-18T10:33:43Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 97.88,
+          "value": 99.11,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 97.88,
+          "value": 99.11,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -8.95,
+      "value": 1.23,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:17:06Z",
+      "fetched_at": "2026-06-18T10:33:43Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -8.95,
+          "value": 1.23,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -8.38,
+      "value": 1.26,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:17:06Z",
+      "fetched_at": "2026-06-18T10:33:43Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -8.38,
+          "value": 1.26,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 2630000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.25,
+          "value": 0.24,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -193,18 +199,19 @@
       "value": 3.66,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:17:06Z",
+      "fetched_at": "2026-06-18T10:33:43Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 3.66,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed"
         }
       ],
@@ -219,7 +226,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -234,7 +242,7 @@
           "value": 0.95,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:17:06Z",
+          "fetched_at": "2026-06-18T10:33:43Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -244,155 +252,155 @@
   },
   "etf": {
     "holdings_count": 51,
-    "holdings_updated": "Jun 15, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP UBS AG",
-        "weight_pct": 25.27,
+        "weight_pct": 26.64,
         "shares": 19289,
         "raw": {
           "no": 1,
           "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP UBS AG",
-          "as": "25.27%",
+          "as": "26.64%",
           "sh": "19,289"
         }
       },
       {
         "rank": 2,
         "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP BANK OF AMERICA NA",
-        "weight_pct": 23.57,
+        "weight_pct": 24.86,
         "shares": 17996,
         "raw": {
           "no": 2,
           "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP BANK OF AMERICA NA",
-          "as": "23.57%",
+          "as": "24.86%",
           "sh": "17,996"
         }
       },
       {
         "rank": 3,
         "name": "DJUSSC SWAP GOLDMAN SACHS INTERNATIONAL",
-        "weight_pct": 23.01,
+        "weight_pct": 24.26,
         "shares": 17567,
         "raw": {
           "no": 3,
           "n": "DJUSSC SWAP GOLDMAN SACHS INTERNATIONAL",
-          "as": "23.01%",
+          "as": "24.26%",
           "sh": "17,567"
         }
       },
       {
         "rank": 4,
         "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP CITIBANK NA",
-        "weight_pct": 22.22,
+        "weight_pct": 23.43,
         "shares": 16966,
         "raw": {
           "no": 4,
           "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP CITIBANK NA",
-          "as": "22.22%",
+          "as": "23.43%",
           "sh": "16,966"
         }
       },
       {
         "rank": 5,
         "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP BNP PARIBAS",
-        "weight_pct": 22.01,
+        "weight_pct": 23.21,
         "shares": 16804,
         "raw": {
           "no": 5,
           "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP BNP PARIBAS",
-          "as": "22.01%",
+          "as": "23.21%",
           "sh": "16,804"
         }
       },
       {
         "rank": 6,
         "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP SOCIETE GENERALE",
-        "weight_pct": 19.92,
+        "weight_pct": 21.0,
         "shares": 15205,
         "raw": {
           "no": 6,
           "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP SOCIETE GENERALE",
-          "as": "19.92%",
+          "as": "21.00%",
           "sh": "15,205"
         }
       },
       {
         "rank": 7,
-        "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-        "weight_pct": 17.27,
-        "shares": 13188,
+        "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP JPMORGAN CHASE BANK NA",
+        "weight_pct": 16.24,
+        "shares": 11756,
         "raw": {
           "no": 7,
-          "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
-          "as": "17.27%",
-          "sh": "13,188"
+          "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP JPMORGAN CHASE BANK NA",
+          "as": "16.24%",
+          "sh": "11,756"
         }
       },
       {
         "rank": 8,
-        "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP JPMORGAN CHASE BANK NA",
-        "weight_pct": 17.14,
-        "shares": 13084,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 11.53,
+        "shares": 1629595,
         "raw": {
           "no": 8,
-          "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP JPMORGAN CHASE BANK NA",
-          "as": "17.14%",
-          "sh": "13,084"
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "11.53%",
+          "sh": "1,629,595"
         }
       },
       {
         "rank": 9,
-        "symbol": "NVDA",
-        "name": "NVIDIA Corporation",
-        "weight_pct": 11.0,
-        "shares": 1672385,
+        "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
+        "weight_pct": 10.78,
+        "shares": 7808,
         "raw": {
           "no": 9,
-          "n": "NVIDIA Corporation",
-          "s": "$NVDA",
-          "as": "11.00%",
-          "sh": "1,672,385"
+          "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP MORGAN STANLEY & CO. INTERNATIONAL PLC",
+          "as": "10.78%",
+          "sh": "7,808"
         }
       },
       {
         "rank": 10,
         "symbol": "AVGO",
         "name": "Broadcom Inc.",
-        "weight_pct": 3.98,
-        "shares": 326395,
+        "weight_pct": 4.09,
+        "shares": 318057,
         "raw": {
           "no": 10,
           "n": "Broadcom Inc.",
           "s": "$AVGO",
-          "as": "3.98%",
-          "sh": "326,395"
+          "as": "4.09%",
+          "sh": "318,057"
         }
       },
       {
         "rank": 11,
         "symbol": "MU",
         "name": "Micron Technology, Inc.",
-        "weight_pct": 2.61,
-        "shares": 77457,
+        "weight_pct": 2.63,
+        "shares": 75477,
         "raw": {
           "no": 11,
           "n": "Micron Technology, Inc.",
           "s": "$MU",
-          "as": "2.61%",
-          "sh": "77,457"
+          "as": "2.63%",
+          "sh": "75,477"
         }
       },
       {
         "rank": 12,
         "name": "DJ U.S. SEMICONDUCTORS INDEX SWAP BARCLAYS CAPITAL",
-        "weight_pct": 2.29,
+        "weight_pct": 2.42,
         "shares": 1752,
         "raw": {
           "no": 12,
           "n": "DJ U.S. SEMICONDUCTORS INDEX SWAP BARCLAYS CAPITAL",
-          "as": "2.29%",
+          "as": "2.42%",
           "sh": "1,752"
         }
       },
@@ -400,168 +408,168 @@
         "rank": 13,
         "symbol": "AMD",
         "name": "Advanced Micro Devices, Inc.",
-        "weight_pct": 1.9,
-        "shares": 112199,
+        "weight_pct": 1.89,
+        "shares": 109339,
         "raw": {
           "no": 13,
           "n": "Advanced Micro Devices, Inc.",
           "s": "$AMD",
-          "as": "1.90%",
-          "sh": "112,199"
+          "as": "1.89%",
+          "sh": "109,339"
         }
       },
       {
         "rank": 14,
         "symbol": "INTC",
         "name": "Intel Corporation",
-        "weight_pct": 1.28,
-        "shares": 323147,
+        "weight_pct": 1.26,
+        "shares": 314875,
         "raw": {
           "no": 14,
           "n": "Intel Corporation",
           "s": "$INTC",
-          "as": "1.28%",
-          "sh": "323,147"
+          "as": "1.26%",
+          "sh": "314,875"
         }
       },
       {
         "rank": 15,
         "symbol": "LRCX",
         "name": "Lam Research Corporation",
-        "weight_pct": 1.04,
-        "shares": 86043,
+        "weight_pct": 1.06,
+        "shares": 83843,
         "raw": {
           "no": 15,
           "n": "Lam Research Corporation",
           "s": "$LRCX",
-          "as": "1.04%",
-          "sh": "86,043"
+          "as": "1.06%",
+          "sh": "83,843"
         }
       },
       {
         "rank": 16,
         "symbol": "AMAT",
         "name": "Applied Materials, Inc.",
-        "weight_pct": 0.99,
-        "shares": 54637,
+        "weight_pct": 1.03,
+        "shares": 53229,
         "raw": {
           "no": 16,
           "n": "Applied Materials, Inc.",
           "s": "$AMAT",
-          "as": "0.99%",
-          "sh": "54,637"
+          "as": "1.03%",
+          "sh": "53,229"
         }
       },
       {
         "rank": 17,
         "symbol": "KLAC",
         "name": "KLA Corporation",
-        "weight_pct": 0.72,
-        "shares": 90120,
+        "weight_pct": 0.71,
+        "shares": 87920,
         "raw": {
           "no": 17,
           "n": "KLA Corporation",
           "s": "$KLAC",
-          "as": "0.72%",
-          "sh": "90,120"
+          "as": "0.71%",
+          "sh": "87,920"
         }
       },
       {
         "rank": 18,
         "symbol": "TXN",
         "name": "Texas Instruments Incorporated",
-        "weight_pct": 0.61,
-        "shares": 62468,
+        "weight_pct": 0.63,
+        "shares": 60862,
         "raw": {
           "no": 18,
           "n": "Texas Instruments Incorporated",
           "s": "$TXN",
-          "as": "0.61%",
-          "sh": "62,468"
+          "as": "0.63%",
+          "sh": "60,862"
         }
       },
       {
         "rank": 19,
         "symbol": "MRVL",
         "name": "Marvell Technology, Inc.",
-        "weight_pct": 0.57,
-        "shares": 60008,
+        "weight_pct": 0.56,
+        "shares": 58468,
         "raw": {
           "no": 19,
           "n": "Marvell Technology, Inc.",
           "s": "$MRVL",
-          "as": "0.57%",
-          "sh": "60,008"
+          "as": "0.56%",
+          "sh": "58,468"
         }
       },
       {
         "rank": 20,
         "symbol": "QCOM",
         "name": "QUALCOMM Incorporated",
-        "weight_pct": 0.5,
-        "shares": 73426,
+        "weight_pct": 0.52,
+        "shares": 71556,
         "raw": {
           "no": 20,
           "n": "QUALCOMM Incorporated",
           "s": "$QCOM",
-          "as": "0.50%",
-          "sh": "73,426"
+          "as": "0.52%",
+          "sh": "71,556"
         }
       },
       {
         "rank": 21,
         "symbol": "ADI",
         "name": "Analog Devices, Inc.",
-        "weight_pct": 0.45,
-        "shares": 33626,
+        "weight_pct": 0.46,
+        "shares": 32768,
         "raw": {
           "no": 21,
           "n": "Analog Devices, Inc.",
           "s": "$ADI",
-          "as": "0.45%",
-          "sh": "33,626"
+          "as": "0.46%",
+          "sh": "32,768"
         }
       },
       {
         "rank": 22,
-        "symbol": "MPWR",
-        "name": "Monolithic Power Systems, Inc.",
+        "symbol": "NXPI",
+        "name": "NXP Semiconductors N.V.",
         "weight_pct": 0.17,
-        "shares": 3355,
+        "shares": 16877,
         "raw": {
           "no": 22,
-          "n": "Monolithic Power Systems, Inc.",
-          "s": "$MPWR",
+          "n": "NXP Semiconductors N.V.",
+          "s": "$NXPI",
           "as": "0.17%",
-          "sh": "3,355"
+          "sh": "16,877"
         }
       },
       {
         "rank": 23,
-        "symbol": "NXPI",
-        "name": "NXP Semiconductors N.V.",
+        "symbol": "MPWR",
+        "name": "Monolithic Power Systems, Inc.",
         "weight_pct": 0.17,
-        "shares": 17317,
+        "shares": 3267,
         "raw": {
           "no": 23,
-          "n": "NXP Semiconductors N.V.",
-          "s": "$NXPI",
+          "n": "Monolithic Power Systems, Inc.",
+          "s": "$MPWR",
           "as": "0.17%",
-          "sh": "17,317"
+          "sh": "3,267"
         }
       },
       {
         "rank": 24,
         "symbol": "TER",
         "name": "Teradyne, Inc.",
-        "weight_pct": 0.14,
-        "shares": 10789,
+        "weight_pct": 0.15,
+        "shares": 10503,
         "raw": {
           "no": 24,
           "n": "Teradyne, Inc.",
           "s": "$TER",
-          "as": "0.14%",
-          "sh": "10,789"
+          "as": "0.15%",
+          "sh": "10,503"
         }
       },
       {
@@ -569,13 +577,13 @@
         "symbol": "MCHP",
         "name": "Microchip Technology Incorporated",
         "weight_pct": 0.12,
-        "shares": 37234,
+        "shares": 36288,
         "raw": {
           "no": 25,
           "n": "Microchip Technology Incorporated",
           "s": "$MCHP",
           "as": "0.12%",
-          "sh": "37,234"
+          "sh": "36,288"
         }
       }
     ],
@@ -607,17 +615,28 @@
         "country": "Hong Kong"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/USD.json",
     "stockanalysis": "stockanalysis/etfs/USD.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -627,21 +646,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -650,7 +673,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -659,20 +683,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

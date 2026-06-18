@@ -21,6 +21,12 @@ ETF detail pages self-heal without a manual freshness step. Full holdings/histor
 backfill remains intentionally chunked with `--universe-backfill --offset
 --limit-etfs` to avoid large request bursts.
 
+Latest measured incremental run (2026-06-18): 729 missing candidates, 120
+selected, 166 total ETF requests including the default focus set, 129 OK, 37
+still pending, 0 hard failures. Of the OK records, 43 came from StockAnalysis and
+86 were source-tagged Yahoo Finance ETF/fund fallbacks. The generated audit state
+is intentionally `warn` while `pending_details_remain` is true.
+
 Some StockAnalysis pages are SvelteKit/devalue payloads rather than simple REST
 JSON. v1 now decodes the high-value non-financial surfaces where live probes
 confirmed stable payloads (`new_etfs`, `etf_screener`, `actions_recent`,

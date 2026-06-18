@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "IWM",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "iShares Russell 2000 ETF",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 292.08,
+      "value": 289.88,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:54:59Z",
+      "fetched_at": "2026-06-18T10:33:23Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 292.08,
+          "value": 289.88,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 292.08,
+          "value": 289.88,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -2.56,
+      "value": -2.2,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:54:59Z",
+      "fetched_at": "2026-06-18T10:33:23Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.56,
+          "value": -2.2,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -0.87,
+      "value": -0.75,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:54:59Z",
+      "fetched_at": "2026-06-18T10:33:23Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -0.87,
+          "value": -0.75,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed"
         }
       ],
@@ -112,18 +116,19 @@
       "value": 77460000000.0,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:54:59Z",
+      "fetched_at": "2026-06-18T10:33:23Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 77460000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed"
         }
       ],
@@ -160,6 +165,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -172,10 +178,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.91,
+          "value": 0.92,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -186,18 +192,19 @@
       "value": 1.12,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:54:59Z",
+      "fetched_at": "2026-06-18T10:33:23Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 1.12,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed"
         }
       ],
@@ -207,19 +214,20 @@
       "value": 0.19,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:54:59Z",
+      "fetched_at": "2026-06-18T10:33:23Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 0.19,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:54:59Z",
+          "fetched_at": "2026-06-18T10:33:23Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -228,35 +236,35 @@
     }
   },
   "etf": {
-    "holdings_count": 1912,
-    "holdings_updated": "Jun 15, 2026",
+    "holdings_count": 1910,
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "BE",
         "name": "Bloom Energy Corporation",
-        "weight_pct": 1.73,
-        "shares": 5210953,
+        "weight_pct": 1.79,
+        "shares": 5200723,
         "raw": {
           "no": 1,
           "n": "Bloom Energy Corporation",
           "s": "$BE",
-          "as": "1.73%",
-          "sh": "5,210,953"
+          "as": "1.79%",
+          "sh": "5,200,723"
         }
       },
       {
         "rank": 2,
         "symbol": "CRDO",
         "name": "Credo Technology Group Holding Ltd",
-        "weight_pct": 1.21,
-        "shares": 3847895,
+        "weight_pct": 1.13,
+        "shares": 3840338,
         "raw": {
           "no": 2,
           "n": "Credo Technology Group Holding Ltd",
           "s": "$CRDO",
-          "as": "1.21%",
-          "sh": "3,847,895"
+          "as": "1.13%",
+          "sh": "3,840,338"
         }
       },
       {
@@ -264,69 +272,69 @@
         "symbol": "STRL",
         "name": "Sterling Infrastructure, Inc.",
         "weight_pct": 0.75,
-        "shares": 710959,
+        "shares": 709562,
         "raw": {
           "no": 3,
           "n": "Sterling Infrastructure, Inc.",
           "s": "$STRL",
           "as": "0.75%",
-          "sh": "710,959"
+          "sh": "709,562"
         }
       },
       {
         "rank": 4,
         "symbol": "FN",
         "name": "Fabrinet",
-        "weight_pct": 0.66,
-        "shares": 861319,
+        "weight_pct": 0.62,
+        "shares": 859625,
         "raw": {
           "no": 4,
           "n": "Fabrinet",
           "s": "$FN",
-          "as": "0.66%",
-          "sh": "861,319"
+          "as": "0.62%",
+          "sh": "859,625"
         }
       },
       {
         "rank": 5,
         "symbol": "TTMI",
         "name": "TTM Technologies, Inc.",
-        "weight_pct": 0.61,
-        "shares": 2440694,
+        "weight_pct": 0.6,
+        "shares": 2435898,
         "raw": {
           "no": 5,
           "n": "TTM Technologies, Inc.",
           "s": "$TTMI",
-          "as": "0.61%",
-          "sh": "2,440,694"
+          "as": "0.60%",
+          "sh": "2,435,898"
         }
       },
       {
         "rank": 6,
         "symbol": "IONQ",
         "name": "IonQ, Inc.",
-        "weight_pct": 0.61,
-        "shares": 8227120,
+        "weight_pct": 0.56,
+        "shares": 8210972,
         "raw": {
           "no": 6,
           "n": "IonQ, Inc.",
           "s": "$IONQ",
-          "as": "0.61%",
-          "sh": "8,227,120"
+          "as": "0.56%",
+          "sh": "8,210,972"
         }
       },
       {
         "rank": 7,
         "symbol": "CDE",
         "name": "Coeur Mining, Inc.",
-        "weight_pct": 0.55,
-        "shares": 24348285,
+        "weight_pct": 0.56,
+        "shares": 24300479,
         "raw": {
           "no": 7,
           "n": "Coeur Mining, Inc.",
           "s": "$CDE",
-          "as": "0.55%",
-          "sh": "24,348,285"
+          "as": "0.56%",
+          "sh": "24,300,479"
         }
       },
       {
@@ -334,251 +342,251 @@
         "symbol": "NXT",
         "name": "Nextpower Inc.",
         "weight_pct": 0.53,
-        "shares": 3477988,
+        "shares": 3471157,
         "raw": {
           "no": 8,
           "n": "Nextpower Inc.",
           "s": "$NXT",
           "as": "0.53%",
-          "sh": "3,477,988"
+          "sh": "3,471,157"
         }
       },
       {
         "rank": 9,
-        "symbol": "SITM",
-        "name": "SiTime Corporation",
+        "symbol": "SATS",
+        "name": "EchoStar Corporation",
         "weight_pct": 0.48,
-        "shares": 536618,
+        "shares": 3225316,
         "raw": {
           "no": 9,
-          "n": "SiTime Corporation",
-          "s": "$SITM",
+          "n": "EchoStar Corporation",
+          "s": "$SATS",
           "as": "0.48%",
-          "sh": "536,618"
+          "sh": "3,225,316"
         }
       },
       {
         "rank": 10,
-        "symbol": "SMTC",
-        "name": "Semtech Corporation",
-        "weight_pct": 0.47,
-        "shares": 2220234,
+        "symbol": "GH",
+        "name": "Guardant Health, Inc.",
+        "weight_pct": 0.46,
+        "shares": 2953202,
         "raw": {
           "no": 10,
-          "n": "Semtech Corporation",
-          "s": "$SMTC",
-          "as": "0.47%",
-          "sh": "2,220,234"
+          "n": "Guardant Health, Inc.",
+          "s": "$GH",
+          "as": "0.46%",
+          "sh": "2,953,202"
         }
       },
       {
         "rank": 11,
-        "symbol": "GH",
-        "name": "Guardant Health, Inc.",
-        "weight_pct": 0.47,
-        "shares": 2959010,
+        "symbol": "SITM",
+        "name": "SiTime Corporation",
+        "weight_pct": 0.45,
+        "shares": 535562,
         "raw": {
           "no": 11,
-          "n": "Guardant Health, Inc.",
-          "s": "$GH",
-          "as": "0.47%",
-          "sh": "2,959,010"
+          "n": "SiTime Corporation",
+          "s": "$SITM",
+          "as": "0.45%",
+          "sh": "535,562"
         }
       },
       {
         "rank": 12,
-        "symbol": "SATS",
-        "name": "EchoStar Corporation",
-        "weight_pct": 0.46,
-        "shares": 3231663,
+        "symbol": "SMTC",
+        "name": "Semtech Corporation",
+        "weight_pct": 0.44,
+        "shares": 2215878,
         "raw": {
           "no": 12,
-          "n": "EchoStar Corporation",
-          "s": "$SATS",
-          "as": "0.46%",
-          "sh": "3,231,663"
+          "n": "Semtech Corporation",
+          "s": "$SMTC",
+          "as": "0.44%",
+          "sh": "2,215,878"
         }
       },
       {
         "rank": 13,
-        "symbol": "RMBS",
-        "name": "Rambus Inc.",
-        "weight_pct": 0.45,
-        "shares": 2576232,
+        "symbol": "MOD",
+        "name": "Modine Manufacturing Company",
+        "weight_pct": 0.44,
+        "shares": 1246709,
         "raw": {
           "no": 13,
-          "n": "Rambus Inc.",
-          "s": "$RMBS",
-          "as": "0.45%",
-          "sh": "2,576,232"
+          "n": "Modine Manufacturing Company",
+          "s": "$MOD",
+          "as": "0.44%",
+          "sh": "1,246,709"
         }
       },
       {
         "rank": 14,
-        "symbol": "MOD",
-        "name": "Modine Manufacturing Company",
-        "weight_pct": 0.43,
-        "shares": 1249162,
+        "symbol": "RMBS",
+        "name": "Rambus Inc.",
+        "weight_pct": 0.42,
+        "shares": 2571172,
         "raw": {
           "no": 14,
-          "n": "Modine Manufacturing Company",
-          "s": "$MOD",
-          "as": "0.43%",
-          "sh": "1,249,162"
+          "n": "Rambus Inc.",
+          "s": "$RMBS",
+          "as": "0.42%",
+          "sh": "2,571,172"
         }
       },
       {
         "rank": 15,
-        "symbol": "AEIS",
-        "name": "Advanced Energy Industries, Inc.",
+        "symbol": "DY",
+        "name": "Dycom Industries, Inc.",
         "weight_pct": 0.4,
-        "shares": 899403,
+        "shares": 693942,
         "raw": {
           "no": 15,
-          "n": "Advanced Energy Industries, Inc.",
-          "s": "$AEIS",
+          "n": "Dycom Industries, Inc.",
+          "s": "$DY",
           "as": "0.40%",
-          "sh": "899,403"
+          "sh": "693,942"
         }
       },
       {
         "rank": 16,
         "symbol": "SANM",
         "name": "Sanmina Corporation",
-        "weight_pct": 0.4,
-        "shares": 1272138,
+        "weight_pct": 0.39,
+        "shares": 1269641,
         "raw": {
           "no": 16,
           "n": "Sanmina Corporation",
           "s": "$SANM",
-          "as": "0.40%",
-          "sh": "1,272,138"
+          "as": "0.39%",
+          "sh": "1,269,641"
         }
       },
       {
         "rank": 17,
         "symbol": "DOCN",
         "name": "DigitalOcean Holdings, Inc.",
-        "weight_pct": 0.4,
-        "shares": 1814663,
+        "weight_pct": 0.39,
+        "shares": 1811099,
         "raw": {
           "no": 17,
           "n": "DigitalOcean Holdings, Inc.",
           "s": "$DOCN",
-          "as": "0.40%",
-          "sh": "1,814,663"
+          "as": "0.39%",
+          "sh": "1,811,099"
         }
       },
       {
         "rank": 18,
-        "symbol": "DY",
-        "name": "Dycom Industries, Inc.",
-        "weight_pct": 0.4,
-        "shares": 695306,
+        "symbol": "AEIS",
+        "name": "Advanced Energy Industries, Inc.",
+        "weight_pct": 0.39,
+        "shares": 897632,
         "raw": {
           "no": 18,
-          "n": "Dycom Industries, Inc.",
-          "s": "$DY",
-          "as": "0.40%",
-          "sh": "695,306"
+          "n": "Advanced Energy Industries, Inc.",
+          "s": "$AEIS",
+          "as": "0.39%",
+          "sh": "897,632"
         }
       },
       {
         "rank": 19,
-        "symbol": "AAOI",
-        "name": "Applied Optoelectronics, Inc.",
-        "weight_pct": 0.37,
-        "shares": 1575951,
+        "symbol": "HUT",
+        "name": "Hut 8 Corp.",
+        "weight_pct": 0.35,
+        "shares": 2334057,
         "raw": {
           "no": 19,
-          "n": "Applied Optoelectronics, Inc.",
-          "s": "$AAOI",
-          "as": "0.37%",
-          "sh": "1,575,951"
+          "n": "Hut 8 Corp.",
+          "s": "$HUT",
+          "as": "0.35%",
+          "sh": "2,334,057"
         }
       },
       {
         "rank": 20,
         "symbol": "VIAV",
         "name": "Viavi Solutions Inc.",
-        "weight_pct": 0.36,
-        "shares": 5500042,
+        "weight_pct": 0.34,
+        "shares": 5489240,
         "raw": {
           "no": 20,
           "n": "Viavi Solutions Inc.",
           "s": "$VIAV",
-          "as": "0.36%",
-          "sh": "5,500,042"
+          "as": "0.34%",
+          "sh": "5,489,240"
         }
       },
       {
         "rank": 21,
-        "symbol": "FORM",
-        "name": "FormFactor, Inc.",
-        "weight_pct": 0.34,
-        "shares": 1858356,
+        "symbol": "SPXC",
+        "name": "SPX Technologies, Inc.",
+        "weight_pct": 0.33,
+        "shares": 1146893,
         "raw": {
           "no": 21,
-          "n": "FormFactor, Inc.",
-          "s": "$FORM",
-          "as": "0.34%",
-          "sh": "1,858,356"
+          "n": "SPX Technologies, Inc.",
+          "s": "$SPXC",
+          "as": "0.33%",
+          "sh": "1,146,893"
         }
       },
       {
         "rank": 22,
-        "symbol": "HUT",
-        "name": "Hut 8 Corp.",
-        "weight_pct": 0.34,
-        "shares": 2338644,
+        "symbol": "MOG.A",
+        "name": "Moog Inc.",
+        "weight_pct": 0.33,
+        "shares": 669548,
         "raw": {
           "no": 22,
-          "n": "Hut 8 Corp.",
-          "s": "$HUT",
-          "as": "0.34%",
-          "sh": "2,338,644"
+          "n": "Moog Inc.",
+          "s": "$MOG.A",
+          "as": "0.33%",
+          "sh": "669,548"
         }
       },
       {
         "rank": 23,
-        "symbol": "SPXC",
-        "name": "SPX Technologies, Inc.",
+        "symbol": "AAOI",
+        "name": "Applied Optoelectronics, Inc.",
         "weight_pct": 0.33,
-        "shares": 1149148,
+        "shares": 1572860,
         "raw": {
           "no": 23,
-          "n": "SPX Technologies, Inc.",
-          "s": "$SPXC",
+          "n": "Applied Optoelectronics, Inc.",
+          "s": "$AAOI",
           "as": "0.33%",
-          "sh": "1,149,148"
+          "sh": "1,572,860"
         }
       },
       {
         "rank": 24,
-        "symbol": "MOG.A",
-        "name": "Moog Inc.",
+        "symbol": "APLD",
+        "name": "Applied Digital Corporation",
         "weight_pct": 0.32,
-        "shares": 670868,
+        "shares": 5661003,
         "raw": {
           "no": 24,
-          "n": "Moog Inc.",
-          "s": "$MOG.A",
+          "n": "Applied Digital Corporation",
+          "s": "$APLD",
           "as": "0.32%",
-          "sh": "670,868"
+          "sh": "5,661,003"
         }
       },
       {
         "rank": 25,
-        "symbol": "APLD",
-        "name": "Applied Digital Corporation",
+        "symbol": "FORM",
+        "name": "FormFactor, Inc.",
         "weight_pct": 0.32,
-        "shares": 5672135,
+        "shares": 1854704,
         "raw": {
           "no": 25,
-          "n": "Applied Digital Corporation",
-          "s": "$APLD",
+          "n": "FormFactor, Inc.",
+          "s": "$FORM",
           "as": "0.32%",
-          "sh": "5,672,135"
+          "sh": "1,854,704"
         }
       }
     ],
@@ -586,35 +594,35 @@
     "sectors": [
       {
         "n": "Technology",
-        "w": 19.26
+        "w": 18.72
       },
       {
         "n": "Industrials",
-        "w": 17.49
+        "w": 17.56
       },
       {
         "n": "Healthcare",
-        "w": 16.44
+        "w": 16.46
       },
       {
         "n": "Financials",
-        "w": 15.85
+        "w": 16.05
       },
       {
         "n": "Consumer Discretionary",
-        "w": 8.08
+        "w": 8.28
       },
       {
         "n": "Real Estate",
-        "w": 5.94
+        "w": 5.97
       },
       {
         "n": "Energy",
-        "w": 5.17
+        "w": 5.11
       },
       {
         "n": "Materials",
-        "w": 4.42
+        "w": 4.44
       },
       {
         "n": "Utilities",
@@ -622,7 +630,7 @@
       },
       {
         "n": "Communication Services",
-        "w": 2.36
+        "w": 2.44
       },
       {
         "n": "Consumer Staples",
@@ -706,17 +714,28 @@
         "country": "Japan"
       }
     ],
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/IWM.json",
     "stockanalysis": "stockanalysis/etfs/IWM.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -726,21 +745,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -749,7 +772,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -758,20 +782,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

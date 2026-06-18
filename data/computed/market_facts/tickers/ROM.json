@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ROM",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "ProShares Ultra Technology",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 149.36,
+      "value": 148.17,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:39:42Z",
+      "fetched_at": "2026-06-18T10:33:35Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 149.36,
+          "value": 148.17,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 149.36,
+          "value": 148.17,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -8.7,
+      "value": -1.19,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:39:42Z",
+      "fetched_at": "2026-06-18T10:33:35Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -8.7,
+          "value": -1.19,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -5.5,
+      "value": -0.8,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:39:42Z",
+      "fetched_at": "2026-06-18T10:33:35Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -5.5,
+          "value": -0.8,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 1270000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 0.15,
+          "value": 0.16,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -193,18 +199,19 @@
       "value": 2.71,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:39:42Z",
+      "fetched_at": "2026-06-18T10:33:35Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 2.71,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed"
         }
       ],
@@ -219,7 +226,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -234,7 +242,7 @@
           "value": 0.95,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:39:42Z",
+          "fetched_at": "2026-06-18T10:33:35Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -244,89 +252,89 @@
   },
   "etf": {
     "holdings_count": 86,
-    "holdings_updated": "Jun 15, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP JPMORGAN CHASE BANK NA",
-        "weight_pct": 27.88,
+        "weight_pct": 28.7,
         "shares": 98373,
         "raw": {
           "no": 1,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP JPMORGAN CHASE BANK NA",
-          "as": "27.88%",
+          "as": "28.70%",
           "sh": "98,373"
         }
       },
       {
         "rank": 2,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP BARCLAYS CAPITAL",
-        "weight_pct": 26.4,
+        "weight_pct": 27.18,
         "shares": 93136,
         "raw": {
           "no": 2,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP BARCLAYS CAPITAL",
-          "as": "26.40%",
+          "as": "27.18%",
           "sh": "93,136"
         }
       },
       {
         "rank": 3,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP BNP PARIBAS",
-        "weight_pct": 25.07,
+        "weight_pct": 25.81,
         "shares": 88465,
         "raw": {
           "no": 3,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP BNP PARIBAS",
-          "as": "25.07%",
+          "as": "25.81%",
           "sh": "88,465"
         }
       },
       {
         "rank": 4,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP CITIBANK NA",
-        "weight_pct": 22.71,
-        "shares": 80131,
+        "weight_pct": 18.59,
+        "shares": 63726,
         "raw": {
           "no": 4,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP CITIBANK NA",
-          "as": "22.71%",
-          "sh": "80,131"
+          "as": "18.59%",
+          "sh": "63,726"
         }
       },
       {
         "rank": 5,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP BANK OF AMERICA NA",
-        "weight_pct": 15.29,
+        "weight_pct": 15.74,
         "shares": 53929,
         "raw": {
           "no": 5,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP BANK OF AMERICA NA",
-          "as": "15.29%",
+          "as": "15.74%",
           "sh": "53,929"
         }
       },
       {
         "rank": 6,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP UBS AG",
-        "weight_pct": 13.08,
+        "weight_pct": 13.46,
         "shares": 46139,
         "raw": {
           "no": 6,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP UBS AG",
-          "as": "13.08%",
+          "as": "13.46%",
           "sh": "46,139"
         }
       },
       {
         "rank": 7,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP SOCIETE GENERALE",
-        "weight_pct": 12.6,
+        "weight_pct": 12.97,
         "shares": 44449,
         "raw": {
           "no": 7,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP SOCIETE GENERALE",
-          "as": "12.60%",
+          "as": "12.97%",
           "sh": "44,449"
         }
       },
@@ -334,13 +342,13 @@
         "rank": 8,
         "symbol": "NVDA",
         "name": "NVIDIA Corporation",
-        "weight_pct": 7.18,
+        "weight_pct": 7.43,
         "shares": 460458,
         "raw": {
           "no": 8,
           "n": "NVIDIA Corporation",
           "s": "$NVDA",
-          "as": "7.18%",
+          "as": "7.43%",
           "sh": "460,458"
         }
       },
@@ -348,55 +356,55 @@
         "rank": 9,
         "symbol": "AAPL",
         "name": "Apple Inc.",
-        "weight_pct": 6.05,
+        "weight_pct": 6.47,
         "shares": 278135,
         "raw": {
           "no": 9,
           "n": "Apple Inc.",
           "s": "$AAPL",
-          "as": "6.05%",
+          "as": "6.47%",
           "sh": "278,135"
         }
       },
       {
         "rank": 10,
-        "symbol": "MU",
-        "name": "Micron Technology, Inc.",
-        "weight_pct": 4.15,
-        "shares": 51925,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 4.31,
+        "shares": 140708,
         "raw": {
           "no": 10,
-          "n": "Micron Technology, Inc.",
-          "s": "$MU",
-          "as": "4.15%",
-          "sh": "51,925"
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "4.31%",
+          "sh": "140,708"
         }
       },
       {
         "rank": 11,
-        "symbol": "MSFT",
-        "name": "Microsoft Corporation",
-        "weight_pct": 4.13,
-        "shares": 140708,
+        "symbol": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 4.12,
+        "shares": 51925,
         "raw": {
           "no": 11,
-          "n": "Microsoft Corporation",
-          "s": "$MSFT",
-          "as": "4.13%",
-          "sh": "140,708"
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "4.12%",
+          "sh": "51,925"
         }
       },
       {
         "rank": 12,
         "symbol": "AMD",
         "name": "Advanced Micro Devices, Inc.",
-        "weight_pct": 3.02,
+        "weight_pct": 2.97,
         "shares": 75236,
         "raw": {
           "no": 12,
           "n": "Advanced Micro Devices, Inc.",
           "s": "$AMD",
-          "as": "3.02%",
+          "as": "2.97%",
           "sh": "75,236"
         }
       },
@@ -404,13 +412,13 @@
         "rank": 13,
         "symbol": "AVGO",
         "name": "Broadcom Inc.",
-        "weight_pct": 2.6,
+        "weight_pct": 2.63,
         "shares": 89842,
         "raw": {
           "no": 13,
           "n": "Broadcom Inc.",
           "s": "$AVGO",
-          "as": "2.60%",
+          "as": "2.63%",
           "sh": "89,842"
         }
       },
@@ -418,36 +426,50 @@
         "rank": 14,
         "symbol": "INTC",
         "name": "Intel Corporation",
-        "weight_pct": 2.03,
+        "weight_pct": 1.97,
         "shares": 216698,
         "raw": {
           "no": 14,
           "n": "Intel Corporation",
           "s": "$INTC",
-          "as": "2.03%",
+          "as": "1.97%",
           "sh": "216,698"
         }
       },
       {
         "rank": 15,
         "name": "TECHNOLOGY SELECT SECTOR INDEX SWAP GOLDMAN SACHS INTERNATIONAL",
-        "weight_pct": 1.8,
+        "weight_pct": 1.85,
         "shares": 6343,
         "raw": {
           "no": 15,
           "n": "TECHNOLOGY SELECT SECTOR INDEX SWAP GOLDMAN SACHS INTERNATIONAL",
-          "as": "1.80%",
+          "as": "1.85%",
           "sh": "6,343"
         }
       },
       {
         "rank": 16,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 1.7,
+        "shares": 182352,
+        "raw": {
+          "no": 16,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "1.70%",
+          "sh": "182,352"
+        }
+      },
+      {
+        "rank": 17,
         "symbol": "LRCX",
         "name": "Lam Research Corporation",
         "weight_pct": 1.65,
         "shares": 57634,
         "raw": {
-          "no": 16,
+          "no": 17,
           "n": "Lam Research Corporation",
           "s": "$LRCX",
           "as": "1.65%",
@@ -455,69 +477,69 @@
         }
       },
       {
-        "rank": 17,
-        "symbol": "CSCO",
-        "name": "Cisco Systems, Inc.",
-        "weight_pct": 1.61,
-        "shares": 182352,
-        "raw": {
-          "no": 17,
-          "n": "Cisco Systems, Inc.",
-          "s": "$CSCO",
-          "as": "1.61%",
-          "sh": "182,352"
-        }
-      },
-      {
         "rank": 18,
         "symbol": "AMAT",
         "name": "Applied Materials, Inc.",
-        "weight_pct": 1.57,
+        "weight_pct": 1.62,
         "shares": 36592,
         "raw": {
           "no": 18,
           "n": "Applied Materials, Inc.",
           "s": "$AMAT",
-          "as": "1.57%",
+          "as": "1.62%",
           "sh": "36,592"
         }
       },
       {
         "rank": 19,
-        "symbol": "KLAC",
-        "name": "KLA Corporation",
-        "weight_pct": 1.14,
-        "shares": 60490,
-        "raw": {
-          "no": 19,
-          "n": "KLA Corporation",
-          "s": "$KLAC",
-          "as": "1.14%",
-          "sh": "60,490"
-        }
-      },
-      {
-        "rank": 20,
         "symbol": "ORCL",
         "name": "Oracle Corporation",
-        "weight_pct": 1.11,
+        "weight_pct": 1.14,
         "shares": 78189,
         "raw": {
-          "no": 20,
+          "no": 19,
           "n": "Oracle Corporation",
           "s": "$ORCL",
-          "as": "1.11%",
+          "as": "1.14%",
           "sh": "78,189"
         }
       },
       {
+        "rank": 20,
+        "symbol": "KLAC",
+        "name": "KLA Corporation",
+        "weight_pct": 1.12,
+        "shares": 60490,
+        "raw": {
+          "no": 20,
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "1.12%",
+          "sh": "60,490"
+        }
+      },
+      {
         "rank": 21,
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "weight_pct": 1.09,
+        "shares": 105427,
+        "raw": {
+          "no": 21,
+          "n": "Palantir Technologies Inc.",
+          "s": "$PLTR",
+          "as": "1.09%",
+          "sh": "105,427"
+        }
+      },
+      {
+        "rank": 22,
         "symbol": "SNDK",
         "name": "Sandisk Corporation",
         "weight_pct": 1.05,
         "shares": 6812,
         "raw": {
-          "no": 21,
+          "no": 22,
           "n": "Sandisk Corporation",
           "s": "$SNDK",
           "as": "1.05%",
@@ -525,30 +547,16 @@
         }
       },
       {
-        "rank": 22,
-        "symbol": "PLTR",
-        "name": "Palantir Technologies Inc.",
-        "weight_pct": 1.04,
-        "shares": 105427,
-        "raw": {
-          "no": 22,
-          "n": "Palantir Technologies Inc.",
-          "s": "$PLTR",
-          "as": "1.04%",
-          "sh": "105,427"
-        }
-      },
-      {
         "rank": 23,
         "symbol": "TXN",
         "name": "Texas Instruments Incorporated",
-        "weight_pct": 0.96,
+        "weight_pct": 1.0,
         "shares": 41885,
         "raw": {
           "no": 23,
           "n": "Texas Instruments Incorporated",
           "s": "$TXN",
-          "as": "0.96%",
+          "as": "1.00%",
           "sh": "41,885"
         }
       },
@@ -556,28 +564,28 @@
         "rank": 24,
         "symbol": "IBM",
         "name": "International Business Machines Corporation",
-        "weight_pct": 0.85,
+        "weight_pct": 0.91,
         "shares": 43140,
         "raw": {
           "no": 24,
           "n": "International Business Machines Corporation",
           "s": "$IBM",
-          "as": "0.85%",
+          "as": "0.91%",
           "sh": "43,140"
         }
       },
       {
         "rank": 25,
-        "symbol": "QCOM",
-        "name": "QUALCOMM Incorporated",
-        "weight_pct": 0.8,
-        "shares": 49244,
+        "symbol": "WDC",
+        "name": "Western Digital Corporation",
+        "weight_pct": 0.83,
+        "shares": 15647,
         "raw": {
           "no": 25,
-          "n": "QUALCOMM Incorporated",
-          "s": "$QCOM",
-          "as": "0.80%",
-          "sh": "49,244"
+          "n": "Western Digital Corporation",
+          "s": "$WDC",
+          "as": "0.83%",
+          "sh": "15,647"
         }
       }
     ],
@@ -609,17 +617,28 @@
         "country": "Netherlands"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/ROM.json",
     "stockanalysis": "stockanalysis/etfs/ROM.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -629,21 +648,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -652,7 +675,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -661,20 +685,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

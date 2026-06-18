@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "NVDL",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "GraniteShares 2x Long NVDA Daily ETF",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 97.38,
+      "value": 94.76,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:16:03Z",
+      "fetched_at": "2026-06-18T10:33:54Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 97.38,
+          "value": 94.76,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 97.38,
+          "value": 94.76,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -4.84,
+      "value": -2.62,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:16:03Z",
+      "fetched_at": "2026-06-18T10:33:54Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -4.84,
+          "value": -2.62,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -4.73,
+      "value": -2.69,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:16:03Z",
+      "fetched_at": "2026-06-18T10:33:54Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -4.73,
+          "value": -2.69,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 4170000000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed"
         }
       ],
@@ -146,6 +151,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -164,18 +170,19 @@
       "value": 3.5,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:16:03Z",
+      "fetched_at": "2026-06-18T10:33:54Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 3.5,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed"
         }
       ],
@@ -190,7 +197,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -205,7 +213,7 @@
           "value": 1.05,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:16:03Z",
+          "fetched_at": "2026-06-18T10:33:54Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -215,172 +223,172 @@
   },
   "etf": {
     "holdings_count": 27,
-    "holdings_updated": "Jun 12, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "Nvda Equity Swap",
-        "weight_pct": 125.02,
+        "weight_pct": 121.18,
         "shares": 25382170,
         "raw": {
           "no": 1,
           "n": "Nvda Equity Swap",
-          "as": "125.02%",
+          "as": "121.18%",
           "sh": "25,382,170"
         }
       },
       {
         "rank": 2,
         "name": "Nvda Equity Swap 2",
-        "weight_pct": 34.49,
+        "weight_pct": 33.43,
         "shares": 7002960,
         "raw": {
           "no": 2,
           "n": "Nvda Equity Swap 2",
-          "as": "34.49%",
+          "as": "33.43%",
           "sh": "7,002,960"
         }
       },
       {
         "rank": 3,
         "name": "Nvda Equity Swap 1",
-        "weight_pct": 14.38,
-        "shares": 2920100,
+        "weight_pct": 17.13,
+        "shares": 3588600,
         "raw": {
           "no": 3,
           "n": "Nvda Equity Swap 1",
-          "as": "14.38%",
-          "sh": "2,920,100"
+          "as": "17.13%",
+          "sh": "3,588,600"
         }
       },
       {
         "rank": 4,
         "name": "Recv Long Nvda Trs Gs2",
-        "weight_pct": 13.45,
+        "weight_pct": 13.04,
         "shares": 2730400,
         "raw": {
           "no": 4,
           "n": "Recv Long Nvda Trs Gs2",
-          "as": "13.45%",
+          "as": "13.04%",
           "sh": "2,730,400"
         }
       },
       {
         "rank": 5,
         "name": "Us Dollars",
-        "weight_pct": 11.43,
-        "shares": 476169805,
+        "weight_pct": 11.25,
+        "shares": 500790528,
         "raw": {
           "no": 5,
           "n": "Us Dollars",
-          "as": "11.43%",
-          "sh": "476,169,805"
+          "as": "11.25%",
+          "sh": "500,790,528"
         }
       },
       {
         "rank": 6,
         "name": "Nvda Equity Swap 19",
-        "weight_pct": 8.9,
+        "weight_pct": 8.62,
         "shares": 1806390,
         "raw": {
           "no": 6,
           "n": "Nvda Equity Swap 19",
-          "as": "8.90%",
+          "as": "8.62%",
           "sh": "1,806,390"
         }
       },
       {
         "rank": 7,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 8.35,
+        "weight_pct": 7.81,
         "shares": 347650001,
         "raw": {
           "no": 7,
           "n": "Cash & Cash Equivalents",
-          "as": "8.35%",
+          "as": "7.81%",
           "sh": "347,650,001"
         }
       },
       {
         "rank": 8,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 6.38,
+        "weight_pct": 5.97,
         "shares": 265840000,
         "raw": {
           "no": 8,
           "n": "Cash & Cash Equivalents",
-          "as": "6.38%",
+          "as": "5.97%",
           "sh": "265,840,000"
         }
       },
       {
         "rank": 9,
         "name": "Nvda Equity Swap 4",
-        "weight_pct": 3.46,
+        "weight_pct": 3.35,
         "shares": 701500,
         "raw": {
           "no": 9,
           "n": "Nvda Equity Swap 4",
-          "as": "3.46%",
+          "as": "3.35%",
           "sh": "701,500"
         }
       },
       {
         "rank": 10,
-        "name": "Cash & Cash Equivalents",
-        "weight_pct": 1.97,
-        "shares": 81880000,
+        "name": "Nvda Equity Swap 5",
+        "weight_pct": 2.93,
+        "shares": 614200,
         "raw": {
           "no": 10,
-          "n": "Cash & Cash Equivalents",
-          "as": "1.97%",
-          "sh": "81,880,000"
+          "n": "Nvda Equity Swap 5",
+          "as": "2.93%",
+          "sh": "614,200"
         }
       },
       {
         "rank": 11,
         "name": "Cash & Cash Equivalents",
+        "weight_pct": 1.84,
+        "shares": 81880000,
+        "raw": {
+          "no": 11,
+          "n": "Cash & Cash Equivalents",
+          "as": "1.84%",
+          "sh": "81,880,000"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "Cash & Cash Equivalents",
         "weight_pct": 0.05,
         "shares": 2050000,
         "raw": {
-          "no": 11,
+          "no": 12,
           "n": "Cash & Cash Equivalents",
           "as": "0.05%",
           "sh": "2,050,000"
         }
       },
       {
-        "rank": 12,
+        "rank": 13,
         "name": "Nvda Equity Swap 7",
         "weight_pct": 0.0,
         "shares": 300,
         "raw": {
-          "no": 12,
+          "no": 13,
           "n": "Nvda Equity Swap 7",
           "as": "0.00%",
           "sh": "300"
         }
       },
       {
-        "rank": 13,
+        "rank": 14,
         "name": "Nvda Equity Swap 3",
         "weight_pct": 0.0,
         "shares": 100,
         "raw": {
-          "no": 13,
-          "n": "Nvda Equity Swap 3",
-          "as": "0.00%",
-          "sh": "100"
-        }
-      },
-      {
-        "rank": 14,
-        "name": "Nvda Equity Swap 5",
-        "weight_pct": 0.0,
-        "shares": 100,
-        "raw": {
           "no": 14,
-          "n": "Nvda Equity Swap 5",
+          "n": "Nvda Equity Swap 3",
           "as": "0.00%",
           "sh": "100"
         }
@@ -399,138 +407,149 @@
       },
       {
         "rank": 16,
-        "name": "Nvda Equity Swap 10",
-        "weight_pct": -0.0,
-        "shares": 10276,
-        "raw": {
-          "no": 16,
-          "n": "Nvda Equity Swap 10",
-          "as": "-0.00%",
-          "sh": "10,276"
-        }
-      },
-      {
-        "rank": 17,
         "name": "Nvda Equity Swap 8",
         "weight_pct": -0.0,
         "shares": 31278,
         "raw": {
-          "no": 17,
+          "no": 16,
           "n": "Nvda Equity Swap 8",
           "as": "-0.00%",
           "sh": "31,278"
         }
       },
       {
-        "rank": 18,
+        "rank": 17,
         "name": "Cash",
-        "weight_pct": -0.19,
+        "weight_pct": -0.96,
         "raw": {
-          "no": 18,
+          "no": 17,
           "n": "Cash",
-          "as": "-0.19%",
+          "as": "-0.96%",
           "sh": 0
         }
       },
       {
-        "rank": 19,
+        "rank": 18,
         "name": "Nvda Equity Swap 11",
-        "weight_pct": -1.64,
+        "weight_pct": -1.54,
         "shares": 68504982,
         "raw": {
-          "no": 19,
+          "no": 18,
           "n": "Nvda Equity Swap 11",
-          "as": "-1.64%",
+          "as": "-1.54%",
           "sh": "68,504,982"
         }
       },
       {
-        "rank": 20,
+        "rank": 19,
         "name": "Nvda Equity Swap 17",
-        "weight_pct": -2.14,
+        "weight_pct": -2.0,
         "shares": 89073765,
         "raw": {
-          "no": 20,
+          "no": 19,
           "n": "Nvda Equity Swap 17",
-          "as": "-2.14%",
+          "as": "-2.00%",
           "sh": "89,073,765"
         }
       },
       {
-        "rank": 21,
+        "rank": 20,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": -2.48,
+        "weight_pct": -2.32,
         "shares": 103360000,
         "raw": {
-          "no": 21,
+          "no": 20,
           "n": "Cash & Cash Equivalents",
-          "as": "-2.48%",
+          "as": "-2.32%",
           "sh": "103,360,000"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "Nvda Equity Swap 10",
+        "weight_pct": -2.93,
+        "shares": 130521511,
+        "raw": {
+          "no": 21,
+          "n": "Nvda Equity Swap 10",
+          "as": "-2.93%",
+          "sh": "130,521,511"
         }
       },
       {
         "rank": 22,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": -4.76,
+        "weight_pct": -4.46,
         "shares": 198330000,
         "raw": {
           "no": 22,
           "n": "Cash & Cash Equivalents",
-          "as": "-4.76%",
+          "as": "-4.46%",
           "sh": "198,330,000"
         }
       },
       {
         "rank": 23,
         "name": "Payb Long Nvda Trs Gs2",
-        "weight_pct": -14.1,
+        "weight_pct": -13.2,
         "shares": 587347126,
         "raw": {
           "no": 23,
           "n": "Payb Long Nvda Trs Gs2",
-          "as": "-14.10%",
+          "as": "-13.20%",
           "sh": "587,347,126"
         }
       },
       {
         "rank": 24,
-        "name": "Nvda Equity Swap 14",
-        "weight_pct": -14.25,
-        "shares": 593727463,
+        "name": "Nvda Equity Swap 13",
+        "weight_pct": -13.79,
+        "shares": 613700791,
         "raw": {
           "no": 24,
-          "n": "Nvda Equity Swap 14",
-          "as": "-14.25%",
-          "sh": "593,727,463"
+          "n": "Nvda Equity Swap 13",
+          "as": "-13.79%",
+          "sh": "613,700,791"
         }
       },
       {
         "rank": 25,
-        "name": "Nvda Equity Swap 13",
-        "weight_pct": -14.73,
-        "shares": 613700791,
+        "name": "Nvda Equity Swap 14",
+        "weight_pct": -16.54,
+        "shares": 735792894,
         "raw": {
           "no": 25,
-          "n": "Nvda Equity Swap 13",
-          "as": "-14.73%",
-          "sh": "613,700,791"
+          "n": "Nvda Equity Swap 14",
+          "as": "-16.54%",
+          "sh": "735,792,894"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "NVIDIA Corporation",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/NVDL.json",
     "stockanalysis": "stockanalysis/etfs/NVDL.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -540,21 +559,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -563,7 +586,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -572,20 +596,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

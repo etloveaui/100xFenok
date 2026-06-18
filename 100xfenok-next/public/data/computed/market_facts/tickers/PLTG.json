@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "PLTG",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Leverage Shares 2X Long PLTR Daily ETF",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 11.98,
+      "value": 11.49,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:23:15Z",
+      "fetched_at": "2026-06-18T10:33:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 11.98,
+          "value": 11.49,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:23:15Z",
+          "fetched_at": "2026-06-18T10:33:59Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 11.98,
+          "value": 11.49,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:23:15Z",
+          "fetched_at": "2026-06-18T10:33:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -0.28,
+      "value": -0.49,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:23:15Z",
+      "fetched_at": "2026-06-18T10:33:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -0.28,
+          "value": -0.49,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:23:15Z",
+          "fetched_at": "2026-06-18T10:33:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -2.28,
+      "value": -4.09,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T08:23:15Z",
+      "fetched_at": "2026-06-18T10:33:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.28,
+          "value": -4.09,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:23:15Z",
+          "fetched_at": "2026-06-18T10:33:59Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 26620000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:23:15Z",
+          "fetched_at": "2026-06-18T10:33:59Z",
           "confidence": "observed"
         }
       ],
@@ -146,6 +151,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -169,7 +175,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -184,7 +191,7 @@
           "value": 0.78,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T08:23:15Z",
+          "fetched_at": "2026-06-18T10:33:59Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -194,53 +201,53 @@
   },
   "etf": {
     "holdings_count": 8,
-    "holdings_updated": "Jun 10, 2026",
+    "holdings_updated": "Jun 12, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "PALANTIR TECHNOLOGIES SWAP - L - CLEARSTREET",
-        "weight_pct": 116.73,
-        "shares": 249064,
+        "weight_pct": 121.02,
+        "shares": 251677,
         "raw": {
           "no": 1,
           "n": "PALANTIR TECHNOLOGIES SWAP - L - CLEARSTREET",
-          "as": "116.73%",
-          "sh": "249,064"
+          "as": "121.02%",
+          "sh": "251,677"
         }
       },
       {
         "rank": 2,
         "name": "US DOLLARS",
-        "weight_pct": 85.93,
-        "shares": 24032941,
+        "weight_pct": 90.1,
+        "shares": 23981863,
         "raw": {
           "no": 2,
           "n": "US DOLLARS",
-          "as": "85.93%",
-          "sh": "24,032,941"
+          "as": "90.10%",
+          "sh": "23,981,863"
         }
       },
       {
         "rank": 3,
         "name": "PALANTIR TECHNOLOGIES SWAP - L - MAREX",
-        "weight_pct": 45.86,
+        "weight_pct": 47.05,
         "shares": 97850,
         "raw": {
           "no": 3,
           "n": "PALANTIR TECHNOLOGIES SWAP - L - MAREX",
-          "as": "45.86%",
+          "as": "47.05%",
           "sh": "97,850"
         }
       },
       {
         "rank": 4,
         "name": "PALANTIR TECHNOLOGIES SWAP - L - CANTOR",
-        "weight_pct": 33.0,
+        "weight_pct": 33.85,
         "shares": 70405,
         "raw": {
           "no": 4,
           "n": "PALANTIR TECHNOLOGIES SWAP - L - CANTOR",
-          "as": "33.00%",
+          "as": "33.85%",
           "sh": "70,405"
         }
       },
@@ -248,67 +255,78 @@
         "rank": 5,
         "symbol": "!MUTF/FXFXX",
         "name": "First American Treasury Obligations Fund Class X",
-        "weight_pct": 12.35,
-        "shares": 3453854,
+        "weight_pct": 13.17,
+        "shares": 3504931,
         "raw": {
           "no": 5,
           "n": "First American Treasury Obligations Fund Class X",
           "s": "!mutf/FXFXX",
-          "as": "12.35%",
-          "sh": "3,453,854"
+          "as": "13.17%",
+          "sh": "3,504,931"
         }
       },
       {
         "rank": 6,
         "name": "OTHER ASSETS AND LIABILITIES",
-        "weight_pct": 3.93,
-        "shares": 1099711,
+        "weight_pct": 4.01,
+        "shares": 1066793,
         "raw": {
           "no": 6,
           "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "3.93%",
-          "sh": "1,099,711"
+          "as": "4.01%",
+          "sh": "1,066,793"
         }
       },
       {
         "rank": 7,
         "name": "PALANTIR TECHNOLOGIES INC.-SWAP-NBCB-L",
-        "weight_pct": 3.09,
+        "weight_pct": 3.17,
         "shares": 6600,
         "raw": {
           "no": 7,
           "n": "PALANTIR TECHNOLOGIES INC.-SWAP-NBCB-L",
-          "as": "3.09%",
+          "as": "3.17%",
           "sh": "6,600"
         }
       },
       {
         "rank": 8,
         "name": "Cash Offset",
-        "weight_pct": -200.89,
-        "shares": 56185119,
+        "weight_pct": -212.37,
+        "shares": 56527491,
         "raw": {
           "no": 8,
           "n": "Cash Offset",
-          "as": "-200.89%",
-          "sh": "56,185,119"
+          "as": "-212.37%",
+          "sh": "56,527,491"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "PLTR",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/PLTG.json",
     "stockanalysis": "stockanalysis/etfs/PLTG.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -318,21 +336,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -341,7 +363,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -350,20 +373,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

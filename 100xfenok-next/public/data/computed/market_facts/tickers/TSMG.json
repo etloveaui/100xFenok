@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "TSMG",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Leverage Shares 2X Long TSM Daily ETF",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 41.3027,
+      "value": 42.5881,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:13:27Z",
+      "fetched_at": "2026-06-18T10:34:11Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 41.3027,
+          "value": 42.5881,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 41.3,
+          "value": 42.59,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -2.87,
+      "value": 1.29,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:13:27Z",
+      "fetched_at": "2026-06-18T10:34:11Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.87,
+          "value": 1.29,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -6.49,
+      "value": 3.12,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:13:27Z",
+      "fetched_at": "2026-06-18T10:34:11Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -6.49,
+          "value": 3.12,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 28100000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed"
         }
       ],
@@ -146,6 +151,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -158,10 +164,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 6.6,
+          "value": 6.4,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -177,7 +183,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -192,7 +199,7 @@
           "value": 0.76,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:13:27Z",
+          "fetched_at": "2026-06-18T10:34:11Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -294,17 +301,28 @@
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "TSM",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/TSMG.json",
     "stockanalysis": "stockanalysis/etfs/TSMG.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -314,21 +332,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -337,7 +359,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -346,20 +369,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

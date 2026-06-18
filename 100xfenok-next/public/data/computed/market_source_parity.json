@@ -1,15 +1,15 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-06-18T03:15:10Z",
+  "generated_at": "2026-06-18T10:44:01Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
-    "inspected_ticker_files": 5741,
+    "inspected_ticker_files": 5753,
     "fields": 11,
-    "multi_candidate_fields": 2286,
-    "divergence_rows": 2286,
+    "multi_candidate_fields": 2318,
+    "divergence_rows": 2318,
     "percent_scale_warnings": 0,
     "diagnosis_counts": {
-      "agreement": 84,
+      "agreement": 116,
       "sign_divergence": 2,
       "stale": 2151,
       "value_drift": 49
@@ -20,11 +20,12 @@
   },
   "by_field": {
     "beta": {
-      "ticker_count": 3967,
+      "ticker_count": 3974,
       "multi_candidate_count": 40,
       "selected_sources": {
         "stockanalysis.overview": 2950,
-        "yf": 1017
+        "yf": 1017,
+        "yf.stockanalysis_fallback.overview": 7
       },
       "candidate_sources": {
         "stockanalysis.overview": 40,
@@ -32,11 +33,12 @@
       }
     },
     "change": {
-      "ticker_count": 5624,
+      "ticker_count": 5636,
       "multi_candidate_count": 40,
       "selected_sources": {
         "stockanalysis.quote": 4597,
-        "yf.derived": 1027
+        "yf.derived": 1027,
+        "yf.stockanalysis_fallback.quote": 12
       },
       "candidate_sources": {
         "stockanalysis.quote": 40,
@@ -44,11 +46,12 @@
       }
     },
     "change_pct": {
-      "ticker_count": 5624,
+      "ticker_count": 5636,
       "multi_candidate_count": 40,
       "selected_sources": {
         "stockanalysis.quote": 4597,
-        "yf.derived": 1027
+        "yf.derived": 1027,
+        "yf.stockanalysis_fallback.quote": 12
       },
       "candidate_sources": {
         "stockanalysis.quote": 40,
@@ -56,29 +59,31 @@
       }
     },
     "dividend_yield": {
-      "ticker_count": 4785,
-      "multi_candidate_count": 375,
+      "ticker_count": 4791,
+      "multi_candidate_count": 381,
       "selected_sources": {
         "slickcharts": 191,
         "stockanalysis.overview": 3723,
-        "yf": 871
+        "yf": 877
       },
       "candidate_sources": {
         "slickcharts": 322,
         "stockanalysis.overview": 53,
-        "yf": 375
+        "yf": 381,
+        "yf.stockanalysis_fallback.overview": 6
       }
     },
     "expense_ratio": {
-      "ticker_count": 4545,
-      "multi_candidate_count": 34,
+      "ticker_count": 4552,
+      "multi_candidate_count": 41,
       "selected_sources": {
         "stockanalysis.overview": 4509,
-        "yf": 36
+        "yf": 43
       },
       "candidate_sources": {
         "stockanalysis.overview": 34,
-        "yf": 34
+        "yf": 41,
+        "yf.stockanalysis_fallback.overview": 7
       }
     },
     "forward_pe": {
@@ -108,24 +113,26 @@
       }
     },
     "previous_close": {
-      "ticker_count": 5630,
-      "multi_candidate_count": 104,
+      "ticker_count": 5642,
+      "multi_candidate_count": 116,
       "selected_sources": {
         "stockanalysis.quote": 4493,
-        "yf": 1137
+        "yf": 1149
       },
       "candidate_sources": {
         "stockanalysis.quote": 104,
-        "yf": 104
+        "yf": 116,
+        "yf.stockanalysis_fallback.quote": 12
       }
     },
     "price": {
-      "ticker_count": 5729,
+      "ticker_count": 5741,
       "multi_candidate_count": 412,
       "selected_sources": {
         "slickcharts": 105,
         "stockanalysis.quote": 4557,
-        "yf": 1067
+        "yf": 1067,
+        "yf.stockanalysis_fallback.quote": 12
       },
       "candidate_sources": {
         "slickcharts": 408,
@@ -134,23 +141,24 @@
       }
     },
     "total_assets": {
-      "ticker_count": 4332,
-      "multi_candidate_count": 33,
+      "ticker_count": 4339,
+      "multi_candidate_count": 40,
       "selected_sources": {
         "stockanalysis.overview": 4296,
-        "yf": 36
+        "yf": 43
       },
       "candidate_sources": {
         "stockanalysis.overview": 33,
-        "yf": 33
+        "yf": 40,
+        "yf.stockanalysis_fallback.overview": 7
       }
     },
     "trailing_pe": {
-      "ticker_count": 821,
+      "ticker_count": 823,
       "multi_candidate_count": 387,
       "selected_sources": {
         "slickcharts": 95,
-        "yf": 726
+        "yf": 728
       },
       "candidate_sources": {
         "slickcharts": 387,
@@ -408,7 +416,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -443,7 +451,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -887,7 +895,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -924,7 +932,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2180,7 +2188,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2217,7 +2225,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2620,7 +2628,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2657,7 +2665,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3615,7 +3623,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3694,7 +3702,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4507,7 +4515,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4544,7 +4552,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -5765,7 +5773,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -5802,7 +5810,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -6135,7 +6143,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -6172,7 +6180,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -7060,7 +7068,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -7097,7 +7105,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -7324,7 +7332,7 @@
       "selected_rationale": {
         "selected": "yf",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -7484,7 +7492,7 @@
       "selected_rationale": {
         "selected": "yf",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -7596,7 +7604,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -7631,7 +7639,7 @@
       "selected_rationale": {
         "selected": "stockanalysis.quote",
         "policy_rank": 0,
-        "policy_len": 3,
+        "policy_len": 4,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {

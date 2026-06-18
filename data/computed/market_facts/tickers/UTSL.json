@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "UTSL",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "Direxion Daily Utilities Bull 3X Shares",
     "exchange": "PCX",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 44.34,
+      "value": 42.7,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:18:23Z",
+      "fetched_at": "2026-06-18T10:33:49Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 44.34,
+          "value": 42.7,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 44.34,
+          "value": 42.7,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": 0.84,
+      "value": -1.64,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:18:23Z",
+      "fetched_at": "2026-06-18T10:33:49Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": 0.84,
+          "value": -1.64,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 1.93,
+      "value": -3.7,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:18:23Z",
+      "fetched_at": "2026-06-18T10:33:49Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": 1.93,
+          "value": -3.7,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 40750000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed"
         }
       ],
@@ -167,6 +172,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -179,10 +185,10 @@
           "unit": "percent_points"
         },
         {
-          "value": 1.65,
+          "value": 1.71,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -193,18 +199,19 @@
       "value": 1.72,
       "source": "stockanalysis.overview",
       "as_of": null,
-      "fetched_at": "2026-06-17T09:18:23Z",
+      "fetched_at": "2026-06-18T10:33:49Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
           "value": 1.72,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed"
         }
       ],
@@ -219,7 +226,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -234,7 +242,7 @@
           "value": 0.97,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T09:18:23Z",
+          "fetched_at": "2026-06-18T10:33:49Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -609,17 +617,28 @@
         "country": "United States"
       }
     ],
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 3.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/UTSL.json",
     "stockanalysis": "stockanalysis/etfs/UTSL.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -629,21 +648,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -652,7 +675,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -661,20 +685,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

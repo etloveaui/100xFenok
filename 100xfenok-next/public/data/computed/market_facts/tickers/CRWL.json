@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "CRWL",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T02:43:30Z",
+  "generated_at": "2026-06-18T10:44:00Z",
   "identity": {
     "name": "GraniteShares 2x Long CRWD Daily ETF",
     "exchange": "NGM",
@@ -14,23 +14,24 @@
   },
   "facts": {
     "price": {
-      "value": 51.42,
+      "value": 51.92,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:05Z",
+      "fetched_at": "2026-06-18T10:34:07Z",
       "confidence": "observed",
       "policy": [
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 51.42,
+          "value": 51.92,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:05Z",
+          "fetched_at": "2026-06-18T10:34:07Z",
           "confidence": "observed"
         }
       ],
@@ -44,7 +45,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
@@ -55,54 +57,56 @@
           "confidence": "observed"
         },
         {
-          "value": 51.42,
+          "value": 51.92,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:05Z",
+          "fetched_at": "2026-06-18T10:34:07Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2
     },
     "change": {
-      "value": -2.22,
+      "value": 0.5,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:05Z",
+      "fetched_at": "2026-06-18T10:34:07Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -2.22,
+          "value": 0.5,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:05Z",
+          "fetched_at": "2026-06-18T10:34:07Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -4.14,
+      "value": 0.97,
       "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-17T07:28:05Z",
+      "fetched_at": "2026-06-18T10:34:07Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
         {
-          "value": -4.14,
+          "value": 0.97,
           "source": "stockanalysis.quote",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:05Z",
+          "fetched_at": "2026-06-18T10:34:07Z",
           "confidence": "observed"
         }
       ],
@@ -116,7 +120,8 @@
       "confidence": "observed",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -130,7 +135,7 @@
           "value": 52130000.0,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:05Z",
+          "fetched_at": "2026-06-18T10:34:07Z",
           "confidence": "observed"
         }
       ],
@@ -146,6 +151,7 @@
       "policy": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
@@ -169,7 +175,8 @@
       "unit": "percent_points",
       "policy": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
@@ -184,7 +191,7 @@
           "value": 1.5,
           "source": "stockanalysis.overview",
           "as_of": null,
-          "fetched_at": "2026-06-17T07:28:05Z",
+          "fetched_at": "2026-06-18T10:34:07Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -194,82 +201,93 @@
   },
   "etf": {
     "holdings_count": 5,
-    "holdings_updated": "Jun 11, 2026",
+    "holdings_updated": "Jun 16, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "name": "Recv Long 2x Crwd Trs Nm1",
-        "weight_pct": 199.71,
-        "shares": 156253,
+        "weight_pct": 199.62,
+        "shares": 146853,
         "raw": {
           "no": 1,
           "n": "Recv Long 2x Crwd Trs Nm1",
-          "as": "199.71%",
-          "sh": "156,253"
+          "as": "199.62%",
+          "sh": "146,853"
         }
       },
       {
         "rank": 2,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 37.02,
+        "weight_pct": 40.07,
         "shares": 20030000,
         "raw": {
           "no": 2,
           "n": "Cash & Cash Equivalents",
-          "as": "37.02%",
+          "as": "40.07%",
           "sh": "20,030,000"
         }
       },
       {
         "rank": 3,
-        "name": "Us Dollars",
-        "weight_pct": -8.01,
-        "shares": 4336206,
+        "name": "Cash",
+        "weight_pct": -13.93,
         "raw": {
           "no": 3,
-          "n": "Us Dollars",
-          "as": "-8.01%",
-          "sh": "4,336,206"
+          "n": "Cash",
+          "as": "-13.93%",
+          "sh": 0
         }
       },
       {
         "rank": 4,
-        "name": "Cash",
-        "weight_pct": -16.77,
+        "name": "Us Dollars",
+        "weight_pct": -17.35,
+        "shares": 8671610,
         "raw": {
           "no": 4,
-          "n": "Cash",
-          "as": "-16.77%",
-          "sh": 0
+          "n": "Us Dollars",
+          "as": "-17.35%",
+          "sh": "8,671,610"
         }
       },
       {
         "rank": 5,
         "name": "Payb Long 2x Crwd Trs Nm1",
-        "weight_pct": -111.95,
-        "shares": 60569757,
+        "weight_pct": -108.41,
+        "shares": 54193119,
         "raw": {
           "no": 5,
           "n": "Payb Long 2x Crwd Trs Nm1",
-          "as": "-111.95%",
-          "sh": "60,569,757"
+          "as": "-108.41%",
+          "sh": "54,193,119"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "CRWD",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
     "yf": true,
     "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/CRWL.json",
     "stockanalysis": "stockanalysis/etfs/CRWL.json",
+    "stockanalysis_yf_fallback": null,
     "slickcharts": null
   },
   "resolver": {
@@ -279,21 +297,25 @@
         "yf",
         "yf.fast_info",
         "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
         "slickcharts"
       ],
       "previous_close": [
         "yf",
-        "stockanalysis.quote"
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "change_pct": [
         "stockanalysis.quote",
         "yf",
-        "yf.derived"
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
       ],
       "market_cap": [
         "yf",
@@ -302,7 +324,8 @@
       ],
       "total_assets": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "trailing_pe": [
         "yf",
@@ -311,20 +334,24 @@
       "forward_pe": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "dividend_yield": [
         "yf",
         "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "beta": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "expense_ratio": [
         "yf",
-        "stockanalysis.overview"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
