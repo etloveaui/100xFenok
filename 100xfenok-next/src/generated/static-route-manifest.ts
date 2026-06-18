@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 25689,
-      "updatedAt": "2026-06-18T19:35:26.746Z"
+      "updatedAt": "2026-06-18T20:25:24.043Z"
     },
     {
       "name": "reports-index.json",
@@ -34,8 +34,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 40659,
-      "updatedAt": "2026-06-18T19:13:05.538Z"
+      "sizeBytes": 40860,
+      "updatedAt": "2026-06-18T20:11:54.346Z"
     },
     {
       "name": "notification-folders.json",
@@ -115,8 +115,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "computed": [
     {
       "name": "market_data_audit.json",
-      "sizeBytes": 5562,
-      "updatedAt": "2026-06-18T19:35:26.058Z"
+      "sizeBytes": 5561,
+      "updatedAt": "2026-06-18T20:25:23.581Z"
     },
     {
       "name": "market_source_parity.json",
@@ -126,7 +126,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "market_structure_index.json",
       "sizeBytes": 42450,
-      "updatedAt": "2026-06-18T18:18:34.528Z"
+      "updatedAt": "2026-06-18T20:11:54.346Z"
     },
     {
       "name": "signals.json",
@@ -41233,8 +41233,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "index.json",
-      "sizeBytes": 80741,
-      "updatedAt": "2026-06-18T19:54:02.418Z"
+      "sizeBytes": 53685,
+      "updatedAt": "2026-06-18T20:22:50.255Z"
     },
     {
       "name": "schema.json",
@@ -41250,8 +41250,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "stockanalysis/backfill": [
     {
       "name": "incremental_latest.json",
-      "sizeBytes": 35690,
-      "updatedAt": "2026-06-18T19:35:26.746Z"
+      "sizeBytes": 32405,
+      "updatedAt": "2026-06-18T20:22:48.803Z"
     },
     {
       "name": "index_offset_0_limit_100.json",
@@ -41325,8 +41325,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "pending_ledger.json",
-      "sizeBytes": 30756,
-      "updatedAt": "2026-06-18T19:35:26.747Z"
+      "sizeBytes": 30581,
+      "updatedAt": "2026-06-18T20:22:48.801Z"
     }
   ],
   "stockanalysis/classification": [
@@ -41339,8 +41339,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "stockanalysis/coverage": [
     {
       "name": "etf_detail.json",
-      "sizeBytes": 14174,
-      "updatedAt": "2026-06-18T19:54:02.417Z"
+      "sizeBytes": 13423,
+      "updatedAt": "2026-06-18T20:22:50.255Z"
     }
   ],
   "stockanalysis/etfs": [
@@ -42005,6 +42005,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:39.636Z"
     },
     {
+      "name": "AMJB.json",
+      "sizeBytes": 148913,
+      "updatedAt": "2026-06-18T20:21:07.071Z"
+    },
+    {
       "name": "AMKL.json",
       "sizeBytes": 38221,
       "updatedAt": "2026-06-18T18:18:37.764Z"
@@ -42023,6 +42028,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "AMPU.json",
       "sizeBytes": 40827,
       "updatedAt": "2026-06-18T18:18:37.894Z"
+    },
+    {
+      "name": "AMUB.json",
+      "sizeBytes": 153484,
+      "updatedAt": "2026-06-18T20:21:08.959Z"
     },
     {
       "name": "AMUN.json",
@@ -42473,6 +42483,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "ATFV.json",
       "sizeBytes": 53669,
       "updatedAt": "2026-06-18T18:18:38.817Z"
+    },
+    {
+      "name": "ATMP.json",
+      "sizeBytes": 153804,
+      "updatedAt": "2026-06-18T20:21:10.889Z"
     },
     {
       "name": "ATTR.json",
@@ -43140,6 +43155,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.051Z"
     },
     {
+      "name": "BDCX.json",
+      "sizeBytes": 150649,
+      "updatedAt": "2026-06-18T20:21:12.682Z"
+    },
+    {
+      "name": "BDCZ.json",
+      "sizeBytes": 154317,
+      "updatedAt": "2026-06-18T20:21:14.776Z"
+    },
+    {
       "name": "BDEC.json",
       "sizeBytes": 147460,
       "updatedAt": "2026-06-18T19:35:26.751Z"
@@ -43218,6 +43243,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "BENJ.json",
       "sizeBytes": 43973,
       "updatedAt": "2026-06-18T18:18:37.786Z"
+    },
+    {
+      "name": "BERZ.json",
+      "sizeBytes": 50815,
+      "updatedAt": "2026-06-18T20:21:16.144Z"
     },
     {
       "name": "BESF.json",
@@ -43803,6 +43833,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "BNKD.json",
       "sizeBytes": 48235,
       "updatedAt": "2026-06-18T18:18:36.826Z"
+    },
+    {
+      "name": "BNKU.json",
+      "sizeBytes": 47046,
+      "updatedAt": "2026-06-18T20:21:17.709Z"
     },
     {
       "name": "BNO.json",
@@ -44400,6 +44435,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.886Z"
     },
     {
+      "name": "BULZ.json",
+      "sizeBytes": 51819,
+      "updatedAt": "2026-06-18T20:21:19.030Z"
+    },
+    {
       "name": "BUSA.json",
       "sizeBytes": 58633,
       "updatedAt": "2026-06-18T18:18:37.531Z"
@@ -44568,6 +44608,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "CAPE.json",
       "sizeBytes": 54043,
       "updatedAt": "2026-06-18T18:18:38.818Z"
+    },
+    {
+      "name": "CARD.json",
+      "sizeBytes": 51571,
+      "updatedAt": "2026-06-18T20:21:20.778Z"
     },
     {
       "name": "CARK.json",
@@ -44803,6 +44848,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "CEFA.json",
       "sizeBytes": 60253,
       "updatedAt": "2026-06-18T18:18:39.329Z"
+    },
+    {
+      "name": "CEFD.json",
+      "sizeBytes": 153280,
+      "updatedAt": "2026-06-18T20:21:22.763Z"
     },
     {
       "name": "CEFS.json",
@@ -46575,6 +46625,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:36.686Z"
     },
     {
+      "name": "DGP.json",
+      "sizeBytes": 144429,
+      "updatedAt": "2026-06-18T20:21:24.740Z"
+    },
+    {
       "name": "DGRE.json",
       "sizeBytes": 61433,
       "updatedAt": "2026-06-18T18:18:37.653Z"
@@ -46603,6 +46658,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "DGT.json",
       "sizeBytes": 59946,
       "updatedAt": "2026-06-18T18:18:38.477Z"
+    },
+    {
+      "name": "DGZ.json",
+      "sizeBytes": 143202,
+      "updatedAt": "2026-06-18T20:21:26.702Z"
     },
     {
       "name": "DHDG.json",
@@ -46763,6 +46823,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "DJIA.json",
       "sizeBytes": 64535,
       "updatedAt": "2026-06-18T18:18:37.636Z"
+    },
+    {
+      "name": "DJP.json",
+      "sizeBytes": 145946,
+      "updatedAt": "2026-06-18T20:21:28.651Z"
     },
     {
       "name": "DJTU.json",
@@ -47095,6 +47160,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.666Z"
     },
     {
+      "name": "DULL.json",
+      "sizeBytes": 132384,
+      "updatedAt": "2026-06-18T20:21:30.548Z"
+    },
+    {
       "name": "DUNK.json",
       "sizeBytes": 52778,
       "updatedAt": "2026-06-18T18:18:38.401Z"
@@ -47348,6 +47418,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "DYTA.json",
       "sizeBytes": 47785,
       "updatedAt": "2026-06-18T18:18:38.235Z"
+    },
+    {
+      "name": "DZZ.json",
+      "sizeBytes": 144926,
+      "updatedAt": "2026-06-18T20:21:32.425Z"
     },
     {
       "name": "EAFG.json",
@@ -49655,9 +49730,19 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:39.269Z"
     },
     {
+      "name": "FLYD.json",
+      "sizeBytes": 56799,
+      "updatedAt": "2026-06-18T20:21:34.313Z"
+    },
+    {
       "name": "FLYT.json",
       "sizeBytes": 96761,
       "updatedAt": "2026-06-18T18:18:39.290Z"
+    },
+    {
+      "name": "FLYU.json",
+      "sizeBytes": 47628,
+      "updatedAt": "2026-06-18T20:21:36.089Z"
     },
     {
       "name": "FMAG.json",
@@ -49790,9 +49875,24 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:39.319Z"
     },
     {
+      "name": "FNGD.json",
+      "sizeBytes": 43711,
+      "updatedAt": "2026-06-18T20:21:37.691Z"
+    },
+    {
       "name": "FNGG.json",
       "sizeBytes": 52599,
       "updatedAt": "2026-06-18T18:18:39.253Z"
+    },
+    {
+      "name": "FNGO.json",
+      "sizeBytes": 36825,
+      "updatedAt": "2026-06-18T20:21:39.117Z"
+    },
+    {
+      "name": "FNGS.json",
+      "sizeBytes": 47921,
+      "updatedAt": "2026-06-18T20:21:40.687Z"
     },
     {
       "name": "FNGU.json",
@@ -50565,9 +50665,19 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.523Z"
     },
     {
+      "name": "GDXD.json",
+      "sizeBytes": 139905,
+      "updatedAt": "2026-06-18T20:21:42.575Z"
+    },
+    {
       "name": "GDXJ.json",
       "sizeBytes": 76168,
       "updatedAt": "2026-06-18T18:18:38.474Z"
+    },
+    {
+      "name": "GDXU.json",
+      "sizeBytes": 145951,
+      "updatedAt": "2026-06-18T20:21:44.344Z"
     },
     {
       "name": "GDXW.json",
@@ -50803,6 +50913,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "GLD.json",
       "sizeBytes": 147061,
       "updatedAt": "2026-06-18T18:18:36.992Z"
+    },
+    {
+      "name": "GLDI.json",
+      "sizeBytes": 154029,
+      "updatedAt": "2026-06-18T20:21:46.284Z"
     },
     {
       "name": "GLDM.json",
@@ -51118,6 +51233,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "GRIN.json",
       "sizeBytes": 56998,
       "updatedAt": "2026-06-18T18:18:39.270Z"
+    },
+    {
+      "name": "GRN.json",
+      "sizeBytes": 145368,
+      "updatedAt": "2026-06-18T20:21:48.173Z"
     },
     {
       "name": "GRNB.json",
@@ -51553,6 +51673,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "HDGE.json",
       "sizeBytes": 59349,
       "updatedAt": "2026-06-18T18:18:38.935Z"
+    },
+    {
+      "name": "HDLB.json",
+      "sizeBytes": 154176,
+      "updatedAt": "2026-06-18T20:21:50.136Z"
     },
     {
       "name": "HDMV.json",
@@ -52725,6 +52850,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.738Z"
     },
     {
+      "name": "IFED.json",
+      "sizeBytes": 143979,
+      "updatedAt": "2026-06-18T20:21:52.050Z"
+    },
+    {
       "name": "IFGL.json",
       "sizeBytes": 55631,
       "updatedAt": "2026-06-18T18:18:37.954Z"
@@ -53645,6 +53775,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:36.838Z"
     },
     {
+      "name": "IWDL.json",
+      "sizeBytes": 143750,
+      "updatedAt": "2026-06-18T20:21:53.880Z"
+    },
+    {
       "name": "IWF.json",
       "sizeBytes": 76355,
       "updatedAt": "2026-06-18T18:18:39.157Z"
@@ -53653,6 +53788,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "IWFG.json",
       "sizeBytes": 27174,
       "updatedAt": "2026-06-18T18:18:38.508Z"
+    },
+    {
+      "name": "IWFL.json",
+      "sizeBytes": 143612,
+      "updatedAt": "2026-06-18T20:21:55.614Z"
     },
     {
       "name": "IWL.json",
@@ -53673,6 +53813,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "IWMI.json",
       "sizeBytes": 67782,
       "updatedAt": "2026-06-18T18:18:39.535Z"
+    },
+    {
+      "name": "IWML.json",
+      "sizeBytes": 143984,
+      "updatedAt": "2026-06-18T20:21:57.604Z"
     },
     {
       "name": "IWMW.json",
@@ -54015,9 +54160,19 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:39.543Z"
     },
     {
+      "name": "JETD.json",
+      "sizeBytes": 50529,
+      "updatedAt": "2026-06-18T20:21:59.092Z"
+    },
+    {
       "name": "JETS.json",
       "sizeBytes": 82050,
       "updatedAt": "2026-06-18T18:18:36.478Z"
+    },
+    {
+      "name": "JETU.json",
+      "sizeBytes": 48383,
+      "updatedAt": "2026-06-18T20:22:00.797Z"
     },
     {
       "name": "JFLI.json",
@@ -56140,6 +56295,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.058Z"
     },
     {
+      "name": "MLPB.json",
+      "sizeBytes": 153685,
+      "updatedAt": "2026-06-18T20:22:02.709Z"
+    },
+    {
       "name": "MLPD.json",
       "sizeBytes": 153773,
       "updatedAt": "2026-06-18T18:18:38.272Z"
@@ -56148,6 +56308,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "MLPI.json",
       "sizeBytes": 53976,
       "updatedAt": "2026-06-18T18:18:38.868Z"
+    },
+    {
+      "name": "MLPR.json",
+      "sizeBytes": 149352,
+      "updatedAt": "2026-06-18T20:22:04.583Z"
     },
     {
       "name": "MLPX.json",
@@ -56520,6 +56685,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:36.868Z"
     },
     {
+      "name": "MTUL.json",
+      "sizeBytes": 143444,
+      "updatedAt": "2026-06-18T20:22:06.335Z"
+    },
+    {
       "name": "MTUM.json",
       "sizeBytes": 76096,
       "updatedAt": "2026-06-18T18:18:37.238Z"
@@ -56648,6 +56818,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "MVPL.json",
       "sizeBytes": 148948,
       "updatedAt": "2026-06-18T18:18:36.900Z"
+    },
+    {
+      "name": "MVRL.json",
+      "sizeBytes": 154033,
+      "updatedAt": "2026-06-18T20:22:08.521Z"
     },
     {
       "name": "MVV.json",
@@ -57210,6 +57385,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.685Z"
     },
     {
+      "name": "NRGD.json",
+      "sizeBytes": 45851,
+      "updatedAt": "2026-06-18T20:22:10.331Z"
+    },
+    {
+      "name": "NRGU.json",
+      "sizeBytes": 52535,
+      "updatedAt": "2026-06-18T20:22:11.849Z"
+    },
+    {
       "name": "NRSH.json",
       "sizeBytes": 54066,
       "updatedAt": "2026-06-18T18:18:39.068Z"
@@ -57695,6 +57880,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.169Z"
     },
     {
+      "name": "OILD.json",
+      "sizeBytes": 53451,
+      "updatedAt": "2026-06-18T20:22:13.362Z"
+    },
+    {
       "name": "OILK.json",
       "sizeBytes": 156443,
       "updatedAt": "2026-06-18T18:18:38.255Z"
@@ -57703,6 +57893,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "OILT.json",
       "sizeBytes": 51860,
       "updatedAt": "2026-06-18T18:18:39.296Z"
+    },
+    {
+      "name": "OILU.json",
+      "sizeBytes": 54422,
+      "updatedAt": "2026-06-18T20:22:14.845Z"
     },
     {
       "name": "OKLL.json",
@@ -58413,6 +58608,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "PFFD.json",
       "sizeBytes": 56469,
       "updatedAt": "2026-06-18T18:18:37.299Z"
+    },
+    {
+      "name": "PFFL.json",
+      "sizeBytes": 152664,
+      "updatedAt": "2026-06-18T20:22:16.789Z"
     },
     {
       "name": "PFFR.json",
@@ -60020,6 +60220,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.007Z"
     },
     {
+      "name": "QULL.json",
+      "sizeBytes": 143451,
+      "updatedAt": "2026-06-18T20:22:18.821Z"
+    },
+    {
       "name": "QUS.json",
       "sizeBytes": 60262,
       "updatedAt": "2026-06-18T18:18:39.089Z"
@@ -61075,6 +61280,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.953Z"
     },
     {
+      "name": "SCDL.json",
+      "sizeBytes": 143538,
+      "updatedAt": "2026-06-18T20:22:20.587Z"
+    },
+    {
       "name": "SCDS.json",
       "sizeBytes": 55622,
       "updatedAt": "2026-06-18T18:18:37.154Z"
@@ -61595,6 +61805,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.630Z"
     },
     {
+      "name": "SHNY.json",
+      "sizeBytes": 148281,
+      "updatedAt": "2026-06-18T20:22:24.134Z"
+    },
+    {
       "name": "SHOC.json",
       "sizeBytes": 58992,
       "updatedAt": "2026-06-18T18:18:39.318Z"
@@ -61830,6 +62045,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.275Z"
     },
     {
+      "name": "SLVO.json",
+      "sizeBytes": 153068,
+      "updatedAt": "2026-06-18T20:22:26.175Z"
+    },
+    {
       "name": "SLVP.json",
       "sizeBytes": 81356,
       "updatedAt": "2026-06-18T18:18:39.493Z"
@@ -61938,6 +62158,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "SMH.json",
       "sizeBytes": 71610,
       "updatedAt": "2026-06-18T18:18:37.638Z"
+    },
+    {
+      "name": "SMHB.json",
+      "sizeBytes": 154221,
+      "updatedAt": "2026-06-18T20:22:28.139Z"
     },
     {
       "name": "SMHX.json",
@@ -62588,6 +62813,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "SPYT.json",
       "sizeBytes": 49419,
       "updatedAt": "2026-06-18T18:18:38.776Z"
+    },
+    {
+      "name": "SPYU.json",
+      "sizeBytes": 148941,
+      "updatedAt": "2026-06-18T20:22:29.956Z"
     },
     {
       "name": "SPYV.json",
@@ -64425,6 +64655,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.520Z"
     },
     {
+      "name": "UCIB.json",
+      "sizeBytes": 145217,
+      "updatedAt": "2026-06-18T20:22:31.767Z"
+    },
+    {
       "name": "UCO.json",
       "sizeBytes": 69594,
       "updatedAt": "2026-06-18T18:18:38.735Z"
@@ -64870,6 +65105,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:37.802Z"
     },
     {
+      "name": "USML.json",
+      "sizeBytes": 144405,
+      "updatedAt": "2026-06-18T20:22:33.593Z"
+    },
+    {
       "name": "USMV.json",
       "sizeBytes": 63791,
       "updatedAt": "2026-06-18T18:18:38.884Z"
@@ -64888,6 +65128,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "USO.json",
       "sizeBytes": 70057,
       "updatedAt": "2026-06-18T18:18:37.162Z"
+    },
+    {
+      "name": "USOI.json",
+      "sizeBytes": 152836,
+      "updatedAt": "2026-06-18T20:22:35.743Z"
     },
     {
       "name": "USOY.json",
@@ -65840,6 +66085,21 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:38.786Z"
     },
     {
+      "name": "VXX.json",
+      "sizeBytes": 147361,
+      "updatedAt": "2026-06-18T20:22:37.733Z"
+    },
+    {
+      "name": "VXZ.json",
+      "sizeBytes": 145559,
+      "updatedAt": "2026-06-18T20:22:39.678Z"
+    },
+    {
+      "name": "VYLD.json",
+      "sizeBytes": 145685,
+      "updatedAt": "2026-06-18T20:22:41.484Z"
+    },
+    {
       "name": "VYM.json",
       "sizeBytes": 74711,
       "updatedAt": "2026-06-18T18:18:38.093Z"
@@ -66150,9 +66410,19 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:39.491Z"
     },
     {
+      "name": "WTID.json",
+      "sizeBytes": 47298,
+      "updatedAt": "2026-06-18T20:22:43.129Z"
+    },
+    {
       "name": "WTIP.json",
       "sizeBytes": 52618,
       "updatedAt": "2026-06-18T18:18:36.614Z"
+    },
+    {
+      "name": "WTIU.json",
+      "sizeBytes": 49694,
+      "updatedAt": "2026-06-18T20:22:44.673Z"
     },
     {
       "name": "WTLS.json",
@@ -66163,6 +66433,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "WTMF.json",
       "sizeBytes": 49990,
       "updatedAt": "2026-06-18T18:18:39.050Z"
+    },
+    {
+      "name": "WTMU.json",
+      "sizeBytes": 44714,
+      "updatedAt": "2026-06-18T20:22:46.657Z"
+    },
+    {
+      "name": "WTMY.json",
+      "sizeBytes": 43721,
+      "updatedAt": "2026-06-18T20:22:48.453Z"
     },
     {
       "name": "WTPI.json",
@@ -70612,6 +70892,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.678Z"
     },
     {
+      "name": "AMJB.json",
+      "sizeBytes": 74118,
+      "updatedAt": "2026-06-18T20:21:07.066Z"
+    },
+    {
       "name": "AMKR.json",
       "sizeBytes": 14993,
       "updatedAt": "2026-06-18T18:18:34.616Z"
@@ -70625,6 +70910,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "AMT.json",
       "sizeBytes": 15735,
       "updatedAt": "2026-06-18T18:18:34.957Z"
+    },
+    {
+      "name": "AMUB.json",
+      "sizeBytes": 78672,
+      "updatedAt": "2026-06-18T20:21:08.954Z"
     },
     {
       "name": "AMZN.json",
@@ -70792,6 +71082,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.240Z"
     },
     {
+      "name": "ATMP.json",
+      "sizeBytes": 78828,
+      "updatedAt": "2026-06-18T20:21:10.884Z"
+    },
+    {
       "name": "ATO.json",
       "sizeBytes": 15379,
       "updatedAt": "2026-06-18T18:18:34.731Z"
@@ -70920,6 +71215,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "BCEM.json",
       "sizeBytes": 20075,
       "updatedAt": "2026-06-18T19:35:26.759Z"
+    },
+    {
+      "name": "BDCX.json",
+      "sizeBytes": 76085,
+      "updatedAt": "2026-06-18T20:21:12.677Z"
+    },
+    {
+      "name": "BDCZ.json",
+      "sizeBytes": 79105,
+      "updatedAt": "2026-06-18T20:21:14.770Z"
     },
     {
       "name": "BDEC.json",
@@ -71435,6 +71740,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "CDW.json",
       "sizeBytes": 15756,
       "updatedAt": "2026-06-18T18:18:35.189Z"
+    },
+    {
+      "name": "CEFD.json",
+      "sizeBytes": 78570,
+      "updatedAt": "2026-06-18T20:21:22.758Z"
     },
     {
       "name": "CEG.json",
@@ -72017,9 +72327,19 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.963Z"
     },
     {
+      "name": "DGP.json",
+      "sizeBytes": 71184,
+      "updatedAt": "2026-06-18T20:21:24.736Z"
+    },
+    {
       "name": "DGX.json",
       "sizeBytes": 15606,
       "updatedAt": "2026-06-18T18:18:35.055Z"
+    },
+    {
+      "name": "DGZ.json",
+      "sizeBytes": 70564,
+      "updatedAt": "2026-06-18T20:21:26.697Z"
     },
     {
       "name": "DHI.json",
@@ -72045,6 +72365,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "DIS.json",
       "sizeBytes": 15989,
       "updatedAt": "2026-06-18T18:18:34.676Z"
+    },
+    {
+      "name": "DJP.json",
+      "sizeBytes": 71961,
+      "updatedAt": "2026-06-18T20:21:28.647Z"
     },
     {
       "name": "DKNG.json",
@@ -72137,6 +72462,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.916Z"
     },
     {
+      "name": "DULL.json",
+      "sizeBytes": 65212,
+      "updatedAt": "2026-06-18T20:21:30.544Z"
+    },
+    {
       "name": "DUOL.json",
       "sizeBytes": 13425,
       "updatedAt": "2026-06-18T18:18:35.025Z"
@@ -72225,6 +72555,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "DXCM.json",
       "sizeBytes": 14139,
       "updatedAt": "2026-06-18T18:18:35.274Z"
+    },
+    {
+      "name": "DZZ.json",
+      "sizeBytes": 71429,
+      "updatedAt": "2026-06-18T20:21:32.423Z"
     },
     {
       "name": "EA.json",
@@ -72737,6 +73072,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.754Z"
     },
     {
+      "name": "GDXD.json",
+      "sizeBytes": 69111,
+      "updatedAt": "2026-06-18T20:21:42.571Z"
+    },
+    {
+      "name": "GDXU.json",
+      "sizeBytes": 71983,
+      "updatedAt": "2026-06-18T20:21:44.339Z"
+    },
+    {
       "name": "GDXW.json",
       "sizeBytes": 52856,
       "updatedAt": "2026-06-18T18:18:34.644Z"
@@ -72810,6 +73155,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "GLD.json",
       "sizeBytes": 72592,
       "updatedAt": "2026-06-18T18:18:34.672Z"
+    },
+    {
+      "name": "GLDI.json",
+      "sizeBytes": 78967,
+      "updatedAt": "2026-06-18T20:21:46.280Z"
     },
     {
       "name": "GLDM.json",
@@ -72912,6 +73262,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.202Z"
     },
     {
+      "name": "GRN.json",
+      "sizeBytes": 71733,
+      "updatedAt": "2026-06-18T20:21:48.170Z"
+    },
+    {
       "name": "GS.json",
       "sizeBytes": 13167,
       "updatedAt": "2026-06-18T18:18:35.258Z"
@@ -72970,6 +73325,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "HD.json",
       "sizeBytes": 16035,
       "updatedAt": "2026-06-18T18:18:34.927Z"
+    },
+    {
+      "name": "HDLB.json",
+      "sizeBytes": 79027,
+      "updatedAt": "2026-06-18T20:21:50.134Z"
     },
     {
       "name": "HFSP.json",
@@ -73192,6 +73552,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.071Z"
     },
     {
+      "name": "IFED.json",
+      "sizeBytes": 70945,
+      "updatedAt": "2026-06-18T20:21:52.045Z"
+    },
+    {
       "name": "IFF.json",
       "sizeBytes": 15911,
       "updatedAt": "2026-06-18T18:18:34.572Z"
@@ -73342,9 +73707,24 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.623Z"
     },
     {
+      "name": "IWDL.json",
+      "sizeBytes": 70811,
+      "updatedAt": "2026-06-18T20:21:53.876Z"
+    },
+    {
+      "name": "IWFL.json",
+      "sizeBytes": 70736,
+      "updatedAt": "2026-06-18T20:21:55.609Z"
+    },
+    {
       "name": "IWM.json",
       "sizeBytes": 1579,
       "updatedAt": "2026-06-18T18:18:35.049Z"
+    },
+    {
+      "name": "IWML.json",
+      "sizeBytes": 70949,
+      "updatedAt": "2026-06-18T20:21:57.600Z"
     },
     {
       "name": "IWMW.json",
@@ -73977,9 +74357,19 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.107Z"
     },
     {
+      "name": "MLPB.json",
+      "sizeBytes": 78777,
+      "updatedAt": "2026-06-18T20:22:02.705Z"
+    },
+    {
       "name": "MLPD.json",
       "sizeBytes": 77685,
       "updatedAt": "2026-06-18T18:18:34.970Z"
+    },
+    {
+      "name": "MLPR.json",
+      "sizeBytes": 75432,
+      "updatedAt": "2026-06-18T20:22:04.578Z"
     },
     {
       "name": "MMAR.json",
@@ -74122,6 +74512,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.264Z"
     },
     {
+      "name": "MTUL.json",
+      "sizeBytes": 70684,
+      "updatedAt": "2026-06-18T20:22:06.332Z"
+    },
+    {
       "name": "MTZ.json",
       "sizeBytes": 14551,
       "updatedAt": "2026-06-18T18:18:34.765Z"
@@ -74145,6 +74540,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "MVPL.json",
       "sizeBytes": 73568,
       "updatedAt": "2026-06-18T18:18:34.648Z"
+    },
+    {
+      "name": "MVRL.json",
+      "sizeBytes": 78949,
+      "updatedAt": "2026-06-18T20:22:08.517Z"
     },
     {
       "name": "NAPR.json",
@@ -74657,6 +75057,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.822Z"
     },
     {
+      "name": "PFFL.json",
+      "sizeBytes": 78277,
+      "updatedAt": "2026-06-18T20:22:16.784Z"
+    },
+    {
       "name": "PFGC.json",
       "sizeBytes": 14368,
       "updatedAt": "2026-06-18T18:18:34.917Z"
@@ -74957,6 +75362,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T19:35:26.763Z"
     },
     {
+      "name": "QULL.json",
+      "sizeBytes": 70665,
+      "updatedAt": "2026-06-18T20:22:18.816Z"
+    },
+    {
       "name": "RACE.json",
       "sizeBytes": 15445,
       "updatedAt": "2026-06-18T18:18:35.057Z"
@@ -75157,6 +75567,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.250Z"
     },
     {
+      "name": "SCDL.json",
+      "sizeBytes": 70723,
+      "updatedAt": "2026-06-18T20:22:20.582Z"
+    },
+    {
       "name": "SCHD.json",
       "sizeBytes": 1593,
       "updatedAt": "2026-06-18T18:18:34.560Z"
@@ -75212,6 +75627,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.893Z"
     },
     {
+      "name": "SHNY.json",
+      "sizeBytes": 73164,
+      "updatedAt": "2026-06-18T20:22:24.132Z"
+    },
+    {
       "name": "SHOP.json",
       "sizeBytes": 13645,
       "updatedAt": "2026-06-18T18:18:34.932Z"
@@ -75262,6 +75682,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:34.739Z"
     },
     {
+      "name": "SLVO.json",
+      "sizeBytes": 78488,
+      "updatedAt": "2026-06-18T20:22:26.172Z"
+    },
+    {
       "name": "SMCI.json",
       "sizeBytes": 14578,
       "updatedAt": "2026-06-18T18:18:34.979Z"
@@ -75270,6 +75695,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "SMH.json",
       "sizeBytes": 1043,
       "updatedAt": "2026-06-18T18:18:34.831Z"
+    },
+    {
+      "name": "SMHB.json",
+      "sizeBytes": 79050,
+      "updatedAt": "2026-06-18T20:22:28.136Z"
     },
     {
       "name": "SMU.json",
@@ -75385,6 +75815,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "SPY.json",
       "sizeBytes": 1592,
       "updatedAt": "2026-06-18T18:18:35.177Z"
+    },
+    {
+      "name": "SPYU.json",
+      "sizeBytes": 73541,
+      "updatedAt": "2026-06-18T20:22:29.952Z"
     },
     {
       "name": "SRE.json",
@@ -75907,6 +76342,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-18T18:18:35.127Z"
     },
     {
+      "name": "UCIB.json",
+      "sizeBytes": 71592,
+      "updatedAt": "2026-06-18T20:22:31.762Z"
+    },
+    {
       "name": "UCOP.json",
       "sizeBytes": 15710,
       "updatedAt": "2026-06-18T18:18:35.226Z"
@@ -76060,6 +76500,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "USG.json",
       "sizeBytes": 75175,
       "updatedAt": "2026-06-18T18:18:35.067Z"
+    },
+    {
+      "name": "USML.json",
+      "sizeBytes": 71191,
+      "updatedAt": "2026-06-18T20:22:33.589Z"
+    },
+    {
+      "name": "USOI.json",
+      "sizeBytes": 78362,
+      "updatedAt": "2026-06-18T20:22:35.738Z"
     },
     {
       "name": "USVN.json",
@@ -76275,6 +76725,21 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "VUS.json",
       "sizeBytes": 43483,
       "updatedAt": "2026-06-18T18:18:34.581Z"
+    },
+    {
+      "name": "VXX.json",
+      "sizeBytes": 72884,
+      "updatedAt": "2026-06-18T20:22:37.728Z"
+    },
+    {
+      "name": "VXZ.json",
+      "sizeBytes": 71824,
+      "updatedAt": "2026-06-18T20:22:39.673Z"
+    },
+    {
+      "name": "VYLD.json",
+      "sizeBytes": 71785,
+      "updatedAt": "2026-06-18T20:22:41.479Z"
     },
     {
       "name": "VZ.json",
