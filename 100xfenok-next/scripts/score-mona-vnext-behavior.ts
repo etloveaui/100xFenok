@@ -431,6 +431,41 @@ function checkEnglishVisibilityIntent(): Result {
     : fail("english-display-contract", "English visibility request was not treated as UI/control intent");
 }
 
+function checkProductCardFlow(): Result {
+  const initial = createInitialLessonState({ englishVisible: false });
+  const attemptTurn = {
+    conversationId: "c",
+    turnSeq: 1,
+    userText: "I hope that makes sense.",
+    modelText: "좋아, 자연스럽게는 이렇게 말해.",
+    intent: "lesson_attempt" as const,
+    sttDrift: false,
+    interrupted: false,
+    startedAtIso: "2026-06-19T00:00:00.000Z",
+    completedAtIso: "2026-06-19T00:00:01.000Z",
+  };
+  const afterAttempt = applyMonaVnextLessonEvaluation(initial, evaluateMonaVnextTurn(attemptTurn, initial));
+  const nextTurn = {
+    ...attemptTurn,
+    turnSeq: 2,
+    userText: "다음 문장으로 넘어가자",
+    modelText: "좋아, 다음 문장 갈게.",
+    intent: "next_material" as const,
+  };
+  const afterNext = applyMonaVnextLessonEvaluation(afterAttempt, evaluateMonaVnextTurn(nextTurn, afterAttempt));
+
+  const ok = !initial.englishVisible
+    && initial.expression.state === "prompt"
+    && afterAttempt.englishVisible
+    && afterAttempt.expression.state === "reveal"
+    && afterNext.expression.id !== afterAttempt.expression.id
+    && !afterNext.englishVisible
+    && afterNext.expression.state === "prompt";
+  return ok
+    ? pass("product-card-flow", "hidden prompt -> attempt reveal -> next hidden prompt")
+    : fail("product-card-flow", JSON.stringify({ initial, afterAttempt, afterNext }));
+}
+
 function checkRepeatLimit(): Result {
   let lesson = createInitialLessonState();
   lesson = recordPromptExposure(lesson, lesson.expression);
@@ -603,6 +638,7 @@ const results = [
   checkDifficultyIntent(),
   checkLessonAttemptExposure(),
   checkEnglishVisibilityIntent(),
+  checkProductCardFlow(),
   checkRepeatLimit(),
   checkControlLeakage(),
   checkRepairIntent(),

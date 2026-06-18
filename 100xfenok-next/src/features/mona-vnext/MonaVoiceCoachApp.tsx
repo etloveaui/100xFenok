@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
+import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
 import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 import {
   createInitialLessonState,
@@ -46,6 +47,8 @@ const DEFAULT_SETTINGS = {
   englishVisible: true,
   temperature: MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE,
 } as const;
+
+const PRODUCT_INITIAL_ENGLISH_VISIBLE = false;
 
 // Durable event buffer cap, matched to the writer's events.slice(-1000).
 const MAX_PENDING_EVENTS = 1000;
@@ -96,6 +99,13 @@ function buildWindDownMessage(status: ReturnType<typeof useGeminiLiveSession>["s
   return "마이크를 켜면 오늘 문장부터 바로 시작할게.";
 }
 
+function isWindDownSettingsLocked(status: ReturnType<typeof useGeminiLiveSession>["status"]) {
+  return status === "connecting"
+    || status === "setup-wait"
+    || status === "listening"
+    || status === "stopping";
+}
+
 function buildWindDownCard(lessonState: MonaVnextLessonState): ExpressionCard {
   const isRepair = lessonState.expression.state === "repair";
   const state: ExpressionCard["state"] = isRepair
@@ -116,7 +126,9 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   const [transcriptState, setTranscriptState] = useState<MonaVnextTranscriptState>(
     () => createMonaVnextTranscriptState(createMonaVnextConversationId()),
   );
-  const [lessonState, setLessonState] = useState<MonaVnextLessonState>(() => createInitialLessonState());
+  const [lessonState, setLessonState] = useState<MonaVnextLessonState>(() => createInitialLessonState({
+    englishVisible: surface === "winddown" ? PRODUCT_INITIAL_ENGLISH_VISIBLE : DEFAULT_SETTINGS.englishVisible,
+  }));
   const [events, setEvents] = useState<MonaVnextLogEvent[]>([]);
   // Single source of truth for the "저장 실패" banner. Only turn/final
   // conversation saves can set it; partial-event logging never does.
@@ -147,8 +159,9 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     model: selectedModel,
     voiceName,
     vadPreset,
+    englishVisible: lessonState.englishVisible,
     activeExpressionId: lessonState.expression.id,
-  }), [lessonState.expression.id, selectedModel, vadPreset, voiceName]);
+  }), [lessonState.englishVisible, lessonState.expression.id, selectedModel, vadPreset, voiceName]);
 
   const applyPersistOutcome = useCallback((
     kind: MonaVnextPersistKind,
@@ -384,6 +397,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       const nextLesson = createInitialLessonState({
         expressionBank: session.expressionBank.entries,
         activeExpressionId: session.settings.activeExpressionId,
+        englishVisible: surface === "winddown" ? PRODUCT_INITIAL_ENGLISH_VISIBLE : DEFAULT_SETTINGS.englishVisible,
       });
       lessonStateRef.current = nextLesson;
       setLessonState(nextLesson);
@@ -553,6 +567,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   const windDownError = persistenceState.conversationSaveError ?? live.metrics.lastError;
 
   if (surface === "winddown") {
+    const settingsLocked = isWindDownSettingsLocked(live.status);
     return (
       <MonaWindDown
         phase={mapWindDownPhase(live.status)}
@@ -564,6 +579,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         vadPreset={vadPreset}
         onVoiceChange={setVoiceName}
         onVadChange={setVadPreset}
+        settingsSlot={<MonaVnextEntry locked={settingsLocked} />}
         onStart={live.start}
         onStop={stopSession}
       />

@@ -71,6 +71,7 @@ function normalizeExpressionBank(value?: MonaVnextExpression[]) {
 export function createInitialLessonState(options: {
   expressionBank?: MonaVnextExpression[];
   activeExpressionId?: string;
+  englishVisible?: boolean;
 } = {}): MonaVnextLessonState {
   const expressionBank = normalizeExpressionBank(options.expressionBank);
   const expression = getMonaVnextExpressionById(options.activeExpressionId, expressionBank);
@@ -78,7 +79,7 @@ export function createInitialLessonState(options: {
     expression,
     expressionBank,
     promptHistory: { [expression.id]: 1 },
-    englishVisible: true,
+    englishVisible: options.englishVisible ?? true,
   };
 }
 

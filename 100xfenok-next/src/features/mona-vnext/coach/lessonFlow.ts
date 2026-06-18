@@ -27,7 +27,7 @@ export function applyMonaVnextLessonEvaluation(
     return recordPromptExposure(
       {
         ...state,
-        englishVisible: true,
+        englishVisible: false,
       },
       {
         ...next,
@@ -51,7 +51,16 @@ export function applyMonaVnextLessonEvaluation(
   }
 
   if (evaluation.lessonAttempt) {
-    return recordPromptExposure(state, state.expression);
+    return recordPromptExposure(
+      {
+        ...state,
+        englishVisible: true,
+      },
+      {
+        ...state.expression,
+        state: "reveal",
+      },
+    );
   }
 
   return state;

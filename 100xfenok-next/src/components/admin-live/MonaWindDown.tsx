@@ -78,10 +78,19 @@ const PALETTES: Record<WindDownTheme, Record<string, string>> = {
 };
 
 const CARD_STATE_LABEL: Record<ExpressionCard["state"], string> = {
-  prompt: "말해보기",
-  reveal: "진짜 쓰는 버전",
-  drill: "비틀어보기",
+  prompt: "먼저 말해보기",
+  reveal: "자연스러운 영어",
+  drill: "다시 잡기",
 };
+
+const FLOW_STEPS = ["말하기", "영어 공개", "따라하기"];
+
+function cardFlowStep(card: ExpressionCard | null) {
+  if (!card) return -1;
+  if (card.state === "prompt") return 0;
+  if (card.state === "reveal") return 1;
+  return 2;
+}
 
 function studyPlanLine(): string {
   const shifted = new Date(Date.now() - 4 * 60 * 60 * 1000);
@@ -157,6 +166,7 @@ export default function MonaWindDown({
   const planLine = useMemo(() => studyPlanLine(), []);
   const live = phase === "live";
   const busy = phase === "connecting" || phase === "boot";
+  const activeFlowStep = cardFlowStep(card);
 
   const buttonLabel = phase === "live"
     ? "듣고 있어 · 누르면 마침"
@@ -226,35 +236,65 @@ export default function MonaWindDown({
                   {CARD_STATE_LABEL[card.state]}
                 </span>
                 {card.state === "prompt" && (
-                  <span aria-label="영어는 아직 비밀" className="text-[14px] text-[var(--wd-muted)]">⚿</span>
+                  <span className="text-[12px] font-semibold text-[var(--wd-muted)]">영어 숨김</span>
+                )}
+                {card.state === "reveal" && (
+                  <span className="text-[12px] font-semibold text-[var(--wd-muted)]">한 번 따라 말하기</span>
+                )}
+                {card.state === "drill" && (
+                  <span className="text-[12px] font-semibold text-[var(--wd-muted)]">천천히</span>
                 )}
               </div>
 
               <p className="mt-5 text-[25px] font-semibold leading-snug">{card.ko}</p>
 
-              <div className="mt-5 flex items-center gap-3" aria-hidden>
-                <span className="h-px flex-1 bg-[var(--wd-line)]" />
-                <span className="text-[10px] text-[var(--wd-muted)]">◆</span>
-                <span className="h-px flex-1 bg-[var(--wd-line)]" />
+              <div className="mt-5 grid grid-cols-3 gap-2" aria-hidden>
+                {FLOW_STEPS.map((step, index) => (
+                  <span
+                    key={step}
+                    className={`h-8 rounded-full border px-2 text-[11px] font-semibold leading-8 ${
+                      activeFlowStep === index
+                        ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
+                        : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+                    }`}
+                  >
+                    {step}
+                  </span>
+                ))}
               </div>
 
               {card.state === "prompt" && (
-                <p className="mt-5 text-[15px] tracking-[0.4em] text-[var(--wd-muted)]">● ● ●</p>
+                <p className="mt-5 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-bg)]/65 px-4 py-3 text-[15px] font-medium leading-relaxed text-[var(--wd-muted)]">
+                  영어는 네가 먼저 말한 뒤 보여줄게.
+                </p>
               )}
 
               {card.state === "reveal" && card.en && (
-                <p className="mt-5 font-[family-name:var(--font-wd-serif)] text-[28px] font-medium leading-snug">
-                  {card.en}
-                </p>
+                <>
+                  <p className="mt-5 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">TARGET</p>
+                  <p className="mt-2 font-[family-name:var(--font-wd-serif)] text-[28px] font-medium leading-snug">
+                    {card.en}
+                  </p>
+                  <p className="mt-4 text-[15px] font-medium leading-relaxed text-[var(--wd-muted)]">
+                    낮은 목소리로 한 번만 따라 말해봐.
+                  </p>
+                </>
               )}
               {card.state === "reveal" && card.pron && (
                 <p className="mt-3 text-[15px] font-medium text-[var(--wd-muted)]">{card.pron}</p>
               )}
 
               {card.state === "drill" && (
-                <p className="mt-5 inline-block rounded-2xl bg-[var(--wd-apricot-soft)] px-4 py-2 text-[15px] font-semibold text-[var(--wd-apricot)]">
-                  {card.drillHint ?? "같은 문장을 비틀어 말해보자"}
-                </p>
+                <>
+                  {card.en ? (
+                    <p className="mt-5 font-[family-name:var(--font-wd-serif)] text-[25px] font-medium leading-snug">
+                      {card.en}
+                    </p>
+                  ) : null}
+                  <p className="mt-5 inline-block rounded-2xl bg-[var(--wd-apricot-soft)] px-4 py-2 text-[15px] font-semibold text-[var(--wd-apricot)]">
+                    {card.drillHint ?? "같은 문장을 천천히 다시 잡아보자"}
+                  </p>
+                </>
               )}
             </>
           ) : (

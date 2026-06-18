@@ -89,9 +89,10 @@ Mona vNext owner-test logs:
 - The settings-sheet entry inside the Wind-Down shell must remain a test escape
   hatch to `/winddown-vnext`; it must not point back to `/winddown` after main
   route promotion. The owner-smoke source invariant checks this exact href.
-- Product-card redesign is still a separate follow-up: the current owner-facing
-  card is vNext lesson state rendered through the legacy-pretty `MonaWindDown`
-  shell, while debug metrics/events stay on `/winddown-vnext`.
+- Product-card flow is intentionally learner-first on `/winddown`: the first
+  prompt hides English, a learner attempt reveals the natural English target,
+  and explicit next material hides English again for the new prompt. Debug
+  metrics/events stay on `/winddown-vnext`.
 - vNext must keep `productionWriteEnabled: false` until the owner explicitly
   approves production Mona writes.
 - vNext does not write to current Mona production study files. It writes
@@ -119,6 +120,9 @@ Mona vNext owner-test logs:
 - Pedagogy-action gates require the scorer to cover explicit-next-only advance,
   hold-current anti-skip, slow teacher mode for difficulty, repair without
   auto-switch, and max-3 intervention with explicit-next escape.
+- Product-card gates require hidden-prompt -> attempt-reveal ->
+  next-hidden-prompt behavior so the main card does not regress into a static
+  experimental card.
 
 ## Local Verification
 

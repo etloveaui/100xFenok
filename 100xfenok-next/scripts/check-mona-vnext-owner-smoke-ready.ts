@@ -62,10 +62,15 @@ function checkSourceInvariants(): Check[] {
   const liveSetup = readRel("src/features/mona-vnext/server/liveSetup.ts");
   const wrangler = readRel("wrangler.jsonc");
   const storage = readRel("src/features/mona-vnext/storage/objectStore.ts");
-  const vnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
+  const legacyVnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
     && adminLiveBench.includes("<MonaVnextEntry locked={settingsLocked} />")
-    && monaVnextEntry.includes("href=\"/winddown-vnext\"")
     && !/normalizedCoachConfig\.tester === "owner"\s*\?\s*\(\s*<MonaVnextEntry/.test(adminLiveBench);
+  const winddownVnextEntryInSettings = monaVoiceCoachApp.includes("MonaVnextEntry")
+    && monaVoiceCoachApp.includes("settingsSlot={<MonaVnextEntry locked={settingsLocked} />}");
+  const vnextEntryInSettings = legacyVnextEntryInSettings
+    && winddownVnextEntryInSettings
+    && monaVnextEntry.includes("href=\"/winddown-vnext\"")
+    && monaVnextEntry.includes("실험 테스트 열기");
   const vnextFiles = [
     ...walkTextFiles("src/features/mona-vnext"),
     ...walkTextFiles("src/app/api/mona-vnext"),
