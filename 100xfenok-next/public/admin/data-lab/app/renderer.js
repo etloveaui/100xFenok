@@ -287,7 +287,7 @@ const Renderer = (function() {
     `;
   }
 
-  function renderMarketDataAudit(audit, sourceParity) {
+  function renderMarketDataAudit(audit, sourceParity, stockanalysisIndex, etfClassification) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
     const backfill = audit?.backfill || {};
@@ -361,15 +361,70 @@ const Renderer = (function() {
           ['Scale warn', facts.percent_scale_warnings]
         ]
       })}
+      ${renderEtfClassificationAudit(etfClassification)}
+      ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderSourceParityDetail(sourceParity)}
     `;
+  }
+
+  function renderEtfClassificationAudit(report) {
+    const universe = findClassificationResult(report, 'etf_universe.json');
+    const screener = findClassificationResult(report, 'surfaces/etf_screener.json');
+    if (!universe && !screener) return '';
+    const generatedAt = report?.generated_at || '-';
+    return renderMarketAuditCard({
+      title: 'ETF 분류',
+      status: 'pass',
+      code: escapeHtml(generatedAt).slice(0, 10),
+      rows: [
+        ['Universe L/I/S', formatClassificationCounts(universe?.classification)],
+        ['Screener L/I/S', formatClassificationCounts(screener?.classification)],
+        ['Universe rows', universe?.records],
+        ['Screener rows', screener?.records]
+      ]
+    });
+  }
+
+  function renderStockanalysisFetchAudit(index) {
+    const counts = index?.counts || {};
+    const requested = Number(counts.etfs_requested || 0);
+    if (!index || requested <= 0) return '';
+    const ok = Number(counts.ok || 0);
+    const failed = Number(counts.failed || 0);
+    const hardFailed = Number(counts.hard_failed || 0);
+    const source404 = Array.isArray(index.results)
+      ? index.results.filter((row) => String(row?.error || '').includes('404')).length
+      : failed;
+    return renderMarketAuditCard({
+      title: '신규 ETF 상세',
+      status: hardFailed === 0 ? 'pass' : 'warn',
+      code: `${Formatters.formatNumber(ok, 0)}/${Formatters.formatNumber(requested, 0)} OK`,
+      rows: [
+        ['Requested', requested],
+        ['OK', ok],
+        ['Source 404', source404],
+        ['Hard fail', hardFailed]
+      ]
+    });
+  }
+
+  function findClassificationResult(report, path) {
+    const results = Array.isArray(report?.results) ? report.results : [];
+    return results.find((row) => row?.path === path || String(row?.path || '').endsWith(path));
+  }
+
+  function formatClassificationCounts(classification) {
+    if (!classification) return '-';
+    return [
+      Formatters.formatNumber(classification.leveraged || 0, 0),
+      Formatters.formatNumber(classification.inverse || 0, 0),
+      Formatters.formatNumber(classification.single_stock || 0, 0)
+    ].join(' / ');
   }
 
   /**
    * Source Parity v1 detail block: diagnosis-count strip, Top Stale and
    * Top Sign Divergence tables, plus a user-readable explainer line.
-   * Rendered from the live computed/market_source_parity.json. Optional —
-   * when absent, shows a small "no data" note instead of crashing.
    */
   function renderSourceParityDetail(sourceParity) {
     if (!sourceParity) {
@@ -432,26 +487,22 @@ const Renderer = (function() {
             <p class="text-xs text-gray-500 mt-1">computed/market_source_parity.json</p>
           </div>
         </div>
-
         <div>
           <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">진단 분포</div>
           <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2">${diagStrip}</div>
         </div>
-
         <div>
           <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
             Top Stale (소스 간 시점 차이 상위)
           </div>
           ${staleTable}
         </div>
-
         <div>
           <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
             Top Sign Divergence (부호 불일치 상위)
           </div>
           ${signTable}
         </div>
-
         <p class="text-[11px] leading-relaxed text-gray-500">
           상대 staleness = 소스 간 시점 차이(가장 신선한 후보 대비). 절대적인 데이터 노후 여부는 별도 freshness/audit 책임입니다.
         </p>

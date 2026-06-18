@@ -224,10 +224,28 @@ const DataLabUI = (function() {
         throw new Error(`market_data_audit returned ${response.status}`);
       }
       const audit = await response.json();
-      Renderer.renderMarketDataAudit(audit);
+      const [sourceParity, stockanalysisIndex, etfClassification] = await Promise.all([
+        fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, 'Source parity diagnostics'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis fetch index'),
+        fetchOptionalJson(`${basePath}/data/stockanalysis/classification/latest.json`, 'ETF classification summary')
+      ]);
+      Renderer.renderMarketDataAudit(audit, sourceParity, stockanalysisIndex, etfClassification);
     } catch (error) {
       console.warn('[DataLab] Market data audit unavailable:', error);
       Renderer.renderMarketAuditUnavailable(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function fetchOptionalJson(url, label) {
+    try {
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) {
+        throw new Error(`${label} returned ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.warn(`[DataLab] ${label} unavailable:`, error);
+      return null;
     }
   }
 

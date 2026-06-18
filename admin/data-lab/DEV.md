@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.1.0 (Manifest + market audit architecture)
+> **Version**: 2.2.0 (Manifest + StockAnalysis audit architecture)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -68,6 +68,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **3-tier caching** | Memory → SessionStorage → Network |
 | **Reactive state** | Observer pattern for automatic UI updates |
 | **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, and source parity |
+| **StockAnalysis audit** | Reads `data/stockanalysis/index.json` and `classification/latest.json` for ETF detail backfill + leverage/inverse/single-stock classification visibility |
 
 ---
 
@@ -149,6 +150,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-06-18 | Added ETF classification counts, latest StockAnalysis fetch index/backfill status, restored Source Parity detail in source, and freshness guards for classification/index/surface files |
 | 2.1.0 | 2026-06-17 | Added market data audit cards and freshness guards for StockAnalysis ETF universe + computed market source parity |
 | 2.0.1 | 2026-04-14 | Added `embed=1` shell mode to hide legacy header/footer inside Next.js iframe bridge (#269) |
 | 2.0.0 | 2026-01-20 | Manifest-driven architecture, 94% code reduction (1,716→103 lines) |

@@ -102,6 +102,20 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
+      label: 'StockAnalysis classification',
+      path: '/data/stockanalysis/classification/latest.json',
+      datePath: 'generated_at',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'StockAnalysis fetch index',
+      path: '/data/stockanalysis/index.json',
+      datePath: 'generated_at',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
       label: 'StockAnalysis surface index',
       path: '/data/stockanalysis/surfaces/index.json',
       datePath: 'generated_at',

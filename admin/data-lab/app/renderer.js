@@ -287,16 +287,19 @@ const Renderer = (function() {
     `;
   }
 
-  function renderMarketDataAudit(audit) {
+  function renderMarketDataAudit(audit, sourceParity, stockanalysisIndex, etfClassification) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
     const backfill = audit?.backfill || {};
     const facts = audit?.market_facts || {};
     const parity = audit?.market_source_parity?.summary || audit?.market_source_parity || {};
+    const transientFileCount = Number(backfill.transient_file_count || 0);
+    const ignoredChunkCount = Array.isArray(backfill.ignored_chunks) ? backfill.ignored_chunks.length : 0;
     const ready = backfill.ready_for_finalize === true
       && Number(backfill.hard_error_count || 0) === 0
       && Array.isArray(backfill.missing_offsets)
       && backfill.missing_offsets.length === 0
+      && transientFileCount === 0
       && Number(facts.policy_mismatch_fields || 0) === 0
       && Number(facts.percent_scale_warnings || 0) === 0;
     const generatedAt = audit?.market_source_parity?.generated_at || audit?.generated_at || '-';
@@ -325,13 +328,25 @@ const Renderer = (function() {
         ]
       })}
       ${renderMarketAuditCard({
+        title: 'DataPack 위생',
+        status: transientFileCount === 0 ? 'pass' : 'warn',
+        code: transientFileCount === 0 ? 'CLEAN' : `${Formatters.formatNumber(transientFileCount, 0)} TEMP`,
+        rows: [
+          ['Raw chunks', backfill.raw_chunk_files],
+          ['Ignored', ignoredChunkCount],
+          ['Temp files', transientFileCount],
+          ['Finalize', backfill.ready_for_finalize === true ? 'yes' : 'no']
+        ]
+      })}
+      ${renderMarketAuditCard({
         title: 'Market Facts',
         status: Number(facts.count || 0) >= 5000 ? 'pass' : 'warn',
         code: `${Formatters.formatNumber(facts.count || 0, 0)} facts`,
         rows: [
           ['ETF', facts.coverage?.etf],
           ['Stock', facts.coverage?.stock],
-          ['StockAnalysis', facts.coverage?.stockanalysis],
+          ['보조 데이터', facts.coverage?.stockanalysis],
+          ['재무 후보', facts.coverage?.stockanalysis_financials],
           ['Yahoo', facts.coverage?.yf]
         ]
       })}
@@ -346,7 +361,193 @@ const Renderer = (function() {
           ['Scale warn', facts.percent_scale_warnings]
         ]
       })}
+      ${renderEtfClassificationAudit(etfClassification)}
+      ${renderStockanalysisFetchAudit(stockanalysisIndex)}
+      ${renderSourceParityDetail(sourceParity)}
     `;
+  }
+
+  function renderEtfClassificationAudit(report) {
+    const universe = findClassificationResult(report, 'etf_universe.json');
+    const screener = findClassificationResult(report, 'surfaces/etf_screener.json');
+    if (!universe && !screener) return '';
+    const generatedAt = report?.generated_at || '-';
+    return renderMarketAuditCard({
+      title: 'ETF 분류',
+      status: 'pass',
+      code: escapeHtml(generatedAt).slice(0, 10),
+      rows: [
+        ['Universe L/I/S', formatClassificationCounts(universe?.classification)],
+        ['Screener L/I/S', formatClassificationCounts(screener?.classification)],
+        ['Universe rows', universe?.records],
+        ['Screener rows', screener?.records]
+      ]
+    });
+  }
+
+  function renderStockanalysisFetchAudit(index) {
+    const counts = index?.counts || {};
+    const requested = Number(counts.etfs_requested || 0);
+    if (!index || requested <= 0) return '';
+    const ok = Number(counts.ok || 0);
+    const failed = Number(counts.failed || 0);
+    const hardFailed = Number(counts.hard_failed || 0);
+    const source404 = Array.isArray(index.results)
+      ? index.results.filter((row) => String(row?.error || '').includes('404')).length
+      : failed;
+    return renderMarketAuditCard({
+      title: '신규 ETF 상세',
+      status: hardFailed === 0 ? 'pass' : 'warn',
+      code: `${Formatters.formatNumber(ok, 0)}/${Formatters.formatNumber(requested, 0)} OK`,
+      rows: [
+        ['Requested', requested],
+        ['OK', ok],
+        ['Source 404', source404],
+        ['Hard fail', hardFailed]
+      ]
+    });
+  }
+
+  function findClassificationResult(report, path) {
+    const results = Array.isArray(report?.results) ? report.results : [];
+    return results.find((row) => row?.path === path || String(row?.path || '').endsWith(path));
+  }
+
+  function formatClassificationCounts(classification) {
+    if (!classification) return '-';
+    return [
+      Formatters.formatNumber(classification.leveraged || 0, 0),
+      Formatters.formatNumber(classification.inverse || 0, 0),
+      Formatters.formatNumber(classification.single_stock || 0, 0)
+    ].join(' / ');
+  }
+
+  /**
+   * Source Parity v1 detail block: diagnosis-count strip, Top Stale and
+   * Top Sign Divergence tables, plus a user-readable explainer line.
+   */
+  function renderSourceParityDetail(sourceParity) {
+    if (!sourceParity) {
+      return `
+        <div class="xl:col-span-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+          Source Parity 상세 데이터 없음 (computed/market_source_parity.json)
+        </div>
+      `;
+    }
+
+    const summary = sourceParity.summary || {};
+    const counts = summary.diagnosis_counts || {};
+    const diagItems = [
+      ['stale', 'Stale'],
+      ['scale_mismatch', 'Scale mismatch'],
+      ['sign_divergence', 'Sign divergence'],
+      ['value_drift', 'Value drift'],
+      ['agreement', 'Agreement']
+    ];
+    const diagStrip = diagItems
+      .map(([key, label]) => renderAuditMetric(label, Formatters.formatNumber(counts[key] || 0, 0)))
+      .join('');
+
+    const topStale = Array.isArray(sourceParity.top_stale) ? sourceParity.top_stale.slice(0, 8) : [];
+    const topSignDiv = Array.isArray(sourceParity.top_sign_divergences)
+      ? sourceParity.top_sign_divergences.slice(0, 6)
+      : [];
+
+    const staleTable = topStale.length
+      ? renderParityTable(
+          ['Ticker', 'Field', 'Selected', 'Stale sources', 'Spread %', 'Freshness'],
+          topStale.map((row) => [
+            escapeHtml(row.ticker ?? '-'),
+            escapeHtml(row.field ?? '-'),
+            escapeHtml(row.selected_source ?? '-'),
+            escapeHtml((Array.isArray(row.stale_sources) ? row.stale_sources : []).join(', ') || '-'),
+            escapeHtml(formatSpreadPct(row.relative_spread_pct)),
+            escapeHtml(formatFreshness(row.freshness))
+          ])
+        )
+      : '<div class="text-xs text-gray-400">No stale rows.</div>';
+
+    const signTable = topSignDiv.length
+      ? renderParityTable(
+          ['Ticker', 'Field', 'Values', 'Spread %'],
+          topSignDiv.map((row) => [
+            escapeHtml(row.ticker ?? '-'),
+            escapeHtml(row.field ?? '-'),
+            escapeHtml(formatParityValues(row.values)),
+            escapeHtml(formatSpreadPct(row.relative_spread_pct))
+          ])
+        )
+      : '<div class="text-xs text-gray-400">No sign divergences.</div>';
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">Source Parity 진단 상세</h3>
+            <p class="text-xs text-gray-500 mt-1">computed/market_source_parity.json</p>
+          </div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">진단 분포</div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2">${diagStrip}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
+            Top Stale (소스 간 시점 차이 상위)
+          </div>
+          ${staleTable}
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
+            Top Sign Divergence (부호 불일치 상위)
+          </div>
+          ${signTable}
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          상대 staleness = 소스 간 시점 차이(가장 신선한 후보 대비). 절대적인 데이터 노후 여부는 별도 freshness/audit 책임입니다.
+        </p>
+      </section>
+    `;
+  }
+
+  function renderParityTable(headers, rows) {
+    return `
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead>
+            <tr class="border-b border-gray-200 text-left text-[11px] font-semibold text-gray-400">
+              ${headers.map((h) => `<th class="py-1.5 pr-3 whitespace-nowrap">${escapeHtml(h)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((cells) => `
+              <tr class="border-b border-gray-50">
+                ${cells.map((cell) => `<td class="py-1.5 pr-3 align-top text-gray-700">${cell}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function formatSpreadPct(value) {
+    if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+    return `${Formatters.formatNumber(Number(value), 1)}%`;
+  }
+
+  function formatFreshness(freshness) {
+    if (!freshness || typeof freshness !== 'object') return '-';
+    const parts = Object.entries(freshness)
+      .map(([source, age]) => `${source}=${Formatters.formatNumber(Number(age) || 0, 1)}d`);
+    return parts.length ? parts.join(', ') : '-';
+  }
+
+  function formatParityValues(values) {
+    if (!Array.isArray(values) || !values.length) return '-';
+    return values
+      .map((entry) => `${entry?.source ?? '?'}=${Formatters.formatNumber(Number(entry?.value) || 0, 2)}`)
+      .join(', ');
   }
 
   function renderMarketAuditUnavailable(message) {

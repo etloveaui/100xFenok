@@ -102,6 +102,47 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
+      label: 'StockAnalysis classification',
+      path: '/data/stockanalysis/classification/latest.json',
+      datePath: 'generated_at',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'StockAnalysis fetch index',
+      path: '/data/stockanalysis/index.json',
+      datePath: 'generated_at',
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'StockAnalysis surface index',
+      path: '/data/stockanalysis/surfaces/index.json',
+      datePath: 'generated_at',
+      minCountPath: 'counts.rows',
+      minCount: 10000,
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'StockAnalysis earnings surface',
+      path: '/data/stockanalysis/surfaces/earnings_calendar.json',
+      datePath: 'fetched_at',
+      minCountPath: 'counts.records',
+      minCount: 1000,
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
+      label: 'StockAnalysis new ETF surface',
+      path: '/data/stockanalysis/surfaces/new_etfs.json',
+      datePath: 'fetched_at',
+      minCountPath: 'counts.records',
+      minCount: 10,
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
       label: 'Market data audit',
       path: '/data/computed/market_data_audit.json',
       datePath: 'market_source_parity.generated_at',
