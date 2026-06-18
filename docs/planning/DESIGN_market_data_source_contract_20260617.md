@@ -43,7 +43,7 @@ External sources
 |---|---|---|---|
 | stock forward estimates, revisions | Global Scouter | Yahoo, StockAnalysis overview | Preserve FY+1~FY+3 and revision history. |
 | stock quote/latest | computed market facts, then Yahoo | StockAnalysis quote, ticker worker | Keep source metadata and timestamps. |
-| stock financial statements | Yahoo current, SEC EDGAR future | StockAnalysis financials parser later | StockAnalysis financials are devalue; phase 2. |
+| stock financial statements | Yahoo current, SEC EDGAR future | StockAnalysis financials | StockAnalysis financials are live DataPack cross-check candidates, not valuation SSOT. |
 | stock overview ratios | Global Scouter/Yahoo | StockAnalysis overview | Use as cross-source parity signal. |
 | analyst estimates/targets | Yahoo | StockAnalysis overview target | Yahoo has broader analyst modules today. |
 | ETF quote/history/options | Yahoo | StockAnalysis quote/history | Yahoo options are targeted only. |
@@ -72,6 +72,9 @@ External sources
   - discovers the full StockAnalysis ETF universe into `data/stockanalysis/etf_universe.json`;
   - writes `data/stockanalysis/etfs/{TICKER}.json`;
   - writes `data/stockanalysis/stocks/{TICKER}.json` when stocks are requested;
+  - writes `data/stockanalysis/financials/{TICKER}.json` for focused stock
+    statement candidates (annual/quarterly income, balance sheet, cash flow,
+    ratios) with the in-file role `financial statement cross-check candidate`;
   - decodes verified Svelte/devalue surfaces into
     `data/stockanalysis/surfaces/{NAME}.json` for `new_etfs`,
     `etf_screener`, `actions_recent`, and `earnings_calendar`;
@@ -142,8 +145,10 @@ External sources
   - remote helper supports `python3 feno_data_remote.py stockanalysis etf NVDL
     'normalized.holdings[0]'` and `... stock AAPL normalized.overview`.
 - `docs/products/skills/feno-value/scripts/providers/datapack.py` (CCH)
-  - exposes StockAnalysis ETF, ETF universe, and stock helpers;
-  - integration coverage includes StockAnalysis stock overview access.
+  - exposes StockAnalysis ETF, ETF universe, stock, financial-statement
+    candidate, and surface helpers;
+  - integration coverage includes StockAnalysis stock overview and financial
+    candidate access.
 - `100xfenok-next/src/lib/server/data-loader.ts`
   - classifies `stockanalysis` ETF/stock details as stock data, ETF universe as
     explore inventory, and backfill indexes as admin fetch-audit artifacts.
@@ -151,8 +156,9 @@ External sources
   - exposes a lightweight StockAnalysis manifest with top-level, ETF, stock,
     and backfill file counts plus small samples and universe/latest-run counts.
 - `100xfenok-next/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`
-  - serves raw StockAnalysis ETF or stock JSON by ticker (`etfs/SPY`,
-    `stocks/AAPL`) so consumers do not need to assemble file paths manually.
+  - serves raw StockAnalysis ETF, stock, or financials JSON by ticker
+    (`etfs/SPY`, `stocks/AAPL`, `financials/AAPL`) so consumers do not need to
+    assemble file paths manually.
 - `100xfenok-next/src/app/api/data/market-quality/route.ts`
   - exposes a lightweight quality surface over `computed/market_data_audit` and
     `computed/market_source_parity`; missing files return `not_available`
