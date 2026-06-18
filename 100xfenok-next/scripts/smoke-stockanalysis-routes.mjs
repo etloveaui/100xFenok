@@ -18,6 +18,7 @@ const PAGE_ROUTES = [
   "/etfs/IEFA",
   "/etfs/ADIU",
   "/market/events",
+  "/market/events?tab=industry",
   "/market/events?section=IPO%20%EC%8B%A0%EC%B2%AD&range=30&sort=section",
   "/market/events?section=%EC%82%B0%EC%97%85&from=2026-06-01&to=2026-06-30",
 ];

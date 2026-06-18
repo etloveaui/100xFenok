@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import TransitionLink from "@/components/TransitionLink";
 
 type EventTab = "earnings" | "actions" | "ipo" | "industry" | "movers";
@@ -15,6 +16,8 @@ interface SurfaceDoc<T = EventRow> {
 type EventRow = Record<string, unknown>;
 type EventSort = "date" | "symbol" | "section";
 type EventDateRange = "all" | "7" | "14" | "30";
+type IndustrySort = "marketCap" | "oneYear" | "oneDay" | "stocks" | "profitMargin" | "peRatio";
+type IndustryTrend = "all" | "up" | "down" | "profitable" | "large";
 
 interface DrilldownRow {
   id: string;
@@ -31,6 +34,27 @@ interface DrilldownRow {
 }
 
 type DrilldownMappedRow = Pick<DrilldownRow, "title" | "detail" | "value"> & Partial<Pick<DrilldownRow, "symbol" | "href" | "valueClass">>;
+
+interface IndustryMapRow {
+  id: string;
+  name: string;
+  href: string;
+  stocks: number | null;
+  stocksRaw: string;
+  marketCap: number | null;
+  marketCapRaw: string;
+  divYieldRaw: string;
+  peRatio: number | null;
+  peRatioRaw: string;
+  profitMargin: number | null;
+  profitMarginRaw: string;
+  oneDayChange: number | null;
+  oneDayRaw: string;
+  oneYearChange: number | null;
+  oneYearRaw: string;
+  sizePct: number;
+  searchText: string;
+}
 
 interface EventData {
   earnings: SurfaceDoc;
@@ -55,6 +79,7 @@ interface EventData {
 }
 
 interface MarketEventsClientProps {
+  initialTab?: string;
   initialQuery?: string;
   initialSection?: string;
   initialRange?: string;
@@ -177,6 +202,11 @@ function eventRangeFromParam(value: string | null | undefined): EventDateRange {
   return "all";
 }
 
+function eventTabFromParam(value: string | null | undefined): EventTab {
+  if (value === "actions" || value === "ipo" || value === "industry" || value === "movers") return value;
+  return "earnings";
+}
+
 function rowSymbol(row: EventRow): string {
   return text(row.symbol).replace(/^\$/, "").toUpperCase();
 }
@@ -198,6 +228,132 @@ function firstText(row: EventRow, keys: string[], fallback = "-"): string {
     if (value !== "-") return value;
   }
   return fallback;
+}
+
+function numericValue(value: unknown): number | null {
+  const raw = text(value, "").replace(/,/g, "").replace(/%$/, "").trim();
+  if (!raw) return null;
+  const matched = raw.match(/^(-?\d+(?:\.\d+)?)([KMBT])?$/i);
+  if (!matched) return null;
+  const number = Number(matched[1]);
+  if (!Number.isFinite(number)) return null;
+  const unit = matched[2]?.toUpperCase();
+  const multiplier = unit === "T" ? 1_000_000_000_000
+    : unit === "B" ? 1_000_000_000
+      : unit === "M" ? 1_000_000
+        : unit === "K" ? 1_000
+          : 1;
+  return number * multiplier;
+}
+
+function ratioValue(value: unknown): number | null {
+  const raw = numericValue(value);
+  return raw === null ? null : raw;
+}
+
+function positiveNegativeClass(value: number | null): string {
+  if (value === null) return "neutral";
+  if (value < 0) return "down";
+  if (value > 0) return "up";
+  return "neutral";
+}
+
+function compareNumbers(a: number | null, b: number | null, direction: "asc" | "desc" = "desc"): number {
+  const emptyA = a === null || !Number.isFinite(a);
+  const emptyB = b === null || !Number.isFinite(b);
+  if (emptyA && emptyB) return 0;
+  if (emptyA) return 1;
+  if (emptyB) return -1;
+  return direction === "asc" ? a - b : b - a;
+}
+
+function buildIndustryMapRows(data: EventData | null): IndustryMapRow[] {
+  const baseRows = rowsOf(data?.industries);
+  const maxMarketCap = Math.max(
+    ...baseRows.map((row) => numericValue(row.market_cap) ?? 0),
+    1,
+  );
+  return baseRows.map((row, index) => {
+    const name = text(row.industry_name);
+    const marketCap = numericValue(row.market_cap);
+    const oneYearChange = ratioValue(row["1y_change"]);
+    const oneDayChange = ratioValue(row["1d_change"]);
+    const profitMargin = ratioValue(row.profit_margin);
+    const peRatio = ratioValue(row.pe_ratio);
+    const stocks = numericValue(row.stocks);
+    const sizePct = marketCap === null ? 6 : Math.max(6, Math.min(100, Math.round((marketCap / maxMarketCap) * 100)));
+    return {
+      id: `${name}-${index}`,
+      name,
+      href: text(row.industry_name_href, ""),
+      stocks,
+      stocksRaw: text(row.stocks),
+      marketCap,
+      marketCapRaw: text(row.market_cap),
+      divYieldRaw: text(row.div_yield),
+      peRatio,
+      peRatioRaw: text(row.pe_ratio),
+      profitMargin,
+      profitMarginRaw: text(row.profit_margin),
+      oneDayChange,
+      oneDayRaw: text(row["1d_change"]),
+      oneYearChange,
+      oneYearRaw: text(row["1y_change"]),
+      sizePct,
+      searchText: [name, row.industry_name_href, row.stocks, row.market_cap, row.profit_margin, row["1d_change"], row["1y_change"]]
+        .map((value) => text(value, ""))
+        .join(" ")
+        .toLowerCase(),
+    };
+  });
+}
+
+function sortIndustryRows(rows: IndustryMapRow[], sort: IndustrySort): IndustryMapRow[] {
+  const next = [...rows];
+  if (sort === "oneYear") return next.sort((a, b) => compareNumbers(a.oneYearChange, b.oneYearChange) || a.name.localeCompare(b.name));
+  if (sort === "oneDay") return next.sort((a, b) => compareNumbers(a.oneDayChange, b.oneDayChange) || a.name.localeCompare(b.name));
+  if (sort === "stocks") return next.sort((a, b) => compareNumbers(a.stocks, b.stocks) || a.name.localeCompare(b.name));
+  if (sort === "profitMargin") return next.sort((a, b) => compareNumbers(a.profitMargin, b.profitMargin) || a.name.localeCompare(b.name));
+  if (sort === "peRatio") return next.sort((a, b) => compareNumbers(a.peRatio, b.peRatio, "asc") || a.name.localeCompare(b.name));
+  return next.sort((a, b) => compareNumbers(a.marketCap, b.marketCap) || a.name.localeCompare(b.name));
+}
+
+function filterIndustryRows(rows: IndustryMapRow[], query: string, trend: IndustryTrend): IndustryMapRow[] {
+  const needle = query.trim().toLowerCase();
+  return rows
+    .filter((row) => !needle || row.searchText.includes(needle))
+    .filter((row) => {
+      if (trend === "up") return row.oneYearChange !== null && row.oneYearChange >= 0;
+      if (trend === "down") return row.oneYearChange !== null && row.oneYearChange < 0;
+      if (trend === "profitable") return row.profitMargin !== null && row.profitMargin > 0;
+      if (trend === "large") return row.marketCap !== null && row.marketCap >= 1_000_000_000_000;
+      return true;
+    });
+}
+
+function downloadIndustryCsv(rows: IndustryMapRow[]) {
+  const header = ["산업", "종목 수", "시가총액", "배당수익률", "PER", "이익률", "1일 변화", "1년 변화", "참고 링크"];
+  const lines = [
+    header.map(csvCell).join(","),
+    ...rows.map((row) => [
+      row.name,
+      row.stocksRaw,
+      row.marketCapRaw,
+      row.divYieldRaw,
+      row.peRatioRaw,
+      row.profitMarginRaw,
+      row.oneDayRaw,
+      row.oneYearRaw,
+      row.href,
+    ].map(csvCell).join(",")),
+  ];
+  const blob = new Blob([`\uFEFF${lines.join("\n")}`], { type: "text/csv;charset=utf-8" });
+  const href = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = href;
+  anchor.download = `100x-industry-map-${todayIso()}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(href);
 }
 
 function makeRow(row: EventRow, title: string, detail: string, value: string, href?: string, valueClass = "neutral") {
@@ -234,6 +390,7 @@ function EmptyRows({ label }: { label: string }) {
 }
 
 export default function MarketEventsClient({
+  initialTab,
   initialQuery,
   initialSection,
   initialRange,
@@ -243,7 +400,7 @@ export default function MarketEventsClient({
 }: MarketEventsClientProps) {
   const [data, setData] = useState<EventData | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [tab, setTab] = useState<EventTab>("earnings");
+  const [tab, setTab] = useState<EventTab>(eventTabFromParam(initialTab));
   const [query, setQuery] = useState((initialQuery ?? "").trim());
   const [sort, setSort] = useState<EventSort>(eventSortFromParam(initialSort));
   const [sectionFilter, setSectionFilter] = useState(initialSection && initialSection.trim() ? initialSection.trim() : "전체");
@@ -316,6 +473,15 @@ export default function MarketEventsClient({
     window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`);
   }, [dateRange, fromDate, query, sectionFilter, sort, toDate]);
 
+  const syncTab = useCallback((nextTab: EventTab) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (nextTab === "earnings") params.delete("tab");
+    else params.set("tab", nextTab);
+    const queryString = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`);
+  }, []);
+
   return (
     <div className="data-shell-page">
       <section className="panel data-shell-header">
@@ -347,7 +513,10 @@ export default function MarketEventsClient({
                   type="button"
                   role="tab"
                   aria-selected={selected}
-                  onClick={() => setTab(item.key)}
+                  onClick={() => {
+                    setTab(item.key);
+                    syncTab(item.key);
+                  }}
                   className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
                     selected
                       ? "border-brand-interactive bg-brand-interactive text-white shadow-sm"
@@ -617,7 +786,7 @@ function csvCell(value: string | number | null | undefined): string {
 
 function downloadDrilldownCsv(rows: DrilldownRow[]) {
   const cappedRows = rows.slice(0, 500);
-  const header = ["분류", "표면", "티커", "이름", "날짜", "요약", "값"];
+  const header = ["분류", "자료명", "티커", "이름", "날짜", "요약", "값"];
   const lines = [
     header.map(csvCell).join(","),
     ...cappedRows.map((row) => [
@@ -953,46 +1122,178 @@ function IpoPanel({ data }: { data: EventData | null }) {
 }
 
 function IndustryPanel({ data }: { data: EventData | null }) {
-  const industries = rowsOf(data?.industries).slice(0, 30);
+  const [industryQuery, setIndustryQuery] = useState("");
+  const [industryTrend, setIndustryTrend] = useState<IndustryTrend>("all");
+  const [industrySort, setIndustrySort] = useState<IndustrySort>("marketCap");
+  const [industryLimit, setIndustryLimit] = useState(36);
+  const industryRows = useMemo(() => buildIndustryMapRows(data), [data]);
+  const filteredIndustries = useMemo(() => (
+    sortIndustryRows(filterIndustryRows(industryRows, industryQuery, industryTrend), industrySort)
+  ), [industryQuery, industryRows, industrySort, industryTrend]);
+  const visibleIndustries = filteredIndustries.slice(0, industryLimit);
+  const topIndustry = useMemo(() => sortIndustryRows(industryRows, "marketCap")[0], [industryRows]);
+  const risingCount = useMemo(() => (
+    industryRows.filter((row) => row.oneYearChange !== null && row.oneYearChange >= 0).length
+  ), [industryRows]);
+  const profitableCount = useMemo(() => (
+    industryRows.filter((row) => row.profitMargin !== null && row.profitMargin > 0).length
+  ), [industryRows]);
   const tech = rowsOf(data?.technology).slice(0, 8);
   const semiconductors = rowsOf(data?.semiconductors).slice(0, 8);
   return (
-    <div className="grid gap-4 xl:grid-cols-3">
-      <section className="panel xl:col-span-1">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <section className="panel">
         <div className="panel-h">
           <h2>산업 지도</h2>
-          <span className="desc">{dateText(data?.industries?.fetched_at)} · {countRows(data?.industries).toLocaleString("ko-KR")}개</span>
+          <span className="desc">
+            {filteredIndustries.length.toLocaleString("ko-KR")} / {industryRows.length.toLocaleString("ko-KR")}개
+          </span>
         </div>
-        <div className="mv-col">
-          {industries.length ? industries.map((row) => (
-            makeRow(row, text(row.industry_name), `${text(row.stocks)}개 종목 · 이익률 ${text(row.profit_margin)} · 1년 ${text(row["1y_change"])}`, text(row.market_cap), undefined, pctClass(row["1y_change"]))
-          )) : <EmptyRows label="산업 데이터가 없습니다." />}
+        <div className="panel-b">
+          <div className="grid gap-2 md:grid-cols-3">
+            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <div className="text-[11px] font-black text-slate-400">최대 산업</div>
+              <div className="mt-1 truncate text-sm font-black text-slate-800">{topIndustry?.name ?? "-"}</div>
+              <div className="mt-0.5 text-xs font-bold text-slate-500">{topIndustry?.marketCapRaw ?? "-"}</div>
+            </div>
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
+              <div className="text-[11px] font-black text-emerald-600">1년 상승</div>
+              <div className="mt-1 text-sm font-black text-emerald-800">{risingCount.toLocaleString("ko-KR")}개 산업</div>
+              <div className="mt-0.5 text-xs font-bold text-emerald-700">전체 산업 기준</div>
+            </div>
+            <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
+              <div className="text-[11px] font-black text-sky-600">흑자 산업</div>
+              <div className="mt-1 text-sm font-black text-sky-800">{profitableCount.toLocaleString("ko-KR")}개 산업</div>
+              <div className="mt-0.5 text-xs font-bold text-sky-700">이익률 0% 초과</div>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_9rem_10rem_7rem]">
+            <input
+              value={industryQuery}
+              onChange={(event) => {
+                setIndustryQuery(event.target.value);
+                setIndustryLimit(36);
+              }}
+              placeholder="산업명 검색"
+              className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-brand-interactive"
+            />
+            <select
+              value={industryTrend}
+              onChange={(event) => {
+                setIndustryTrend(event.target.value as IndustryTrend);
+                setIndustryLimit(36);
+              }}
+              className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+              aria-label="산업 조건"
+            >
+              <option value="all">전체 조건</option>
+              <option value="up">1년 상승</option>
+              <option value="down">1년 하락</option>
+              <option value="profitable">흑자 산업</option>
+              <option value="large">대형 산업</option>
+            </select>
+            <select
+              value={industrySort}
+              onChange={(event) => setIndustrySort(event.target.value as IndustrySort)}
+              className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+              aria-label="산업 정렬"
+            >
+              <option value="marketCap">시가총액순</option>
+              <option value="oneYear">1년 변화순</option>
+              <option value="oneDay">1일 변화순</option>
+              <option value="stocks">종목 수순</option>
+              <option value="profitMargin">이익률순</option>
+              <option value="peRatio">PER 낮은순</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => downloadIndustryCsv(filteredIndustries)}
+              disabled={!filteredIndustries.length}
+              className="min-h-10 rounded-lg border border-slate-200 bg-slate-900 px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              내보내기
+            </button>
+          </div>
+        </div>
+        <div className="panel-b pt-0">
+          <div className="grid auto-rows-[116px] gap-2 md:grid-cols-3 xl:grid-cols-4">
+            {visibleIndustries.length ? visibleIndustries.map((row) => {
+              const tone = positiveNegativeClass(row.oneYearChange);
+              const spanClass = row.marketCap !== null && row.marketCap >= 5_000_000_000_000
+                ? "md:col-span-2 md:row-span-2"
+                : row.marketCap !== null && row.marketCap >= 1_000_000_000_000
+                  ? "md:col-span-2"
+                  : "";
+              const toneClass = tone === "up"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                : tone === "down"
+                  ? "border-rose-200 bg-rose-50 text-rose-950"
+                  : "border-slate-200 bg-slate-50 text-slate-800";
+              return (
+                <div
+                  key={row.id}
+                  className={`flex min-w-0 flex-col justify-between rounded-lg border p-3 ${toneClass} ${spanClass}`}
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-black">{row.name}</div>
+                    <div className="mt-1 text-[11px] font-bold opacity-75">
+                      {row.stocksRaw}개 종목 · 시총 {row.marketCapRaw}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-black">
+                      <span>1일 {row.oneDayRaw}</span>
+                      <span>1년 {row.oneYearRaw}</span>
+                      <span>이익률 {row.profitMarginRaw}</span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/70">
+                      <div
+                        className={tone === "down" ? "h-full rounded-full bg-rose-500" : tone === "up" ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-slate-400"}
+                        style={{ width: `${row.sizePct}%` } as CSSProperties}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            }) : <EmptyRows label="조건에 맞는 산업이 없습니다." />}
+          </div>
+          {filteredIndustries.length > visibleIndustries.length ? (
+            <button
+              type="button"
+              onClick={() => setIndustryLimit(industryLimit + 36)}
+              className="mt-3 min-h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 hover:border-brand-interactive hover:text-brand-interactive"
+            >
+              더 보기 {visibleIndustries.length.toLocaleString("ko-KR")} / {filteredIndustries.length.toLocaleString("ko-KR")}
+            </button>
+          ) : null}
         </div>
       </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>기술 섹터 상위</h2>
-          <span className="desc">{countRows(data?.technology).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {tech.length ? tech.map((row) => {
-            const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
-          }) : <EmptyRows label="기술 섹터 데이터가 없습니다." />}
-        </div>
-      </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>반도체 상위</h2>
-          <span className="desc">{countRows(data?.semiconductors).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {semiconductors.length ? semiconductors.map((row) => {
-            const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
-          }) : <EmptyRows label="반도체 산업 데이터가 없습니다." />}
-        </div>
-      </section>
+      <div className="grid gap-4">
+        <section className="panel">
+          <div className="panel-h">
+            <h2>기술 섹터 상위</h2>
+            <span className="desc">{countRows(data?.technology).toLocaleString("ko-KR")}개</span>
+          </div>
+          <div className="mv-col">
+            {tech.length ? tech.map((row) => {
+              const symbol = rowSymbol(row);
+              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
+            }) : <EmptyRows label="기술 섹터 데이터가 없습니다." />}
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-h">
+            <h2>반도체 상위</h2>
+            <span className="desc">{countRows(data?.semiconductors).toLocaleString("ko-KR")}개</span>
+          </div>
+          <div className="mv-col">
+            {semiconductors.length ? semiconductors.map((row) => {
+              const symbol = rowSymbol(row);
+              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
+            }) : <EmptyRows label="반도체 산업 데이터가 없습니다." />}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

@@ -29,6 +29,7 @@ export default async function MarketEventsPage({ searchParams }: Props) {
     <div className={`fnk-shell ${plexKr.className}`}>
       <AppShell active="market" title="시장 이벤트" backHref="/market-valuation">
         <MarketEventsClient
+          initialTab={firstParam(params.tab)}
           initialQuery={firstParam(params.q)}
           initialSection={firstParam(params.section)}
           initialRange={firstParam(params.range)}
