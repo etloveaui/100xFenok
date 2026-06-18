@@ -64,6 +64,10 @@ stockanalysis/
     └── ...
 ```
 
+Manifest note: `data/manifest.json` and the public mirror count JSON data files
+with `schema.json` excluded. The raw filesystem total can be higher because it
+also includes `README.md` and the schema file.
+
 ## SSOT Role
 
 - ETF universe ticker/name/category/AUM list: primary source.

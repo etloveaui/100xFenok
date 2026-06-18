@@ -30,9 +30,16 @@ function typeFilterFromParams(params: Record<string, string | string[] | undefin
   return "전체";
 }
 
+function newOnlyFromParams(params: Record<string, string | string[] | undefined>): boolean {
+  const rawNew = params.new;
+  const value = Array.isArray(rawNew) ? rawNew[0] : rawNew;
+  return value === "1" || value === "true";
+}
+
 export default async function EtfsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialTypeFilter = typeFilterFromParams(params);
+  const initialNewOnly = newOnlyFromParams(params);
 
   return (
     <div className={`fnk-shell ${plexKr.className}`}>
@@ -43,7 +50,7 @@ export default async function EtfsPage({ searchParams }: Props) {
               <p className="data-shell-kicker">ETF Search</p>
               <h1 className="data-shell-title">ETF 검색</h1>
               <p className="data-shell-desc">
-                ETF 목록, AUM, 유형 필터를 한곳에서 보고 각 행에서 상세 페이지로 이동합니다.
+                ETF 목록, 운용자산, 유형 필터를 한곳에서 보고 각 행에서 상세 페이지로 이동합니다.
               </p>
             </div>
             <div className="data-shell-head-actions">
@@ -57,7 +64,7 @@ export default async function EtfsPage({ searchParams }: Props) {
         </div>
 
         <div style={{ marginTop: "var(--s4)" }}>
-          <EtfUniverseCard limit={80} showOpenLink={false} initialTypeFilter={initialTypeFilter} syncTypeParam />
+          <EtfUniverseCard limit={80} showOpenLink={false} initialTypeFilter={initialTypeFilter} initialNewOnly={initialNewOnly} syncTypeParam />
         </div>
       </AppShell>
     </div>

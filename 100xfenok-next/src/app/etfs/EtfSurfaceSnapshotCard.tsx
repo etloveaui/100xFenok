@@ -179,7 +179,7 @@ export default function EtfSurfaceSnapshotCard() {
         <div className="mv-row">
           <span className="co">
             <div className="n">ETF 현황 확인 중</div>
-            <div className="tk">신규 상장·AUM·테마 목록을 읽고 있습니다</div>
+            <div className="tk">신규 상장·운용자산·테마 목록을 읽고 있습니다</div>
           </span>
           <span className="pc num neutral">...</span>
         </div>
@@ -201,7 +201,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">AUM 상위 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용자산 상위 ETF</div>
             {largestEtfs.map((row) => (
               <EtfLink
                 key={`large-${row.s}`}
@@ -233,7 +233,7 @@ export default function EtfSurfaceSnapshotCard() {
                 key={`btc-${row.symbol}`}
                 ticker={row.symbol}
                 name={row.fund_name}
-                detail={`가격 ${row.stock_price || "-"} · AUM ${row.assets || "-"}`}
+                detail={`가격 ${row.stock_price || "-"} · 운용자산 ${row.assets || "-"}`}
                 value={row.pct_change || "-"}
               />
             ))}

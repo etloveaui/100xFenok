@@ -4,6 +4,10 @@ export interface EtfUniverseRecord {
   category?: string;
   aum_raw?: string;
   aum?: number;
+  inceptionDate?: string;
+  price?: number;
+  change?: number;
+  is_new?: boolean;
   classification?: EtfClassification;
   is_leveraged?: boolean;
   leverage_factor?: number | null;
@@ -55,7 +59,7 @@ export function asOfDate(value: string | null | undefined): string {
 }
 
 function etfSearchText(row: EtfUniverseRecord): string {
-  return [row.ticker, row.name, row.category, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
+  return [row.ticker, row.name, row.category, row.inceptionDate, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
 }
 
 function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
@@ -99,6 +103,8 @@ export function isSingleStockLeveragedEtf(row: EtfUniverseRecord): boolean {
   const text = etfSearchText(row);
   return (
     /\bsingle[- ]stock\b/i.test(text) ||
+    /\b(?:long|short)\s+[A-Z]{1,6}\s+daily\s+ETF\b/i.test(text) ||
+    /\b[1-9](?:\.\d+)?x\s+(?:long|short)\s+[A-Z]{1,6}\b/i.test(text) ||
     /\b(?:aapl|apple|nvda|nvidia|tsla|tesla|amd|amzn|amazon|msft|microsoft|meta|googl?|google|coin|coinbase|mstr|microstrategy|pltr|palantir|smci|super micro|avgo|broadcom|mu|nflx|netflix|hood|arm|intc|baba|aal|aaoi|abnb)\b/i.test(text)
   );
 }
@@ -119,11 +125,15 @@ export function formatTypeHint(row: EtfUniverseRecord): string {
   } else if (isLeveragedEtf(row)) {
     parts.push("레버리지");
   }
-  if (classification?.is_single_stock) {
-    parts.push(classification.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
+  const singleStock = classification?.is_single_stock || isSingleStockLeveragedEtf(row);
+  if (singleStock) {
+    parts.push(classification?.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
   }
-  if (classification?.is_inverse) {
+  if (classification?.is_inverse || isInverseEtf(row)) {
     parts.push("인버스");
+  }
+  if (row.is_new) {
+    parts.push(row.inceptionDate ? `신규 상장 ${row.inceptionDate}` : "신규 상장");
   }
   return parts.filter(Boolean).join(" · ");
 }

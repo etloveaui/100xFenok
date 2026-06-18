@@ -26,8 +26,29 @@ interface EtfUniverseDoc {
   records?: EtfUniverseRecord[];
 }
 
+interface NewEtfRecord {
+  s?: string;
+  n?: string;
+  inceptionDate?: string;
+  price?: number;
+  change?: number;
+}
+
+interface EtfSnapshotDoc {
+  newEtfs?: {
+    fetched_at?: string | null;
+    counts?: {
+      records?: number | null;
+      rows?: number | null;
+    } | null;
+    records?: NewEtfRecord[];
+  } | null;
+}
+
 let universeCache: EtfUniverseDoc | null = null;
 let universePending: Promise<EtfUniverseDoc | null> | null = null;
+let snapshotCache: EtfSnapshotDoc | null = null;
+let snapshotPending: Promise<EtfSnapshotDoc | null> | null = null;
 
 function loadUniverse(): Promise<EtfUniverseDoc | null> {
   if (universeCache) return Promise.resolve(universeCache);
@@ -45,25 +66,45 @@ function loadUniverse(): Promise<EtfUniverseDoc | null> {
   return universePending;
 }
 
+function loadSnapshot(): Promise<EtfSnapshotDoc | null> {
+  if (snapshotCache) return Promise.resolve(snapshotCache);
+  if (snapshotPending) return snapshotPending;
+  snapshotPending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() as Promise<EtfSnapshotDoc> : null))
+    .then((doc) => {
+      snapshotCache = doc;
+      return doc;
+    })
+    .catch(() => {
+      snapshotPending = null;
+      return null;
+    });
+  return snapshotPending;
+}
+
 interface EtfUniverseCardProps {
   limit?: number;
   showOpenLink?: boolean;
   initialTypeFilter?: EtfTypeFilter;
+  initialNewOnly?: boolean;
   syncTypeParam?: boolean;
 }
 
-export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initialTypeFilter = "전체", syncTypeParam = false }: EtfUniverseCardProps) {
+export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initialTypeFilter = "전체", initialNewOnly = false, syncTypeParam = false }: EtfUniverseCardProps) {
   const [doc, setDoc] = useState<EtfUniverseDoc | null>(null);
+  const [snapshot, setSnapshot] = useState<EtfSnapshotDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
   const [typeFilter, setTypeFilter] = useState<EtfTypeFilter>(initialTypeFilter);
+  const [newOnly, setNewOnly] = useState(initialNewOnly);
 
   useEffect(() => {
     let cancelled = false;
-    loadUniverse().then((nextDoc) => {
+    Promise.all([loadUniverse(), loadSnapshot()]).then(([nextDoc, nextSnapshot]) => {
       if (!cancelled) {
         setDoc(nextDoc);
+        setSnapshot(nextSnapshot);
         setLoaded(true);
       }
     });
@@ -76,21 +117,54 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
     setTypeFilter(initialTypeFilter);
   }, [initialTypeFilter]);
 
+  useEffect(() => {
+    setNewOnly(initialNewOnly);
+  }, [initialNewOnly]);
+
   const rows = useMemo(() => {
+    const byTicker = new Map<string, EtfUniverseRecord>();
     const sourceRows = Array.isArray(doc?.records) ? doc.records : [];
-    return sourceRows
+    sourceRows
       .filter((row) => typeof row.ticker === "string" && row.ticker.trim())
-      .map((row) => ({
-        ...row,
-        ticker: row.ticker!.trim().toUpperCase(),
-        name: typeof row.name === "string" && row.name.trim() ? row.name.trim() : row.ticker!.trim().toUpperCase(),
-        category: cleanCategory(row.category),
-      }));
-  }, [doc]);
+      .forEach((row) => {
+        const ticker = row.ticker!.trim().toUpperCase();
+        byTicker.set(ticker, {
+          ...row,
+          ticker,
+          name: typeof row.name === "string" && row.name.trim() ? row.name.trim() : ticker,
+          category: cleanCategory(row.category),
+        });
+      });
+
+    for (const row of snapshot?.newEtfs?.records ?? []) {
+      if (typeof row.s !== "string" || !row.s.trim()) continue;
+      const ticker = row.s.trim().toUpperCase();
+      const existing = byTicker.get(ticker);
+      byTicker.set(ticker, {
+        ...(existing ?? {
+          ticker,
+          name: typeof row.n === "string" && row.n.trim() ? row.n.trim() : ticker,
+          category: "신규 상장",
+        }),
+        ticker,
+        name: existing?.name ?? (typeof row.n === "string" && row.n.trim() ? row.n.trim() : ticker),
+        category: existing?.category ?? "신규 상장",
+        inceptionDate: row.inceptionDate,
+        price: row.price,
+        change: row.change,
+        is_new: true,
+      });
+    }
+
+    return [...byTicker.values()];
+  }, [doc, snapshot]);
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const row of rows) counts.set(row.category, (counts.get(row.category) ?? 0) + 1);
+    for (const row of rows) {
+      const categoryName = cleanCategory(row.category);
+      counts.set(categoryName, (counts.get(categoryName) ?? 0) + 1);
+    }
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([name, count]) => ({ name, count }));
@@ -112,41 +186,62 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
     const q = query.trim().toUpperCase();
     return rows
       .filter((row) => category === "전체" || row.category === category)
+      .filter((row) => !newOnly || row.is_new === true)
       .filter((row) => {
         if (typeFilter === "레버리지") return isLeveragedEtf(row);
         if (typeFilter === "단일종목 레버리지") return isSingleStockLeveragedEtf(row);
         if (typeFilter === "인버스") return isInverseEtf(row);
         return true;
       })
-      .filter((row) => !q || row.ticker.includes(q) || row.name.toUpperCase().includes(q))
-      .sort((a, b) => (b.aum ?? -1) - (a.aum ?? -1))
-      .slice(0, limit);
-  }, [category, limit, query, rows, typeFilter]);
+      .filter((row) => !q || (row.ticker ?? "").includes(q) || (row.name ?? "").toUpperCase().includes(q))
+      .sort((a, b) => {
+        if (newOnly) {
+          return String(b.inceptionDate ?? "").localeCompare(String(a.inceptionDate ?? "")) || String(a.ticker ?? "").localeCompare(String(b.ticker ?? ""));
+        }
+        return (b.aum ?? -1) - (a.aum ?? -1);
+      })
+      .slice(0, newOnly ? Math.max(limit, 100) : limit);
+  }, [category, limit, newOnly, query, rows, typeFilter]);
 
   const total = doc?.counts?.records ?? rows.length;
+  const newCount = snapshot?.newEtfs?.counts?.records ?? snapshot?.newEtfs?.counts?.rows ?? (snapshot?.newEtfs?.records ?? []).length;
+  const displayTotal = newOnly ? newCount : total;
+  const visibleLimit = newOnly ? Math.max(limit, 100) : limit;
   const topCategory = categories[0];
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number | null }> = [
     { value: "전체", label: "전체", count: total },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
-    { value: "단일종목 레버리지", label: "단일종목", count: typeCounts.singleStock },
+    { value: "단일종목 레버리지", label: "단일주 레버리지", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
   ];
 
-  const handleTypeFilterChange = (nextFilter: EtfTypeFilter) => {
-    setTypeFilter(nextFilter);
+  const syncFilterParams = (nextFilter: EtfTypeFilter, nextNewOnly: boolean) => {
     if (!syncTypeParam || typeof window === "undefined") return;
     const nextUrl = new URL(window.location.href);
     const param = ETF_TYPE_PARAM[nextFilter];
     if (param) nextUrl.searchParams.set("type", param);
     else nextUrl.searchParams.delete("type");
+    if (nextNewOnly) nextUrl.searchParams.set("new", "1");
+    else nextUrl.searchParams.delete("new");
     window.history.replaceState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+  };
+
+  const handleTypeFilterChange = (nextFilter: EtfTypeFilter) => {
+    setTypeFilter(nextFilter);
+    syncFilterParams(nextFilter, newOnly);
+  };
+
+  const handleNewOnlyChange = () => {
+    const nextNewOnly = !newOnly;
+    setNewOnly(nextNewOnly);
+    syncFilterParams(typeFilter, nextNewOnly);
   };
 
   return (
     <section className="panel">
       <div className="panel-h">
         <h2>ETF 검색</h2>
-        <span className="desc">{asOfDate(doc?.generated_at)} · {formatNumber(total)}개</span>
+        <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
       </div>
       <div className="panel-b">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_170px]">
@@ -191,11 +286,24 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={handleNewOnlyChange}
+            aria-pressed={newOnly}
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
+              newOnly
+                ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                : "border-slate-200 bg-white text-slate-600 hover:border-emerald-600 hover:text-emerald-700"
+            }`}
+          >
+            <span>신규 상장</span>
+            <span className={newOnly ? "text-white/80" : "text-slate-400"}>{formatNumber(newCount)}</span>
+          </button>
         </div>
 
         {topCategory ? (
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
-            최대 카테고리 <span className="text-slate-800">{topCategory.name}</span> · {formatNumber(topCategory.count)}개
+            가장 많은 분류 <span className="text-slate-800">{topCategory.name}</span> · {formatNumber(topCategory.count)}개
           </div>
         ) : null}
       </div>
@@ -210,15 +318,18 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
             <span className="pc num neutral">...</span>
           </div>
         ) : filteredRows.length > 0 ? (
-          filteredRows.map((row) => (
-            <TransitionLink key={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} className="mv-row">
-              <span className="co">
-                <div className="n">{row.name}</div>
-                <div className="tk">{formatTypeHint(row)}</div>
-              </span>
-              <span className="pc num neutral">{formatAum(row)}</span>
-            </TransitionLink>
-          ))
+          filteredRows.map((row) => {
+            const ticker = row.ticker ?? "";
+            return (
+              <TransitionLink key={ticker} href={`/etfs/${encodeURIComponent(ticker)}`} className="mv-row">
+                <span className="co">
+                  <div className="n">{row.name ?? ticker}</div>
+                  <div className="tk">{formatTypeHint(row)}</div>
+                </span>
+                <span className="pc num neutral">{formatAum(row)}</span>
+              </TransitionLink>
+            );
+          })
         ) : (
           <div className="mv-row">
             <span className="co">
@@ -230,7 +341,7 @@ export default function EtfUniverseCard({ limit = 12, showOpenLink = true, initi
         )}
       </div>
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
-        <span>현재 조건에서 AUM순 {formatNumber(limit)}개 표시 · 각 행은 상세 페이지로 이동</span>
+        <span>현재 조건에서 {newOnly ? "상장일순" : "운용자산순"} {formatNumber(visibleLimit)}개 표시 · 각 행은 상세 페이지로 이동</span>
         {showOpenLink ? (
           <TransitionLink href="/etfs" className="font-black text-brand-interactive hover:underline">
             ETF 전체 보기

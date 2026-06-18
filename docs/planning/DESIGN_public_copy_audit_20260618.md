@@ -51,3 +51,13 @@ The public forbidden-term grep now leaves only internal identifiers such as
   Explore must not render that full working surface.
 - Dedicated routes are still needed for earnings/actions, IPO, industry maps,
   and market movers before they re-enter Explore.
+
+## 2026-06-18 ETF/Data Lab Follow-Up
+
+- Replaced remaining public ETF shorthand (`AUM`) with user-facing
+  `운용자산` on `/etfs` and ETF detail surfaces.
+- Kept ETF type filters in the canonical `/etfs` route, including leveraged,
+  single-stock leveraged, and inverse filters.
+- Data Lab remains allowed to show provider/source names, but its StockAnalysis
+  audit cards should prefer Korean operational labels over public-product
+  jargon such as "surface", "DataPack", and raw error phrasing.

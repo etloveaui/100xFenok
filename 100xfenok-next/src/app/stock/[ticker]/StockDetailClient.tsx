@@ -1503,7 +1503,7 @@ function EtfDataPanel({
   const cards = [
     { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: fmtDateish(quote.u) },
     { label: "당일 변화", value: fmtEtfSignedPct(changePct), note: rawText(quote.ex) },
-    { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "AUM" },
+    { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "운용자산" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
     { label: "보수율", value: expenseRatio !== null ? fmtEtfPct(expenseRatio) : rawText(overview.expenseRatio), note: "Expense" },
     { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "Yield" },
