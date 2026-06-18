@@ -35,3 +35,10 @@ Cohesive rounded-square app tiles for explore quick-launch (Mona-English style):
 2. Claude gates: legibility at 32px, scaling cleanliness, white-tile contrast, palette compliance.
 3. Owner picks the final mark (aesthetic authority — "최고로 이뿌게").
 4. Export the size set → asset swap (in D) only after owner pick + Claude gate. No swap before that.
+
+## Applied Follow-up — PWA launcher centering (2026-06-18)
+
+- User feedback: Samsung/One UI installed icon no longer had the bad blue background, but the mark appeared shifted toward 11 o'clock.
+- Active manifest icons moved from `pwa-icon-*-v3.png` to `pwa-icon-*-v4.png` to force Android/Chrome to fetch a new icon set instead of reusing an installed/cached launcher asset.
+- `pwa-icon-512-v4.png` and `pwa-icon-maskable-512-v4.png` share the same centered foreground on `#f8fafc`; measured content center is `x=256.0`, `y=256.5` on a 512 canvas. `pwa-icon-192-v4.png` measures exactly `x=96.0`, `y=96.0`.
+- App-shell and V2/V3 nav image CSS now pins `object-fit: contain` and `object-position: 50% 50%` so header logos cannot drift from container sizing.

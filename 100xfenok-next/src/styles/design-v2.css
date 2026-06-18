@@ -63,7 +63,13 @@
   justify-content: center;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
-.hp-nav__mark img { height: 22px; display: block; }
+.hp-nav__mark img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+  object-position: 50% 50%;
+}
 .hp-nav__wordmark {
   font-family: var(--font-display);
   font-weight: 900;
@@ -129,7 +135,7 @@
 .hp-nav--mob .hp-nav__tabs { display: none; }
 .hp-nav--mob .hp-nav__wordmark { font-size: 17px; }
 .hp-nav--mob .hp-nav__mark { width: 34px; height: 34px; }
-.hp-nav--mob .hp-nav__mark img { height: 18px; }
+.hp-nav--mob .hp-nav__mark img { width: 18px; height: 18px; }
 .hp-nav--mob .hp-icon-btn { width: 34px; height: 34px; }
 .hp-nav--mob .hp-search-trigger,
 .hp-nav--mob .hp-avatar { display: none; }
