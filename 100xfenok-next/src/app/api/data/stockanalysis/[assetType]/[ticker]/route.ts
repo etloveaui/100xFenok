@@ -39,6 +39,12 @@ const ETF_SURFACE_FALLBACKS = [
     tickerKeys: ["symbol", "s"],
   },
 ] as const;
+type EtfSurfaceFallbackSpec = (typeof ETF_SURFACE_FALLBACKS)[number];
+type EtfSurfaceFallbackMatch = {
+  surface: string;
+  fetched_at: string | null;
+  row: JsonRecord;
+};
 
 function asRecord(value: unknown): JsonRecord | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -78,29 +84,28 @@ function cleanText(value: unknown): string | null {
   return text && text !== "-" ? text : null;
 }
 
-async function getEtfSurfaceFallback(ticker: string) {
-  const matches: Array<{
-    surface: string;
-    fetched_at: string | null;
-    row: JsonRecord;
-  }> = [];
-
-  for (const spec of ETF_SURFACE_FALLBACKS) {
+async function getEtfSurfaceMatches(specs: readonly EtfSurfaceFallbackSpec[], ticker: string): Promise<EtfSurfaceFallbackMatch[]> {
+  const groups = await Promise.all(specs.map(async (spec) => {
     const surface = asRecord(await getStockanalysisSurface(spec.surface));
     const rows = rowsFromSurface(surface);
-    for (const row of rows) {
-      if (spec.tickerKeys.some((key) => cleanTicker(row[key]) === ticker)) {
-        matches.push({
-          surface: spec.surface,
-          fetched_at: typeof surface?.fetched_at === "string" ? surface.fetched_at : null,
-          row,
-        });
-      }
-    }
-  }
+    return rows
+      .filter((row) => spec.tickerKeys.some((key) => cleanTicker(row[key]) === ticker))
+      .map((row) => ({
+        surface: spec.surface,
+        fetched_at: typeof surface?.fetched_at === "string" ? surface.fetched_at : null,
+        row,
+      }));
+  }));
+  return groups.flat();
+}
 
-  const universe = asRecord(await getStockanalysisEtfUniverse());
-  const universeRow = rowsFromSurface(universe).find((row) => cleanTicker(row.ticker) === ticker) ?? null;
+async function getEtfSurfaceFallback(ticker: string) {
+  const priorityMatches = await getEtfSurfaceMatches(ETF_SURFACE_FALLBACKS.slice(0, 2), ticker);
+  const matches = priorityMatches.length > 0
+    ? priorityMatches
+    : await getEtfSurfaceMatches(ETF_SURFACE_FALLBACKS.slice(2), ticker);
+  const universe = matches.length === 0 ? asRecord(await getStockanalysisEtfUniverse()) : null;
+  const universeRow = universe ? rowsFromSurface(universe).find((row) => cleanTicker(row.ticker) === ticker) ?? null : null;
   const universeFetchedAt = typeof universe?.generated_at === "string" ? universe.generated_at : null;
   const primary = matches[0];
   if (!primary && !universeRow) return null;
