@@ -52,7 +52,7 @@ class SourceParityDiagnosisTest(unittest.TestCase):
             cand(0.05, "yf", fetched_at=self.old_iso),
         ]
         result = self.mod.diagnose_divergence(
-            "dividend_yield", candidates, ["stockanalysis.quote", "yf"], self.now
+            "dividend_yield", candidates, ["stockanalysis.quote", "yf"]
         )
 
         self.assertEqual(result["diagnosis"], "stale")
@@ -69,7 +69,7 @@ class SourceParityDiagnosisTest(unittest.TestCase):
             cand(0.05, "yf", fetched_at=self.now_iso),
         ]
         result = self.mod.diagnose_divergence(
-            "dividend_yield", candidates, ["stockanalysis.quote", "yf"], self.now
+            "dividend_yield", candidates, ["stockanalysis.quote", "yf"]
         )
 
         self.assertEqual(result["diagnosis"], "scale_mismatch")
@@ -84,7 +84,7 @@ class SourceParityDiagnosisTest(unittest.TestCase):
             cand(-2.0, "yf.derived", fetched_at=self.now_iso),
         ]
         result = self.mod.diagnose_divergence(
-            "change_pct", candidates, ["stockanalysis.quote", "yf", "yf.derived"], self.now
+            "change_pct", candidates, ["stockanalysis.quote", "yf", "yf.derived"]
         )
 
         self.assertEqual(result["diagnosis"], "sign_divergence")
@@ -97,7 +97,7 @@ class SourceParityDiagnosisTest(unittest.TestCase):
             cand(100.4, "stockanalysis.quote", fetched_at=self.now_iso),
         ]
         result = self.mod.diagnose_divergence(
-            "price", candidates, ["yf", "stockanalysis.quote"], self.now
+            "price", candidates, ["yf", "stockanalysis.quote"]
         )
 
         self.assertEqual(result["diagnosis"], "agreement")

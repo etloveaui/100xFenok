@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -61,8 +61,6 @@ def parse_ts(cand: dict) -> datetime | None:
     Accepts ISO 8601 strings that may end with ``Z`` or ``+00:00``.
     Returns ``None`` when neither timestamp is present or parseable.
     """
-    if not isinstance(cand, dict):
-        return None
     for key in ("fetched_at", "as_of"):
         raw = cand.get(key)
         if not raw or not isinstance(raw, str):
@@ -82,7 +80,7 @@ def parse_ts(cand: dict) -> datetime | None:
     return None
 
 
-def diagnose_divergence(field: str, candidates: list, policy: list, now: datetime) -> dict:
+def diagnose_divergence(field: str, candidates: list, policy: list) -> dict:
     """Classify why a multi-candidate field diverges.
 
     Pure/importable. Separates UNIT mismatch (scale) from STALENESS so a
@@ -191,7 +189,6 @@ def selected_rationale(selected, policy: list) -> dict:
 
 
 def build_payload(limit: int) -> dict:
-    now = datetime.now(timezone.utc)
     field_counts: Counter[str] = Counter()
     selected_sources: Counter[str] = Counter()
     candidate_sources: Counter[str] = Counter()
@@ -235,7 +232,7 @@ def build_payload(limit: int) -> dict:
             spread = relative_spread_pct(values)
             if spread is None:
                 continue
-            diagnosis = diagnose_divergence(field, candidates, policy, now)
+            diagnosis = diagnose_divergence(field, candidates, policy)
             diagnosis["selected_rationale"] = selected_rationale(selected_source, policy)
             row = {
                 "ticker": ticker,
