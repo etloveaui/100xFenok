@@ -680,9 +680,15 @@ const Renderer = (function() {
       ? incremental.selected
       : (Array.isArray(index?.incremental_etf_backfill?.selected) ? index.incremental_etf_backfill.selected : []);
     const failedResults = Array.isArray(index?.results)
-      ? index.results.filter((row) => row?.status && row.status !== 'ok')
+      ? index.results.filter((row) => {
+          const status = String(row?.status || '').trim();
+          return status && status !== 'ok' && status !== 'fallback_ok';
+        })
       : [];
     const ledgerRows = normalizePendingLedgerRows(pendingLedger);
+    const trackedCount = Number(pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked ?? ledgerRows.length) || 0;
+    const cooldownCount = Number(pendingLedger?.counts?.cooldown ?? counts.incremental_etf_ledger_cooldown ?? 0) || 0;
+    const retryNowCount = Math.max(trackedCount - cooldownCount, 0);
     const generatedAt = incremental?.generated_at || index?.incremental_etf_backfill?.generated_at || index?.generated_at || '-';
 
     return `
@@ -696,11 +702,13 @@ const Renderer = (function() {
             ${escapeHtml(generatedAt).slice(0, 10)}
           </span>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
           ${renderAuditMetric('다음 선택', incrementalCounts.selected ?? selected.length)}
           ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
           ${renderAuditMetric('보조 가격 재시도 후보', incrementalCounts.fallback_retry)}
-          ${renderAuditMetric('재시도 대기', pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked)}
+          ${renderAuditMetric('추적 중', trackedCount)}
+          ${renderAuditMetric('재시도 예약', cooldownCount)}
+          ${renderAuditMetric('다음 실행 예정', retryNowCount)}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
           ${renderBackfillMiniTable(
@@ -735,7 +743,7 @@ const Renderer = (function() {
           )}
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 재시도 대기는 반복 미확인 항목을 일정 기간 쉬게 해 수집 슬롯 낭비를 줄이는 장치이며, 다음 수집 실행이나 보조 가격 상세가 갱신되면 이 표도 함께 바뀝니다.
+          대기열은 수집기가 만든 JSON을 그대로 읽습니다. 재시도 예약은 반복 미확인 항목을 일정 기간 쉬게 해 수집 슬롯 낭비를 줄이는 장치이며, 추적 중인 항목에는 보조 가격 상세가 이미 붙었지만 원본 상세 재확인이 남은 항목도 포함될 수 있습니다.
         </p>
       </section>
     `;
