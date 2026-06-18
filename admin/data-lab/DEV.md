@@ -158,6 +158,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.15 | 2026-06-19 | Polished remaining Data Lab visible labels in mirror/usage and market-audit cards, and extended `qa:copy` to block the awkward `데이터 묶음` regression |
 | 2.2.14 | 2026-06-19 | Added ETF missing-reason summary rendering so remaining uncovered details are separated into external classification mismatch, untracked, and retry-wait buckets |
 | 2.2.13 | 2026-06-19 | Clarified ETF collection queue wording and added next-attempt dates for cooldown ledger rows so operators can see why missing ETF details are not retried immediately |
 | 2.2.12 | 2026-06-19 | Added `surface_consumers.json` to Freshness Guard so missing/stale surface consumer maps are visible in Data Lab ops checks |

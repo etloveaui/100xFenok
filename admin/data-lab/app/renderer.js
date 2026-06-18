@@ -203,42 +203,42 @@ const Renderer = (function() {
       <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
         <div class="flex items-start justify-between gap-3 mb-4">
           <div class="min-w-0">
-            <h3 class="font-semibold text-gray-800">Mirror / Usage</h3>
+            <h3 class="font-semibold text-gray-800">미러/사용 현황</h3>
             <p class="text-xs text-gray-500 mt-1 break-words">${escapeHtml(manifest?.generated_at || '-')}</p>
           </div>
           <span class="px-2 py-1 rounded-full border text-xs font-bold ${manifest?.mirror_sync_status === 'ok' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}">
-            ${escapeHtml((manifest?.mirror_sync_status || 'unknown').toUpperCase())}
+            ${manifest?.mirror_sync_status === 'ok' ? '동기화됨' : '점검'}
           </span>
         </div>
         <div class="grid grid-cols-2 gap-3 text-sm">
-          ${renderDepthMetric('root JSON', totals.rootJsonCount)}
-          ${renderDepthMetric('public JSON', totals.publicJsonCount)}
-          ${renderDepthMetric('direct fetch', totals.directDataFetchCount)}
-          ${renderDepthMetric('dynamic', totals.dynamicPatternCount)}
+          ${renderDepthMetric('루트 JSON', totals.rootJsonCount)}
+          ${renderDepthMetric('공개 JSON', totals.publicJsonCount)}
+          ${renderDepthMetric('직접 호출', totals.directDataFetchCount)}
+          ${renderDepthMetric('동적 경로', totals.dynamicPatternCount)}
         </div>
       </article>
       <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
-        <h3 class="font-semibold text-gray-800 mb-3">Generated Indexes</h3>
+        <h3 class="font-semibold text-gray-800 mb-3">생성 인덱스</h3>
         <div class="space-y-2">
           ${generated.map(item => `
             <div class="rounded-lg border ${item.mirrored ? 'bg-green-50 border-green-100' : 'bg-yellow-50 border-yellow-100'} p-3">
               <div class="flex items-center justify-between gap-3">
                 <code class="min-w-0 truncate text-xs font-semibold text-gray-700" title="${escapeHtml(item.path)}">${escapeHtml(item.path)}</code>
-                <span class="shrink-0 text-[10px] font-bold ${item.mirrored ? 'text-green-700' : 'text-yellow-700'}">${item.mirrored ? 'MIRROR' : 'CHECK'}</span>
+                <span class="shrink-0 text-[10px] font-bold ${item.mirrored ? 'text-green-700' : 'text-yellow-700'}">${item.mirrored ? '미러됨' : '점검'}</span>
               </div>
-              <div class="mt-1 text-[11px] text-gray-500">${Formatters.formatNumber(item.sourceFiles?.length || 0, 0)} source files</div>
+              <div class="mt-1 text-[11px] text-gray-500">원본 파일 ${Formatters.formatNumber(item.sourceFiles?.length || 0, 0)}개</div>
             </div>
           `).join('')}
         </div>
       </article>
       <article class="bg-white rounded-xl p-5 shadow border border-gray-100">
-        <h3 class="font-semibold text-gray-800 mb-3">Active Categories</h3>
+        <h3 class="font-semibold text-gray-800 mb-3">사용 중인 데이터 분류</h3>
         <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
           ${activeCategories.map(item => `
             <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
               <div class="flex items-center justify-between gap-3">
                 <span class="font-semibold text-sm text-gray-800 truncate" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
-                <span class="text-[10px] font-bold text-gray-500">${Formatters.formatNumber(item.rootJsonCount, 0)} files</span>
+                <span class="text-[10px] font-bold text-gray-500">파일 ${Formatters.formatNumber(item.rootJsonCount, 0)}개</span>
               </div>
               <div class="mt-1 text-[11px] text-gray-500 break-words">${escapeHtml(item.usage || '')}</div>
             </div>
@@ -323,7 +323,7 @@ const Renderer = (function() {
       ${renderMarketAuditCard({
         title: 'ETF 상세 수집',
         status: ready ? 'pass' : 'warn',
-        code: ready ? 'READY' : 'CHECK',
+        code: ready ? '정상' : '점검',
         rows: [
           ['전체 후보', detailCoverageCounts.candidate_total ?? stockanalysis.universe_records],
           ['상세 파일', `${Formatters.formatNumber(detailCoverageCounts.covered_detail_files ?? stockanalysis.etf_detail_files ?? 0, 0)} (${Formatters.formatNumber(detailCoverageCounts.coverage_pct ?? 0, 2)}%)`],
@@ -339,7 +339,7 @@ const Renderer = (function() {
       ${renderMarketAuditCard({
         title: '수집 무결성',
         status: Number(backfill.hard_error_count || 0) === 0 && ready ? 'pass' : 'warn',
-        code: Number(backfill.hard_error_count || 0) === 0 ? 'HARD 0' : 'HARD',
+        code: Number(backfill.hard_error_count || 0) === 0 ? '치명 0' : '치명',
         rows: [
           ['성공', backfill.status_counts?.ok],
           ['오류', backfill.status_counts?.error],
@@ -348,20 +348,20 @@ const Renderer = (function() {
         ]
       })}
       ${renderMarketAuditCard({
-        title: '데이터 묶음 정리',
+        title: '수집 파일 정리',
         status: transientFileCount === 0 ? 'pass' : 'warn',
-        code: transientFileCount === 0 ? 'CLEAN' : `${Formatters.formatNumber(transientFileCount, 0)} TEMP`,
+        code: transientFileCount === 0 ? '정리됨' : `임시 ${Formatters.formatNumber(transientFileCount, 0)}`,
         rows: [
-          ['원본 묶음', backfill.raw_chunk_files],
-          ['제외 묶음', ignoredChunkCount],
+          ['원본 파일', backfill.raw_chunk_files],
+          ['제외 파일', ignoredChunkCount],
           ['임시 파일', transientFileCount],
-          ['마감 가능', backfill.ready_for_finalize === true ? 'yes' : 'no']
+          ['최종 반영 가능', backfill.ready_for_finalize === true ? '가능' : '대기']
         ]
       })}
       ${renderMarketAuditCard({
         title: '시장 데이터 정규화',
         status: Number(facts.count || 0) >= 5000 ? 'pass' : 'warn',
-        code: `${Formatters.formatNumber(facts.count || 0, 0)} facts`,
+        code: `${Formatters.formatNumber(facts.count || 0, 0)}건`,
         rows: [
           ['ETF', factsCoverage.etf],
           ['주식', factsCoverage.stock],
