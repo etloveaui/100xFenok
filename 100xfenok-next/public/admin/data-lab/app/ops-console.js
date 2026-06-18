@@ -125,6 +125,15 @@ const OpsConsole = (function() {
       failAfterDays: 14
     },
     {
+      label: '시장 데이터 소비처',
+      path: '/data/stockanalysis/surface_consumers.json',
+      datePath: 'updated_at',
+      minCountPath: 'surfaces.length',
+      minCount: 25,
+      warnAfterDays: 7,
+      failAfterDays: 14
+    },
+    {
       label: '어닝 일정 데이터',
       path: '/data/stockanalysis/surfaces/earnings_calendar.json',
       datePath: 'fetched_at',
