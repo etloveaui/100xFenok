@@ -58,7 +58,7 @@ FIELD_SOURCE_POLICY = {
         "stockanalysis.etf_universe.performance",
         "yf",
     ],
-    "return_3y_avg": ["yf"],
+    "return_3y_avg": ["yf", "stockanalysis.detail.history"],
     "return_5y_avg": [
         "yf",
         "stockanalysis.detail.performance",
@@ -255,6 +255,14 @@ def return_from_closes(start_close, end_close):
     return ((end_close - start_close) / start_close) * 100
 
 
+def annualized_return_from_closes(start_close, end_close, years):
+    if start_close in (None, 0) or end_close in (None, 0) or years in (None, 0):
+        return None
+    if start_close <= 0 or end_close <= 0 or years <= 0:
+        return None
+    return (((end_close / start_close) ** (1 / years)) - 1) * 100
+
+
 def yf_history_return_fact(yf_payload, trading_days):
     rows = yf_history_points(yf_payload)
     if len(rows) <= trading_days:
@@ -363,6 +371,37 @@ def stockanalysis_history_return_fact(sa_payload, *, daily_trading_days=None, mo
         confidence="derived",
         unit="percent_points",
     )
+
+
+def stockanalysis_history_cagr_fact(
+    sa_payload,
+    *,
+    period_keys,
+    target_years,
+    min_year_fraction=0.85,
+):
+    if not isinstance(period_keys, (list, tuple)) or not isinstance(target_years, (int, float)):
+        return None
+    min_years = target_years * min_year_fraction
+    for period_key in period_keys:
+        rows = stockanalysis_history_points(sa_payload, period_key)
+        if len(rows) < 2:
+            continue
+        latest = rows[-1]
+        start = rows[0]
+        years = (latest["date"] - start["date"]).days / 365.2425
+        if years < min_years:
+            continue
+        value = annualized_return_from_closes(start["close"], latest["close"], years)
+        return fact(
+            value,
+            "stockanalysis.detail.history",
+            as_of=latest["date"].isoformat(),
+            fetched_at=(sa_payload or {}).get("fetched_at"),
+            confidence="derived",
+            unit="percent_points",
+        )
+    return None
 
 
 def stockanalysis_quote_fact(sa_payload, key):
@@ -488,7 +527,15 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=
             stockanalysis_performance_fact(sa_catalog_payload, "return_1y", (sa_catalog_payload or {}).get("market_facts_source")),
             yf_percent_fact(yf_payload, "fiftyTwoWeekChangePercent"),
         ),
-        "return_3y_avg": resolve_fact("return_3y_avg", yf_annual_return_fact(yf_payload, "threeYearAverageReturn")),
+        "return_3y_avg": resolve_fact(
+            "return_3y_avg",
+            yf_annual_return_fact(yf_payload, "threeYearAverageReturn"),
+            stockanalysis_history_cagr_fact(
+                sa_payload,
+                period_keys=("monthly_3y", "monthly_5y"),
+                target_years=3,
+            ),
+        ),
         "return_5y_avg": resolve_fact(
             "return_5y_avg",
             yf_annual_return_fact(yf_payload, "fiveYearAverageReturn"),

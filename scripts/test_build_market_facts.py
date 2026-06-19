@@ -34,6 +34,18 @@ def history_rows(count=80, start_close=100.0):
     ]
 
 
+def monthly_stockanalysis_rows():
+    return [
+        {"t": "2023-06-01", "a": 100.0, "c": 101.0},
+        {"t": "2023-12-01", "a": 108.0, "c": 109.0},
+        {"t": "2024-06-01", "a": 115.0, "c": 116.0},
+        {"t": "2024-12-01", "a": 121.0, "c": 122.0},
+        {"t": "2025-06-01", "a": 126.0, "c": 127.0},
+        {"t": "2025-12-01", "a": 130.0, "c": 131.0},
+        {"t": "2026-06-01", "a": 133.1, "c": 134.0},
+    ]
+
+
 class BuildMarketFactsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -126,6 +138,30 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(fact["unit"], "percent_points")
         self.assertEqual(fact["as_of"], "2026-06-01")
         self.assertAlmostEqual(fact["value"], ((118.0 - 98.0) / 98.0) * 100)
+
+    def test_stockanalysis_multi_year_history_fills_three_year_average_return_gap(self) -> None:
+        sa_payload = {
+            "asset_type": "etf",
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "normalized": {
+                "quote": {},
+                "overview": {},
+                "holdings": [],
+                "history_periods": {
+                    "monthly_3y": monthly_stockanalysis_rows(),
+                },
+            },
+        }
+
+        result = self.mod.build_one("SA3Y", None, sa_payload, None)
+        fact = result["facts"]["return_3y_avg"]
+
+        years = (date(2026, 6, 1) - date(2023, 6, 1)).days / 365.2425
+        expected = (((133.1 / 100.0) ** (1 / years)) - 1) * 100
+        self.assertEqual(fact["source"], "stockanalysis.detail.history")
+        self.assertEqual(fact["unit"], "percent_points")
+        self.assertEqual(fact["as_of"], "2026-06-01")
+        self.assertAlmostEqual(fact["value"], expected)
 
     def test_etf_catalog_performance_fills_return_gaps(self) -> None:
         catalog_payload = {

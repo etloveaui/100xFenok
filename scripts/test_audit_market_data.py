@@ -101,6 +101,7 @@ class MarketDataAuditTest(unittest.TestCase):
                 "facts": {
                     "return_1m": {"value": 3.3, "source": "yf.history_1y"},
                     "return_3m": {"value": 4.4, "source": "stockanalysis.detail.history"},
+                    "return_3y_avg": {"value": 9.9, "source": "stockanalysis.detail.history"},
                 },
             },
         )
@@ -120,6 +121,7 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertEqual(coverage["return_1m"]["yf_history_1y"], 3)
         self.assertEqual(coverage["return_1m"]["etf_coverage_pct"], 100.0)
         self.assertEqual(coverage["return_3m"]["stockanalysis_history"], 1)
+        self.assertEqual(coverage["return_3y_avg"]["stockanalysis_history"], 1)
         self.assertEqual(coverage["return_ytd"]["etf"], 1)
         self.assertEqual(coverage["return_ytd"]["yf_info"], 1)
         self.assertEqual(coverage["return_1y"]["stockanalysis_performance"], 1)

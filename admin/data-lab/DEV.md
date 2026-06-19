@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.24 (ETF return coverage)
+> **Version**: 2.2.27 (ETF multi-year history readiness)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -147,6 +147,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Update QA gate**: The StockAnalysis refresh workflow runs `qa:surface-consumers`, `qa:market-audit`, and `qa:copy` after generated data is rebuilt, so Data Lab structure, public labels, and active surface consumers fail before the data commit is pushed.
 - **ETF API route smoke**: Ops Console probes `/api/data/stockanalysis/etf-universe` as JSON so the Admin surface catches route-level failures separately from static `etf_universe.json` freshness.
 - **ETF list coverage**: Data Lab renders `with_expense_ratio` and `with_performance` from the joined ETF list API, falling back to static universe enrichment counts only when the API omits them.
+- **ETF multi-year history**: StockAnalysis ETF detail files may now expose `weekly_3y`, `monthly_3y`, and `monthly_5y` under `history_periods`; market facts can derive 3Y CAGR from those arrays after the staged refresh writes them.
 
 ---
 
@@ -162,6 +163,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.27 | 2026-06-19 | Prepared StockAnalysis ETF detail fetches for multi-year history keys and wired market facts to derive 3Y CAGR from local monthly history after backfill |
 | 2.2.26 | 2026-06-19 | Derived ETF 3M return coverage from local StockAnalysis detail history when Yahoo daily history is missing, and added audit/QA source counts for the new history source |
 | 2.2.25 | 2026-06-19 | Added normalized ETF 10Y and inception-to-date CAGR coverage from StockAnalysis performance, including Data Lab return-coverage visibility |
 | 2.2.24 | 2026-06-19 | Market facts now use StockAnalysis ETF catalog performance for 1M/YTD/1Y/5Y ETF return coverage, and Data Lab audit exposes the expanded coverage from generated data |

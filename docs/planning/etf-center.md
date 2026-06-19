@@ -16,7 +16,7 @@ Current coverage (2026-06-19 local DataPack):
 - Price coverage in joined universe API: 5,347 / 5,347
 - Expense ratio coverage: 5,213
 - Performance coverage: 4,579
-- Market-facts ETF return coverage: 1M 5,143 / 5,267, 3M 562 / 5,267, YTD 4,903 / 5,267, 1Y 4,328 / 5,267, 5Y CAGR 2,037 / 5,267
+- Market-facts ETF return coverage: 1M 5,143 / 5,267, 3M 5,041 / 5,267, YTD 4,903 / 5,267, 1Y 4,328 / 5,267, 3Y CAGR 229 / 5,267, 5Y CAGR 2,037 / 5,267, 10Y CAGR 1,138 / 5,267, max CAGR 3,637 / 5,267
 
 Design principles:
 
@@ -71,7 +71,7 @@ Detail page for a single ETF.
   - Key metrics: price, change, AUM, expense ratio, dividend yield, beta, P/E, 52-week range.
   - Performance: 1M, YTD, 1Y, CAGR 3Y/5Y/10Y/max (raw StockAnalysis `performance` + normalized `market_facts`).
   - Holdings: top holdings, sector/country/asset allocation breakdowns.
-  - History: 1-year monthly bar chart + table.
+  - History: available period chart + table from detail `history_periods`.
 - Fallback states:
   - `full`: complete detail available.
   - `surface_only` / `universe_only`: only price/summary data available; user-facing copy explains missing depth.
@@ -177,7 +177,7 @@ Implementation pointers:
 | Returns (1M/YTD/1Y/CAGR) | yes | yes | raw `performance` + market facts |
 | Top holdings | no | yes | detail holdings |
 | Sector/country allocation | no | yes | detail breakdowns |
-| History chart | no | yes | detail `history_periods` (`daily_1y`, `weekly_1y`, `monthly_1y`; legacy `history` fallback) |
+| History chart | no | yes | detail `history_periods` (`daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, `monthly_5y`; legacy `history` fallback) |
 
 ### 4.3 `/etfs/new` Filters
 
@@ -232,8 +232,8 @@ Representative ticker contracts:
 
 | Gap | Status | Notes |
 |-----|--------|-------|
-| 3Y return coverage | partial coverage | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y still needs staged multi-year ETF history backfill or a new source field because the current catalog/detail payload has no matching 3Y key. |
-| Chart granularity | partial coverage | ETF detail fetcher stores `daily_1y`, `weekly_1y`, and `monthly_1y`; detail UI enables only ranges that exist in the payload. 3Y/5Y remain follow-up data-collection work. |
+| 3Y return coverage | code-ready / data backfill needed | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data is backfilled. Current local coverage remains 229 / 5,267 until that live history refresh runs. |
+| Chart granularity | code-ready / data backfill needed | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files still mostly hold the 1Y keys, so 3Y/5Y charts open progressively after detail backfill. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 

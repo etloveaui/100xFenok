@@ -212,6 +212,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 return {"status": 200, "data": [{"t": "2026-06-15", "c": 100.0}]}
             if "history?range=1Y&period=Monthly" in path:
                 return {"status": 200, "data": [{"t": "2026-06-01", "c": 99.0}]}
+            if "history?range=3Y&period=Weekly" in path:
+                return {"status": 200, "data": [{"t": "2026-06-08", "c": 98.0}]}
+            if "history?range=3Y&period=Monthly" in path:
+                return {"status": 200, "data": [{"t": "2026-06-01", "c": 97.0}]}
+            if "history?range=5Y&period=Monthly" in path:
+                return {"status": 200, "data": [{"t": "2026-06-01", "c": 96.0}]}
             return {"status": 200, "data": {}}
 
         original_fetch_json = self.fetcher.fetch_json
@@ -231,6 +237,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(payload["normalized"]["history_periods"]["daily_1y"][0]["c"], 101.0)
         self.assertEqual(payload["normalized"]["history_periods"]["weekly_1y"][0]["c"], 100.0)
         self.assertEqual(payload["normalized"]["history_periods"]["monthly_1y"][0]["c"], 99.0)
+        self.assertEqual(payload["normalized"]["history_periods"]["weekly_3y"][0]["c"], 98.0)
+        self.assertEqual(payload["normalized"]["history_periods"]["monthly_3y"][0]["c"], 97.0)
+        self.assertEqual(payload["normalized"]["history_periods"]["monthly_5y"][0]["c"], 96.0)
+        self.assertIn("monthly_3y", payload["endpoints"]["history_periods"])
+        self.assertIn("monthly_5y", payload["endpoints"]["history_periods"])
 
     def test_etf_catalog_enrichment_promotes_detail_metrics(self) -> None:
         detail_index = {

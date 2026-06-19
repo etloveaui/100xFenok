@@ -110,6 +110,9 @@ HISTORY_PERIOD_ENDPOINTS = {
     "daily_1y": {"range": "1Y", "period": "Daily"},
     "weekly_1y": {"range": "1Y", "period": "Weekly"},
     "monthly_1y": {"range": "1Y", "period": "Monthly"},
+    "weekly_3y": {"range": "3Y", "period": "Weekly"},
+    "monthly_3y": {"range": "3Y", "period": "Monthly"},
+    "monthly_5y": {"range": "5Y", "period": "Monthly"},
 }
 FINANCIAL_STATEMENT_PATHS = {
     "income": "financials",

@@ -79,6 +79,9 @@ External sources
 - `scripts/fetch-stockanalysis.py`
   - discovers the full StockAnalysis ETF universe into `data/stockanalysis/etf_universe.json`;
   - writes `data/stockanalysis/etfs/{TICKER}.json`;
+  - stores ETF detail history in `history_periods` for `daily_1y`,
+    `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and
+    `monthly_5y` so charts and derived returns can update from refreshed JSON;
   - writes `data/stockanalysis/stocks/{TICKER}.json` when stocks are requested;
   - writes `data/stockanalysis/financials/{TICKER}.json` for focused stock
     statement candidates (annual/quarterly income, balance sheet, cash flow,
@@ -114,6 +117,10 @@ External sources
     ticker collision so ETF holdings are not silently lost;
   - marks percent-like fields as `unit=percent_points` and adds Yahoo-derived
     change/change_pct candidates when raw quote change fields are absent;
+  - derives ETF 3M returns from StockAnalysis detail history when Yahoo daily
+    history is missing, and can derive ETF 3Y CAGR from StockAnalysis
+    multi-year monthly history after the ETF detail backfill refreshes those
+    `history_periods` keys;
   - mirrors the normalized facts to `100xfenok-next/public/data/computed/market_facts/`.
 - `scripts/audit-market-data.py`
   - read-only audit for ETF universe backfill progress, failure classes,
@@ -283,7 +290,7 @@ This keeps UI consumption simple while preserving overlapping source evidence.
 | return_3m | Yahoo 1Y daily history close-to-close derived → StockAnalysis detail history derived |
 | return_ytd | Yahoo 1Y daily history derived → Yahoo ytdReturn |
 | return_1y | Yahoo 1Y daily history derived → Yahoo 52-week change |
-| return_3y_avg | Yahoo average-return field normalized from ratio to percent points |
+| return_3y_avg | Yahoo average-return field normalized from ratio to percent points → StockAnalysis multi-year monthly detail history derived |
 | return_5y_avg | Yahoo average-return field normalized from ratio to percent points → StockAnalysis ETF performance |
 | return_10y_avg / return_max_avg | StockAnalysis ETF performance |
 
@@ -299,15 +306,17 @@ StockAnalysis all remain visible when their values overlap.
    finalize only when audit reports no missing offsets and no hard errors.
 4. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-5. Keep shipped StockAnalysis surfaces actively reachable through canonical
+5. Run staged ETF detail refreshes for the multi-year history keys so 3Y CAGR
+   and 3Y/5Y detail charts graduate from code-ready to broad local coverage.
+6. Keep shipped StockAnalysis surfaces actively reachable through canonical
    tabs/routes, Admin, or Data Lab and guarded by `qa:stockanalysis`,
    `qa:surface-consumers`, and `qa:market-audit` so committed surface data does
    not become dead DataPack weight. Explore is not the first home for new data
    families; it receives only curated headlines after the dedicated route is
    usable.
-6. Promote the StockAnalysis financial probe into the main fetcher only after the
+7. Promote the StockAnalysis financial probe into the main fetcher only after the
    ETF backfill run is closed and the fixture/schema gate remains passing.
-7. Maintain and extend the dedicated drill-down views for `stockanalysis/surfaces`
+8. Maintain and extend the dedicated drill-down views for `stockanalysis/surfaces`
    when new surfaces are added: ETF launch radar, earnings calendar, corporate
    actions, IPO radar, market movers, and industry maps must keep
    filter/sort/export affordances instead of falling back to Explore-only cards.
