@@ -78,6 +78,14 @@ available with the expected detail and classification fields. The scheduled
 `fetch-stockanalysis.yml` workflow runs this gate before committing refreshed
 data.
 
+Normalized `market_facts/tickers/{TICKER}.json` payloads preserve the existing
+top-level `generated_at` when the payload is otherwise unchanged. This keeps
+weekly StockAnalysis/Yahoo refreshes from rewriting thousands of ticker files
+only because a build clock advanced. Per-field freshness should read
+`facts.*.as_of` or `facts.*.fetched_at` first; top-level `generated_at` is the
+last material normalized-payload change fallback. `market_facts/index.json` and
+`data/manifest.json` continue to expose build/run timestamps.
+
 ## Structure
 
 ```

@@ -102,6 +102,21 @@ def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def stable_payload_for_compare(payload: dict) -> str:
+    stable = dict(payload)
+    stable["generated_at"] = None
+    return json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def carry_forward_generated_at(existing_payload, payload: dict) -> None:
+    if (
+        isinstance(existing_payload, dict)
+        and isinstance(existing_payload.get("generated_at"), str)
+        and stable_payload_for_compare(existing_payload) == stable_payload_for_compare(payload)
+    ):
+        payload["generated_at"] = existing_payload["generated_at"]
+
+
 def number(value):
     if value is None:
         return None
@@ -681,6 +696,7 @@ def main() -> None:
             payload["sources"]["stockanalysis_financials"] = True
             payload["source_files"]["stockanalysis_financials"] = f"stockanalysis/financials/{ticker}.json"
         rel = Path("tickers") / f"{ticker}.json"
+        carry_forward_generated_at(load_json(OUT / rel), payload)
         write_json(OUT / rel, payload)
         write_json(PUBLIC_OUT / rel, payload)
         rows.append({

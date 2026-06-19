@@ -5,7 +5,9 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 import importlib.util
+import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 
@@ -214,6 +216,91 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(fact["source"], "yf.history_1y")
         self.assertEqual(fact["candidate_count"], 2)
         self.assertEqual(fact["candidates"][1]["source"], "stockanalysis.etf_screener.performance")
+
+    def test_carry_forward_generated_at_when_payload_is_unchanged(self) -> None:
+        existing = {
+            "ticker": "SAME",
+            "generated_at": "2026-06-18T00:00:00Z",
+            "facts": {"price": {"value": 100.0, "source": "yf"}},
+        }
+        payload = {
+            "ticker": "SAME",
+            "generated_at": "2026-06-19T00:00:00Z",
+            "facts": {"price": {"value": 100.0, "source": "yf"}},
+        }
+
+        self.mod.carry_forward_generated_at(existing, payload)
+
+        self.assertEqual(payload["generated_at"], "2026-06-18T00:00:00Z")
+
+    def test_generated_at_advances_when_payload_content_changes(self) -> None:
+        existing = {
+            "ticker": "DIFF",
+            "generated_at": "2026-06-18T00:00:00Z",
+            "facts": {"price": {"value": 100.0, "source": "yf"}},
+        }
+        payload = {
+            "ticker": "DIFF",
+            "generated_at": "2026-06-19T00:00:00Z",
+            "facts": {"price": {"value": 101.0, "source": "yf"}},
+        }
+
+        self.mod.carry_forward_generated_at(existing, payload)
+
+        self.assertEqual(payload["generated_at"], "2026-06-19T00:00:00Z")
+
+    def test_main_preserves_ticker_generated_at_across_noop_rebuilds(self) -> None:
+        original_data = self.mod.DATA
+        original_out = self.mod.OUT
+        original_public_out = self.mod.PUBLIC_OUT
+        original_now_iso = self.mod.now_iso
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_root = root / "data"
+            yf_dir = data_root / "yf" / "finance"
+            yf_dir.mkdir(parents=True)
+            self.mod.DATA = data_root
+            self.mod.OUT = data_root / "computed" / "market_facts"
+            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
+
+            source_payload = {
+                "fetched_at": "2026-06-19T00:00:00Z",
+                "data": {
+                    "info": {
+                        "quoteType": "EQUITY",
+                        "shortName": "Same Inc.",
+                        "currency": "USD",
+                        "currentPrice": 100.0,
+                    }
+                },
+            }
+            source_path = yf_dir / "SAME.json"
+            source_path.write_text(json.dumps(source_payload), encoding="utf-8")
+
+            try:
+                self.mod.now_iso = lambda: "2026-06-19T01:00:00Z"
+                self.mod.main()
+                first = self.mod.load_json(self.mod.OUT / "tickers" / "SAME.json")
+
+                self.mod.now_iso = lambda: "2026-06-19T02:00:00Z"
+                self.mod.main()
+                second = self.mod.load_json(self.mod.OUT / "tickers" / "SAME.json")
+
+                source_payload["data"]["info"]["currentPrice"] = 101.0
+                source_path.write_text(json.dumps(source_payload), encoding="utf-8")
+                self.mod.now_iso = lambda: "2026-06-19T03:00:00Z"
+                self.mod.main()
+                third = self.mod.load_json(self.mod.OUT / "tickers" / "SAME.json")
+            finally:
+                self.mod.DATA = original_data
+                self.mod.OUT = original_out
+                self.mod.PUBLIC_OUT = original_public_out
+                self.mod.now_iso = original_now_iso
+
+        self.assertEqual(first["generated_at"], "2026-06-19T01:00:00Z")
+        self.assertEqual(second["generated_at"], "2026-06-19T01:00:00Z")
+        self.assertEqual(third["generated_at"], "2026-06-19T03:00:00Z")
 
 
 if __name__ == "__main__":
