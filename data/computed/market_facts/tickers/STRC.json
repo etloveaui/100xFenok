@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "STRC",
   "asset_type": "stock",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Strategy Inc",
     "exchange": "NMS",
@@ -151,6 +151,104 @@
         }
       ],
       "candidate_count": 1
+    },
+    "return_1m": {
+      "value": -6.515724980865835,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:39:14Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -6.515724980865835,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:39:14Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": -5.3521200997842096,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:39:14Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -5.3521200997842096,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:39:14Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -2.4395269519637623,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:39:14Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -2.4395269519637623,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:39:14Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 7.470327767956758,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:39:14Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 7.470327767956758,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:39:14Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -2.8677225,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-17T04:39:14Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": null,
@@ -229,6 +327,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

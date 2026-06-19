@@ -265,6 +265,10 @@ This keeps UI consumption simple while preserving overlapping source evidence.
 | dividend_yield | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview → SlickCharts |
 | beta | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
 | expense_ratio | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
+| return_1m / return_3m | Yahoo 1Y daily history close-to-close derived |
+| return_ytd | Yahoo 1Y daily history derived → Yahoo ytdReturn |
+| return_1y | Yahoo 1Y daily history derived → Yahoo 52-week change |
+| return_3y_avg / return_5y_avg | Yahoo average-return fields normalized from ratio to percent points |
 
 This is intentionally not a single-provider takeover. Yahoo, SlickCharts, and
 StockAnalysis all remain visible when their values overlap.

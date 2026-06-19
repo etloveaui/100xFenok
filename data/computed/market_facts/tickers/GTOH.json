@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "GTOH",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Invesco Actively Managed Exchange-Traded Fund Trust - Invesco Short Duration High Yield ETF",
     "exchange": "BTS",
@@ -111,6 +111,104 @@
         }
       ],
       "candidate_count": 1
+    },
+    "return_1m": {
+      "value": 0.8102764027192612,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 0.8102764027192612,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 1.9349627012500406,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 1.9349627012500406,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 1.7299771076521575,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 1.7299771076521575,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 6.629999948965466,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 6.629999948965466,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.0,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:47Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -206,6 +304,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

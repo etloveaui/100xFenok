@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "030000.KS",
   "asset_type": "stock",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Cheil Worldwide Inc.",
     "exchange": "KSC",
@@ -196,6 +196,29 @@
         }
       ],
       "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 0.7389188,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:16:56Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 0.7389188,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:16:56Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": null,
@@ -274,6 +297,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

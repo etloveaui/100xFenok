@@ -16,7 +16,17 @@ FACTS_DIR = DATA / "computed" / "market_facts" / "tickers"
 DEFAULT_OUTPUT = DATA / "computed" / "market_source_parity.json"
 NEXT_PUBLIC_DATA = ROOT / "100xfenok-next" / "public" / "data"
 SCHEMA_VERSION = "market-source-parity/v1"
-PERCENT_FIELDS = {"dividend_yield", "expense_ratio", "change_pct"}
+PERCENT_FIELDS = {
+    "change_pct",
+    "dividend_yield",
+    "expense_ratio",
+    "return_1m",
+    "return_3m",
+    "return_ytd",
+    "return_1y",
+    "return_3y_avg",
+    "return_5y_avg",
+}
 STALE_AGE_DAYS = 3
 SCALE_RATIO = 50
 SPREAD_PCT_THRESHOLD = 5

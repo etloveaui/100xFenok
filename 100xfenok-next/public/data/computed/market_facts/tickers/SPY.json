@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SPY",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "State Street SPDR S&P 500 ETF Trust",
     "exchange": "PCX",
@@ -228,6 +228,29 @@
           "source": "stockanalysis.overview",
           "as_of": null,
           "fetched_at": "2026-06-18T15:38:33Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 23.075258,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-13T23:55:08Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 23.075258,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-13T23:55:08Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -768,6 +791,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

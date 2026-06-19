@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Contract checks for computed market facts."""
+
+from __future__ import annotations
+
+from datetime import date, timedelta
+import importlib.util
+from pathlib import Path
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+BUILD_PATH = ROOT / "scripts" / "build-market-facts.py"
+
+
+def load_build_module():
+    spec = importlib.util.spec_from_file_location("build_market_facts", BUILD_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load build module from {BUILD_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def history_rows(count=80, start_close=100.0):
+    start = date(2026, 1, 2)
+    return [
+        {
+            "date": (start + timedelta(days=index)).isoformat(),
+            "Close": start_close + index,
+            "Volume": 1000 + index,
+        }
+        for index in range(count)
+    ]
+
+
+class BuildMarketFactsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.mod = load_build_module()
+
+    def test_history_return_uses_trading_day_offset(self) -> None:
+        payload = {
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "data": {"history_1y": history_rows()},
+        }
+
+        result = self.mod.yf_history_return_fact(payload, 21)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["source"], "yf.history_1y")
+        self.assertEqual(result["unit"], "percent_points")
+        self.assertAlmostEqual(result["value"], ((179.0 - 158.0) / 158.0) * 100)
+
+    def test_build_one_derives_history_returns_and_normalizes_average_returns(self) -> None:
+        yf_payload = {
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "data": {
+                "info": {
+                    "quoteType": "ETF",
+                    "ytdReturn": 4.5,
+                    "threeYearAverageReturn": 0.1234,
+                    "fiveYearAverageReturn": 0.2345,
+                    "fiftyTwoWeekChangePercent": 42.0,
+                },
+                "history_1y": history_rows(),
+            },
+        }
+
+        result = self.mod.build_one(
+            "TEST",
+            yf_payload,
+            {"asset_type": "etf", "normalized": {"quote": {}, "overview": {}, "holdings": []}},
+            None,
+        )
+        facts = result["facts"]
+
+        self.assertEqual(result["asset_type"], "etf")
+        self.assertEqual(facts["return_1m"]["source"], "yf.history_1y")
+        self.assertEqual(facts["return_3m"]["source"], "yf.history_1y")
+        self.assertEqual(facts["return_ytd"]["source"], "yf.history_1y")
+        self.assertEqual(facts["return_ytd"]["candidate_count"], 2)
+        self.assertAlmostEqual(facts["return_3y_avg"]["value"], 12.34)
+        self.assertAlmostEqual(facts["return_5y_avg"]["value"], 23.45)
+
+    def test_ytd_uses_yahoo_info_when_history_is_missing(self) -> None:
+        yf_payload = {
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "data": {
+                "info": {
+                    "quoteType": "ETF",
+                    "ytdReturn": 7.25,
+                },
+                "history_1y": [],
+            },
+        }
+
+        result = self.mod.build_one("NOHIST", yf_payload, {"asset_type": "etf", "normalized": {}}, None)
+        facts = result["facts"]
+
+        self.assertNotIn("return_1m", facts)
+        self.assertEqual(facts["return_ytd"]["source"], "yf")
+        self.assertEqual(facts["return_ytd"]["value"], 7.25)
+
+
+if __name__ == "__main__":
+    unittest.main()

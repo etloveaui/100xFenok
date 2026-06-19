@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "CPNX",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Tradr 2X Long CPNG Daily ETF",
     "exchange": "BTS",
@@ -215,6 +215,82 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_1m": {
+      "value": 37.824200310081565,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T11:53:12Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 37.824200310081565,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T11:53:12Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -22.675831294472196,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T11:53:12Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -22.675831294472196,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T11:53:12Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": -22.675831294472196,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T11:53:12Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -22.675831294472196,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T11:53:12Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -22.67583,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T11:53:12Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -317,6 +393,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

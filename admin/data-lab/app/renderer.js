@@ -428,6 +428,8 @@ const Renderer = (function() {
           ${renderAuditMetric('가격 제공', mergedCounts.with_price)}
           ${renderAuditMetric('거래량 제공', mergedCounts.with_volume)}
           ${renderAuditMetric('보유종목 제공', mergedCounts.with_holdings)}
+          ${renderAuditMetric('보수율 제공', mergedCounts.with_expense_ratio ?? universeCounts.detail_enrichment?.expense_ratio)}
+          ${renderAuditMetric('기간 수익률 제공', mergedCounts.with_performance ?? universeCounts.detail_enrichment?.performance)}
           ${renderAuditMetric('목록 추가분', mergedCounts.screener_only)}
           ${renderAuditMetric('신규 상장', newEtfs?.counts?.records ?? newRows.length)}
           ${renderAuditMetric('최신 상장일', escapeHtml(latestDate).slice(0, 10))}
@@ -445,7 +447,7 @@ const Renderer = (function() {
           <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs font-semibold text-gray-400">표시할 신규 ETF가 없습니다.</div>
         `}
         <p class="text-[11px] leading-relaxed text-gray-500">
-          공개 ETF 목록은 ETF 목록 API에서 가격, 변동률, 거래량, 보유종목 수를 함께 읽습니다. 상세 파일이 아직 없으면 공개 상세는 요약/가격 제공 상태로 열리고, 다음 데이터 갱신에서 보유 구성과 분류가 자동 보강됩니다.
+          공개 ETF 목록은 ETF 목록 API에서 가격, 변동률, 거래량, 보유종목 수, 보수율, 기간 수익률을 함께 읽습니다. 상세 파일이 아직 없으면 공개 상세는 요약/가격 제공 상태로 열리고, 다음 데이터 갱신에서 보유 구성과 분류가 자동 보강됩니다.
         </p>
       </section>
     `;

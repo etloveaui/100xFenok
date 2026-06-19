@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "GPT",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Intelligent Alpha Atlas ETF",
     "exchange": "NGM",
@@ -248,6 +248,112 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_1m": {
+      "value": 3.344253478082443,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:42Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 3.344253478082443,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:42Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 10.181047855192576,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:42Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 10.181047855192576,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:42Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 10.628544183411332,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:42Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 10.628544183411332,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:42Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 11.96613,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": 30.52382959681778,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-17",
+      "fetched_at": "2026-06-18T12:38:42Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 30.52382959681778,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-17",
+          "fetched_at": "2026-06-18T12:38:42Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 30.914724,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T12:38:42Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -473,6 +579,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

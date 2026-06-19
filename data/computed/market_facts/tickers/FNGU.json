@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "FNGU",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "MicroSectors FANG+ 3X Leveraged",
     "exchange": "PCX",
@@ -178,6 +178,104 @@
         }
       ],
       "candidate_count": 1
+    },
+    "return_1m": {
+      "value": -3.520878752471505,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:43Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -3.520878752471505,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 44.22085641532016,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:43Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 44.22085641532016,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 15.830923062707193,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:43Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 15.830923062707193,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 30.060498188107537,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:43Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 30.060498188107537,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 31.65332,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-17T04:38:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -423,6 +521,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

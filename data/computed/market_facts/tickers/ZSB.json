@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ZSB",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "USCF Sustainable Battery Metals Strategy Fund",
     "exchange": "PCX",
@@ -248,6 +248,134 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_1m": {
+      "value": -5.268221689109515,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:22:08Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -5.268221689109515,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 7.058540653181346,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:22:08Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 7.058540653181346,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 7.438994214059378,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:22:08Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 7.438994214059378,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 12.82538,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": 65.55835836633214,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:22:08Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 65.55835836633214,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 67.96297,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3y_avg": {
+      "value": 2.36794,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T16:22:08Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 2.36794,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:22:08Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
@@ -362,6 +490,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

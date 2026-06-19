@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "AAPW",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Roundhill AAPL WeeklyPay ETF",
     "exchange": "BTS",
@@ -227,6 +227,112 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_1m": {
+      "value": -1.2236255613912383,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T17:16:52Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -1.2236255613912383,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T17:16:52Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 22.86266559610248,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T17:16:52Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 22.86266559610248,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T17:16:52Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 9.933083748425503,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T17:16:52Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 9.933083748425503,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T17:16:52Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 16.11957,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T17:16:52Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": 57.359159295797056,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T17:16:52Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 57.359159295797056,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T17:16:52Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 9.147369,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T17:16:52Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -352,6 +458,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

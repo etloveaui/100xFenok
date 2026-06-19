@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "USDU",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "WisdomTree Bloomberg U.S. Dollar Bullish Fund",
     "exchange": "PCX",
@@ -227,6 +227,156 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_1m": {
+      "value": 1.5064853856136007,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:18:01Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 1.5064853856136007,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 2.1689080637430806,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:18:01Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 2.1689080637430806,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 3.0391012378271762,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:18:01Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 3.0391012378271762,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.39223,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": 5.493014660160448,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:18:01Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 5.493014660160448,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.0674834,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3y_avg": {
+      "value": 5.3204004,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T16:18:01Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 5.3204004,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_5y_avg": {
+      "value": 5.3430602,
+      "source": "yf",
+      "as_of": null,
+      "fetched_at": "2026-06-18T16:18:01Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 5.3430602,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-18T16:18:01Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
@@ -341,6 +491,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

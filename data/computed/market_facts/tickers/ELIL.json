@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ELIL",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Direxion Daily LLY Bull 2X Shares",
     "exchange": "NGM",
@@ -221,6 +221,112 @@
           "source": "stockanalysis.overview",
           "as_of": null,
           "fetched_at": "2026-06-18T15:39:22Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1m": {
+      "value": 23.114682465176205,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:39Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 23.114682465176205,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:39Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": 37.82261116529331,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:39Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": 37.82261116529331,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:39Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -3.0266004164093743,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:39Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -3.0266004164093743,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:39Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -4.46454,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-17T04:38:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": 59.428539119553115,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:39Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 59.428539119553115,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:39Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 43.175922,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-17T04:38:39Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -507,6 +613,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

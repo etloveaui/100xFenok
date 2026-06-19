@@ -37,6 +37,12 @@ FIELD_SOURCE_POLICY = {
     "dividend_yield": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "slickcharts"],
     "beta": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
     "expense_ratio": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
+    "return_1m": ["yf.history_1y"],
+    "return_3m": ["yf.history_1y"],
+    "return_ytd": ["yf.history_1y", "yf"],
+    "return_1y": ["yf.history_1y", "yf"],
+    "return_3y_avg": ["yf"],
+    "return_5y_avg": ["yf"],
 }
 
 
@@ -83,6 +89,15 @@ def number(value):
 def percent(value):
     parsed = number(value)
     return parsed
+
+
+def annual_return_percent(value):
+    parsed = number(value)
+    if parsed is None:
+        return None
+    # yfinance average-return fields are ratios (0.12 = 12%), while
+    # ytdReturn and fiftyTwoWeekChangePercent arrive as percent points.
+    return parsed * 100 if abs(parsed) <= 5 else parsed
 
 
 def fact(value, source, as_of=None, fetched_at=None, confidence="observed", unit=None):
@@ -133,6 +148,13 @@ def yf_percent_fact(yf_payload, key):
     return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
 
 
+def yf_annual_return_fact(yf_payload, key):
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    value = annual_return_percent(info.get(key))
+    return fact(value, "yf", fetched_at=(yf_payload or {}).get("fetched_at"), unit="percent_points")
+
+
 def yf_fast_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     fast_info = data.get("fast_info") or {}
@@ -158,6 +180,92 @@ def yf_derived_change_pct_fact(yf_payload):
     if current is None or previous in (None, 0):
         return None
     return fact(((current - previous) / previous) * 100, "yf.derived", fetched_at=(yf_payload or {}).get("fetched_at"), confidence="derived")
+
+
+def parse_history_date(value):
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        return datetime.strptime(value[:10], "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def history_close(point):
+    if not isinstance(point, dict):
+        return None
+    return number(point.get("Close", point.get("close", point.get("c"))))
+
+
+def yf_history_points(yf_payload):
+    data = (yf_payload or {}).get("data") or {}
+    rows = []
+    for point in data.get("history_1y") or []:
+        date = parse_history_date((point or {}).get("date"))
+        close = history_close(point)
+        if date is None or close is None or close <= 0:
+            continue
+        rows.append({"date": date, "close": close})
+    return sorted(rows, key=lambda item: item["date"])
+
+
+def return_from_closes(start_close, end_close):
+    if start_close in (None, 0) or end_close is None:
+        return None
+    return ((end_close - start_close) / start_close) * 100
+
+
+def yf_history_return_fact(yf_payload, trading_days):
+    rows = yf_history_points(yf_payload)
+    if len(rows) <= trading_days:
+        return None
+    latest = rows[-1]
+    start = rows[-1 - trading_days]
+    value = return_from_closes(start["close"], latest["close"])
+    return fact(
+        value,
+        "yf.history_1y",
+        as_of=latest["date"].isoformat(),
+        fetched_at=(yf_payload or {}).get("fetched_at"),
+        confidence="derived",
+        unit="percent_points",
+    )
+
+
+def yf_history_ytd_fact(yf_payload):
+    rows = yf_history_points(yf_payload)
+    if len(rows) < 2:
+        return None
+    latest = rows[-1]
+    start = next((row for row in rows if row["date"].year == latest["date"].year), None)
+    if start is None or start["date"] == latest["date"]:
+        return None
+    value = return_from_closes(start["close"], latest["close"])
+    return fact(
+        value,
+        "yf.history_1y",
+        as_of=latest["date"].isoformat(),
+        fetched_at=(yf_payload or {}).get("fetched_at"),
+        confidence="derived",
+        unit="percent_points",
+    )
+
+
+def yf_history_one_year_fact(yf_payload):
+    rows = yf_history_points(yf_payload)
+    if len(rows) < 2:
+        return None
+    latest = rows[-1]
+    start = rows[0]
+    value = return_from_closes(start["close"], latest["close"])
+    return fact(
+        value,
+        "yf.history_1y",
+        as_of=latest["date"].isoformat(),
+        fetched_at=(yf_payload or {}).get("fetched_at"),
+        confidence="derived",
+        unit="percent_points",
+    )
 
 
 def stockanalysis_quote_fact(sa_payload, key):
@@ -232,6 +340,12 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
         "dividend_yield": resolve_fact("dividend_yield", yf_percent_fact(yf_payload, "dividendYield"), stockanalysis_overview_fact(sa_payload, "dividendYield", unit="percent_points"), slick_fact(slick_payload, "dividend_yield", unit="percent_points")),
         "beta": resolve_fact("beta", yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")),
         "expense_ratio": resolve_fact("expense_ratio", yf_percent_fact(yf_payload, "netExpenseRatio"), stockanalysis_overview_fact(sa_payload, "expenseRatio", unit="percent_points")),
+        "return_1m": resolve_fact("return_1m", yf_history_return_fact(yf_payload, 21)),
+        "return_3m": resolve_fact("return_3m", yf_history_return_fact(yf_payload, 63)),
+        "return_ytd": resolve_fact("return_ytd", yf_history_ytd_fact(yf_payload), yf_percent_fact(yf_payload, "ytdReturn")),
+        "return_1y": resolve_fact("return_1y", yf_history_one_year_fact(yf_payload), yf_percent_fact(yf_payload, "fiftyTwoWeekChangePercent")),
+        "return_3y_avg": resolve_fact("return_3y_avg", yf_annual_return_fact(yf_payload, "threeYearAverageReturn")),
+        "return_5y_avg": resolve_fact("return_5y_avg", yf_annual_return_fact(yf_payload, "fiveYearAverageReturn")),
     }
     facts = {key: value for key, value in facts.items() if value is not None}
 

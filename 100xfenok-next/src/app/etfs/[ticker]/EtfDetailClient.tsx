@@ -40,6 +40,7 @@ interface EtfPerformance {
   tr1m?: number | null;
   trYTD?: number | null;
   tr1y?: number | null;
+  cagr3y?: number | null;
   cagr5y?: number | null;
   cagr10y?: number | null;
   cagrMAX?: number | null;
@@ -253,11 +254,33 @@ function hasWeightedRows(rows: WeightedRow[] | null | undefined) {
   return Array.isArray(rows) && rows.some((row) => weightedRowValue(row) !== null);
 }
 
-function performanceFromPayload(payload: EtfPayload | null | undefined, normalized: EtfPayload["normalized"]): EtfPerformance | null {
+function performanceFromPayload(
+  payload: EtfPayload | null | undefined,
+  normalized: EtfPayload["normalized"],
+  marketFacts: MarketFactsPayload | null | undefined,
+): EtfPerformance | null {
   const normalizedPerformance = normalized?.performance;
-  if (normalizedPerformance && typeof normalizedPerformance === "object") return normalizedPerformance;
+  const sourcePerformance: EtfPerformance = normalizedPerformance && typeof normalizedPerformance === "object" ? normalizedPerformance : {};
   const rawPerformance = payload?.raw?.overview?.performance;
-  return rawPerformance && typeof rawPerformance === "object" ? rawPerformance : null;
+  const legacyPerformance: EtfPerformance = rawPerformance && typeof rawPerformance === "object" ? rawPerformance : {};
+  const derivedPerformance: EtfPerformance = {
+    tr1m: factNumber(marketFacts, "return_1m"),
+    trYTD: factNumber(marketFacts, "return_ytd"),
+    tr1y: factNumber(marketFacts, "return_1y"),
+    cagr3y: factNumber(marketFacts, "return_3y_avg"),
+    cagr5y: factNumber(marketFacts, "return_5y_avg"),
+  };
+  const fields = ["tr1m", "trYTD", "tr1y", "cagr3y", "cagr5y", "cagr10y", "cagrMAX"] as const;
+  const merged: EtfPerformance = {};
+  fields.forEach((field) => {
+    const value = isFiniteNumber(sourcePerformance[field])
+      ? sourcePerformance[field]
+      : isFiniteNumber(legacyPerformance[field])
+        ? legacyPerformance[field]
+        : derivedPerformance[field];
+    if (isFiniteNumber(value)) merged[field] = value;
+  });
+  return Object.values(merged).some(isFiniteNumber) ? merged : null;
 }
 
 function detailStatusMeta(status: string | null): DetailStatusMeta | null {
@@ -332,6 +355,7 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
     { label: "1개월", value: performance?.tr1m, note: "총수익률" },
     { label: "연초 이후", value: performance?.trYTD, note: "총수익률" },
     { label: "1년", value: performance?.tr1y, note: "총수익률" },
+    { label: "3년 CAGR", value: performance?.cagr3y, note: "연환산" },
     { label: "5년 CAGR", value: performance?.cagr5y, note: "연환산" },
     { label: "10년 CAGR", value: performance?.cagr10y, note: "연환산" },
     { label: "상장 이후 CAGR", value: performance?.cagrMAX, note: "연환산" },
@@ -566,7 +590,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const history = Array.isArray(normalized.history) ? normalized.history : [];
-  const performance = performanceFromPayload(etfData, normalized);
+  const performance = performanceFromPayload(etfData, normalized, marketFacts);
   const statusMeta = detailStatusMeta(etfData?.detail_status ?? null);
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
   const labels = classificationLabels(classification);

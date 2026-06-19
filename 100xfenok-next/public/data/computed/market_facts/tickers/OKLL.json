@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "OKLL",
   "asset_type": "etf",
-  "generated_at": "2026-06-18T19:32:18Z",
+  "generated_at": "2026-06-19T01:47:39Z",
   "identity": {
     "name": "Defiance Daily Target 2X Long OKLO ETF",
     "exchange": "NGM",
@@ -167,6 +167,112 @@
           "source": "stockanalysis.overview",
           "as_of": null,
           "fetched_at": "2026-06-18T15:39:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1m": {
+      "value": -22.969542087474444,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:53Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -22.969542087474444,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:53Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_3m": {
+      "value": -35.767192654225035,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:53Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y"
+      ],
+      "candidates": [
+        {
+          "value": -35.767192654225035,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:53Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -68.90368837441721,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:53Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -68.90368837441721,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:53Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -47.44668,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-17T04:38:53Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": -74.78607492852196,
+      "source": "yf.history_1y",
+      "as_of": "2026-06-16",
+      "fetched_at": "2026-06-17T04:38:53Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -74.78607492852196,
+          "source": "yf.history_1y",
+          "as_of": "2026-06-16",
+          "fetched_at": "2026-06-17T04:38:53Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -74.78608,
+          "source": "yf",
+          "as_of": null,
+          "fetched_at": "2026-06-17T04:38:53Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -425,6 +531,26 @@
         "yf",
         "stockanalysis.overview",
         "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y"
+      ],
+      "return_3m": [
+        "yf.history_1y"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf"
+      ],
+      "return_5y_avg": [
+        "yf"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
