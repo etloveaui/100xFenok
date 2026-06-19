@@ -21,6 +21,13 @@ ETF detail pages self-heal without a manual freshness step. Full holdings/histor
 backfill remains intentionally chunked with `--universe-backfill --offset
 --limit-etfs` to avoid large request bursts.
 
+ETF detail payloads keep the legacy `normalized.history` field as the 1-year
+monthly series for backward compatibility. New chart consumers should prefer
+`normalized.history_periods`, currently keyed as `daily_1y`, `weekly_1y`, and
+`monthly_1y`. The 100x ETF detail page enables only periods present in the local
+payload, so data refreshes automatically activate richer chart controls without
+mock states.
+
 Latest measured ETF detail coverage (2026-06-19 KST / 2026-06-18 UTC): 5,347
 candidate ETF symbols from `union(etf_universe, etf_screener, new_etfs)`, 5,265
 detail files, 82 missing detail files, 686 Yahoo fallback detail files, 98.47%
@@ -136,7 +143,12 @@ Each file keeps both normalized fields and raw endpoint payloads:
     "overview": {},
     "performance": {},
     "quote": {},
-    "history": []
+    "history": [],
+    "history_periods": {
+      "daily_1y": [],
+      "weekly_1y": [],
+      "monthly_1y": []
+    }
   },
   "raw": {}
 }
