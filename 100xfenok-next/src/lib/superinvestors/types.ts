@@ -233,10 +233,14 @@ export interface SummaryInvestor {
 
 export interface SummaryData {
   metadata: {
+    version?: string;
     generated_at?: string;
     latest_quarter?: string;
+    investor_count?: number;
     total_investors?: number;
     total_tickers?: number;
+    data_latency_note?: string;
+    quarters_covered?: string[];
     enrichment_coverage?: {
       sector?: number;
       industry?: number;
@@ -349,6 +353,7 @@ export interface SuperInvestorsDataResult {
   summary: SummaryData | null;
   byTicker: ByTickerData | null;
   bySector: SectorHoldingsData | null;
+  convictionEntries: ConvictionEntriesData | null;
   dataReady: boolean;
   failed: boolean;
   quarter: string | null;

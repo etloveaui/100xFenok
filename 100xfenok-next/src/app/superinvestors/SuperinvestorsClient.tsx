@@ -184,6 +184,22 @@ function fmtScore(value: number | null | undefined): string {
   return `${Math.round(value * 100)}`;
 }
 
+function fmtNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return value.toLocaleString();
+}
+
+function fmtDateTimeKo(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("ko-KR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}
+
 function uniqueHolders(holdersList: string[]): string[] {
   const seen = new Set<string>();
   return holdersList.filter((h) => {
@@ -616,7 +632,18 @@ export default function SuperinvestorsClient({
   initialSearch?: string;
   initialGuru?: string | null;
 }) {
-  const { consensus, enhancedConsensus, summary, byTicker, bySector, dataReady, failed, quarter, excludedStale } = use13FData();
+  const {
+    consensus,
+    enhancedConsensus,
+    summary,
+    byTicker,
+    bySector,
+    convictionEntries,
+    dataReady,
+    failed,
+    quarter,
+    excludedStale,
+  } = use13FData();
   const [tab, setTab] = useState<SuperInvestorsTab>(initialTab ?? "consensus");
   const tabsId = useTabsBaseId(SUPERINVESTOR_TABS_ID);
   const [search, setSearch] = useState(initialSearch);
@@ -689,6 +716,11 @@ export default function SuperinvestorsClient({
       .slice(0, 8);
   }, [bySector]);
 
+  const sectorBreakdownCount = useMemo(() => {
+    if (!bySector) return 0;
+    return Object.entries(bySector).filter(([sector, entry]) => sector !== "_meta" && isSectorEntry(entry)).length;
+  }, [bySector]);
+
   const coverage = summary?.metadata?.enrichment_coverage ?? null;
 
   const pageCount = Math.max(1, Math.ceil(consensusRows.length / PAGE_SIZE));
@@ -735,6 +767,21 @@ export default function SuperinvestorsClient({
 
   const quarterLabel = quarter ? `${quarter} 기준` : null;
   const delayLabel = "기관 공시는 분기 종료 후 최대 45일 지연됩니다";
+  const generatedAtLabel = fmtDateTimeKo(summary?.metadata?.generated_at);
+  const investorCount =
+    consensus?.metadata?.current_cohort_investors ??
+    summary?.metadata?.investor_count ??
+    summary?.metadata?.total_investors ??
+    null;
+  const tickerCount =
+    consensus?.metadata?.tickers_count ??
+    summary?.metadata?.total_tickers ??
+    (byTicker ? Object.keys(byTicker).length : null);
+  const topSector = sectorRows[0] ?? null;
+  const topSectorLabel = topSector ? sectorLabelKo(resolveSector(topSector.sector)) : "—";
+  const topSectorHoldings = topSector?.top_holdings?.slice(0, 3).join(", ") || "—";
+  const convictionNewCount = convictionEntries?.metadata?.high_conviction_new_count ?? null;
+  const convictionHoldCount = convictionEntries?.metadata?.top_conviction_hold_count ?? null;
 
   return (
     <div className="data-shell-page">
@@ -766,6 +813,72 @@ export default function SuperinvestorsClient({
         <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
           기관 공시 데이터를 불러오지 못했습니다.
         </div>
+      ) : null}
+
+      {dataReady ? (
+        <section
+          className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]"
+          aria-label="13F 자료 기준"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">자료 기준</p>
+              <h2 className="mt-1 text-sm font-black tracking-tight text-slate-950">SEC 13F 공시 변환 데이터</h2>
+              <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-[var(--c-ink-3)]">
+                SEC 13F 공시 원문을 100x SEC13F DataPack으로 변환한 자료만 사용합니다. 실시간 보유가 아니라 분기 보고 기준입니다.
+              </p>
+            </div>
+            <span className="inline-flex min-h-8 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700">
+              분기 종료 후 최대 45일 지연
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">기준 분기</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{quarter ?? "—"}</p>
+              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                {generatedAtLabel ? `생성 ${generatedAtLabel}` : "생성 시각 정보 없음"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 범위</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">
+                {fmtNumber(investorCount)}명 · {fmtNumber(tickerCount)}종목
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                오래된 공시는 최신 분기 계산에서 제외
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">섹터 분해</p>
+              <p className="mt-1 text-sm font-black text-slate-950">{topSectorLabel}</p>
+              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                {sectorBreakdownCount}개 섹터 · 대표 {topSectorHoldings}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">종목별 보유</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtNumber(tickerCount)}</p>
+              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                보유 투자자·비중은 종목별 보유 탭에서 확인
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 신호</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">
+                {fmtNumber(convictionNewCount)} / {fmtNumber(convictionHoldCount)}
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                신규 고비중 / 상위 보유 유지
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[10px] font-semibold leading-4 text-[var(--c-ink-3)]">
+            섹터·종목·확신 신호는 같은 기준 분기의 변환 데이터에서 계산합니다. 공시 지연 때문에 오늘의 실제 보유와 다를 수 있습니다.
+          </p>
+        </section>
       ) : null}
 
       {/* Tabs */}

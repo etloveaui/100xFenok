@@ -7,6 +7,7 @@ import type {
   SummaryData,
   ByTickerData,
   SectorHoldingsData,
+  ConvictionEntriesData,
   InvestorData,
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
@@ -33,6 +34,7 @@ const EMPTY: SuperInvestorsDataResult = {
   summary: null,
   byTicker: null,
   bySector: null,
+  convictionEntries: null,
   dataReady: false,
   failed: false,
   quarter: null,
@@ -47,12 +49,13 @@ export function use13FData(): SuperInvestorsDataResult {
     isMountedRef.current = true;
 
     void (async () => {
-      const [consensus, summary, byTicker, enhancedConsensus, bySector] = await Promise.all([
+      const [consensus, summary, byTicker, enhancedConsensus, bySector, convictionEntries] = await Promise.all([
         fetchJson<ConsensusData>("/data/sec-13f/analytics/consensus.json"),
         fetchJson<SummaryData>("/data/sec-13f/summary.json"),
         fetchJson<ByTickerData>("/data/sec-13f/by_ticker.json"),
         fetchJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json"),
         fetchJson<SectorHoldingsData>("/data/sec-13f/by_sector.json"),
+        fetchJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json"),
       ]);
 
       if (!isMountedRef.current) return;
@@ -71,6 +74,7 @@ export function use13FData(): SuperInvestorsDataResult {
         summary,
         byTicker,
         bySector,
+        convictionEntries,
         dataReady: true,
         failed: false,
         quarter: consensus?.metadata?.quarter ?? null,
