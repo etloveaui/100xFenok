@@ -198,6 +198,9 @@ export function useSectorData(): SectorDataResult {
     rows: [],
     benchmarkMomentum: null,
     dataReady: false,
+    benchmarksReady: false,
+    etfsReady: false,
+    valuationReady: false,
     failedSources: [],
     updatedAt: null,
     sourceMeta: {
@@ -249,11 +252,15 @@ export function useSectorData(): SectorDataResult {
       if (!portfolioViews?.total?.sector_history) failed.push("portfolio_views");
       if (!bySector) failed.push("by_sector");
 
+      const benchmarksReady = Boolean(benchmarks?.momentum);
+      const etfsReady = Boolean(etfs?.etfs);
+      const valuationReady = Boolean(usSectors?.sections);
       const benchmarkMomentum: SectorMomentum | null = benchmarks?.momentum?.sp500
         ? Object.fromEntries(MOMENTUM_KEYS.map((key) => [key, num(benchmarks.momentum?.sp500?.[key])]))
         : null;
       const smartMoneyMap = buildSmartMoneyMap(portfolioViews, bySector);
       let valuationLatestDate: string | null = null;
+      let tickerFailed = false;
 
       const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
         const rawMomentum = benchmarks?.momentum?.[sector.key];
@@ -262,7 +269,10 @@ export function useSectorData(): SectorDataResult {
           momentum[key] = num(rawMomentum?.[key]);
         }
         const quote = tickerMap[sector.etf];
-        if (!quote) failed.push(`ticker:${sector.etf}`);
+        if (!quote) {
+          tickerFailed = true;
+          failed.push(`ticker:${sector.etf}`);
+        }
         const changePercent = num(quote?.changePercent);
         const marketState =
           typeof quote?.marketState === "string" && quote.marketState.trim().length > 0
@@ -293,7 +303,8 @@ export function useSectorData(): SectorDataResult {
         };
       });
 
-      const dataReady = Boolean(benchmarks?.momentum) || Boolean(etfs?.etfs);
+      if (tickerFailed) failed.push("ticker");
+      const dataReady = benchmarksReady || etfsReady || valuationReady;
       const updatedAt = benchmarks?.metadata?.generated ?? null;
       const sourceMeta = {
         benchmarksGenerated: updatedAt,
@@ -309,7 +320,17 @@ export function useSectorData(): SectorDataResult {
       };
 
       if (!isMountedRef.current) return;
-      setResult({ rows, benchmarkMomentum, dataReady, failedSources: failed, updatedAt, sourceMeta });
+      setResult({
+        rows,
+        benchmarkMomentum,
+        dataReady,
+        benchmarksReady,
+        etfsReady,
+        valuationReady,
+        failedSources: failed,
+        updatedAt,
+        sourceMeta,
+      });
     } finally {
       inFlightRef.current = false;
     }

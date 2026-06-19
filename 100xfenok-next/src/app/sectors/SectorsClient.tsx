@@ -142,13 +142,26 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
   );
 }
 
-function SourceLine({ sourceMeta }: { sourceMeta: SectorSourceMeta }) {
+function failedSourceLabel(source: string): string | null {
+  if (source === "benchmarks") return "모멘텀";
+  if (source === "etfs") return "ETF";
+  if (source === "us_sectors") return "가치";
+  if (source === "portfolio_views" || source === "by_sector") return "기관 보유";
+  if (source === "ticker") return "실시간 가격";
+  return null;
+}
+
+function SourceLine({ sourceMeta, failedSources = [] }: { sourceMeta: SectorSourceMeta; failedSources?: string[] }) {
   const parts = [
     sourceMeta.benchmarksGenerated ? `모멘텀 ${dateOnly(sourceMeta.benchmarksGenerated)}` : null,
     sourceMeta.valuationLatestDate ? `가치 ${sourceMeta.valuationLatestDate}` : null,
     sourceMeta.smartMoneyQuarter ? `기관 보유 ${sourceMeta.smartMoneyQuarter}` : null,
   ].filter(Boolean);
-  return <span>{parts.length > 0 ? parts.join(" · ") : "기준일 확인 중"}</span>;
+  const missing = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
+  if (parts.length > 0) {
+    return <span>{missing.length > 0 ? `${parts.join(" · ")} · 확인 불가 ${missing.join("/")}` : parts.join(" · ")}</span>;
+  }
+  return <span>{missing.length > 0 ? `데이터 없음: ${missing.join(" · ")}` : "기준일 확인 중"}</span>;
 }
 
 function valuationSourceLine(sourceMeta: SectorSourceMeta): string {
@@ -199,6 +212,7 @@ function SectorPulse({
   smartLeader,
   smartDeltaLeader,
   sourceMeta,
+  failedSources,
 }: {
   leader: SectorRow | undefined;
   laggard: SectorRow | undefined;
@@ -211,6 +225,7 @@ function SectorPulse({
   smartLeader: SectorRow | null;
   smartDeltaLeader: SectorRow | null;
   sourceMeta: SectorSourceMeta;
+  failedSources: string[];
 }) {
   const leaderValue = leader?.momentum ? leader.momentum[activeWindowKey] : null;
   const laggardValue = laggard?.momentum ? laggard.momentum[activeWindowKey] : null;
@@ -230,7 +245,7 @@ function SectorPulse({
         <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {beatCount === null ? "S&P 기준 없음" : `${beatCount}/${totalCount}개 섹터가 S&P 상회`}
         </p>
-        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"><SourceLine sourceMeta={sourceMeta} /></p>
+        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"><SourceLine sourceMeta={sourceMeta} failedSources={failedSources} /></p>
       </div>
       <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
         <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">가치 위치</p>
@@ -334,7 +349,17 @@ function ValuationMobileCard({ row }: { row: SectorRow }) {
 }
 
 export default function SectorsClient() {
-  const { rows, benchmarkMomentum, dataReady, failedSources, updatedAt, sourceMeta } = useSectorData();
+  const {
+    rows,
+    benchmarkMomentum,
+    dataReady,
+    benchmarksReady,
+    etfsReady,
+    valuationReady,
+    failedSources,
+    updatedAt,
+    sourceMeta,
+  } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
   const [mobileView, setMobileView] = useState<MobileView>("heatmap");
   const chartTheme = useMarketChartTheme();
@@ -352,7 +377,7 @@ export default function SectorsClient() {
   const valuationRows = useMemo(() => rows.filter((row) => row.valuation), [rows]);
   const activeWindowLabel = MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label ?? sortWindow;
 
-  const isMuted = !dataReady;
+  const isMuted = !(benchmarksReady || etfsReady || valuationReady);
   const benchmarksFailed = failedSources.includes("benchmarks");
   const dateLabel = updatedAt ? updatedAt.slice(0, 10) : null;
   const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
@@ -368,9 +393,13 @@ export default function SectorsClient() {
   const smartLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.weight ?? -Infinity) - (a.smartMoney?.weight ?? -Infinity))[0] : null;
   const smartDeltaLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.delta4q ?? -Infinity) - (a.smartMoney?.delta4q ?? -Infinity))[0] : null;
   const headerDesc =
-    dataReady && leaders[0] && laggards[0]
+    benchmarksReady && leaders[0] && laggards[0]
       ? `${dateLabel ?? "최신"} 기준 ${activeWindowLabel} 리더는 ${leaders[0].name} ${pct(leaders[0].momentum[sortWindow], 1)}, 약세는 ${laggards[0].name} ${pct(laggards[0].momentum[sortWindow], 1)}입니다.`
-      : "섹터 데이터를 불러오는 중입니다.";
+      : dataReady
+        ? "섹터 자료 일부를 불러왔지만 모멘텀 기준선은 없습니다."
+        : failedSources.length > 0
+          ? "섹터 데이터를 불러오지 못했습니다."
+          : "섹터 데이터를 불러오는 중입니다.";
   const etfCoverageText =
     sourceMeta.etfMissing.length > 0
       ? `ETF 상세 미수록: ${sourceMeta.etfMissing.join(", ")}`
@@ -401,7 +430,7 @@ export default function SectorsClient() {
           <span className="hidden sm:inline-flex">
             <span className="data-shell-pill">
               <span />
-              <SourceLine sourceMeta={sourceMeta} />
+              <SourceLine sourceMeta={sourceMeta} failedSources={failedSources} />
             </span>
           </span>
           <TransitionLink href="/" className="data-shell-link">
@@ -428,13 +457,18 @@ export default function SectorsClient() {
         smartLeader={smartLeader}
         smartDeltaLeader={smartDeltaLeader}
         sourceMeta={sourceMeta}
+        failedSources={failedSources}
       />
 
       {/* Heatmap */}
       <div className={mobilePanelClass(mobileView === "heatmap")}>
       <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과" className={isMuted ? "opacity-60" : undefined}>
         <p className="mb-3 text-xs text-[var(--c-ink-2)]">
-          {beatCount === null ? "S&P 500 기준선을 불러오는 중입니다." : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
+          {beatCount === null
+            ? benchmarksFailed
+              ? "S&P 500 기준선 데이터가 없습니다."
+              : "S&P 500 기준선을 불러오는 중입니다."
+            : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
         </p>
         <div className="grid gap-2 md:hidden">
           {sorted.map((row) => (
@@ -478,28 +512,30 @@ export default function SectorsClient() {
               </tr>
             </thead>
             <tbody>
-              {benchmarkMomentum ? (
-                <tr className="border-b border-[var(--c-line)]">
-                  <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-sm">
-                    <span className="block text-sm font-black text-[var(--c-ink)]">S&amp;P 500</span>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">시장 기준선</span>
-                  </th>
-                  <td className="px-2 py-1.5 text-right text-xs font-black text-[var(--c-ink-3)]">기준</td>
-                  {MOMENTUM_WINDOWS.map((window) => {
-                    const value = benchmarkMomentum[window.key];
-                    return (
-                      <td key={window.key} className="px-1 py-1.5">
-                        <div
-                          className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
-                          style={heatStyle(value, chartTheme)}
-                        >
-                          {pct(value, 1)}
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ) : null}
+              <tr className="border-b border-[var(--c-line)]">
+                <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-sm">
+                  <span className="block text-sm font-black text-[var(--c-ink)]">S&amp;P 500</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                    {benchmarksReady ? "시장 기준선" : benchmarksFailed ? "데이터 없음" : "확인 중"}
+                  </span>
+                </th>
+                <td className="px-2 py-1.5 text-right text-xs font-black text-[var(--c-ink-3)]">
+                  {benchmarksReady ? "기준" : "—"}
+                </td>
+                {MOMENTUM_WINDOWS.map((window) => {
+                  const value = benchmarkMomentum?.[window.key] ?? null;
+                  return (
+                    <td key={window.key} className="px-1 py-1.5">
+                      <div
+                        className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
+                        style={heatStyle(value, chartTheme)}
+                      >
+                        {pct(value, 1)}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
               {sorted.map((row) => {
                 const state = getMarketStateMeta(row.marketState);
                 const relativeThreeMonth =

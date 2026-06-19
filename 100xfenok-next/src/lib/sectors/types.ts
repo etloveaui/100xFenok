@@ -82,6 +82,9 @@ export interface SectorDataResult {
   rows: SectorRow[];
   benchmarkMomentum: SectorMomentum | null;
   dataReady: boolean;
+  benchmarksReady: boolean;
+  etfsReady: boolean;
+  valuationReady: boolean;
   /** Source ids that fell back (e.g. "benchmarks", "etfs", "ticker:XLK"). */
   failedSources: string[];
   /** benchmarks generated timestamp, or null. */
