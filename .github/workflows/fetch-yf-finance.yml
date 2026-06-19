@@ -42,6 +42,18 @@ on:
         description: 'Fetch share-count history sample'
         required: false
         default: 'false'
+      stockanalysis_etfs:
+        description: 'Include full StockAnalysis ETF universe in the candidate set'
+        required: false
+        default: 'false'
+      history_gaps_only:
+        description: 'Fetch only tickers missing enough local 1Y history rows'
+        required: false
+        default: 'false'
+      history_min_rows:
+        description: 'Minimum local history_1y rows before a ticker is skipped'
+        required: false
+        default: '200'
 
 jobs:
   fetch-yf-finance:
@@ -68,6 +80,9 @@ jobs:
           INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '0' }}
           INPUT_INCLUDE_OPTIONS: ${{ github.event.inputs.include_options || 'false' }}
           INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full || 'false' }}
+          INPUT_STOCKANALYSIS_ETFS: ${{ github.event.inputs.stockanalysis_etfs || 'false' }}
+          INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only || 'false' }}
+          INPUT_HISTORY_MIN_ROWS: ${{ github.event.inputs.history_min_rows || '200' }}
         run: |
           ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0}"
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
@@ -75,6 +90,8 @@ jobs:
           if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi
           if [ "$INPUT_INCLUDE_OPTIONS" = "true" ]; then ARGS="$ARGS --include-options"; fi
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
+          if [ "$INPUT_STOCKANALYSIS_ETFS" = "true" ]; then ARGS="$ARGS --stockanalysis-etfs"; fi
+          if [ "$INPUT_HISTORY_GAPS_ONLY" = "true" ]; then ARGS="$ARGS --history-gaps-only --history-min-rows ${INPUT_HISTORY_MIN_ROWS:-200}"; fi
           python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}"
 
       - name: Rebuild local coverage summary

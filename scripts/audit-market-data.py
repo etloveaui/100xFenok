@@ -15,6 +15,14 @@ DATA = ROOT / "data"
 NEXT_PUBLIC_DATA = ROOT / "100xfenok-next" / "public" / "data"
 CHUNK_RE = re.compile(r"^index_offset_(\d+)_limit_(\d+)\.json$")
 TRANSIENT_FILE_RE = re.compile(r"(\.partial\.|\.ignored$)")
+RETURN_FIELDS = (
+    "return_1m",
+    "return_3m",
+    "return_ytd",
+    "return_1y",
+    "return_3y_avg",
+    "return_5y_avg",
+)
 
 
 def load_json(path: Path):
@@ -28,6 +36,12 @@ def pct(part: int, whole: int) -> str:
     if whole <= 0:
         return "0.0%"
     return f"{(part / whole) * 100:.1f}%"
+
+
+def pct_number(part: int, whole: int) -> float:
+    if whole <= 0:
+        return 0.0
+    return round((part / whole) * 100, 2)
 
 
 def is_expected_missing_error(error: object) -> bool:
@@ -230,12 +244,40 @@ def build_payload() -> dict:
     multi_candidate_fields = 0
     policy_mismatch_fields = 0
     percent_scale_warnings = 0
+    audited_asset_counts = Counter()
+    return_field_coverage = {
+        field: {
+            "total": 0,
+            "etf": 0,
+            "stock": 0,
+            "yf_history_1y": 0,
+            "yf_info": 0,
+        }
+        for field in RETURN_FIELDS
+    }
     ticker_files = sorted((DATA / "computed" / "market_facts" / "tickers").glob("*.json"))
     for path in ticker_files:
         payload = load_json(path) or {}
+        asset_type = str(payload.get("asset_type") or "unknown")
+        audited_asset_counts[asset_type] += 1
         facts = payload.get("facts") or {}
         if not isinstance(facts, dict):
             continue
+        for field in RETURN_FIELDS:
+            fact = facts.get(field)
+            if not isinstance(fact, dict):
+                continue
+            bucket = return_field_coverage[field]
+            bucket["total"] += 1
+            if asset_type == "etf":
+                bucket["etf"] += 1
+            elif asset_type == "stock":
+                bucket["stock"] += 1
+            source = fact.get("source")
+            if source == "yf.history_1y":
+                bucket["yf_history_1y"] += 1
+            elif source == "yf":
+                bucket["yf_info"] += 1
         for field, fact in facts.items():
             if not isinstance(fact, dict):
                 continue
@@ -257,6 +299,11 @@ def build_payload() -> dict:
                 ]
                 if len(values) > 1 and max(values) / min(values) >= 50:
                     percent_scale_warnings += 1
+    etf_denominator = as_int(market_coverage.get("etf")) or audited_asset_counts.get("etf", 0)
+    stockanalysis_denominator = universe_count
+    for bucket in return_field_coverage.values():
+        bucket["etf_coverage_pct"] = pct_number(bucket["etf"], etf_denominator)
+        bucket["stockanalysis_universe_pct"] = pct_number(bucket["etf"], stockanalysis_denominator)
 
     return {
         "stockanalysis": {
@@ -296,6 +343,12 @@ def build_payload() -> dict:
             "multi_candidate_fields": multi_candidate_fields,
             "policy_mismatch_fields": policy_mismatch_fields,
             "percent_scale_warnings": percent_scale_warnings,
+            "return_field_coverage": return_field_coverage,
+            "return_field_denominators": {
+                "etf": etf_denominator,
+                "stockanalysis_universe": stockanalysis_denominator,
+                "stock": audited_asset_counts.get("stock", 0),
+            },
         },
         "market_source_parity": {
             "generated_at": source_parity.get("generated_at"),

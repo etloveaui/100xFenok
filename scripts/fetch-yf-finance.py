@@ -32,6 +32,8 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parent.parent
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
+STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
+STOCKANALYSIS_ETF_SCREENER = ROOT / "data" / "stockanalysis" / "surfaces" / "etf_screener.json"
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
@@ -500,6 +502,94 @@ def load_scouter_etfs():
     return symbols
 
 
+def surface_rows(payload):
+    if not isinstance(payload, dict):
+        return []
+    records = payload.get("records") if isinstance(payload.get("records"), list) else []
+    table_records = []
+    for table in payload.get("tables") or []:
+        if isinstance(table, dict) and isinstance(table.get("records"), list):
+            table_records.extend(table["records"])
+    return [row for row in [*records, *table_records] if isinstance(row, dict)]
+
+
+def stockanalysis_symbol(value):
+    clean = str(value or "").replace("$", "").strip().upper()
+    if clean not in NON_YAHOO_ETF_LABELS and SYMBOL_RE.match(clean):
+        return clean
+    return None
+
+
+def parse_suffix_number(value):
+    if value is None:
+        return None
+    if isinstance(value, Number):
+        return float(value)
+    text = str(value).strip().replace(",", "").replace("$", "")
+    if not text or text in {"-", "N/A"}:
+        return None
+    multiplier = 1
+    suffix = text[-1:].upper()
+    if suffix in {"K", "M", "B", "T"}:
+        multiplier = {"K": 1_000, "M": 1_000_000, "B": 1_000_000_000, "T": 1_000_000_000_000}[suffix]
+        text = text[:-1]
+    try:
+        return float(text) * multiplier
+    except ValueError:
+        return None
+
+
+def stockanalysis_aum(row):
+    for key in ("aum", "aum_raw", "totalAssets", "total_assets", "netAssets", "net_assets"):
+        parsed = parse_suffix_number(row.get(key))
+        if parsed is not None:
+            return parsed
+    return 0.0
+
+
+def load_stockanalysis_etfs():
+    symbols = set()
+    for path in (STOCKANALYSIS_ETF_UNIVERSE, STOCKANALYSIS_ETF_SCREENER):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+        for row in surface_rows(payload):
+            symbol = stockanalysis_symbol(row.get("ticker") or row.get("s") or row.get("symbol"))
+            if symbol:
+                symbols.add(symbol)
+    return symbols
+
+
+def load_stockanalysis_etf_priority():
+    priority = {}
+    for path in (STOCKANALYSIS_ETF_UNIVERSE, STOCKANALYSIS_ETF_SCREENER):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+        for row in surface_rows(payload):
+            symbol = stockanalysis_symbol(row.get("ticker") or row.get("s") or row.get("symbol"))
+            if symbol:
+                priority[symbol] = max(priority.get(symbol, 0.0), stockanalysis_aum(row))
+    return priority
+
+
+def sort_universe(tickers, stockanalysis_etfs=False):
+    clean = [ticker for ticker in tickers if SYMBOL_RE.match(ticker)]
+    if not stockanalysis_etfs:
+        return sorted(clean)
+    priority = load_stockanalysis_etf_priority()
+    return sorted(
+        clean,
+        key=lambda ticker: (
+            0 if ticker in priority else 1,
+            -priority.get(ticker, 0.0),
+            ticker,
+        ),
+    )
+
+
 def load_dashboard_etfs():
     try:
         text = DASHBOARD_CONSTANTS.read_text(encoding="utf-8")
@@ -516,7 +606,7 @@ def load_portfolio_symbols():
     return {m.group(1).upper() for m in re.finditer(r"ticker:\s*\"([^\"]+)\"", text)}
 
 
-def load_universe(stocks_only=False):
+def load_universe(stocks_only=False, stockanalysis_etfs=False):
     tickers = {p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}
     if not stocks_only:
         tickers |= load_scouter_etfs()
@@ -524,7 +614,9 @@ def load_universe(stocks_only=False):
         tickers |= load_portfolio_symbols()
         tickers |= MAJOR_ETFS
         tickers |= LEVERAGED_AND_FOCUS_ETFS
-    return sorted(t for t in tickers if SYMBOL_RE.match(t))
+        if stockanalysis_etfs:
+            tickers |= load_stockanalysis_etfs()
+    return sort_universe(tickers, stockanalysis_etfs=stockanalysis_etfs)
 
 
 def usable_existing_payload(path):
@@ -552,12 +644,59 @@ def is_fresh_payload(payload, max_age_hours):
     return age_hours < max_age_hours
 
 
+def history_row_count(payload):
+    data = payload.get("data") if isinstance(payload, dict) else None
+    history = data.get("history_1y") if isinstance(data, dict) else None
+    return len(history) if isinstance(history, list) else 0
+
+
+def has_return_history_payload(payload, min_rows):
+    return history_row_count(payload) >= min_rows
+
+
+def filter_history_gaps(tickers, min_rows):
+    selected = []
+    for ticker in tickers:
+        existing = usable_existing_payload(OUT_DIR / f"{ticker}.json")
+        if not existing or not has_return_history_payload(existing, min_rows):
+            selected.append(ticker)
+    return selected
+
+
+def write_empty_summary(profile, args, candidate_count, reason):
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    summary = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "count": 0,
+        "candidate_count_before_filters": candidate_count,
+        "ok": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total_seconds": 0,
+        "avg_latency_ms": 0,
+        "profile": profile,
+        "include_options": args.include_options,
+        "include_shares_full": args.include_shares_full,
+        "stockanalysis_etfs": args.stockanalysis_etfs,
+        "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
+        "history_gaps_only": args.history_gaps_only,
+        "history_min_rows": args.history_min_rows,
+        "empty_reason": reason,
+        "errors": [],
+    }
+    (OUT_DIR / "_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="legacy mode: global-scouter stock detail only")
+    parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
+    parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
+    parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
     parser.add_argument("--profile", choices=("core", "full", "etf"), default="full", help="core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
     parser.add_argument("--include-options", action="store_true", help="fetch first option expiries; use targeted tickers only")
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
@@ -568,14 +707,22 @@ def main():
     if args.tickers:
         tickers = [s.strip() for s in args.tickers.split(",") if s.strip()]
     else:
-        tickers = load_universe(stocks_only=args.stocks_only)
-        if args.shard:
-            i, n = (int(x) for x in args.shard.split("/"))
-            tickers = tickers[i::n]
-        if args.limit:
-            tickers = tickers[: args.limit]
+        tickers = load_universe(stocks_only=args.stocks_only, stockanalysis_etfs=args.stockanalysis_etfs)
+
+    candidate_count = len(tickers)
+    if args.history_gaps_only:
+        tickers = filter_history_gaps(tickers, args.history_min_rows)
+    if args.shard:
+        i, n = (int(x) for x in args.shard.split("/"))
+        tickers = tickers[i::n]
+    if args.limit:
+        tickers = tickers[: args.limit]
 
     if not tickers:
+        if args.history_gaps_only:
+            write_empty_summary(args.profile, args, candidate_count, "no_history_gaps")
+            print(f"[summary] no history gaps; candidates={candidate_count}")
+            return
         print("[error] empty universe", file=sys.stderr)
         sys.exit(1)
 
@@ -631,6 +778,11 @@ def main():
         "profile": args.profile,
         "include_options": args.include_options,
         "include_shares_full": args.include_shares_full,
+        "stockanalysis_etfs": args.stockanalysis_etfs,
+        "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
+        "history_gaps_only": args.history_gaps_only,
+        "history_min_rows": args.history_min_rows,
+        "candidate_count_before_filters": candidate_count,
         "errors": errors,
     }
     (OUT_DIR / "_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")

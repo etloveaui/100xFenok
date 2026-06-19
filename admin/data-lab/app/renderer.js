@@ -310,6 +310,9 @@ const Renderer = (function() {
     const backfill = audit?.backfill || {};
     const facts = audit?.market_facts || {};
     const factsCoverage = marketFactsIndex?.coverage || facts.coverage || {};
+    const returnCoverage = facts.return_field_coverage || {};
+    const returnDenominators = facts.return_field_denominators || {};
+    const returnEtfDenominator = Number(returnDenominators.etf || factsCoverage.etf || 0);
     const parity = audit?.market_source_parity?.summary || audit?.market_source_parity || {};
     const transientFileCount = Number(backfill.transient_file_count || 0);
     const ignoredChunkCount = Array.isArray(backfill.ignored_chunks) ? backfill.ignored_chunks.length : 0;
@@ -374,6 +377,19 @@ const Renderer = (function() {
         ]
       })}
       ${renderMarketAuditCard({
+        title: 'ETF 수익률 커버리지',
+        status: isReturnCoverageComplete(returnCoverage, returnEtfDenominator) ? 'pass' : 'warn',
+        code: `${Formatters.formatNumber(Number(returnCoverage?.return_1y?.etf || 0), 0)} / ${Formatters.formatNumber(returnEtfDenominator, 0)}`,
+        rows: [
+          ['1개월', formatReturnCoverage(returnCoverage.return_1m, returnEtfDenominator)],
+          ['3개월', formatReturnCoverage(returnCoverage.return_3m, returnEtfDenominator)],
+          ['YTD', formatReturnCoverage(returnCoverage.return_ytd, returnEtfDenominator)],
+          ['1년', formatReturnCoverage(returnCoverage.return_1y, returnEtfDenominator)],
+          ['3년 CAGR', formatReturnCoverage(returnCoverage.return_3y_avg, returnEtfDenominator)],
+          ['5년 CAGR', formatReturnCoverage(returnCoverage.return_5y_avg, returnEtfDenominator)]
+        ]
+      })}
+      ${renderMarketAuditCard({
         title: '소스 일치성',
         status: Number(facts.policy_mismatch_fields || 0) === 0 && Number(facts.percent_scale_warnings || 0) === 0 ? 'pass' : 'warn',
         code: escapeHtml(generatedAt).slice(0, 10),
@@ -393,6 +409,21 @@ const Renderer = (function() {
       ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
     `;
+  }
+
+  function isReturnCoverageComplete(coverage, denominator) {
+    if (!denominator) return false;
+    return ['return_1m', 'return_3m', 'return_ytd', 'return_1y'].every((field) =>
+      Number(coverage?.[field]?.etf || 0) >= denominator
+    );
+  }
+
+  function formatReturnCoverage(row, denominator) {
+    const count = Number(row?.etf || 0);
+    const pct = Number.isFinite(Number(row?.etf_coverage_pct))
+      ? Number(row.etf_coverage_pct)
+      : (denominator ? (count / denominator) * 100 : 0);
+    return `${Formatters.formatNumber(count, 0)} / ${Formatters.formatNumber(denominator, 0)} (${Formatters.formatNumber(pct, 1)}%)`;
   }
 
   function renderEtfUniverseSnapshot(universe, mergedUniverse, newEtfs, coverage) {

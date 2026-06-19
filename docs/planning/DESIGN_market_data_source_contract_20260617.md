@@ -65,6 +65,11 @@ External sources
 
 - `scripts/fetch-yf-finance.py`
   - now includes AA/focus leveraged ETF universe;
+  - can opt into the full StockAnalysis ETF universe with
+    `--stockanalysis-etfs`, sorted by StockAnalysis AUM so staged `--limit`
+    runs fill the most visible ETFs first;
+  - supports `--history-gaps-only --history-min-rows 200` for return-history
+    backfills that skip tickers already holding enough local `history_1y` rows;
   - supports `profile=etf`;
   - collects Yahoo `funds_data` for ETF/fund-like tickers;
   - skips stock-only statement/holder/analyst modules for ETFs.
@@ -111,6 +116,10 @@ External sources
   - read-only audit for ETF universe backfill progress, failure classes,
     market-facts coverage, resolver candidate preservation, policy-source
     mismatches, and large percent-scale candidate disagreements;
+  - reports ETF return-fact coverage for `return_1m`, `return_3m`,
+    `return_ytd`, `return_1y`, `return_3y_avg`, and `return_5y_avg` against the
+    normalized ETF universe so Yahoo history backfills have a durable progress
+    metric;
   - reports completed/missing backfill offsets, next expected offset, hard-error
     count, and finalization readiness for the full ETF universe run;
   - reports `incremental_etf.status` (`waiting|warn|pass|fail`) from

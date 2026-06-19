@@ -76,6 +76,47 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertTrue(payload["backfill"]["ready_for_finalize"])
         self.assertEqual(payload["backfill"]["transient_file_count"], 0)
 
+    def test_market_facts_return_field_coverage_counts_etfs_separately(self) -> None:
+        write_json(
+            self.data / "computed" / "market_facts" / "index.json",
+            {"count": 3, "rows": [], "coverage": {"etf": 2, "stock": 1}},
+        )
+        write_json(
+            self.data / "computed" / "market_facts" / "tickers" / "AAA.json",
+            {
+                "asset_type": "etf",
+                "facts": {
+                    "return_1m": {"value": 1.1, "source": "yf.history_1y"},
+                    "return_ytd": {"value": 2.2, "source": "yf"},
+                },
+            },
+        )
+        write_json(
+            self.data / "computed" / "market_facts" / "tickers" / "BBB.json",
+            {
+                "asset_type": "etf",
+                "facts": {"return_1m": {"value": 3.3, "source": "yf.history_1y"}},
+            },
+        )
+        write_json(
+            self.data / "computed" / "market_facts" / "tickers" / "STK.json",
+            {
+                "asset_type": "stock",
+                "facts": {"return_1m": {"value": 4.4, "source": "yf.history_1y"}},
+            },
+        )
+
+        payload = self.audit.build_payload()
+        coverage = payload["market_facts"]["return_field_coverage"]
+
+        self.assertEqual(coverage["return_1m"]["etf"], 2)
+        self.assertEqual(coverage["return_1m"]["stock"], 1)
+        self.assertEqual(coverage["return_1m"]["yf_history_1y"], 3)
+        self.assertEqual(coverage["return_1m"]["etf_coverage_pct"], 100.0)
+        self.assertEqual(coverage["return_ytd"]["etf"], 1)
+        self.assertEqual(coverage["return_ytd"]["yf_info"], 1)
+        self.assertEqual(payload["market_facts"]["return_field_denominators"]["stockanalysis_universe"], 3)
+
     def test_transient_backfill_files_block_finalize_readiness(self) -> None:
         (self.data / "stockanalysis" / "backfill" / "index_offset_0_limit_3.json.partial.1").write_text("{}", encoding="utf-8")
         (self.public_data / "stockanalysis" / "backfill" / "index_offset_0_limit_3.json.ignored").write_text("{}", encoding="utf-8")
