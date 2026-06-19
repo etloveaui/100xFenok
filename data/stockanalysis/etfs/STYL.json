@@ -3,12 +3,19 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "STYL",
-  "fetched_at": "2026-06-17T08:53:14Z",
+  "fetched_at": "2026-06-19T09:50:04Z",
   "endpoints": {
     "holdings": "/api/symbol/e/STYL/holdings",
     "overview": "/api/symbol/e/STYL/overview",
-    "history": "/api/symbol/e/STYL/history?range=1Y&period=Monthly",
-    "quote": "/api/quotes/e/STYL"
+    "quote": "/api/quotes/e/STYL",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/STYL/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/STYL/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/STYL/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/STYL/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/STYL/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/STYL/history?range=5Y&period=Monthly"
+    }
   },
   "normalized": {
     "holdings": [
@@ -16,13 +23,13 @@
         "rank": 1,
         "symbol": "NKE",
         "name": "NIKE, Inc.",
-        "weight_pct": 9.21,
+        "weight_pct": 9.37,
         "shares": 3058,
         "raw": {
           "no": 1,
           "n": "NIKE, Inc.",
           "s": "$NKE",
-          "as": "9.21%",
+          "as": "9.37%",
           "sh": "3,058"
         }
       },
@@ -30,13 +37,13 @@
         "rank": 2,
         "symbol": "!BIT/RACE",
         "name": "Ferrari N.V.",
-        "weight_pct": 6.8,
+        "weight_pct": 7.12,
         "shares": 286,
         "raw": {
           "no": 2,
           "n": "Ferrari N.V.",
           "s": "!bit/RACE",
-          "as": "6.80%",
+          "as": "7.12%",
           "sh": "286"
         }
       },
@@ -44,13 +51,13 @@
         "rank": 3,
         "symbol": "TPR",
         "name": "Tapestry, Inc.",
-        "weight_pct": 4.56,
+        "weight_pct": 4.7,
         "shares": 462,
         "raw": {
           "no": 3,
           "n": "Tapestry, Inc.",
           "s": "$TPR",
-          "as": "4.56%",
+          "as": "4.70%",
           "sh": "462"
         }
       },
@@ -58,13 +65,13 @@
         "rank": 4,
         "symbol": "DECK",
         "name": "Deckers Outdoor Corporation",
-        "weight_pct": 4.36,
+        "weight_pct": 4.29,
         "shares": 572,
         "raw": {
           "no": 4,
           "n": "Deckers Outdoor Corporation",
           "s": "$DECK",
-          "as": "4.36%",
+          "as": "4.29%",
           "sh": "572"
         }
       },
@@ -72,13 +79,13 @@
         "rank": 5,
         "symbol": "RL",
         "name": "Ralph Lauren Corporation",
-        "weight_pct": 4.17,
+        "weight_pct": 4.26,
         "shares": 154,
         "raw": {
           "no": 5,
           "n": "Ralph Lauren Corporation",
           "s": "$RL",
-          "as": "4.17%",
+          "as": "4.26%",
           "sh": "154"
         }
       },
@@ -100,83 +107,83 @@
         "rank": 7,
         "symbol": "LULU",
         "name": "lululemon athletica inc.",
-        "weight_pct": 3.68,
+        "weight_pct": 3.63,
         "shares": 462,
         "raw": {
           "no": 7,
           "n": "lululemon athletica inc.",
           "s": "$LULU",
-          "as": "3.68%",
+          "as": "3.63%",
           "sh": "462"
         }
       },
       {
         "rank": 8,
-        "symbol": "!TSX/GIL",
-        "name": "Gildan Activewear Inc.",
-        "weight_pct": 3.54,
-        "shares": 869,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund Class X",
+        "weight_pct": 3.31,
+        "shares": 48693,
         "raw": {
           "no": 8,
-          "n": "Gildan Activewear Inc.",
-          "s": "!tsx/GIL",
-          "as": "3.54%",
-          "sh": "869"
+          "n": "First American Government Obligations Fund Class X",
+          "s": "!mutf/FGXXX",
+          "as": "3.31%",
+          "sh": "48,693"
         }
       },
       {
         "rank": 9,
         "symbol": "YETI",
         "name": "YETI Holdings, Inc.",
-        "weight_pct": 3.3,
+        "weight_pct": 3.28,
         "shares": 977,
         "raw": {
           "no": 9,
           "n": "YETI Holdings, Inc.",
           "s": "$YETI",
-          "as": "3.30%",
+          "as": "3.28%",
           "sh": "977"
         }
       },
       {
         "rank": 10,
-        "symbol": "!MUTF/FGXXX",
-        "name": "First American Government Obligations Fund Class X",
-        "weight_pct": 3.25,
-        "shares": 48501,
+        "symbol": "VSXY",
+        "name": "Victoria's Secret & Co.",
+        "weight_pct": 3.06,
+        "shares": 572,
         "raw": {
           "no": 10,
-          "n": "First American Government Obligations Fund Class X",
-          "s": "!mutf/FGXXX",
-          "as": "3.25%",
-          "sh": "48,501"
+          "n": "Victoria's Secret & Co.",
+          "s": "$VSXY",
+          "as": "3.06%",
+          "sh": "572"
         }
       },
       {
         "rank": 11,
-        "symbol": "VSCO",
-        "name": "Victoria's Secret & Co",
-        "weight_pct": 3.02,
-        "shares": 572,
+        "symbol": "!TSX/GIL",
+        "name": "Gildan Activewear Inc.",
+        "weight_pct": 2.98,
+        "shares": 869,
         "raw": {
           "no": 11,
-          "n": "Victoria's Secret & Co",
-          "s": "VSCO",
-          "as": "3.02%",
-          "sh": "572"
+          "n": "Gildan Activewear Inc.",
+          "s": "!tsx/GIL",
+          "as": "2.98%",
+          "sh": "869"
         }
       },
       {
         "rank": 12,
         "symbol": "ANF",
         "name": "Abercrombie & Fitch Co.",
-        "weight_pct": 2.78,
+        "weight_pct": 2.77,
         "shares": 458,
         "raw": {
           "no": 12,
           "n": "Abercrombie & Fitch Co.",
           "s": "$ANF",
-          "as": "2.78%",
+          "as": "2.77%",
           "sh": "458"
         }
       },
@@ -184,13 +191,13 @@
         "rank": 13,
         "symbol": "GAP",
         "name": "The Gap, Inc.",
-        "weight_pct": 2.75,
+        "weight_pct": 2.77,
         "shares": 1872,
         "raw": {
           "no": 13,
           "n": "The Gap, Inc.",
           "s": "$GAP",
-          "as": "2.75%",
+          "as": "2.77%",
           "sh": "1,872"
         }
       },
@@ -198,13 +205,13 @@
         "rank": 14,
         "symbol": "AS",
         "name": "Amer Sports, Inc.",
-        "weight_pct": 2.61,
+        "weight_pct": 2.66,
         "shares": 1100,
         "raw": {
           "no": 14,
           "n": "Amer Sports, Inc.",
           "s": "$AS",
-          "as": "2.61%",
+          "as": "2.66%",
           "sh": "1,100"
         }
       },
@@ -212,13 +219,13 @@
         "rank": 15,
         "symbol": "CROX",
         "name": "Crocs, Inc.",
-        "weight_pct": 2.57,
+        "weight_pct": 2.66,
         "shares": 308,
         "raw": {
           "no": 15,
           "n": "Crocs, Inc.",
           "s": "$CROX",
-          "as": "2.57%",
+          "as": "2.66%",
           "sh": "308"
         }
       },
@@ -226,69 +233,69 @@
         "rank": 16,
         "symbol": "VFC",
         "name": "V.F. Corporation",
-        "weight_pct": 2.43,
+        "weight_pct": 2.48,
         "shares": 2057,
         "raw": {
           "no": 16,
           "n": "V.F. Corporation",
           "s": "$VFC",
-          "as": "2.43%",
+          "as": "2.48%",
           "sh": "2,057"
         }
       },
       {
         "rank": 17,
-        "symbol": "BOOT",
-        "name": "Boot Barn Holdings, Inc.",
-        "weight_pct": 2.26,
-        "shares": 198,
-        "raw": {
-          "no": 17,
-          "n": "Boot Barn Holdings, Inc.",
-          "s": "$BOOT",
-          "as": "2.26%",
-          "sh": "198"
-        }
-      },
-      {
-        "rank": 18,
         "symbol": "URBN",
         "name": "Urban Outfitters, Inc.",
-        "weight_pct": 2.21,
+        "weight_pct": 2.22,
         "shares": 429,
         "raw": {
-          "no": 18,
+          "no": 17,
           "n": "Urban Outfitters, Inc.",
           "s": "$URBN",
-          "as": "2.21%",
+          "as": "2.22%",
           "sh": "429"
         }
       },
       {
-        "rank": 19,
+        "rank": 18,
         "symbol": "KTB",
         "name": "Kontoor Brands, Inc.",
-        "weight_pct": 2.21,
+        "weight_pct": 2.2,
         "shares": 418,
         "raw": {
-          "no": 19,
+          "no": 18,
           "n": "Kontoor Brands, Inc.",
           "s": "$KTB",
-          "as": "2.21%",
+          "as": "2.20%",
           "sh": "418"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "BOOT",
+        "name": "Boot Barn Holdings, Inc.",
+        "weight_pct": 2.19,
+        "shares": 198,
+        "raw": {
+          "no": 19,
+          "n": "Boot Barn Holdings, Inc.",
+          "s": "$BOOT",
+          "as": "2.19%",
+          "sh": "198"
         }
       },
       {
         "rank": 20,
         "symbol": "AEO",
         "name": "American Eagle Outfitters, Inc.",
-        "weight_pct": 2.15,
+        "weight_pct": 2.04,
         "shares": 1706,
         "raw": {
           "no": 20,
           "n": "American Eagle Outfitters, Inc.",
           "s": "$AEO",
-          "as": "2.15%",
+          "as": "2.04%",
           "sh": "1,706"
         }
       },
@@ -296,13 +303,13 @@
         "rank": 21,
         "symbol": "SHOO",
         "name": "Steven Madden, Ltd.",
-        "weight_pct": 1.91,
+        "weight_pct": 1.87,
         "shares": 616,
         "raw": {
           "no": 21,
           "n": "Steven Madden, Ltd.",
           "s": "$SHOO",
-          "as": "1.91%",
+          "as": "1.87%",
           "sh": "616"
         }
       },
@@ -310,13 +317,13 @@
         "rank": 22,
         "symbol": "BIRK",
         "name": "Birkenstock Holding plc",
-        "weight_pct": 1.8,
+        "weight_pct": 1.83,
         "shares": 550,
         "raw": {
           "no": 22,
           "n": "Birkenstock Holding plc",
           "s": "$BIRK",
-          "as": "1.80%",
+          "as": "1.83%",
           "sh": "550"
         }
       },
@@ -324,42 +331,42 @@
         "rank": 23,
         "symbol": "WRBY",
         "name": "Warby Parker Inc.",
-        "weight_pct": 1.74,
+        "weight_pct": 1.67,
         "shares": 979,
         "raw": {
           "no": 23,
           "n": "Warby Parker Inc.",
           "s": "$WRBY",
-          "as": "1.74%",
+          "as": "1.67%",
           "sh": "979"
         }
       },
       {
         "rank": 24,
-        "symbol": "RH",
-        "name": "RH",
-        "weight_pct": 1.69,
-        "shares": 165,
+        "symbol": "PVH",
+        "name": "PVH Corp.",
+        "weight_pct": 1.65,
+        "shares": 297,
         "raw": {
           "no": 24,
-          "n": "RH",
-          "s": "$RH",
-          "as": "1.69%",
-          "sh": "165"
+          "n": "PVH Corp.",
+          "s": "$PVH",
+          "as": "1.65%",
+          "sh": "297"
         }
       },
       {
         "rank": 25,
-        "symbol": "PVH",
-        "name": "PVH Corp.",
-        "weight_pct": 1.63,
-        "shares": 297,
+        "symbol": "RH",
+        "name": "RH",
+        "weight_pct": 1.65,
+        "shares": 165,
         "raw": {
           "no": 25,
-          "n": "PVH Corp.",
-          "s": "$PVH",
-          "as": "1.63%",
-          "sh": "297"
+          "n": "RH",
+          "s": "$RH",
+          "as": "1.65%",
+          "sh": "165"
         }
       }
     ],
@@ -367,16 +374,25 @@
     "sectors": [
       {
         "n": "Consumer Discretionary",
-        "w": 98.14
+        "w": 98.27
       },
       {
         "n": "Healthcare",
-        "w": 1.86
+        "w": 1.73
       }
     ],
     "countries": null,
     "holding_count": 49,
-    "holdings_updated": "Jun 12, 2026",
+    "holdings_updated": "Jun 15, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "overview": {
       "expenseRatio": "0.35%",
       "peRatio": "20.22",
@@ -384,25 +400,28 @@
       "inception": "May 6, 2026",
       "etf_website": "https://www.corgifunds.com/thematic/styl"
     },
+    "performance": {
+      "tr1m": 12.512
+    },
     "quote": {
-      "p": 26.7398,
-      "pd": 26.74,
-      "c": -0.5,
-      "cp": -1.84,
-      "cl": 27.24,
-      "cdr": -1,
-      "o": 27.29,
-      "h": 27.29,
-      "l": 26.74,
-      "v": 113,
-      "ts": 1781640000000,
-      "u": "Jun 16, 2026, 4:00 PM EDT",
-      "td": "2026-06-16",
+      "p": 26.7627,
+      "pd": 26.76,
+      "c": 0.63,
+      "cp": 2.42,
+      "cl": 26.13,
+      "cdr": 1,
+      "o": 26.76,
+      "h": 26.76,
+      "l": 26.76,
+      "v": null,
+      "ts": 1781812800000,
+      "u": "Jun 18, 2026, 4:00 PM EDT",
+      "td": "2026-06-18",
       "h52": 27.29,
       "l52": 23.78,
       "ex": "BATS",
       "ms": "closed",
-      "fms": "pre",
+      "fms": "closed",
       "e": false,
       "ep": null,
       "epd": 0,
@@ -410,11 +429,11 @@
       "ecp": 0,
       "eu": null,
       "es": "After-hours",
-      "ets": 1781654407820.7422,
+      "ets": 1781827207663.9954,
       "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1781686398283,
+      "exp": 1782116100000,
       "symbol": "STYL",
       "uid": "STYL"
     },
@@ -424,12 +443,476 @@
         "o": 26.128,
         "h": 27.29,
         "l": 25.646,
-        "c": 27.29,
-        "a": 27.29,
-        "v": 9830,
-        "ch": 3.72
+        "c": 26.763,
+        "a": 26.7627,
+        "v": 9843,
+        "ch": 1.71
       }
-    ]
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-06-18",
+          "o": 26.763,
+          "h": 26.763,
+          "l": 26.763,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 0,
+          "ch": 2.41
+        },
+        {
+          "t": "2026-06-17",
+          "o": 26.133,
+          "h": 26.133,
+          "l": 26.133,
+          "c": 26.133,
+          "a": 26.1334,
+          "v": 0,
+          "ch": -2.27
+        },
+        {
+          "t": "2026-06-16",
+          "o": 27.29,
+          "h": 27.29,
+          "l": 26.74,
+          "c": 26.74,
+          "a": 26.7398,
+          "v": 113,
+          "ch": -1.83
+        },
+        {
+          "t": "2026-06-15",
+          "o": 27.275,
+          "h": 27.275,
+          "l": 27.239,
+          "c": 27.239,
+          "a": 27.2394,
+          "v": 100,
+          "ch": 0.29
+        },
+        {
+          "t": "2026-06-12",
+          "o": 27.162,
+          "h": 27.162,
+          "l": 27.162,
+          "c": 27.162,
+          "a": 27.1616,
+          "v": 0,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-06-11",
+          "o": 27.155,
+          "h": 27.155,
+          "l": 27.155,
+          "c": 27.155,
+          "a": 27.155,
+          "v": 0,
+          "ch": 3.93
+        },
+        {
+          "t": "2026-06-10",
+          "o": 26.127,
+          "h": 26.127,
+          "l": 26.127,
+          "c": 26.127,
+          "a": 26.1274,
+          "v": 2,
+          "ch": -1.7
+        },
+        {
+          "t": "2026-06-09",
+          "o": 26.58,
+          "h": 26.58,
+          "l": 26.58,
+          "c": 26.58,
+          "a": 26.5798,
+          "v": 3,
+          "ch": 2.13
+        },
+        {
+          "t": "2026-06-08",
+          "o": 26.025,
+          "h": 26.025,
+          "l": 26.025,
+          "c": 26.025,
+          "a": 26.0248,
+          "v": 16,
+          "ch": 1.48
+        },
+        {
+          "t": "2026-06-05",
+          "o": 25.646,
+          "h": 25.646,
+          "l": 25.646,
+          "c": 25.646,
+          "a": 25.6463,
+          "v": 2,
+          "ch": -1.28
+        },
+        {
+          "t": "2026-06-04",
+          "o": 25.978,
+          "h": 25.978,
+          "l": 25.978,
+          "c": 25.978,
+          "a": 25.978,
+          "v": 0,
+          "ch": 0
+        },
+        {
+          "t": "2026-06-03",
+          "o": 25.72,
+          "h": 25.978,
+          "l": 25.72,
+          "c": 25.978,
+          "a": 25.9778,
+          "v": 9582,
+          "ch": -0.96
+        },
+        {
+          "t": "2026-06-02",
+          "o": 26.229,
+          "h": 26.229,
+          "l": 26.229,
+          "c": 26.229,
+          "a": 26.2289,
+          "v": 4,
+          "ch": 0.39
+        },
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 26.128,
+          "l": 26.128,
+          "c": 26.128,
+          "a": 26.128,
+          "v": 21,
+          "ch": -0.7
+        },
+        {
+          "t": "2026-05-29",
+          "o": 26.312,
+          "h": 26.312,
+          "l": 26.312,
+          "c": 26.312,
+          "a": 26.3123,
+          "v": 0,
+          "ch": -2.28
+        },
+        {
+          "t": "2026-05-28",
+          "o": 26.94,
+          "h": 26.94,
+          "l": 26.915,
+          "c": 26.925,
+          "a": 26.9249,
+          "v": 241,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-05-27",
+          "o": 26.499,
+          "h": 26.499,
+          "l": 26.499,
+          "c": 26.499,
+          "a": 26.4992,
+          "v": 0,
+          "ch": 1.68
+        },
+        {
+          "t": "2026-05-26",
+          "o": 26.063,
+          "h": 26.063,
+          "l": 26.063,
+          "c": 26.063,
+          "a": 26.0625,
+          "v": 139,
+          "ch": 1.69
+        },
+        {
+          "t": "2026-05-22",
+          "o": 25.41,
+          "h": 25.63,
+          "l": 25.41,
+          "c": 25.63,
+          "a": 25.6301,
+          "v": 787,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-05-21",
+          "o": 25.375,
+          "h": 25.375,
+          "l": 25.375,
+          "c": 25.375,
+          "a": 25.3749,
+          "v": 3,
+          "ch": 3.18
+        },
+        {
+          "t": "2026-05-20",
+          "o": 24.594,
+          "h": 24.594,
+          "l": 24.594,
+          "c": 24.594,
+          "a": 24.5939,
+          "v": 0,
+          "ch": 3.42
+        },
+        {
+          "t": "2026-05-19",
+          "o": 23.78,
+          "h": 23.78,
+          "l": 23.78,
+          "c": 23.78,
+          "a": 23.78,
+          "v": 100,
+          "ch": -0.65
+        },
+        {
+          "t": "2026-05-18",
+          "o": 23.935,
+          "h": 23.935,
+          "l": 23.935,
+          "c": 23.935,
+          "a": 23.9348,
+          "v": 108,
+          "ch": 0.62
+        },
+        {
+          "t": "2026-05-15",
+          "o": 23.787,
+          "h": 23.787,
+          "l": 23.787,
+          "c": 23.787,
+          "a": 23.7865,
+          "v": 4,
+          "ch": -1.28
+        },
+        {
+          "t": "2026-05-14",
+          "o": 24.094,
+          "h": 24.094,
+          "l": 24.094,
+          "c": 24.094,
+          "a": 24.0939,
+          "v": 2,
+          "ch": 0.53
+        },
+        {
+          "t": "2026-05-13",
+          "o": 23.966,
+          "h": 23.966,
+          "l": 23.966,
+          "c": 23.966,
+          "a": 23.9658,
+          "v": 168,
+          "ch": -0.93
+        },
+        {
+          "t": "2026-05-12",
+          "o": 24.191,
+          "h": 24.191,
+          "l": 24.191,
+          "c": 24.191,
+          "a": 24.191,
+          "v": 0,
+          "ch": -1.44
+        },
+        {
+          "t": "2026-05-11",
+          "o": 24.545,
+          "h": 24.545,
+          "l": 24.545,
+          "c": 24.545,
+          "a": 24.5451,
+          "v": 102,
+          "ch": -3.88
+        },
+        {
+          "t": "2026-05-08",
+          "o": 25.537,
+          "h": 25.537,
+          "l": 25.537,
+          "c": 25.537,
+          "a": 25.537,
+          "v": 0,
+          "ch": -0.51
+        },
+        {
+          "t": "2026-05-07",
+          "o": 25.669,
+          "h": 25.669,
+          "l": 25.669,
+          "c": 25.669,
+          "a": 25.6689,
+          "v": 1,
+          "ch": -1.38
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-06-15",
+          "o": 27.275,
+          "h": 27.29,
+          "l": 26.133,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 213,
+          "ch": -1.47
+        },
+        {
+          "t": "2026-06-08",
+          "o": 26.025,
+          "h": 27.162,
+          "l": 26.025,
+          "c": 27.162,
+          "a": 27.1616,
+          "v": 21,
+          "ch": 5.91
+        },
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 26.229,
+          "l": 25.646,
+          "c": 25.646,
+          "a": 25.6463,
+          "v": 9609,
+          "ch": -2.53
+        },
+        {
+          "t": "2026-05-26",
+          "o": 26.063,
+          "h": 26.94,
+          "l": 26.063,
+          "c": 26.312,
+          "a": 26.3123,
+          "v": 380,
+          "ch": 2.66
+        },
+        {
+          "t": "2026-05-18",
+          "o": 23.935,
+          "h": 25.63,
+          "l": 23.78,
+          "c": 25.63,
+          "a": 25.6301,
+          "v": 998,
+          "ch": 7.75
+        },
+        {
+          "t": "2026-05-11",
+          "o": 24.545,
+          "h": 24.545,
+          "l": 23.787,
+          "c": 23.787,
+          "a": 23.7865,
+          "v": 276,
+          "ch": -6.85
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 27.29,
+          "l": 25.646,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 9843,
+          "ch": 1.71
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-06-15",
+          "o": 27.275,
+          "h": 27.29,
+          "l": 26.133,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 213,
+          "ch": -1.47
+        },
+        {
+          "t": "2026-06-08",
+          "o": 26.025,
+          "h": 27.162,
+          "l": 26.025,
+          "c": 27.162,
+          "a": 27.1616,
+          "v": 21,
+          "ch": 5.91
+        },
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 26.229,
+          "l": 25.646,
+          "c": 25.646,
+          "a": 25.6463,
+          "v": 9609,
+          "ch": -2.53
+        },
+        {
+          "t": "2026-05-26",
+          "o": 26.063,
+          "h": 26.94,
+          "l": 26.063,
+          "c": 26.312,
+          "a": 26.3123,
+          "v": 380,
+          "ch": 2.66
+        },
+        {
+          "t": "2026-05-18",
+          "o": 23.935,
+          "h": 25.63,
+          "l": 23.78,
+          "c": 25.63,
+          "a": 25.6301,
+          "v": 998,
+          "ch": 7.75
+        },
+        {
+          "t": "2026-05-11",
+          "o": 24.545,
+          "h": 24.545,
+          "l": 23.787,
+          "c": 23.787,
+          "a": 23.7865,
+          "v": 276,
+          "ch": -6.85
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 27.29,
+          "l": 25.646,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 9843,
+          "ch": 1.71
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 27.29,
+          "l": 25.646,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 9843,
+          "ch": 1.71
+        }
+      ]
+    }
   },
   "raw": {
     "holdings": {
@@ -438,35 +921,35 @@
           "no": 1,
           "n": "NIKE, Inc.",
           "s": "$NKE",
-          "as": "9.21%",
+          "as": "9.37%",
           "sh": "3,058"
         },
         {
           "no": 2,
           "n": "Ferrari N.V.",
           "s": "!bit/RACE",
-          "as": "6.80%",
+          "as": "7.12%",
           "sh": "286"
         },
         {
           "no": 3,
           "n": "Tapestry, Inc.",
           "s": "$TPR",
-          "as": "4.56%",
+          "as": "4.70%",
           "sh": "462"
         },
         {
           "no": 4,
           "n": "Deckers Outdoor Corporation",
           "s": "$DECK",
-          "as": "4.36%",
+          "as": "4.29%",
           "sh": "572"
         },
         {
           "no": 5,
           "n": "Ralph Lauren Corporation",
           "s": "$RL",
-          "as": "4.17%",
+          "as": "4.26%",
           "sh": "154"
         },
         {
@@ -480,156 +963,156 @@
           "no": 7,
           "n": "lululemon athletica inc.",
           "s": "$LULU",
-          "as": "3.68%",
+          "as": "3.63%",
           "sh": "462"
         },
         {
           "no": 8,
-          "n": "Gildan Activewear Inc.",
-          "s": "!tsx/GIL",
-          "as": "3.54%",
-          "sh": "869"
+          "n": "First American Government Obligations Fund Class X",
+          "s": "!mutf/FGXXX",
+          "as": "3.31%",
+          "sh": "48,693"
         },
         {
           "no": 9,
           "n": "YETI Holdings, Inc.",
           "s": "$YETI",
-          "as": "3.30%",
+          "as": "3.28%",
           "sh": "977"
         },
         {
           "no": 10,
-          "n": "First American Government Obligations Fund Class X",
-          "s": "!mutf/FGXXX",
-          "as": "3.25%",
-          "sh": "48,501"
+          "n": "Victoria's Secret & Co.",
+          "s": "$VSXY",
+          "as": "3.06%",
+          "sh": "572"
         },
         {
           "no": 11,
-          "n": "Victoria's Secret & Co",
-          "s": "VSCO",
-          "as": "3.02%",
-          "sh": "572"
+          "n": "Gildan Activewear Inc.",
+          "s": "!tsx/GIL",
+          "as": "2.98%",
+          "sh": "869"
         },
         {
           "no": 12,
           "n": "Abercrombie & Fitch Co.",
           "s": "$ANF",
-          "as": "2.78%",
+          "as": "2.77%",
           "sh": "458"
         },
         {
           "no": 13,
           "n": "The Gap, Inc.",
           "s": "$GAP",
-          "as": "2.75%",
+          "as": "2.77%",
           "sh": "1,872"
         },
         {
           "no": 14,
           "n": "Amer Sports, Inc.",
           "s": "$AS",
-          "as": "2.61%",
+          "as": "2.66%",
           "sh": "1,100"
         },
         {
           "no": 15,
           "n": "Crocs, Inc.",
           "s": "$CROX",
-          "as": "2.57%",
+          "as": "2.66%",
           "sh": "308"
         },
         {
           "no": 16,
           "n": "V.F. Corporation",
           "s": "$VFC",
-          "as": "2.43%",
+          "as": "2.48%",
           "sh": "2,057"
         },
         {
           "no": 17,
-          "n": "Boot Barn Holdings, Inc.",
-          "s": "$BOOT",
-          "as": "2.26%",
-          "sh": "198"
-        },
-        {
-          "no": 18,
           "n": "Urban Outfitters, Inc.",
           "s": "$URBN",
-          "as": "2.21%",
+          "as": "2.22%",
           "sh": "429"
         },
         {
-          "no": 19,
+          "no": 18,
           "n": "Kontoor Brands, Inc.",
           "s": "$KTB",
-          "as": "2.21%",
+          "as": "2.20%",
           "sh": "418"
+        },
+        {
+          "no": 19,
+          "n": "Boot Barn Holdings, Inc.",
+          "s": "$BOOT",
+          "as": "2.19%",
+          "sh": "198"
         },
         {
           "no": 20,
           "n": "American Eagle Outfitters, Inc.",
           "s": "$AEO",
-          "as": "2.15%",
+          "as": "2.04%",
           "sh": "1,706"
         },
         {
           "no": 21,
           "n": "Steven Madden, Ltd.",
           "s": "$SHOO",
-          "as": "1.91%",
+          "as": "1.87%",
           "sh": "616"
         },
         {
           "no": 22,
           "n": "Birkenstock Holding plc",
           "s": "$BIRK",
-          "as": "1.80%",
+          "as": "1.83%",
           "sh": "550"
         },
         {
           "no": 23,
           "n": "Warby Parker Inc.",
           "s": "$WRBY",
-          "as": "1.74%",
+          "as": "1.67%",
           "sh": "979"
         },
         {
           "no": 24,
-          "n": "RH",
-          "s": "$RH",
-          "as": "1.69%",
-          "sh": "165"
+          "n": "PVH Corp.",
+          "s": "$PVH",
+          "as": "1.65%",
+          "sh": "297"
         },
         {
           "no": 25,
-          "n": "PVH Corp.",
-          "s": "$PVH",
-          "as": "1.63%",
-          "sh": "297"
+          "n": "RH",
+          "s": "$RH",
+          "as": "1.65%",
+          "sh": "165"
         }
       ],
       "asset_allocation": null,
       "sectors": [
         {
           "n": "Consumer Discretionary",
-          "w": 98.14
+          "w": 98.27
         },
         {
           "n": "Healthcare",
-          "w": 1.86
+          "w": 1.73
         }
       ],
       "countries": null,
-      "infoBox": "STYL is an equity ETF with a total of 49 individual holdings. The top holdings are NIKE, Inc. stock at 9.21%, Ferrari at 6.80%, Tapestry at 4.56%, Deckers Outdoor at 4.36%, and Ralph Lauren at 4.17%.",
+      "infoBox": "STYL is an equity ETF with a total of 49 individual holdings. The top holdings are NIKE, Inc. stock at 9.37%, Ferrari at 7.12%, Tapestry at 4.70%, Deckers Outdoor at 4.29%, and Ralph Lauren at 4.26%.",
       "infoTable": {
         "count": 49,
-        "top10": 46.6,
+        "top10": 46.75,
         "assetClass": "Equity",
         "peRatio": 20.21845
       },
-      "date": "Jun 12, 2026",
+      "date": "Jun 15, 2026",
       "count": 49
     },
     "overview": {
@@ -1884,37 +2367,37 @@
       "provider_page": null,
       "holdingsTable": {
         "count": 49,
-        "updated": "Jun 12, 2026",
-        "top10": 46.6,
+        "updated": "Jun 15, 2026",
+        "top10": 46.75,
         "holdings": [
           {
             "n": "NIKE, Inc.",
             "s": "$NKE",
-            "as": "9.21%",
+            "as": "9.37%",
             "sh": "3,058"
           },
           {
             "n": "Ferrari N.V.",
             "s": "!bit/RACE",
-            "as": "6.80%",
+            "as": "7.12%",
             "sh": "286"
           },
           {
             "n": "Tapestry, Inc.",
             "s": "$TPR",
-            "as": "4.56%",
+            "as": "4.70%",
             "sh": "462"
           },
           {
             "n": "Deckers Outdoor Corporation",
             "s": "$DECK",
-            "as": "4.36%",
+            "as": "4.29%",
             "sh": "572"
           },
           {
             "n": "Ralph Lauren Corporation",
             "s": "$RL",
-            "as": "4.17%",
+            "as": "4.26%",
             "sh": "154"
           },
           {
@@ -1926,26 +2409,26 @@
           {
             "n": "lululemon athletica inc.",
             "s": "$LULU",
-            "as": "3.68%",
+            "as": "3.63%",
             "sh": "462"
-          },
-          {
-            "n": "Gildan Activewear Inc.",
-            "s": "!tsx/GIL",
-            "as": "3.54%",
-            "sh": "869"
-          },
-          {
-            "n": "YETI Holdings, Inc.",
-            "s": "$YETI",
-            "as": "3.30%",
-            "sh": "977"
           },
           {
             "n": "First American Government Obligations Fund Class X",
             "s": "!mutf/FGXXX",
-            "as": "3.25%",
-            "sh": "48,501"
+            "as": "3.31%",
+            "sh": "48,693"
+          },
+          {
+            "n": "YETI Holdings, Inc.",
+            "s": "$YETI",
+            "as": "3.28%",
+            "sh": "977"
+          },
+          {
+            "n": "Victoria's Secret & Co.",
+            "s": "$VSXY",
+            "as": "3.06%",
+            "sh": "572"
           }
         ]
       },
@@ -1958,45 +2441,33 @@
         "no1d": false
       },
       "changes": {
-        "price1w": 26.58,
+        "price1w": 27.155,
         "price1m": 23.787,
         "priceMAX": 26.027
       },
       "performance": {
-        "tr1m": 12.416
+        "tr1m": 12.512
       }
     },
-    "history": [
-      {
-        "t": "2026-06-01",
-        "o": 26.128,
-        "h": 27.29,
-        "l": 25.646,
-        "c": 27.29,
-        "a": 27.29,
-        "v": 9830,
-        "ch": 3.72
-      }
-    ],
     "quote": {
-      "p": 26.7398,
-      "pd": 26.74,
-      "c": -0.5,
-      "cp": -1.84,
-      "cl": 27.24,
-      "cdr": -1,
-      "o": 27.29,
-      "h": 27.29,
-      "l": 26.74,
-      "v": 113,
-      "ts": 1781640000000,
-      "u": "Jun 16, 2026, 4:00 PM EDT",
-      "td": "2026-06-16",
+      "p": 26.7627,
+      "pd": 26.76,
+      "c": 0.63,
+      "cp": 2.42,
+      "cl": 26.13,
+      "cdr": 1,
+      "o": 26.76,
+      "h": 26.76,
+      "l": 26.76,
+      "v": null,
+      "ts": 1781812800000,
+      "u": "Jun 18, 2026, 4:00 PM EDT",
+      "td": "2026-06-18",
       "h52": 27.29,
       "l52": 23.78,
       "ex": "BATS",
       "ms": "closed",
-      "fms": "pre",
+      "fms": "closed",
       "e": false,
       "ep": null,
       "epd": 0,
@@ -2004,13 +2475,489 @@
       "ecp": 0,
       "eu": null,
       "es": "After-hours",
-      "ets": 1781654407820.7422,
+      "ets": 1781827207663.9954,
       "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1781686398283,
+      "exp": 1782116100000,
       "symbol": "STYL",
       "uid": "STYL"
+    },
+    "history": [
+      {
+        "t": "2026-06-01",
+        "o": 26.128,
+        "h": 27.29,
+        "l": 25.646,
+        "c": 26.763,
+        "a": 26.7627,
+        "v": 9843,
+        "ch": 1.71
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-06-18",
+          "o": 26.763,
+          "h": 26.763,
+          "l": 26.763,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 0,
+          "ch": 2.41
+        },
+        {
+          "t": "2026-06-17",
+          "o": 26.133,
+          "h": 26.133,
+          "l": 26.133,
+          "c": 26.133,
+          "a": 26.1334,
+          "v": 0,
+          "ch": -2.27
+        },
+        {
+          "t": "2026-06-16",
+          "o": 27.29,
+          "h": 27.29,
+          "l": 26.74,
+          "c": 26.74,
+          "a": 26.7398,
+          "v": 113,
+          "ch": -1.83
+        },
+        {
+          "t": "2026-06-15",
+          "o": 27.275,
+          "h": 27.275,
+          "l": 27.239,
+          "c": 27.239,
+          "a": 27.2394,
+          "v": 100,
+          "ch": 0.29
+        },
+        {
+          "t": "2026-06-12",
+          "o": 27.162,
+          "h": 27.162,
+          "l": 27.162,
+          "c": 27.162,
+          "a": 27.1616,
+          "v": 0,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-06-11",
+          "o": 27.155,
+          "h": 27.155,
+          "l": 27.155,
+          "c": 27.155,
+          "a": 27.155,
+          "v": 0,
+          "ch": 3.93
+        },
+        {
+          "t": "2026-06-10",
+          "o": 26.127,
+          "h": 26.127,
+          "l": 26.127,
+          "c": 26.127,
+          "a": 26.1274,
+          "v": 2,
+          "ch": -1.7
+        },
+        {
+          "t": "2026-06-09",
+          "o": 26.58,
+          "h": 26.58,
+          "l": 26.58,
+          "c": 26.58,
+          "a": 26.5798,
+          "v": 3,
+          "ch": 2.13
+        },
+        {
+          "t": "2026-06-08",
+          "o": 26.025,
+          "h": 26.025,
+          "l": 26.025,
+          "c": 26.025,
+          "a": 26.0248,
+          "v": 16,
+          "ch": 1.48
+        },
+        {
+          "t": "2026-06-05",
+          "o": 25.646,
+          "h": 25.646,
+          "l": 25.646,
+          "c": 25.646,
+          "a": 25.6463,
+          "v": 2,
+          "ch": -1.28
+        },
+        {
+          "t": "2026-06-04",
+          "o": 25.978,
+          "h": 25.978,
+          "l": 25.978,
+          "c": 25.978,
+          "a": 25.978,
+          "v": 0,
+          "ch": 0
+        },
+        {
+          "t": "2026-06-03",
+          "o": 25.72,
+          "h": 25.978,
+          "l": 25.72,
+          "c": 25.978,
+          "a": 25.9778,
+          "v": 9582,
+          "ch": -0.96
+        },
+        {
+          "t": "2026-06-02",
+          "o": 26.229,
+          "h": 26.229,
+          "l": 26.229,
+          "c": 26.229,
+          "a": 26.2289,
+          "v": 4,
+          "ch": 0.39
+        },
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 26.128,
+          "l": 26.128,
+          "c": 26.128,
+          "a": 26.128,
+          "v": 21,
+          "ch": -0.7
+        },
+        {
+          "t": "2026-05-29",
+          "o": 26.312,
+          "h": 26.312,
+          "l": 26.312,
+          "c": 26.312,
+          "a": 26.3123,
+          "v": 0,
+          "ch": -2.28
+        },
+        {
+          "t": "2026-05-28",
+          "o": 26.94,
+          "h": 26.94,
+          "l": 26.915,
+          "c": 26.925,
+          "a": 26.9249,
+          "v": 241,
+          "ch": 1.61
+        },
+        {
+          "t": "2026-05-27",
+          "o": 26.499,
+          "h": 26.499,
+          "l": 26.499,
+          "c": 26.499,
+          "a": 26.4992,
+          "v": 0,
+          "ch": 1.68
+        },
+        {
+          "t": "2026-05-26",
+          "o": 26.063,
+          "h": 26.063,
+          "l": 26.063,
+          "c": 26.063,
+          "a": 26.0625,
+          "v": 139,
+          "ch": 1.69
+        },
+        {
+          "t": "2026-05-22",
+          "o": 25.41,
+          "h": 25.63,
+          "l": 25.41,
+          "c": 25.63,
+          "a": 25.6301,
+          "v": 787,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-05-21",
+          "o": 25.375,
+          "h": 25.375,
+          "l": 25.375,
+          "c": 25.375,
+          "a": 25.3749,
+          "v": 3,
+          "ch": 3.18
+        },
+        {
+          "t": "2026-05-20",
+          "o": 24.594,
+          "h": 24.594,
+          "l": 24.594,
+          "c": 24.594,
+          "a": 24.5939,
+          "v": 0,
+          "ch": 3.42
+        },
+        {
+          "t": "2026-05-19",
+          "o": 23.78,
+          "h": 23.78,
+          "l": 23.78,
+          "c": 23.78,
+          "a": 23.78,
+          "v": 100,
+          "ch": -0.65
+        },
+        {
+          "t": "2026-05-18",
+          "o": 23.935,
+          "h": 23.935,
+          "l": 23.935,
+          "c": 23.935,
+          "a": 23.9348,
+          "v": 108,
+          "ch": 0.62
+        },
+        {
+          "t": "2026-05-15",
+          "o": 23.787,
+          "h": 23.787,
+          "l": 23.787,
+          "c": 23.787,
+          "a": 23.7865,
+          "v": 4,
+          "ch": -1.28
+        },
+        {
+          "t": "2026-05-14",
+          "o": 24.094,
+          "h": 24.094,
+          "l": 24.094,
+          "c": 24.094,
+          "a": 24.0939,
+          "v": 2,
+          "ch": 0.53
+        },
+        {
+          "t": "2026-05-13",
+          "o": 23.966,
+          "h": 23.966,
+          "l": 23.966,
+          "c": 23.966,
+          "a": 23.9658,
+          "v": 168,
+          "ch": -0.93
+        },
+        {
+          "t": "2026-05-12",
+          "o": 24.191,
+          "h": 24.191,
+          "l": 24.191,
+          "c": 24.191,
+          "a": 24.191,
+          "v": 0,
+          "ch": -1.44
+        },
+        {
+          "t": "2026-05-11",
+          "o": 24.545,
+          "h": 24.545,
+          "l": 24.545,
+          "c": 24.545,
+          "a": 24.5451,
+          "v": 102,
+          "ch": -3.88
+        },
+        {
+          "t": "2026-05-08",
+          "o": 25.537,
+          "h": 25.537,
+          "l": 25.537,
+          "c": 25.537,
+          "a": 25.537,
+          "v": 0,
+          "ch": -0.51
+        },
+        {
+          "t": "2026-05-07",
+          "o": 25.669,
+          "h": 25.669,
+          "l": 25.669,
+          "c": 25.669,
+          "a": 25.6689,
+          "v": 1,
+          "ch": -1.38
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-06-15",
+          "o": 27.275,
+          "h": 27.29,
+          "l": 26.133,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 213,
+          "ch": -1.47
+        },
+        {
+          "t": "2026-06-08",
+          "o": 26.025,
+          "h": 27.162,
+          "l": 26.025,
+          "c": 27.162,
+          "a": 27.1616,
+          "v": 21,
+          "ch": 5.91
+        },
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 26.229,
+          "l": 25.646,
+          "c": 25.646,
+          "a": 25.6463,
+          "v": 9609,
+          "ch": -2.53
+        },
+        {
+          "t": "2026-05-26",
+          "o": 26.063,
+          "h": 26.94,
+          "l": 26.063,
+          "c": 26.312,
+          "a": 26.3123,
+          "v": 380,
+          "ch": 2.66
+        },
+        {
+          "t": "2026-05-18",
+          "o": 23.935,
+          "h": 25.63,
+          "l": 23.78,
+          "c": 25.63,
+          "a": 25.6301,
+          "v": 998,
+          "ch": 7.75
+        },
+        {
+          "t": "2026-05-11",
+          "o": 24.545,
+          "h": 24.545,
+          "l": 23.787,
+          "c": 23.787,
+          "a": 23.7865,
+          "v": 276,
+          "ch": -6.85
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 27.29,
+          "l": 25.646,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 9843,
+          "ch": 1.71
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-06-15",
+          "o": 27.275,
+          "h": 27.29,
+          "l": 26.133,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 213,
+          "ch": -1.47
+        },
+        {
+          "t": "2026-06-08",
+          "o": 26.025,
+          "h": 27.162,
+          "l": 26.025,
+          "c": 27.162,
+          "a": 27.1616,
+          "v": 21,
+          "ch": 5.91
+        },
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 26.229,
+          "l": 25.646,
+          "c": 25.646,
+          "a": 25.6463,
+          "v": 9609,
+          "ch": -2.53
+        },
+        {
+          "t": "2026-05-26",
+          "o": 26.063,
+          "h": 26.94,
+          "l": 26.063,
+          "c": 26.312,
+          "a": 26.3123,
+          "v": 380,
+          "ch": 2.66
+        },
+        {
+          "t": "2026-05-18",
+          "o": 23.935,
+          "h": 25.63,
+          "l": 23.78,
+          "c": 25.63,
+          "a": 25.6301,
+          "v": 998,
+          "ch": 7.75
+        },
+        {
+          "t": "2026-05-11",
+          "o": 24.545,
+          "h": 24.545,
+          "l": 23.787,
+          "c": 23.787,
+          "a": 23.7865,
+          "v": 276,
+          "ch": -6.85
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 27.29,
+          "l": 25.646,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 9843,
+          "ch": 1.71
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-06-01",
+          "o": 26.128,
+          "h": 27.29,
+          "l": 25.646,
+          "c": 26.763,
+          "a": 26.7627,
+          "v": 9843,
+          "ch": 1.71
+        }
+      ]
     }
   }
 }
