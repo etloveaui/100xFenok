@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 
 interface SurfaceDoc<T> {
@@ -76,6 +77,8 @@ interface EtfSurfaceData {
 }
 
 type CollectionKey = "largeProvider" | "strategy" | "bitcoin";
+const ETF_COLLECTION_TABS_ID = "etf-surface-collections-tabs";
+const ETF_COLLECTION_KEYS: CollectionKey[] = ["largeProvider", "strategy", "bitcoin"];
 
 let etfSurfaceCache: EtfSurfaceData | undefined;
 let etfSurfacePending: Promise<EtfSurfaceData | null> | null = null;
@@ -235,6 +238,7 @@ export default function EtfSurfaceSnapshotCard() {
     failed: boolean;
   }>({ reloadKey: 0, data: null, loaded: false, failed: false });
   const [collectionKey, setCollectionKey] = useState<CollectionKey>("largeProvider");
+  const collectionTabsId = useTabsBaseId(ETF_COLLECTION_TABS_ID);
 
   useEffect(() => {
     let cancelled = false;
@@ -287,6 +291,11 @@ export default function EtfSurfaceSnapshotCard() {
     [data],
   );
   const activeCollection = collections[collectionKey];
+  const collectionTabs: Array<TabItem<CollectionKey> & { total: number | null }> = ETF_COLLECTION_KEYS.map((key) => ({
+    id: key,
+    label: collectionLabel(key),
+    total: collections[key].total,
+  }));
   const newEtfCount = countRows(data?.newEtfs);
 
   return (
@@ -410,51 +419,55 @@ export default function EtfSurfaceSnapshotCard() {
                   {collectionLabel(collectionKey)} · {fmtNumber(activeCollection.total)}개 중 {fmtNumber(activeCollection.rows.length)}개 표시
                 </div>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(["largeProvider", "strategy", "bitcoin"] as CollectionKey[]).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={collectionKey === key}
-                    onClick={() => setCollectionKey(key)}
-                    className={`min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
-                      collectionKey === key
-                        ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
-                        : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
-                    }`}
-                  >
-                    {collectionLabel(key)} {fmtNumber(collections[key].total)}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                idBase={collectionTabsId}
+                items={collectionTabs}
+                value={collectionKey}
+                onValueChange={setCollectionKey}
+                ariaLabel="ETF 모음 분류"
+                className="flex flex-wrap gap-1.5"
+                getTabClassName={(_, selected) => `min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
+                  selected
+                    ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+                    : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
+                }`}
+                renderLabel={(item) => <>{item.label} {fmtNumber(item.total)}</>}
+              />
             </div>
-            {activeCollection.rows.map((row) => {
-              if (collectionKey === "bitcoin") {
-                const bitcoinRow = row as BitcoinEtfRow;
-                return (
-                  <EtfLink
-                    key={`collection-btc-${bitcoinRow.symbol}`}
-                    ticker={bitcoinRow.symbol}
-                    name={bitcoinRow.fund_name}
-                    detail={bitcoinDetail(bitcoinRow)}
-                    value={bitcoinRow.pct_change || "-"}
-                  />
-                );
-              }
-              const providerRow = row as ProviderRow;
+            {collectionTabs.map((item) => {
+              const collection = collections[item.id];
               return (
-                <EtfLink
-                  key={`collection-provider-${providerRow.symbol}`}
-                  ticker={providerRow.symbol}
-                  name={providerRow.fund_name}
-                  detail={providerDetail(providerRow)}
-                  value={providerRow.assets || "-"}
-                />
+                <TabPanel key={item.id} idBase={collectionTabsId} item={item} active={collectionKey === item.id}>
+                  {collection.rows.map((row) => {
+                    if (item.id === "bitcoin") {
+                      const bitcoinRow = row as BitcoinEtfRow;
+                      return (
+                        <EtfLink
+                          key={`collection-btc-${bitcoinRow.symbol}`}
+                          ticker={bitcoinRow.symbol}
+                          name={bitcoinRow.fund_name}
+                          detail={bitcoinDetail(bitcoinRow)}
+                          value={bitcoinRow.pct_change || "-"}
+                        />
+                      );
+                    }
+                    const providerRow = row as ProviderRow;
+                    return (
+                      <EtfLink
+                        key={`collection-provider-${providerRow.symbol}`}
+                        ticker={providerRow.symbol}
+                        name={providerRow.fund_name}
+                        detail={providerDetail(providerRow)}
+                        value={providerRow.assets || "-"}
+                      />
+                    );
+                  })}
+                  <div className="px-[var(--panel-pad)] py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
+                    기준일 {asOf(collection.fetchedAt)}
+                  </div>
+                </TabPanel>
               );
             })}
-            <div className="px-[var(--panel-pad)] py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
-              기준일 {asOf(activeCollection.fetchedAt)}
-            </div>
           </div>
         </div>
       )}

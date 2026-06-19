@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import TransitionLink from "@/components/TransitionLink";
+import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import GuruTrendBlock from "./GuruTrendBlock";
@@ -22,6 +23,21 @@ import type {
 } from "@/lib/superinvestors/types";
 
 const PAGE_SIZE = 50;
+const SUPERINVESTOR_TABS_ID = "superinvestors-main-tabs";
+const SUPERINVESTOR_TAB_ITEMS = {
+  consensus: { id: "consensus", label: "공통 보유" },
+  gurus: { id: "gurus", label: "투자자 목록" },
+  "by-ticker": { id: "by-ticker", label: "종목별 보유" },
+  trades: { id: "trades", label: "매매 순위" },
+  insights: { id: "insights", label: "인사이트" },
+} satisfies Record<SuperInvestorsTab, TabItem<SuperInvestorsTab>>;
+const SUPERINVESTOR_TABS: Array<TabItem<SuperInvestorsTab>> = [
+  SUPERINVESTOR_TAB_ITEMS.consensus,
+  SUPERINVESTOR_TAB_ITEMS.gurus,
+  SUPERINVESTOR_TAB_ITEMS["by-ticker"],
+  SUPERINVESTOR_TAB_ITEMS.trades,
+  SUPERINVESTOR_TAB_ITEMS.insights,
+];
 
 const ChartLoading = () => (
   <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-4)]">
@@ -602,6 +618,7 @@ export default function SuperinvestorsClient({
 }) {
   const { consensus, enhancedConsensus, summary, byTicker, bySector, dataReady, failed, quarter, excludedStale } = use13FData();
   const [tab, setTab] = useState<SuperInvestorsTab>(initialTab ?? "consensus");
+  const tabsId = useTabsBaseId(SUPERINVESTOR_TABS_ID);
   const [search, setSearch] = useState(initialSearch);
   const [group, setGroup] = useState("");
   const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
@@ -752,38 +769,31 @@ export default function SuperinvestorsClient({
       ) : null}
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-1">
-        {[
-          { id: "consensus" as const, label: "공통 보유" },
-          { id: "gurus" as const, label: "투자자 목록" },
-          { id: "by-ticker" as const, label: "종목별 보유" },
-          { id: "trades" as const, label: "매매 순위" },
-          { id: "insights" as const, label: "인사이트" },
-        ].map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => {
-              setTab(t.id);
-              setSearch("");
-              setExpandedGuru(null);
-            }}
-            className={cx(
-              "relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition",
-              tab === t.id ? "text-brand-interactive" : "text-slate-500 hover:text-slate-900",
-            )}
-            aria-pressed={tab === t.id}
-            aria-current={tab === t.id ? "page" : undefined}
-          >
-            {t.label}
-            {tab === t.id ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-brand-interactive" /> : null}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        idBase={tabsId}
+        items={SUPERINVESTOR_TABS}
+        value={tab}
+        onValueChange={(next) => {
+          setTab(next);
+          setSearch("");
+          setExpandedGuru(null);
+        }}
+        ariaLabel="거장 보유 현황 분류"
+        className="flex flex-wrap items-center gap-2 border-b border-[var(--c-line)] pb-1"
+        getTabClassName={(_, selected) => cx(
+          "relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition",
+          selected ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)] hover:text-[var(--c-ink)]",
+        )}
+        renderLabel={(item, selected) => (
+          <>
+            {item.label}
+            {selected ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-[var(--c-brand)]" /> : null}
+          </>
+        )}
+      />
 
       {/* Consensus */}
-      {tab === "consensus" && (
-        <section className="space-y-3">
+      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.consensus} active={tab === "consensus"} className="space-y-3">
           {/* Total portfolio (collapsible) */}
           {pvData && !pvFailed ? (
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
@@ -865,7 +875,7 @@ export default function SuperinvestorsClient({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <label className="flex min-w-[220px] flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">티커 검색</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">티커 검색</span>
               <input
                 type="search"
                 value={search}
@@ -884,10 +894,10 @@ export default function SuperinvestorsClient({
           </div>
 
           <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
-            <div className="-mx-1 overflow-x-auto px-1">
+            <div className="-mx-1 overflow-x-auto px-1" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+                  <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
                     <th className="px-3 py-2 text-left">#</th>
                     <th className="px-3 py-2 text-left">티커</th>
                     <th className="px-3 py-2 text-right">보유자</th>
@@ -1006,15 +1016,13 @@ export default function SuperinvestorsClient({
               </div>
             ) : null}
           </div>
-        </section>
-      )}
+      </TabPanel>
 
       {/* Gurus */}
-      {tab === "gurus" && (
-        <section className="space-y-3">
+      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.gurus} active={tab === "gurus"} className="space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <label className="flex min-w-[200px] flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">스타일</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">스타일</span>
               <select
                 value={group}
                 onChange={(e) => {
@@ -1031,7 +1039,7 @@ export default function SuperinvestorsClient({
                 ))}
               </select>
             </label>
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-sm font-bold text-slate-700">
               <strong className="orbitron text-slate-900">{guruEntries.length}</strong>명
             </span>
           </div>
@@ -1110,14 +1118,12 @@ export default function SuperinvestorsClient({
               })}
             </div>
           )}
-        </section>
-      )}
+      </TabPanel>
 
       {/* By ticker */}
-      {tab === "by-ticker" && (
-        <section className="space-y-3">
+      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS["by-ticker"]} active={tab === "by-ticker"} className="space-y-3">
           <label className="flex max-w-md flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">티커 검색</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">티커 검색</span>
             <div className="flex gap-2">
               <input
                 type="search"
@@ -1173,10 +1179,10 @@ export default function SuperinvestorsClient({
                     <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
                   </span>
                 </div>
-                <div className="-mx-1 overflow-x-auto px-1">
+                <div className="-mx-1 overflow-x-auto px-1" tabIndex={0} aria-label="종목별 보유자 표 가로 스크롤">
                   <table className="w-full min-w-[720px] text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+                      <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
                         <th className="px-3 py-2 text-left">보유자</th>
                         <th className="px-3 py-2 text-right">비중</th>
                         <th className="px-3 py-2 text-right">평가액</th>
@@ -1240,12 +1246,10 @@ export default function SuperinvestorsClient({
               </div>
             )}
           </div>
-        </section>
-      )}
+      </TabPanel>
 
       {/* Trades ranking */}
-      {tab === "trades" && (
-        <section className="space-y-4">
+      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.trades} active={tab === "trades"} className="space-y-4">
           {/* Header strip */}
           {tradesData ? (
             <div className="space-y-1">
@@ -1311,11 +1315,12 @@ export default function SuperinvestorsClient({
               </div>
             </>
           ) : null}
-        </section>
-      )}
+      </TabPanel>
 
       {/* Insights */}
-      {tab === "insights" && <InsightsTab />}
+      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.insights} active={tab === "insights"}>
+        <InsightsTab />
+      </TabPanel>
 
     </div>
   );

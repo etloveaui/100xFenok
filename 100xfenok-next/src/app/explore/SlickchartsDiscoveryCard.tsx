@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 
 type DiscoveryTab = "movers" | "returns" | "dividends";
+
+const DISCOVERY_TABS_ID = "explore-slickcharts-discovery-tabs";
+const DISCOVERY_TABS: Array<TabItem<DiscoveryTab>> = [
+  { id: "movers", label: "급등락" },
+  { id: "returns", label: "수익률" },
+  { id: "dividends", label: "배당" },
+];
 
 interface DiscoveryRow {
   symbol: string;
@@ -120,7 +128,7 @@ function RowList({
   );
 }
 
-function SectionTitle({ tone, children }: { tone: "up" | "down"; children: React.ReactNode }) {
+function SectionTitle({ tone, children }: { tone: "up" | "down"; children: ReactNode }) {
   return <div className={`mv-h ${tone}`}>{children}</div>;
 }
 
@@ -128,6 +136,7 @@ export default function SlickchartsDiscoveryCard() {
   const [doc, setDoc] = useState<DiscoveryDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<DiscoveryTab>("movers");
+  const tabsId = useTabsBaseId(DISCOVERY_TABS_ID);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,21 +194,21 @@ export default function SlickchartsDiscoveryCard() {
       <div className="panel-h">
         <h2>수익률 리더보드</h2>
         <span className="desc">{asOf} · {doc.universe?.uniqueCount ?? "—"}개 종목</span>
-        <div className="seg ml-auto">
-          {[
-            ["movers", "급등락"],
-            ["returns", "수익률"],
-            ["dividends", "배당"],
-          ].map(([key, label]) => (
-            <button key={key} type="button" aria-pressed={tab === key} className={tab === key ? "on" : ""} onClick={() => setTab(key as DiscoveryTab)}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          idBase={tabsId}
+          items={DISCOVERY_TABS}
+          value={tab}
+          onValueChange={setTab}
+          ariaLabel="수익률 리더보드 분류"
+          className="seg ml-auto"
+          getTabClassName={(_, selected) => (selected ? "on" : undefined)}
+        />
       </div>
 
-      {tab === "movers" ? (
-        <div className="mv-split">
+      {DISCOVERY_TABS.map((item) => (
+        <TabPanel key={item.id} idBase={tabsId} item={item} active={tab === item.id} className="mv-split">
+          {item.id === "movers" ? (
+            <>
           <div>
             <SectionTitle tone="up">▲ 상승률 TOP</SectionTitle>
             <RowList rows={gainers} tone="up" formatValue={fmtMove} />
@@ -208,11 +217,9 @@ export default function SlickchartsDiscoveryCard() {
             <SectionTitle tone="down">▼ 하락률 TOP</SectionTitle>
             <RowList rows={losers} tone="down" formatValue={fmtMove} />
           </div>
-        </div>
-      ) : null}
-
-      {tab === "returns" ? (
-        <div className="mv-split">
+            </>
+          ) : item.id === "returns" ? (
+            <>
           <div>
             <SectionTitle tone="up">▲ 1Y 수익률 TOP</SectionTitle>
             <RowList rows={best1y} tone="up" formatValue={fmtFraction} />
@@ -221,11 +228,9 @@ export default function SlickchartsDiscoveryCard() {
             <SectionTitle tone="down">▼ 1Y 수익률 하위</SectionTitle>
             <RowList rows={worst1y} tone="down" formatValue={fmtFraction} />
           </div>
-        </div>
-      ) : null}
-
-      {tab === "dividends" ? (
-        <div className="mv-split">
+            </>
+          ) : (
+            <>
           <div>
             <SectionTitle tone="up">배당률 TOP</SectionTitle>
             <RowList rows={highYield} tone="up" formatValue={fmtDividendYield} />
@@ -234,8 +239,10 @@ export default function SlickchartsDiscoveryCard() {
             <SectionTitle tone="up">DPS TTM TOP</SectionTitle>
             <RowList rows={highTtm} tone="up" formatValue={fmtDollars} />
           </div>
-        </div>
-      ) : null}
+            </>
+          )}
+        </TabPanel>
+      ))}
 
       <div className="panel-foot">대용량 히스토리는 요약 데이터만 표시합니다</div>
     </section>

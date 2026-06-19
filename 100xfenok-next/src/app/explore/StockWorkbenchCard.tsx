@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
 type ActionBucket = "smart_money" | "value_momentum" | "index_core";
+
+const WORKBENCH_TABS_ID = "explore-stock-workbench-tabs";
 
 interface ActionRow {
   symbol: string;
@@ -235,6 +238,7 @@ export default function StockWorkbenchCard() {
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<WorkbenchTab>("action");
   const [actionBucket, setActionBucket] = useState<ActionBucket>("smart_money");
+  const tabsId = useTabsBaseId(WORKBENCH_TABS_ID);
 
   useEffect(() => {
     let cancelled = false;
@@ -278,12 +282,11 @@ export default function StockWorkbenchCard() {
     + (data?.discovery?.movers?.losers?.count ?? losers.length);
   const revisionCount = (data?.revisions?.up?.length ?? 0) + (data?.revisions?.down?.length ?? 0);
   const returnsCount = data?.discovery?.universe?.uniqueCount ?? null;
-  const tabs: Array<{ key: WorkbenchTab; label: string; count: number | null }> = [
-    { key: "action", label: "이벤트", count: allActions.length },
-    { key: "revision", label: "추정치", count: revisionCount },
-    { key: "movers", label: "급등락", count: moverCount },
-    { key: "returns", label: "수익/배당", count: returnsCount },
-  ];
+  const actionTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "action", label: "이벤트", count: allActions.length };
+  const revisionTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "revision", label: "추정치", count: revisionCount };
+  const moversTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "movers", label: "급등락", count: moverCount };
+  const returnsTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "returns", label: "수익/배당", count: returnsCount };
+  const tabs: Array<TabItem<WorkbenchTab> & { count: number | null }> = [actionTabItem, revisionTabItem, moversTabItem, returnsTabItem];
 
   return (
     <section className="panel">
@@ -304,26 +307,22 @@ export default function StockWorkbenchCard() {
         </div>
       ) : (
         <>
-          <div className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]">
-            {tabs.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                aria-pressed={tab === item.key}
-                onClick={() => setTab(item.key)}
-                className={`min-h-9 rounded-full border px-3 text-[11px] font-black tracking-wide transition ${
-                  tab === item.key
-                    ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
-                    : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
-                }`}
-              >
-                {item.label} · {fmtCount(item.count)}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            idBase={tabsId}
+            items={tabs}
+            value={tab}
+            onValueChange={setTab}
+            ariaLabel="종목 후보 분류"
+            className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]"
+            getTabClassName={(item, selected) => `min-h-9 rounded-full border px-3 text-[11px] font-black tracking-wide transition ${
+              selected
+                ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+                : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
+            }`}
+            renderLabel={(item) => <>{item.label} · {fmtCount(item.count)}</>}
+          />
 
-          {tab === "action" ? (
-            <div className="mt-3">
+          <TabPanel idBase={tabsId} item={actionTabItem} active={tab === "action"} className="mt-3">
               <div className="mb-2 flex flex-wrap gap-1.5 px-[var(--panel-pad)]">
                 {[
                   ["smart_money", "기관·고수"],
@@ -359,11 +358,9 @@ export default function StockWorkbenchCard() {
                   <StockRowLink name="표시할 투자 후보 없음" detail="선택한 분류에 표시할 종목이 없습니다" tone="neutral" />
                 )}
               </div>
-            </div>
-          ) : null}
+          </TabPanel>
 
-          {tab === "revision" ? (
-            <div className="panel-b grid gap-3 lg:grid-cols-2">
+          <TabPanel idBase={tabsId} item={revisionTabItem} active={tab === "revision"} className="panel-b grid gap-3 lg:grid-cols-2">
               <div className="mv-col">
                 <div className="mv-h up">▲ EPS 상향</div>
                 {revisionUp.map((row) => (
@@ -390,11 +387,9 @@ export default function StockWorkbenchCard() {
                   />
                 ))}
               </div>
-            </div>
-          ) : null}
+          </TabPanel>
 
-          {tab === "movers" ? (
-            <div className="panel-b grid gap-3 lg:grid-cols-2">
+          <TabPanel idBase={tabsId} item={moversTabItem} active={tab === "movers"} className="panel-b grid gap-3 lg:grid-cols-2">
               <div className="mv-col">
                 <div className="mv-h up">▲ 상승</div>
                 {gainers.map((row) => (
@@ -421,11 +416,9 @@ export default function StockWorkbenchCard() {
                   />
                 ))}
               </div>
-            </div>
-          ) : null}
+          </TabPanel>
 
-          {tab === "returns" ? (
-            <div className="panel-b grid gap-3 lg:grid-cols-2">
+          <TabPanel idBase={tabsId} item={returnsTabItem} active={tab === "returns"} className="panel-b grid gap-3 lg:grid-cols-2">
               <div className="mv-col">
                 <div className="mv-h up">수익률</div>
                 {best1y.map((row) => (
@@ -444,8 +437,7 @@ export default function StockWorkbenchCard() {
                   <StockRowLink key={`ht-${row.symbol}`} symbol={row.symbol} name={row.company} detail={row.sector} value={fmtDollars(row.value)} tone="up" />
                 ))}
               </div>
-            </div>
-          ) : null}
+          </TabPanel>
         </>
       )}
 

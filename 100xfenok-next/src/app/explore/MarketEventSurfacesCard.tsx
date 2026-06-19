@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 
 interface SurfaceResult {
   surface?: string;
@@ -98,6 +99,8 @@ interface SurfaceRadarData {
 let radarCache: SurfaceRadarData | null = null;
 let radarPending: Promise<SurfaceRadarData> | null = null;
 type EventTab = "macro" | "corporate" | "session";
+
+const EVENT_TABS_ID = "explore-market-event-surfaces-tabs";
 
 function loadJson<T>(path: string): Promise<T | null> {
   return fetch(path, { cache: "no-store" })
@@ -257,6 +260,7 @@ export default function MarketEventSurfacesCard() {
   const [data, setData] = useState<SurfaceRadarData | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<EventTab>("macro");
+  const tabsId = useTabsBaseId(EVENT_TABS_ID);
 
   useEffect(() => {
     let cancelled = false;
@@ -325,15 +329,14 @@ export default function MarketEventSurfacesCard() {
   const generatedAt = datePart(data?.manifest?.surfaces?.generated_at);
   const earningsAsOf = datePart(data?.earnings?.fetched_at);
   const asOf = generatedAt !== "—" ? generatedAt : earningsAsOf;
-  const tabs: Array<{ key: EventTab; label: string; count: number }> = [
-    { key: "macro", label: "매크로", count: upcomingMacroEvents.length },
-    { key: "corporate", label: "기업", count: upcomingEarnings.length + latestActions.length },
-    {
-      key: "session",
-      label: "장전/장후",
-      count: Number(Boolean(premarketTop)) + Number(Boolean(afterhoursTop)) + Number(Boolean(latestSplit)),
-    },
-  ];
+  const macroTabItem: TabItem<EventTab> & { count: number } = { id: "macro", label: "매크로", count: upcomingMacroEvents.length };
+  const corporateTabItem: TabItem<EventTab> & { count: number } = { id: "corporate", label: "기업", count: upcomingEarnings.length + latestActions.length };
+  const sessionTabItem: TabItem<EventTab> & { count: number } = {
+    id: "session",
+    label: "장전/장후",
+    count: Number(Boolean(premarketTop)) + Number(Boolean(afterhoursTop)) + Number(Boolean(latestSplit)),
+  };
+  const tabs: Array<TabItem<EventTab> & { count: number }> = [macroTabItem, corporateTabItem, sessionTabItem];
 
   return (
     <section className="panel">
@@ -365,27 +368,24 @@ export default function MarketEventSurfacesCard() {
       </div>
 
       {loaded ? (
-        <div className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              aria-pressed={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`min-h-9 rounded-full border px-3 text-[11px] font-black uppercase tracking-wide transition ${
-                activeTab === tab.key
-                  ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
-                  : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
-              }`}
-            >
-              {tab.label} · {fmtNumber(tab.count)}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          idBase={tabsId}
+          items={tabs}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          ariaLabel="이벤트 리스크 분류"
+          className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]"
+          getTabClassName={(_, selected) => `min-h-9 rounded-full border px-3 text-[11px] font-black uppercase tracking-wide transition ${
+            selected
+              ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+              : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
+          }`}
+          renderLabel={(item) => <>{item.label} · {fmtNumber(item.count)}</>}
+        />
       ) : null}
 
-      {loaded && activeTab === "macro" ? (
-        <div className="mv-col mt-3">
+      {loaded ? (
+        <TabPanel idBase={tabsId} item={macroTabItem} active={activeTab === "macro"} className="mv-col mt-3">
           {upcomingMacroEvents.length > 0 ? (
             upcomingMacroEvents.map((event, index) => {
               const dd = ddayInfo(event.date_kst, todayKST());
@@ -421,11 +421,11 @@ export default function MarketEventSurfacesCard() {
               <span className="pc num neutral">—</span>
             </div>
           )}
-        </div>
+        </TabPanel>
       ) : null}
 
-      {loaded && activeTab === "session" ? (
-        <div className="mv-col mt-3">
+      {loaded ? (
+        <TabPanel idBase={tabsId} item={sessionTabItem} active={activeTab === "session"} className="mv-col mt-3">
           {premarketTop ? (
             <TickerRowLink symbol={premarketTop.symbol}>
               <span className="co">
@@ -462,11 +462,11 @@ export default function MarketEventSurfacesCard() {
               <span className="pc num neutral">—</span>
             </div>
           ) : null}
-        </div>
+        </TabPanel>
       ) : null}
 
-      {loaded && activeTab === "corporate" ? (
-        <div className="panel-b grid gap-3 lg:grid-cols-2">
+      {loaded ? (
+        <TabPanel idBase={tabsId} item={corporateTabItem} active={activeTab === "corporate"} className="panel-b grid gap-3 lg:grid-cols-2">
           {upcomingEarnings.length > 0 ? (
             <div className="mv-col">
               <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">어닝 캘린더</div>
@@ -506,7 +506,7 @@ export default function MarketEventSurfacesCard() {
               <span className="pc num neutral">—</span>
             </div>
           ) : null}
-        </div>
+        </TabPanel>
       ) : null}
 
       {loaded && (upcomingMacroEvents[0] || upcomingEarnings[0] || latestActions[0]) ? (
