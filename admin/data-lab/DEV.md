@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.20 (ETF universe API ops smoke)
+> **Version**: 2.2.21 (ETF gap reason copy)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -141,7 +141,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 - **ETF gap drilldown**: Data Lab reads `counts.missing_by_source` and `samples` from `coverage/etf_detail.json` so operators can see which new/listed ETFs still rely on fallback surfaces.
 - **ETF universe snapshot**: Data Lab reads the ETF list API plus the full ETF universe and new-ETF surface, then joins those counts with `coverage/etf_detail.json`; the card must stay data-driven and must not use static launch counts.
-- **ETF missing reasons**: `coverage/etf_detail.json` also exposes `missing_reason_summary` and `missing_status_summary`; Data Lab renders those as source-neutral Korean buckets (`외부 분류 불일치`, `아직 수집 전`, `재시도 대기`) while raw provider evidence remains in JSON.
+- **ETF missing reasons**: `coverage/etf_detail.json` also exposes `missing_reason_summary` and `missing_status_summary`; Data Lab renders those as source-neutral Korean buckets (`ETF로 인식되지 않음`, `재시도 예약됨`, `다음 수집 후보`, `보조 가격 임시 적용`) while raw provider evidence remains in JSON. These are diagnostic categories, not a mutually exclusive partition; use `missing_detail_files` as the actual missing total.
 - **Operator copy**: Provider-specific fallback labels are rendered as source-neutral auxiliary price/detail wording on the Data Lab surface; raw provider IDs stay in JSON only.
 - **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json` and active route/component files.
 - **Update QA gate**: The StockAnalysis refresh workflow runs `qa:surface-consumers`, `qa:market-audit`, and `qa:copy` after generated data is rebuilt, so Data Lab structure, public labels, and active surface consumers fail before the data commit is pushed.
@@ -161,6 +161,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.21 | 2026-06-19 | Clarified ETF gap reason copy and separated missing samples into diagnostic buckets, with an explicit note that buckets can overlap |
 | 2.2.20 | 2026-06-19 | Added Ops Console route smoke for the joined ETF list API |
 | 2.2.19 | 2026-06-19 | Added ETF list API coverage metrics for price, volume, holdings, and screener-only rows |
 | 2.2.18 | 2026-06-19 | Added Data Lab ETF universe/new-launch snapshot from live StockAnalysis files, including newest ETF rows and new-ETF detail gap counts |

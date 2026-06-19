@@ -508,6 +508,7 @@ const Renderer = (function() {
     const mismatch = sampleTickers(reasonSamples.external_quote_type_mismatch, samples.missing_external_quote_type_mismatch, 24);
     const untracked = sampleTickers(reasonSamples.untracked, statusSamples.untracked, samples.missing_untracked, 24);
     const cooldown = sampleTickers(statusSamples.retry_cooldown, samples.missing_retry_cooldown, 24);
+    const retryPending = sampleTickers(statusSamples.retry_pending, samples.missing_retry_pending, 24);
     const yahooFallback = Array.isArray(samples.yahoo_fallback) ? samples.yahoo_fallback.filter(Boolean).slice(0, 36) : [];
     if (!missing.length && !yahooFallback.length) return '';
 
@@ -527,27 +528,31 @@ const Renderer = (function() {
           ${renderAuditMetric('ETF 목록 누락', counts.missing_by_source?.etf_universe)}
           ${renderAuditMetric('스크리너 누락', counts.missing_by_source?.etf_screener)}
           ${renderAuditMetric('보조 가격 상세', counts.yahoo_fallback_files)}
-          ${renderAuditMetric('외부 분류 불일치', reasonSummary.external_quote_type_mismatch)}
-          ${renderAuditMetric('아직 수집 전', reasonSummary.untracked)}
-          ${renderAuditMetric('재시도 대기', statusSummary.retry_cooldown)}
+          ${renderAuditMetric('ETF로 인식되지 않음', reasonSummary.external_quote_type_mismatch)}
+          ${renderAuditMetric('아직 재시도 전', reasonSummary.untracked)}
+          ${renderAuditMetric('재시도 예약됨', statusSummary.retry_cooldown)}
           ${renderAuditMetric('다음 수집 후보', statusSummary.retry_pending)}
         </div>
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
-            <div class="mb-3 text-xs font-black text-gray-700">외부 분류 불일치</div>
-            ${renderTickerChipList(mismatch.length ? mismatch : cooldown, 'warn')}
+            <div class="mb-3 text-xs font-black text-gray-700">ETF로 인식되지 않음</div>
+            ${renderTickerChipList(mismatch, 'warn')}
           </div>
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
-            <div class="mb-3 text-xs font-black text-gray-700">아직 수집 전</div>
-            ${renderTickerChipList(untracked.length ? untracked : missing, 'warn')}
+            <div class="mb-3 text-xs font-black text-gray-700">재시도 예약됨</div>
+            ${renderTickerChipList(cooldown, 'warn')}
           </div>
           <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
-            <div class="mb-3 text-xs font-black text-gray-700">보조 가격 상세 반영</div>
+            <div class="mb-3 text-xs font-black text-gray-700">다음 수집 후보</div>
+            ${renderTickerChipList(retryPending.length ? retryPending : untracked, 'warn')}
+          </div>
+          <div class="min-w-0 rounded-xl border border-gray-100 bg-slate-50 p-4">
+            <div class="mb-3 text-xs font-black text-gray-700">보조 가격 임시 적용</div>
             ${renderTickerChipList(yahooFallback, 'ok')}
           </div>
         </div>
         <p class="text-[11px] leading-relaxed text-gray-500">
-          상세 누락은 단순 실패가 아니라 외부 데이터가 ETF로 분류하지 않는 항목과 아직 재시도 이력이 없는 항목으로 나뉩니다. ETF 페이지는 목록/신규 상장 데이터 기준으로 먼저 열리고, 다음 수집 또는 보조 가격 상세가 갱신되면 이 분류도 자동으로 바뀝니다.
+          이 항목들은 서로 배타적인 합계가 아니라 진단용 분류입니다. 실제 누락 수는 위의 상세 누락 수를 기준으로 보고, ETF 페이지는 먼저 요약 정보로 열리며 다음 수집 또는 보조 가격 상세가 갱신되면 이 분류도 자동으로 바뀝니다.
         </p>
       </section>
     `;
@@ -795,7 +800,7 @@ const Renderer = (function() {
           ${renderAuditMetric('보조 가격 재시도 후보', incrementalCounts.fallback_retry)}
           ${renderAuditMetric('추적 중', trackedCount)}
           ${renderAuditMetric('재시도 예약', cooldownCount)}
-          ${renderAuditMetric('다음 실행 예정', retryNowCount)}
+          ${renderAuditMetric('지금 재시도 가능', retryNowCount)}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
           ${renderBackfillMiniTable(
