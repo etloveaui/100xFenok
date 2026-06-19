@@ -234,7 +234,7 @@ Representative ticker contracts:
 |-----|--------|-------|
 | Daily-derived 1M / 3M returns | partial coverage | Implemented via Yahoo `history_1y` in `market_facts`; remaining work is staged ETF history backfill to lift coverage beyond the current 1M 612 / 5,267 and 3M 562 / 5,267. |
 | Chart granularity | monthly only | Add daily/weekly/monthly toggle and 3Y/5Y ranges. Requires extending history collection beyond 1Y. |
-| Browser QA for ETF routes | covered, needs visual expansion | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Remaining work is richer screenshot/visual assertions for fallback/detail states. |
+| Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
 ## 7. Related Files

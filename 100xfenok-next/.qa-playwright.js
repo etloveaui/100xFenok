@@ -382,6 +382,52 @@ async function runStockAnalyzerNativeChecks(page) {
   };
 }
 
+async function runEtfChecks(page, route) {
+  const checks = [];
+  const detailTicker =
+    route !== "/etfs/new" && route.startsWith("/etfs/")
+      ? route.replace(/^\/etfs\//, "").replace(/\/$/, "").split("?")[0]
+      : "";
+
+  if (detailTicker) {
+    const ticker = detailTicker.toUpperCase();
+    const h1 = page.locator("h1").first();
+    await h1.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+    const h1Text = await h1.textContent().catch(() => null);
+    const h1Visible = await h1.isVisible().catch(() => false);
+    checks.push({ check: "etfDetailH1", pass: h1Visible && !!h1Text && h1Text.toUpperCase().includes(ticker), text: h1Text?.slice(0, 60) });
+
+    // Shell layout should render regardless of data-fetch state; avoid
+    // asserting on price/status because dev-server trailing-slash redirects
+    // can make client-side JSON fetches flaky in local QA.
+    const shell = page.locator(".stock-shell").first();
+    const shellVisible = await shell.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
+    checks.push({ check: "etfDetailShell", pass: shellVisible });
+  } else if (route === "/etfs" || route === "/etfs?type=single-stock") {
+    const heading = page.locator('h2:has-text("ETF 목록")').first();
+    const headingVisible = await heading.isVisible().catch(() => false);
+    const rows = await page.locator(".mv-row").count();
+    checks.push({
+      check: route === "/etfs" ? "etfListContent" : "etfFilteredListContent",
+      pass: headingVisible && rows > 0,
+      headingVisible,
+      rows,
+    });
+  } else if (route === "/etfs/new") {
+    const heading = page.locator('h2:has-text("신규 상장 ETF 탐색")').first();
+    const headingVisible = await heading.isVisible().catch(() => false);
+    const rows = await page.locator(".mv-row").count();
+    checks.push({
+      check: "etfNewContent",
+      pass: headingVisible && rows > 0,
+      headingVisible,
+      rows,
+    });
+  }
+
+  return checks;
+}
+
 (async () => {
   await prewarmRoutes();
   const browser = await chromium.launch({ headless: true });
@@ -723,6 +769,23 @@ async function runStockAnalyzerNativeChecks(page) {
           });
         }
       }
+
+      if (route.startsWith("/etfs") && !item.navigationError) {
+        try {
+          const etfChecks = await runEtfChecks(page, route);
+          etfChecks.forEach((check) => {
+            results.push({ viewport: vp.name, route, ...check });
+          });
+        } catch (err) {
+          results.push({
+            viewport: vp.name,
+            route,
+            check: "etfChecks",
+            pass: false,
+            error: String(err),
+          });
+        }
+      }
     }
 
     await context.close();
@@ -733,6 +796,7 @@ async function runStockAnalyzerNativeChecks(page) {
   const failures = results.filter((r) => {
     if (r.check === "desktopDropdown") return r.pass === false;
     if (r.check === "stockAnalyzerNativeTabs") return r.pass === false;
+    if (r.check && r.check.startsWith("etf") && r.pass === false) return true;
     if (r.check === "mobileMenuToggle") {
       if (r.error) return true;
       if (r.skipped) return false;
