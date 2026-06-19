@@ -29,7 +29,7 @@ export default function EtfRetryCallout({
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-down)] bg-[var(--c-panel)] px-4 text-[11px] font-black text-[var(--c-down)] transition hover:bg-white hover:text-[var(--c-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive"
+          className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-down)] bg-[var(--c-panel)] px-4 text-[11px] font-black text-[var(--c-down)] transition hover:bg-[var(--c-surface)] hover:text-[var(--c-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive"
         >
           {actionLabel}
         </button>
