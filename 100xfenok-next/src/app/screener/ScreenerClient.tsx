@@ -249,20 +249,20 @@ function confidenceText(label: string | null | undefined): string {
 }
 
 function confidenceClass(label: string | null | undefined, lowEvidence: boolean): string {
-  if (lowEvidence || label === "low") return "text-[var(--c-ink-4)]";
+  if (lowEvidence || label === "low") return "text-[var(--c-ink-2)]";
   if (label === "medium") return "text-[var(--c-warn)]";
   if (label === "high") return "text-[var(--c-up)]";
-  return "text-[var(--c-ink-4)]";
+  return "text-[var(--c-ink-2)]";
 }
 
 function actionTone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
-  if (lowEvidence || confidenceLabel === "low") return "border-slate-200 bg-slate-50 text-slate-500";
+  if (lowEvidence || confidenceLabel === "low") return "border-slate-200 bg-slate-50 text-slate-700";
   if (bucket === "smart_money") return "border-violet-200 bg-violet-50 text-violet-700";
   if (bucket === "value_momentum") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (bucket === "index_core") return "border-sky-200 bg-sky-50 text-sky-700";
   if (bucket === "income") return "border-amber-200 bg-amber-50 text-amber-700";
   if (bucket === "momentum") return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-slate-200 bg-slate-50 text-slate-600";
+  return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 function getMomentumClass(value: number | null): string {
@@ -272,7 +272,7 @@ function getMomentumClass(value: number | null): string {
 
 const BADGE_CLASS_MAP: Record<string, string> = {
   emerald: "bg-[var(--c-up-soft)] text-[var(--c-up)]",
-  slate: "bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
+  slate: "bg-[var(--c-surface-2)] text-[var(--c-ink-2)]",
   rose: "bg-[var(--c-down-soft)] text-[var(--c-down)]",
 };
 
@@ -523,7 +523,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey): React.Rea
 function MobileMetric({ stock, metricKey }: { stock: ScreenerStock; metricKey: ScreenerSortKey }) {
   return (
     <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-      <span className="block truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">
+      <span className="block truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
         {columnLabel(metricKey)}
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
@@ -567,7 +567,7 @@ function MobileStockCard({
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-base font-black text-slate-950">{stock.ticker}</span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
               {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
             </span>
             <span
@@ -578,7 +578,7 @@ function MobileStockCard({
             </span>
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700">{stock.name}</span>
-          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-slate-400">
+          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
             {stock.sector || "섹터 미정"}
             {stock.actionReasons?.[0] ? ` · ${stock.actionReasons[0]}` : ""}
           </span>
@@ -1080,7 +1080,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
             className={cx(
               "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
               preset === p
-                ? "border border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
+                ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
                 : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
             )}
           >
@@ -1228,7 +1228,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         ) : null}
       </section>
 
-      <p className="px-1 text-[11px] text-[var(--c-ink-4)]">
+      <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
         데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · 통합 스코어. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
     </div>

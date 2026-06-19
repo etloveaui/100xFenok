@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
-import type { ChartData } from "chart.js";
+import type { ChartData, ChartOptions } from "chart.js";
 import { Doughnut, Bar, Line, Chart } from "react-chartjs-2";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
@@ -151,8 +151,13 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
   return (
     <div>
       <div className="relative h-[300px] sm:h-[420px]">
-        {/* @ts-expect-error treemap type from chartjs-chart-treemap */}
-        <Chart type="treemap" data={data} options={options} />
+        <Chart
+          type="treemap"
+          data={data as unknown as ChartData<"treemap">}
+          options={options as unknown as ChartOptions<"treemap">}
+          role="img"
+          aria-label={`${quarterLabel} 포트폴리오 보유 비중과 수익률 트리맵`}
+        />
       </div>
       {/* Legend strip */}
       <div className="mt-2">
@@ -281,7 +286,12 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
         ) : null}
       </div>
       <div className="mt-2 h-[220px] sm:h-[260px]">
-        <Line data={data as ChartData<"line">} options={options} />
+        <Line
+          data={data as ChartData<"line">}
+          options={options}
+          role="img"
+          aria-label={`${investorName} 포트폴리오 성과와 SPY 비교 차트`}
+        />
       </div>
       <p className="mt-1 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
         분기 공시 롱 포지션을 분기말 매수·리밸런싱 없이 보유로 가정한 추정 (지수 100 = 첫 분기말, 배당 조정)
@@ -430,9 +440,19 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
       {/* Chart */}
       <div style={{ height: 380 }}>
         {view === "current" ? (
-          <Doughnut data={doughnutData} options={doughnutOptions} />
+          <Doughnut
+            data={doughnutData}
+            options={doughnutOptions}
+            role="img"
+            aria-label="현재 섹터 구성 도넛 차트"
+          />
         ) : (
-          <Bar data={barData as ChartData<"bar">} options={barOptions} />
+          <Bar
+            data={barData as ChartData<"bar">}
+            options={barOptions}
+            role="img"
+            aria-label="분기별 섹터 구성 변화 막대 차트"
+          />
         )}
       </div>
     </div>

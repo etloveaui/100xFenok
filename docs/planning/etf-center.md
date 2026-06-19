@@ -16,8 +16,8 @@ Current coverage (2026-06-19 local DataPack):
 - Price coverage in joined universe API: 5,347 / 5,347
 - Expense ratio coverage: 5,213
 - Performance coverage: 4,579
-- Market-facts ETF return coverage: 1M 5,143 / 5,267, 3M 5,057 / 5,267, YTD 4,903 / 5,267, 1Y 4,332 / 5,267, 3Y CAGR 1,873 / 5,267, 5Y CAGR 2,038 / 5,267, 10Y CAGR 1,141 / 5,267, max CAGR 3,641 / 5,267
-- Multi-year detail history: 2,786 / 4,579 primary StockAnalysis detail files complete (60.84%); 1,793 still need `monthly_3y` and `monthly_5y`.
+- Market-facts ETF return coverage: 1M 5,143 / 5,267, 3M 5,057 / 5,267, YTD 4,903 / 5,267, 1Y 4,332 / 5,267, 3Y CAGR 2,863 / 5,267, 5Y CAGR 2,038 / 5,267, 10Y CAGR 1,141 / 5,267, max CAGR 3,641 / 5,267
+- Multi-year detail history: 4,568 / 4,579 primary StockAnalysis detail files complete (99.76%); the remaining 11 are source gaps that still lack `monthly_3y` and `monthly_5y`.
 
 Design principles:
 
@@ -276,8 +276,8 @@ Representative ticker contracts:
 
 | Gap | Status | Notes |
 |-----|--------|-------|
-| 3Y return coverage | partially backfilled / live data backfill continuing | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data is backfilled. `fetch-stockanalysis.py --history-gaps-only --plan-only` previews the exact local candidate slice first. Current local 3Y CAGR coverage is 1,873 / 5,267, including 1,644 from StockAnalysis history; the history-gap report shows 2,786 / 4,579 primary detail files complete and 1,793 still missing `monthly_3y` / `monthly_5y`. |
-| Chart granularity | code-ready / data backfill needed | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files still mostly hold the 1Y keys, so 3Y/5Y charts open progressively after detail backfill. |
+| 3Y return coverage | effectively backfilled / source-gap limited | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data exists. Current local 3Y CAGR coverage is 2,863 / 5,267, including 2,634 StockAnalysis-history-derived records; the history-gap report shows 4,568 / 4,579 primary detail files complete and 11 remaining source gaps. |
+| Chart granularity | code-ready / source-gap limited | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files are almost fully backfilled for 3Y/5Y; the remaining 11 open progressively only if source history appears. |
 | Missing multi-year history UX | done / data-dependent | ETF detail pages show the current 1Y chart/table and a short pending-data note when 3Y/5Y history ranges are not present, so disabled ranges are not mistaken for a broken chart. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, distinguishes transient fetch failure from missing/backfill-pending data, and exposes an in-place retry action. |
