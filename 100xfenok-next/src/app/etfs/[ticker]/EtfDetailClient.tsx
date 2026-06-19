@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
+import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 
 type MaybeNumber = number | null | undefined;
 
@@ -121,9 +122,13 @@ interface MarketFactsPayload {
 }
 
 type EtfClassification = NonNullable<NonNullable<MarketFactsPayload["etf"]>["classification"]>;
+type LoadResult<T> =
+  | { kind: "load_result"; status: "ok"; data: T }
+  | { kind: "load_result"; status: "missing"; data: null }
+  | { kind: "load_result"; status: "failed"; data: null };
 
-const etfCache: Record<string, Promise<EtfPayload | null> | EtfPayload | null> = {};
-const factsCache: Record<string, Promise<MarketFactsPayload | null> | MarketFactsPayload | null> = {};
+const etfCache: Record<string, Promise<LoadResult<EtfPayload>> | EtfPayload | undefined> = {};
+const factsCache: Record<string, Promise<LoadResult<MarketFactsPayload>> | MarketFactsPayload | undefined> = {};
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -137,53 +142,94 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
-function loadEtfPayload(ticker: string): Promise<EtfPayload | null> {
+function missingResult<T>(): LoadResult<T> {
+  return { kind: "load_result", status: "missing", data: null };
+}
+
+function failedResult<T>(): LoadResult<T> {
+  return { kind: "load_result", status: "failed", data: null };
+}
+
+function okResult<T>(data: T): LoadResult<T> {
+  return { kind: "load_result", status: "ok", data };
+}
+
+function isLoadResult<T>(value: unknown): value is LoadResult<T> {
+  const record = asRecord(value);
+  return record?.kind === "load_result"
+    && (record.status === "ok" || record.status === "missing" || record.status === "failed");
+}
+
+function clearEtfRuntimeCache(ticker: string) {
   const symbol = cleanSymbol(ticker);
-  if (!symbol) return Promise.resolve(null);
+  if (!symbol) return;
+  delete etfCache[symbol];
+  delete factsCache[symbol];
+}
+
+function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
+  const symbol = cleanSymbol(ticker);
+  if (!symbol) return Promise.resolve(missingResult());
   const cached = etfCache[symbol];
   if (cached instanceof Promise) return cached;
-  if (cached !== undefined) return Promise.resolve(cached);
+  if (cached !== undefined) return Promise.resolve(okResult(cached));
 
   const request = fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}/`, { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() : null))
+    .then((res) => {
+      if (res.ok) return res.json();
+      return res.status === 404 ? missingResult<EtfPayload>() : failedResult<EtfPayload>();
+    })
     .then((payload) => {
+      if (isLoadResult<EtfPayload>(payload)) {
+        delete etfCache[symbol];
+        return payload;
+      }
       const parsed = asRecord(payload) ? payload as EtfPayload : null;
       if (parsed) {
         etfCache[symbol] = parsed;
+        return okResult(parsed);
       } else {
         delete etfCache[symbol];
+        return missingResult<EtfPayload>();
       }
-      return parsed;
     })
     .catch(() => {
       delete etfCache[symbol];
-      return null;
+      return failedResult<EtfPayload>();
     });
   etfCache[symbol] = request;
   return request;
 }
 
-function loadMarketFacts(ticker: string): Promise<MarketFactsPayload | null> {
+function loadMarketFacts(ticker: string): Promise<LoadResult<MarketFactsPayload>> {
   const symbol = cleanSymbol(ticker);
-  if (!symbol) return Promise.resolve(null);
+  if (!symbol) return Promise.resolve(missingResult());
   const cached = factsCache[symbol];
   if (cached instanceof Promise) return cached;
-  if (cached !== undefined) return Promise.resolve(cached);
+  if (cached !== undefined) return Promise.resolve(okResult(cached));
 
   const request = fetch(`/data/computed/market_facts/tickers/${encodeURIComponent(symbol)}.json`, { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() : null))
+    .then((res) => {
+      if (res.ok) return res.json();
+      return res.status === 404 ? missingResult<MarketFactsPayload>() : failedResult<MarketFactsPayload>();
+    })
     .then((payload) => {
+      if (isLoadResult<MarketFactsPayload>(payload)) {
+        delete factsCache[symbol];
+        return payload;
+      }
       const parsed = asRecord(payload) ? payload as MarketFactsPayload : null;
       if (parsed) {
         factsCache[symbol] = parsed;
+        return okResult(parsed);
       } else {
         delete factsCache[symbol];
+        return missingResult<MarketFactsPayload>();
       }
-      return parsed;
     })
     .catch(() => {
       delete factsCache[symbol];
-      return null;
+      return failedResult<MarketFactsPayload>();
     });
   factsCache[symbol] = request;
   return request;
@@ -618,6 +664,7 @@ function HistoryView({
   onModeChange,
   range,
   onRangeChange,
+  loadFailed,
 }: {
   history: HistoryPoint[];
   historyPeriods?: Partial<Record<HistoryPeriodKey, HistoryPoint[]>>;
@@ -626,29 +673,62 @@ function HistoryView({
   onModeChange: (mode: HistoryMode) => void;
   range: HistoryRange;
   onRangeChange: (range: HistoryRange) => void;
+  loadFailed?: boolean;
 }) {
-  const fallback = firstAvailableHistorySelection(historyPeriods, history);
-  const requestedRows = historyRowsForSelection(historyPeriods, history, mode, range);
+  const fallback = useMemo(() => firstAvailableHistorySelection(historyPeriods, history), [historyPeriods, history]);
+  const requestedRows = useMemo(
+    () => historyRowsForSelection(historyPeriods, history, mode, range),
+    [historyPeriods, history, mode, range],
+  );
   const activeMode = requestedRows.length > 0 ? mode : fallback?.mode ?? mode;
   const activeRange = requestedRows.length > 0 ? range : fallback?.range ?? range;
-  const rows = requestedRows.length > 0
-    ? requestedRows
-    : historyRowsForSelection(historyPeriods, history, activeMode, activeRange);
-  const isAvailable = (candidateMode: HistoryMode, candidateRange: HistoryRange) =>
-    historyRowsForSelection(historyPeriods, history, candidateMode, candidateRange).length > 0;
-  if (!rows.length) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">가격 히스토리 없음</p>;
-  const pendingMultiYearRanges = (["3Y", "5Y"] as const).filter((candidateRange) =>
-    HISTORY_MODES.every((candidateMode) => !isAvailable(candidateMode, candidateRange))
+  const rows = useMemo(
+    () => requestedRows.length > 0
+      ? requestedRows
+      : historyRowsForSelection(historyPeriods, history, activeMode, activeRange),
+    [requestedRows, historyPeriods, history, activeMode, activeRange],
   );
+  const availableMap = useMemo(() => {
+    const next: Partial<Record<HistoryPeriodKey, boolean>> = {};
+    for (const candidateMode of HISTORY_MODES) {
+      for (const candidateRange of HISTORY_RANGES) {
+        next[historyPeriodKey(candidateMode, candidateRange)] =
+          historyRowsForSelection(historyPeriods, history, candidateMode, candidateRange).length > 0;
+      }
+    }
+    return next;
+  }, [historyPeriods, history]);
+  const isAvailable = (candidateMode: HistoryMode, candidateRange: HistoryRange) =>
+    Boolean(availableMap[historyPeriodKey(candidateMode, candidateRange)]);
+  const pendingMultiYearRanges = useMemo(
+    () => loadFailed
+      ? []
+      : (["3Y", "5Y"] as const).filter((candidateRange) =>
+          HISTORY_MODES.every((candidateMode) => !availableMap[historyPeriodKey(candidateMode, candidateRange)])
+        ),
+    [availableMap, loadFailed],
+  );
+  const historyStats = useMemo(() => {
+    const chronological = [...rows].reverse();
+    const closes = chronological.map(historyPointClose).filter(isFiniteNumber);
+    if (!closes.length) return null;
+    const min = Math.min(...closes);
+    const max = Math.max(...closes);
+    const priceRange = max - min || 1;
+    const firstClose = closes[0] ?? null;
+    const lastClose = closes[closes.length - 1] ?? null;
+    const periodReturn = firstClose && lastClose !== null ? ((lastClose - firstClose) / firstClose) * 100 : null;
+    return { chronological, min, max, priceRange, periodReturn };
+  }, [rows]);
+  if (!rows.length) {
+    return (
+      <p className="text-sm font-semibold text-[var(--c-ink-3)]">
+        {loadFailed ? "가격 히스토리를 불러오지 못했습니다. 다시 시도해 주세요." : "가격 히스토리 없음"}
+      </p>
+    );
+  }
+  if (!historyStats) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">가격 히스토리 없음</p>;
 
-  const chronological = [...rows].reverse();
-  const closes = chronological.map(historyPointClose).filter(isFiniteNumber);
-  const min = Math.min(...closes);
-  const max = Math.max(...closes);
-  const priceRange = max - min || 1;
-  const firstClose = closes[0] ?? null;
-  const lastClose = closes[closes.length - 1] ?? null;
-  const periodReturn = firstClose && lastClose !== null ? ((lastClose - firstClose) / firstClose) * 100 : null;
   const activeLabel = historyModeLabel(activeMode);
   return (
     <div className="space-y-3">
@@ -668,16 +748,16 @@ function HistoryView({
         </p>
       ) : null}
       <div className="grid gap-2 sm:grid-cols-3">
-        <MetricCard label={`${activeLabel} 구간 수익률`} value={fmtCompactSignedPercent(periodReturn)} note={`${activeRange} ${activeLabel} 종가 기준`} />
-        <MetricCard label="구간 고점" value={formatMoney(max, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
-        <MetricCard label="구간 저점" value={formatMoney(min, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label={`${activeLabel} 구간 수익률`} value={fmtCompactSignedPercent(historyStats.periodReturn)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label="구간 고점" value={formatMoney(historyStats.max, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label="구간 저점" value={formatMoney(historyStats.min, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
         <div className="flex h-40 items-end gap-1 overflow-hidden rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3">
-          {chronological.map((point, index) => {
+          {historyStats.chronological.map((point, index) => {
             const date = historyPointDate(point);
-            const close = historyPointClose(point) ?? min;
-            const height = 10 + ((close - min) / priceRange) * 90;
+            const close = historyPointClose(point) ?? historyStats.min;
+            const height = 10 + ((close - historyStats.min) / historyStats.priceRange) * 90;
             const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
             return (
               <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatMoney(close, currency)}`}>
@@ -716,27 +796,39 @@ function HistoryView({
 
 export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const symbol = cleanSymbol(ticker);
+  const [reloadKey, setReloadKey] = useState(0);
   const [state, setState] = useState<{
     symbol: string;
-    etfData: EtfPayload | null | undefined;
-    marketFacts: MarketFactsPayload | null | undefined;
-  }>({ symbol, etfData: undefined, marketFacts: undefined });
+    reloadKey: number;
+    etfResult: LoadResult<EtfPayload> | undefined;
+    factsResult: LoadResult<MarketFactsPayload> | undefined;
+  }>({ symbol, reloadKey: 0, etfResult: undefined, factsResult: undefined });
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([loadEtfPayload(symbol), loadMarketFacts(symbol)]).then(([nextEtf, nextFacts]) => {
       if (!cancelled) {
-        setState({ symbol, etfData: nextEtf, marketFacts: nextFacts });
+        setState({ symbol, reloadKey, etfResult: nextEtf, factsResult: nextFacts });
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [symbol]);
+  }, [symbol, reloadKey]);
 
-  const etfData = state.symbol === symbol ? state.etfData : undefined;
-  const marketFacts = state.symbol === symbol ? state.marketFacts : undefined;
-  const loading = etfData === undefined || marketFacts === undefined;
+  const currentState = state.symbol === symbol && state.reloadKey === reloadKey;
+  const etfResult = currentState ? state.etfResult : undefined;
+  const factsResult = currentState ? state.factsResult : undefined;
+  const etfData = etfResult?.status === "ok" ? etfResult.data : etfResult === undefined ? undefined : null;
+  const marketFacts = factsResult?.status === "ok" ? factsResult.data : factsResult === undefined ? undefined : null;
+  const etfLoadFailed = etfResult?.status === "failed";
+  const factsLoadFailed = factsResult?.status === "failed";
+  const hasLoadFailure = etfLoadFailed || factsLoadFailed;
+  const retryLoads = () => {
+    clearEtfRuntimeCache(symbol);
+    setReloadKey((value) => value + 1);
+  };
+  const loading = etfResult === undefined || factsResult === undefined;
   const normalized = etfData?.normalized ?? {};
   const overview = normalized.overview ?? {};
   const quote = normalized.quote ?? {};
@@ -836,6 +928,20 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   }
 
   if (!etfData && !marketFacts) {
+    if (hasLoadFailure) {
+      return (
+        <div className="stock-shell">
+          <div className="panel stock-empty">
+            <EtfRetryCallout
+              title="ETF 데이터를 불러오지 못했습니다"
+              desc="일시적인 연결 문제일 수 있습니다. 다시 시도하면 ETF 상세와 가격 정보를 새로 요청합니다."
+              onRetry={retryLoads}
+            />
+            <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="stock-shell">
         <div className="panel stock-empty">
@@ -890,6 +996,16 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
 
         <div className="stock-main-stack">
           <SectionCard title="ETF 핵심 지표" desc="가격·비용·분류">
+            {hasLoadFailure ? (
+              <div className="mb-3">
+                <EtfRetryCallout
+                  title="일부 ETF 데이터를 불러오지 못했습니다"
+                  desc="현재 보이는 값은 연결된 데이터만 사용합니다. 누락된 가격·상세 정보는 다시 시도해 확인할 수 있습니다."
+                  onRetry={retryLoads}
+                  compact
+                />
+              </div>
+            ) : null}
             {statusMeta ? <DetailAvailabilityCallout meta={statusMeta} available={availableDetailItems} pending={pendingDetailItems} /> : null}
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {metrics.map((metric) => (
@@ -941,6 +1057,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               onModeChange={setHistoryMode}
               range={historyRange}
               onRangeChange={setHistoryRange}
+              loadFailed={etfLoadFailed}
             />
           </SectionCard>
 

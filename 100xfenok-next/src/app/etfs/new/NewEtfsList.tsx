@@ -333,6 +333,7 @@ export default function NewEtfsList({
   const filteredRows = useMemo(() => {
     const q = debouncedQuery.trim().toUpperCase();
     const days = dateFilter === "전체" ? null : Number(dateFilter.replace("일", ""));
+    if (days && !dateFilterAnchor) return [];
     const threshold = days && dateFilterAnchor ? dateFilterAnchor - (days - 1) * 24 * 60 * 60 * 1000 : null;
     return rows
       .filter((row) => issuerFilter === "전체" || row.issuer === issuerFilter)
@@ -352,6 +353,7 @@ export default function NewEtfsList({
         return dateValue(b.inceptionDate) - dateValue(a.inceptionDate) || a.s.localeCompare(b.s);
       });
   }, [dateFilter, dateFilterAnchor, debouncedQuery, issuerFilter, rows, sort, typeFilter]);
+  const dateFilterMissingAnchor = dateFilter !== "전체" && !dateFilterAnchor;
 
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number }> = [
     { value: "전체", label: "전체", count: rows.length },
@@ -465,6 +467,11 @@ export default function NewEtfsList({
                 CSV 저장
               </button>
             </div>
+            {dateFilterMissingAnchor ? (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                상장일 기준일이 없어 최근 기간 필터를 적용할 수 없습니다. 전체 기간으로 바꾸면 현재 수집된 목록을 볼 수 있습니다.
+              </p>
+            ) : null}
           </div>
 
           <div className="mv-col">

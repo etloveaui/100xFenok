@@ -76,6 +76,7 @@ Detail page for a single ETF.
   - `full`: complete detail available.
   - `surface_only` / `universe_only`: only price/summary data available; user-facing copy explains missing depth.
   - `yf_fallback`: Yahoo Finance auxiliary data is used temporarily.
+  - transient fetch failures are shown separately from missing/backfill-pending data and expose an in-place retry action.
 
 Implementation pointers:
 
@@ -276,8 +277,9 @@ Representative ticker contracts:
 | Chart granularity | code-ready / data backfill needed | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files still mostly hold the 1Y keys, so 3Y/5Y charts open progressively after detail backfill. |
 | Missing multi-year history UX | done / data-dependent | ETF detail pages show the current 1Y chart/table and a short pending-data note when 3Y/5Y history ranges are not present, so disabled ranges are not mistaken for a broken chart. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
-| ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, so a transient route/API failure can recover on a later retry or navigation. |
-| New ETF date/filter cache | improved | `/etfs/new` date filters use the surface `fetched_at` date as the "recent N days" anchor, and new-ETF snapshot/coverage loaders no longer keep failed non-OK responses as permanent pending promises. |
+| ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, distinguishes transient fetch failure from missing/backfill-pending data, and exposes an in-place retry action. |
+| ETF snapshot transient fetch | improved | The `/etfs` snapshot card clears failed surface fetches, avoids stale failed pending state, and shows a retry callout instead of rendering empty leaderboards as if data were valid. |
+| New ETF date/filter cache | improved | `/etfs/new` date filters use the surface `fetched_at` date as the "recent N days" anchor, show an explicit no-date-baseline note if a recent-period filter cannot be evaluated, and new-ETF snapshot/coverage loaders no longer keep failed non-OK responses as permanent pending promises. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
 ## 7. Related Files

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 
 interface SurfaceDoc<T> {
   fetched_at?: string | null;
@@ -76,26 +77,38 @@ interface EtfSurfaceData {
 
 type CollectionKey = "largeProvider" | "strategy" | "bitcoin";
 
-let etfSurfaceCache: EtfSurfaceData | null = null;
+let etfSurfaceCache: EtfSurfaceData | undefined;
 let etfSurfacePending: Promise<EtfSurfaceData | null> | null = null;
 
 function loadEtfSurfaceData(): Promise<EtfSurfaceData | null> {
   if (etfSurfaceCache) return Promise.resolve(etfSurfaceCache);
   if (etfSurfacePending) return etfSurfacePending;
   etfSurfacePending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
-    .then((response) => (response.ok ? response.json() as Promise<EtfSurfaceData> : null))
+    .then((response) => {
+      if (response.ok) return response.json() as Promise<EtfSurfaceData>;
+      etfSurfaceCache = undefined;
+      return null;
+    })
     .then((payload) => {
       if (payload) {
         etfSurfaceCache = payload;
+      } else {
+        etfSurfaceCache = undefined;
       }
       etfSurfacePending = null;
       return payload;
     })
     .catch(() => {
+      etfSurfaceCache = undefined;
       etfSurfacePending = null;
       return null;
     });
   return etfSurfacePending;
+}
+
+function clearEtfSurfaceData() {
+  etfSurfaceCache = undefined;
+  etfSurfacePending = null;
 }
 
 function rows<T>(doc: SurfaceDoc<T> | null | undefined): T[] {
@@ -214,23 +227,36 @@ function EtfLink({
 }
 
 export default function EtfSurfaceSnapshotCard() {
-  const [data, setData] = useState<EtfSurfaceData | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [loadState, setLoadState] = useState<{
+    reloadKey: number;
+    data: EtfSurfaceData | null;
+    loaded: boolean;
+    failed: boolean;
+  }>({ reloadKey: 0, data: null, loaded: false, failed: false });
   const [collectionKey, setCollectionKey] = useState<CollectionKey>("largeProvider");
 
   useEffect(() => {
     let cancelled = false;
     loadEtfSurfaceData().then((payload) => {
       if (!cancelled) {
-        setData(payload);
-        setLoaded(true);
+        setLoadState({ reloadKey, data: payload, loaded: true, failed: !payload });
       }
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
+  const retryLoad = () => {
+    clearEtfSurfaceData();
+    setReloadKey((value) => value + 1);
+  };
+
+  const isCurrentLoad = loadState.reloadKey === reloadKey;
+  const data = isCurrentLoad ? loadState.data : null;
+  const loaded = isCurrentLoad ? loadState.loaded : false;
+  const loadFailed = isCurrentLoad ? loadState.failed : false;
   const newEtfs = useMemo(() => rows(data?.newEtfs).slice(0, 5), [data]);
   const largestEtfs = useMemo(() => rows(data?.screener).slice(0, 5), [data]);
   const volumeLeaders = useMemo(() => (data?.screener?.volumeLeaders ?? []).slice(0, 5), [data]);
@@ -279,6 +305,14 @@ export default function EtfSurfaceSnapshotCard() {
             <div className="tk">신규 상장·운용자산·테마 목록을 읽고 있습니다</div>
           </span>
           <span className="pc num neutral">...</span>
+        </div>
+      ) : loadFailed ? (
+        <div className="panel-b">
+          <EtfRetryCallout
+            title="ETF 요약을 불러오지 못했습니다"
+            desc="신규 상장·운용자산·테마 목록 연결에 실패했습니다. 다시 시도하면 최신 요약 데이터를 새로 요청합니다."
+            onRetry={retryLoad}
+          />
         </div>
       ) : (
         <div className="panel-b grid gap-3 lg:grid-cols-2">
