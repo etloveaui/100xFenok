@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.28 (ETF multi-year history backfill planning)
+> **Version**: 2.2.29 (ETF history-gap operator visibility)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -149,6 +149,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF list coverage**: Data Lab renders `with_expense_ratio` and `with_performance` from the joined ETF list API, falling back to static universe enrichment counts only when the API omits them.
 - **ETF multi-year history**: StockAnalysis ETF detail files may now expose `weekly_3y`, `monthly_3y`, and `monthly_5y` under `history_periods`; market facts can derive 3Y CAGR from those arrays after the staged refresh writes them.
 - **ETF history-gap plan**: `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only` previews existing primary ETF detail files missing `monthly_3y` / `monthly_5y` without network calls or data writes.
+- **ETF history-gap visibility**: The incremental backfill and queue cards render `history_gap` as `다년 히스토리 보강`, and label candidate sources such as `new_etfs` / `etf_screener` in Korean.
 
 ---
 
@@ -164,6 +165,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.29 | 2026-06-19 | Rendered StockAnalysis ETF `history_gap` candidates in Data Lab backfill cards with Korean operator labels |
 | 2.2.28 | 2026-06-19 | Added a local plan-only StockAnalysis ETF history-gap selector so staged 3Y/5Y history backfills can be reviewed before live refresh calls |
 | 2.2.27 | 2026-06-19 | Prepared StockAnalysis ETF detail fetches for multi-year history keys and wired market facts to derive 3Y CAGR from local monthly history after backfill |
 | 2.2.26 | 2026-06-19 | Derived ETF 3M return coverage from local StockAnalysis detail history when Yahoo daily history is missing, and added audit/QA source counts for the new history source |

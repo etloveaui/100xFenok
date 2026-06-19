@@ -768,6 +768,7 @@ const Renderer = (function() {
     const selected = Number(incrementalCounts.selected ?? auditCounts.selected ?? counts.incremental_etf_backfill_selected ?? 0);
     const candidates = Number(incrementalCounts.candidates ?? auditCounts.candidates ?? counts.incremental_etf_backfill_candidates ?? 0);
     const fallbackRetry = Number(incrementalCounts.fallback_retry ?? auditCounts.fallback_retry ?? 0);
+    const historyGap = Number(incrementalCounts.history_gap ?? auditCounts.history_gap ?? 0);
     const cooldownSkipped = Number(incrementalCounts.cooldown_skipped ?? auditCounts.cooldown_skipped ?? counts.incremental_etf_cooldown_skipped ?? 0);
     const cooldownActive = Number(auditCounts.pending_ledger_cooldown ?? incrementalCounts.ledger_cooldown ?? counts.incremental_etf_ledger_cooldown ?? 0);
     const fallbackOk = Number(auditCounts.etfs_yahoo_fallback_ok ?? counts.etfs_yahoo_fallback_ok ?? 0);
@@ -793,6 +794,7 @@ const Renderer = (function() {
         ['후보', candidates],
         ['선택', selected],
         ['보조 가격 재시도', fallbackRetry],
+        ['다년 히스토리 보강', historyGap],
         ['이번 선택 제외', cooldownSkipped],
         ['재시도 대기', cooldownActive],
         ['보조 가격 반영', fallbackOk],
@@ -841,6 +843,7 @@ const Renderer = (function() {
           ${renderAuditMetric('다음 선택', incrementalCounts.selected ?? selected.length)}
           ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
           ${renderAuditMetric('보조 가격 재시도 후보', incrementalCounts.fallback_retry)}
+          ${renderAuditMetric('다년 히스토리 보강 후보', incrementalCounts.history_gap)}
           ${renderAuditMetric('추적 중', trackedCount)}
           ${renderAuditMetric('재시도 예약됨', cooldownCount)}
           ${renderAuditMetric('지금 재시도 가능', retryNowCount)}
@@ -933,6 +936,7 @@ const Renderer = (function() {
     const value = String(reason || '').trim();
     if (value === 'missing') return '상세 없음';
     if (value === 'fallback_retry') return '보조 가격 재시도';
+    if (value === 'history_gap') return '다년 히스토리 보강';
     if (value === 'stale') return '오래된 파일';
     return value || '-';
   }
@@ -940,6 +944,8 @@ const Renderer = (function() {
   function formatBackfillSource(source) {
     const value = String(source || '').trim();
     if (value === 'etf_universe') return 'ETF 목록';
+    if (value === 'new_etfs') return '신규 ETF';
+    if (value === 'etf_screener') return 'ETF 스크리너';
     if (value === 'stockanalysis') return '기본 상세';
     if (value === 'yahoo_finance') return '보조 가격';
     return value || '-';
