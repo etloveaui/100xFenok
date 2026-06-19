@@ -151,6 +151,11 @@ Implementation pointers:
   `monthly_3y` / `monthly_5y`, without network calls. The written
   `incremental_plan_latest.json` is a plan artifact; `incremental_latest.json`
   remains the completed-run evidence.
+- **History gap QA summary**: run `npm run qa:history-gap` from
+  `100xfenok-next/` before dispatching a live history refresh. It directly
+  scans local primary StockAnalysis ETF detail files, compares the current
+  missing-history count to `incremental_plan_latest.json`, and prints the
+  recommended workflow inputs without making network calls.
 - **Workflow dispatch controls**:
   - `history_gap_plan=true` writes the same no-network
     `incremental_plan_latest.json` artifact. The workflow treats the normal
@@ -217,6 +222,7 @@ Implementation pointers:
 | `npm run qa:stockanalysis` | Smoke-tests public routes and API responses. |
 | `npm run qa:surface-consumers` | Validates that every declared surface has an active route/component consumer. |
 | `npm run qa:market-audit` | Validates Data Lab renderer labels and market audit contracts. |
+| `npm run qa:history-gap` | Prints the current primary StockAnalysis ETF multi-year history gap and verifies it matches the no-network plan artifact. |
 | `npm run qa:copy` | Lints public-facing Korean copy. |
 
 ### 5.2 ETF Universe Contract Thresholds
