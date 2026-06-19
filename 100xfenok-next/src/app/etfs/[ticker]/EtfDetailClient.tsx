@@ -352,7 +352,7 @@ function MetricCard({ label, value, note }: { label: string; value: string; note
     <div className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{value}</p>
-      {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{note}</p> : null}
+      {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{note}</p> : null}
     </div>
   );
 }
@@ -369,7 +369,7 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
   ].filter((item) => isFiniteNumber(item.value));
 
   if (!items.length) {
-    return <p className="text-sm font-semibold text-slate-400">기간 수익률 데이터 없음</p>;
+    return <p className="text-sm font-semibold text-slate-500">기간 수익률 데이터 없음</p>;
   }
 
   return (
@@ -381,7 +381,7 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
           <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
             <p className={`orbitron mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
-            <p className="mt-1 text-[10px] font-semibold text-slate-400">{item.note}</p>
+            <p className="mt-1 text-[10px] font-semibold text-slate-500">{item.note}</p>
           </div>
         );
       })}
@@ -432,10 +432,10 @@ function DetailAvailabilityCallout({
 
 function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currency: string }) {
   if (!holdings.length) {
-    return <p className="text-sm font-semibold text-slate-400">보유 구성 데이터 없음</p>;
+    return <p className="text-sm font-semibold text-slate-500">보유 구성 데이터 없음</p>;
   }
   return (
-    <div className="-mx-1 max-h-[560px] overflow-auto px-1">
+    <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0}>
       <table className="w-full min-w-[620px] text-xs">
         <thead className="sticky top-0 z-10 bg-white">
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -452,7 +452,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
             const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-400">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-500">{item.rank ?? index + 1}</td>
                 <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
                 <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
@@ -462,14 +462,14 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
           })}
         </tbody>
       </table>
-      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-400">표시 통화: {currency}</p> : null}
+      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-500">표시 통화: {currency}</p> : null}
     </div>
   );
 }
 
 function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined; empty: string }) {
   const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
-  if (!items.length) return <p className="text-sm font-semibold text-slate-400">{empty}</p>;
+  if (!items.length) return <p className="text-sm font-semibold text-slate-500">{empty}</p>;
   return (
     <div className="space-y-2">
       {items.map((row, index) => {
@@ -626,7 +626,7 @@ function HistoryView({
     : historyRowsForSelection(historyPeriods, history, activeMode, activeRange);
   const isAvailable = (candidateMode: HistoryMode, candidateRange: HistoryRange) =>
     historyRowsForSelection(historyPeriods, history, candidateMode, candidateRange).length > 0;
-  if (!rows.length) return <p className="text-sm font-semibold text-slate-400">가격 히스토리 없음</p>;
+  if (!rows.length) return <p className="text-sm font-semibold text-slate-500">가격 히스토리 없음</p>;
 
   const chronological = [...rows].reverse();
   const closes = chronological.map(historyPointClose).filter(isFiniteNumber);
@@ -664,12 +664,12 @@ function HistoryView({
             return (
               <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatMoney(close, currency)}`}>
                 <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
-                <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(date ?? "").slice(5, 7)}</span>
+                <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-500 sm:block">{(date ?? "").slice(5, 7)}</span>
               </div>
             );
           })}
         </div>
-        <div className="-mx-1 overflow-x-auto px-1">
+        <div className="-mx-1 overflow-x-auto px-1" role="region" aria-label="가격 히스토리 표" tabIndex={0}>
           <table className="w-full min-w-[360px] text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -895,7 +895,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${holdings.length.toLocaleString("ko-KR")}개 표시`}>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
               <span>{holdingCount.toLocaleString("ko-KR")}개 원장 중 표시 가능한 항목</span>
               <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
             </div>

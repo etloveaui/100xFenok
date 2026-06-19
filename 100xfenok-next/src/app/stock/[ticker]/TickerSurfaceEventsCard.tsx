@@ -45,7 +45,7 @@ export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promi
   if (cacheKey in surfacePending) return surfacePending[cacheKey];
 
   const query = assetKind ? `?asset=${assetKind}` : "";
-  const request = fetch(`/api/data/stockanalysis/ticker/${encodeURIComponent(symbol)}/surfaces${query}`, { cache: "no-store" })
+  const request = fetch(`/api/data/stockanalysis/ticker/${encodeURIComponent(symbol)}/surfaces/${query}`, { cache: "no-store" })
     .then((res) => (res.ok ? res.json() as Promise<TickerSurfacePayload> : null))
     .then((payload) => {
       surfaceCache[cacheKey] = payload;

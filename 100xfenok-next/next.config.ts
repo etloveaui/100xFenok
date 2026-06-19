@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  allowedDevOrigins: ["127.0.0.1"],
 
   // Trailing slash for consistent URLs
   trailingSlash: true,

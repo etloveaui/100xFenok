@@ -395,7 +395,13 @@ async function runEtfChecks(page, route) {
     await h1.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
     const h1Text = await h1.textContent().catch(() => null);
     const h1Visible = await h1.isVisible().catch(() => false);
-    checks.push({ check: "etfDetailH1", pass: h1Visible && !!h1Text && h1Text.toUpperCase().includes(ticker), text: h1Text?.slice(0, 60) });
+    const metaText = await page.locator(".stock-meta").first().textContent().catch(() => null);
+    checks.push({
+      check: "etfDetailIdentity",
+      pass: h1Visible && !!h1Text && !!metaText && metaText.toUpperCase().includes(ticker),
+      h1: h1Text?.slice(0, 80),
+      meta: metaText?.slice(0, 80),
+    });
 
     const shell = page.locator(".stock-shell").first();
     const shellVisible = await shell.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
