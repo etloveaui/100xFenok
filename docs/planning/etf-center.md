@@ -277,6 +277,7 @@ Representative ticker contracts:
 | Missing multi-year history UX | done / data-dependent | ETF detail pages show the current 1Y chart/table and a short pending-data note when 3Y/5Y history ranges are not present, so disabled ranges are not mistaken for a broken chart. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, so a transient route/API failure can recover on a later retry or navigation. |
+| New ETF date/filter cache | improved | `/etfs/new` date filters use the surface `fetched_at` date as the "recent N days" anchor, and new-ETF snapshot/coverage loaders no longer keep failed non-OK responses as permanent pending promises. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
 ## 7. Related Files

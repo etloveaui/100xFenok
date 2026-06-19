@@ -74,7 +74,10 @@ function loadSnapshot(): Promise<EtfSnapshotPayload | null> {
   pending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
     .then((response) => (response.ok ? response.json() as Promise<EtfSnapshotPayload> : null))
     .then((payload) => {
-      cache = payload;
+      if (payload) {
+        cache = payload;
+      }
+      pending = null;
       return payload;
     })
     .catch(() => {
@@ -90,7 +93,10 @@ function loadCoverage(): Promise<EtfCoveragePayload | null> {
   coveragePending = fetch("/data/stockanalysis/coverage/etf_detail.json", { cache: "no-store" })
     .then((response) => (response.ok ? response.json() as Promise<EtfCoveragePayload> : null))
     .then((payload) => {
-      coverageCache = payload;
+      if (payload) {
+        coverageCache = payload;
+      }
+      coveragePending = null;
       return payload;
     })
     .catch(() => {
@@ -304,6 +310,8 @@ export default function NewEtfsList({
   }, [state]);
 
   const maxDate = useMemo(() => Math.max(...rows.map((row) => dateValue(row.inceptionDate)), 0), [rows]);
+  const fetchedAtDate = dateValue(state.snapshot?.newEtfs?.fetched_at);
+  const dateFilterAnchor = Math.max(fetchedAtDate, maxDate);
   const issuers = useMemo(() => {
     const counts = new Map<string, number>();
     for (const row of rows) counts.set(row.issuer, (counts.get(row.issuer) ?? 0) + 1);
@@ -325,7 +333,7 @@ export default function NewEtfsList({
   const filteredRows = useMemo(() => {
     const q = debouncedQuery.trim().toUpperCase();
     const days = dateFilter === "전체" ? null : Number(dateFilter.replace("일", ""));
-    const threshold = days && maxDate ? maxDate - (days - 1) * 24 * 60 * 60 * 1000 : null;
+    const threshold = days && dateFilterAnchor ? dateFilterAnchor - (days - 1) * 24 * 60 * 60 * 1000 : null;
     return rows
       .filter((row) => issuerFilter === "전체" || row.issuer === issuerFilter)
       .filter((row) => {
@@ -343,7 +351,7 @@ export default function NewEtfsList({
         if (sort === "price") return (b.price ?? -Infinity) - (a.price ?? -Infinity) || a.s.localeCompare(b.s);
         return dateValue(b.inceptionDate) - dateValue(a.inceptionDate) || a.s.localeCompare(b.s);
       });
-  }, [dateFilter, debouncedQuery, issuerFilter, maxDate, rows, sort, typeFilter]);
+  }, [dateFilter, dateFilterAnchor, debouncedQuery, issuerFilter, rows, sort, typeFilter]);
 
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number }> = [
     { value: "전체", label: "전체", count: rows.length },

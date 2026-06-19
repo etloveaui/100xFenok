@@ -85,7 +85,10 @@ function loadEtfSurfaceData(): Promise<EtfSurfaceData | null> {
   etfSurfacePending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
     .then((response) => (response.ok ? response.json() as Promise<EtfSurfaceData> : null))
     .then((payload) => {
-      etfSurfaceCache = payload;
+      if (payload) {
+        etfSurfaceCache = payload;
+      }
+      etfSurfacePending = null;
       return payload;
     })
     .catch(() => {
