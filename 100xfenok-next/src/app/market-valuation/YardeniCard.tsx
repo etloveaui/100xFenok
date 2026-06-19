@@ -130,12 +130,12 @@ export default function YardeniCard() {
   const v = verdict(active.premium_pct);
 
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
+    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5">
       <div>
-        <h2 className="text-sm font-black tracking-tight text-slate-900">
+        <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
           야데니 모델 (채권 PER)
         </h2>
-        <p className="mt-1 text-[11px] leading-5 text-slate-500">
+        <p className="mt-1 text-[11px] leading-5 text-[var(--c-ink-3)]">
           회사채 금리로 계산한 채권 PER × EPS = 주식 적정가. 국채·회사채 대비
           주식이 비싼지 보는 잣대.
         </p>
@@ -143,21 +143,21 @@ export default function YardeniCard() {
 
       <p className={`mt-3 text-xs font-black ${v.tone}`}>{v.text}</p>
 
-      <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[11px] font-bold text-slate-500">
+      <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[11px] font-bold text-[var(--c-ink-3)]">
         <span>
           S&P 500{" "}
-          <span className="orbitron font-black text-slate-900">
+          <span className="orbitron font-black text-[var(--c-ink)]">
             {fmtIndex(active.spx)}
           </span>
         </span>
-        <span className="text-slate-300">vs</span>
+        <span className="text-[var(--c-line-2)]">vs</span>
         <span>
           적정가{" "}
-          <span className="orbitron font-black text-slate-900">
+          <span className="orbitron font-black text-[var(--c-ink)]">
             {fmtIndex(active.fair_value)}
           </span>
         </span>
-        <span className="text-slate-300">{active.date}</span>
+        <span className="text-[var(--c-line-2)]">{active.date}</span>
       </div>
 
       {chart ? (
@@ -226,9 +226,9 @@ export default function YardeniCard() {
               ["BAA", `${fmtNum(active.moodys_baa, 2)}%`],
               ["평균 스프레드", `${fmtNum(active.spread_avg, 2)}%`],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>
-                <p className="orbitron mt-1 text-xs font-black tabular-nums text-slate-800">{value}</p>
+              <div key={label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{label}</p>
+                <p className="orbitron mt-1 text-xs font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
               </div>
             ))}
           </div>

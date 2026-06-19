@@ -68,12 +68,12 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-4 py-3">
-      <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">{label}</p>
-      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">
+    <div className="min-w-0 rounded-[1rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3">
+      <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)]">{label}</p>
+      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
         {value}
       </p>
-      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-slate-500">
+      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-[var(--c-ink-3)]">
         {detail}
       </p>
     </div>
@@ -94,11 +94,11 @@ function SlotShell({
   return (
     <section
       data-slot={`market-structure-${id}`}
-      className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_36px_-18px_rgba(15,23,42,0.18)]"
+      className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
     >
       <header className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h2 className="min-w-0 text-sm font-black tracking-tight text-slate-950">{title}</h2>
-        <span className="min-w-0 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
+        <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
+        <span className="min-w-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">
           {subtitle}
         </span>
       </header>
@@ -109,7 +109,7 @@ function SlotShell({
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 text-center text-xs font-bold leading-5 text-slate-400">
+    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-xs font-bold leading-5 text-[var(--c-ink-4)]">
       {children}
     </div>
   );
