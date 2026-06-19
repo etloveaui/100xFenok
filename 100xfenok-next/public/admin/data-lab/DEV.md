@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.35 (ETF history-gap period guard)
+> **Version**: 2.2.36 (StockAnalysis workflow push retry)
 > **Redesign**: #168 (2026-01-20)
 
 ---
