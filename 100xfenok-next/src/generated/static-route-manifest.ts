@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 25689,
-      "updatedAt": "2026-06-19T08:36:55.809Z"
+      "updatedAt": "2026-06-19T13:28:31.180Z"
     },
     {
       "name": "reports-index.json",
@@ -35,12 +35,12 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "data-usage-manifest.json",
       "sizeBytes": 40798,
-      "updatedAt": "2026-06-19T08:36:55.809Z"
+      "updatedAt": "2026-06-19T13:28:31.169Z"
     },
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-19T07:35:14.405Z"
+      "updatedAt": "2026-06-19T12:49:22.002Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -99,7 +99,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "prev-values.json",
       "sizeBytes": 11062,
-      "updatedAt": "2026-06-18T10:51:47.521Z"
+      "updatedAt": "2026-06-19T12:49:22.002Z"
     },
     {
       "name": "schema.json",
@@ -125,23 +125,23 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "market_structure_index.json",
-      "sizeBytes": 42440,
-      "updatedAt": "2026-06-19T07:36:06.071Z"
+      "sizeBytes": 42437,
+      "updatedAt": "2026-06-19T13:28:31.169Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12717,
-      "updatedAt": "2026-06-19T07:36:06.072Z"
+      "sizeBytes": 12716,
+      "updatedAt": "2026-06-19T13:28:31.170Z"
     },
     {
       "name": "stock_action_index.json",
       "sizeBytes": 3968330,
-      "updatedAt": "2026-06-18T14:37:59.428Z"
+      "updatedAt": "2026-06-19T13:28:31.172Z"
     },
     {
       "name": "stock_action_summary.json",
       "sizeBytes": 318628,
-      "updatedAt": "2026-06-18T14:37:59.438Z"
+      "updatedAt": "2026-06-19T13:28:31.173Z"
     }
   ],
   "computed/market_facts": [
@@ -32402,7 +32402,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "industry_benchmarks.json",
       "sizeBytes": 24630,
-      "updatedAt": "2026-06-18T10:51:48.085Z"
+      "updatedAt": "2026-06-19T12:49:22.003Z"
     },
     {
       "name": "industry_metrics_regions.json",
@@ -32441,22 +32441,22 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "per_bands_index.json",
       "sizeBytes": 110023,
-      "updatedAt": "2026-06-18T10:51:48.086Z"
+      "updatedAt": "2026-06-19T12:49:22.003Z"
     },
     {
       "name": "revision_movers.json",
       "sizeBytes": 2638,
-      "updatedAt": "2026-06-18T10:51:48.086Z"
+      "updatedAt": "2026-06-19T12:49:22.003Z"
     },
     {
       "name": "slick_index.json",
       "sizeBytes": 79672,
-      "updatedAt": "2026-06-18T10:51:48.086Z"
+      "updatedAt": "2026-06-19T12:49:22.003Z"
     },
     {
       "name": "stocks_analyzer.json",
       "sizeBytes": 860327,
-      "updatedAt": "2026-06-18T10:51:48.087Z"
+      "updatedAt": "2026-06-19T12:49:22.004Z"
     },
     {
       "name": "stocks_index.json",
@@ -37887,23 +37887,23 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "fred-banking-daily.json",
-      "sizeBytes": 526044,
-      "updatedAt": "2026-06-18T11:16:55.450Z"
+      "sizeBytes": 526113,
+      "updatedAt": "2026-06-19T12:49:22.005Z"
     },
     {
       "name": "fred-banking-quarterly.json",
       "sizeBytes": 80045,
-      "updatedAt": "2026-06-18T11:16:55.450Z"
+      "updatedAt": "2026-06-19T12:49:22.005Z"
     },
     {
       "name": "fred-banking-weekly.json",
-      "sizeBytes": 233119,
-      "updatedAt": "2026-06-18T11:16:55.451Z"
+      "sizeBytes": 233272,
+      "updatedAt": "2026-06-19T12:49:22.008Z"
     },
     {
       "name": "fred-macro.json",
-      "sizeBytes": 525253,
-      "updatedAt": "2026-06-18T12:05:08.399Z"
+      "sizeBytes": 525534,
+      "updatedAt": "2026-06-19T12:49:22.008Z"
     },
     {
       "name": "schema.json",
@@ -37912,18 +37912,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1032463,
-      "updatedAt": "2026-06-19T07:22:40.840Z"
+      "sizeBytes": 1033212,
+      "updatedAt": "2026-06-19T12:49:22.009Z"
     },
     {
       "name": "tga.json",
       "sizeBytes": 774892,
-      "updatedAt": "2026-06-19T10:15:48.268Z"
+      "updatedAt": "2026-06-19T14:49:50.270Z"
     },
     {
       "name": "yahoo-ticker.json",
       "sizeBytes": 731,
-      "updatedAt": "2026-06-19T07:22:58.638Z"
+      "updatedAt": "2026-06-19T12:49:22.010Z"
     }
   ],
   "metadata": [
@@ -38192,12 +38192,12 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "by_sector.json",
       "sizeBytes": 12550,
-      "updatedAt": "2026-06-17T12:57:05.159Z"
+      "updatedAt": "2026-06-19T12:49:22.015Z"
     },
     {
       "name": "by_ticker.json",
-      "sizeBytes": 718898,
-      "updatedAt": "2026-06-17T03:03:04.570Z"
+      "sizeBytes": 719120,
+      "updatedAt": "2026-06-19T12:49:22.016Z"
     },
     {
       "name": "schema.json",
@@ -38207,7 +38207,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "summary.json",
       "sizeBytes": 27488,
-      "updatedAt": "2026-06-18T10:51:48.227Z"
+      "updatedAt": "2026-06-19T12:49:22.351Z"
     }
   ],
   "sec-13f/analytics": [
@@ -38218,8 +38218,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "consensus.json",
-      "sizeBytes": 127394,
-      "updatedAt": "2026-06-18T10:51:48.089Z"
+      "sizeBytes": 127476,
+      "updatedAt": "2026-06-19T12:49:22.013Z"
     },
     {
       "name": "conviction_entries.json",
@@ -38238,8 +38238,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "guru_holders_index.json",
-      "sizeBytes": 8981,
-      "updatedAt": "2026-06-18T10:51:48.089Z"
+      "sizeBytes": 8990,
+      "updatedAt": "2026-06-19T12:49:22.014Z"
     },
     {
       "name": "hhi.json",
@@ -38264,17 +38264,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "portfolio_views.json",
       "sizeBytes": 400114,
-      "updatedAt": "2026-06-18T10:51:48.089Z"
+      "updatedAt": "2026-06-19T12:49:22.014Z"
     },
     {
       "name": "ticker_aliases.json",
-      "sizeBytes": 77804,
-      "updatedAt": "2026-06-18T10:51:48.089Z"
+      "sizeBytes": 77749,
+      "updatedAt": "2026-06-19T12:49:22.015Z"
     },
     {
       "name": "trades_ranking.json",
       "sizeBytes": 38315,
-      "updatedAt": "2026-06-18T10:51:48.089Z"
+      "updatedAt": "2026-06-19T12:49:22.015Z"
     },
     {
       "name": "turnover.json",
@@ -38286,302 +38286,302 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "abdiel.json",
       "sizeBytes": 159725,
-      "updatedAt": "2026-06-18T10:51:48.090Z"
+      "updatedAt": "2026-06-19T12:49:22.016Z"
     },
     {
       "name": "ackman.json",
       "sizeBytes": 195489,
-      "updatedAt": "2026-06-18T10:51:48.090Z"
+      "updatedAt": "2026-06-19T12:49:22.016Z"
     },
     {
       "name": "akre.json",
       "sizeBytes": 378410,
-      "updatedAt": "2026-06-18T10:51:48.090Z"
+      "updatedAt": "2026-06-19T12:49:22.017Z"
     },
     {
       "name": "altimeter.json",
       "sizeBytes": 389584,
-      "updatedAt": "2026-06-18T10:51:48.091Z"
+      "updatedAt": "2026-06-19T12:49:22.019Z"
     },
     {
       "name": "asness.json",
       "sizeBytes": 10749637,
-      "updatedAt": "2026-06-18T10:51:48.096Z"
+      "updatedAt": "2026-06-19T12:49:22.026Z"
     },
     {
       "name": "balyasny.json",
       "sizeBytes": 10085877,
-      "updatedAt": "2026-06-18T10:51:48.102Z"
+      "updatedAt": "2026-06-19T12:49:22.035Z"
     },
     {
       "name": "blackrock.json",
       "sizeBytes": 1916437,
-      "updatedAt": "2026-06-18T10:51:48.103Z"
+      "updatedAt": "2026-06-19T12:49:22.042Z"
     },
     {
       "name": "buffett.json",
       "sizeBytes": 1397188,
-      "updatedAt": "2026-06-18T10:51:48.104Z"
+      "updatedAt": "2026-06-19T12:49:22.061Z"
     },
     {
       "name": "capital_research_global.json",
       "sizeBytes": 3994638,
-      "updatedAt": "2026-06-18T10:51:48.107Z"
+      "updatedAt": "2026-06-19T12:49:22.063Z"
     },
     {
       "name": "capital_world.json",
       "sizeBytes": 4434053,
-      "updatedAt": "2026-06-18T10:51:48.109Z"
+      "updatedAt": "2026-06-19T12:49:22.067Z"
     },
     {
       "name": "cohen.json",
-      "sizeBytes": 8327498,
-      "updatedAt": "2026-06-18T10:51:48.114Z"
+      "sizeBytes": 8328817,
+      "updatedAt": "2026-06-19T12:49:22.074Z"
     },
     {
       "name": "coleman.json",
       "sizeBytes": 929839,
-      "updatedAt": "2026-06-18T10:51:48.115Z"
+      "updatedAt": "2026-06-19T12:49:22.077Z"
     },
     {
       "name": "d1.json",
       "sizeBytes": 706781,
-      "updatedAt": "2026-06-18T10:51:48.116Z"
+      "updatedAt": "2026-06-19T12:49:22.078Z"
     },
     {
       "name": "dalio.json",
-      "sizeBytes": 5058605,
-      "updatedAt": "2026-06-18T10:51:48.118Z"
+      "sizeBytes": 5060566,
+      "updatedAt": "2026-06-19T12:49:22.087Z"
     },
     {
       "name": "de_shaw.json",
-      "sizeBytes": 11953866,
-      "updatedAt": "2026-06-18T10:51:48.125Z"
+      "sizeBytes": 11954131,
+      "updatedAt": "2026-06-19T12:49:22.098Z"
     },
     {
       "name": "dorsey.json",
       "sizeBytes": 204757,
-      "updatedAt": "2026-06-18T10:51:48.125Z"
+      "updatedAt": "2026-06-19T12:49:22.099Z"
     },
     {
       "name": "dragoneer.json",
       "sizeBytes": 528942,
-      "updatedAt": "2026-06-18T10:51:48.126Z"
+      "updatedAt": "2026-06-19T12:49:22.108Z"
     },
     {
       "name": "druckenmiller.json",
       "sizeBytes": 1041080,
-      "updatedAt": "2026-06-18T10:51:48.128Z"
+      "updatedAt": "2026-06-19T12:49:22.115Z"
     },
     {
       "name": "durable.json",
       "sizeBytes": 846428,
-      "updatedAt": "2026-06-18T10:51:48.129Z"
+      "updatedAt": "2026-06-19T12:49:22.119Z"
     },
     {
       "name": "edgewood.json",
       "sizeBytes": 618775,
-      "updatedAt": "2026-06-18T10:51:48.130Z"
+      "updatedAt": "2026-06-19T12:49:22.119Z"
     },
     {
       "name": "einhorn.json",
       "sizeBytes": 909282,
-      "updatedAt": "2026-06-18T10:51:48.130Z"
+      "updatedAt": "2026-06-19T12:49:22.121Z"
     },
     {
       "name": "fidelity.json",
       "sizeBytes": 1829964,
-      "updatedAt": "2026-06-18T10:51:48.132Z"
+      "updatedAt": "2026-06-19T12:49:22.127Z"
     },
     {
       "name": "fisher.json",
       "sizeBytes": 4790550,
-      "updatedAt": "2026-06-18T10:51:48.135Z"
+      "updatedAt": "2026-06-19T12:49:22.130Z"
     },
     {
       "name": "fundsmith.json",
       "sizeBytes": 735939,
-      "updatedAt": "2026-06-18T10:51:48.136Z"
+      "updatedAt": "2026-06-19T12:49:22.131Z"
     },
     {
       "name": "gayner.json",
       "sizeBytes": 2280639,
-      "updatedAt": "2026-06-18T10:51:48.137Z"
+      "updatedAt": "2026-06-19T12:49:22.132Z"
     },
     {
       "name": "geode.json",
       "sizeBytes": 14057329,
-      "updatedAt": "2026-06-18T10:51:48.143Z"
+      "updatedAt": "2026-06-19T12:49:22.141Z"
     },
     {
       "name": "greenblatt.json",
-      "sizeBytes": 8045992,
-      "updatedAt": "2026-06-18T10:51:48.148Z"
+      "sizeBytes": 8046427,
+      "updatedAt": "2026-06-19T12:49:22.158Z"
     },
     {
       "name": "griffin.json",
       "sizeBytes": 14651205,
-      "updatedAt": "2026-06-18T10:51:48.155Z"
+      "updatedAt": "2026-06-19T12:49:22.173Z"
     },
     {
       "name": "halvorsen.json",
       "sizeBytes": 1530168,
-      "updatedAt": "2026-06-18T10:51:48.158Z"
+      "updatedAt": "2026-06-19T12:49:22.186Z"
     },
     {
       "name": "hhlr.json",
-      "sizeBytes": 662130,
-      "updatedAt": "2026-06-18T10:51:48.159Z"
+      "sizeBytes": 662394,
+      "updatedAt": "2026-06-19T12:49:22.195Z"
     },
     {
       "name": "hohn.json",
       "sizeBytes": 240028,
-      "updatedAt": "2026-06-18T10:51:48.161Z"
+      "updatedAt": "2026-06-19T12:49:22.196Z"
     },
     {
       "name": "icahn.json",
       "sizeBytes": 274613,
-      "updatedAt": "2026-06-18T10:51:48.161Z"
+      "updatedAt": "2026-06-19T12:49:22.196Z"
     },
     {
       "name": "klarman.json",
       "sizeBytes": 453736,
-      "updatedAt": "2026-06-18T10:51:48.162Z"
+      "updatedAt": "2026-06-19T12:49:22.196Z"
     },
     {
       "name": "laffont.json",
       "sizeBytes": 2224604,
-      "updatedAt": "2026-06-18T10:51:48.163Z"
+      "updatedAt": "2026-06-19T12:49:22.197Z"
     },
     {
       "name": "loeb.json",
       "sizeBytes": 725235,
-      "updatedAt": "2026-06-18T10:51:48.165Z"
+      "updatedAt": "2026-06-19T12:49:22.198Z"
     },
     {
       "name": "mandel.json",
       "sizeBytes": 584773,
-      "updatedAt": "2026-06-18T10:51:48.165Z"
+      "updatedAt": "2026-06-19T12:49:22.204Z"
     },
     {
       "name": "marks.json",
       "sizeBytes": 1794365,
-      "updatedAt": "2026-06-18T10:51:48.166Z"
+      "updatedAt": "2026-06-19T12:49:22.205Z"
     },
     {
       "name": "millennium.json",
-      "sizeBytes": 18011788,
-      "updatedAt": "2026-06-18T10:51:48.174Z"
+      "sizeBytes": 18012583,
+      "updatedAt": "2026-06-19T12:49:22.217Z"
     },
     {
       "name": "miller.json",
       "sizeBytes": 771981,
-      "updatedAt": "2026-06-18T10:51:48.175Z"
+      "updatedAt": "2026-06-19T12:49:22.226Z"
     },
     {
       "name": "norges.json",
       "sizeBytes": 7890403,
-      "updatedAt": "2026-06-18T10:51:48.179Z"
+      "updatedAt": "2026-06-19T12:49:22.236Z"
     },
     {
       "name": "northern_trust.json",
       "sizeBytes": 12366272,
-      "updatedAt": "2026-06-18T10:51:48.185Z"
+      "updatedAt": "2026-06-19T12:49:22.243Z"
     },
     {
       "name": "pabrai.json",
       "sizeBytes": 83234,
-      "updatedAt": "2026-06-18T10:51:48.185Z"
+      "updatedAt": "2026-06-19T12:49:22.244Z"
     },
     {
       "name": "peltz.json",
       "sizeBytes": 167706,
-      "updatedAt": "2026-06-18T10:51:48.186Z"
+      "updatedAt": "2026-06-19T12:49:22.249Z"
     },
     {
       "name": "polen.json",
       "sizeBytes": 1024893,
-      "updatedAt": "2026-06-18T10:51:48.186Z"
+      "updatedAt": "2026-06-19T12:49:22.255Z"
     },
     {
       "name": "renaissance.json",
       "sizeBytes": 12766499,
-      "updatedAt": "2026-06-18T10:51:48.192Z"
+      "updatedAt": "2026-06-19T12:49:22.268Z"
     },
     {
       "name": "russo.json",
       "sizeBytes": 578355,
-      "updatedAt": "2026-06-18T10:51:48.193Z"
+      "updatedAt": "2026-06-19T12:49:22.269Z"
     },
     {
       "name": "sands.json",
       "sizeBytes": 1260583,
-      "updatedAt": "2026-06-18T10:51:48.194Z"
+      "updatedAt": "2026-06-19T12:49:22.276Z"
     },
     {
       "name": "scion.json",
       "sizeBytes": 292824,
-      "updatedAt": "2026-06-18T10:51:48.196Z"
+      "updatedAt": "2026-06-19T12:49:22.277Z"
     },
     {
       "name": "singer.json",
       "sizeBytes": 727371,
-      "updatedAt": "2026-06-18T10:51:48.196Z"
+      "updatedAt": "2026-06-19T12:49:22.282Z"
     },
     {
       "name": "soros.json",
       "sizeBytes": 2341953,
-      "updatedAt": "2026-06-18T10:51:48.197Z"
+      "updatedAt": "2026-06-19T12:49:22.289Z"
     },
     {
       "name": "state_street.json",
       "sizeBytes": 3939003,
-      "updatedAt": "2026-06-18T10:51:48.200Z"
+      "updatedAt": "2026-06-19T12:49:22.291Z"
     },
     {
       "name": "tepper.json",
       "sizeBytes": 741007,
-      "updatedAt": "2026-06-18T10:51:48.201Z"
+      "updatedAt": "2026-06-19T12:49:22.298Z"
     },
     {
       "name": "trowe.json",
       "sizeBytes": 6970232,
-      "updatedAt": "2026-06-18T10:51:48.204Z"
+      "updatedAt": "2026-06-19T12:49:22.303Z"
     },
     {
       "name": "tudor.json",
-      "sizeBytes": 8533091,
-      "updatedAt": "2026-06-18T10:51:48.210Z"
+      "sizeBytes": 8534147,
+      "updatedAt": "2026-06-19T12:49:22.308Z"
     },
     {
       "name": "two_sigma.json",
       "sizeBytes": 11750696,
-      "updatedAt": "2026-06-18T10:51:48.215Z"
+      "updatedAt": "2026-06-19T12:49:22.318Z"
     },
     {
       "name": "vanguard.json",
       "sizeBytes": 2017915,
-      "updatedAt": "2026-06-18T10:51:48.217Z"
+      "updatedAt": "2026-06-19T12:49:22.325Z"
     },
     {
       "name": "wcm.json",
       "sizeBytes": 1539126,
-      "updatedAt": "2026-06-18T10:51:48.219Z"
+      "updatedAt": "2026-06-19T12:49:22.326Z"
     },
     {
       "name": "wellington.json",
       "sizeBytes": 3783611,
-      "updatedAt": "2026-06-18T10:51:48.221Z"
+      "updatedAt": "2026-06-19T12:49:22.338Z"
     },
     {
       "name": "whale_rock.json",
       "sizeBytes": 847893,
-      "updatedAt": "2026-06-18T10:51:48.222Z"
+      "updatedAt": "2026-06-19T12:49:22.339Z"
     },
     {
       "name": "wood.json",
-      "sizeBytes": 2141427,
-      "updatedAt": "2026-06-18T10:51:48.224Z"
+      "sizeBytes": 2144600,
+      "updatedAt": "2026-06-19T12:49:22.350Z"
     }
   ],
   "sentiment": [
@@ -38675,7 +38675,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "discovery-summary.json",
       "sizeBytes": 24642,
-      "updatedAt": "2026-06-19T10:31:00.787Z"
+      "updatedAt": "2026-06-19T12:49:22.351Z"
     },
     {
       "name": "dowjones-analysis.json",
