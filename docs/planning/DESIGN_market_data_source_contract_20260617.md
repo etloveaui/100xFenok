@@ -193,6 +193,11 @@ External sources
     renders a searchable/category-filterable ETF universe on Explore;
   - links each ETF row to `/etfs/{TICKER}`, where the ETF detail route reads
     the latest available holdings/quote/history payload.
+- `100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx`
+  - keeps fallback ETF detail states user-facing: when only list/universe or
+    auxiliary price data exists, the page labels what is currently available
+    and what is still waiting for deeper holdings/allocation data instead of
+    exposing internal status names.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and

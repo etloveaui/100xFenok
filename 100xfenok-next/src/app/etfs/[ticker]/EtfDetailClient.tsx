@@ -55,6 +55,11 @@ interface EtfPayload {
   };
 }
 
+interface DetailStatusMeta {
+  title: string;
+  description: string;
+}
+
 interface MarketFact {
   value?: unknown;
   source?: string;
@@ -225,9 +230,29 @@ function weightedRowValue(row: WeightedRow): number | null {
   return null;
 }
 
-function detailStatusText(status: string | null) {
-  if (status === "surface_only" || status === "universe_only") return "아직 보유 구성은 준비 중이며, 요약 정보부터 확인할 수 있습니다. 데이터가 갱신되면 자동으로 보강됩니다.";
-  if (status === "yf_fallback") return "가격 정보는 연결됐고, 보유·분류 지표는 데이터 갱신 시 자동으로 보강됩니다.";
+function hasWeightedRows(rows: WeightedRow[] | null | undefined) {
+  return Array.isArray(rows) && rows.some((row) => weightedRowValue(row) !== null);
+}
+
+function detailStatusMeta(status: string | null): DetailStatusMeta | null {
+  if (status === "surface_only") {
+    return {
+      title: "기본 가격·변동률 제공 중",
+      description: "ETF 목록과 신규 상장 데이터로 요약을 먼저 보여줍니다. 상세 보유 구성과 분석은 데이터 갱신 후 자동으로 추가됩니다.",
+    };
+  }
+  if (status === "universe_only") {
+    return {
+      title: "ETF 기본 정보만 제공 중",
+      description: "ETF 전체 목록 기준의 기본 정보부터 연결했습니다. 보유 구성과 세부 분해는 다음 데이터 갱신 후 보강됩니다.",
+    };
+  }
+  if (status === "yf_fallback") {
+    return {
+      title: "가격 정보는 연결됐고 보강 중",
+      description: "가격과 일부 기본 지표를 먼저 보여줍니다. 보유 구성과 분류 지표는 데이터 갱신 시 자동으로 보강됩니다.",
+    };
+  }
   return null;
 }
 
@@ -272,6 +297,47 @@ function MetricCard({ label, value, note }: { label: string; value: string; note
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{value}</p>
       {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{note}</p> : null}
+    </div>
+  );
+}
+
+function DetailAvailabilityCallout({
+  meta,
+  available,
+  pending,
+}: {
+  meta: DetailStatusMeta;
+  available: string[];
+  pending: string[];
+}) {
+  const availableItems = available.length ? available : ["기본 식별 정보"];
+  const pendingItems = pending.length ? pending : ["추가 보강 대기 없음"];
+  return (
+    <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-black text-amber-900">{meta.title}</p>
+          <p className="mt-1 text-[11px] font-semibold leading-relaxed text-amber-800">{meta.description}</p>
+        </div>
+        <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:min-w-[360px]">
+          <div className="min-w-0">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">현재 제공</p>
+            <div className="flex flex-wrap gap-1">
+              {availableItems.map((item) => (
+                <span key={`available-${item}`} className="rounded-full border border-amber-200 bg-white px-2 py-1 text-[10px] font-black text-amber-800">{item}</span>
+              ))}
+            </div>
+          </div>
+          <div className="min-w-0">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">보강 대기</p>
+            <div className="flex flex-wrap gap-1">
+              {pendingItems.map((item) => (
+                <span key={`pending-${item}`} className="rounded-full border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-900">{item}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -433,7 +499,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const history = Array.isArray(normalized.history) ? normalized.history : [];
-  const statusText = detailStatusText(etfData?.detail_status ?? null);
+  const statusMeta = detailStatusMeta(etfData?.detail_status ?? null);
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
   const labels = classificationLabels(classification);
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
@@ -444,6 +510,24 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const dividendYield = factNumber(marketFacts, "dividend_yield");
   const beta = factNumber(marketFacts, "beta");
   const trailingPe = factNumber(marketFacts, "trailing_pe");
+  const availableDetailItems = [
+    price !== null ? "가격" : null,
+    changePct !== null ? "당일 변화" : null,
+    totalAssets !== null || rawText(overview.aum) !== "—" ? "운용자산" : null,
+    expenseRatio !== null || rawText(overview.expenseRatio) !== "—" ? "보수율" : null,
+    dividendYield !== null || rawText(overview.dividendYield) !== "—" ? "배당률" : null,
+    category !== "—" ? "카테고리" : null,
+    labels.length > 0 ? "분류 태그" : null,
+    holdingCount > 0 ? "보유 항목 수" : null,
+    history.length > 0 ? "가격 히스토리" : null,
+  ].filter((item): item is string => Boolean(item));
+  const pendingDetailItems = [
+    holdings.length === 0 ? "보유·스왑 구성 목록" : null,
+    !hasWeightedRows(assetAllocation) ? "자산 분해" : null,
+    !hasWeightedRows(sectors) ? "섹터 분해" : null,
+    !hasWeightedRows(countries) ? "국가 분해" : null,
+    history.length === 0 ? "가격 히스토리" : null,
+  ].filter((item): item is string => Boolean(item));
   const metrics = [
     { label: "가격", value: formatMoney(price, currency), note: fmtDateish(updateDate) },
     { label: "당일 변화", value: fmtSignedPercentPoints(changePct), note: metricValue(quote.ex, exchange) },
@@ -532,11 +616,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
 
         <div className="stock-main-stack">
           <SectionCard title="ETF 핵심 지표" desc="가격·비용·분류">
-            {statusText ? (
-              <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-black text-amber-800">
-                {statusText}
-              </div>
-            ) : null}
+            {statusMeta ? <DetailAvailabilityCallout meta={statusMeta} available={availableDetailItems} pending={pendingDetailItems} /> : null}
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {metrics.map((metric) => (
                 <MetricCard key={`${metric.label}-${metric.value}`} label={metric.label} value={metric.value} note={metric.note} />
