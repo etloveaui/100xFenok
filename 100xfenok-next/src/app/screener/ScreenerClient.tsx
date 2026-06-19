@@ -557,6 +557,7 @@ function MobileStockCard({
         type="button"
         aria-expanded={expanded}
         aria-controls={detailId}
+        aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
         onClick={onToggle}
         className="flex w-full min-w-0 items-start gap-3 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
       >
