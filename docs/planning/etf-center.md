@@ -150,6 +150,15 @@ Implementation pointers:
   `monthly_3y` / `monthly_5y`, without network calls. The written
   `incremental_plan_latest.json` is a plan artifact; `incremental_latest.json`
   remains the completed-run evidence.
+- **Workflow dispatch controls**:
+  - `history_gap_plan=true` writes the same no-network
+    `incremental_plan_latest.json` artifact. The workflow treats the normal
+    default incremental limit (`120`) as `0` in this plan-only mode so the full
+    local candidate set is visible unless the operator overrides the limit.
+  - `history_gaps_only=true` runs a focused live ETF-detail refresh for primary
+    StockAnalysis ETF files missing the required multi-year history periods. It
+    skips the normal surface/financial refresh bundle and uses
+    `incremental_etf_limit` as the chunk size.
 
 ## 4. Filters & Display Fields
 

@@ -313,9 +313,11 @@ StockAnalysis all remain visible when their values overlap.
 4. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
 5. Run `fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only
-   --history-gaps-only --plan-only` first, then run staged ETF detail refreshes
-   for the multi-year history keys so 3Y CAGR and 3Y/5Y detail charts graduate
-   from code-ready to broad local coverage.
+   --history-gaps-only --plan-only --write-plan` first, or dispatch
+   `fetch-stockanalysis.yml` with `history_gap_plan=true`, then run staged ETF
+   detail refreshes with `history_gaps_only=true` for the multi-year history
+   keys so 3Y CAGR and 3Y/5Y detail charts graduate from code-ready to broad
+   local coverage.
 6. Keep shipped StockAnalysis surfaces actively reachable through canonical
    tabs/routes, Admin, or Data Lab and guarded by `qa:stockanalysis`,
    `qa:surface-consumers`, and `qa:market-audit` so committed surface data does
