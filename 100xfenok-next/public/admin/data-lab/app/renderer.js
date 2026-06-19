@@ -300,6 +300,7 @@ const Renderer = (function() {
     stockanalysisNewEtfs,
     stockanalysisIncremental,
     stockanalysisIncrementalPlan,
+    stockanalysisHistoryGapReport,
     stockanalysisPendingLedger,
     marketFactsIndex
   ) {
@@ -409,6 +410,7 @@ const Renderer = (function() {
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, stockanalysisIncrementalPlan, marketFactsIndex, audit?.incremental_etf)}
+      ${renderHistoryGapPreflightAudit(stockanalysisHistoryGapReport)}
       ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisIncrementalPlan, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
     `;
@@ -841,6 +843,39 @@ const Renderer = (function() {
         ['증거 파일', hasIncrementalFile ? '있음' : '대기'],
         ['계획 파일', hasPlanFile ? '있음' : '대기'],
         ['메모', notes.length ? notes.join(', ') : '-']
+      ]
+    });
+  }
+
+  function renderHistoryGapPreflightAudit(report) {
+    if (!report) return '';
+    const missing = Number(report.missing_required_history || 0);
+    const complete = Number(report.complete_required_history || 0);
+    const total = Number(report.primary_stockanalysis_detail_files || 0);
+    const missingByPeriod = report.missing_by_period || {};
+    const plan = report.incremental_plan || {};
+    const planMatches = plan.matches_current_gap === true;
+    const marketFacts3y = report.market_facts_return_3y || {};
+    const dispatchInputs = report.recommended_dispatch?.inputs || {};
+
+    return renderMarketAuditCard({
+      title: 'ETF 히스토리 사전 점검',
+      status: missing === 0 && planMatches ? 'pass' : 'warn',
+      code: missing > 0
+        ? `${Formatters.formatNumber(missing, 0)}개 보강 필요`
+        : '완료',
+      rows: [
+        ['생성일', escapeHtml(report.generated_at || '-').slice(0, 10)],
+        ['직접 스캔', `${Formatters.formatNumber(total, 0)}개`],
+        ['3Y/5Y 완료', complete],
+        ['보강 필요', missing],
+        ['커버리지', `${Formatters.formatNumber(report.coverage_pct || 0, 2)}%`],
+        ['월간 3년 누락', missingByPeriod.monthly_3y],
+        ['월간 5년 누락', missingByPeriod.monthly_5y],
+        ['계획과 일치', planMatches ? '일치' : '불일치'],
+        ['계획 후보', plan.counts?.history_gap ?? '-'],
+        ['추천 청크', dispatchInputs.incremental_etf_limit || '-'],
+        ['시장 팩트 3년', `${Formatters.formatNumber(marketFacts3y.etf || 0, 0)} / ${Formatters.formatNumber(marketFacts3y.etf_denominator || 0, 0)}`]
       ]
     });
   }

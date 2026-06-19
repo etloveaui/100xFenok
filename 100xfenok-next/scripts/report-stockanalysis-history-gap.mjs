@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
 const SOURCE_DIR = path.resolve(ROOT, "..", "data", "stockanalysis");
 const DETAIL_DIR = path.join(SOURCE_DIR, "etfs");
 const PLAN_PATH = path.join(SOURCE_DIR, "backfill", "incremental_plan_latest.json");
+const REPORT_PATH = path.join(SOURCE_DIR, "backfill", "history_gap_report_latest.json");
+const PUBLIC_REPORT_PATH = path.join(ROOT, "public", "data", "stockanalysis", "backfill", "history_gap_report_latest.json");
 const AUDIT_PATH = path.resolve(ROOT, "..", "data", "computed", "market_data_audit.json");
 const REQUIRED_PERIODS = ["monthly_3y", "monthly_5y"];
+
+const argv = new Set(process.argv.slice(2));
+const WRITE_REPORT = argv.has("--write-report");
 
 function readJson(filePath) {
   return JSON.parse(readFileSync(filePath, "utf8"));
@@ -38,6 +43,11 @@ function isPrimaryStockAnalysisDetail(payload) {
 function percent(part, total) {
   if (!total) return 0;
   return Number(((part / total) * 100).toFixed(2));
+}
+
+function writeJson(filePath, payload) {
+  mkdirSync(path.dirname(filePath), { recursive: true });
+  writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
 function main() {
@@ -77,6 +87,7 @@ function main() {
 
   const report = {
     schema_version: "stockanalysis-history-gap-report/v1",
+    generated_at: new Date().toISOString(),
     required_history_periods: REQUIRED_PERIODS,
     primary_stockanalysis_detail_files: primaryRows.length,
     complete_required_history: completeRows.length,
@@ -117,6 +128,13 @@ function main() {
   };
 
   console.log(JSON.stringify(report, null, 2));
+
+  if (WRITE_REPORT) {
+    writeJson(REPORT_PATH, report);
+    writeJson(PUBLIC_REPORT_PATH, report);
+    console.error(`wrote ${REPORT_PATH}`);
+    console.error(`wrote ${PUBLIC_REPORT_PATH}`);
+  }
 
   if (plan && !report.incremental_plan.matches_current_gap) {
     throw new Error(

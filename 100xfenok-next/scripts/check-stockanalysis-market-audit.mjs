@@ -15,6 +15,7 @@ const JSON_PAIRS = [
   ["ETF coverage", "../data/stockanalysis/coverage/etf_detail.json", "public/data/stockanalysis/coverage/etf_detail.json"],
   ["ETF incremental proof", "../data/stockanalysis/backfill/incremental_latest.json", "public/data/stockanalysis/backfill/incremental_latest.json"],
   ["ETF incremental plan", "../data/stockanalysis/backfill/incremental_plan_latest.json", "public/data/stockanalysis/backfill/incremental_plan_latest.json"],
+  ["ETF history gap report", "../data/stockanalysis/backfill/history_gap_report_latest.json", "public/data/stockanalysis/backfill/history_gap_report_latest.json"],
   ["ETF pending ledger", "../data/stockanalysis/backfill/pending_ledger.json", "public/data/stockanalysis/backfill/pending_ledger.json"],
   ["StockAnalysis index", "../data/stockanalysis/index.json", "public/data/stockanalysis/index.json"],
   ["StockAnalysis classification", "../data/stockanalysis/classification/latest.json", "public/data/stockanalysis/classification/latest.json"],
@@ -50,6 +51,9 @@ const REQUIRED_RENDERED_SECTIONS = [
   "ETF 수집 대기열",
   "계획 파일",
   "계획 후보",
+  "ETF 히스토리 사전 점검",
+  "직접 스캔",
+  "계획과 일치",
   "실행/계획",
   "실행 증거 + 보강 계획",
   "계획: 다년 히스토리",
@@ -192,6 +196,26 @@ function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
   assert(audit?.incremental_etf?.plan_generated_at === incrementalPlan?.generated_at, "Market audit: plan_generated_at must match incremental plan generated_at", errors);
 }
 
+function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) {
+  const requiredPeriods = Array.isArray(report?.required_history_periods) ? report.required_history_periods : [];
+  const missingByPeriod = report?.missing_by_period || {};
+  const planCounts = incrementalPlan?.counts || {};
+  const auditCounts = audit?.incremental_etf?.counts || {};
+
+  assert(report?.schema_version === "stockanalysis-history-gap-report/v1", "ETF history gap report: schema version is required", errors);
+  assert(typeof report?.generated_at === "string" && report.generated_at.length >= 10, "ETF history gap report: generated_at is required", errors);
+  assert(requiredPeriods.includes("monthly_3y"), "ETF history gap report: monthly_3y must be required", errors);
+  assert(requiredPeriods.includes("monthly_5y"), "ETF history gap report: monthly_5y must be required", errors);
+  assert(Number(report?.primary_stockanalysis_detail_files || 0) > 0, "ETF history gap report: primary detail count must be positive", errors);
+  assert(Number(report?.missing_required_history ?? -1) >= 0, "ETF history gap report: missing history count is required", errors);
+  assert(Number(missingByPeriod.monthly_3y ?? -1) >= 0, "ETF history gap report: monthly_3y missing count is required", errors);
+  assert(Number(missingByPeriod.monthly_5y ?? -1) >= 0, "ETF history gap report: monthly_5y missing count is required", errors);
+  assert(report?.incremental_plan?.matches_current_gap === true, "ETF history gap report: plan must match current direct scan", errors);
+  assert(Number(report?.missing_required_history || 0) === Number(planCounts.history_gap || 0), "ETF history gap report: missing count must match incremental plan history_gap", errors);
+  assert(Number(report?.missing_required_history || 0) === Number(auditCounts.plan_history_gap || 0), "ETF history gap report: missing count must match market audit plan_history_gap", errors);
+  assert(report?.recommended_dispatch?.inputs?.history_gaps_only === "true", "ETF history gap report: recommended dispatch must stay history_gaps_only", errors);
+}
+
 function assertReturnCoverageContract(audit, errors) {
   const returnCoverage = audit?.market_facts?.return_field_coverage || {};
   const requiredFields = [
@@ -310,6 +334,7 @@ function renderMarketAuditHtml(payloads) {
     payloads.newEtfs,
     payloads.incremental,
     payloads.incrementalPlan,
+    payloads.historyGapReport,
     payloads.pendingLedger,
     payloads.marketFactsIndex,
   );
@@ -350,6 +375,7 @@ const payloads = {
   newEtfs: readJson("public/data/stockanalysis/surfaces/new_etfs.json"),
   incremental: readJson("public/data/stockanalysis/backfill/incremental_latest.json"),
   incrementalPlan: readJson("public/data/stockanalysis/backfill/incremental_plan_latest.json"),
+  historyGapReport: readJson("public/data/stockanalysis/backfill/history_gap_report_latest.json"),
   pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
   marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
 };
@@ -358,6 +384,7 @@ payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, paylo
 assertCoverageContract(payloads.coverage, errors);
 assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors);
 assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
+assertHistoryGapReportContract(payloads.historyGapReport, payloads.incrementalPlan, payloads.audit, errors);
 assertReturnCoverageContract(payloads.audit, errors);
 assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
 assertRenderedMarketAudit(payloads, errors);

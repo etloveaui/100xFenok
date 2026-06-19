@@ -1,0 +1,128 @@
+{
+  "schema_version": "stockanalysis-history-gap-report/v1",
+  "generated_at": "2026-06-19T06:23:32.989Z",
+  "required_history_periods": [
+    "monthly_3y",
+    "monthly_5y"
+  ],
+  "primary_stockanalysis_detail_files": 4579,
+  "complete_required_history": 0,
+  "missing_required_history": 4579,
+  "coverage_pct": 0,
+  "missing_by_period": {
+    "monthly_3y": 4579,
+    "monthly_5y": 4579
+  },
+  "samples": {
+    "missing": [
+      {
+        "ticker": "AAA",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAAA",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAAC",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AADR",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAEQ",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AALG",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAOG",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAPD",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAPU",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      },
+      {
+        "ticker": "AAPY",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ]
+      }
+    ],
+    "complete": []
+  },
+  "incremental_plan": {
+    "generated_at": "2026-06-19T05:00:36Z",
+    "operation": "incremental_etf_backfill_plan",
+    "mode": "history_gaps_only",
+    "network": "none",
+    "counts": {
+      "etfs_planned": 4579,
+      "incremental_selected": 4579,
+      "incremental_candidates": 4579,
+      "history_gap": 4579,
+      "cooldown_skipped": 0
+    },
+    "first5": [
+      "JTNY",
+      "BITA",
+      "JCAL",
+      "AAA",
+      "AAAA"
+    ],
+    "matches_current_gap": true
+  },
+  "market_facts_return_3y": {
+    "etf": 229,
+    "stockanalysis_history": 0,
+    "etf_coverage_pct": 4.35,
+    "etf_denominator": 5267,
+    "stockanalysis_universe_denominator": 5280
+  },
+  "recommended_dispatch": {
+    "workflow": "fetch-stockanalysis.yml",
+    "inputs": {
+      "history_gaps_only": "true",
+      "required_history_periods": "monthly_3y,monthly_5y",
+      "incremental_etf_limit": "120"
+    },
+    "note": "External StockAnalysis calls; run only after explicit approval."
+  }
+}

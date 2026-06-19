@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.33 (ETF history-gap workflow refresh)
+> **Version**: 2.2.34 (ETF history-gap report surface)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -150,6 +150,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF multi-year history**: StockAnalysis ETF detail files may now expose `weekly_3y`, `monthly_3y`, and `monthly_5y` under `history_periods`; market facts can derive 3Y CAGR from those arrays after the staged refresh writes them.
 - **ETF history-gap plan**: `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only` previews existing primary ETF detail files missing `monthly_3y` / `monthly_5y` without network calls. Add `--write-plan` to persist the preview to `data/stockanalysis/backfill/incremental_plan_latest.json`; this is a plan artifact, not completed-run evidence.
 - **ETF history-gap preflight**: `npm run qa:history-gap` scans current primary StockAnalysis ETF detail files and verifies the missing multi-year history count still matches `incremental_plan_latest.json` before a live workflow dispatch.
+- **ETF history-gap report**: `npm run qa:history-gap -- --write-report` writes `data/stockanalysis/backfill/history_gap_report_latest.json` and the public mirror. Data Lab reads this direct-scan report as a preflight surface, separate from completed-run evidence.
 - **ETF history-gap workflow refresh**: live `history_gaps_only=true` workflow chunks regenerate the no-network plan after fetching so Data Lab and `qa:history-gap` describe the remaining gap, not the pre-run gap.
 - **ETF history-gap visibility**: The incremental backfill and queue cards render `history_gap` as `다년 히스토리 보강`, and label candidate sources such as `new_etfs` / `etf_screener` in Korean.
 
@@ -167,6 +168,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.34 | 2026-06-19 | Added a durable ETF history-gap report JSON and Data Lab preflight card so direct-scan coverage updates with generated data |
 | 2.2.33 | 2026-06-19 | Wired live StockAnalysis history-gap workflow chunks to refresh the no-network plan artifact and run `qa:history-gap` before committing generated data |
 | 2.2.32 | 2026-06-19 | Added a no-network ETF history-gap preflight report so operators can verify current missing multi-year history counts before live StockAnalysis dispatch |
 | 2.2.31 | 2026-06-19 | Strengthened market-audit QA so the no-network ETF history-gap plan contract must match Data Lab audit counts and required multi-year periods |

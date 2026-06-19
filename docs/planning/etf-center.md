@@ -156,6 +156,11 @@ Implementation pointers:
   scans local primary StockAnalysis ETF detail files, compares the current
   missing-history count to `incremental_plan_latest.json`, and prints the
   recommended workflow inputs without making network calls.
+- **History gap report artifact**: run
+  `npm run qa:history-gap -- --write-report` to persist the same direct-scan
+  result to `data/stockanalysis/backfill/history_gap_report_latest.json` and
+  `100xfenok-next/public/data/stockanalysis/backfill/history_gap_report_latest.json`.
+  Data Lab reads this as a preflight report, not as completed-run evidence.
 - **Workflow dispatch controls**:
   - `history_gap_plan=true` writes the same no-network
     `incremental_plan_latest.json` artifact. The workflow treats the normal
@@ -168,6 +173,9 @@ Implementation pointers:
   - After a live `history_gaps_only=true` chunk, the workflow regenerates the
     no-network plan artifact so `incremental_plan_latest.json` reflects the
     remaining gap, then runs `qa:history-gap` before committing.
+  - Every StockAnalysis refresh now writes the history-gap report after market
+    audit generation, so Data Lab's preflight card follows generated data
+    automatically.
 
 ## 4. Filters & Display Fields
 
@@ -226,6 +234,7 @@ Implementation pointers:
 | `npm run qa:surface-consumers` | Validates that every declared surface has an active route/component consumer. |
 | `npm run qa:market-audit` | Validates Data Lab renderer labels and market audit contracts. |
 | `npm run qa:history-gap` | Prints the current primary StockAnalysis ETF multi-year history gap and verifies it matches the no-network plan artifact. |
+| `npm run qa:history-gap -- --write-report` | Writes the durable history-gap report JSON plus the public mirror for Data Lab. |
 | `npm run qa:copy` | Lints public-facing Korean copy. |
 
 ### 5.2 ETF Universe Contract Thresholds
