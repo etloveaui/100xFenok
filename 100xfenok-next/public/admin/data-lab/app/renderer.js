@@ -426,7 +426,24 @@ const Renderer = (function() {
     const pct = Number.isFinite(Number(row?.etf_coverage_pct))
       ? Number(row.etf_coverage_pct)
       : (denominator ? (count / denominator) * 100 : 0);
-    return `${Formatters.formatNumber(count, 0)} / ${Formatters.formatNumber(denominator, 0)} (${Formatters.formatNumber(pct, 1)}%)`;
+    const sources = formatReturnSourceBreakdown(row);
+    return `${Formatters.formatNumber(count, 0)} / ${Formatters.formatNumber(denominator, 0)} (${Formatters.formatNumber(pct, 1)}%)${sources ? ` · ${sources}` : ''}`;
+  }
+
+  function formatReturnSourceBreakdown(row) {
+    if (!row || typeof row !== 'object') return '';
+    return [
+      formatSourceCount('가격 히스토리', row.yf_history_1y),
+      formatSourceCount('요약값', row.yf_info),
+      formatSourceCount('상세 히스토리', row.stockanalysis_history),
+      formatSourceCount('성과표', row.stockanalysis_performance)
+    ].filter(Boolean).join(' · ');
+  }
+
+  function formatSourceCount(label, value) {
+    const count = Number(value || 0);
+    if (!Number.isFinite(count) || count <= 0) return '';
+    return `${label} ${Formatters.formatNumber(count, 0)}`;
   }
 
   function renderEtfUniverseSnapshot(universe, mergedUniverse, newEtfs, coverage) {
@@ -792,6 +809,13 @@ const Renderer = (function() {
       ? `${Formatters.formatNumber(planSelected, 0)}개 계획`
       : '대기';
     const notes = Array.isArray(auditIncremental?.notes) ? auditIncremental.notes : [];
+    const evidenceMode = hasRunEvidence && hasPlanFile
+      ? '실행 증거 + 보강 계획'
+      : hasRunEvidence
+      ? '실행 증거'
+      : hasPlanFile
+      ? '보강 계획'
+      : '대기';
 
     return renderMarketAuditCard({
       title: '자동 ETF 보강',
@@ -799,15 +823,16 @@ const Renderer = (function() {
       code,
       rows: [
         ['감사 상태', auditStatus],
+        ['실행/계획', evidenceMode],
         ['생성일', escapeHtml(generatedAt).slice(0, 10)],
         ['계획일', escapeHtml(planGeneratedAt).slice(0, 10)],
         ['후보', candidates],
         ['선택', selected],
         ['계획 후보', planCandidates],
         ['계획 선택', planSelected],
-        ['계획 히스토리 보강', planHistoryGap],
+        ['계획: 다년 히스토리', planHistoryGap],
         ['보조 가격 재시도', fallbackRetry],
-        ['다년 히스토리 보강', historyGap],
+        ['최근 실행: 다년 히스토리', historyGap],
         ['이번 선택 제외', cooldownSkipped],
         ['재시도 대기', cooldownActive],
         ['보조 가격 반영', fallbackOk],

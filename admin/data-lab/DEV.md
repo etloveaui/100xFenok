@@ -167,6 +167,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 |---------|------|---------|
 | 2.2.30 | 2026-06-19 | Added a durable no-network ETF history-gap plan artifact and Data Lab plan-file visibility without treating it as completed fetch evidence |
 | 2.2.29 | 2026-06-19 | Rendered StockAnalysis ETF `history_gap` candidates in Data Lab backfill cards with Korean operator labels |
+| 2.2.29 | 2026-06-19 | Clarified ETF return coverage source breakdown and separated actual incremental run evidence from plan-only multi-year history backfill candidates |
 | 2.2.28 | 2026-06-19 | Added a local plan-only StockAnalysis ETF history-gap selector so staged 3Y/5Y history backfills can be reviewed before live refresh calls |
 | 2.2.27 | 2026-06-19 | Prepared StockAnalysis ETF detail fetches for multi-year history keys and wired market facts to derive 3Y CAGR from local monthly history after backfill |
 | 2.2.26 | 2026-06-19 | Derived ETF 3M return coverage from local StockAnalysis detail history when Yahoo daily history is missing, and added audit/QA source counts for the new history source |
