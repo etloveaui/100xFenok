@@ -166,7 +166,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
           />
           <span>수익</span>
         </div>
-        <p className="mt-1 text-center text-[10px] font-semibold text-slate-400">
+        <p className="mt-1 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
           수익률 = 분기말 종가 → 현재 (배당 조정) · {quarterLabel} 기준
         </p>
       </div>
@@ -260,7 +260,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
 
   if (portfolio.length === 0) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-slate-400">
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
         성과 차트 데이터가 없습니다
       </div>
     );
@@ -283,7 +283,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
       <div className="mt-2 h-[220px] sm:h-[260px]">
         <Line data={data as ChartData<"line">} options={options} />
       </div>
-      <p className="mt-1 text-center text-[10px] font-semibold text-slate-400">
+      <p className="mt-1 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
         분기 공시 롱 포지션을 분기말 매수·리밸런싱 없이 보유로 가정한 추정 (지수 100 = 첫 분기말, 배당 조정)
       </p>
     </div>

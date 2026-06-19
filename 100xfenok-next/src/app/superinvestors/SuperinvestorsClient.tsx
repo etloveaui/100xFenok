@@ -308,12 +308,12 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
                     {h.ticker}
                   </TransitionLink>
                 ) : (
-                  <span className="text-slate-400">—</span>
+                  <span className="text-[var(--c-ink-3)]">—</span>
                 )}
               </td>
               <td className="px-2 py-2">
                 <span className="block max-w-[200px] truncate font-semibold text-slate-700">{h.name}</span>
-                {h.sector ? <span className="text-[10px] text-slate-400">{h.sector}</span> : null}
+                {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
               </td>
               <td className="px-2 py-2 text-right">
                 <span className="orbitron tabular-nums font-bold text-slate-900">{fmtWeight(h.weight)}</span>
@@ -554,7 +554,7 @@ function TradeRankingPanel({
             {visibleRows.map((r) => (
               <tr key={`${r.ticker}-${r.rank}`} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-2">
-                  <span className="orbitron tabular-nums text-xs font-bold text-slate-400">{r.rank}</span>
+                  <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
                 </td>
                 <td className="px-2 py-2">
                   <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
@@ -582,7 +582,7 @@ function TradeRankingPanel({
                 <td className="px-2 py-2 text-right">
                   <span className="orbitron tabular-nums font-bold text-slate-900">{r.investors_count}</span>
                   {actionLabel(r) ? (
-                    <span className="block text-[10px] font-semibold text-slate-400">{actionLabel(r)}</span>
+                    <span className="block text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(r)}</span>
                   ) : null}
                 </td>
                 <td className="px-2 py-2 max-w-[110px]">
@@ -811,7 +811,7 @@ export default function SuperinvestorsClient({
                     <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
                       {pvData.metadata.quarter}
                     </span>
-                    <span className="text-[10px] font-semibold text-slate-400">
+                    <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
                       {pvData.total.treemap.length}종목 · 30인 합산
                     </span>
                   </div>
@@ -828,7 +828,7 @@ export default function SuperinvestorsClient({
                     <EmptyState title="포트폴리오 차트 데이터가 없습니다" desc="차트 데이터가 아직 준비되지 않았습니다." />
                   )}
                   {pvData.metadata.disclaimer ? (
-                    <p className="text-[10px] font-semibold text-slate-400">{pvData.metadata.disclaimer}</p>
+                    <p className="text-[10px] font-semibold text-[var(--c-ink-3)]">{pvData.metadata.disclaimer}</p>
                   ) : null}
                 </div>
               ) : null}
@@ -840,7 +840,7 @@ export default function SuperinvestorsClient({
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-black tracking-tight text-slate-900">섹터 정렬</h2>
-                  <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                  <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
                     최신 공시 보유를 섹터별로 묶어 어느 영역에 거장 자금이 모이는지 봅니다.
                   </p>
                 </div>
@@ -863,7 +863,7 @@ export default function SuperinvestorsClient({
                           {fmtPct(row.avg_weight)}
                         </span>
                       </div>
-                      <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                      <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
                         {row.investors.filter(Boolean).length}명 보유 · 대표 {row.top_holdings.slice(0, 3).join(", ")}
                       </p>
                     </div>
@@ -923,7 +923,7 @@ export default function SuperinvestorsClient({
                       return (
                         <tr key={row.ticker} className="border-b border-slate-100 last:border-b-0">
                           <td className="px-3 py-3">
-                            <span className="orbitron tabular-nums text-xs font-bold text-slate-400">{rank}</span>
+                            <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{rank}</span>
                           </td>
                           <td className="px-3 py-3">
                             <span className="text-sm font-black text-slate-950">{row.ticker}</span>
@@ -940,7 +940,7 @@ export default function SuperinvestorsClient({
                                   <span className="orbitron tabular-nums text-xs font-black text-slate-900">
                                     {classSummary(enhanced)}
                                   </span>
-                                  <span className="text-[10px] font-bold text-slate-400">
+                                  <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
                                     {fmtScore(enhanced.equity_score)}
                                   </span>
                                 </div>
@@ -1078,18 +1078,18 @@ export default function SuperinvestorsClient({
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">AUM</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">AUM</p>
                         <p className="orbitron mt-0.5 text-sm font-black text-slate-900">{fmtAum(inv.aum)}</p>
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">보유</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">보유</p>
                         <p className="orbitron mt-0.5 text-sm font-black text-slate-900">{inv.holdings_count}종목</p>
                       </div>
                     </div>
 
                     {inv.top5.length > 0 ? (
                       <div className="mt-3">
-                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">Top 5</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">Top 5</p>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {[...new Set(inv.top5)].slice(0, 5).map((ticker, i) => (
                             <span
@@ -1169,7 +1169,7 @@ export default function SuperinvestorsClient({
                       {search.trim().toUpperCase()}
                     </h2>
                     {byTickerEnhanced ? (
-                      <p className="mt-1 text-[10px] font-bold text-slate-400">
+                      <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
                         주식 기준 {byTickerEnhanced.equity_holders}/{byTickerEnhanced.total_holders}명 · 확신 점수 {fmtScore(byTickerEnhanced.equity_score)}
                       </p>
                     ) : null}
@@ -1258,10 +1258,10 @@ export default function SuperinvestorsClient({
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   {tradesData.metadata.quarter} 기준
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">{delayLabel}</span>
+                <span className="text-[10px] font-bold text-[var(--c-ink-3)]">{delayLabel}</span>
               </div>
               {tradesData.metadata.disclaimer ? (
-                <p className="text-[10px] font-semibold text-slate-400">{tradesData.metadata.disclaimer}</p>
+                <p className="text-[10px] font-semibold text-[var(--c-ink-3)]">{tradesData.metadata.disclaimer}</p>
               ) : null}
             </div>
           ) : null}

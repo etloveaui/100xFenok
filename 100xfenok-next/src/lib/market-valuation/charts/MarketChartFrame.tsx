@@ -222,7 +222,7 @@ export function MarketChartFrame({
               </figcaption>
             )}
             {subtitle && (
-              <p className="truncate text-xs font-semibold text-slate-400">{subtitle}</p>
+              <p className="truncate text-xs font-semibold text-[var(--c-ink-2)]">{subtitle}</p>
             )}
           </div>
           {showRanges && (
@@ -241,7 +241,7 @@ export function MarketChartFrame({
                     className={
                       active
                         ? "rounded-md bg-slate-800 px-2 py-1 text-[11px] font-bold text-white"
-                        : "rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-200"
+                        : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)]"
                     }
                   >
                     {range.label}
@@ -266,8 +266,8 @@ export function MarketChartFrame({
                 aria-pressed={!off}
                 className={
                   off
-                    ? "inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-300"
-                    : "inline-flex items-center gap-1 rounded-full border border-slate-300 px-2 py-0.5 text-[11px] font-bold text-slate-600"
+                    ? "inline-flex items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-[11px] font-bold text-[var(--c-ink-3)]"
+                    : "inline-flex items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"
                 }
               >
                 <span
@@ -298,13 +298,13 @@ export function MarketChartFrame({
       />
 
       <div
-        className="mt-2 min-h-[1.25rem] text-[11px] font-semibold text-slate-500"
+        className="mt-2 min-h-[1.25rem] text-[11px] font-semibold text-[var(--c-ink-2)]"
         aria-atomic="true"
         role="status"
       >
         {announcedHover ? (
           <span>
-            <span className="font-bold text-slate-700">{announcedHover.label}</span>
+            <span className="font-bold text-[var(--c-ink)]">{announcedHover.label}</span>
             {"  "}
             {announcedHover.points
               .filter((point) => point.value !== null)
@@ -312,7 +312,7 @@ export function MarketChartFrame({
               .join("   ")}
           </span>
         ) : (
-          footnote && <span className="text-slate-400">{footnote}</span>
+          footnote && <span className="text-[var(--c-ink-2)]">{footnote}</span>
         )}
       </div>
     </figure>

@@ -159,9 +159,9 @@ function SourceLine({ sourceMeta, failedSources = [] }: { sourceMeta: SectorSour
   ].filter(Boolean);
   const missing = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
   if (parts.length > 0) {
-    return <span>{missing.length > 0 ? `${parts.join(" · ")} · 확인 불가 ${missing.join("/")}` : parts.join(" · ")}</span>;
+    return <>{missing.length > 0 ? `${parts.join(" · ")} · 확인 불가 ${missing.join("/")}` : parts.join(" · ")}</>;
   }
-  return <span>{missing.length > 0 ? `데이터 없음: ${missing.join(" · ")}` : "기준일 확인 중"}</span>;
+  return <>{missing.length > 0 ? `데이터 없음: ${missing.join(" · ")}` : "기준일 확인 중"}</>;
 }
 
 function valuationSourceLine(sourceMeta: SectorSourceMeta): string {
@@ -462,7 +462,7 @@ export default function SectorsClient() {
 
       {/* Heatmap */}
       <div className={mobilePanelClass(mobileView === "heatmap")}>
-      <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과" className={isMuted ? "opacity-60" : undefined}>
+        <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과">
         <p className="mb-3 text-xs text-[var(--c-ink-2)]">
           {beatCount === null
             ? benchmarksFailed

@@ -208,7 +208,7 @@ function BuyingPressureCard({ data, trades }: { data: BuyingPressureData | null;
           <PressurePanel title="매도 압력 TOP" rows={sellRows} color="rose" signLabel={(r) => `${r.net_sellers} vs ${r.net_buyers}`} />
         ) : null}
       </div>
-      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {quarter} 기준 · {note}
       </p>
     </div>
@@ -221,7 +221,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
 }) {
   const textColor = color === "emerald" ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
   const barColor = color === "emerald" ? "var(--c-up)" : "var(--c-down)";
-  if (rows.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
+  if (rows.length === 0) return <p className="text-xs text-[var(--c-ink-3)]">데이터 없음</p>;
   return (
     <div>
       <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
@@ -319,8 +319,8 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
           </tbody>
         </table>
       </div>
-      {rows.length === 0 ? <p className="text-xs text-slate-400">현재 분기 신규 편입 데이터 없음</p> : null}
-      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+      {rows.length === 0 ? <p className="text-xs text-[var(--c-ink-3)]">현재 분기 신규 편입 데이터 없음</p> : null}
+      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} 신규 편입 · 총 {data.metadata.new_positions_count}건 ({data.metadata.unique_tickers}종목)
       </p>
     </div>
@@ -376,7 +376,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · 각 투자자 포트폴리오 TOP5 포지션 (비중 기준 정렬, 상위 12개)
       </p>
     </div>
@@ -428,7 +428,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · 새로 편입되면서 바로 큰 비중이 된 포지션 {data.metadata.high_conviction_new_count}건 중 상위 12개
       </p>
     </div>
@@ -484,7 +484,7 @@ function HhiCard({ data }: { data: HhiData }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[10px] font-semibold text-slate-400">
+      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · HHI: 0~1, 높을수록 집중 · 집중≥0.25, 보통≥0.15, 분산&lt;0.15
       </p>
     </div>
@@ -538,7 +538,7 @@ export default function InsightsTab() {
               {quarterLabel} 기준
             </span>
           ) : null}
-          <span className="text-[10px] font-bold text-slate-400">기관 공시는 분기 종료 후 최대 45일 지연됩니다</span>
+          <span className="text-[10px] font-bold text-[var(--c-ink-3)]">기관 공시는 분기 종료 후 최대 45일 지연됩니다</span>
         </div>
       </div>
 
@@ -555,7 +555,7 @@ export default function InsightsTab() {
           {/* 1. 매수 압력 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
-            <p className="mb-3 text-[10px] font-semibold text-slate-400">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
             {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <SkeletonCard />}
           </div>
 
@@ -563,20 +563,20 @@ export default function InsightsTab() {
             {/* 2. 신규 편입 빅베팅 */}
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">신규 편입 빅베팅</h3>
-              <p className="mb-3 text-[10px] font-semibold text-slate-400">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
+              <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
               {np ? <NewPositionsCard data={np} /> : <SkeletonCard />}
             </div>
 
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">고확신 신규 편입</h3>
-              <p className="mb-3 text-[10px] font-semibold text-slate-400">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
+              <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
               {ce ? <HighConvictionNewCard data={ce} /> : <SkeletonCard />}
             </div>
 
             {/* 3. 확신 베팅 */}
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">확신 베팅 (TOP5)</h3>
-              <p className="mb-3 text-[10px] font-semibold text-slate-400">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
+              <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
               {cv ? <ConvictionCard data={cv} /> : <SkeletonCard />}
             </div>
           </div>
@@ -584,7 +584,7 @@ export default function InsightsTab() {
           {/* 4. 집중도 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">집중도 (HHI)</h3>
-            <p className="mb-3 text-[10px] font-semibold text-slate-400">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
             {hhi ? <HhiCard data={hhi} /> : <SkeletonCard />}
           </div>
         </div>

@@ -363,7 +363,7 @@ export function MarketChartEngineClient({
     return (
       <div
         className={cx(
-          "grid min-h-48 place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-slate-400",
+          "grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-2)]",
           heightClassName,
           className,
         )}
@@ -383,9 +383,10 @@ export function MarketChartEngineClient({
       aria-label={`${ariaLabel}. 방향키, Home, End 키로 시점을 이동할 수 있습니다.`}
       onBlur={() => selectKeyboardIndex(null)}
       onKeyDown={handleKeyDown}
+      role="group"
       tabIndex={onHoverPoint ? 0 : undefined}
     >
-      <Chart type={type} data={data} options={options} />
+      <Chart type={type} data={data} options={options} aria-label={ariaLabel} role="img" />
     </div>
   );
 }

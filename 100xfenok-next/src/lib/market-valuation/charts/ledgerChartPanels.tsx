@@ -111,7 +111,7 @@ function fmtSigned(value: number | null, digits = 1): string {
 }
 
 function yardeniVerdict(premiumPct: number | null): { label: string; tone: string } {
-  if (premiumPct === null) return { label: "데이터 부족", tone: "text-slate-400" };
+  if (premiumPct === null) return { label: "데이터 부족", tone: "text-[var(--c-ink-2)]" };
   if (premiumPct > 15) return { label: "고평가 프리미엄", tone: "text-rose-600" };
   if (premiumPct > 5) return { label: "다소 프리미엄", tone: "text-amber-600" };
   if (premiumPct >= -5) return { label: "적정 범위", tone: "text-slate-600" };
@@ -290,7 +290,7 @@ export function YardeniOverlayChartPanel() {
           ["Spread avg", fmtMetric(model?.latest.spreadAvg ?? null, 2, "%")],
         ].map(([label, value]) => (
           <div key={label} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-            <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-slate-400">
+            <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
             </p>
             <p className="orbitron mt-1 truncate text-xs font-black tabular-nums text-slate-800">
@@ -380,7 +380,7 @@ export function PmiActivityChartPanel() {
                 <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
                   {group.label}
                 </p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
                   {group.period ?? group.releaseDate ?? "—"}
                 </p>
               </div>
@@ -405,10 +405,10 @@ export function PmiActivityChartPanel() {
                       className={cx(
                         "text-[10px] font-black tabular-nums",
                         component.delta1m === null
-                          ? "text-slate-300"
+                          ? "text-[var(--c-ink-3)]"
                           : component.delta1m >= 0
-                            ? "text-emerald-600"
-                            : "text-rose-600",
+                            ? "text-[var(--c-up)]"
+                            : "text-[var(--c-down)]",
                       )}
                     >
                       {fmtSigned(component.delta1m)}

@@ -12,7 +12,7 @@ const DynamicMarketChartEngine = dynamic<MarketChartEngineProps>(
   {
     ssr: false,
     loading: () => (
-      <div className="grid h-72 min-w-0 place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-slate-400">
+      <div className="grid h-72 min-w-0 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-2)]">
         차트 모듈 로드 중
       </div>
     ),

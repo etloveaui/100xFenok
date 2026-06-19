@@ -140,7 +140,7 @@ function MarketSection({
   muted?: boolean;
 }) {
   return (
-    <section className={cx("grid gap-3", muted && "opacity-60")}>
+    <section className="grid gap-3" data-loading={muted ? "true" : undefined}>
       <header className="flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">{index}</p>
@@ -276,7 +276,7 @@ function BondPulsePanel({ items, fallbackAsOf }: { items: MarketBondPulse[]; fal
               <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
               <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-2)]">{item.changeLabel}</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{formatAsOf(item.date) ?? "—"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{formatAsOf(item.date) ?? "—"}</span>
               </div>
             </div>
           ))}
@@ -302,7 +302,7 @@ function SentimentPulsePanel({ items, fallbackAsOf }: { items: MarketSentimentPu
               </div>
               <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
               <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{formatAsOf(item.date) ?? "—"}</p>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{formatAsOf(item.date) ?? "—"}</p>
             </div>
           ))}
         </div>
@@ -344,7 +344,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                       <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
                       <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{fmtIndex(trend.latestValue)}</p>
                     </div>
-                    <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{trend.latestDate ?? "—"}</span>
+                    <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{trend.latestDate ?? "—"}</span>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     <MomentumCell label="1Y" value={trend.oneYearReturn} />
@@ -366,7 +366,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                     </div>
                     <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", toneClass(item.tone))}>{item.valueLabel}</span>
                   </div>
-                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.updated ?? "—"}</p>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{item.updated ?? "—"}</p>
                 </div>
               ))}
             </div>
@@ -391,7 +391,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
                     <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">이익과 멀티플</p>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{doc.benchmarkMatrix?.generated ?? "—"}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{doc.benchmarkMatrix?.generated ?? "—"}</span>
                   </div>
                   <div className="mt-2 grid min-w-0 gap-1">
                     {benchmarkRows.map((row) => (
@@ -431,7 +431,7 @@ function EventRiskPanel({ items, fallbackAsOf }: { items: MarketEventRisk[]; fal
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="shrink-0 text-right">
                     <p className="text-[11px] font-black tabular-nums text-slate-950">{item.dateKst.slice(5)}</p>
-                    <p className="text-[10px] font-bold tabular-nums text-slate-400">{item.timeKst}</p>
+                    <p className="text-[10px] font-bold tabular-nums text-[var(--c-ink-2)]">{item.timeKst}</p>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -441,10 +441,10 @@ function EventRiskPanel({ items, fallbackAsOf }: { items: MarketEventRisk[]; fal
                       ) : item.daysUntil !== null ? (
                         <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">D-{item.daysUntil}</span>
                       ) : null}
-                      <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">{item.category}</span>
+                      <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{item.category}</span>
                     </div>
                     <p className="mt-1 min-w-0 break-words text-sm font-bold leading-5 text-slate-800">{item.titleKo}</p>
-                    {item.titleEn ? <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-400">{item.titleEn}</p> : null}
+                    {item.titleEn ? <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-2)]">{item.titleEn}</p> : null}
                     {item.previousValue ? (
                       <p className="mt-2 inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
                         직전 {item.previousValue} · {item.previousAsOf ?? item.previousSeries ?? "prev"}
@@ -506,7 +506,7 @@ function ValuationRow({ label, band, digits }: { label: string; band: ValuationB
           />
         ) : null}
       </div>
-      <div className="mt-1 flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-300">
+      <div className="mt-1 flex justify-between text-[9px] font-bold uppercase tracking-wider text-[var(--c-ink-2)]">
         <span>저평가</span>
         <span>avg {fmt(band.avg, digits)}</span>
         <span>고평가</span>
@@ -623,7 +623,7 @@ export default function MarketValuationClient() {
         <EventRiskPanel items={eventRisks} fallbackAsOf={sourceDate} />
       </MarketSection>
 
-      <p className="px-1 text-[11px] text-slate-400">
+      <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
         역사 밴드 = 2010년 이후 주간 시계열의 최저·평균·최고 범위입니다. 백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다. 연초 이후 분해는 가격 변화가 EPS 개선에서 왔는지 평가배수 확장/축소에서 왔는지 보기 위한 보조 지표입니다.
       </p>
     </div>

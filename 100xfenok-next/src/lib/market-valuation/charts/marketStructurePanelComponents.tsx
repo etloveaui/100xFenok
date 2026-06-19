@@ -230,7 +230,7 @@ const CREDIT_LABELS: Record<string, string> = {
 
 /** Fraction (e.g. -0.0852) -> signed colored percent. */
 function fracPct(value: number | null): { text: string; cls: string } {
-  if (value === null) return { text: "—", cls: "text-slate-300" };
+  if (value === null) return { text: "—", cls: "text-[var(--c-ink-3)]" };
   const pct = value * 100;
   const cls = pct > 0 ? "text-emerald-600" : pct < 0 ? "text-rose-600" : "text-slate-500";
   return { text: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`, cls };
@@ -238,7 +238,7 @@ function fracPct(value: number | null): { text: string; cls: string } {
 
 /** Already-percent value (e.g. -6.2) -> signed colored percent. */
 function signedPct(value: number | null): { text: string; cls: string } {
-  if (value === null) return { text: "—", cls: "text-slate-300" };
+  if (value === null) return { text: "—", cls: "text-[var(--c-ink-3)]" };
   const cls = value > 0 ? "text-emerald-600" : value < 0 ? "text-rose-600" : "text-slate-500";
   return { text: `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`, cls };
 }
@@ -268,7 +268,7 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
       <div className="min-w-0 overflow-x-auto">
         <table className="w-full min-w-[390px] border-collapse text-[12px]">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-400">
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
               <th scope="col" className="py-2 pr-2 text-left">지수</th>
               {BENCH_METRICS.map((m) => (
                 <th key={m.key} scope="col" className="px-2 py-2 text-right">{m.label}</th>
@@ -292,7 +292,7 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[11px] font-semibold text-slate-400">
+      <p className="mt-2 text-[11px] font-semibold text-[var(--c-ink-2)]">
         기간별 변화율 · 가격 = EPS × 멀티플 분해 (멀티플 확장/축소 vs 이익)
       </p>
     </div>
@@ -305,7 +305,7 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
     <div className="min-w-0 overflow-x-auto">
       <table className="w-full min-w-[360px] border-collapse text-[12px]">
         <thead>
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-400">
+          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
             <th scope="col" className="py-2 pr-2 text-left">구간</th>
             <th scope="col" className="px-2 py-2 text-right">종목</th>
             <th scope="col" className="px-2 py-2 text-right">최고</th>
@@ -327,7 +327,7 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
           ))}
         </tbody>
       </table>
-      <p className="mt-2 text-[11px] font-semibold text-slate-400">
+      <p className="mt-2 text-[11px] font-semibold text-[var(--c-ink-2)]">
         {model.creditRatings.sourceDate ? `Damodaran 신용 스프레드 · ${model.creditRatings.sourceDate}` : "Damodaran 신용 스프레드"}
       </p>
     </div>
@@ -388,7 +388,7 @@ function MembershipPanel({ model }: MarketStructureSlotProps) {
   const recent = model.membershipChanges.recent;
   if (recent.length === 0) {
     return (
-      <div className="grid min-h-32 place-items-center text-xs font-bold text-slate-400">
+      <div className="grid min-h-32 place-items-center text-xs font-bold text-[var(--c-ink-2)]">
         편입/편출 데이터 없음
       </div>
     );
@@ -399,7 +399,7 @@ function MembershipPanel({ model }: MarketStructureSlotProps) {
         <div key={`${ev.date}-${ev.index}-${index}`} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{(ev.index ?? "—").toUpperCase()}</span>
-            <span className="text-[10px] font-bold text-slate-400">{ev.date ?? "—"} · {ev.previousCount ?? "—"}→{ev.currentCount ?? "—"}</span>
+            <span className="text-[10px] font-bold text-[var(--c-ink-2)]">{ev.date ?? "—"} · {ev.previousCount ?? "—"}→{ev.currentCount ?? "—"}</span>
           </div>
           <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5">
             <span className="text-emerald-600">＋{ev.added.length}</span> {ev.added.slice(0, 8).join(" · ")}{ev.added.length > 8 ? " …" : ""}

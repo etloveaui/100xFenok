@@ -221,7 +221,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
           >
             {hedgeLabel.text}
           </span>
-          <p className="mt-0.5 text-[9px] font-semibold text-slate-400">{hedgeLabel.sub}</p>
+          <p className="mt-0.5 text-[9px] font-semibold text-[var(--c-ink-3)]">{hedgeLabel.sub}</p>
         </div>
       ) : null}
     </div>
