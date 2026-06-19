@@ -3,6 +3,10 @@
 Date: 2026-06-17
 Status: active design note
 
+Umbrella: `DESIGN_data_spine_program_20260619.md`. This file remains the
+market-source contract note, but the broader program gates, P0 inventory, and
+provider-disagreement policy now live under the Data Spine planning shell.
+
 ## Goal
 
 Unify overlapping market data sources into the 100x DataPack first, then let
