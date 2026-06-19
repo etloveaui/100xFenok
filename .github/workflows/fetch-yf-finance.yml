@@ -113,6 +113,14 @@ jobs:
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: python3 scripts/build-market-facts.py
 
+      - name: Build market source parity
+        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        run: python3 scripts/build-market-source-parity.py
+
+      - name: Build market data audit
+        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
+
       - name: Mirror to public
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: |
@@ -124,12 +132,20 @@ jobs:
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: python3 scripts/update-manifest.py
 
+      - name: Validate YF and market audit contracts
+        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        run: |
+          python3 -m unittest scripts/test_fetch_yf_finance_selection.py
+          python3 -m unittest scripts/test_audit_market_data.py
+          npm --prefix 100xfenok-next run qa:market-audit
+          npm --prefix 100xfenok-next run qa:copy
+
       - name: Commit and push
         if: ${{ env.YF_PLAN_ONLY != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/yf data/computed/market_facts data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/manifest.json
+          git add data/yf data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/manifest.json 100xfenok-next/public/data/yf 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/manifest.json
           git diff --staged --quiet || git commit -m "chore: update yf finance data"
           git pull --rebase origin main
           git push

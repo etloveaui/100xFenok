@@ -143,6 +143,7 @@ Implementation pointers:
   - Fetches Yahoo info + 1-year daily history for focus / major / portfolio / scouter / dashboard tickers.
   - Optional `--stockanalysis-etfs` flag for staged full-ETF backfills.
   - `--plan-only` can preview the exact AUM-prioritized candidate slice before any Yahoo call or data write.
+  - Non-plan runs rebuild market facts, source parity, and market data audit, then run `qa:market-audit` and `qa:copy` before committing so YF-driven return changes are visible in Data Lab automatically.
 - **Incremental backfill**: scheduled default is conservative; staged full-ETF backfills are triggered manually via `workflow_dispatch`.
 - **Multi-year history gap plan**: before a live 3Y/5Y ETF history refresh, run
   `python3 scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit <N>`
@@ -242,6 +243,8 @@ Representative ticker contracts:
 ### 5.3 CI Gate
 
 `fetch-stockanalysis.yml` runs `qa:etf-universe`, `qa:surface-consumers`, `qa:market-audit`, `qa:copy` after data rebuilds and before the data commit/push step.
+
+`fetch-yf-finance.yml` runs `qa:market-audit` and `qa:copy` after rebuilding market facts/source parity/audit, except in `plan_only` mode.
 
 `deploy-worker.yml` runs `qa:stockanalysis` after `wrangler deploy` with retries.
 
