@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "LAPR",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:54:06Z",
+  "generated_at": "2026-06-19T04:07:38Z",
   "identity": {
     "name": "Innovator Premium Income 15 Buffer ETF - April",
     "exchange": "BTS",
@@ -261,7 +261,8 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "candidates": [
         {
@@ -271,9 +272,17 @@
           "fetched_at": "2026-06-18T15:41:49Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 0.01972418933356162,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T15:41:49Z",
+          "confidence": "derived",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": 3.3158176437056346,
@@ -466,7 +475,8 @@
         "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "return_ytd": [
         "yf.history_1y",

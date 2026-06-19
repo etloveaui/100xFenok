@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "UNOV",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:54:06Z",
+  "generated_at": "2026-06-19T04:07:38Z",
   "identity": {
     "name": "Innovator U.S. Equity Ultra Buffer ETF - November",
     "exchange": "BTS",
@@ -282,7 +282,8 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "candidates": [
         {
@@ -292,9 +293,17 @@
           "fetched_at": "2026-06-18T16:17:49Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -0.3357844300014232,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:17:49Z",
+          "confidence": "derived",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": 5.115427118515503,
@@ -534,7 +543,8 @@
         "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "return_ytd": [
         "yf.history_1y",

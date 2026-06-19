@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "RACK",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:54:06Z",
+  "generated_at": "2026-06-19T04:07:38Z",
   "identity": {
     "name": "VanEck Data Center Supply Chain ETF",
     "exchange": "BTS",
@@ -143,6 +143,29 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 2.548490473994619,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:03:34Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 2.548490473994619,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:03:34Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     },
     "return_ytd": {
       "value": 1.4487236518544453,
@@ -308,7 +331,8 @@
         "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "return_ytd": [
         "yf.history_1y",

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "UPAL",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:54:06Z",
+  "generated_at": "2026-06-19T04:07:38Z",
   "identity": {
     "name": "ProShares Ultra Palladium K-1 Free ETF",
     "exchange": "PCX",
@@ -220,6 +220,29 @@
       ],
       "candidate_count": 1
     },
+    "return_3m": {
+      "value": -5.540402994449066,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T16:17:55Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -5.540402994449066,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T16:17:55Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_ytd": {
       "value": -34.175886779864726,
       "source": "yf.history_1y",
@@ -384,7 +407,8 @@
         "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "return_ytd": [
         "yf.history_1y",

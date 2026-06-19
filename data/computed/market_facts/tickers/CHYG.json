@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "CHYG",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:54:06Z",
+  "generated_at": "2026-06-19T04:07:38Z",
   "identity": {
     "name": "Corgi 0-5 Year High Yield Corporate Bond ETF",
     "exchange": "BTS",
@@ -143,6 +143,29 @@
         }
       ],
       "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -0.27910564209393723,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-06-18",
+      "fetched_at": "2026-06-18T19:29:35Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -0.27910564209393723,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T19:29:35Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     },
     "return_ytd": {
       "value": -0.03996893964377559,
@@ -308,7 +331,8 @@
         "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "return_ytd": [
         "yf.history_1y",

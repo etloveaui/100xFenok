@@ -157,6 +157,7 @@ function assertReturnCoverageContract(audit, errors) {
     assert(returnCoverage[field] && typeof returnCoverage[field] === "object", `Market facts: ${field} coverage is required`, errors);
     assert(Number(returnCoverage[field]?.etf || 0) >= 0, `Market facts: ${field} ETF coverage count is required`, errors);
   }
+  assert(Number(returnCoverage.return_3m?.stockanalysis_history || 0) > 0, "Market facts: return_3m must include StockAnalysis history coverage", errors);
   assert(Number(returnCoverage.return_10y_avg?.stockanalysis_performance || 0) > 0, "Market facts: return_10y_avg must include StockAnalysis performance coverage", errors);
   assert(Number(returnCoverage.return_max_avg?.stockanalysis_performance || 0) > 0, "Market facts: return_max_avg must include StockAnalysis performance coverage", errors);
 }

@@ -102,6 +102,31 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(facts["return_ytd"]["source"], "yf")
         self.assertEqual(facts["return_ytd"]["value"], 7.25)
 
+    def test_stockanalysis_monthly_history_fills_three_month_return_gap(self) -> None:
+        sa_payload = {
+            "asset_type": "etf",
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "normalized": {
+                "quote": {},
+                "overview": {},
+                "holdings": [],
+                "history": [
+                    {"t": "2026-06-01", "c": 120, "a": 118},
+                    {"t": "2026-05-01", "c": 112, "a": 110},
+                    {"t": "2026-04-01", "c": 108, "a": 105},
+                    {"t": "2026-03-01", "c": 100, "a": 98},
+                ],
+            },
+        }
+
+        result = self.mod.build_one("SA3M", None, sa_payload, None)
+        fact = result["facts"]["return_3m"]
+
+        self.assertEqual(fact["source"], "stockanalysis.detail.history")
+        self.assertEqual(fact["unit"], "percent_points")
+        self.assertEqual(fact["as_of"], "2026-06-01")
+        self.assertAlmostEqual(fact["value"], ((118.0 - 98.0) / 98.0) * 100)
+
     def test_etf_catalog_performance_fills_return_gaps(self) -> None:
         catalog_payload = {
             "ticker": "CAT",

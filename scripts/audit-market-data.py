@@ -254,6 +254,7 @@ def build_payload() -> dict:
             "stock": 0,
             "yf_history_1y": 0,
             "yf_info": 0,
+            "stockanalysis_history": 0,
             "stockanalysis_performance": 0,
         }
         for field in RETURN_FIELDS
@@ -281,6 +282,8 @@ def build_payload() -> dict:
                 bucket["yf_history_1y"] += 1
             elif source == "yf":
                 bucket["yf_info"] += 1
+            elif source == "stockanalysis.detail.history":
+                bucket["stockanalysis_history"] += 1
             elif isinstance(source, str) and source.startswith("stockanalysis.") and source.endswith(".performance"):
                 bucket["stockanalysis_performance"] += 1
         for field, fact in facts.items():

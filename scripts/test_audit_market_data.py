@@ -98,7 +98,10 @@ class MarketDataAuditTest(unittest.TestCase):
             self.data / "computed" / "market_facts" / "tickers" / "BBB.json",
             {
                 "asset_type": "etf",
-                "facts": {"return_1m": {"value": 3.3, "source": "yf.history_1y"}},
+                "facts": {
+                    "return_1m": {"value": 3.3, "source": "yf.history_1y"},
+                    "return_3m": {"value": 4.4, "source": "stockanalysis.detail.history"},
+                },
             },
         )
         write_json(
@@ -116,6 +119,7 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertEqual(coverage["return_1m"]["stock"], 1)
         self.assertEqual(coverage["return_1m"]["yf_history_1y"], 3)
         self.assertEqual(coverage["return_1m"]["etf_coverage_pct"], 100.0)
+        self.assertEqual(coverage["return_3m"]["stockanalysis_history"], 1)
         self.assertEqual(coverage["return_ytd"]["etf"], 1)
         self.assertEqual(coverage["return_ytd"]["yf_info"], 1)
         self.assertEqual(coverage["return_1y"]["stockanalysis_performance"], 1)

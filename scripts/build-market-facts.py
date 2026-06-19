@@ -43,7 +43,7 @@ FIELD_SOURCE_POLICY = {
         "stockanalysis.etf_screener.performance",
         "stockanalysis.etf_universe.performance",
     ],
-    "return_3m": ["yf.history_1y"],
+    "return_3m": ["yf.history_1y", "stockanalysis.detail.history"],
     "return_ytd": [
         "yf.history_1y",
         "stockanalysis.detail.performance",
@@ -308,6 +308,63 @@ def yf_history_one_year_fact(yf_payload):
     )
 
 
+def stockanalysis_history_close(point):
+    if not isinstance(point, dict):
+        return None
+    # StockAnalysis history rows expose adjusted close as `a`; prefer it for
+    # return math to match the adjusted Yahoo history contract.
+    return number(point.get("a", point.get("Close", point.get("close", point.get("c")))))
+
+
+def stockanalysis_history_points(sa_payload, period_key=None):
+    normalized = (sa_payload or {}).get("normalized") if isinstance(sa_payload, dict) else None
+    raw = (sa_payload or {}).get("raw") if isinstance(sa_payload, dict) else None
+    rows_source = None
+    if isinstance(period_key, str):
+        history_periods = normalized.get("history_periods") if isinstance(normalized, dict) else None
+        if isinstance(history_periods, dict) and isinstance(history_periods.get(period_key), list):
+            rows_source = history_periods.get(period_key)
+        if rows_source is None:
+            raw_periods = raw.get("history_periods") if isinstance(raw, dict) else None
+            if isinstance(raw_periods, dict) and isinstance(raw_periods.get(period_key), list):
+                rows_source = raw_periods.get(period_key)
+    elif isinstance(normalized, dict) and isinstance(normalized.get("history"), list):
+        rows_source = normalized.get("history")
+
+    rows = []
+    for point in rows_source or []:
+        date = parse_history_date((point or {}).get("t") or (point or {}).get("date"))
+        close = stockanalysis_history_close(point)
+        if date is None or close is None or close <= 0:
+            continue
+        rows.append({"date": date, "close": close})
+    return sorted(rows, key=lambda item: item["date"])
+
+
+def stockanalysis_history_return_fact(sa_payload, *, daily_trading_days=None, monthly_periods=None):
+    rows = []
+    offset = None
+    if isinstance(daily_trading_days, int):
+        rows = stockanalysis_history_points(sa_payload, "daily_1y")
+        offset = daily_trading_days
+    if (not rows or len(rows) <= (offset or 0)) and isinstance(monthly_periods, int):
+        rows = stockanalysis_history_points(sa_payload)
+        offset = monthly_periods
+    if not rows or offset is None or len(rows) <= offset:
+        return None
+    latest = rows[-1]
+    start = rows[-1 - offset]
+    value = return_from_closes(start["close"], latest["close"])
+    return fact(
+        value,
+        "stockanalysis.detail.history",
+        as_of=latest["date"].isoformat(),
+        fetched_at=(sa_payload or {}).get("fetched_at"),
+        confidence="derived",
+        unit="percent_points",
+    )
+
+
 def stockanalysis_quote_fact(sa_payload, key):
     quote = ((sa_payload or {}).get("normalized") or {}).get("quote") or {}
     source = "stockanalysis.quote"
@@ -412,7 +469,11 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=
             stockanalysis_performance_fact(sa_payload, "return_1m", "stockanalysis.detail.performance"),
             stockanalysis_performance_fact(sa_catalog_payload, "return_1m", (sa_catalog_payload or {}).get("market_facts_source")),
         ),
-        "return_3m": resolve_fact("return_3m", yf_history_return_fact(yf_payload, 63)),
+        "return_3m": resolve_fact(
+            "return_3m",
+            yf_history_return_fact(yf_payload, 63),
+            stockanalysis_history_return_fact(sa_payload, daily_trading_days=63, monthly_periods=3),
+        ),
         "return_ytd": resolve_fact(
             "return_ytd",
             yf_history_ytd_fact(yf_payload),

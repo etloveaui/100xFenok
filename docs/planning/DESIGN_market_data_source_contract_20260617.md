@@ -123,7 +123,8 @@ External sources
     `return_ytd`, `return_1y`, `return_3y_avg`, `return_5y_avg`,
     `return_10y_avg`, and `return_max_avg` against the
     normalized ETF universe so Yahoo history backfills have a durable progress
-    metric;
+    metric, including whether a selected return came from Yahoo history,
+    Yahoo info, StockAnalysis detail history, or StockAnalysis performance;
   - reports completed/missing backfill offsets, next expected offset, hard-error
     count, and finalization readiness for the full ETF universe run;
   - reports `incremental_etf.status` (`waiting|warn|pass|fail`) from
@@ -278,7 +279,8 @@ This keeps UI consumption simple while preserving overlapping source evidence.
 | dividend_yield | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview → SlickCharts |
 | beta | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
 | expense_ratio | Yahoo → StockAnalysis overview → Yahoo StockAnalysis-fallback overview |
-| return_1m / return_3m | Yahoo 1Y daily history close-to-close derived |
+| return_1m | Yahoo 1Y daily history close-to-close derived |
+| return_3m | Yahoo 1Y daily history close-to-close derived → StockAnalysis detail history derived |
 | return_ytd | Yahoo 1Y daily history derived → Yahoo ytdReturn |
 | return_1y | Yahoo 1Y daily history derived → Yahoo 52-week change |
 | return_3y_avg | Yahoo average-return field normalized from ratio to percent points |

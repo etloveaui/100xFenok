@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ACVU",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:54:06Z",
+  "generated_at": "2026-06-19T04:07:38Z",
   "identity": {
     "name": "Hartford Funds Exchange-Traded Trust - Hartford Alpha Capture Value ETF",
     "exchange": "BTS",
@@ -145,7 +145,8 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "candidates": [
         {
@@ -155,9 +156,17 @@
           "fetched_at": "2026-06-18T17:17:02Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -0.6766955651100722,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-18",
+          "fetched_at": "2026-06-18T17:17:02Z",
+          "confidence": "derived",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": 12.454605242562934,
@@ -323,7 +332,8 @@
         "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.history"
       ],
       "return_ytd": [
         "yf.history_1y",
