@@ -629,6 +629,9 @@ function HistoryView({
   const isAvailable = (candidateMode: HistoryMode, candidateRange: HistoryRange) =>
     historyRowsForSelection(historyPeriods, history, candidateMode, candidateRange).length > 0;
   if (!rows.length) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">가격 히스토리 없음</p>;
+  const pendingMultiYearRanges = (["3Y", "5Y"] as const).filter((candidateRange) =>
+    HISTORY_MODES.every((candidateMode) => !isAvailable(candidateMode, candidateRange))
+  );
 
   const chronological = [...rows].reverse();
   const closes = chronological.map(historyPointClose).filter(isFiniteNumber);
@@ -651,6 +654,11 @@ function HistoryView({
         onRangeChange={onRangeChange}
         isAvailable={isAvailable}
       />
+      {pendingMultiYearRanges.length > 0 ? (
+        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--c-ink-3)]">
+          {pendingMultiYearRanges.join("·")} 히스토리 대기: 해당 구간 데이터가 들어오면 차트와 표에 자동 반영됩니다.
+        </p>
+      ) : null}
       <div className="grid gap-2 sm:grid-cols-3">
         <MetricCard label={`${activeLabel} 구간 수익률`} value={fmtCompactSignedPercent(periodReturn)} note={`${activeRange} ${activeLabel} 종가 기준`} />
         <MetricCard label="구간 고점" value={formatMoney(max, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
