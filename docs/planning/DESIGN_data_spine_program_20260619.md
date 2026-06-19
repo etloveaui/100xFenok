@@ -1,6 +1,6 @@
 # Data Spine Program
 
-Date/status: 2026-06-19; P0 inventory baseline measured, v0 contract still DRAFT/UNVERIFIED.
+Date/status: 2026-06-19; P0 inventory measured, P1 policy draft opened, v0 contract still DRAFT/UNVERIFIED.
 
 ## Purpose
 
@@ -87,8 +87,9 @@ Sample top disagreements already prove that parity alerts need an action policy:
 | FXB | `return_1y` | `yf.history_1y` +1.2328 | `yf` -1.2296 | sign_divergence |
 | GDXW | `return_3m` | `yf.history_1y` -6.8462 | `stockanalysis.detail.history` +6.7927 | sign_divergence |
 
-P1 must define, per field: authority, fallback chain, tolerance band, and the
-served-value action when providers disagree beyond tolerance.
+P1 draft: `DATA_SPINE_P1_POLICY_20260619.md` +
+`scripts/audit-data-spine-p1.py`; authority/fallback mirrors
+`scripts/build-market-facts.py`, while tolerance/action remain unratified.
 
 ## Direct Provider Fetch Leak Inventory
 
@@ -260,10 +261,7 @@ contract and the disagreement policy.
 
 ## Next P0 Work
 
-1. Turn the direct-provider leak table into actionable backlog rows.
-2. Extend parity policy from alert-only to action-bearing disagreement rules.
-3. Add feno-data/feno-data-remote/feno-value consumer evidence from the
-   claude-code-hub skill files before changing those skills.
-4. Decide the StockAnalysis route vs service-map IA before expanding A-phase UI.
-5. Ratify ownership/update policy for `public.report_metadata` before the v0
-   contract is frozen.
+1. Ratify or amend `DATA_SPINE_P1_POLICY_20260619.md`.
+2. Add feno-data/feno-data-remote/feno-value consumer evidence from CCH skills.
+3. Decide the StockAnalysis route vs service-map IA before A-phase UI.
+4. Ratify ownership/update policy for `public.report_metadata`.

@@ -1,0 +1,361 @@
+#!/usr/bin/env python3
+"""Build a read-only Data Spine P1 authority/disagreement audit."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import sys
+from collections import Counter, defaultdict
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parent.parent
+PARITY_JSON = ROOT / "data" / "computed" / "market_source_parity.json"
+PARITY_BUILDER = ROOT / "scripts" / "build-market-source-parity.py"
+FACTS_BUILDER = ROOT / "scripts" / "build-market-facts.py"
+
+
+DIRECT_FETCH_ROWS = (
+    {
+        "id": "DS-P1-001",
+        "path": "100xfenok-next/src/lib/server/ticker.ts",
+        "provider": "Yahoo query1 + ticker worker",
+        "patterns": ("YAHOO_BASE_URL", "WORKER_TICKER_BASE"),
+        "current_shape": "product-runtime live fetch",
+        "target": "migrate-to-contract or explicit live-gateway exception",
+        "owner": "100x Next runtime",
+        "priority": "P1-high",
+    },
+    {
+        "id": "DS-P1-002",
+        "path": "100x/daily-wrap/fetcher.py",
+        "provider": "Yahoo yfinance + FRED",
+        "patterns": ("import yfinance", "FRED_BASE_URL"),
+        "current_shape": "legacy Daily Wrap publication fetcher",
+        "target": "legacy-exception or migrate-to-contract",
+        "owner": "Daily Wrap legacy",
+        "priority": "P2",
+    },
+    {
+        "id": "DS-P1-003",
+        "path": "admin/market-data/yahoo-quotes.gs",
+        "provider": "Yahoo query1",
+        "patterns": ("YAHOO_CONFIG", "UrlFetchApp.fetch"),
+        "current_shape": "admin GAS quote helper",
+        "target": "legacy-exception or contract route",
+        "owner": "admin market-data",
+        "priority": "P2",
+    },
+    {
+        "id": "DS-P1-004",
+        "path": "admin/market-radar/scripts/yahoo-quotes.gs",
+        "provider": "Yahoo query1 + Stooq + GOOGLEFINANCE",
+        "patterns": ("YAHOO_BASE_URL", "fetchFromYahoo"),
+        "current_shape": "market-radar GAS quote helper",
+        "target": "legacy-exception or contract route",
+        "owner": "admin market-radar",
+        "priority": "P2",
+    },
+    {
+        "id": "DS-P1-005",
+        "path": "admin/market-radar/scripts/vix.gs",
+        "provider": "Yahoo query1 + GitHub contents API",
+        "patterns": ("YAHOO_SYMBOL", "query1.finance.yahoo.com"),
+        "current_shape": "market-radar VIX collector that writes repo data",
+        "target": "migrate-to-contract under sentiment collector or explicit admin exception",
+        "owner": "admin market-radar",
+        "priority": "P1-medium",
+    },
+    {
+        "id": "DS-P1-006",
+        "path": "ib/ib-helper/apps-script/yahoo-quotes.gs",
+        "provider": "CNBC + Yahoo query1 + Stooq + GOOGLEFINANCE",
+        "patterns": ("YAHOO_QUOTES_CONFIG", "fetchFromYahoo"),
+        "current_shape": "IB helper GAS live quote helper",
+        "target": "legacy-exception until AA/IB contract route exists",
+        "owner": "IB helper / Asset Allocator bridge",
+        "priority": "P2",
+    },
+    {
+        "id": "DS-P1-007",
+        "path": "ib/ib-total-guide-calculator.html",
+        "provider": "browser Yahoo/CORS proxy",
+        "patterns": ("Yahoo Finance API", "allorigins"),
+        "current_shape": "legacy browser-side provider fetch",
+        "target": "sunset or contract route",
+        "owner": "IB legacy docs",
+        "priority": "P2",
+    },
+    {
+        "id": "DS-P1-008",
+        "path": "scripts/fetch-yf-finance-v0.py",
+        "provider": "Yahoo yfinance",
+        "patterns": ("yf Finance Engine v0 PoC", "import yfinance"),
+        "current_shape": "old PoC collector",
+        "target": "sunset/archive",
+        "owner": "data pipeline",
+        "priority": "P1-medium",
+    },
+)
+
+
+FIELD_TOLERANCE = {
+    "price": "0.5% relative drift",
+    "previous_close": "0.5% relative drift",
+    "change": "same sign required; <= 0.5% of price for value drift",
+    "change_pct": "same sign required; <= 0.5 percentage points",
+    "market_cap": "5% relative drift",
+    "total_assets": "5% relative drift",
+    "trailing_pe": "5% relative drift",
+    "forward_pe": "5% relative drift",
+    "dividend_yield": "25 bps after percent-point normalization",
+    "beta": "0.10 absolute drift",
+    "expense_ratio": "25 bps after percent-point normalization",
+    "return_1m": "2 percentage points; sign divergence blocks",
+    "return_3m": "3 percentage points; sign divergence blocks",
+    "return_ytd": "3 percentage points; sign divergence blocks",
+    "return_1y": "5 percentage points; sign divergence blocks",
+    "return_3y_avg": "5 percentage points; sign divergence blocks",
+    "return_5y_avg": "5 percentage points; sign divergence blocks",
+    "return_10y_avg": "5 percentage points; sign divergence blocks",
+    "return_max_avg": "5 percentage points; sign divergence blocks",
+}
+
+FIELD_UNIT = {
+    "price": "currency",
+    "previous_close": "currency",
+    "change": "currency",
+    "change_pct": "percent_points",
+    "market_cap": "currency",
+    "total_assets": "currency",
+    "trailing_pe": "ratio",
+    "forward_pe": "ratio",
+    "dividend_yield": "percent_points",
+    "beta": "ratio",
+    "expense_ratio": "percent_points",
+    "return_1m": "percent_points",
+    "return_3m": "percent_points",
+    "return_ytd": "percent_points",
+    "return_1y": "percent_points",
+    "return_3y_avg": "percent_points",
+    "return_5y_avg": "percent_points",
+    "return_10y_avg": "percent_points",
+    "return_max_avg": "percent_points",
+}
+
+DIAGNOSIS_ACTION = {
+    "agreement": "serve selected value",
+    "stale": "prefer fresher candidate over static authority; retain stale source as provenance warning",
+    "scale_mismatch": "unit-normalize to percent_points before compare/serve; fail normalization if unresolved",
+    "sign_divergence": "do not silently pick; block confidence UI or require explicit authority tiebreak",
+    "value_drift": "apply per-field tolerance band; if outside tolerance, serve with warning or hold from confidence UI",
+}
+
+
+def now_iso() -> str:
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_parity_builder():
+    spec = importlib.util.spec_from_file_location("market_source_parity", PARITY_BUILDER)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load {PARITY_BUILDER}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_facts_builder():
+    spec = importlib.util.spec_from_file_location("market_facts", FACTS_BUILDER)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load {FACTS_BUILDER}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def source_line(path: Path, needle: str) -> int | None:
+    if not path.exists():
+        return None
+    for idx, line in enumerate(path.read_text(encoding="utf-8", errors="ignore").splitlines(), start=1):
+        if needle in line:
+            return idx
+    return None
+
+
+def first_matching_line(path: Path, patterns: tuple[str, ...]) -> int | None:
+    if not path.exists():
+        return None
+    for idx, line in enumerate(path.read_text(encoding="utf-8", errors="ignore").splitlines(), start=1):
+        if any(pattern in line for pattern in patterns):
+            return idx
+    return None
+
+
+def build_field_rows() -> list[dict[str, Any]]:
+    parity = load_parity_builder()
+    facts = load_facts_builder()
+    source_policy = facts.FIELD_SOURCE_POLICY
+    diagnosis_by_field: dict[str, Counter[str]] = defaultdict(Counter)
+    selected_sources: dict[str, Counter[str]] = defaultdict(Counter)
+    policy_samples: dict[str, list[str]] = {}
+
+    for path in sorted(parity.FACTS_DIR.glob("*.json")):
+        payload = parity.load_json(path) or {}
+        facts = payload.get("facts") or {}
+        if not isinstance(facts, dict):
+            continue
+        for field, fact in facts.items():
+            if not isinstance(fact, dict):
+                continue
+            source = fact.get("source")
+            if source:
+                selected_sources[field][source] += 1
+            candidates = fact.get("candidates") or []
+            if not isinstance(candidates, list) or len(candidates) < 2:
+                continue
+            policy = fact.get("policy") or []
+            diagnosis = parity.diagnose_divergence(field, candidates, policy)["diagnosis"]
+            diagnosis_by_field[field][diagnosis] += 1
+            policy_samples.setdefault(field, policy)
+
+    rows = []
+    for field in sorted(set(diagnosis_by_field) | set(source_policy)):
+        counts = diagnosis_by_field[field]
+        chain = list(source_policy.get(field, []))
+        line = source_line(FACTS_BUILDER, f'"{field}"')
+        rows.append(
+            {
+                "field": field,
+                "authority": chain[0] if chain else "[not verified]",
+                "authority_ref": f"scripts/build-market-facts.py:{line}" if line else "[not verified]",
+                "fallback_chain": chain,
+                "unit_scale": FIELD_UNIT.get(field, "[not verified]"),
+                "tolerance_band": FIELD_TOLERANCE.get(field, "DRAFT/UNVERIFIED"),
+                "disagreement_action": DIAGNOSIS_ACTION,
+                "provenance_surfaced": "yes: facts.{field}.source/as_of/fetched_at + candidates",
+                "implemented_vs_proposed": "authority/fallback implemented; tolerance/action proposed P1 draft",
+                "status": "DRAFT",
+                "multi_candidate_count": sum(counts.values()),
+                "agreement": counts["agreement"],
+                "value_drift": counts["value_drift"],
+                "stale": counts["stale"],
+                "sign_divergence": counts["sign_divergence"],
+                "scale_mismatch": counts["scale_mismatch"],
+                "selected_sources": dict(selected_sources[field].most_common(5)),
+                "policy_order": policy_samples.get(field, []),
+            }
+        )
+    return rows
+
+
+def build_direct_fetch_rows() -> list[dict[str, Any]]:
+    rows = []
+    for row in DIRECT_FETCH_ROWS:
+        path = ROOT / row["path"]
+        line = first_matching_line(path, row["patterns"])
+        rows.append(
+            {
+                **row,
+                "exists": path.exists(),
+                "evidence": f"{row['path']}:{line}" if line else "[not verified]",
+            }
+        )
+    return rows
+
+
+def build_payload() -> dict[str, Any]:
+    parity_payload = load_json(PARITY_JSON)
+    return {
+        "schema_version": "data-spine-p1-audit/v1",
+        "generated_at": now_iso(),
+        "parity_summary": parity_payload.get("summary", {}),
+        "field_rows": build_field_rows(),
+        "diagnosis_action": DIAGNOSIS_ACTION,
+        "direct_fetch_rows": build_direct_fetch_rows(),
+        "public_report_metadata": {
+            "dataset": "public.report_metadata",
+            "status": "ownership/update-policy required",
+            "current_as_of": "2026-01-28 (from P0 inventory)",
+        },
+    }
+
+
+def print_markdown(payload: dict[str, Any]) -> None:
+    print("# Data Spine P1 Audit")
+    print()
+    print(f"Generated: {payload['generated_at']}")
+    print()
+    print("## Parity Summary")
+    print()
+    print("| Metric | Value |")
+    print("|---|---:|")
+    for key, value in payload["parity_summary"].items():
+        if isinstance(value, dict):
+            continue
+        print(f"| `{key}` | {value} |")
+    counts = payload["parity_summary"].get("diagnosis_counts") or {}
+    for key, value in counts.items():
+        print(f"| `diagnosis.{key}` | {value} |")
+    print()
+    print("## Field Diagnostics")
+    print()
+    print("| Field | Multi | Agree | Drift | Stale | Sign | Scale | Top selected sources |")
+    print("|---|---:|---:|---:|---:|---:|---:|---|")
+    for row in payload["field_rows"]:
+        top = ", ".join(f"{k}:{v}" for k, v in row["selected_sources"].items())
+        print(
+            f"| `{row['field']}` | {row['multi_candidate_count']} | {row['agreement']} | "
+            f"{row['value_drift']} | {row['stale']} | {row['sign_divergence']} | "
+            f"{row['scale_mismatch']} | {top} |"
+        )
+    print()
+    print("## Authority / Fallback Matrix")
+    print()
+    print("| Field | Authority ref | Fallback chain | Unit | Tolerance | Action basis | Provenance | Implemented vs proposed | Status |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for row in payload["field_rows"]:
+        chain = " -> ".join(row["fallback_chain"]) if row["fallback_chain"] else "[not verified]"
+        print(
+            f"| `{row['field']}` | `{row['authority_ref']}` `{row['authority']}` | {chain} | "
+            f"{row['unit_scale']} | {row['tolerance_band']} | 5-category parity action | "
+            f"{row['provenance_surfaced']} | {row['implemented_vs_proposed']} | {row['status']} |"
+        )
+    print()
+    print("## Direct Fetch Backlog Candidates")
+    print()
+    print("| ID | Evidence | Provider | Current shape | Target | Owner | Priority |")
+    print("|---|---|---|---|---|---|---|")
+    for row in payload["direct_fetch_rows"]:
+        print(
+            f"| `{row['id']}` | `{row['evidence']}` | {row['provider']} | "
+            f"{row['current_shape']} | {row['target']} | {row['owner']} | {row['priority']} |"
+        )
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Read-only Data Spine P1 authority/disagreement audit.")
+    parser.add_argument("--json", action="store_true", help="Print JSON instead of Markdown.")
+    return parser.parse_args()
+
+
+def main() -> None:
+    payload = build_payload()
+    if parse_args().json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print_markdown(payload)
+
+
+if __name__ == "__main__":
+    main()
