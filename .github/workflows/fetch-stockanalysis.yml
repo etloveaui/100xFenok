@@ -155,6 +155,17 @@ jobs:
           fi
           python3 scripts/fetch-stockanalysis.py $ARGS
 
+      - name: Refresh history-gap plan after live backfill
+        if: ${{ github.event.inputs.history_gaps_only == 'true' }}
+        env:
+          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
+          INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
+        run: |
+          ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
+          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+          if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
+          python3 scripts/fetch-stockanalysis.py $ARGS
+
       - name: Mirror docs to public
         run: |
           mkdir -p 100xfenok-next/public/data/stockanalysis
@@ -188,6 +199,9 @@ jobs:
           npm --prefix 100xfenok-next run qa:etf-universe
           npm --prefix 100xfenok-next run qa:surface-consumers
           npm --prefix 100xfenok-next run qa:market-audit
+          if [ "${{ github.event.inputs.history_gap_plan }}" = "true" ] || [ "${{ github.event.inputs.history_gaps_only }}" = "true" ]; then
+            npm --prefix 100xfenok-next run qa:history-gap
+          fi
           npm --prefix 100xfenok-next run qa:copy
 
       - name: Commit and push

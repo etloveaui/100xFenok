@@ -165,6 +165,9 @@ Implementation pointers:
     StockAnalysis ETF files missing the required multi-year history periods. It
     skips the normal surface/financial refresh bundle and uses
     `incremental_etf_limit` as the chunk size.
+  - After a live `history_gaps_only=true` chunk, the workflow regenerates the
+    no-network plan artifact so `incremental_plan_latest.json` reflects the
+    remaining gap, then runs `qa:history-gap` before committing.
 
 ## 4. Filters & Display Fields
 
