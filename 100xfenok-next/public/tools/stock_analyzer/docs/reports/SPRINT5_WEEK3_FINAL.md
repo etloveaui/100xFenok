@@ -374,9 +374,9 @@ Update Sprint 5 documentation:
 - [SPRINT5_WEEK2_RETROSPECTIVE.md](./SPRINT5_WEEK2_RETROSPECTIVE.md): Week 2 회고
 
 **Week 1**:
-- [SPRINT5_ARCHITECTURE.md](./SPRINT5_ARCHITECTURE.md): 전체 아키텍처
-- [SPRINT5_TEST_REPORT.md](./SPRINT5_TEST_REPORT.md): 테스트 상세
-- [SPRINT5_USAGE_GUIDE.md](./SPRINT5_USAGE_GUIDE.md): 사용 가이드
+- [SPRINT5_ARCHITECTURE.md](../SPRINT5_ARCHITECTURE.md): 전체 아키텍처
+- SPRINT5_TEST_REPORT.md: 테스트 상세
+- [SPRINT5_USAGE_GUIDE.md](../SPRINT5_USAGE_GUIDE.md): 사용 가이드
 
 **Git**:
 - Commit 2481601: Week 2 회고 + Week 3 시작
