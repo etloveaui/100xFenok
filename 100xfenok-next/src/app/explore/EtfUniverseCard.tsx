@@ -518,7 +518,7 @@ export default function EtfUniverseCard({
                 }`}
               >
                 <span>{option.label}</span>
-                <span className={selected ? "text-white/80" : "text-slate-400"}>{formatNumber(option.count)}</span>
+                <span className={selected ? "text-white/80" : "text-[var(--c-ink-4)]"}>{formatNumber(option.count)}</span>
               </button>
             );
           })}
@@ -533,7 +533,7 @@ export default function EtfUniverseCard({
             }`}
           >
             <span>신규 상장</span>
-            <span className={newOnly ? "text-white/80" : "text-slate-400"}>{formatNumber(newCount)}</span>
+            <span className={newOnly ? "text-white/80" : "text-[var(--c-ink-4)]"}>{formatNumber(newCount)}</span>
           </button>
         </div>
 
@@ -591,7 +591,7 @@ export default function EtfUniverseCard({
               key: filterKey,
               count: Math.min(filteredRows.length, visibleRows.length + visibleLimit),
             })}
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive"
           >
             더 보기 · {formatNumber(visibleRows.length)} / {formatNumber(filteredRows.length)}
           </button>

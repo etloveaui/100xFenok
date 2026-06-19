@@ -58,7 +58,7 @@ export default function ExploreDashboard() {
           <h2>섹터 흐름</h2>
           <span className="desc">최근 1개월 · 수익률순</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">
+        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">
           {loaded ? "섹터 흐름 데이터를 불러오지 못했습니다." : "섹터 흐름 데이터 확인 중"}
         </div>
       </section>
@@ -79,7 +79,7 @@ export default function ExploreDashboard() {
           <h2>섹터 흐름</h2>
           <span className="desc">최근 1개월 · 수익률순</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">표시할 섹터 흐름 데이터가 없습니다.</div>
+        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">표시할 섹터 흐름 데이터가 없습니다.</div>
       </section>
     );
   }

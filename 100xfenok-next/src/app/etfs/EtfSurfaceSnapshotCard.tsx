@@ -282,7 +282,7 @@ export default function EtfSurfaceSnapshotCard() {
           <div className="mv-col">
             <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">
               <span>신규 상장 ETF · {fmtNumber(countRows(data?.newEtfs))}개</span>
-              <TransitionLink href="/etfs/new" className="text-brand-interactive hover:text-[var(--c-ink)]">
+              <TransitionLink href="/etfs/new" className="text-[var(--c-brand)] hover:text-[var(--c-ink)]">
                 {countLabel(newEtfCount)} 전체 보기
               </TransitionLink>
             </div>
@@ -382,8 +382,8 @@ export default function EtfSurfaceSnapshotCard() {
                     onClick={() => setCollectionKey(key)}
                     className={`min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
                       collectionKey === key
-                        ? "border-brand-interactive bg-brand-interactive text-white"
-                        : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-brand-interactive hover:text-brand-interactive"
+                        ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+                        : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
                     }`}
                   >
                     {collectionLabel(key)} {fmtNumber(collections[key].total)}
@@ -424,7 +424,7 @@ export default function EtfSurfaceSnapshotCard() {
 
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
         <span>기준일 {asOf(data?.screener?.fetched_at, data?.newEtfs?.fetched_at)}</span>
-        <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
+        <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--c-brand)]">
           신규 상장 {countLabel(newEtfCount)} 보기
         </TransitionLink>
       </div>

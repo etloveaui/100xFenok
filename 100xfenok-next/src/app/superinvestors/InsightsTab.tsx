@@ -120,7 +120,7 @@ function classificationLabel(c: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
       <div className="h-5 w-1/3 rounded bg-slate-200" />
       <div className="mt-3 space-y-2">
         {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-4 w-full rounded bg-slate-200" />)}
@@ -553,7 +553,7 @@ export default function InsightsTab() {
       ) : (
         <div className="space-y-4">
           {/* 1. 매수 압력 */}
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+          <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
             <p className="mb-3 text-[10px] font-semibold text-slate-400">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
             {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <SkeletonCard />}
@@ -561,20 +561,20 @@ export default function InsightsTab() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             {/* 2. 신규 편입 빅베팅 */}
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">신규 편입 빅베팅</h3>
               <p className="mb-3 text-[10px] font-semibold text-slate-400">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
               {np ? <NewPositionsCard data={np} /> : <SkeletonCard />}
             </div>
 
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">고확신 신규 편입</h3>
               <p className="mb-3 text-[10px] font-semibold text-slate-400">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
               {ce ? <HighConvictionNewCard data={ce} /> : <SkeletonCard />}
             </div>
 
             {/* 3. 확신 베팅 */}
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">확신 베팅 (TOP5)</h3>
               <p className="mb-3 text-[10px] font-semibold text-slate-400">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
               {cv ? <ConvictionCard data={cv} /> : <SkeletonCard />}
@@ -582,7 +582,7 @@ export default function InsightsTab() {
           </div>
 
           {/* 4. 집중도 */}
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
+          <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">집중도 (HHI)</h3>
             <p className="mb-3 text-[10px] font-semibold text-slate-400">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
             {hhi ? <HhiCard data={hhi} /> : <SkeletonCard />}

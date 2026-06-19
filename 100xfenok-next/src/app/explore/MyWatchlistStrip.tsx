@@ -54,7 +54,7 @@ export default function MyWatchlistStrip() {
           <span className="desc num">(0)</span>
           <TransitionLink href="/portfolio" className="act">포트폴리오 →</TransitionLink>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">관심 종목을 추가하면 여기에서 바로 확인할 수 있습니다.</div>
+        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">관심 종목을 추가하면 여기에서 바로 확인할 수 있습니다.</div>
       </section>
     );
   }

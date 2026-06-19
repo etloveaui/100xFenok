@@ -37,11 +37,11 @@ function loadYardney(): Promise<YardneyDoc | null> {
 }
 
 function verdict(p: number | null): { text: string; tone: string } {
-  if (p === null) return { text: "데이터 부족", tone: "text-slate-400" };
-  if (p > 15) return { text: `적정가 대비 ${p.toFixed(1)}% 프리미엄 — 고평가 구간`, tone: "text-rose-600" };
-  if (p > 5) return { text: `다소 프리미엄 (${p.toFixed(1)}%)`, tone: "text-amber-600" };
-  if (p >= -5) return { text: `적정 범위 (${p.toFixed(1)}%)`, tone: "text-slate-600" };
-  return { text: `할인 구간 (${p.toFixed(1)}%)`, tone: "text-emerald-600" };
+  if (p === null) return { text: "데이터 부족", tone: "text-[var(--c-ink-4)]" };
+  if (p > 15) return { text: `적정가 대비 ${p.toFixed(1)}% 프리미엄 — 고평가 구간`, tone: "text-[var(--c-down)]" };
+  if (p > 5) return { text: `다소 프리미엄 (${p.toFixed(1)}%)`, tone: "text-[var(--c-warn)]" };
+  if (p >= -5) return { text: `적정 범위 (${p.toFixed(1)}%)`, tone: "text-[var(--c-ink-2)]" };
+  return { text: `할인 구간 (${p.toFixed(1)}%)`, tone: "text-[var(--c-up)]" };
 }
 
 function percentile(value: number, sorted: number[]): number {
@@ -212,10 +212,10 @@ export default function YardeniCard() {
               </circle>
             ))}
           </svg>
-          <div className="mt-1 flex justify-between text-[9px] font-bold tabular-nums text-slate-300">
+          <div className="mt-1 flex justify-between text-[9px] font-bold tabular-nums text-[var(--c-ink-4)]">
             <span>최저 {fmtIndex(chart.minV)}</span>
-            <span className="text-[#1B73D3]">S&P 500</span>
-            <span className="text-slate-500">적정가</span>
+            <span className="text-[var(--c-brand)]">S&P 500</span>
+            <span className="text-[var(--c-ink-3)]">적정가</span>
             <span>최고 {fmtIndex(chart.maxV)}</span>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-5">
@@ -236,12 +236,12 @@ export default function YardeniCard() {
       ) : null}
 
       {pctRank !== null ? (
-        <p className="mt-3 text-[11px] font-bold text-slate-500">
+        <p className="mt-3 text-[11px] font-bold text-[var(--c-ink-3)]">
           1990년 이후 프리미엄 상위 {pctRank}% 수준
         </p>
       ) : null}
 
-      <p className="mt-3 text-[9px] font-semibold text-slate-400">
+      <p className="mt-3 text-[9px] font-semibold text-[var(--c-ink-4)]">
         Moody&apos;s AAA·BAA 스프레드 기반 · 주간 · 참고용 · {latest.date}
       </p>
     </div>

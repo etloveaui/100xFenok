@@ -176,7 +176,7 @@ export default function DataCoverageCard() {
           <h2>데이터 커버리지</h2>
           <span className="desc">ETF·종목·품질</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">
+        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">
           {loaded ? "데이터 커버리지 정보를 불러오지 못했습니다." : "데이터 커버리지 확인 중"}
         </div>
       </section>

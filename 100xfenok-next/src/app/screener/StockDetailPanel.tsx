@@ -693,7 +693,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
   const { data, loading } = useMarketFacts(ticker);
   if (loading) {
     return (
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-sm font-semibold text-slate-500">
+      <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3 text-sm font-semibold text-[var(--c-ink-3)]">
         통합 데이터 확인 중…
       </div>
     );
@@ -726,15 +726,15 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
   const breakdownLimit = compact ? 4 : 8;
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+    <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
-          <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">통합 데이터</h4>
-          <p className="mt-0.5 min-w-0 truncate text-[11px] font-bold text-slate-400">
+          <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">통합 데이터</h4>
+          <p className="mt-0.5 min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]">
             {data.identity?.name ?? data.ticker ?? ticker} · {data.asset_type === "etf" ? "ETF" : "주식"}
           </p>
         </div>
-        <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
+        <span className="min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]">
           {data.generated_at?.slice(0, 10) ?? "—"}
         </span>
       </div>
@@ -755,15 +755,15 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       {topHoldings.length > 0 ? (
         <div className="mt-3 min-w-0">
           <div className="mb-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">ETF 상위 보유 종목</p>
-            <span className="text-[10px] font-bold text-slate-400">
+            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">ETF 상위 보유 종목</p>
+            <span className="text-[10px] font-bold text-[var(--c-ink-4)]">
               {data.etf?.holdings_updated ?? "—"} · {data.etf?.holdings_count ?? topHoldings.length}개
             </span>
           </div>
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[360px] text-[11px]">
               <thead>
-                <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
                   <th className="px-2 py-1.5 text-left">보유 항목</th>
                   <th className="px-2 py-1.5 text-right">비중</th>
                   <th className="px-2 py-1.5 text-right">수량</th>
@@ -771,15 +771,15 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
               </thead>
               <tbody>
                 {topHoldings.map((row, index) => (
-                  <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-slate-100 last:border-b-0">
-                    <td className="px-2 py-1.5 font-bold text-slate-700">
+                  <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
+                    <td className="px-2 py-1.5 font-bold text-[var(--c-ink-2)]">
                       <span className="block max-w-[14rem] truncate">{row.name ?? "—"}</span>
-                      {row.symbol ? <span className="orbitron text-[10px] font-black text-slate-400">{row.symbol}</span> : null}
+                      {row.symbol ? <span className="orbitron text-[10px] font-black text-[var(--c-ink-4)]">{row.symbol}</span> : null}
                     </td>
-                    <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-slate-900">
+                    <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
                       {isFiniteNumber(row.weight_pct) ? `${row.weight_pct.toFixed(2)}%` : "—"}
                     </td>
-                    <td className="px-2 py-1.5 text-right font-bold tabular-nums text-slate-500">
+                    <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">
                       {isFiniteNumber(row.shares) ? row.shares.toLocaleString() : "—"}
                     </td>
                   </tr>
@@ -792,7 +792,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {availableSources.map((source) => (
-          <span key={source} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500">
+          <span key={source} className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
             {sourceLabel(source)}
           </span>
         ))}
@@ -820,7 +820,7 @@ export function Sparkline({
   const actualPoints = points.filter((point) => !point.estimate);
   const estimatePoints = points.filter((point) => point.estimate);
   const firstEstimatePoint = estimatePoints[0] ?? null;
-  if (points.length < 2 || labels.length < 2) return <span className="text-xs text-slate-300">—</span>;
+  if (points.length < 2 || labels.length < 2) return <span className="text-xs text-[var(--c-ink-4)]">—</span>;
   const values = points.map((point) => point.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -936,7 +936,7 @@ export function PerBandChart({
   const perPoints = allPerPoints.filter((point) => !point.estimate);
   const forwardPoints = allPerPoints.filter((point) => point.estimate);
   const forwardPoint = forwardPoints[0] ?? null;
-  if (perPoints.length < 2) return <span className="text-xs text-slate-300">—</span>;
+  if (perPoints.length < 2) return <span className="text-xs text-[var(--c-ink-4)]">—</span>;
 
   const allValues = allPerPoints.map((point) => point.value);
 
@@ -1209,10 +1209,10 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+    <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">추정치 변화·시장 예상</h4>
-        <span className="text-[10px] font-bold text-slate-400">EPS 주간 예상</span>
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">추정치 변화·시장 예상</h4>
+        <span className="text-[10px] font-bold text-[var(--c-ink-4)]">EPS 주간 예상</span>
       </div>
       {epsRows.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-3">
@@ -1240,7 +1240,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
         <div className="-mx-1 mt-3 overflow-x-auto px-1">
           <table className="w-full min-w-[520px] text-[10px]">
             <thead>
-              <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+              <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
                 <th className="px-2 py-1 text-left">일자</th>
                 <th className="px-2 py-1 text-right">가격</th>
                 <th className="px-2 py-1 text-right">매출 컨센</th>
@@ -1250,11 +1250,11 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
             </thead>
             <tbody>
               {historyRows.map((row, index) => (
-                <tr key={`${row.date}-${index}`} className="border-b border-slate-100 last:border-b-0">
-                  <td className="px-2 py-1.5 font-bold tabular-nums text-slate-600">{row.date}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-700">{fmtPlainNumber(row.price, 2)}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-700">{fmtLarge(row.revenue_consensus)}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-700">{fmtEps(row.eps_consensus)}</td>
+                <tr key={`${row.date}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
+                  <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.date}</td>
+                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtPlainNumber(row.price, 2)}</td>
+                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtLarge(row.revenue_consensus)}</td>
+                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtEps(row.eps_consensus)}</td>
                   <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.eps_change)}`}>
                     {fmtSignedNumber(row.eps_change, 2)}
                   </td>
@@ -1291,15 +1291,15 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+    <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">실적·예상치 상세</h4>
-        <span className="text-[10px] font-bold text-slate-400">FY-4 ~ FY+3 표준화 데이터</span>
+        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">실적·예상치 상세</h4>
+        <span className="text-[10px] font-bold text-[var(--c-ink-4)]">FY-4 ~ FY+3 표준화 데이터</span>
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
         <table className="w-full min-w-[720px] text-[10px]">
           <thead>
-            <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+            <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
               <th className="px-2 py-1.5 text-left">항목</th>
               {periods.map((period) => (
                 <th key={period} className="px-2 py-1.5 text-right">{period}</th>
@@ -1308,12 +1308,12 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
           </thead>
           <tbody>
             {validRows.map((row) => (
-              <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-1.5 font-black text-slate-600">{row.label}</td>
+              <tr key={row.label} className="border-b border-[var(--c-line-2)] last:border-b-0">
+                <td className="px-2 py-1.5 font-black text-[var(--c-ink-2)]">{row.label}</td>
                 {periods.map((period, index) => {
                   const value = row.data?.[index];
                   return (
-                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right orbitron tabular-nums text-slate-800">
+                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink)]">
                       {row.fmt(value)}
                     </td>
                   );
@@ -1380,10 +1380,10 @@ function fmtRelativeDelta(current: MaybeNumber, previous: MaybeNumber) {
 
 function SlickMetricCard({ label, value, delta }: { label: string; value: string; delta?: string | null }) {
   return (
-    <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-      <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{value}</p>
-      <p className="mt-1 min-h-[16px] text-[11px] font-bold tabular-nums text-slate-400">{delta ? `직전 ${delta}` : ""}</p>
+    <div className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
+      <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
+      <p className="mt-1 min-h-[16px] text-[11px] font-bold tabular-nums text-[var(--c-ink-4)]">{delta ? `직전 ${delta}` : ""}</p>
     </div>
   );
 }
@@ -1466,10 +1466,10 @@ export function PriceDividendHistoryDepth({
   if (metricCards.length === 0 && returnRows.length === 0 && dividendRows.length === 0) return null;
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3">
+    <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">가격·배당 히스토리</h4>
-        <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
+        <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">가격·배당 히스토리</h4>
+        <span className="min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]">
           {latestMetric?.date ?? data.updated?.slice(0, 10) ?? "—"} · 수집 데이터 기준
         </span>
       </div>
@@ -1485,19 +1485,19 @@ export function PriceDividendHistoryDepth({
       <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">
         {returnRows.length > 0 ? (
           <div className="min-w-0">
-            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">연도별 수익률</p>
+            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">연도별 수익률</p>
             <div className="-mx-1 overflow-x-auto px-1">
               <table className="w-full min-w-[240px] text-[11px]">
                 <thead>
-                  <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                  <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
                     <th className="px-2 py-1.5 text-left">연도</th>
                     <th className="px-2 py-1.5 text-right">수익률</th>
                   </tr>
                 </thead>
                 <tbody>
                   {returnRows.map((row) => (
-                    <tr key={row.year} className="border-b border-slate-100 last:border-b-0">
-                      <td className="px-2 py-1.5 font-bold tabular-nums text-slate-600">{row.year}</td>
+                    <tr key={row.year} className="border-b border-[var(--c-line-2)] last:border-b-0">
+                      <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.year}</td>
                       <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.return)}`}>
                         {fmtSlickReturn(row.return)}
                       </td>
@@ -1511,11 +1511,11 @@ export function PriceDividendHistoryDepth({
 
         {dividendRows.length > 0 ? (
           <div className="min-w-0">
-            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">배당 이력</p>
+            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">배당 이력</p>
             <div className="-mx-1 overflow-x-auto px-1">
               <table className="w-full min-w-[320px] text-[11px]">
                 <thead>
-                  <tr className="border-b border-slate-200 font-black uppercase tracking-[0.06em] text-slate-400">
+                  <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
                     <th className="px-2 py-1.5 text-left">락일</th>
                     <th className="px-2 py-1.5 text-right">배당</th>
                     <th className="px-2 py-1.5 text-right">지급일</th>
@@ -1523,12 +1523,12 @@ export function PriceDividendHistoryDepth({
                 </thead>
                 <tbody>
                   {dividendRows.map((row, index) => (
-                    <tr key={`${row.exDate ?? "ex"}-${index}`} className="border-b border-slate-100 last:border-b-0">
-                      <td className="px-2 py-1.5 font-bold tabular-nums text-slate-600">{row.exDate ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-slate-900">
+                    <tr key={`${row.exDate ?? "ex"}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
+                      <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.exDate ?? "—"}</td>
+                      <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
                         {fmtSlickMoney(row.amount, 3)}
                       </td>
-                      <td className="px-2 py-1.5 text-right font-bold tabular-nums text-slate-500">{row.payDate ?? "—"}</td>
+                      <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">{row.payDate ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1566,16 +1566,16 @@ export function StockDetailBody({
   return (
     <>
       {interpretation ? (
-        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+        <div className="mb-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--c-ink-4)]">
               Feno 자동 해석
             </span>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black leading-none ${interpretation.badgeClass}`}>
               {interpretation.badge}
             </span>
           </div>
-          <p className="text-xs font-semibold leading-relaxed text-slate-700">
+          <p className="text-xs font-semibold leading-relaxed text-[var(--c-ink-2)]">
             {interpretation.text}
           </p>
         </div>
@@ -1584,7 +1584,7 @@ export function StockDetailBody({
       <div className="grid gap-5 sm:grid-cols-3">
         {/* PER Band Chart */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             PER 밴드
           </h4>
           {hasPer ? (
@@ -1595,13 +1595,13 @@ export function StockDetailBody({
               estimates={detail.valuation_estimates?.per}
             />
           ) : (
-            <span className="text-xs text-slate-300">—</span>
+            <span className="text-xs text-[var(--c-ink-4)]">—</span>
           )}
         </div>
 
         {/* Revenue Sparkline */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             매출 추이
           </h4>
           {hasRevenue ? (
@@ -1613,19 +1613,19 @@ export function StockDetailBody({
                 estimates={detail.income_statement_estimates?.revenue}
                 formatValue={fmtLarge}
               />
-              <div className="mt-1 text-[10px] font-bold text-slate-400">
+              <div className="mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
                 {fmtLarge(latestRevenue)}
                 {" (최신)"}
               </div>
             </>
           ) : (
-            <span className="text-xs text-slate-300">—</span>
+            <span className="text-xs text-[var(--c-ink-4)]">—</span>
           )}
         </div>
 
         {/* EPS Sparkline */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             EPS 추이
           </h4>
           {hasEps ? (
@@ -1637,12 +1637,12 @@ export function StockDetailBody({
                 estimates={detail.per_share_estimates?.eps}
                 formatValue={(value) => `$${value.toFixed(2)}`}
               />
-              <div className="mt-1 text-[10px] font-bold text-slate-400">
+              <div className="mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
                 {latestEps != null ? `$${latestEps.toFixed(2)} (최신)` : "—"}
               </div>
             </>
           ) : (
-            <span className="text-xs text-slate-300">—</span>
+            <span className="text-xs text-[var(--c-ink-4)]">—</span>
           )}
         </div>
       </div>
@@ -1654,7 +1654,7 @@ export function StockDetailBody({
       {/* 13F Badges */}
       {f13Entries && f13Entries.length > 0 ? (
         <div className="mt-4">
-          <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+          <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             기관 공시 보유
           </h4>
           <div className="flex flex-wrap gap-1.5">
@@ -1694,9 +1694,9 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
   }
 
   return (
-    <div className="col-span-full border-t border-slate-100 bg-slate-50/50 p-4">
+    <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
           종목 상세
         </span>
         <TransitionLink

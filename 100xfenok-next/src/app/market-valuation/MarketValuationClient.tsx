@@ -33,7 +33,7 @@ function valuationMeta(pct: number | null): { label: string; tone: string; dot: 
   if (pct >= 80) return { label: "고평가", tone: "text-[var(--c-down)]", dot: "bg-[var(--c-down)]" };
   if (pct >= 60) return { label: "다소 높음", tone: "text-[var(--c-warn)]", dot: "bg-[var(--c-warn)]" };
   if (pct >= 40) return { label: "역사적 중립", tone: "text-[var(--c-ink-2)]", dot: "bg-[var(--c-line)]" };
-  if (pct >= 20) return { label: "다소 낮음", tone: "text-sky-600", dot: "bg-sky-500" };
+  if (pct >= 20) return { label: "다소 낮음", tone: "text-[var(--c-info)]", dot: "bg-[var(--c-info)]" };
   return { label: "저평가", tone: "text-[var(--c-up)]", dot: "bg-[var(--c-up)]" };
 }
 
@@ -103,10 +103,10 @@ function MarketSection({
     <section className={cx("grid gap-3", muted && "opacity-60")}>
       <header className="flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-brand-interactive">{index}</p>
-          <h2 className="mt-1 text-xl font-black text-slate-950">{title}</h2>
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">{index}</p>
+          <h2 className="mt-1 text-xl font-black text-[var(--c-ink)]">{title}</h2>
         </div>
-        <p className="max-w-xl text-sm font-semibold leading-6 text-slate-500">{summary}</p>
+        <p className="max-w-xl text-sm font-semibold leading-6 text-[var(--c-ink-3)]">{summary}</p>
       </header>
       {children}
     </section>
@@ -117,14 +117,14 @@ function StructureDetailEntry() {
   return (
     <TransitionLink
       href="/market-valuation/structure"
-      className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_58%,#eef6ff_100%)] px-4 py-3 shadow-[0_10px_36px_-20px_rgba(15,23,42,0.28)] transition hover:border-brand-interactive hover:shadow-[0_14px_42px_-24px_rgba(27,115,211,0.42)]"
+      className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 shadow-[0_10px_36px_-20px_rgba(15,23,42,0.28)] transition hover:border-brand-interactive hover:shadow-[0_14px_42px_-24px_rgba(27,115,211,0.42)]"
     >
       <span className="min-w-0">
-        <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-brand-interactive">시장 구조 상세</span>
-        <span className="mt-1 block text-base font-black text-slate-950">시장 구조 자세히 보기</span>
-        <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">집중도, 벤치마크 매트릭스, 유동성, 심리 하위 지표를 더 크게 확인합니다.</span>
+        <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">시장 구조 상세</span>
+        <span className="mt-1 block text-base font-black text-[var(--c-ink)]">시장 구조 자세히 보기</span>
+        <span className="mt-1 block text-xs font-semibold leading-5 text-[var(--c-ink-3)]">집중도, 벤치마크 매트릭스, 유동성, 심리 하위 지표를 더 크게 확인합니다.</span>
       </span>
-      <span className="shrink-0 rounded-full border border-brand-interactive/30 bg-white px-3 py-2 text-xs font-black text-brand-interactive transition group-hover:bg-brand-interactive group-hover:text-white">
+      <span className="shrink-0 rounded-full border border-[var(--c-brand)]/30 bg-[var(--c-panel)] px-3 py-2 text-xs font-black text-[var(--c-brand)] transition group-hover:bg-brand-interactive group-hover:text-white">
         열기
       </span>
     </TransitionLink>
@@ -203,12 +203,12 @@ function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
             <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0">
               <div className="flex min-w-0 items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-                  <p className="mt-1 min-w-0 break-words text-xs font-semibold leading-5 text-slate-500">{item.detail}</p>
+                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
+                  <p className="mt-1 min-w-0 break-words text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{item.detail}</p>
                 </div>
                 <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(item.tone))}>{item.statusLabel}</span>
               </div>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.asOf ?? "—"}</p>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{item.asOf ?? "—"}</p>
             </div>
           ))}
         </div>

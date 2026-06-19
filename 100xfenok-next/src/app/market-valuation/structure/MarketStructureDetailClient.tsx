@@ -173,12 +173,12 @@ export default function MarketStructureDetailClient({
     <div className="data-shell-page">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
-          <div className="mb-2 hidden items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-400 md:flex">
-            <TransitionLink href="/market-valuation" className="hover:text-brand-interactive">
+          <div className="mb-2 hidden items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)] md:flex">
+            <TransitionLink href="/market-valuation" className="hover:text-[var(--c-brand)]">
               시장 밸류에이션
             </TransitionLink>
             <span>/</span>
-            <span className="text-slate-600">시장 구조</span>
+            <span className="text-[var(--c-ink-2)]">시장 구조</span>
           </div>
           <p className="data-shell-kicker">시장 구조</p>
           <h1 className="data-shell-title">시장 구조 상세</h1>
@@ -203,13 +203,13 @@ export default function MarketStructureDetailClient({
       </section>
 
       {state === "loading" ? (
-        <div className="rounded-[1.2rem] border border-slate-200 bg-white px-4 py-8 text-center text-sm font-bold text-slate-400">
+        <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-8 text-center text-sm font-bold text-[var(--c-ink-4)]">
           시장 구조 데이터를 불러오는 중입니다.
         </div>
       ) : null}
 
       {state === "failed" ? (
-        <div className="rounded-[1.2rem] border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
+        <div className="rounded-[1.2rem] border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
           시장 구조 데이터를 불러오지 못했습니다.
         </div>
       ) : null}

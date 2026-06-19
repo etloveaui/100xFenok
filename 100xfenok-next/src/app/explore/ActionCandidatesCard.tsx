@@ -133,7 +133,7 @@ export default function ActionCandidatesCard() {
           <h2>투자 후보</h2>
           <span className="desc">스코어 계산</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">
+        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">
           {loaded ? "투자 후보 데이터를 불러오지 못했습니다." : "투자 후보 계산 중"}
         </div>
       </section>
