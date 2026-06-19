@@ -189,21 +189,37 @@ External sources
   - upcoming earnings are filtered on a KST date key, and ticker links degrade
     to static rows when a surface row has no symbol.
 - `100xfenok-next/src/app/explore/EtfUniverseCard.tsx`
-  - reads `stockanalysis/etf_universe.json` from the local public DataPack and
-    renders a searchable/category-filterable ETF universe on Explore;
+  - reads the merged `/api/data/stockanalysis/etf-universe` and ETF snapshot
+    routes and renders a searchable/category-filterable ETF universe on Explore;
   - links each ETF row to `/etfs/{TICKER}`, where the ETF detail route reads
     the latest available holdings/quote/history payload.
+- `100xfenok-next/src/app/etfs/page.tsx`
+  - is the dedicated ETF center route, separate from Explore and Screener;
+  - exposes the full ETF universe with URL-backed type filters for leveraged,
+    single-stock leveraged, inverse, and newly listed ETFs.
+- `100xfenok-next/src/app/etfs/new/NewEtfsList.tsx`
+  - is the full launch radar for the `new_etfs` surface;
+  - supports query, recent 7/14/30-day windows, issuer, ETF type filters,
+    sort modes, CSV export, and links each row to `/etfs/{TICKER}`.
 - `100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx`
   - keeps fallback ETF detail states user-facing: when only list/universe or
     auxiliary price data exists, the page labels what is currently available
     and what is still waiting for deeper holdings/allocation data instead of
     exposing internal status names.
+- `100xfenok-next/src/app/market/events/MarketEventsClient.tsx`
+  - is the dedicated route for StockAnalysis earnings, corporate actions,
+    IPO, market-mover, and industry surfaces;
+  - provides tabbed views plus a full cross-surface drilldown search with
+    section/date filters, sort modes, industry map controls, and CSV export.
 - `100xfenok-next/scripts/smoke-stockanalysis-routes.mjs`
   - treats `coverage/etf_detail.json` missing samples as a live contract:
     missing detail files must still open through the ETF asset API as
     `surface_only` or `universe_only` fallback responses.
   - includes `/admin/data-lab/` in the live smoke route list so Admin-facing
     StockAnalysis/Data Lab regressions are checked after Worker deploys.
+  - includes the dedicated ETF center, new-ETF radar, ETF detail fallback, and
+    market-events filter URLs in the smoke route list so those surfaces do not
+    drift back into Explore-only cards.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and
@@ -253,15 +269,17 @@ StockAnalysis all remain visible when their values overlap.
 4. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
 5. Keep shipped StockAnalysis surfaces actively reachable through canonical
-   tabs/routes, Admin, or Data Lab and guarded by contract tests so committed
-   surface data does not become dead DataPack weight. Explore is not the first
-   home for new data families; it receives only curated headlines after the
-   dedicated route is usable.
+   tabs/routes, Admin, or Data Lab and guarded by `qa:stockanalysis`,
+   `qa:surface-consumers`, and `qa:market-audit` so committed surface data does
+   not become dead DataPack weight. Explore is not the first home for new data
+   families; it receives only curated headlines after the dedicated route is
+   usable.
 6. Promote the StockAnalysis financial probe into the main fetcher only after the
    ETF backfill run is closed and the fixture/schema gate remains passing.
-7. Add deeper drill-down views for `stockanalysis/surfaces` beyond the Explore
-   summary cards: full ETF launch radar, earnings calendar, corporate actions,
-   IPO radar, and industry maps with filter/sort/export affordances.
+7. Maintain and extend the dedicated drill-down views for `stockanalysis/surfaces`
+   when new surfaces are added: ETF launch radar, earnings calendar, corporate
+   actions, IPO radar, market movers, and industry maps must keep
+   filter/sort/export affordances instead of falling back to Explore-only cards.
 8. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
 9. Keep direct provider scraping as explicit fallback, not the normal path.
