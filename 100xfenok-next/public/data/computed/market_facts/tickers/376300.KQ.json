@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "376300.KQ",
   "asset_type": "stock",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "Dear U Co., Ltd.",
     "exchange": "KOE",
@@ -206,6 +206,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -227,12 +230,14 @@
     "yf": true,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/376300.KQ.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
@@ -299,24 +304,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

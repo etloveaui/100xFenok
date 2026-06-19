@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SGOV",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "iShares 0-3 Month Treasury Bond ETF",
     "exchange": "NYQ",
@@ -236,7 +236,10 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -246,9 +249,17 @@
           "fetched_at": "2026-06-17T04:39:03Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 0.3333,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 0.8993801771867469,
@@ -281,6 +292,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -293,6 +307,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 1.682,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 1.47368,
           "source": "yf",
           "as_of": null,
@@ -301,7 +323,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": 3.9159156554056054,
@@ -312,6 +334,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -324,6 +349,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 3.974,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -0.01989007,
           "source": "yf",
           "as_of": null,
@@ -332,7 +365,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3y_avg": {
       "value": 4.6890803000000005,
@@ -364,7 +397,10 @@
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -374,9 +410,17 @@
           "fetched_at": "2026-06-17T04:39:03Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 3.572,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -721,12 +765,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/SGOV.json",
     "stockanalysis": "stockanalysis/etfs/SGOV.json",
     "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
@@ -793,24 +839,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

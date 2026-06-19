@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "TPAY",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "Roundhill ETF Trust - Roundhill S&P 500 Target 10 Managed Distribution ETF",
     "exchange": "BTS",
@@ -120,7 +120,10 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -165,6 +168,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -188,6 +194,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -234,12 +243,14 @@
     "yf": true,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
+    "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/TPAY.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "stockanalysis/etfs/TPAY.json",
+    "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
@@ -306,24 +317,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

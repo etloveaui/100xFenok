@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "ORCX",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "Defiance Daily Target 2X Long ORCL ETF",
     "exchange": "NGM",
@@ -227,7 +227,10 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -237,9 +240,17 @@
           "fetched_at": "2026-06-17T04:38:54Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -15.566254011921137,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 29.933331807454426,
@@ -272,6 +283,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -284,6 +298,14 @@
           "unit": "percent_points"
         },
         {
+          "value": -28.748314108307788,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 13.05972,
           "source": "yf",
           "as_of": null,
@@ -292,7 +314,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": -49.18524311372791,
@@ -303,6 +325,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -315,6 +340,14 @@
           "unit": "percent_points"
         },
         {
+          "value": -53.391550572755584,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -50.501587,
           "source": "yf",
           "as_of": null,
@@ -323,7 +356,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     }
   },
   "etf": {
@@ -507,12 +540,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/ORCX.json",
     "stockanalysis": "stockanalysis/etfs/ORCX.json",
     "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
@@ -579,24 +614,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

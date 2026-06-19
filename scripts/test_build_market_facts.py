@@ -102,6 +102,52 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(facts["return_ytd"]["source"], "yf")
         self.assertEqual(facts["return_ytd"]["value"], 7.25)
 
+    def test_etf_catalog_performance_fills_return_gaps(self) -> None:
+        catalog_payload = {
+            "ticker": "CAT",
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "market_facts_source": "stockanalysis.etf_screener.performance",
+            "performance": {
+                "tr1m": 1.2,
+                "trYTD": 9.8,
+                "tr1y": 26.5,
+                "cagr5y": 13.7,
+            },
+        }
+
+        result = self.mod.build_one("CAT", None, None, None, catalog_payload)
+        facts = result["facts"]
+
+        self.assertEqual(result["asset_type"], "etf")
+        self.assertTrue(result["sources"]["stockanalysis_etf_catalog"])
+        self.assertEqual(facts["return_1m"]["source"], "stockanalysis.etf_screener.performance")
+        self.assertEqual(facts["return_ytd"]["source"], "stockanalysis.etf_screener.performance")
+        self.assertEqual(facts["return_1y"]["source"], "stockanalysis.etf_screener.performance")
+        self.assertEqual(facts["return_5y_avg"]["source"], "stockanalysis.etf_screener.performance")
+        self.assertEqual(facts["return_1m"]["unit"], "percent_points")
+
+    def test_history_return_stays_primary_when_catalog_performance_exists(self) -> None:
+        yf_payload = {
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "data": {
+                "info": {"quoteType": "ETF"},
+                "history_1y": history_rows(),
+            },
+        }
+        catalog_payload = {
+            "ticker": "BOTH",
+            "fetched_at": "2026-06-19T00:00:00Z",
+            "market_facts_source": "stockanalysis.etf_screener.performance",
+            "performance": {"tr1m": 1.2},
+        }
+
+        result = self.mod.build_one("BOTH", yf_payload, None, None, catalog_payload)
+        fact = result["facts"]["return_1m"]
+
+        self.assertEqual(fact["source"], "yf.history_1y")
+        self.assertEqual(fact["candidate_count"], 2)
+        self.assertEqual(fact["candidates"][1]["source"], "stockanalysis.etf_screener.performance")
+
 
 if __name__ == "__main__":
     unittest.main()

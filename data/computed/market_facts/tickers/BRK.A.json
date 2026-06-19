@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BRK.A",
   "asset_type": "stock",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "Berkshire Hathaway Inc.",
     "exchange": "NYQ",
@@ -251,6 +251,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -325,6 +328,7 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": false,
     "slickcharts": false,
     "stockanalysis_financials": true
   },
@@ -332,6 +336,7 @@
     "yf": "yf/finance/BRK.A.json",
     "stockanalysis": "stockanalysis/stocks/BRK.A.json",
     "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": null,
     "slickcharts": null,
     "stockanalysis_financials": "stockanalysis/financials/BRK.A.json"
   },
@@ -399,24 +404,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

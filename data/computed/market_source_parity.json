@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-06-19T01:47:45Z",
+  "generated_at": "2026-06-19T03:42:04Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6445,
     "fields": 17,
-    "multi_candidate_fields": 5830,
-    "divergence_rows": 5830,
+    "multi_candidate_fields": 5929,
+    "divergence_rows": 5929,
     "percent_scale_warnings": 16,
     "diagnosis_counts": {
-      "agreement": 2870,
+      "agreement": 2886,
       "scale_mismatch": 16,
-      "sign_divergence": 111,
-      "stale": 2151,
-      "value_drift": 682
+      "sign_divergence": 113,
+      "stale": 2180,
+      "value_drift": 734
     },
-    "stale_rows": 2151,
+    "stale_rows": 2180,
     "scale_mismatch_rows": 16,
-    "sign_divergence_rows": 111
+    "sign_divergence_rows": 113
   },
   "by_field": {
     "beta": {
@@ -142,22 +142,32 @@
       }
     },
     "return_1m": {
-      "ticker_count": 615,
-      "multi_candidate_count": 0,
+      "ticker_count": 5146,
+      "multi_candidate_count": 40,
       "selected_sources": {
+        "stockanalysis.detail.performance": 5,
+        "stockanalysis.etf_screener.performance": 4526,
         "yf.history_1y": 615
       },
-      "candidate_sources": {}
+      "candidate_sources": {
+        "stockanalysis.detail.performance": 8,
+        "stockanalysis.etf_screener.performance": 40,
+        "yf.history_1y": 35
+      }
     },
     "return_1y": {
-      "ticker_count": 1819,
-      "multi_candidate_count": 726,
+      "ticker_count": 5395,
+      "multi_candidate_count": 757,
       "selected_sources": {
-        "yf": 1093,
+        "stockanalysis.detail.performance": 5,
+        "stockanalysis.etf_screener.performance": 3600,
+        "yf": 1064,
         "yf.history_1y": 726
       },
       "candidate_sources": {
-        "yf": 726,
+        "stockanalysis.detail.performance": 8,
+        "stockanalysis.etf_screener.performance": 63,
+        "yf": 755,
         "yf.history_1y": 726
       }
     },
@@ -178,22 +188,32 @@
       "candidate_sources": {}
     },
     "return_5y_avg": {
-      "ticker_count": 175,
-      "multi_candidate_count": 0,
+      "ticker_count": 2037,
+      "multi_candidate_count": 22,
       "selected_sources": {
+        "stockanalysis.detail.performance": 5,
+        "stockanalysis.etf_screener.performance": 1857,
         "yf": 175
       },
-      "candidate_sources": {}
+      "candidate_sources": {
+        "stockanalysis.detail.performance": 7,
+        "stockanalysis.etf_screener.performance": 22,
+        "yf": 17
+      }
     },
     "return_ytd": {
-      "ticker_count": 726,
-      "multi_candidate_count": 517,
+      "ticker_count": 4906,
+      "multi_candidate_count": 523,
       "selected_sources": {
+        "stockanalysis.detail.performance": 5,
+        "stockanalysis.etf_screener.performance": 4175,
         "yf.history_1y": 726
       },
       "candidate_sources": {
+        "stockanalysis.detail.performance": 8,
+        "stockanalysis.etf_screener.performance": 40,
         "yf": 517,
-        "yf.history_1y": 517
+        "yf.history_1y": 518
       }
     },
     "total_assets": {
@@ -250,7 +270,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -396,7 +416,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -431,7 +451,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -466,7 +486,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -538,7 +558,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -610,7 +630,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -752,7 +772,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -787,7 +807,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -859,7 +879,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -894,7 +914,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -966,7 +986,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1001,7 +1021,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1036,7 +1056,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1071,7 +1091,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1106,7 +1126,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1141,7 +1161,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1176,7 +1196,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1211,7 +1231,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1246,7 +1266,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1281,7 +1301,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1316,7 +1336,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1388,7 +1408,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1460,7 +1480,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1532,7 +1552,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1604,7 +1624,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1639,7 +1659,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1674,7 +1694,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1709,7 +1729,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1744,7 +1764,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1779,7 +1799,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1814,7 +1834,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1886,7 +1906,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1958,7 +1978,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -1993,7 +2013,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2102,42 +2122,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "ORCX",
-      "asset_type": "etf",
-      "field": "return_ytd",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 152.098665,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -25.06728335405311
-        },
-        {
-          "source": "yf",
-          "value": 13.05972
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 152.098665,
-      "fresh_spread_pct": 152.098665,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2172,7 +2157,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2207,7 +2192,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2242,12 +2227,47 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "UTSL",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 148.005104,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -2.9451131276483506
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 6.135
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 148.005104,
+      "fresh_spread_pct": 148.005104,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3895,
+        "stockanalysis.etf_screener.performance": 0.0
       }
     },
     {
@@ -2277,7 +2297,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2312,7 +2332,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2347,7 +2367,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2382,7 +2402,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2417,7 +2437,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2452,7 +2472,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2487,12 +2507,52 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "ORCX",
+      "asset_type": "etf",
+      "field": "return_ytd",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 145.427777,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -25.06728335405311
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": -28.748314108307788
+        },
+        {
+          "source": "yf",
+          "value": 13.05972
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 145.427777,
+      "fresh_spread_pct": 145.427777,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3899,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3899
       }
     },
     {
@@ -2522,7 +2582,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2557,7 +2617,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2592,7 +2652,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2627,7 +2687,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2662,7 +2722,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2771,7 +2831,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2806,7 +2866,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2841,7 +2901,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2913,7 +2973,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -2985,7 +3045,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3020,7 +3080,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3055,7 +3115,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3164,7 +3224,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3199,12 +3259,52 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "TMF",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 136.869029,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -1.0123862328408015
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 1.815
+        },
+        {
+          "source": "yf",
+          "value": -4.922831
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 136.869029,
+      "fresh_spread_pct": 136.869029,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3897,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3897
       }
     },
     {
@@ -3234,7 +3334,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3380,7 +3480,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3452,7 +3552,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3487,7 +3587,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3596,7 +3696,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3631,7 +3731,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3666,7 +3766,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3710,78 +3810,6 @@
         "stockanalysis.quote": 0.0,
         "yf.derived": 4.1275
       }
-    },
-    {
-      "ticker": "COST",
-      "asset_type": "stock",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 131.578947,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -21.09
-        },
-        {
-          "source": "yf.derived",
-          "value": 6.659999999999968
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 131.578947,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf.derived"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf.derived": 4.1275
-      }
-    },
-    {
-      "ticker": "CUSD",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 131.275021,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 3.077743184253054
-        },
-        {
-          "source": "yf",
-          "value": -9.840899
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 131.275021,
-      "fresh_spread_pct": 131.275021,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
     }
   ],
   "percent_scale_warnings": [
@@ -3812,7 +3840,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3847,7 +3875,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3882,7 +3910,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3917,7 +3945,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3952,7 +3980,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -3987,7 +4015,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4000,12 +4028,16 @@
       "asset_type": "etf",
       "field": "return_ytd",
       "selected_source": "yf.history_1y",
-      "candidate_count": 2,
+      "candidate_count": 3,
       "relative_spread_pct": 100.752916,
       "values": [
         {
           "source": "yf.history_1y",
           "value": -0.3603263724945937
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 18.0
         },
         {
           "source": "yf",
@@ -4022,47 +4054,13 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "SGOV",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 100.507929,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 3.9159156554056054
-        },
-        {
-          "source": "yf",
-          "value": -0.01989007
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 100.507929,
-      "fresh_spread_pct": 100.507929,
-      "stale_sources": [],
-      "scale_mismatch": true,
-      "scale_factor": 197,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
+        "yf.history_1y": 0.3903,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3903
       }
     },
     {
@@ -4092,7 +4090,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4101,16 +4099,60 @@
       }
     },
     {
+      "ticker": "SGOV",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 100.500505,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 3.9159156554056054
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 3.974
+        },
+        {
+          "source": "yf",
+          "value": -0.01989007
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 100.500505,
+      "fresh_spread_pct": 100.500505,
+      "stale_sources": [],
+      "scale_mismatch": true,
+      "scale_factor": 200,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3898,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3898
+      }
+    },
+    {
       "ticker": "BILS",
       "asset_type": "etf",
       "field": "return_1y",
       "selected_source": "yf.history_1y",
-      "candidate_count": 2,
+      "candidate_count": 3,
       "relative_spread_pct": 100.025899,
       "values": [
         {
           "source": "yf.history_1y",
           "value": 3.88935162783026
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 3.88
         },
         {
           "source": "yf",
@@ -4127,12 +4169,13 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
+        "yf.history_1y": 0.3902,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3902
       }
     },
     {
@@ -4162,7 +4205,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4197,7 +4240,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4232,7 +4275,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4245,12 +4288,16 @@
       "asset_type": "etf",
       "field": "return_ytd",
       "selected_source": "yf.history_1y",
-      "candidate_count": 2,
+      "candidate_count": 3,
       "relative_spread_pct": 98.659696,
       "values": [
         {
           "source": "yf.history_1y",
           "value": 0.6600671146103182
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 9.635
         },
         {
           "source": "yf",
@@ -4267,12 +4314,13 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
+        "yf.history_1y": 0.3903,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3903
       }
     },
     {
@@ -4302,7 +4350,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -4337,7 +4385,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -5828,6 +5876,43 @@
       }
     },
     {
+      "ticker": "SHY",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "stockanalysis.etf_screener.performance",
+      "candidate_count": 2,
+      "relative_spread_pct": 111.915608,
+      "values": [
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 3.361
+        },
+        {
+          "source": "yf",
+          "value": -0.4004836
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 111.915608,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.etf_screener.performance",
+        "policy_rank": 2,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 3.5876
+      }
+    },
+    {
       "ticker": "NVDA",
       "asset_type": "stock",
       "field": "change_pct",
@@ -6050,6 +6135,43 @@
       }
     },
     {
+      "ticker": "IEF",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "stockanalysis.etf_screener.performance",
+      "candidate_count": 2,
+      "relative_spread_pct": 95.899488,
+      "values": [
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 4.15
+        },
+        {
+          "source": "yf",
+          "value": 0.17017126
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 95.899488,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "stockanalysis.etf_screener.performance",
+        "policy_rank": 2,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 3.5943
+      }
+    },
+    {
       "ticker": "META",
       "asset_type": "stock",
       "field": "change",
@@ -6121,6 +6243,43 @@
       "freshness": {
         "stockanalysis.quote": 0.0,
         "yf.derived": 4.1205
+      }
+    },
+    {
+      "ticker": "TLT",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "stockanalysis.etf_screener.performance",
+      "candidate_count": 2,
+      "relative_spread_pct": 91.740848,
+      "values": [
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 4.392
+        },
+        {
+          "source": "yf",
+          "value": 0.36274195
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 91.740848,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "stockanalysis.etf_screener.performance",
+        "policy_rank": 2,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 3.5861
       }
     },
     {
@@ -7308,6 +7467,43 @@
       }
     },
     {
+      "ticker": "XLF",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "stockanalysis.etf_screener.performance",
+      "candidate_count": 2,
+      "relative_spread_pct": 46.87568,
+      "values": [
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 10.468
+        },
+        {
+          "source": "yf",
+          "value": 5.5610538
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 46.87568,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "stockanalysis.etf_screener.performance",
+        "policy_rank": 2,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 3.5837
+      }
+    },
+    {
       "ticker": "INTC",
       "asset_type": "stock",
       "field": "change_pct",
@@ -7678,6 +7874,80 @@
       }
     },
     {
+      "ticker": "XLC",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "stockanalysis.etf_screener.performance",
+      "candidate_count": 2,
+      "relative_spread_pct": 35.441006,
+      "values": [
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 10.852
+        },
+        {
+          "source": "yf",
+          "value": 7.005942
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 35.441006,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "stockanalysis.etf_screener.performance",
+        "policy_rank": 2,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 3.5838
+      }
+    },
+    {
+      "ticker": "XLP",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "stockanalysis.etf_screener.performance",
+      "candidate_count": 2,
+      "relative_spread_pct": 34.471442,
+      "values": [
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 8.643
+        },
+        {
+          "source": "yf",
+          "value": 5.6636333
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 34.471442,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "stockanalysis.etf_screener.performance",
+        "policy_rank": 2,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 3.5836
+      }
+    },
+    {
       "ticker": "SMCI",
       "asset_type": "stock",
       "field": "trailing_pe",
@@ -7830,240 +8100,6 @@
         "stockanalysis.overview": 0.0,
         "slickcharts": 16.4723
       }
-    },
-    {
-      "ticker": "INTC",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 3,
-      "relative_spread_pct": 33.096927,
-      "values": [
-        {
-          "source": "yf",
-          "value": 80.8046
-        },
-        {
-          "source": "stockanalysis.overview",
-          "value": 114.21
-        },
-        {
-          "source": "slickcharts",
-          "value": 76.41
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 33.096927,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf",
-        "slickcharts"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 4.1232,
-        "stockanalysis.overview": 0.0,
-        "slickcharts": 16.4728
-      }
-    },
-    {
-      "ticker": "SMCI",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 2,
-      "relative_spread_pct": 32.933282,
-      "values": [
-        {
-          "source": "yf",
-          "value": 9.603954
-        },
-        {
-          "source": "slickcharts",
-          "value": 14.32
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 32.933282,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "slickcharts"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "slickcharts": 12.3562
-      }
-    },
-    {
-      "ticker": "BDX",
-      "asset_type": "stock",
-      "field": "trailing_pe",
-      "selected_source": "yf",
-      "candidate_count": 2,
-      "relative_spread_pct": 31.59524,
-      "values": [
-        {
-          "source": "yf",
-          "value": 25.521816
-        },
-        {
-          "source": "slickcharts",
-          "value": 37.31
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 31.59524,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "slickcharts"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "slickcharts": 12.3429
-      }
-    },
-    {
-      "ticker": "AMAT",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 3,
-      "relative_spread_pct": 31.147541,
-      "values": [
-        {
-          "source": "yf",
-          "value": 34.88573
-        },
-        {
-          "source": "stockanalysis.overview",
-          "value": 40.26
-        },
-        {
-          "source": "slickcharts",
-          "value": 27.72
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 31.147541,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf",
-        "slickcharts"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 4.1312,
-        "stockanalysis.overview": 0.0,
-        "slickcharts": 16.4731
-      }
-    },
-    {
-      "ticker": "INSM",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 2,
-      "relative_spread_pct": 30.938869,
-      "values": [
-        {
-          "source": "yf",
-          "value": 301.32724
-        },
-        {
-          "source": "slickcharts",
-          "value": 208.1
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 30.938869,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "slickcharts"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "slickcharts": 5.429
-      }
-    },
-    {
-      "ticker": "CIEN",
-      "asset_type": "stock",
-      "field": "forward_pe",
-      "selected_source": "yf",
-      "candidate_count": 2,
-      "relative_spread_pct": 30.270002,
-      "values": [
-        {
-          "source": "yf",
-          "value": 46.363476
-        },
-        {
-          "source": "slickcharts",
-          "value": 66.49
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 30.270002,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "slickcharts"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "slickcharts": 12.3442
-      }
     }
   ],
   "top_sign_divergences": [
@@ -8094,7 +8130,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8129,7 +8165,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8164,7 +8200,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8199,7 +8235,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8234,7 +8270,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8269,7 +8305,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8374,7 +8410,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8409,7 +8445,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8444,7 +8480,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8479,7 +8515,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8514,7 +8550,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8549,7 +8585,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8584,7 +8620,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8619,7 +8655,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8654,7 +8690,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8689,7 +8725,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8724,7 +8760,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8759,7 +8795,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8794,7 +8830,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8829,7 +8865,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8864,7 +8900,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8899,7 +8935,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8934,7 +8970,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -8969,7 +9005,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9004,7 +9040,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9039,7 +9075,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9074,7 +9110,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9109,7 +9145,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9144,7 +9180,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9179,7 +9215,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9214,7 +9250,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9249,7 +9285,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9284,7 +9320,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9319,7 +9355,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9354,42 +9390,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "ORCX",
-      "asset_type": "etf",
-      "field": "return_ytd",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 152.098665,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -25.06728335405311
-        },
-        {
-          "source": "yf",
-          "value": 13.05972
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 152.098665,
-      "fresh_spread_pct": 152.098665,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9424,7 +9425,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9459,7 +9460,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9494,12 +9495,47 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "UTSL",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 148.005104,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -2.9451131276483506
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 6.135
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 148.005104,
+      "fresh_spread_pct": 148.005104,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3895,
+        "stockanalysis.etf_screener.performance": 0.0
       }
     },
     {
@@ -9529,7 +9565,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9564,7 +9600,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9599,7 +9635,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9634,7 +9670,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9669,7 +9705,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9704,7 +9740,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9739,12 +9775,52 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "ORCX",
+      "asset_type": "etf",
+      "field": "return_ytd",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 145.427777,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -25.06728335405311
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": -28.748314108307788
+        },
+        {
+          "source": "yf",
+          "value": 13.05972
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 145.427777,
+      "fresh_spread_pct": 145.427777,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3899,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3899
       }
     },
     {
@@ -9774,7 +9850,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9809,7 +9885,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9844,7 +9920,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9879,7 +9955,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9914,7 +9990,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9949,7 +10025,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -9984,7 +10060,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10019,7 +10095,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10054,7 +10130,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10089,7 +10165,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10124,7 +10200,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10159,7 +10235,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10194,7 +10270,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10229,12 +10305,52 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "TMF",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 136.869029,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -1.0123862328408015
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 1.815
+        },
+        {
+          "source": "yf",
+          "value": -4.922831
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 136.869029,
+      "fresh_spread_pct": 136.869029,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.3897,
+        "stockanalysis.etf_screener.performance": 0.0,
+        "yf": 0.3897
       }
     },
     {
@@ -10264,7 +10380,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10299,7 +10415,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10334,7 +10450,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10369,7 +10485,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10404,7 +10520,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10439,7 +10555,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10474,7 +10590,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10509,7 +10625,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10544,7 +10660,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10579,7 +10695,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10614,7 +10730,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10649,7 +10765,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10684,7 +10800,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10719,7 +10835,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10754,7 +10870,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10789,7 +10905,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10824,7 +10940,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10859,7 +10975,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10894,7 +11010,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10929,7 +11045,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10964,7 +11080,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -10999,7 +11115,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11034,7 +11150,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11069,7 +11185,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11104,7 +11220,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11139,7 +11255,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11174,7 +11290,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11209,7 +11325,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11244,7 +11360,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11279,7 +11395,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11314,7 +11430,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11349,7 +11465,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11384,7 +11500,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11419,7 +11535,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11454,7 +11570,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
@@ -11489,77 +11605,7 @@
       "selected_rationale": {
         "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "BLST",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 108.972481,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 3.1143951531947893
-        },
-        {
-          "source": "yf",
-          "value": -0.2794385
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 108.972481,
-      "fresh_spread_pct": 108.972481,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "BUCK",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 108.075784,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 7.333206144443022
-        },
-        {
-          "source": "yf",
-          "value": -0.59221387
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 108.075784,
-      "fresh_spread_pct": 108.075784,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
+        "policy_len": 5,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {

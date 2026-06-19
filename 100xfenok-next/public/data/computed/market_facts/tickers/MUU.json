@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MUU",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "Direxion Daily MU Bull 2X Shares",
     "exchange": "NGM",
@@ -235,7 +235,10 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -245,9 +248,17 @@
           "fetched_at": "2026-06-17T04:38:47Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 113.028,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 282.1130517168703,
@@ -280,6 +291,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -292,6 +306,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 969.385,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 763.5261,
           "source": "yf",
           "as_of": null,
@@ -300,7 +322,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": 3915.714120768282,
@@ -311,6 +333,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -323,6 +348,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 4739.655,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 3595.5002,
           "source": "yf",
           "as_of": null,
@@ -331,7 +364,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     }
   },
   "etf": {
@@ -567,12 +600,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/MUU.json",
     "stockanalysis": "stockanalysis/etfs/MUU.json",
     "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
@@ -639,24 +674,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

@@ -37,12 +37,40 @@ FIELD_SOURCE_POLICY = {
     "dividend_yield": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "slickcharts"],
     "beta": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
     "expense_ratio": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
-    "return_1m": ["yf.history_1y"],
+    "return_1m": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+    ],
     "return_3m": ["yf.history_1y"],
-    "return_ytd": ["yf.history_1y", "yf"],
-    "return_1y": ["yf.history_1y", "yf"],
+    "return_ytd": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf",
+    ],
+    "return_1y": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf",
+    ],
     "return_3y_avg": ["yf"],
-    "return_5y_avg": ["yf"],
+    "return_5y_avg": [
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+    ],
+}
+STOCKANALYSIS_PERFORMANCE_FIELD_MAP = {
+    "return_1m": "tr1m",
+    "return_ytd": "trYTD",
+    "return_1y": "tr1y",
+    "return_5y_avg": "cagr5y",
 }
 
 
@@ -286,6 +314,28 @@ def stockanalysis_overview_fact(sa_payload, key, unit=None):
     return fact(parsed if parsed is not None else value, source, fetched_at=(sa_payload or {}).get("fetched_at"), unit=unit)
 
 
+def stockanalysis_performance_fact(payload, field, source):
+    key = STOCKANALYSIS_PERFORMANCE_FIELD_MAP.get(field)
+    if not key:
+        return None
+    normalized = (payload or {}).get("normalized") if isinstance(payload, dict) else None
+    performance = (
+        normalized.get("performance")
+        if isinstance(normalized, dict) and isinstance(normalized.get("performance"), dict)
+        else (payload or {}).get("performance")
+    )
+    if not isinstance(performance, dict):
+        return None
+    value = number(performance.get(key))
+    return fact(
+        value,
+        source,
+        fetched_at=(payload or {}).get("fetched_at") or (payload or {}).get("generated_at"),
+        confidence="observed",
+        unit="percent_points",
+    )
+
+
 def slick_fact(slick_payload, key, unit=None):
     current = (slick_payload or {}).get("current") or {}
     return fact(current.get(key), "slickcharts", as_of=(slick_payload or {}).get("updated"), unit=unit)
@@ -298,7 +348,7 @@ def slick_market_cap_fact(slick_payload):
     return fact(value, "slickcharts", as_of=(slick_payload or {}).get("updated"))
 
 
-def build_one(ticker, yf_payload, sa_payload, slick_payload):
+def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=None):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     sa_norm = (sa_payload or {}).get("normalized") or {}
@@ -306,7 +356,11 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
     sa_is_yahoo_fallback = sa_provider == "yahoo_finance"
 
     asset_type = "stock"
-    if (sa_payload or {}).get("asset_type") == "etf" or str(info.get("quoteType") or "").upper() == "ETF":
+    if (
+        (sa_payload or {}).get("asset_type") == "etf"
+        or str(info.get("quoteType") or "").upper() == "ETF"
+        or sa_catalog_payload is not None
+    ):
         asset_type = "etf"
 
     price = resolve_fact(
@@ -340,12 +394,34 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
         "dividend_yield": resolve_fact("dividend_yield", yf_percent_fact(yf_payload, "dividendYield"), stockanalysis_overview_fact(sa_payload, "dividendYield", unit="percent_points"), slick_fact(slick_payload, "dividend_yield", unit="percent_points")),
         "beta": resolve_fact("beta", yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")),
         "expense_ratio": resolve_fact("expense_ratio", yf_percent_fact(yf_payload, "netExpenseRatio"), stockanalysis_overview_fact(sa_payload, "expenseRatio", unit="percent_points")),
-        "return_1m": resolve_fact("return_1m", yf_history_return_fact(yf_payload, 21)),
+        "return_1m": resolve_fact(
+            "return_1m",
+            yf_history_return_fact(yf_payload, 21),
+            stockanalysis_performance_fact(sa_payload, "return_1m", "stockanalysis.detail.performance"),
+            stockanalysis_performance_fact(sa_catalog_payload, "return_1m", (sa_catalog_payload or {}).get("market_facts_source")),
+        ),
         "return_3m": resolve_fact("return_3m", yf_history_return_fact(yf_payload, 63)),
-        "return_ytd": resolve_fact("return_ytd", yf_history_ytd_fact(yf_payload), yf_percent_fact(yf_payload, "ytdReturn")),
-        "return_1y": resolve_fact("return_1y", yf_history_one_year_fact(yf_payload), yf_percent_fact(yf_payload, "fiftyTwoWeekChangePercent")),
+        "return_ytd": resolve_fact(
+            "return_ytd",
+            yf_history_ytd_fact(yf_payload),
+            stockanalysis_performance_fact(sa_payload, "return_ytd", "stockanalysis.detail.performance"),
+            stockanalysis_performance_fact(sa_catalog_payload, "return_ytd", (sa_catalog_payload or {}).get("market_facts_source")),
+            yf_percent_fact(yf_payload, "ytdReturn"),
+        ),
+        "return_1y": resolve_fact(
+            "return_1y",
+            yf_history_one_year_fact(yf_payload),
+            stockanalysis_performance_fact(sa_payload, "return_1y", "stockanalysis.detail.performance"),
+            stockanalysis_performance_fact(sa_catalog_payload, "return_1y", (sa_catalog_payload or {}).get("market_facts_source")),
+            yf_percent_fact(yf_payload, "fiftyTwoWeekChangePercent"),
+        ),
         "return_3y_avg": resolve_fact("return_3y_avg", yf_annual_return_fact(yf_payload, "threeYearAverageReturn")),
-        "return_5y_avg": resolve_fact("return_5y_avg", yf_annual_return_fact(yf_payload, "fiveYearAverageReturn")),
+        "return_5y_avg": resolve_fact(
+            "return_5y_avg",
+            yf_annual_return_fact(yf_payload, "fiveYearAverageReturn"),
+            stockanalysis_performance_fact(sa_payload, "return_5y_avg", "stockanalysis.detail.performance"),
+            stockanalysis_performance_fact(sa_catalog_payload, "return_5y_avg", (sa_catalog_payload or {}).get("market_facts_source")),
+        ),
     }
     facts = {key: value for key, value in facts.items() if value is not None}
 
@@ -379,6 +455,7 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
             "yf": bool(yf_payload),
             "stockanalysis": bool(sa_payload and not sa_is_yahoo_fallback),
             "stockanalysis_yf_fallback": bool(sa_payload and sa_is_yahoo_fallback),
+            "stockanalysis_etf_catalog": bool(sa_catalog_payload),
             "slickcharts": bool(slick_payload),
         },
         "source_files": {
@@ -391,6 +468,11 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
                 f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
                 if sa_payload and sa_is_yahoo_fallback else None
             ),
+            "stockanalysis_etf_catalog": (
+                "stockanalysis/surfaces/etf_screener.json"
+                if (sa_catalog_payload or {}).get("market_facts_source") == "stockanalysis.etf_screener.performance"
+                else ("stockanalysis/etf_universe.json" if sa_catalog_payload else None)
+            ),
             "slickcharts": f"slickcharts/stocks/{ticker}.json" if slick_payload else None,
         },
         "resolver": {
@@ -401,13 +483,50 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload):
     }
 
 
+def clean_ticker(value):
+    return str(value or "").replace("$", "").strip().upper()
+
+
+def etf_catalog_rows(payload):
+    rows = []
+    if isinstance((payload or {}).get("records"), list):
+        rows.extend(payload["records"])
+    for table in (payload or {}).get("tables") or []:
+        if isinstance(table, dict) and isinstance(table.get("records"), list):
+            rows.extend(table["records"])
+    return [row for row in rows if isinstance(row, dict)]
+
+
+def build_etf_catalog_map() -> dict[str, dict]:
+    sources = [
+        (DATA / "stockanalysis" / "etf_universe.json", "stockanalysis.etf_universe.performance"),
+        (DATA / "stockanalysis" / "surfaces" / "etf_screener.json", "stockanalysis.etf_screener.performance"),
+    ]
+    rows = {}
+    for path, source in sources:
+        payload = load_json(path) or {}
+        fetched_at = payload.get("fetched_at") or payload.get("generated_at")
+        for row in etf_catalog_rows(payload):
+            ticker = clean_ticker(row.get("ticker") or row.get("s") or row.get("symbol"))
+            if not ticker or not isinstance(row.get("performance"), dict):
+                continue
+            rows[ticker] = {
+                "ticker": ticker,
+                "performance": row.get("performance"),
+                "fetched_at": fetched_at,
+                "market_facts_source": source,
+            }
+    return rows
+
+
 def main() -> None:
     yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
     sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
     sa_stock_files = {p.stem: p for p in (DATA / "stockanalysis" / "stocks").glob("*.json")}
     sa_financial_files = {p.stem: p for p in (DATA / "stockanalysis" / "financials").glob("*.json")}
     slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
-    tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files))
+    sa_catalog_rows = build_etf_catalog_map()
+    tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows))
 
     rows = []
     generated_at = now_iso()
@@ -417,7 +536,7 @@ def main() -> None:
         sa_payload = load_json(sa_path) if sa_path else None
         sa_financials = load_json(sa_financial_files[ticker]) if ticker in sa_financial_files else None
         slick_payload = load_json(slick_files[ticker]) if ticker in slick_files else None
-        payload = build_one(ticker, yf_payload, sa_payload, slick_payload)
+        payload = build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_rows.get(ticker))
         payload["generated_at"] = generated_at
         if sa_financials and payload["asset_type"] != "etf":
             payload["financials"] = {
@@ -450,6 +569,8 @@ def main() -> None:
             "stockanalysis/etfs/*.json",
             "stockanalysis/stocks/*.json",
             "stockanalysis/financials/*.json",
+            "stockanalysis/etf_universe.json",
+            "stockanalysis/surfaces/etf_screener.json",
             "slickcharts/stocks/*.json",
         ],
         "resolver": {
@@ -461,6 +582,7 @@ def main() -> None:
             "stockanalysis": sum(1 for row in rows if row["sources"]["stockanalysis"]),
             "stockanalysis_yf_fallback": sum(1 for row in rows if row["sources"].get("stockanalysis_yf_fallback")),
             "stockanalysis_financials": sum(1 for row in rows if row["sources"].get("stockanalysis_financials")),
+            "stockanalysis_etf_catalog": len(sa_catalog_rows),
             "slickcharts": sum(1 for row in rows if row["sources"]["slickcharts"]),
             "etf": sum(1 for row in rows if row["asset_type"] == "etf"),
             "stock": sum(1 for row in rows if row["asset_type"] == "stock"),

@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.23 (ETF latest refresh copy)
+> **Version**: 2.2.24 (ETF return coverage)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -67,7 +67,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **Freshness signals** | 🟢 Fresh / 🟡 Stale / 🔴 Critical based on update frequency |
 | **3-tier caching** | Memory → SessionStorage → Network |
 | **Reactive state** | Observer pattern for automatic UI updates |
-| **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, and source parity |
+| **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, source parity, and StockAnalysis ETF catalog return coverage |
 | **StockAnalysis audit** | Reads `data/stockanalysis/index.json`, `coverage/etf_detail.json`, and `classification/latest.json` for ETF detail coverage, backfill, and leverage/inverse/single-stock classification visibility |
 | **ETF universe snapshot** | Reads the ETF list API, `etf_universe.json`, `surfaces/new_etfs.json`, and `coverage/etf_detail.json` together so operators can see total ETF count, price/volume/holdings/expense/performance coverage, newest launches, and new-ETF detail gaps from live data |
 | **ETF coverage gap drilldown** | Shows new-ETF/universe/screener missing counts and sample tickers from `coverage/etf_detail.json` |
@@ -162,6 +162,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.24 | 2026-06-19 | Market facts now use StockAnalysis ETF catalog performance for 1M/YTD/1Y/5Y ETF return coverage, and Data Lab audit exposes the expanded coverage from generated data |
 | 2.2.23 | 2026-06-19 | Clarified the StockAnalysis index card as the latest ETF detail refresh, while keeping full ETF detail coverage visible in the same card |
 | 2.2.22 | 2026-06-19 | Added ETF list coverage metrics for expense ratio and period-return availability |
 | 2.2.21 | 2026-06-19 | Clarified ETF gap reason copy and separated missing samples into diagnostic buckets, with an explicit note that buckets can overlap |

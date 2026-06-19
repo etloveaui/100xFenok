@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "USD",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T01:47:39Z",
+  "generated_at": "2026-06-19T03:41:58Z",
   "identity": {
     "name": "ProShares Ultra Semiconductors",
     "exchange": "PCX",
@@ -257,7 +257,10 @@
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -267,9 +270,17 @@
           "fetched_at": "2026-06-17T04:39:26Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": 12.527,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
       "value": 83.99050886155099,
@@ -302,6 +313,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -314,6 +328,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 105.169,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 94.31117,
           "source": "yf",
           "as_of": null,
@@ -322,7 +344,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_1y": {
       "value": 212.72884121792214,
@@ -333,6 +355,9 @@
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "candidates": [
@@ -345,6 +370,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 243.82,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 206.30574,
           "source": "yf",
           "as_of": null,
@@ -353,7 +386,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3y_avg": {
       "value": 114.84970000000001,
@@ -385,7 +418,10 @@
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
@@ -395,9 +431,17 @@
           "fetched_at": "2026-06-17T04:39:26Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 67.265,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -781,12 +825,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/USD.json",
     "stockanalysis": "stockanalysis/etfs/USD.json",
     "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
@@ -853,24 +899,36 @@
         "yf.stockanalysis_fallback.overview"
       ],
       "return_1m": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ],
       "return_3m": [
         "yf.history_1y"
       ],
       "return_ytd": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_1y": [
         "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
         "yf"
       ],
       "return_3y_avg": [
         "yf"
       ],
       "return_5y_avg": [
-        "yf"
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
       ]
     },
     "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."

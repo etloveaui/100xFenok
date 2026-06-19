@@ -88,6 +88,7 @@ class MarketDataAuditTest(unittest.TestCase):
                 "facts": {
                     "return_1m": {"value": 1.1, "source": "yf.history_1y"},
                     "return_ytd": {"value": 2.2, "source": "yf"},
+                    "return_1y": {"value": 5.5, "source": "stockanalysis.etf_screener.performance"},
                 },
             },
         )
@@ -115,6 +116,7 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertEqual(coverage["return_1m"]["etf_coverage_pct"], 100.0)
         self.assertEqual(coverage["return_ytd"]["etf"], 1)
         self.assertEqual(coverage["return_ytd"]["yf_info"], 1)
+        self.assertEqual(coverage["return_1y"]["stockanalysis_performance"], 1)
         self.assertEqual(payload["market_facts"]["return_field_denominators"]["stockanalysis_universe"], 3)
 
     def test_transient_backfill_files_block_finalize_readiness(self) -> None:
