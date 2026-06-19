@@ -210,6 +210,9 @@ External sources
   - renders available ETF overview facts such as inception date and shares
     outstanding alongside price, assets, fees, dividend yield, holdings, and
     allocation breakdowns.
+  - renders `normalized.performance` (or legacy `raw.overview.performance`)
+    into a period-return section, while the price-history panel labels its
+    summary as monthly-close based until daily history is promoted.
 - `100xfenok-next/src/app/market/events/MarketEventsClient.tsx`
   - is the dedicated route for StockAnalysis earnings, corporate actions,
     IPO, market-mover, and industry surfaces;

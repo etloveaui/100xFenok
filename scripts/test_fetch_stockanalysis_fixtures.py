@@ -198,6 +198,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                             "to the daily price movement for shares of NVIDIA Corporation stock."
                         ),
                         "aum": "$1.0B",
+                        "performance": {
+                            "tr1m": 12.3,
+                            "trYTD": 45.6,
+                        },
                     },
                 }
             if path.endswith("/holdings"):
@@ -216,6 +220,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(classification["leverage_factor"], 2.0)
         self.assertTrue(classification["is_single_stock"])
         self.assertEqual(classification["underlying"], "NVIDIA Corporation")
+        self.assertEqual(payload["normalized"]["performance"]["trYTD"], 45.6)
 
     def test_etf_catalog_enrichment_promotes_detail_metrics(self) -> None:
         detail_index = {

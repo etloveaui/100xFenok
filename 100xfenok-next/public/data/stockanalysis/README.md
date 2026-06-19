@@ -134,6 +134,7 @@ Each file keeps both normalized fields and raw endpoint payloads:
     "sectors": {},
     "countries": {},
     "overview": {},
+    "performance": {},
     "quote": {},
     "history": []
   },

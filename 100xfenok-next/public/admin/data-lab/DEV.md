@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.21 (ETF gap reason copy)
+> **Version**: 2.2.22 (ETF expense/performance coverage)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -69,7 +69,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **Reactive state** | Observer pattern for automatic UI updates |
 | **Market data audit** | Reads `data/computed/market_data_audit.json` for ETF backfill, market facts, and source parity |
 | **StockAnalysis audit** | Reads `data/stockanalysis/index.json`, `coverage/etf_detail.json`, and `classification/latest.json` for ETF detail coverage, backfill, and leverage/inverse/single-stock classification visibility |
-| **ETF universe snapshot** | Reads the ETF list API, `etf_universe.json`, `surfaces/new_etfs.json`, and `coverage/etf_detail.json` together so operators can see total ETF count, price/volume/holdings coverage, newest launches, and new-ETF detail gaps from live data |
+| **ETF universe snapshot** | Reads the ETF list API, `etf_universe.json`, `surfaces/new_etfs.json`, and `coverage/etf_detail.json` together so operators can see total ETF count, price/volume/holdings/expense/performance coverage, newest launches, and new-ETF detail gaps from live data |
 | **ETF coverage gap drilldown** | Shows new-ETF/universe/screener missing counts and sample tickers from `coverage/etf_detail.json` |
 
 ---
@@ -146,6 +146,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Surface consumers**: Data Lab reads `data/stockanalysis/surface_consumers.json` for public-route connection status instead of keeping the route map inside `renderer.js`. Keep the source file and public mirror byte-identical; `npm run qa:surface-consumers` verifies this against `surfaces/index.json` and active route/component files.
 - **Update QA gate**: The StockAnalysis refresh workflow runs `qa:surface-consumers`, `qa:market-audit`, and `qa:copy` after generated data is rebuilt, so Data Lab structure, public labels, and active surface consumers fail before the data commit is pushed.
 - **ETF API route smoke**: Ops Console probes `/api/data/stockanalysis/etf-universe` as JSON so the Admin surface catches route-level failures separately from static `etf_universe.json` freshness.
+- **ETF list coverage**: Data Lab renders `with_expense_ratio` and `with_performance` from the joined ETF list API, falling back to static universe enrichment counts only when the API omits them.
 
 ---
 
@@ -161,6 +162,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.22 | 2026-06-19 | Added ETF list coverage metrics for expense ratio and period-return availability |
 | 2.2.21 | 2026-06-19 | Clarified ETF gap reason copy and separated missing samples into diagnostic buckets, with an explicit note that buckets can overlap |
 | 2.2.20 | 2026-06-19 | Added Ops Console route smoke for the joined ETF list API |
 | 2.2.19 | 2026-06-19 | Added ETF list API coverage metrics for price, volume, holdings, and screener-only rows |

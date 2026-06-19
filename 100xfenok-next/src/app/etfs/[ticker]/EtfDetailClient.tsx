@@ -36,6 +36,15 @@ interface HistoryPoint {
   ch?: number | null;
 }
 
+interface EtfPerformance {
+  tr1m?: number | null;
+  trYTD?: number | null;
+  tr1y?: number | null;
+  cagr5y?: number | null;
+  cagr10y?: number | null;
+  cagrMAX?: number | null;
+}
+
 interface EtfPayload {
   ticker?: string;
   asset_type?: string;
@@ -49,10 +58,16 @@ interface EtfPayload {
     holding_count?: number | null;
     holdings_updated?: string | null;
     overview?: Record<string, unknown> | null;
+    performance?: EtfPerformance | null;
     quote?: Record<string, unknown> | null;
     history?: HistoryPoint[];
     classification?: EtfClassification | null;
   };
+  raw?: {
+    overview?: {
+      performance?: EtfPerformance | null;
+    } | null;
+  } | null;
 }
 
 interface DetailStatusMeta {
@@ -208,6 +223,10 @@ function fmtSignedPercentPoints(value: MaybeNumber) {
   return isFiniteNumber(value) ? formatSignedPercent(value, { digits: 2, fraction: false }) : "—";
 }
 
+function fmtCompactSignedPercent(value: MaybeNumber) {
+  return isFiniteNumber(value) ? formatSignedPercent(value, { digits: Math.abs(value) >= 100 ? 1 : 2, fraction: false }) : "—";
+}
+
 function fmtShares(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (!isFiniteNumber(value)) return "—";
@@ -232,6 +251,13 @@ function weightedRowValue(row: WeightedRow): number | null {
 
 function hasWeightedRows(rows: WeightedRow[] | null | undefined) {
   return Array.isArray(rows) && rows.some((row) => weightedRowValue(row) !== null);
+}
+
+function performanceFromPayload(payload: EtfPayload | null | undefined, normalized: EtfPayload["normalized"]): EtfPerformance | null {
+  const normalizedPerformance = normalized?.performance;
+  if (normalizedPerformance && typeof normalizedPerformance === "object") return normalizedPerformance;
+  const rawPerformance = payload?.raw?.overview?.performance;
+  return rawPerformance && typeof rawPerformance === "object" ? rawPerformance : null;
 }
 
 function detailStatusMeta(status: string | null): DetailStatusMeta | null {
@@ -297,6 +323,37 @@ function MetricCard({ label, value, note }: { label: string; value: string; note
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{value}</p>
       {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{note}</p> : null}
+    </div>
+  );
+}
+
+function PerformanceView({ performance }: { performance: EtfPerformance | null }) {
+  const items = [
+    { label: "1개월", value: performance?.tr1m, note: "총수익률" },
+    { label: "연초 이후", value: performance?.trYTD, note: "총수익률" },
+    { label: "1년", value: performance?.tr1y, note: "총수익률" },
+    { label: "5년 CAGR", value: performance?.cagr5y, note: "연환산" },
+    { label: "10년 CAGR", value: performance?.cagr10y, note: "연환산" },
+    { label: "상장 이후 CAGR", value: performance?.cagrMAX, note: "연환산" },
+  ].filter((item) => isFiniteNumber(item.value));
+
+  if (!items.length) {
+    return <p className="text-sm font-semibold text-slate-400">기간 수익률 데이터 없음</p>;
+  }
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((item) => {
+        const value = item.value ?? 0;
+        const tone = value >= 0 ? "text-emerald-600" : "text-rose-600";
+        return (
+          <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+            <p className={`orbitron mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
+            <p className="mt-1 text-[10px] font-semibold text-slate-400">{item.note}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -411,42 +468,52 @@ function HistoryView({ history, currency }: { history: HistoryPoint[]; currency:
   const min = Math.min(...closes);
   const max = Math.max(...closes);
   const range = max - min || 1;
+  const firstClose = closes[0] ?? null;
+  const lastClose = closes[closes.length - 1] ?? null;
+  const periodReturn = firstClose && lastClose !== null ? ((lastClose - firstClose) / firstClose) * 100 : null;
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
-      <div className="flex h-40 items-end gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-        {chronological.map((point, index) => {
-          const close = isFiniteNumber(point.c) ? point.c : min;
-          const height = 10 + ((close - min) / range) * 90;
-          const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
-          return (
-            <div key={`${point.t ?? "month"}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${point.t}: ${formatMoney(close, currency)}`}>
-              <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
-              <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(point.t ?? "").slice(5, 7)}</span>
-            </div>
-          );
-        })}
+    <div className="space-y-3">
+      <div className="grid gap-2 sm:grid-cols-3">
+        <MetricCard label="월간 구간 수익률" value={fmtCompactSignedPercent(periodReturn)} note="표시된 월간 종가 기준" />
+        <MetricCard label="구간 고점" value={formatMoney(max, currency)} note="월간 종가 기준" />
+        <MetricCard label="구간 저점" value={formatMoney(min, currency)} note="월간 종가 기준" />
       </div>
-      <div className="-mx-1 overflow-x-auto px-1">
-        <table className="w-full min-w-[360px] text-xs">
-          <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-              <th className="px-2 py-2 text-left">월</th>
-              <th className="px-2 py-2 text-right">종가</th>
-              <th className="px-2 py-2 text-right">변화</th>
-              <th className="px-2 py-2 text-right">거래량</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((point, index) => (
-              <tr key={`${point.t ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-2 font-bold text-slate-700">{point.t ?? "—"}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(point.c, currency)}</td>
-                <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtSignedPercentPoints(point.ch)}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+        <div className="flex h-40 items-end gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+          {chronological.map((point, index) => {
+            const close = isFiniteNumber(point.c) ? point.c : min;
+            const height = 10 + ((close - min) / range) * 90;
+            const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
+            return (
+              <div key={`${point.t ?? "month"}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${point.t}: ${formatMoney(close, currency)}`}>
+                <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
+                <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(point.t ?? "").slice(5, 7)}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="-mx-1 overflow-x-auto px-1">
+          <table className="w-full min-w-[360px] text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+                <th className="px-2 py-2 text-left">월</th>
+                <th className="px-2 py-2 text-right">종가</th>
+                <th className="px-2 py-2 text-right">변화</th>
+                <th className="px-2 py-2 text-right">거래량</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((point, index) => (
+                <tr key={`${point.t ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
+                  <td className="px-2 py-2 font-bold text-slate-700">{point.t ?? "—"}</td>
+                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(point.c, currency)}</td>
+                  <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtSignedPercentPoints(point.ch)}</td>
+                  <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -499,6 +566,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const history = Array.isArray(normalized.history) ? normalized.history : [];
+  const performance = performanceFromPayload(etfData, normalized);
   const statusMeta = detailStatusMeta(etfData?.detail_status ?? null);
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
   const labels = classificationLabels(classification);
@@ -523,6 +591,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     category !== "—" ? "카테고리" : null,
     labels.length > 0 ? "분류 태그" : null,
     holdingCount > 0 ? "보유 항목 수" : null,
+    performance ? "기간 수익률" : null,
     history.length > 0 ? "가격 히스토리" : null,
   ].filter((item): item is string => Boolean(item));
   const pendingDetailItems = [
@@ -530,6 +599,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     !hasWeightedRows(assetAllocation) ? "자산 분해" : null,
     !hasWeightedRows(sectors) ? "섹터 분해" : null,
     !hasWeightedRows(countries) ? "국가 분해" : null,
+    !performance ? "기간 수익률" : null,
     history.length === 0 ? "가격 히스토리" : null,
   ].filter((item): item is string => Boolean(item));
   const metrics = [
@@ -638,6 +708,10 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 운용사 웹사이트
               </a>
             ) : null}
+          </SectionCard>
+
+          <SectionCard title="기간 수익률" desc="총수익률·연환산 수익률">
+            <PerformanceView performance={performance} />
           </SectionCard>
 
           <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${holdings.length.toLocaleString("ko-KR")}개 표시`}>

@@ -1316,6 +1316,7 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
                 )
                 if overview_data.get(key) is not None
             },
+            "performance": overview_data.get("performance") if isinstance(overview_data.get("performance"), dict) else None,
             "quote": raw.get("quote"),
             "history": raw.get("history"),
         },
