@@ -269,16 +269,16 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
         <table className="w-full min-w-[390px] border-collapse text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-400">
-              <th className="py-2 pr-2 text-left">지수</th>
+              <th scope="col" className="py-2 pr-2 text-left">지수</th>
               {BENCH_METRICS.map((m) => (
-                <th key={m.key} className="px-2 py-2 text-right">{m.label}</th>
+                <th key={m.key} scope="col" className="px-2 py-2 text-right">{m.label}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.id} className="border-b border-slate-100">
-                <td className="py-2 pr-2 text-left font-bold text-slate-700">{row.label}</td>
+                <th scope="row" className="py-2 pr-2 text-left font-bold text-slate-700">{row.label}</th>
                 {BENCH_METRICS.map((m) => {
                   const cell = fracPct(numberOrNull(row[m.key]?.[period]));
                   return (
@@ -306,17 +306,17 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
       <table className="w-full min-w-[360px] border-collapse text-[12px]">
         <thead>
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-400">
-            <th className="py-2 pr-2 text-left">구간</th>
-            <th className="px-2 py-2 text-right">종목</th>
-            <th className="px-2 py-2 text-right">최고</th>
-            <th className="px-2 py-2 text-right">최저</th>
-            <th className="px-2 py-2 text-right">중앙 스프레드</th>
+            <th scope="col" className="py-2 pr-2 text-left">구간</th>
+            <th scope="col" className="px-2 py-2 text-right">종목</th>
+            <th scope="col" className="px-2 py-2 text-right">최고</th>
+            <th scope="col" className="px-2 py-2 text-right">최저</th>
+            <th scope="col" className="px-2 py-2 text-right">중앙 스프레드</th>
           </tr>
         </thead>
         <tbody>
           {tables.map((t) => (
             <tr key={t.id} className="border-b border-slate-100">
-              <td className="py-2 pr-2 text-left font-bold text-slate-700">{CREDIT_LABELS[t.id] ?? t.id}</td>
+              <th scope="row" className="py-2 pr-2 text-left font-bold text-slate-700">{CREDIT_LABELS[t.id] ?? t.id}</th>
               <td className="px-2 py-2 text-right tabular-nums text-slate-600">{t.rows ?? "—"}</td>
               <td className="px-2 py-2 text-right font-bold text-emerald-600">{t.bestRating ?? "—"}</td>
               <td className="px-2 py-2 text-right font-bold text-rose-600">{t.worstRating ?? "—"}</td>

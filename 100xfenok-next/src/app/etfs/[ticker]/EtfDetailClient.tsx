@@ -495,11 +495,11 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
       <table className="w-full min-w-[620px] text-xs">
         <thead className="sticky top-0 z-10 bg-white">
           <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
-            <th className="px-2 py-2 text-right">#</th>
-            <th className="px-2 py-2 text-left">종목/계약</th>
-            <th className="px-2 py-2 text-left">티커</th>
-            <th className="px-2 py-2 text-right">비중</th>
-            <th className="px-2 py-2 text-right">수량</th>
+            <th scope="col" className="px-2 py-2 text-right">#</th>
+            <th scope="col" className="px-2 py-2 text-left">종목/계약</th>
+            <th scope="col" className="px-2 py-2 text-left">티커</th>
+            <th scope="col" className="px-2 py-2 text-right">비중</th>
+            <th scope="col" className="px-2 py-2 text-right">수량</th>
           </tr>
         </thead>
         <tbody>
@@ -509,7 +509,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0">
                 <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
-                <td className="px-2 py-2 font-bold text-[var(--c-ink)]">{item.name ?? "—"}</td>
+                <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">{item.name ?? "—"}</th>
                 <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-[var(--c-ink-3)]">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
                 <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
@@ -771,16 +771,16 @@ function HistoryView({
           <table className="w-full min-w-[360px] text-xs">
             <thead>
               <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
-                <th className="px-2 py-2 text-left">일자</th>
-                <th className="px-2 py-2 text-right">종가</th>
-                <th className="px-2 py-2 text-right">변화</th>
-                <th className="px-2 py-2 text-right">거래량</th>
+                <th scope="col" className="px-2 py-2 text-left">일자</th>
+                <th scope="col" className="px-2 py-2 text-right">종가</th>
+                <th scope="col" className="px-2 py-2 text-right">변화</th>
+                <th scope="col" className="px-2 py-2 text-right">거래량</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((point, index) => (
                 <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-[var(--c-line)] last:border-b-0">
-                  <td className="px-2 py-2 font-bold text-[var(--c-ink)]">{historyPointDate(point) ?? "—"}</td>
+                  <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">{historyPointDate(point) ?? "—"}</th>
                   <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-[var(--c-ink)]">{formatMoney(historyPointClose(point), currency)}</td>
                   <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
                   <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>

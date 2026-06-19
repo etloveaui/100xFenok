@@ -451,15 +451,16 @@ export default function SectorsClient() {
           <table className="w-full min-w-[640px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                   업종
                 </th>
-                <th className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">당일</th>
+                <th scope="col" className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">당일</th>
                 {MOMENTUM_WINDOWS.map((window) => {
                   const active = window.key === sortWindow;
                   return (
                     <th
                       key={window.key}
+                      scope="col"
                       aria-sort={active ? "descending" : "none"}
                       className="px-1 py-2 text-center"
                     >
@@ -485,7 +486,7 @@ export default function SectorsClient() {
             <tbody>
               {benchmarkMomentum ? (
                 <tr className="border-b border-[var(--c-line)]">
-                  <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                  <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                     <span className="block text-sm font-black text-[var(--c-ink)]">S&amp;P 500</span>
                     <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">시장 기준선</span>
                   </th>
@@ -513,7 +514,7 @@ export default function SectorsClient() {
                     : null;
                 return (
                   <tr key={row.key}>
-                    <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                    <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                       <span className="block text-sm font-black text-[var(--c-ink)]">{row.name}</span>
                       <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</span>
                       {relativeThreeMonth !== null ? (
@@ -591,14 +592,14 @@ export default function SectorsClient() {
             <table className="w-full min-w-[680px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                  <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">ETF</th>
-                  <th className="px-2 py-2 text-right">1M</th>
-                  <th className="px-2 py-2 text-right">YTD</th>
-                  <th className="px-2 py-2 text-right">1Y</th>
-                  <th className="px-2 py-2 text-right">3Y CAGR</th>
-                  <th className="px-2 py-2 text-right">5Y CAGR</th>
-                  <th className="px-2 py-2 text-right">Beta</th>
-                  <th className="px-2 py-2 text-right">보수율</th>
+                  <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">ETF</th>
+                  <th scope="col" className="px-2 py-2 text-right">1M</th>
+                  <th scope="col" className="px-2 py-2 text-right">YTD</th>
+                  <th scope="col" className="px-2 py-2 text-right">1Y</th>
+                  <th scope="col" className="px-2 py-2 text-right">3Y CAGR</th>
+                  <th scope="col" className="px-2 py-2 text-right">5Y CAGR</th>
+                  <th scope="col" className="px-2 py-2 text-right">Beta</th>
+                  <th scope="col" className="px-2 py-2 text-right">보수율</th>
                 </tr>
               </thead>
               <tbody>
@@ -606,10 +607,10 @@ export default function SectorsClient() {
                   const etf = row.etfInfo!;
                   return (
                     <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
-                      <td className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                      <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                         <span className="text-sm font-black text-[var(--c-ink)]">{row.etf}</span>
                         <span className="ml-2 text-xs font-semibold text-[var(--c-ink-2)]">{row.name}</span>
-                      </td>
+                      </th>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns["1m"], 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns.ytd, 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns["1y"], 1)}</td>
@@ -647,14 +648,14 @@ export default function SectorsClient() {
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                <th className="px-2 py-2 text-left">업종</th>
-                <th className="px-2 py-2 text-right">
+                <th scope="col" className="px-2 py-2 text-left">업종</th>
+                <th scope="col" className="px-2 py-2 text-right">
                   <abbr title={valuationHelp.pe} className="cursor-help no-underline">Fwd P/E</abbr>
                 </th>
-                <th className="px-2 py-2 text-right">
+                <th scope="col" className="px-2 py-2 text-right">
                   <abbr title={valuationHelp.pb} className="cursor-help no-underline">P/B</abbr>
                 </th>
-                <th className="px-2 py-2 text-right">
+                <th scope="col" className="px-2 py-2 text-right">
                   <abbr title={valuationHelp.roe} className="cursor-help no-underline">ROE</abbr>
                 </th>
               </tr>
@@ -667,10 +668,10 @@ export default function SectorsClient() {
                   if (!v) return null;
                   return (
                     <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
-                      <td className="px-2 py-2 text-left">
+                      <th scope="row" className="px-2 py-2 text-left">
                         <span className="text-sm font-bold text-[var(--c-ink)]">{row.name}</span>
                         <span className="ml-2 text-xs font-semibold text-[var(--c-ink-3)]">{row.etf}</span>
-                      </td>
+                      </th>
                       <td className="px-2 py-2 text-right">
                         <PeBandGauge value={v.pe} band={v.peBand} />
                       </td>

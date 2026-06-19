@@ -275,7 +275,28 @@
 
 /* Focus Visible */
 *:focus-visible {
-  outline: 2px solid #1B73D3;
+  outline: 2px solid var(--brand-interactive);
+  outline-offset: 2px;
+}
+
+:is(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="switch"],
+  [role="option"],
+  [tabindex],
+  [contenteditable]
+):focus-visible {
+  outline: 2px solid var(--brand-interactive) !important;
   outline-offset: 2px;
 }
 

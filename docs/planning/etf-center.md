@@ -280,6 +280,8 @@ Representative ticker contracts:
 | ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, distinguishes transient fetch failure from missing/backfill-pending data, and exposes an in-place retry action. |
 | ETF snapshot transient fetch | improved | The `/etfs` snapshot card clears failed surface fetches, avoids stale failed pending state, and shows a retry callout instead of rendering empty leaderboards as if data were valid. |
 | New ETF date/filter cache | improved | `/etfs/new` date filters use the surface `fetched_at` date as the "recent N days" anchor, show an explicit no-date-baseline note if a recent-period filter cannot be evaluated, and new-ETF snapshot/coverage loaders no longer keep failed non-OK responses as permanent pending promises. |
+| Global focus indicator | improved / browser-smoked | The app-wide `:focus-visible` outline now uses the brand interaction token and has an interactive-element override so controls that use utility `outline-none` still keep a visible keyboard focus. Browser focus checks covered Superinvestors and new-ETF filter inputs. |
+| Table header semantics | improved | ETF detail, sector desktop tables, and market-valuation benchmark tables declare column and row header scope so assistive technologies can map table cells to their headers reliably. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
 ## 7. Related Files
