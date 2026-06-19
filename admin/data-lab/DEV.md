@@ -137,7 +137,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **Validation-first**: Field/record change warnings
 - **Separation**: Feature experiments in Valuation Lab, data monitoring in Data Lab
 - **Incremental proof**: `data/stockanalysis/backfill/incremental_latest.json` is optional until the first scheduled/dispatch incremental ETF run. Data Lab fetches it only when audit says `proof_file_exists=true`, so missing proof renders as a neutral waiting state without console 404.
-- **ETF queue visibility**: `data/stockanalysis/backfill/pending_ledger.json` is fetched directly for Admin-only drilldown rows. This shows pending/retry/failure tickers from the data refresh artifacts instead of static copy.
+- **ETF queue visibility**: `data/stockanalysis/backfill/pending_ledger.json` is fetched directly for Admin-only drilldown rows. This shows pending/retry/failure tickers from the data refresh artifacts instead of static copy, including the earliest retry date, latest attempt date, and repeated-missing count.
 - **ETF coverage proof**: `data/stockanalysis/coverage/etf_detail.json` is rebuilt from local files and uses the union of ETF universe, ETF screener, and new ETF launch rows as the candidate denominator.
 - **ETF gap drilldown**: Data Lab reads `counts.missing_by_source` and `samples` from `coverage/etf_detail.json` so operators can see which new/listed ETFs still rely on fallback surfaces.
 - **ETF universe snapshot**: Data Lab reads the ETF list API plus the full ETF universe and new-ETF surface, then joins those counts with `coverage/etf_detail.json`; the card must stay data-driven and must not use static launch counts.

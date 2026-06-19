@@ -782,6 +782,9 @@ const Renderer = (function() {
     const cooldownCount = Number(pendingLedger?.counts?.cooldown ?? counts.incremental_etf_ledger_cooldown ?? 0) || 0;
     const retryNowCount = Math.max(trackedCount - cooldownCount, 0);
     const generatedAt = incremental?.generated_at || index?.incremental_etf_backfill?.generated_at || index?.generated_at || '-';
+    const nextRetryAt = findEarliestIso(ledgerRows.map((row) => row.next_attempt_after_utc));
+    const lastAttemptAt = findLatestIso(ledgerRows.map((row) => row.last_attempt_utc));
+    const repeatedFailureCount = ledgerRows.filter((row) => Number(row.consecutive_failures || 0) >= 3).length;
 
     return `
       <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-5">
@@ -799,8 +802,11 @@ const Renderer = (function() {
           ${renderAuditMetric('누락 후보', incrementalCounts.missing)}
           ${renderAuditMetric('보조 가격 재시도 후보', incrementalCounts.fallback_retry)}
           ${renderAuditMetric('추적 중', trackedCount)}
-          ${renderAuditMetric('재시도 예약', cooldownCount)}
+          ${renderAuditMetric('재시도 예약됨', cooldownCount)}
           ${renderAuditMetric('지금 재시도 가능', retryNowCount)}
+          ${renderAuditMetric('가장 빠른 재시도일', formatBackfillDate(nextRetryAt))}
+          ${renderAuditMetric('최근 확인일', formatBackfillDate(lastAttemptAt))}
+          ${renderAuditMetric('반복 미확인', repeatedFailureCount)}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
           ${renderBackfillMiniTable(
@@ -855,6 +861,20 @@ const Renderer = (function() {
         if (aFailures !== bFailures) return bFailures - aFailures;
         return String(b.last_attempt_utc || '').localeCompare(String(a.last_attempt_utc || ''));
       });
+  }
+
+  function findEarliestIso(values) {
+    return values
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))[0] || '';
+  }
+
+  function findLatestIso(values) {
+    return values
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .sort((a, b) => b.localeCompare(a))[0] || '';
   }
 
   function renderBackfillMiniTable(title, headers, rows) {
