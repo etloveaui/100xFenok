@@ -217,7 +217,7 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(fact["candidate_count"], 2)
         self.assertEqual(fact["candidates"][1]["source"], "stockanalysis.etf_screener.performance")
 
-    def test_carry_forward_generated_at_when_payload_is_unchanged(self) -> None:
+    def test_carry_forward_stable_payload_when_payload_is_unchanged(self) -> None:
         existing = {
             "ticker": "SAME",
             "generated_at": "2026-06-18T00:00:00Z",
@@ -229,9 +229,27 @@ class BuildMarketFactsTest(unittest.TestCase):
             "facts": {"price": {"value": 100.0, "source": "yf"}},
         }
 
-        self.mod.carry_forward_generated_at(existing, payload)
+        result = self.mod.carry_forward_stable_payload(existing, payload)
 
-        self.assertEqual(payload["generated_at"], "2026-06-18T00:00:00Z")
+        self.assertEqual(result["generated_at"], "2026-06-18T00:00:00Z")
+        self.assertEqual(result["facts"]["price"]["value"], 100.0)
+
+    def test_carry_forward_stable_payload_ignores_float_epsilon_churn(self) -> None:
+        existing = {
+            "ticker": "BABX",
+            "generated_at": "2026-06-18T00:00:00Z",
+            "facts": {"return_3y_avg": {"value": -18.49677368804874, "source": "stockanalysis.detail.history"}},
+        }
+        payload = {
+            "ticker": "BABX",
+            "generated_at": "2026-06-19T00:00:00Z",
+            "facts": {"return_3y_avg": {"value": -18.49677368804875, "source": "stockanalysis.detail.history"}},
+        }
+
+        result = self.mod.carry_forward_stable_payload(existing, payload)
+
+        self.assertEqual(result["generated_at"], "2026-06-18T00:00:00Z")
+        self.assertEqual(result["facts"]["return_3y_avg"]["value"], -18.49677368804874)
 
     def test_generated_at_advances_when_payload_content_changes(self) -> None:
         existing = {
@@ -245,9 +263,9 @@ class BuildMarketFactsTest(unittest.TestCase):
             "facts": {"price": {"value": 101.0, "source": "yf"}},
         }
 
-        self.mod.carry_forward_generated_at(existing, payload)
+        result = self.mod.carry_forward_stable_payload(existing, payload)
 
-        self.assertEqual(payload["generated_at"], "2026-06-19T00:00:00Z")
+        self.assertEqual(result["generated_at"], "2026-06-19T00:00:00Z")
 
     def test_main_preserves_ticker_generated_at_across_noop_rebuilds(self) -> None:
         original_data = self.mod.DATA

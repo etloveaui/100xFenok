@@ -103,18 +103,25 @@ def write_json(path: Path, payload: dict) -> None:
 
 
 def stable_payload_for_compare(payload: dict) -> str:
-    stable = dict(payload)
-    stable["generated_at"] = None
-    return json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    def normalize(value, *, root=False):
+        if isinstance(value, dict):
+            return {
+                key: (None if root and key == "generated_at" else normalize(item))
+                for key, item in value.items()
+            }
+        if isinstance(value, list):
+            return [normalize(item) for item in value]
+        if isinstance(value, float):
+            return round(value, 12)
+        return value
+
+    return json.dumps(normalize(payload, root=True), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def carry_forward_generated_at(existing_payload, payload: dict) -> None:
-    if (
-        isinstance(existing_payload, dict)
-        and isinstance(existing_payload.get("generated_at"), str)
-        and stable_payload_for_compare(existing_payload) == stable_payload_for_compare(payload)
-    ):
-        payload["generated_at"] = existing_payload["generated_at"]
+def carry_forward_stable_payload(existing_payload, payload: dict) -> dict:
+    if isinstance(existing_payload, dict) and stable_payload_for_compare(existing_payload) == stable_payload_for_compare(payload):
+        return existing_payload
+    return payload
 
 
 def number(value):
@@ -696,7 +703,7 @@ def main() -> None:
             payload["sources"]["stockanalysis_financials"] = True
             payload["source_files"]["stockanalysis_financials"] = f"stockanalysis/financials/{ticker}.json"
         rel = Path("tickers") / f"{ticker}.json"
-        carry_forward_generated_at(load_json(OUT / rel), payload)
+        payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
         write_json(OUT / rel, payload)
         write_json(PUBLIC_OUT / rel, payload)
         rows.append({
