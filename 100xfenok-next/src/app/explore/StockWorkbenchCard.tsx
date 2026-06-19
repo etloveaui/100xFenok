@@ -301,7 +301,7 @@ export default function StockWorkbenchCard() {
         </div>
       ) : (
         <>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]">
             {tabs.map((item) => (
               <button
                 key={item.key}
@@ -321,7 +321,7 @@ export default function StockWorkbenchCard() {
 
           {tab === "action" ? (
             <div className="mt-3">
-              <div className="mb-2 flex flex-wrap gap-1.5">
+              <div className="mb-2 flex flex-wrap gap-1.5 px-[var(--panel-pad)]">
                 {[
                   ["smart_money", "기관·고수"],
                   ["value_momentum", "밸류+모멘텀"],
