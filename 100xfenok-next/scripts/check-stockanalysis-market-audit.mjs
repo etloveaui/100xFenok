@@ -169,6 +169,29 @@ function assertBackfillContract(audit, incremental, incrementalPlan, pendingLedg
   assert("stockanalysis_yf_fallback" in coverage, "Market facts: fallback coverage key must be present", errors);
 }
 
+function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
+  const auditCounts = audit?.incremental_etf?.counts || {};
+  const planCounts = incrementalPlan?.counts || {};
+  const nestedCounts = incrementalPlan?.incremental_etf_backfill?.counts || {};
+  const plannedEtfs = Array.isArray(incrementalPlan?.etfs) ? incrementalPlan.etfs : [];
+  const requiredPeriods = Array.isArray(incrementalPlan?.required_history_periods)
+    ? incrementalPlan.required_history_periods
+    : [];
+
+  assert(incrementalPlan?.operation === "incremental_etf_backfill_plan", "ETF incremental plan: operation must be incremental_etf_backfill_plan", errors);
+  assert(incrementalPlan?.mode === "history_gaps_only", "ETF incremental plan: mode must be history_gaps_only", errors);
+  assert(incrementalPlan?.policy?.network === "none", "ETF incremental plan: policy.network must remain none", errors);
+  assert(requiredPeriods.includes("monthly_3y"), "ETF incremental plan: monthly_3y must be required", errors);
+  assert(requiredPeriods.includes("monthly_5y"), "ETF incremental plan: monthly_5y must be required", errors);
+  assert(plannedEtfs.length === Number(planCounts.etfs_planned || 0), "ETF incremental plan: etfs length must match etfs_planned", errors);
+  assert(Number(planCounts.incremental_selected || 0) === Number(planCounts.etfs_planned || 0), "ETF incremental plan: incremental_selected must match etfs_planned", errors);
+  assert(Number(nestedCounts.selected || 0) === Number(planCounts.incremental_selected || 0), "ETF incremental plan: nested selected count must match top-level selected count", errors);
+  assert(Number(nestedCounts.history_gap || 0) === Number(planCounts.history_gap || 0), "ETF incremental plan: nested history_gap count must match top-level history_gap count", errors);
+  assert(Number(auditCounts.plan_selected ?? -1) === Number(planCounts.incremental_selected || 0), "Market audit: plan_selected must match incremental plan selected count", errors);
+  assert(Number(auditCounts.plan_history_gap ?? -1) === Number(planCounts.history_gap || 0), "Market audit: plan_history_gap must match incremental plan history_gap count", errors);
+  assert(audit?.incremental_etf?.plan_generated_at === incrementalPlan?.generated_at, "Market audit: plan_generated_at must match incremental plan generated_at", errors);
+}
+
 function assertReturnCoverageContract(audit, errors) {
   const returnCoverage = audit?.market_facts?.return_field_coverage || {};
   const requiredFields = [
@@ -334,6 +357,7 @@ payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, paylo
 
 assertCoverageContract(payloads.coverage, errors);
 assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors);
+assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
 assertReturnCoverageContract(payloads.audit, errors);
 assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
 assertRenderedMarketAudit(payloads, errors);

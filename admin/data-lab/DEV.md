@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.30 (ETF history-gap plan-file visibility)
+> **Version**: 2.2.31 (ETF history-gap plan contract QA)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -165,6 +165,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.31 | 2026-06-19 | Strengthened market-audit QA so the no-network ETF history-gap plan contract must match Data Lab audit counts and required multi-year periods |
 | 2.2.30 | 2026-06-19 | Added a durable no-network ETF history-gap plan artifact and Data Lab plan-file visibility without treating it as completed fetch evidence |
 | 2.2.29 | 2026-06-19 | Rendered StockAnalysis ETF `history_gap` candidates in Data Lab backfill cards with Korean operator labels |
 | 2.2.29 | 2026-06-19 | Clarified ETF return coverage source breakdown and separated actual incremental run evidence from plan-only multi-year history backfill candidates |
