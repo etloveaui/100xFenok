@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import BrandLogo from '@/components/BrandLogo';
 import { usePathname } from 'next/navigation';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/client/body-scroll-lock';
 
@@ -282,17 +282,12 @@ export default function Navbar() {
                 aria-label="Go to home"
                 onClick={handleAdminTap}
               >
-                <div className={`brand-logo w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300 border border-slate-100 active:scale-95 ${adminTapFlash ? 'ring-2 ring-brand-gold ring-offset-1' : ''}`}>
-                  <Image
-                    src="/100x-fenok-logo.png"
-                    alt=""
-                    width={100}
-                    height={100}
-                    priority
-                    sizes="(max-width: 640px) 24px, 32px"
-                    className="h-6 w-6 sm:h-8 sm:w-8"
-                  />
-                </div>
+                <BrandLogo
+                  size="md"
+                  className={`sm:w-10 sm:h-10 group-hover:scale-105 active:scale-95 ${adminTapFlash ? 'ring-2 ring-brand-gold ring-offset-1' : ''}`}
+                  imageClassName="sm:w-8 sm:h-8"
+                  priority
+                />
                 <span className="brand-text font-[900] orbitron text-slate-800 text-base min-[390px]:text-lg sm:text-xl leading-none tracking-tight whitespace-nowrap">
                   100x <span className="text-brand-gold">FENOK</span>
                 </span>

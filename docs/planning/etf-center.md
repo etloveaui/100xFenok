@@ -234,7 +234,7 @@ Representative ticker contracts:
 | Daily-derived 1M / 3M returns | partial coverage | Implemented via Yahoo `history_1y` in `market_facts`; remaining work is staged ETF history backfill to lift coverage beyond the current 1M 612 / 5,267 and 3M 562 / 5,267. |
 | Chart granularity | monthly only | Add daily/weekly/monthly toggle and 3Y/5Y ranges. Requires extending history collection beyond 1Y. |
 | Browser QA for ETF routes | covered, needs visual expansion | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Remaining work is richer screenshot/visual assertions for fallback/detail states. |
-| Header logo style | inconsistent | Root `Navbar` uses white rounded background; `AppShell` (`/etfs`, `/explore`) uses plain 28x28 logo. Decide and unify. |
+| Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
 ## 7. Related Files
 
@@ -245,6 +245,7 @@ Representative ticker contracts:
 - `100xfenok-next/src/app/etfs/EtfSurfaceSnapshotCard.tsx`
 - `100xfenok-next/src/app/etfs/new/NewEtfsList.tsx`
 - `100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx`
+- `100xfenok-next/src/components/BrandLogo.tsx`
 - `100xfenok-next/src/app/api/data/stockanalysis/etf-universe/route.ts`
 - `100xfenok-next/src/app/api/data/stockanalysis/etf-snapshot/route.ts`
 - `100xfenok-next/src/app/api/data/stockanalysis/etfs/[ticker]/route.ts`
