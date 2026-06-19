@@ -198,6 +198,10 @@ External sources
     auxiliary price data exists, the page labels what is currently available
     and what is still waiting for deeper holdings/allocation data instead of
     exposing internal status names.
+- `100xfenok-next/scripts/smoke-stockanalysis-routes.mjs`
+  - treats `coverage/etf_detail.json` missing samples as a live contract:
+    missing detail files must still open through the ETF asset API as
+    `surface_only` or `universe_only` fallback responses.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and

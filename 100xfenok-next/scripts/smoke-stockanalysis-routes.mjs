@@ -170,6 +170,7 @@ async function checkEtfDetails(root) {
   assert(adiu?.normalized?.classification?.is_leveraged === true, "ADIU fallback leveraged classification missing");
   assert(adiu?.normalized?.classification?.is_single_stock === true, "ADIU fallback single-stock classification missing");
   assert(adiu?.normalized?.classification?.underlying === "ADI", `ADIU fallback underlying mismatch: ${adiu?.normalized?.classification?.underlying}`);
+  const missingFallbacks = await checkMissingEtfDetailFallbacks(root);
   return {
     IEFA: { holdings: iefa.normalized.holdings.length },
     ADIU: {
@@ -177,7 +178,36 @@ async function checkEtfDetails(root) {
       name: adiu.normalized.overview.name,
       classification: adiu.normalized.classification,
     },
+    missingFallbacks,
   };
+}
+
+async function checkMissingEtfDetailFallbacks(root) {
+  const coverage = await fetchJson(`${root}/data/stockanalysis/coverage/etf_detail.json`);
+  const missingCount = Number(coverage?.counts?.missing_detail_files ?? 0);
+  const missingSamples = Array.isArray(coverage?.samples?.missing)
+    ? coverage.samples.missing.filter(Boolean).slice(0, 5)
+    : [];
+  if (missingCount <= 0) return [];
+  assert(missingSamples.length > 0, "ETF coverage missing count exists but samples.missing is empty");
+
+  const results = [];
+  for (const ticker of missingSamples) {
+    const payload = await fetchJson(`${root}/api/data/stockanalysis/etfs/${encodeURIComponent(ticker)}`);
+    assert(payload?.ticker === ticker, `${ticker} missing-detail fallback ticker mismatch`);
+    assert(payload?.asset_type === "etf", `${ticker} missing-detail fallback must be ETF`);
+    assert(
+      ["surface_only", "universe_only"].includes(payload?.detail_status),
+      `${ticker} missing-detail fallback status invalid: ${payload?.detail_status}`,
+    );
+    assert(payload?.normalized?.overview?.name, `${ticker} missing-detail fallback overview name missing`);
+    results.push({
+      ticker,
+      detail_status: payload.detail_status,
+      name: payload.normalized.overview.name,
+    });
+  }
+  return results;
 }
 
 async function checkSurfaceContracts(root) {
