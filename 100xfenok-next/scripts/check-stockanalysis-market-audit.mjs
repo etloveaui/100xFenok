@@ -7,6 +7,8 @@ const ROOT = process.cwd();
 
 const PUBLIC_RENDERER_PATH = `${ROOT}/public/admin/data-lab/app/renderer.js`;
 const FORMATTERS_PATH = `${ROOT}/public/admin/shared/core/formatters.js`;
+const DATA_LAB_DEV_SOURCE_PATH = "../admin/data-lab/DEV.md";
+const DATA_LAB_DEV_PUBLIC_PATH = "public/admin/data-lab/DEV.md";
 
 const JSON_PAIRS = [
   ["ETF universe", "../data/stockanalysis/etf_universe.json", "public/data/stockanalysis/etf_universe.json"],
@@ -98,6 +100,20 @@ function assertMirror(label, sourceRelPath, publicRelPath, errors) {
   const source = readText(pathOf(sourceRelPath));
   const mirror = readText(pathOf(publicRelPath));
   assert(source === mirror, `${label}: source and public mirror differ`, errors);
+}
+
+function assertDataLabDevVersion(errors) {
+  const dev = readText(pathOf(DATA_LAB_DEV_PUBLIC_PATH));
+  const headerVersion = dev.match(/^\> \*\*Version\*\*: ([^\s]+) /m)?.[1] || "";
+  const latestChangelogVersion = dev.match(/^\| ([0-9]+\.[0-9]+\.[0-9]+) \| [0-9-]+ \|/m)?.[1] || "";
+
+  assert(headerVersion.length > 0, "Data Lab DEV: header version is required", errors);
+  assert(latestChangelogVersion.length > 0, "Data Lab DEV: latest changelog version is required", errors);
+  assert(
+    headerVersion === latestChangelogVersion,
+    `Data Lab DEV: header version ${headerVersion || "(missing)"} must match latest changelog ${latestChangelogVersion || "(missing)"}`,
+    errors,
+  );
 }
 
 function assertCoverageContract(coverage, errors) {
@@ -292,6 +308,8 @@ const errors = [];
 
 assertMirror("Data Lab dashboard", "../admin/data-lab/app/dashboard.js", "public/admin/data-lab/app/dashboard.js", errors);
 assertMirror("Data Lab renderer", "../admin/data-lab/app/renderer.js", "public/admin/data-lab/app/renderer.js", errors);
+assertMirror("Data Lab DEV", DATA_LAB_DEV_SOURCE_PATH, DATA_LAB_DEV_PUBLIC_PATH, errors);
+assertDataLabDevVersion(errors);
 for (const [label, sourceRelPath, publicRelPath] of JSON_PAIRS) {
   assertMirror(label, sourceRelPath, publicRelPath, errors);
 }

@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.29 (ETF history-gap operator visibility)
+> **Version**: 2.2.30 (ETF history-gap plan-file visibility)
 > **Redesign**: #168 (2026-01-20)
 
 ---
