@@ -25,6 +25,7 @@ import type {
   ValuationDriver,
   ValuationBand,
 } from "@/lib/market-valuation/types";
+import { daysUntilKstDate, todayKST } from "@/lib/market-valuation/freshness";
 
 const FETCH_TIMEOUT_MS = 4000;
 
@@ -794,10 +795,6 @@ function buildSentimentPulses(params: {
   ].filter((pulse) => pulse.value !== null);
 }
 
-function todayKST(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
-}
-
 function previousValueForEvent(event: RawCalendarEvent, prevValues: RawPrevValues | null) {
   const values = prevValues?.values ?? {};
   const aliases = prevValues?.aliases ?? {};
@@ -830,13 +827,15 @@ function buildEventRisks(calendar: RawCalendar | null, prevValues: RawPrevValues
   const today = todayKST();
   return (Array.isArray(calendar?.events) ? calendar!.events! : [])
     .filter((event) => typeof event.date_kst === "string" && event.date_kst >= today && (event.importance === "H" || event.importance === "M"))
-    .slice(0, 6)
     .map((event, index) => {
       const previous = previousValueForEvent(event, prevValues);
+      const daysUntil = daysUntilKstDate(event.date_kst, today);
       return {
         id: `${event.date_kst}-${event.time_kst}-${index}`,
         dateKst: event.date_kst ?? "—",
         timeKst: event.time_kst ?? "—",
+        isToday: daysUntil === 0,
+        daysUntil,
         importance: event.importance ?? "M",
         category: event.category ?? "—",
         titleKo: event.title_ko ?? event.title_en ?? "이벤트",
@@ -845,7 +844,13 @@ function buildEventRisks(calendar: RawCalendar | null, prevValues: RawPrevValues
         previousAsOf: previous.asOf,
         previousSeries: previous.series,
       };
-    });
+    })
+    .sort((a, b) => {
+      const dayDelta = (a.daysUntil ?? Number.MAX_SAFE_INTEGER) - (b.daysUntil ?? Number.MAX_SAFE_INTEGER);
+      if (dayDelta !== 0) return dayDelta;
+      return (a.importance === "H" ? 0 : 1) - (b.importance === "H" ? 0 : 1);
+    })
+    .slice(0, 6);
 }
 
 function buildTrend(id: string, label: string, rows: RawIndexPoint[] | null): MarketIndexTrend | null {

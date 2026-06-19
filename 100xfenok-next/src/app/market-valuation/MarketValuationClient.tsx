@@ -22,6 +22,7 @@ import {
   YardeniOverlayChartPanel,
 } from "@/lib/market-valuation/charts/ledgerChartPanels";
 import { formatPercent } from "@/lib/dashboard/formatters";
+import { formatAsOf, isStaleAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -74,12 +75,51 @@ function EmptyPanel({ label }: { label: string }) {
   return <div className="px-[var(--panel-pad)] py-5 text-sm font-semibold text-[var(--c-ink-4)]">{label}</div>;
 }
 
-function PanelShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+function AsOfBadge({ value, prefix = "기준" }: { value: string | null | undefined; prefix?: string }) {
+  const label = formatAsOf(value);
+  if (!label) return null;
+  const stale = isStaleAsOf(value);
+  return (
+    <span
+      className={cx(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums",
+        stale
+          ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
+          : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
+      )}
+      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
+    >
+      {prefix} {label}
+      {stale ? " · 오래됨" : ""}
+    </span>
+  );
+}
+
+function PanelShell({
+  title,
+  subtitle,
+  asOf,
+  asOfPrefix,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  asOf?: string | null;
+  asOfPrefix?: string;
+  children: ReactNode;
+}) {
   return (
     <section className="overflow-hidden rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
       <header className="flex min-w-0 flex-wrap items-baseline justify-between gap-2 border-b border-[var(--c-line-2)] px-4 py-3">
         <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
-        <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{subtitle}</span>
+        {asOf ? (
+          <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{subtitle}</span>
+            <AsOfBadge value={asOf} prefix={asOfPrefix} />
+          </span>
+        ) : (
+          <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{subtitle}</span>
+        )}
       </header>
       {children}
     </section>
@@ -165,9 +205,10 @@ function loadMarketStructureIndex(): Promise<MarketStructureIndexDoc | null> {
   return marketStructureIndexPending;
 }
 
-function MacroPulsePanel({ items }: { items: MarketMacroPulse[] }) {
+function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; fallbackAsOf?: string | null }) {
+  const panelAsOf = latestAsOf(items.flatMap((item) => [item.releaseDate, item.period])) ?? fallbackAsOf ?? null;
   return (
-    <PanelShell title="경기 펄스" subtitle="PMI · ISM · OECD CLI">
+    <PanelShell title="경기 펄스" subtitle="PMI · ISM · OECD CLI" asOf={panelAsOf}>
       {items.length === 0 ? (
         <EmptyPanel label="경기 데이터 없음" />
       ) : (
@@ -182,7 +223,7 @@ function MacroPulsePanel({ items }: { items: MarketMacroPulse[] }) {
                 <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{fmt(item.value, 1)}</span>
                 <span className="pb-1 text-[10px] font-bold uppercase text-[var(--c-ink-4)]">{item.unit}</span>
               </div>
-              <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-4)]">{item.period ?? item.releaseDate ?? "—"}</p>
+              <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-4)]">{formatAsOf(item.releaseDate ?? item.period) ?? "—"}</p>
               <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{item.detail}</p>
             </div>
           ))}
@@ -217,9 +258,10 @@ function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
   );
 }
 
-function BondPulsePanel({ items }: { items: MarketBondPulse[] }) {
+function BondPulsePanel({ items, fallbackAsOf }: { items: MarketBondPulse[]; fallbackAsOf?: string | null }) {
+  const panelAsOf = latestAsOf(items.map((item) => item.date)) ?? fallbackAsOf ?? null;
   return (
-    <PanelShell title="채권 시그널" subtitle="HY · curve · BEI">
+    <PanelShell title="채권 시그널" subtitle="HY · curve · BEI" asOf={panelAsOf}>
       {items.length === 0 ? (
         <EmptyPanel label="채권 신호 데이터 없음" />
       ) : (
@@ -234,7 +276,7 @@ function BondPulsePanel({ items }: { items: MarketBondPulse[] }) {
               <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
               <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-2)]">{item.changeLabel}</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.date ?? "—"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{formatAsOf(item.date) ?? "—"}</span>
               </div>
             </div>
           ))}
@@ -244,9 +286,10 @@ function BondPulsePanel({ items }: { items: MarketBondPulse[] }) {
   );
 }
 
-function SentimentPulsePanel({ items }: { items: MarketSentimentPulse[] }) {
+function SentimentPulsePanel({ items, fallbackAsOf }: { items: MarketSentimentPulse[]; fallbackAsOf?: string | null }) {
+  const panelAsOf = latestAsOf(items.map((item) => item.date)) ?? fallbackAsOf ?? null;
   return (
-    <PanelShell title="센티먼트" subtitle="VIX · AAII · MOVE">
+    <PanelShell title="센티먼트" subtitle="VIX · AAII · MOVE" asOf={panelAsOf}>
       {items.length === 0 ? (
         <EmptyPanel label="센티먼트 데이터 없음" />
       ) : (
@@ -259,7 +302,7 @@ function SentimentPulsePanel({ items }: { items: MarketSentimentPulse[] }) {
               </div>
               <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
               <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{item.date ?? "—"}</p>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">{formatAsOf(item.date) ?? "—"}</p>
             </div>
           ))}
         </div>
@@ -370,9 +413,13 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
   );
 }
 
-function EventRiskPanel({ items }: { items: MarketEventRisk[] }) {
+function EventRiskPanel({ items, fallbackAsOf }: { items: MarketEventRisk[]; fallbackAsOf?: string | null }) {
+  const nextEvent = items[0];
+  const nextEventAsOf = nextEvent
+    ? `${nextEvent.dateKst}${nextEvent.timeKst && nextEvent.timeKst !== "—" ? ` ${nextEvent.timeKst}` : ""}`
+    : fallbackAsOf ?? null;
   return (
-    <PanelShell title="이벤트 리스크" subtitle="미국 경제일정">
+    <PanelShell title="이벤트 리스크" subtitle="미국 경제일정" asOf={nextEventAsOf} asOfPrefix="다음">
       {items.length === 0 ? (
         <EmptyPanel label="다가오는 주요 이벤트 없음" />
       ) : (
@@ -389,6 +436,11 @@ function EventRiskPanel({ items }: { items: MarketEventRisk[] }) {
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <span className={cx("rounded-full border px-2 py-0.5 text-[10px] font-black", toneClass(tone))}>{item.importance}</span>
+                      {item.isToday ? (
+                        <span className="rounded-full border border-[var(--c-down)] bg-[var(--c-down-soft)] px-2 py-0.5 text-[10px] font-black text-[var(--c-down)]">TODAY</span>
+                      ) : item.daysUntil !== null ? (
+                        <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">D-{item.daysUntil}</span>
+                      ) : null}
                       <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">{item.category}</span>
                     </div>
                     <p className="mt-1 min-w-0 break-words text-sm font-bold leading-5 text-slate-800">{item.titleKo}</p>
@@ -517,8 +569,8 @@ export default function MarketValuationClient() {
 
       <MarketSection index="02 매크로" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
         <PmiActivityChartPanel />
-        <MacroPulsePanel items={macroPulses} />
-        <BondPulsePanel items={bondPulses} />
+        <MacroPulsePanel items={macroPulses} fallbackAsOf={sourceDate} />
+        <BondPulsePanel items={bondPulses} fallbackAsOf={sourceDate} />
       </MarketSection>
 
       <MarketSection index="03 밸류에이션" title="밸류에이션" summary="ERP, 야데니 모델, 지수별 평가 밴드를 한곳에 모았습니다." muted={!dataReady}>
@@ -563,12 +615,12 @@ export default function MarketValuationClient() {
       <MarketSection index="04 구조·심리" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
         <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
         <StructureDetailEntry />
-        <SentimentPulsePanel items={sentimentPulses} />
+        <SentimentPulsePanel items={sentimentPulses} fallbackAsOf={sourceDate} />
       </MarketSection>
 
       <MarketSection index="05 맥락" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
         <AnnualReturnsChartPanel />
-        <EventRiskPanel items={eventRisks} />
+        <EventRiskPanel items={eventRisks} fallbackAsOf={sourceDate} />
       </MarketSection>
 
       <p className="px-1 text-[11px] text-slate-400">

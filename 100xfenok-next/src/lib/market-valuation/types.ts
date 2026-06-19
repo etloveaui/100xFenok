@@ -131,6 +131,8 @@ export interface MarketEventRisk {
   id: string;
   dateKst: string;
   timeKst: string;
+  isToday: boolean;
+  daysUntil: number | null;
   importance: "H" | "M" | "L" | string;
   category: string;
   titleKo: string;

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
+import { formatAsOf, isStaleAsOf } from "@/lib/market-valuation/freshness";
 
 interface YardneyRow {
   date: string;
@@ -68,6 +69,25 @@ function fmtIndex(value: number | null | undefined): string {
 
 function fmtNum(value: number | null | undefined, digits = 1): string {
   return finite(value) ? value.toFixed(digits) : "—";
+}
+
+function AsOfPill({ value }: { value: string | null | undefined }) {
+  const label = formatAsOf(value);
+  if (!label) return null;
+  const stale = isStaleAsOf(value);
+  return (
+    <span
+      className={`rounded-full border px-2 py-1 text-[10px] font-black tabular-nums ${
+        stale
+          ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
+          : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
+      }`}
+      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
+    >
+      기준 {label}
+      {stale ? " · 오래됨" : ""}
+    </span>
+  );
 }
 
 export default function YardeniCard() {
@@ -159,7 +179,7 @@ export default function YardeniCard() {
             {fmtIndex(active.fair_value)}
           </span>
         </span>
-        <span className="text-[var(--c-line-2)]">{active.date}</span>
+        <AsOfPill value={active.date} />
       </div>
 
       {chart ? (
@@ -244,7 +264,7 @@ export default function YardeniCard() {
       ) : null}
 
       <p className="mt-3 text-[9px] font-semibold text-[var(--c-ink-4)]">
-        Moody&apos;s AAA·BAA 스프레드 기반 · 주간 · 참고용 · {latest.date}
+        Moody&apos;s AAA·BAA 스프레드 기반 · 주간 · 참고용 · 기준 {formatAsOf(latest.date) ?? "—"}
       </p>
     </div>
   );

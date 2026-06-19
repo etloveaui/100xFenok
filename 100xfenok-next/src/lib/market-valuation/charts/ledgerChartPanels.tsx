@@ -24,6 +24,7 @@ import {
   yardeniOverlayModel,
   type YardeniOverlayModel,
 } from "../models/yardeniOverlayModel";
+import { formatAsOf, isStaleAsOf } from "../freshness";
 
 import { MarketChartFrame } from "./MarketChartFrame";
 import type { MarketChartSeries, MarketChartValueFormatter } from "./types";
@@ -58,6 +59,26 @@ const indexFormat: MarketChartValueFormatter = (value) =>
 
 function cx(...parts: Array<string | false | undefined>): string {
   return parts.filter(Boolean).join(" ");
+}
+
+function AsOfPill({ value }: { value: string | null | undefined }) {
+  const label = formatAsOf(value);
+  if (!label) return null;
+  const stale = isStaleAsOf(value);
+  return (
+    <span
+      className={cx(
+        "mt-1 inline-flex rounded-full border px-2 py-1 text-[10px] font-black tabular-nums",
+        stale
+          ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
+          : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
+      )}
+      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
+    >
+      기준 {label}
+      {stale ? " · 오래됨" : ""}
+    </span>
+  );
 }
 
 function finiteField(point: SeriesPoint, key: string): number | null {
@@ -241,9 +262,7 @@ export function YardeniOverlayChartPanel() {
         </div>
         <div className="shrink-0 text-right">
           <p className={cx("text-xs font-black", verdict.tone)}>{verdict.label}</p>
-          <p className="mt-1 text-[10px] font-bold tabular-nums text-slate-400">
-            {model?.latest.date ?? "—"}
-          </p>
+          <AsOfPill value={model?.latest.date} />
         </div>
       </div>
 
