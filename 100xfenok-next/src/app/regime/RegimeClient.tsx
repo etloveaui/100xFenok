@@ -416,6 +416,9 @@ export default function RegimeClient() {
           <TransitionLink href="/market-valuation/structure" className="data-shell-link">
             구조 상세
           </TransitionLink>
+          <TransitionLink href="/market/events" className="data-shell-link">
+            이벤트
+          </TransitionLink>
         </div>
       </section>
 

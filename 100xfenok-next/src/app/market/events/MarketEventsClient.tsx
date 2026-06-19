@@ -511,6 +511,7 @@ export default function MarketEventsClient({
         <div className="data-shell-head-actions">
           <span className="data-shell-pill ok"><span />{asOf(data)}</span>
           <TransitionLink href="/market-valuation" className="data-shell-link">시장</TransitionLink>
+          <TransitionLink href="/regime" className="data-shell-link">국면</TransitionLink>
         </div>
       </section>
 

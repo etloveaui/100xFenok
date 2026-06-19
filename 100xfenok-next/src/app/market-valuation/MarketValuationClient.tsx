@@ -547,6 +547,9 @@ export default function MarketValuationClient() {
               {sourceDate}
             </span>
           ) : null}
+          <TransitionLink href="/regime" className="data-shell-link">
+            국면
+          </TransitionLink>
           <TransitionLink href="/market/events" className="data-shell-link">
             이벤트
           </TransitionLink>

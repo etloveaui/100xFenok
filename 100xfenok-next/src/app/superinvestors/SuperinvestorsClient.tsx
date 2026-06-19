@@ -800,6 +800,18 @@ export default function SuperinvestorsClient({
               {quarterLabel}
             </span>
           ) : null}
+          {generatedAtLabel ? (
+            <span className="data-shell-pill ok">
+              <span />
+              변환 {generatedAtLabel}
+            </span>
+          ) : null}
+          <TransitionLink href="/market/events" className="data-shell-link">
+            이벤트
+          </TransitionLink>
+          <TransitionLink href="/regime" className="data-shell-link">
+            국면
+          </TransitionLink>
           <span className="data-shell-note">{delayLabel}</span>
           {excludedStale.length > 0 ? (
             <span className="data-shell-note warn">
