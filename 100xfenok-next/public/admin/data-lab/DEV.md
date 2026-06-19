@@ -153,6 +153,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF history-gap report**: `npm run qa:history-gap -- --write-report` writes `data/stockanalysis/backfill/history_gap_report_latest.json` and the public mirror. Data Lab reads this direct-scan report as a preflight surface, separate from completed-run evidence.
 - **ETF history-gap period guard**: when `required_history_periods` is overridden for a staged workflow run, `qa:history-gap` and Data Lab require the report period list to match `incremental_plan_latest.json`; a count-only match is not enough.
 - **ETF history-gap workflow refresh**: live `history_gaps_only=true` workflow chunks regenerate the no-network plan after fetching so Data Lab and `qa:history-gap` describe the remaining gap, not the pre-run gap.
+- **StockAnalysis workflow push retry**: the generated-data commit step rebases and retries push up to 5 times so concurrent `main` updates do not discard a successful fetch run.
 - **ETF history-gap visibility**: The incremental backfill and queue cards render `history_gap` as `다년 히스토리 보강`, and label candidate sources such as `new_etfs` / `etf_screener` in Korean.
 
 ---
@@ -169,6 +170,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.36 | 2026-06-19 | Added StockAnalysis workflow push retry so successful generated-data runs survive concurrent main updates |
 | 2.2.35 | 2026-06-19 | Added required-period matching to ETF history-gap QA/Data Lab so staged 3Y/5Y backfills cannot pass on count equality alone |
 | 2.2.34 | 2026-06-19 | Added a durable ETF history-gap report JSON and Data Lab preflight card so direct-scan coverage updates with generated data |
 | 2.2.33 | 2026-06-19 | Wired live StockAnalysis history-gap workflow chunks to refresh the no-network plan artifact and run `qa:history-gap` before committing generated data |

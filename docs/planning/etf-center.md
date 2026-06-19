@@ -140,6 +140,8 @@ Implementation pointers:
   - Runs incremental ETF backfill (default 120 ETFs per run).
   - Builds market facts, source parity, market audit.
   - Mirrors to `public/` and commits.
+  - Commit/push retries a concurrent `main` advance up to 5 times by rebasing
+    before each push attempt.
 - **Weekly Yahoo refresh**: `fetch-yf-finance.yml` runs Saturdays 22:00 UTC.
   - Fetches Yahoo info + 1-year daily history for focus / major / portfolio / scouter / dashboard tickers.
   - Optional `--stockanalysis-etfs` flag for staged full-ETF backfills.

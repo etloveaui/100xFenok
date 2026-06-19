@@ -220,5 +220,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/stockanalysis data/yf/finance data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/yf/finance 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
-          git pull --rebase origin main
-          git push
+          for attempt in $(seq 1 5); do
+            git pull --rebase origin main
+            if git push; then
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1
