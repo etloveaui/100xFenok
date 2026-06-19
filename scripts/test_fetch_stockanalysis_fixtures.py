@@ -206,6 +206,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 }
             if path.endswith("/holdings"):
                 return {"status": 200, "data": {"holdings": [], "count": 0}}
+            if "history?range=1Y&period=Daily" in path:
+                return {"status": 200, "data": [{"t": "2026-06-18", "c": 101.0}]}
+            if "history?range=1Y&period=Weekly" in path:
+                return {"status": 200, "data": [{"t": "2026-06-15", "c": 100.0}]}
+            if "history?range=1Y&period=Monthly" in path:
+                return {"status": 200, "data": [{"t": "2026-06-01", "c": 99.0}]}
             return {"status": 200, "data": {}}
 
         original_fetch_json = self.fetcher.fetch_json
@@ -221,6 +227,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertTrue(classification["is_single_stock"])
         self.assertEqual(classification["underlying"], "NVIDIA Corporation")
         self.assertEqual(payload["normalized"]["performance"]["trYTD"], 45.6)
+        self.assertEqual(payload["normalized"]["history"][0]["c"], 99.0)
+        self.assertEqual(payload["normalized"]["history_periods"]["daily_1y"][0]["c"], 101.0)
+        self.assertEqual(payload["normalized"]["history_periods"]["weekly_1y"][0]["c"], 100.0)
+        self.assertEqual(payload["normalized"]["history_periods"]["monthly_1y"][0]["c"], 99.0)
 
     def test_etf_catalog_enrichment_promotes_detail_metrics(self) -> None:
         detail_index = {
@@ -709,6 +719,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(payload["normalized"]["holdings"][0]["weight_pct"], 12.5)
         self.assertEqual(payload["normalized"]["asset_allocation"]["bondPosition"], 0.875)
         self.assertEqual(payload["normalized"]["history"][0]["close"], 25.07)
+        self.assertEqual(payload["normalized"]["history_periods"]["daily_1y"][0]["close"], 25.07)
 
     def test_yahoo_etf_payload_rejects_non_fund_quote_type(self) -> None:
         with self.assertRaises(ValueError):

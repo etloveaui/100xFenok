@@ -163,6 +163,9 @@ async function checkEtfDetails(root) {
   assert(iefa?.ticker === "IEFA", "IEFA detail ticker mismatch");
   assert(iefa?.asset_type === "etf", "IEFA detail must be ETF");
   assert(Array.isArray(iefa?.normalized?.holdings) && iefa.normalized.holdings.length > 0, "IEFA holdings missing");
+  assert(Array.isArray(iefa?.normalized?.history_periods?.daily_1y) && iefa.normalized.history_periods.daily_1y.length >= 200, "IEFA daily_1y history missing");
+  assert(Array.isArray(iefa?.normalized?.history_periods?.weekly_1y) && iefa.normalized.history_periods.weekly_1y.length >= 45, "IEFA weekly_1y history missing");
+  assert(Array.isArray(iefa?.normalized?.history_periods?.monthly_1y) && iefa.normalized.history_periods.monthly_1y.length >= 10, "IEFA monthly_1y history missing");
 
   const adiu = await fetchJson(`${root}/api/data/stockanalysis/etfs/ADIU`);
   assert(adiu?.ticker === "ADIU", "ADIU fallback ticker mismatch");
@@ -174,7 +177,14 @@ async function checkEtfDetails(root) {
   assert(adiu?.normalized?.classification?.underlying === "ADI", `ADIU fallback underlying mismatch: ${adiu?.normalized?.classification?.underlying}`);
   const missingFallbacks = await checkMissingEtfDetailFallbacks(root);
   return {
-    IEFA: { holdings: iefa.normalized.holdings.length },
+    IEFA: {
+      holdings: iefa.normalized.holdings.length,
+      history: {
+        daily_1y: iefa.normalized.history_periods.daily_1y.length,
+        weekly_1y: iefa.normalized.history_periods.weekly_1y.length,
+        monthly_1y: iefa.normalized.history_periods.monthly_1y.length,
+      },
+    },
     ADIU: {
       detail_status: adiu.detail_status,
       name: adiu.normalized.overview.name,

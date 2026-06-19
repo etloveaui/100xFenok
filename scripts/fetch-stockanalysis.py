@@ -106,6 +106,11 @@ DEFAULT_STOCKS = [
     "INTC", "V", "JNJ", "ORCL", "CSCO", "LRCX", "AMAT", "MA",
     "CAT", "ARM", "ABBV", "BAC", "CVX", "GE", "NFLX", "MS",
 ]
+HISTORY_PERIOD_ENDPOINTS = {
+    "daily_1y": {"range": "1Y", "period": "Daily"},
+    "weekly_1y": {"range": "1Y", "period": "Weekly"},
+    "monthly_1y": {"range": "1Y", "period": "Monthly"},
+}
 FINANCIAL_STATEMENT_PATHS = {
     "income": "financials",
     "balance_sheet": "financials/balance-sheet",
@@ -726,6 +731,21 @@ def fetch_json(rel_path: str, timeout: int) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
+def history_endpoint(asset_prefix: str, ticker: str, config: dict) -> str:
+    return (
+        f"/api/symbol/{asset_prefix}/{ticker}/history"
+        f"?range={config['range']}&period={config['period']}"
+    )
+
+
+def fetch_history_periods(asset_prefix: str, ticker: str, timeout: int) -> tuple[dict, dict]:
+    paths = {
+        key: history_endpoint(asset_prefix, ticker, config)
+        for key, config in HISTORY_PERIOD_ENDPOINTS.items()
+    }
+    return paths, {key: pick_data(fetch_json(path, timeout)) for key, path in paths.items()}
+
+
 def fetch_text(rel_path: str, timeout: int) -> str:
     url = f"{BASE_URL}{rel_path}"
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -1276,13 +1296,20 @@ def load_etf_universe_symbols() -> list[str]:
 
 
 def fetch_etf(ticker: str, timeout: int) -> dict:
+    history_paths, history_periods = fetch_history_periods("e", ticker, timeout)
     paths = {
         "holdings": f"/api/symbol/e/{ticker}/holdings",
         "overview": f"/api/symbol/e/{ticker}/overview",
-        "history": f"/api/symbol/e/{ticker}/history?range=1Y&period=Monthly",
         "quote": f"/api/quotes/e/{ticker}",
+        "history_periods": history_paths,
     }
-    raw = {name: pick_data(fetch_json(path, timeout)) for name, path in paths.items()}
+    raw = {
+        name: pick_data(fetch_json(path, timeout))
+        for name, path in paths.items()
+        if isinstance(path, str)
+    }
+    raw["history"] = history_periods.get("monthly_1y")
+    raw["history_periods"] = history_periods
     holdings_data = raw["holdings"] if isinstance(raw.get("holdings"), dict) else {}
     overview_data = raw["overview"] if isinstance(raw.get("overview"), dict) else {}
     holdings = holdings_data.get("holdings") or (overview_data.get("holdingsTable") or {}).get("holdings")
@@ -1319,6 +1346,7 @@ def fetch_etf(ticker: str, timeout: int) -> dict:
             "performance": overview_data.get("performance") if isinstance(overview_data.get("performance"), dict) else None,
             "quote": raw.get("quote"),
             "history": raw.get("history"),
+            "history_periods": history_periods,
         },
         "raw": raw,
     }
@@ -2007,6 +2035,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
     info = data.get("info") or {}
     fast_info = data.get("fast_info") or {}
     funds_data = data.get("funds_data") or {}
+    history_1y = data.get("history_1y")
     fund_overview = funds_data.get("fund_overview") if isinstance(funds_data, dict) else {}
     description = funds_data.get("description") if isinstance(funds_data, dict) else None
     quote_type = str(info.get("quoteType") or funds_data.get("quote_type") or "").upper()
@@ -2070,7 +2099,10 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
                 }.items()
                 if value is not None
             },
-            "history": data.get("history_1y"),
+            "history": history_1y,
+            "history_periods": {
+                "daily_1y": history_1y if isinstance(history_1y, list) else [],
+            },
         },
         "raw": {
             "yf": data,

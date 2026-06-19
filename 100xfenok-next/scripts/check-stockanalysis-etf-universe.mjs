@@ -197,6 +197,19 @@ function assertTickerContract(payload, ticker, contract, errors) {
   }
 }
 
+function assertEtfHistoryPeriods(payload, ticker, errors) {
+  const periods = asRecord(payload?.normalized?.history_periods);
+  assert(periods, `${ticker}: normalized.history_periods missing`, errors);
+  if (!periods) return;
+
+  const daily = Array.isArray(periods.daily_1y) ? periods.daily_1y : [];
+  const weekly = Array.isArray(periods.weekly_1y) ? periods.weekly_1y : [];
+  const monthly = Array.isArray(periods.monthly_1y) ? periods.monthly_1y : [];
+  assert(daily.length >= 200, `${ticker}: daily_1y history expected >= 200 rows, got ${daily.length}`, errors);
+  assert(weekly.length >= 45, `${ticker}: weekly_1y history expected >= 45 rows, got ${weekly.length}`, errors);
+  assert(monthly.length >= 10, `${ticker}: monthly_1y history expected >= 10 rows, got ${monthly.length}`, errors);
+}
+
 const errors = [];
 
 assertMirror("ETF universe", SOURCE_UNIVERSE_PATH, PUBLIC_UNIVERSE_PATH, errors);
@@ -256,6 +269,7 @@ for (const ticker of REQUIRED_DETAIL_FILES) {
   assert(existsSync(sourcePath), `${ticker}: source ETF detail file missing`, errors);
   if (existsSync(publicPath) && existsSync(sourcePath)) {
     assertMirror(`${ticker} ETF detail`, sourcePath, publicPath, errors);
+    assertEtfHistoryPeriods(readJson(publicPath), ticker, errors);
   }
 }
 

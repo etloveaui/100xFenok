@@ -91,7 +91,7 @@ Implementation pointers:
 | `data/stockanalysis/etf_universe.json` | Full ETF list: ticker, name, category, AUM | `fetch-stockanalysis.py --discover-etf-universe` |
 | `data/stockanalysis/surfaces/etf_screener.json` | Price, change, volume, holdings, assetClass | `fetch-stockanalysis.py --fetch-surfaces` |
 | `data/stockanalysis/surfaces/new_etfs.json` | Recently listed ETFs | `fetch-stockanalysis.py --fetch-surfaces` |
-| `data/stockanalysis/etfs/{TICKER}.json` | Individual ETF detail (overview, holdings, history, performance) | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
+| `data/stockanalysis/etfs/{TICKER}.json` | Individual ETF detail (overview, holdings, `history_periods`, performance) | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
 | `data/stockanalysis/coverage/etf_detail.json` | Coverage counts and missing samples | coverage builder |
 | `data/computed/market_facts/tickers/{TICKER}.json` | Normalized facts (price, returns, expense_ratio, etc.) | `build-market-facts.py` |
 | `data/yf/finance/{TICKER}.json` | Yahoo Finance fallback info + history | `fetch-yf-finance.py` |
@@ -177,7 +177,7 @@ Implementation pointers:
 | Returns (1M/YTD/1Y/CAGR) | yes | yes | raw `performance` + market facts |
 | Top holdings | no | yes | detail holdings |
 | Sector/country allocation | no | yes | detail breakdowns |
-| History chart | no | yes | detail history (monthly bars) |
+| History chart | no | yes | detail `history_periods` (`daily_1y`, `weekly_1y`, `monthly_1y`; legacy `history` fallback) |
 
 ### 4.3 `/etfs/new` Filters
 
@@ -233,7 +233,7 @@ Representative ticker contracts:
 | Gap | Status | Notes |
 |-----|--------|-------|
 | Daily-derived 1M / 3M returns | partial coverage | Implemented via Yahoo `history_1y` in `market_facts`; remaining work is staged ETF history backfill to lift coverage beyond the current 1M 612 / 5,267 and 3M 562 / 5,267. |
-| Chart granularity | monthly only | Add daily/weekly/monthly toggle and 3Y/5Y ranges. Requires extending history collection beyond 1Y. |
+| Chart granularity | partial coverage | ETF detail fetcher stores `daily_1y`, `weekly_1y`, and `monthly_1y`; detail UI enables only ranges that exist in the payload. 3Y/5Y remain follow-up data-collection work. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
