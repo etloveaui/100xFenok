@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.22 (ETF expense/performance coverage)
+> **Version**: 2.2.23 (ETF latest refresh copy)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -162,6 +162,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.23 | 2026-06-19 | Clarified the StockAnalysis index card as the latest ETF detail refresh, while keeping full ETF detail coverage visible in the same card |
 | 2.2.22 | 2026-06-19 | Added ETF list coverage metrics for expense ratio and period-return availability |
 | 2.2.21 | 2026-06-19 | Clarified ETF gap reason copy and separated missing samples into diagnostic buckets, with an explicit note that buckets can overlap |
 | 2.2.20 | 2026-06-19 | Added Ops Console route smoke for the joined ETF list API |

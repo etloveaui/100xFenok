@@ -43,6 +43,7 @@ const REQUIRED_RENDERED_SECTIONS = [
   "다음 수집 후보",
   "보조 가격 임시 적용",
   "시장 데이터 수집 현황",
+  "최근 ETF 상세 갱신",
   "ETF 수집 대기열",
   "지금 재시도 가능",
   "가장 빠른 재시도일",
@@ -58,6 +59,7 @@ const REJECTED_RENDERED_COPY = [
   "Top Stale",
   "Top Sign Divergence",
   "Universe rows",
+  "신규 ETF 상세 수집",
 ];
 
 function pathOf(relPath) {

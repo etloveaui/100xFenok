@@ -738,18 +738,23 @@ const Renderer = (function() {
     const ok = Number(counts.ok || 0);
     const failed = Number(counts.failed || 0);
     const hardFailed = Number(counts.hard_failed || 0);
+    const candidateTotal = Number(counts.etf_candidate_total || index.etf_detail_coverage?.counts?.candidate_total || 0);
+    const covered = Number(counts.etf_detail_covered || index.etf_detail_coverage?.counts?.covered_detail_files || 0);
+    const coveragePct = Number(counts.etf_detail_coverage_pct || index.etf_detail_coverage?.counts?.coverage_pct || 0);
     const source404 = Array.isArray(index.results)
       ? index.results.filter((row) => String(row?.error || '').includes('404')).length
       : failed;
     return renderMarketAuditCard({
-      title: '신규 ETF 상세 수집',
+      title: '최근 ETF 상세 갱신',
       status: hardFailed === 0 ? 'pass' : 'warn',
-      code: `${Formatters.formatNumber(ok, 0)}건 상세 / ${Formatters.formatNumber(source404, 0)}건 원천 미제공`,
+      code: `${Formatters.formatNumber(ok, 0)} / ${Formatters.formatNumber(requested, 0)} 성공`,
       rows: [
-        ['요청', requested],
-        ['상세 성공', ok],
-        ['원천 미제공', source404],
-        ['치명 오류', hardFailed]
+        ['실행일', escapeHtml(index.generated_at || '-').slice(0, 10)],
+        ['이번 요청', requested],
+        ['이번 성공', ok],
+        ['이번 미제공', source404],
+        ['이번 치명 오류', hardFailed],
+        ['전체 커버리지', `${Formatters.formatNumber(covered, 0)} / ${Formatters.formatNumber(candidateTotal, 0)} (${Formatters.formatNumber(coveragePct, 2)}%)`]
       ]
     });
   }
