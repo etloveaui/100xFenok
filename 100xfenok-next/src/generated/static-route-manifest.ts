@@ -38669,13 +38669,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "currency.json",
-      "sizeBytes": 1161995,
-      "updatedAt": "2026-06-18T10:18:21.790Z"
+      "sizeBytes": 1162312,
+      "updatedAt": "2026-06-19T10:31:00.786Z"
     },
     {
       "name": "discovery-summary.json",
-      "sizeBytes": 24523,
-      "updatedAt": "2026-06-18T10:51:48.227Z"
+      "sizeBytes": 24642,
+      "updatedAt": "2026-06-19T10:31:00.787Z"
     },
     {
       "name": "dowjones-analysis.json",
@@ -38714,8 +38714,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "gainers.json",
-      "sizeBytes": 2502073,
-      "updatedAt": "2026-06-18T10:18:21.792Z"
+      "sizeBytes": 2513790,
+      "updatedAt": "2026-06-19T10:31:00.788Z"
     },
     {
       "name": "inflation.json",
@@ -38724,8 +38724,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "losers.json",
-      "sizeBytes": 2574809,
-      "updatedAt": "2026-06-18T10:18:21.794Z"
+      "sizeBytes": 2565993,
+      "updatedAt": "2026-06-19T10:31:00.790Z"
     },
     {
       "name": "magnificent7.json",
@@ -38739,8 +38739,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "mortgage.json",
-      "sizeBytes": 2380,
-      "updatedAt": "2026-06-18T10:18:21.794Z"
+      "sizeBytes": 3140,
+      "updatedAt": "2026-06-19T10:31:00.790Z"
     },
     {
       "name": "nasdaq100-analysis.json",
@@ -38849,8 +38849,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "treasury.json",
-      "sizeBytes": 110304,
-      "updatedAt": "2026-06-18T10:18:21.795Z"
+      "sizeBytes": 110307,
+      "updatedAt": "2026-06-19T10:31:00.790Z"
     },
     {
       "name": "universe.json",
