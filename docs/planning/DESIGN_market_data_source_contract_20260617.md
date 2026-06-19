@@ -338,6 +338,6 @@ StockAnalysis all remain visible when their values overlap.
    when new surfaces are added: ETF launch radar, earnings calendar, corporate
    actions, IPO radar, market movers, and industry maps must keep
    filter/sort/export affordances instead of falling back to Explore-only cards.
-8. Extend analyzer-specific feno-value providers beyond the common DataPack
+9. Extend analyzer-specific feno-value providers beyond the common DataPack
    fallback path.
-9. Keep direct provider scraping as explicit fallback, not the normal path.
+10. Keep direct provider scraping as explicit fallback, not the normal path.

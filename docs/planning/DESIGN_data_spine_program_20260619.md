@@ -110,35 +110,34 @@ P0 grep command:
 
 ```sh
 rg -n "stockanalysis\\.com|slickcharts\\.com|query[12]\\.finance\\.yahoo|finance\\.yahoo\\.com|yfinance" \
-  100xfenok-next/src admin ib scripts --glob '!**/node_modules/**'
+  100xfenok-next/src admin ib scripts 100x \
+  --glob '!**/node_modules/**' --glob '*.{py,ts,tsx,js,jsx,gs,html,mjs}'
 ```
 
-### Allowed collectors / fetchers
+Raw result: 59 hits across 50 unique files. The table below groups every hit by
+file/pattern and separates real fetchers from tests and string-only references.
 
-These files intentionally contact upstream providers and should remain outside
-normal UI rendering paths:
+### Classified grep output
 
-- `scripts/fetch-yf-finance.py`
-- `scripts/fetch-stockanalysis.py`
-- `scripts/probe-stockanalysis-financials.py`
-- `scripts/build-quarter-closes.py`
-- `scripts/fetch-sentiment.mjs`
-- `scripts/scrapers/*.py`
-
-### Product/runtime leak candidates to classify
-
-These should become either contract-served routes or documented legacy
-exceptions. This list is MEASURED but the action per file is DRAFT/UNVERIFIED.
-
-| File | Provider | Current shape | P0 classification |
-|---|---|---|---|
-| `100xfenok-next/src/lib/server/ticker.ts` | Yahoo chart API | Next server route fetches Yahoo directly | DRAFT: classify as live quote gateway or migrate behind Data Spine |
-| `ib/ib-total-guide-calculator.html` | Yahoo chart API | legacy browser calculator via CORS proxy | DRAFT: legacy exception or sunset/migrate |
-| `ib/ib-helper/apps-script/yahoo-quotes.gs` | Yahoo chart API | GAS quote helper | DRAFT: legacy IB exception |
-| `admin/market-data/yahoo-quotes.gs` | Yahoo chart API | admin GAS quote helper | DRAFT: admin exception |
-| `admin/market-radar/scripts/yahoo-quotes.gs` | Yahoo chart API | admin/radar GAS helper | DRAFT: admin/radar exception |
-| `admin/market-radar/scripts/vix.gs` | Yahoo chart API | VIX quote helper | DRAFT: admin/radar exception |
-| `100x/daily-wrap/fetcher.py` | yfinance | legacy content fetcher | DRAFT: legacy/publication exception |
+| Hits | File / pattern | Match type | P0 classification |
+|---:|---|---|---|
+| 1 | `100xfenok-next/src/lib/server/ticker.ts` | live provider fetch | DRAFT: classify as sanctioned live quote gateway or migrate behind Data Spine |
+| 1 | `ib/ib-total-guide-calculator.html` | legacy browser/provider fetch through CORS proxy | DRAFT: legacy exception or sunset/migrate |
+| 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | legacy GAS provider fetch | DRAFT: legacy IB exception |
+| 1 | `admin/market-data/yahoo-quotes.gs` | admin GAS provider fetch | DRAFT: admin exception |
+| 1 | `admin/market-radar/scripts/yahoo-quotes.gs` | admin/radar GAS provider fetch | DRAFT: admin/radar exception |
+| 1 | `admin/market-radar/scripts/vix.gs` | admin/radar GAS provider fetch | DRAFT: admin/radar exception |
+| 3 | `100x/daily-wrap/fetcher.py` | legacy content fetcher / dependency hints | DRAFT: legacy publication exception |
+| 1 | `scripts/fetch-yf-finance.py` | allowed scheduled collector | Allowed collector |
+| 1 | `scripts/fetch-stockanalysis.py` | allowed scheduled collector | Allowed collector |
+| 1 | `scripts/probe-stockanalysis-financials.py` | allowed read-only probe | Allowed collector/probe |
+| 2 | `scripts/build-quarter-closes.py` | allowed generated-data builder using yfinance | Allowed collector |
+| 2 | `scripts/fetch-sentiment.mjs` | allowed generated-data builder using Yahoo chart API | Allowed collector |
+| 37 | `scripts/scrapers/*.py` | allowed SlickCharts scrapers | Allowed collector |
+| 3 | `scripts/fetch-yf-finance-v0.py` | old PoC fetcher | DRAFT: archive/sunset candidate |
+| 1 | `scripts/test_fetch_stockanalysis_fixtures.py` | test fixture string | Test/string reference, not a fetch leak |
+| 1 | `scripts/test_fetch_yf_finance_selection.py` | test stub string | Test/string reference, not a fetch leak |
+| 1 | `scripts/build-market-facts.py` | source/provenance string reference | Build string reference, not a fetch leak |
 
 Generated/public mirror hits are intentionally excluded from the action list
 unless the source file above remains active.
@@ -176,7 +175,7 @@ Known consumers from the current contract note, grep, and CCH skill files:
   - `fetch_financial_statement_candidate()` explicitly keeps StockAnalysis
     financials as cross-check candidates only, not DCF inputs.
 
-Evidence:
+Evidence as of 2026-06-19:
 
 - `claude-code-hub/docs/products/skills/feno-data/SKILL.md:45-50`
 - `claude-code-hub/docs/products/skills/feno-data/SKILL.md:195-212`
@@ -196,6 +195,16 @@ above is MEASURED, but per-file consumer coverage remains DRAFT/UNVERIFIED.
 This matrix is intentionally DRAFT/UNVERIFIED. It records the expected contract
 shape, not the frozen v0 policy.
 
+SSOT relationship:
+
+- Implemented-now resolver behavior lives in
+  `DESIGN_market_data_source_contract_20260617.md` under `Resolver Policy` and
+  mirrors `scripts/build-market-facts.py`.
+- The matrix below is the future Data Spine v0 target to ratify after P0
+  inventory and P1 disagreement-policy work.
+- If this matrix conflicts with the implemented resolver policy before v0
+  ratification, the implemented resolver policy wins.
+
 | Field group | Candidate authority | Fallback / cross-check | Disagreement action |
 |---|---|---|---|
 | Stock quote/latest | computed market facts | Yahoo, StockAnalysis quote, ticker route | DRAFT/UNVERIFIED |
@@ -208,7 +217,10 @@ shape, not the frozen v0 policy.
 | Market events | StockAnalysis surfaces | Yahoo/SEC later | DRAFT/UNVERIFIED |
 | Macro/valuation factors | FRED/Yardeni/Damodaran/Benchmark Excel | none or source-specific mirrors | DRAFT/UNVERIFIED |
 
-## Phase Gates
+## Proposed Phase Gates
+
+These gates are proposed. They become ratified only when P1 freezes the v0
+contract and the disagreement policy.
 
 ### P0 Done
 
