@@ -249,10 +249,10 @@ function confidenceText(label: string | null | undefined): string {
 }
 
 function confidenceClass(label: string | null | undefined, lowEvidence: boolean): string {
-  if (lowEvidence || label === "low") return "text-slate-400";
-  if (label === "medium") return "text-amber-600";
-  if (label === "high") return "text-emerald-600";
-  return "text-slate-400";
+  if (lowEvidence || label === "low") return "text-[var(--c-ink-4)]";
+  if (label === "medium") return "text-[var(--c-warn)]";
+  if (label === "high") return "text-[var(--c-up)]";
+  return "text-[var(--c-ink-4)]";
 }
 
 function actionTone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
@@ -266,26 +266,26 @@ function actionTone(bucket: string | null | undefined, confidenceLabel?: string 
 }
 
 function getMomentumClass(value: number | null): string {
-  if (value === null) return "text-slate-300";
-  return value >= 0 ? "text-emerald-600" : "text-rose-600";
+  if (value === null) return "text-[var(--c-ink-4)]";
+  return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
 const BADGE_CLASS_MAP: Record<string, string> = {
-  emerald: "bg-emerald-100 text-emerald-700",
-  slate: "bg-slate-100 text-slate-600",
-  rose: "bg-rose-100 text-rose-700",
+  emerald: "bg-[var(--c-up-soft)] text-[var(--c-up)]",
+  slate: "bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
+  rose: "bg-[var(--c-down-soft)] text-[var(--c-down)]",
 };
 
 const DOT_CLASS_MAP: Record<string, string> = {
-  emerald: "bg-emerald-500",
-  slate: "bg-slate-500",
-  rose: "bg-rose-500",
+  emerald: "bg-[var(--c-up)]",
+  slate: "bg-[var(--c-neutral)]",
+  rose: "bg-[var(--c-down)]",
 };
 
 function PerBandBar({ current, min, avg, max }: { current: number | null; min: number | null; avg: number | null; max: number | null }) {
   const band = normalizeBandTuple(current, min, max);
   if (!band) {
-    return <span className="text-slate-300">—</span>;
+    return <span className="text-[var(--c-ink-4)]">—</span>;
   }
   const [safeCurrent, safeMin, safeMax] = band;
   const pct = bandPct(safeCurrent, safeMin, safeMax);
@@ -305,24 +305,24 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
       <div className="flex max-w-full items-center gap-1.5">
         <div className="relative h-2 w-20 shrink-0 overflow-hidden rounded-full">
           {/* 3-zone shading */}
-          <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${BAND_CHEAP * 100}%` }} />
-          <div className="absolute inset-y-0 bg-slate-100" style={{ left: `${BAND_CHEAP * 100}%`, width: `${(BAND_RICH - BAND_CHEAP) * 100}%` }} />
-          <div className="absolute inset-y-0 right-0 bg-rose-100" style={{ width: `${(1 - BAND_RICH) * 100}%` }} />
+          <div className="absolute inset-y-0 left-0 bg-[var(--c-up-soft)]" style={{ width: `${BAND_CHEAP * 100}%` }} />
+          <div className="absolute inset-y-0 bg-[var(--c-surface-2)]" style={{ left: `${BAND_CHEAP * 100}%`, width: `${(BAND_RICH - BAND_CHEAP) * 100}%` }} />
+          <div className="absolute inset-y-0 right-0 bg-[var(--c-down-soft)]" style={{ width: `${(1 - BAND_RICH) * 100}%` }} />
 
           {/* avg line */}
           {avgPct !== null && (
-            <div className="absolute top-0 h-full w-[1.5px] bg-slate-500" style={{ left: `${avgPct * 100}%` }} />
+            <div className="absolute top-0 h-full w-[1.5px] bg-[var(--c-ink-3)]" style={{ left: `${avgPct * 100}%` }} />
           )}
 
           {/* edge marker or dot */}
           {isClampedHigh ? (
             <div
-              className="absolute top-1/2 border-y-4 border-l-[6px] border-y-transparent border-l-rose-500"
+              className="absolute top-1/2 border-y-4 border-l-[6px] border-y-transparent border-l-[var(--c-down)]"
               style={{ right: 0, transform: "translateY(-50%)" }}
             />
           ) : isClampedLow ? (
             <div
-              className="absolute top-1/2 border-y-4 border-r-[6px] border-y-transparent border-r-emerald-500"
+              className="absolute top-1/2 border-y-4 border-r-[6px] border-y-transparent border-r-[var(--c-up)]"
               style={{ left: 0, transform: "translateY(-50%)" }}
             />
           ) : (
@@ -333,7 +333,7 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
           )}
         </div>
 
-        <span className="orbitron shrink-0 tabular-nums text-[9px] font-black text-slate-600">
+        <span className="orbitron shrink-0 tabular-nums text-[9px] font-black text-[var(--c-ink-2)]">
           현재 {safeCurrent.toFixed(1)}x
         </span>
 
@@ -341,7 +341,7 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
           {label} {Math.round(pct * 100)}%
         </span>
       </div>
-      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-slate-400">
+      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-4)]">
         평균 {safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y {safeMin.toFixed(1)}~{safeMax.toFixed(1)}
       </span>
     </div>
@@ -351,9 +351,9 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
 function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode {
   switch (key) {
     case "ticker":
-      return <span className="text-sm font-black text-slate-950">{stock.ticker}</span>;
+      return <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>;
     case "name":
-      return <span className="block max-w-[180px] truncate text-sm font-semibold text-slate-700">{stock.name}</span>;
+      return <span className="block max-w-[180px] truncate text-sm font-semibold text-[var(--c-ink)]">{stock.name}</span>;
     case "actionScore": {
       const lowEvidence = stock.lowEvidence === true;
       const confidence = confidenceText(stock.confidenceLabel);
@@ -367,7 +367,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
           <span className={cx("max-w-full truncate text-[10px] font-black", confidenceClass(stock.confidenceLabel, lowEvidence))}>
             {detail}
           </span>
-          {stock.actionReasons?.[0] ? <span className="max-w-full truncate text-[10px] font-semibold text-slate-400">{stock.actionReasons[0]}</span> : null}
+          {stock.actionReasons?.[0] ? <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-4)]">{stock.actionReasons[0]}</span> : null}
         </span>
       );
     }
@@ -863,7 +863,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       </section>
 
       {failed ? (
-        <div className="rounded-[1.2rem] border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
+        <div role="alert" className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
           종목 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
@@ -872,7 +872,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">검색</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
             <input
               type="search"
               value={search}
@@ -882,7 +882,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">섹터</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
             <select
               value={sector}
               onChange={(event) => setSector(event.target.value)}
@@ -897,7 +897,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
             </select>
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">국가</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
             <select
               value={country}
               onChange={(event) => setCountry(event.target.value)}
@@ -911,9 +911,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               ))}
             </select>
           </label>
-          <div className={filtersOpen ? "contents" : "hidden md:contents"}>
+          <div id="advanced-filters" className={filtersOpen ? "contents" : "hidden md:contents"}>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 최대</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -924,7 +924,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">예상 PER 상한</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -935,7 +935,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">매출+1 최소</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -946,7 +946,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">EPS+1 최소</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -957,7 +957,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">배당률 최소 (%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -968,7 +968,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">FY+1 ROE 최소 (%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">FY+1 ROE 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -979,7 +979,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">3Y 수익률 최소 (%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -990,7 +990,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">5Y 수익률 최소 (%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -1001,7 +1001,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">PER 밴드</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
               <select
                 value={bandFilter}
                 onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
@@ -1014,7 +1014,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">투자 신호</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
               <select
                 value={actionFilter}
                 onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
@@ -1034,12 +1034,14 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         <button
           type="button"
           onClick={() => setFiltersOpen((value) => !value)}
-          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 md:hidden"
+          aria-expanded={filtersOpen}
+          aria-controls="advanced-filters"
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] md:hidden"
         >
           {filtersOpen ? "고급 필터 접기" : advancedFiltersActive ? "고급 필터 적용 중" : "고급 필터 열기"}
         </button>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
+          <label className="inline-flex items-center gap-2 text-sm font-bold text-[var(--c-ink-2)]">
             <input
               type="checkbox"
               checked={profitableOnly}
@@ -1049,14 +1051,14 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
             흑자 종목만 (PER &gt; 0)
           </label>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-bold text-slate-500">
-              <strong className="orbitron text-slate-900">{sorted.length.toLocaleString()}</strong>개 종목
+            <span className="text-sm font-bold text-[var(--c-ink-3)]">
+              <strong className="orbitron text-[var(--c-ink)]">{sorted.length.toLocaleString()}</strong>개 종목
             </span>
             {hasFilters ? (
               <button
                 type="button"
                 onClick={resetFilters}
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-rose-300 hover:text-rose-600 sm:min-h-8"
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-down)] hover:text-[var(--c-down)] sm:min-h-8"
               >
                 초기화
               </button>
@@ -1067,17 +1069,18 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
 
       {/* Preset selector */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">뷰</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">뷰</span>
         {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
           <button
             key={p}
             type="button"
             onClick={() => handlePresetChange(p)}
+            aria-pressed={preset === p}
             className={cx(
               "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
               preset === p
                 ? "border border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900",
+                : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
             )}
           >
             {PRESET_LABEL[p]}
@@ -1086,7 +1089,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       </div>
 
       {/* Results */}
-      <section className={cx("rounded-[1.5rem] border border-slate-200 bg-white p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
+      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
         <div className="space-y-3 md:hidden">
           {pageRows.map((stock) => {
             const expanded = expandedTicker === stock.ticker;
@@ -1103,7 +1106,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
             );
           })}
           {dataReady && pageRows.length === 0 ? (
-            <div className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
+            <div className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
               조건에 맞는 종목이 없습니다.
             </div>
           ) : null}
@@ -1113,7 +1116,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+                <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
                   {activeColumns.map((column) => {
                     const active = column.key === sortKey;
                     return (
@@ -1125,8 +1128,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                         <button
                           type="button"
                           onClick={() => toggleSort(column.key)}
+                          aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
                           className={cx(
-                            "inline-flex items-center gap-1 transition hover:text-slate-900",
+                            "inline-flex items-center gap-1 transition hover:text-[var(--c-ink)]",
                             column.align === "right" && "flex-row-reverse",
                             active && "text-brand-interactive",
                           )}
@@ -1149,7 +1153,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                       onClick={() =>
                         setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
                       }
-                      className="cursor-pointer border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
+                      className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
                     >
                       {activeColumns.map((column) => (
                         <td
@@ -1166,9 +1170,9 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                                 event.stopPropagation();
                                 setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
                               }}
-                              className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-slate-950 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                              className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
                             >
-                              <span className="w-3 text-center text-[10px] text-slate-400" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                              <span className="w-3 text-center text-[10px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
                               <span className="truncate">{stock.ticker}</span>
                             </button>
                           ) : renderCell(stock, column.key)}
@@ -1187,7 +1191,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                 })}
                 {dataReady && pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-slate-500">
+                    <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
                       조건에 맞는 종목이 없습니다.
                     </td>
                   </tr>
@@ -1204,18 +1208,18 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               type="button"
               onClick={() => setPage((value) => Math.max(0, value - 1))}
               disabled={safePage === 0}
-              className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition enabled:hover:border-brand-interactive disabled:opacity-40"
+              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-brand-interactive disabled:opacity-40"
             >
               이전
             </button>
-            <span className="orbitron text-xs font-bold tabular-nums text-slate-600">
+            <span className="orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]">
               {safePage + 1} / {pageCount}
             </span>
             <button
               type="button"
               onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
               disabled={safePage >= pageCount - 1}
-              className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition enabled:hover:border-brand-interactive disabled:opacity-40"
+              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-brand-interactive disabled:opacity-40"
             >
               다음
             </button>
@@ -1223,7 +1227,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         ) : null}
       </section>
 
-      <p className="px-1 text-[11px] text-slate-400">
+      <p className="px-1 text-[11px] text-[var(--c-ink-4)]">
         데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · 통합 스코어. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
     </div>

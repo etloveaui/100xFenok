@@ -341,8 +341,8 @@ function fmtEps(value: MaybeNumber): string {
 }
 
 function toneText(value: MaybeNumber): string {
-  if (!isFiniteNumber(value)) return "text-slate-400";
-  return value >= 0 ? "text-emerald-600" : "text-rose-600";
+  if (!isFiniteNumber(value)) return "text-[var(--c-ink-4)]";
+  return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
 export function useStockDetail(ticker: string, enabled = true) {
@@ -416,6 +416,7 @@ export function use13FData(ticker: string) {
         F13_CACHE.set(symbol, unique);
         if (!cancelled) setEntries(unique);
       } catch {
+        F13_CACHE.set(symbol, []);
         if (!cancelled) setEntries([]);
       }
     };
@@ -650,15 +651,15 @@ function EtfBreakdownStrip({
   const items = (rows ?? []).slice(0, limit);
   if (items.length === 0) return null;
   return (
-    <div className="min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5">
-      <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{title}</p>
+    <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] p-2.5">
+      <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-4)]">{title}</p>
       <div className="flex min-w-0 flex-wrap gap-1.5">
         {items.map((row, index) => {
           const weight = etfBreakdownWeight(row);
           return (
-            <span key={`${title}-${index}-${etfBreakdownLabel(row)}`} className="max-w-full rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-200">
+            <span key={`${title}-${index}-${etfBreakdownLabel(row)}`} className="max-w-full rounded-full bg-[var(--c-panel)] px-2 py-0.5 text-[10px] font-bold text-[var(--c-ink-3)] ring-1 ring-[var(--c-line)]">
               <span className="inline-block max-w-[9rem] truncate align-bottom">{etfBreakdownLabel(row)}</span>
-              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-slate-900">{weight.toFixed(1)}%</span> : null}
+              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-[var(--c-ink)]">{weight.toFixed(1)}%</span> : null}
             </span>
           );
         })}
@@ -671,17 +672,17 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
   if (!fact) return null;
   const candidateCount = fact.candidate_count ?? fact.candidates?.length ?? 1;
   return (
-    <div className="min-w-0 rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5">
+    <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2.5">
       <div className="flex min-w-0 items-start justify-between gap-2">
-        <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
-        <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
+        <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+        <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-1.5 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
           기준 {candidateCount}곳 확인
         </span>
       </div>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">
+      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">
         {formatMarketFact(field, fact, currency)}
       </p>
-      <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-slate-400" title={sourceLabel(fact.source)}>
+      <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-[var(--c-ink-4)]" title={sourceLabel(fact.source)}>
         {sourceLabel(fact.source)}
       </p>
     </div>
@@ -971,7 +972,7 @@ export function PerBandChart({
   const currentPct = bands ? bandPct(bands.current, bands.min_8y, bands.max_8y) : 0.5;
   const currentCls = bandClass(currentPct);
   const currentColor =
-    currentCls === "emerald" ? "#10b981" : currentCls === "rose" ? "#f43f5e" : "#64748b";
+    currentCls === "emerald" ? "var(--c-up)" : currentCls === "rose" ? "var(--c-down)" : "var(--c-ink-3)";
 
   const hasForward = Boolean(forwardPoint);
   const forwardX = forwardPoint ? toX(forwardPoint.index) : 0;
@@ -1003,21 +1004,21 @@ export function PerBandChart({
               y={toY(bands.max_8y)}
               width={plotW}
               height={toY(bands.min_8y) - toY(bands.max_8y)}
-              fill="#f1f5f9"
+              fill="var(--c-surface-2)"
             />
             <rect
               x={padL}
               y={toY(bands.max_8y)}
               width={plotW}
               height={toY(bands.avg_8y) - toY(bands.max_8y)}
-              fill="#fff1f2"
+              fill="var(--c-down-soft)"
             />
             <rect
               x={padL}
               y={toY(bands.avg_8y)}
               width={plotW}
               height={toY(bands.min_8y) - toY(bands.avg_8y)}
-              fill="#ecfdf5"
+              fill="var(--c-up-soft)"
             />
           </>
         )}
@@ -1030,7 +1031,7 @@ export function PerBandChart({
               y1={toY(bands.avg_8y)}
               x2={padL + plotW}
               y2={toY(bands.avg_8y)}
-              stroke="#64748b"
+              stroke="var(--c-ink-3)"
               strokeWidth={1}
               strokeDasharray="4,2"
             />
@@ -1059,7 +1060,7 @@ export function PerBandChart({
               y1={y}
               x2={padL + plotW}
               y2={y}
-              stroke="#e2e8f0"
+              stroke="var(--c-line)"
               strokeWidth={1}
               strokeDasharray={t === 0.5 ? undefined : "2,2"}
             />
@@ -1219,15 +1220,15 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
             const latest = row.series[0];
             const previous = row.series[1];
             return (
-              <div key={row.key} className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+              <div key={row.key} className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
                 <div className="flex min-w-0 items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{row.label}</span>
+                  <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.label}</span>
                   <span className={`shrink-0 text-[10px] font-black tabular-nums ${toneText(row.change)}`}>
                     {fmtSignedFractionPercent(row.change)}
                   </span>
                 </div>
-                <p className="orbitron mt-1 text-sm font-black tabular-nums text-slate-950">{fmtEps(latest?.value)}</p>
-                <p className="mt-1 truncate text-[9px] font-bold tabular-nums text-slate-400">
+                <p className="orbitron mt-1 text-sm font-black tabular-nums text-[var(--c-ink)]">{fmtEps(latest?.value)}</p>
+                <p className="mt-1 truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-4)]">
                   {latest?.date ?? "—"} · 전주 {fmtEps(previous?.value)}
                 </p>
               </div>
@@ -1400,7 +1401,7 @@ export function PriceDividendHistoryDepth({
 
   if (loading) {
     return (
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-sm font-semibold text-slate-500">
+      <div role="status" aria-busy="true" className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3 text-sm font-semibold text-[var(--c-ink-3)]">
         가격·배당 히스토리 확인 중…
       </div>
     );
@@ -1408,7 +1409,7 @@ export function PriceDividendHistoryDepth({
 
   if (!data) {
     return showUnavailable ? (
-      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
+      <div className="mt-4 rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] p-3 text-sm font-semibold text-[var(--c-ink-3)]">
         가격·배당 히스토리가 아직 수집되지 않은 티커입니다.
       </div>
     ) : null;
@@ -1607,7 +1608,7 @@ export function StockDetailBody({
             <>
               <Sparkline
                 data={revenue}
-                color="#10b981"
+                color="var(--c-up)"
                 years={detail.years}
                 estimates={detail.income_statement_estimates?.revenue}
                 formatValue={fmtLarge}
@@ -1660,7 +1661,7 @@ export function StockDetailBody({
             {f13Entries.map((e) => (
               <span
                 key={e.investor}
-                className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-700"
+                className="inline-flex items-center rounded-full bg-[var(--c-warn-soft)] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[var(--c-warn)]"
               >
                 {e.investor}
               </span>
@@ -1678,7 +1679,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
 
   if (loading) {
     return (
-      <div className="col-span-full border-t border-slate-100 bg-slate-50/50 px-4 py-6 text-sm text-slate-500">
+      <div role="status" aria-busy="true" className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-6 text-sm text-[var(--c-ink-3)]">
         상세 데이터 로딩 중…
       </div>
     );
@@ -1686,7 +1687,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
 
   if (!detail) {
     return (
-      <div className="col-span-full border-t border-slate-100 bg-slate-50/50 px-4 py-6 text-sm text-slate-500">
+      <div role="alert" className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-6 text-sm text-[var(--c-ink-3)]">
         상세 데이터를 불러올 수 없습니다.
       </div>
     );
