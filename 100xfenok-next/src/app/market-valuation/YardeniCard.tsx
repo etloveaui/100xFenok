@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 interface YardneyRow {
   date: string;
@@ -72,6 +73,7 @@ function fmtNum(value: number | null | undefined, digits = 1): string {
 export default function YardeniCard() {
   const [doc, setDoc] = useState<YardneyDoc | null>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const chartTheme = useMarketChartTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -175,15 +177,15 @@ export default function YardeniCard() {
               y1={chart.scaleY(chart.minV)}
               x2={W - PAD}
               y2={chart.scaleY(chart.minV)}
-              stroke="#cbd5e1"
+              stroke={chartTheme.token("line")}
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <line x1={PAD} y1={chart.scaleY(chart.maxV)} x2={W - PAD} y2={chart.scaleY(chart.maxV)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3,3" />
+            <line x1={PAD} y1={chart.scaleY(chart.maxV)} x2={W - PAD} y2={chart.scaleY(chart.maxV)} stroke={chartTheme.token("line2")} strokeWidth="1" strokeDasharray="3,3" />
             <polyline
               points={chart.fairPts}
               fill="none"
-              stroke="#94a3b8"
+              stroke={chartTheme.token("fairValue")}
               strokeWidth="1.8"
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
@@ -191,7 +193,7 @@ export default function YardeniCard() {
             <polyline
               points={chart.spxPts}
               fill="none"
-              stroke="#1B73D3"
+              stroke={chartTheme.token("brand")}
               strokeWidth="2"
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
@@ -202,8 +204,8 @@ export default function YardeniCard() {
                 cx={marker.x}
                 cy={marker.y}
                 r={active.date === marker.row.date ? "4" : "2.5"}
-                fill={active.date === marker.row.date ? "#1B73D3" : "rgba(27,115,211,0.25)"}
-                stroke="white"
+                fill={active.date === marker.row.date ? chartTheme.token("brand") : chartTheme.alpha("brand", 0.25)}
+                stroke={chartTheme.token("panel")}
                 strokeWidth="1.5"
                 onMouseEnter={() => setActiveIndex(marker.index)}
                 onFocus={() => setActiveIndex(marker.index)}

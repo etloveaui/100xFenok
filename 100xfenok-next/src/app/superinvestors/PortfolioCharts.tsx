@@ -8,6 +8,7 @@ import { Doughnut, Bar, Line, Chart } from "react-chartjs-2";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
+import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 type MaybeNumber = number | null | undefined;
 
@@ -54,27 +55,6 @@ export function loadPortfolioViews(): Promise<PortfolioViewsData | null> {
   return pvPromise;
 }
 
-// ---------------------------------------------------------------------------
-// Color helpers
-// ---------------------------------------------------------------------------
-
-function interpolate(hexA: string, hexB: string, t: number): string {
-  const a = [1, 3, 5].map((i) => parseInt(hexA.slice(i, i + 2), 16));
-  const b = [1, 3, 5].map((i) => parseInt(hexB.slice(i, i + 2), 16));
-  const r = Math.round(a[0] + (b[0] - a[0]) * t);
-  const g = Math.round(a[1] + (b[1] - a[1]) * t);
-  const bl = Math.round(a[2] + (b[2] - a[2]) * t);
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
-}
-
-function retColor(ret: MaybeNumber): string {
-  if (!isFiniteNumber(ret)) return "#f1f5f9"; // slate-100
-  const clamped = Math.max(-0.1, Math.min(0.1, ret));
-  const t = (clamped + 0.1) / 0.2; // 0..1
-  if (t < 0.5) return interpolate("#f43f5e", "#e2e8f0", t * 2); // rose-500 → slate-200
-  return interpolate("#e2e8f0", "#059669", (t - 0.5) * 2); // slate-200 → emerald-600
-}
-
 function retStr(ret: MaybeNumber): string {
   if (!isFiniteNumber(ret)) return "—";
   const pct = (ret * 100).toFixed(1);
@@ -97,6 +77,7 @@ function leafRow(ctx: TreemapLeaf): PortfolioRow | null {
 }
 
 export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
+  const chartTheme = useMarketChartTheme();
   const data = useMemo(() => {
     const displayRows = rows.filter((r) => isFiniteNumber(r.weight) && r.weight > 0);
     return {
@@ -108,20 +89,19 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
           tree: displayRows as unknown as number[],
           key: "weight",
           data: [],
-          borderColor: "#ffffff",
+          borderColor: chartTheme.token("panel"),
           borderWidth: 1,
           spacing: 1,
           backgroundColor: (ctx: TreemapLeaf) => {
             const d = leafRow(ctx);
-            return d ? retColor(d.ret) : "#f1f5f9";
+            return d ? chartTheme.returnColor(d.ret) : chartTheme.token("surface");
           },
           // `labels` must be the plugin's object config (NOT an array).
           labels: {
             display: true,
             color: (ctx: TreemapLeaf) => {
               const d = leafRow(ctx);
-              if (d?.ret != null && Math.abs(d.ret) > 0.055) return "#ffffff";
-              return "#0f172a";
+              return chartTheme.returnTextColor(d?.ret);
             },
             font: { size: 11, weight: "bold" as const },
             formatter: (ctx: TreemapLeaf) => {
@@ -137,7 +117,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
         },
       ],
     };
-  }, [rows]);
+  }, [rows, chartTheme]);
 
   const options = useMemo(
     () => ({
@@ -181,7 +161,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
           <span
             className="inline-block h-3 w-32 rounded"
             style={{
-              background: "linear-gradient(to right, #f43f5e, #e2e8f0, #059669)",
+              background: chartTheme.returnGradient,
             }}
           />
           <span>수익</span>
@@ -204,9 +184,19 @@ interface PerformanceChartProps {
 }
 
 export function PerformanceChart({ performance, investorName }: PerformanceChartProps) {
-  const dates = Array.isArray(performance.dates) ? performance.dates : [];
-  const portfolio = Array.isArray(performance.portfolio) ? performance.portfolio.filter(isFiniteNumber) : [];
-  const spy = Array.isArray(performance.spy) ? performance.spy.filter(isFiniteNumber) : null;
+  const chartTheme = useMarketChartTheme();
+  const dates = useMemo(
+    () => (Array.isArray(performance.dates) ? performance.dates : []),
+    [performance.dates],
+  );
+  const portfolio = useMemo(
+    () => (Array.isArray(performance.portfolio) ? performance.portfolio.filter(isFiniteNumber) : []),
+    [performance.portfolio],
+  );
+  const spy = useMemo(
+    () => (Array.isArray(performance.spy) ? performance.spy.filter(isFiniteNumber) : null),
+    [performance.spy],
+  );
 
   const data = useMemo(() => {
     const labels = dates.slice(-portfolio.length).map((d) => d.slice(0, 7));
@@ -214,8 +204,8 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
       {
         label: investorName,
         data: portfolio,
-        borderColor: "#4f46e5", // indigo-600
-        backgroundColor: "rgba(79,70,229,0.08)",
+        borderColor: chartTheme.token("brand"),
+        backgroundColor: chartTheme.alpha("brand", 0.08),
         borderWidth: 2,
         pointRadius: 0,
         pointHitRadius: 8,
@@ -227,7 +217,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
       datasets.push({
         label: "SPY",
         data: spy as number[],
-        borderColor: "#94a3b8", // slate-400
+        borderColor: chartTheme.token("neutral"),
         backgroundColor: "transparent",
         borderWidth: 1.5,
         pointRadius: 0,
@@ -237,7 +227,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
       } as (typeof datasets)[number]);
     }
     return { labels, datasets };
-  }, [dates, portfolio, spy, investorName]);
+  }, [dates, portfolio, spy, investorName, chartTheme]);
 
   const options = useMemo(
     () => ({
@@ -257,15 +247,15 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
         legend: {
           position: "top" as const,
           align: "end" as const,
-          labels: { font: { size: 11, weight: "bold" as const }, usePointStyle: true, pointStyleWidth: 8, boxHeight: 6 },
+          labels: { color: chartTheme.token("ink2"), font: { size: 11, weight: "bold" as const }, usePointStyle: true, pointStyleWidth: 8, boxHeight: 6 },
         },
       },
       scales: {
-        x: { ticks: { font: { size: 9 }, maxTicksLimit: 8 } },
-        y: { ticks: { font: { size: 10 } } },
+        x: { ticks: { color: chartTheme.token("ink3"), font: { size: 9 }, maxTicksLimit: 8 } },
+        y: { ticks: { color: chartTheme.token("ink3"), font: { size: 10 } } },
       },
     }),
-    [],
+    [chartTheme],
   );
 
   if (portfolio.length === 0) {
@@ -285,7 +275,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
       <div className="flex items-baseline justify-between">
         <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">성과 vs SPY</p>
         {alpha != null ? (
-          <p className={`text-[11px] font-bold ${alpha >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
+          <p className={`text-[11px] font-bold ${alpha >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
             {alpha >= 0 ? "SPY 대비 앞섬" : "SPY 대비 뒤처짐"} {Math.abs(alpha).toFixed(1)}p
           </p>
         ) : null}
@@ -312,6 +302,7 @@ interface SectorMixProps {
 
 export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixProps) {
   const [view, setView] = useState<"current" | "history">("current");
+  const chartTheme = useMarketChartTheme();
 
   // --- Current doughnut ---
   const doughnutData = useMemo(() => {
@@ -327,14 +318,14 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
     const data = entries.map(([, w]) => w);
     if (otherW > 0) {
       labels.push("기타");
-      colors.push("#94a3b8");
+      colors.push(chartTheme.token("neutral"));
       data.push(otherW);
     }
     return {
       labels,
-      datasets: [{ data, backgroundColor: colors, borderColor: "#ffffff", borderWidth: 2 }],
+      datasets: [{ data, backgroundColor: colors, borderColor: chartTheme.token("panel"), borderWidth: 2 }],
     };
-  }, [currentSectors]);
+  }, [currentSectors, chartTheme]);
 
   const doughnutOptions = useMemo(
     () => ({

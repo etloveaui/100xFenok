@@ -6,6 +6,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { useSectorData } from "@/hooks/useSectorData";
 import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorSourceMeta, type SectorValuationBand } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
+import { useMarketChartTheme, type MarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -44,16 +45,8 @@ function mobilePanelClass(active: boolean, display = "block"): string {
 }
 
 /** Continuous green/red heat scale over a momentum fraction. */
-function heatStyle(value: number | null | undefined): CSSProperties {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return { backgroundColor: "rgba(148,163,184,0.10)", color: "#94a3b8" };
-  }
-  const alpha = Math.min(Math.max(Math.abs(value) / 0.15, 0.1), 0.9);
-  const strong = alpha > 0.5;
-  if (value >= 0) {
-    return { backgroundColor: `rgba(16,185,129,${alpha.toFixed(3)})`, color: strong ? "#ffffff" : "#065f46" };
-  }
-  return { backgroundColor: `rgba(244,63,94,${alpha.toFixed(3)})`, color: strong ? "#ffffff" : "#9f1239" };
+function heatStyle(value: number | null | undefined, theme: MarketChartTheme): CSSProperties {
+  return theme.heatStyle(value);
 }
 
 function SectionCard({
@@ -70,7 +63,7 @@ function SectionCard({
   return (
     <section
       className={cx(
-        "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-6",
+        "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm sm:p-6",
         className,
       )}
     >
@@ -83,7 +76,7 @@ function SectionCard({
 
 function LoadingSkeleton() {
   return (
-    <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-16px_rgba(15,23,42,0.18)]">
+    <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm">
       <div className="h-3 w-32 animate-pulse rounded-full bg-[var(--c-surface-2)]" />
       <div className="mt-3 grid gap-2 sm:grid-cols-4">
         {Array.from({ length: 8 }, (_, index) => (
@@ -171,7 +164,7 @@ function MobileViewSwitch({
 }) {
   return (
     <div className="md:hidden">
-      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
+      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm">
         {MOBILE_VIEWS.map((view) => {
           const active = view.key === value;
           return (
@@ -223,7 +216,7 @@ function SectorPulse({
   const laggardValue = laggard?.momentum ? laggard.momentum[activeWindowKey] : null;
   return (
     <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
         <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">{activeWindowLabel} 주도</p>
         <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {leader ? `${leader.name} ${pct(leaderValue, 1)}` : "데이터 없음"}
@@ -232,14 +225,14 @@ function SectorPulse({
           약세 {laggard ? `${laggard.name} ${pct(laggardValue, 1)}` : "—"}
         </p>
       </div>
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
         <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">시장 대비</p>
         <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {beatCount === null ? "S&P 기준 없음" : `${beatCount}/${totalCount}개 섹터가 S&P 상회`}
         </p>
         <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"><SourceLine sourceMeta={sourceMeta} /></p>
       </div>
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
         <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">가치 위치</p>
         <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           저평가 {cheapest ? cheapest.name : "—"} · 고평가 {richest ? richest.name : "—"}
@@ -248,7 +241,7 @@ function SectorPulse({
           {valuationSourceLine(sourceMeta)}
         </p>
       </div>
-      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-sm">
         <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">기관 보유</p>
         <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "기관 보유 없음"}
@@ -344,6 +337,7 @@ export default function SectorsClient() {
   const { rows, benchmarkMomentum, dataReady, failedSources, updatedAt, sourceMeta } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
   const [mobileView, setMobileView] = useState<MobileView>("heatmap");
+  const chartTheme = useMarketChartTheme();
 
   const sorted = useMemo(
     () =>
@@ -451,7 +445,7 @@ export default function SectorsClient() {
           <table className="w-full min-w-[640px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
-                <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-sm">
                   업종
                 </th>
                 <th scope="col" className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">당일</th>
@@ -486,7 +480,7 @@ export default function SectorsClient() {
             <tbody>
               {benchmarkMomentum ? (
                 <tr className="border-b border-[var(--c-line)]">
-                  <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                  <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-sm">
                     <span className="block text-sm font-black text-[var(--c-ink)]">S&amp;P 500</span>
                     <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">시장 기준선</span>
                   </th>
@@ -497,7 +491,7 @@ export default function SectorsClient() {
                       <td key={window.key} className="px-1 py-1.5">
                         <div
                           className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
-                          style={heatStyle(value)}
+                          style={heatStyle(value, chartTheme)}
                         >
                           {pct(value, 1)}
                         </div>
@@ -514,7 +508,7 @@ export default function SectorsClient() {
                     : null;
                 return (
                   <tr key={row.key}>
-                    <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                    <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-sm">
                       <span className="block text-sm font-black text-[var(--c-ink)]">{row.name}</span>
                       <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</span>
                       {relativeThreeMonth !== null ? (
@@ -550,7 +544,7 @@ export default function SectorsClient() {
                         <td key={window.key} className="px-1 py-1.5">
                           <div
                             className="orbitron flex min-h-9 items-center justify-center rounded-md px-1 text-[13px] font-black tabular-nums"
-                            style={heatStyle(value)}
+                            style={heatStyle(value, chartTheme)}
                           >
                             {pct(value, 1)}
                           </div>
@@ -592,7 +586,7 @@ export default function SectorsClient() {
             <table className="w-full min-w-[680px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                  <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">ETF</th>
+                  <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-sm">ETF</th>
                   <th scope="col" className="px-2 py-2 text-right">1M</th>
                   <th scope="col" className="px-2 py-2 text-right">YTD</th>
                   <th scope="col" className="px-2 py-2 text-right">1Y</th>
@@ -607,7 +601,7 @@ export default function SectorsClient() {
                   const etf = row.etfInfo!;
                   return (
                     <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
-                      <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                      <th scope="row" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-sm">
                         <span className="text-sm font-black text-[var(--c-ink)]">{row.etf}</span>
                         <span className="ml-2 text-xs font-semibold text-[var(--c-ink-2)]">{row.name}</span>
                       </th>

@@ -215,13 +215,13 @@ export function YardeniOverlayChartPanel() {
         id: "spx",
         label: "S&P 500",
         points: pointsFromField(model.series, "spx"),
-        color: "#0072B2",
+        colorToken: "brand",
       },
       {
         id: "fair_value",
         label: "적정가",
         points: pointsFromField(model.series, "fair_value"),
-        color: "#E69F00",
+        colorToken: "fairValue",
       },
     ];
   }, [model]);
@@ -229,7 +229,7 @@ export function YardeniOverlayChartPanel() {
   const verdict = yardeniVerdict(model?.latest.premiumPct ?? null);
 
   return (
-    <section className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_36px_-18px_rgba(15,23,42,0.18)]">
+    <section className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-sm font-black tracking-tight text-slate-950">
@@ -307,7 +307,7 @@ export function PmiActivityChartPanel() {
     return model.datasets.map((dataset) => ({
       id: dataset.id,
       label: dataset.label,
-      color: dataset.color,
+      colorToken: dataset.colorToken,
       yAxisId: dataset.axis === "cli" ? "y1" : "y",
       points: dataset.series.map((point) => ({
         label: point.date,
@@ -317,7 +317,7 @@ export function PmiActivityChartPanel() {
   }, [model]);
 
   return (
-    <section className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_36px_-18px_rgba(15,23,42,0.18)]">
+    <section className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-sm font-black tracking-tight text-slate-950">

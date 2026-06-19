@@ -13,6 +13,7 @@ import {
 } from "./loaders";
 import type { MarketModel, SeriesPoint } from "./types";
 import type { MarketTone } from "../types";
+import type { MarketChartColorToken } from "../charts/types";
 
 const SOURCE_ID = "activitySurveys" as const;
 
@@ -38,7 +39,7 @@ interface DatasetConfig {
   valueKeys: readonly string[];
   valueLabel: string;
   axis: "activity" | "cli";
-  color: string;
+  colorToken: MarketChartColorToken;
 }
 
 export interface PmiActivityDatasetModel {
@@ -47,7 +48,7 @@ export interface PmiActivityDatasetModel {
   unit: string;
   valueLabel: string;
   axis: "activity" | "cli";
-  color: string;
+  colorToken: MarketChartColorToken;
   latestDate: string | null;
   latestPeriod: string | null;
   latestReleaseDate: string | null;
@@ -93,7 +94,7 @@ const DATASETS: readonly DatasetConfig[] = [
     valueKeys: ["global", "us_sp_global"],
     valueLabel: "Global 우선",
     axis: "activity",
-    color: "#0072B2",
+    colorToken: "brand",
   },
   {
     id: "pmi_services",
@@ -102,7 +103,7 @@ const DATASETS: readonly DatasetConfig[] = [
     valueKeys: ["global", "us_sp_global"],
     valueLabel: "Global 우선",
     axis: "activity",
-    color: "#56B4E9",
+    colorToken: "info",
   },
   {
     id: "ism_manufacturing",
@@ -111,7 +112,7 @@ const DATASETS: readonly DatasetConfig[] = [
     valueKeys: ["headline"],
     valueLabel: "Headline",
     axis: "activity",
-    color: "#E69F00",
+    colorToken: "warn",
   },
   {
     id: "ism_services",
@@ -120,7 +121,7 @@ const DATASETS: readonly DatasetConfig[] = [
     valueKeys: ["headline"],
     valueLabel: "Headline",
     axis: "activity",
-    color: "#D55E00",
+    colorToken: "down",
   },
   {
     id: "oecd_cli",
@@ -129,7 +130,7 @@ const DATASETS: readonly DatasetConfig[] = [
     valueKeys: ["united_states"],
     valueLabel: "US",
     axis: "cli",
-    color: "#6b7280",
+    colorToken: "neutral",
   },
 ];
 
@@ -233,7 +234,7 @@ function buildDataset(doc: RawActivitySurveys, config: DatasetConfig): PmiActivi
     unit: config.unit,
     valueLabel: config.valueLabel,
     axis: config.axis,
-    color: config.color,
+    colorToken: config.colorToken,
     latestDate: latest?.date ?? null,
     latestPeriod: typeof latest?.period === "string" ? latest.period : null,
     latestReleaseDate: typeof latest?.release_date === "string" ? latest.release_date : null,

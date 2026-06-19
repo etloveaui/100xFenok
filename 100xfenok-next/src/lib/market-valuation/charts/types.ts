@@ -2,6 +2,25 @@ export type MarketChartType = "line" | "bar";
 
 export type MarketChartValueFormatter = (value: number | null) => string;
 
+export type MarketChartColorToken =
+  | "brand"
+  | "brandAlt"
+  | "info"
+  | "up"
+  | "down"
+  | "warn"
+  | "neutral"
+  | "line"
+  | "line2"
+  | "ink"
+  | "ink2"
+  | "ink3"
+  | "ink4"
+  | "panel"
+  | "surface"
+  | "white"
+  | "fairValue";
+
 export interface MarketChartPoint {
   label: string;
   value: number | null;
@@ -13,7 +32,9 @@ export interface MarketChartSeries {
   label: string;
   points: readonly MarketChartPoint[];
   color?: string;
+  colorToken?: MarketChartColorToken;
   negativeColor?: string;
+  negativeColorToken?: MarketChartColorToken;
   hidden?: boolean;
   yAxisId?: "y" | "y1";
   chartType?: MarketChartType;

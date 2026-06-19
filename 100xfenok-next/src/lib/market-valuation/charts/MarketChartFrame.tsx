@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useMarketChartTheme } from "./chartTheme";
 import { MarketChartEngine } from "./MarketChartEngine";
 import type {
   MarketChartHoverPoint,
@@ -64,16 +65,6 @@ export interface MarketChartFrameProps {
    */
   sortLabels?: boolean;
 }
-
-// Mirrors the engine palette so toggle chips match the rendered line colors.
-const FRAME_PALETTE = [
-  "#0072B2",
-  "#E69F00",
-  "#56B4E9",
-  "#D55E00",
-  "#009E73",
-  "#6b7280",
-] as const;
 
 const DEFAULT_RANGES: readonly MarketChartRange[] = [
   { id: "1Y", label: "1Y", count: 12 },
@@ -171,6 +162,7 @@ export function MarketChartFrame({
     defaultHiddenIds(series),
   );
   const [hover, setHover] = useState<MarketChartHoverPoint | null>(null);
+  const theme = useMarketChartTheme();
 
   useEffect(() => {
     setHiddenIds(defaultHiddenIds(series));
@@ -259,7 +251,7 @@ export function MarketChartFrame({
         <div className="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="시리즈 토글">
           {series.map((item, index) => {
             const off = hiddenIds.has(item.id);
-            const dot = item.color ?? FRAME_PALETTE[index % FRAME_PALETTE.length];
+            const dot = theme.seriesColor(item, index);
             return (
               <button
                 key={item.id}
@@ -275,7 +267,7 @@ export function MarketChartFrame({
                 <span
                   aria-hidden
                   className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: off ? "#cbd5e1" : dot }}
+                  style={{ backgroundColor: off ? theme.token("line") : dot }}
                 />
                 {item.label}
               </button>

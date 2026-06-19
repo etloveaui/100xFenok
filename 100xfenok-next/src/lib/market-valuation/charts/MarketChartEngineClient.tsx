@@ -10,6 +10,7 @@ import type {
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 
+import { useMarketChartTheme, type MarketChartTheme } from "./chartTheme";
 import { ensureMarketChartJsRegistered } from "./chartJsRegistry";
 import type {
   MarketChartEngineProps,
@@ -20,15 +21,6 @@ import type {
 } from "./types";
 
 ensureMarketChartJsRegistered();
-
-const palette = [
-  "#0072B2",
-  "#E69F00",
-  "#56B4E9",
-  "#D55E00",
-  "#009E73",
-  "#6b7280",
-] as const;
 
 function cx(...parts: Array<string | false | undefined>): string {
   return parts.filter(Boolean).join(" ");
@@ -95,12 +87,13 @@ function buildData(
   type: MarketChartType,
   series: readonly MarketChartSeries[],
   labels: readonly string[],
+  theme: MarketChartTheme,
 ): ChartData<MarketChartType, Array<number | null>, string> {
   return {
     labels: [...labels],
     datasets: series.map((item, index) => {
-      const color = item.color ?? palette[index % palette.length];
-      const negativeColor = item.negativeColor ?? "#D55E00";
+      const color = theme.seriesColor(item, index);
+      const negativeColor = theme.negativeColor(item);
       const pointsByLabel = pointMap(item);
       const values = labels.map((label) => pointsByLabel.get(label)?.value ?? null);
       const isLine = (item.chartType ?? type) === "line";
@@ -134,6 +127,7 @@ function buildOptions({
   suggestedMax,
   yAxisTitle,
   y1AxisTitle,
+  theme,
 }: Required<Pick<MarketChartEngineProps, "ariaLabel" | "showLegend">> &
   Pick<
     MarketChartEngineProps,
@@ -146,6 +140,7 @@ function buildOptions({
   > & {
     labels: readonly string[];
     series: readonly MarketChartSeries[];
+    theme: MarketChartTheme;
   }): ChartOptions<MarketChartType> {
   const valueFormatter = formatValue ?? defaultFormatValue;
   const axisTitleFont = { size: 10, weight: "bold" as const };
@@ -173,7 +168,7 @@ function buildOptions({
         labels: {
           boxWidth: 10,
           boxHeight: 10,
-          color: "#475569",
+          color: theme.token("ink2"),
           font: { size: 11, weight: "bold" },
           usePointStyle: true,
         },
@@ -197,7 +192,7 @@ function buildOptions({
       x: {
         grid: { display: false },
         ticks: {
-          color: "#64748b",
+          color: theme.token("ink3"),
           font: { size: 10, weight: "bold" },
           maxRotation: 0,
           autoSkip: true,
@@ -207,12 +202,12 @@ function buildOptions({
       y: {
         suggestedMin,
         suggestedMax,
-        grid: { color: "rgba(148, 163, 184, 0.22)" },
+        grid: { color: theme.token("line2") },
         title: yAxisTitle
-          ? { display: true, text: yAxisTitle, color: "#64748b", font: axisTitleFont }
+          ? { display: true, text: yAxisTitle, color: theme.token("ink3"), font: axisTitleFont }
           : undefined,
         ticks: {
-          color: "#64748b",
+          color: theme.token("ink3"),
           font: { size: 10, weight: "bold" },
           callback(value) {
             return valueFormatter(toFiniteNumber(value));
@@ -224,10 +219,10 @@ function buildOptions({
         position: "right",
         grid: { drawOnChartArea: false },
         title: y1AxisTitle
-          ? { display: true, text: y1AxisTitle, color: "#64748b", font: axisTitleFont }
+          ? { display: true, text: y1AxisTitle, color: theme.token("ink3"), font: axisTitleFont }
           : undefined,
         ticks: {
-          color: "#64748b",
+          color: theme.token("ink3"),
           font: { size: 10, weight: "bold" },
           callback(value) {
             return valueFormatter(toFiniteNumber(value));
@@ -254,6 +249,7 @@ export function MarketChartEngineClient({
   yAxisTitle,
   y1AxisTitle,
 }: MarketChartEngineProps) {
+  const theme = useMarketChartTheme();
   const visibleSeries = useMemo(
     () => series.filter((item) => item.points.length > 0),
     [series],
@@ -263,8 +259,8 @@ export function MarketChartEngineClient({
     [visibleSeries, sortLabels],
   );
   const data = useMemo(
-    () => buildData(type, visibleSeries, labels),
-    [type, visibleSeries, labels],
+    () => buildData(type, visibleSeries, labels, theme),
+    [type, visibleSeries, labels, theme],
   );
   const options = useMemo(
     () =>
@@ -279,6 +275,7 @@ export function MarketChartEngineClient({
         suggestedMax,
         yAxisTitle,
         y1AxisTitle,
+        theme,
       }),
     [
       ariaLabel,
@@ -291,6 +288,7 @@ export function MarketChartEngineClient({
       suggestedMax,
       yAxisTitle,
       y1AxisTitle,
+      theme,
     ],
   );
 

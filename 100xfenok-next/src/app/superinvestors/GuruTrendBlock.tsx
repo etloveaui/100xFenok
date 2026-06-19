@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 interface TrendDoc {
   metadata?: { global_latest_quarter?: string };
@@ -88,6 +89,7 @@ const SPARK_PAD = 2;
 export default function GuruTrendBlock({ investorId }: { investorId: string }) {
   const [trend, setTrend] = useState<TrendDoc | null>(null);
   const [hedge, setHedge] = useState<HedgeDoc | null>(null);
+  const chartTheme = useMarketChartTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -173,7 +175,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
             <polyline
               points={sparkline.pts}
               fill="none"
-              stroke="#6366f1"
+              stroke={chartTheme.token("brand")}
               strokeWidth="1.5"
               strokeLinejoin="round"
             />
@@ -181,8 +183,8 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
               cx={sparkline.lastX}
               cy={sparkline.lastY}
               r="2.5"
-              fill="#6366f1"
-              stroke="white"
+              fill={chartTheme.token("brand")}
+              stroke={chartTheme.token("panel")}
               strokeWidth="1"
             />
           </svg>
