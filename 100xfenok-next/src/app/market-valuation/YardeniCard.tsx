@@ -228,7 +228,9 @@ export default function YardeniCard() {
                 stroke={chartTheme.token("panel")}
                 strokeWidth="1.5"
                 onMouseEnter={() => setActiveIndex(marker.index)}
+                onBlur={() => setActiveIndex(null)}
                 onFocus={() => setActiveIndex(marker.index)}
+                tabIndex={0}
               >
                 <title>{`${marker.row.date} · S&P 500 ${fmtIndex(marker.row.spx)} · 적정가 ${fmtIndex(marker.row.fair_value)} · 프리미엄 ${fmtNum(marker.row.premium_pct)}%`}</title>
               </circle>

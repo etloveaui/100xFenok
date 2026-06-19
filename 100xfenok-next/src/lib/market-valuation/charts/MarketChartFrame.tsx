@@ -162,11 +162,17 @@ export function MarketChartFrame({
     defaultHiddenIds(series),
   );
   const [hover, setHover] = useState<MarketChartHoverPoint | null>(null);
+  const [announcedHover, setAnnouncedHover] = useState<MarketChartHoverPoint | null>(null);
   const theme = useMarketChartTheme();
 
   useEffect(() => {
     setHiddenIds(defaultHiddenIds(series));
   }, [series]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setAnnouncedHover(hover), 200);
+    return () => window.clearTimeout(timer);
+  }, [hover]);
 
   const activeRange = useMemo(
     () => ranges.find((range) => range.id === rangeId) ?? ranges[ranges.length - 1],
@@ -293,13 +299,14 @@ export function MarketChartFrame({
 
       <div
         className="mt-2 min-h-[1.25rem] text-[11px] font-semibold text-slate-500"
-        aria-live="polite"
+        aria-atomic="true"
+        role="status"
       >
-        {hover ? (
+        {announcedHover ? (
           <span>
-            <span className="font-bold text-slate-700">{hover.label}</span>
+            <span className="font-bold text-slate-700">{announcedHover.label}</span>
             {"  "}
-            {hover.points
+            {announcedHover.points
               .filter((point) => point.value !== null)
               .map((point) => `${point.seriesLabel} ${fmt(point.value)}`)
               .join("   ")}

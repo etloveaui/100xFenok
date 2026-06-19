@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import type {
   ActiveElement,
   ChartData,
@@ -121,6 +121,7 @@ function buildOptions({
   formatValue,
   labels,
   onHoverPoint,
+  onMouseHover,
   series,
   showLegend,
   suggestedMin,
@@ -139,6 +140,7 @@ function buildOptions({
     | "y1AxisTitle"
   > & {
     labels: readonly string[];
+    onMouseHover?: () => void;
     series: readonly MarketChartSeries[];
     theme: MarketChartTheme;
   }): ChartOptions<MarketChartType> {
@@ -153,6 +155,7 @@ function buildOptions({
     },
     onHover: (_event: ChartEvent, activeElements: ActiveElement[]) => {
       if (!onHoverPoint) return;
+      onMouseHover?.();
       const active = activeElements[0];
       if (!active) {
         onHoverPoint(null);
@@ -250,6 +253,7 @@ export function MarketChartEngineClient({
   y1AxisTitle,
 }: MarketChartEngineProps) {
   const theme = useMarketChartTheme();
+  const [keyboardIndex, setKeyboardIndex] = useState<number | null>(null);
   const visibleSeries = useMemo(
     () => series.filter((item) => item.points.length > 0),
     [series],
@@ -262,6 +266,15 @@ export function MarketChartEngineClient({
     () => buildData(type, visibleSeries, labels, theme),
     [type, visibleSeries, labels, theme],
   );
+  const resetKeyboardHover = useMemo(
+    () =>
+      onHoverPoint
+        ? () => {
+            setKeyboardIndex(null);
+          }
+        : undefined,
+    [onHoverPoint],
+  );
   const options = useMemo(
     () =>
       buildOptions({
@@ -269,6 +282,7 @@ export function MarketChartEngineClient({
         formatValue,
         labels,
         onHoverPoint,
+        onMouseHover: resetKeyboardHover,
         series: visibleSeries,
         showLegend,
         suggestedMin,
@@ -282,6 +296,7 @@ export function MarketChartEngineClient({
       formatValue,
       labels,
       onHoverPoint,
+      resetKeyboardHover,
       visibleSeries,
       showLegend,
       suggestedMin,
@@ -291,6 +306,58 @@ export function MarketChartEngineClient({
       theme,
     ],
   );
+
+  useEffect(() => {
+    if (keyboardIndex !== null && keyboardIndex >= labels.length) {
+      const timer = window.setTimeout(() => {
+        setKeyboardIndex(null);
+        onHoverPoint?.(null);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [keyboardIndex, labels.length, onHoverPoint]);
+
+  const selectKeyboardIndex = (index: number | null) => {
+    if (!onHoverPoint) return;
+    if (index === null || labels.length === 0) {
+      setKeyboardIndex(null);
+      onHoverPoint(null);
+      return;
+    }
+    const nextIndex = Math.min(Math.max(index, 0), labels.length - 1);
+    const label = labels[nextIndex];
+    if (!label) {
+      setKeyboardIndex(null);
+      onHoverPoint(null);
+      return;
+    }
+    setKeyboardIndex(nextIndex);
+    onHoverPoint(buildHoverPoint(label, nextIndex, visibleSeries));
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onHoverPoint || labels.length === 0) return;
+    const latestIndex = labels.length - 1;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      event.preventDefault();
+      selectKeyboardIndex((keyboardIndex ?? latestIndex) + 1);
+      return;
+    }
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      event.preventDefault();
+      selectKeyboardIndex((keyboardIndex ?? latestIndex) - 1);
+      return;
+    }
+    if (event.key === "Home") {
+      event.preventDefault();
+      selectKeyboardIndex(0);
+      return;
+    }
+    if (event.key === "End") {
+      event.preventDefault();
+      selectKeyboardIndex(latestIndex);
+    }
+  };
 
   if (visibleSeries.length === 0 || labels.length === 0) {
     return (
@@ -307,7 +374,17 @@ export function MarketChartEngineClient({
   }
 
   return (
-    <div className={cx("relative min-w-0", heightClassName, className)} aria-label={ariaLabel}>
+    <div
+      className={cx(
+        "relative min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-brand)] focus-visible:ring-offset-2",
+        heightClassName,
+        className,
+      )}
+      aria-label={`${ariaLabel}. 방향키, Home, End 키로 시점을 이동할 수 있습니다.`}
+      onBlur={() => selectKeyboardIndex(null)}
+      onKeyDown={handleKeyDown}
+      tabIndex={onHoverPoint ? 0 : undefined}
+    >
       <Chart type={type} data={data} options={options} />
     </div>
   );
