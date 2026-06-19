@@ -219,8 +219,8 @@ function PressurePanel({ title, rows, color, signLabel }: {
   title: string; rows: BuyingPressureRow[]; color: "emerald" | "rose";
   signLabel: (r: BuyingPressureRow) => string;
 }) {
-  const textColor = color === "emerald" ? "text-emerald-700" : "text-rose-700";
-  const barColor = color === "emerald" ? "#10b981" : "#f43f5e";
+  const textColor = color === "emerald" ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
+  const barColor = color === "emerald" ? "var(--c-up)" : "var(--c-down)";
   if (rows.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
   return (
     <div>
@@ -255,7 +255,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
                   </div>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className={`orbitron tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                  <span className={`orbitron tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
                     {fmtUSD(r.total_value_change)}
                   </span>
                 </td>

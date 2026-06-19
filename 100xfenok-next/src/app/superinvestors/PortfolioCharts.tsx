@@ -413,6 +413,7 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
         <button
           type="button"
           onClick={() => setView("current")}
+          aria-pressed={view === "current"}
           className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${
             view === "current"
               ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive"
@@ -424,6 +425,7 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
         <button
           type="button"
           onClick={() => setView("history")}
+          aria-pressed={view === "history"}
           className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${
             view === "history"
               ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive"

@@ -206,7 +206,7 @@ function classSummary(entry: EnhancedConsensusTicker | undefined): string {
 
 function EmptyState({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="rounded-[1.2rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+    <div className="rounded-[1.2rem] border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-6 py-10 text-center">
       <p className="text-sm font-black text-slate-700">{title}</p>
       <p className="mt-1 text-xs font-semibold text-slate-500">{desc}</p>
     </div>
@@ -581,6 +581,7 @@ function TradeRankingPanel({
         <button
           type="button"
           onClick={onToggle}
+          aria-pressed={expanded}
           className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
         >
           {expanded ? "접기" : "전체 50개 보기"}
@@ -771,6 +772,7 @@ export default function SuperinvestorsClient({
               "relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition",
               tab === t.id ? "text-brand-interactive" : "text-slate-500 hover:text-slate-900",
             )}
+            aria-pressed={tab === t.id}
             aria-current={tab === t.id ? "page" : undefined}
           >
             {t.label}
@@ -788,6 +790,7 @@ export default function SuperinvestorsClient({
               <button
                 type="button"
                 onClick={() => setTotalPortfolioOpen((v) => !v)}
+                aria-pressed={totalPortfolioOpen}
                 className="flex w-full items-center justify-between text-left"
               >
                 <div>
@@ -1095,6 +1098,7 @@ export default function SuperinvestorsClient({
                     <button
                       type="button"
                       onClick={() => setExpandedGuru(isOpen ? null : id)}
+                      aria-pressed={isOpen}
                       className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
                     >
                       {isOpen ? "접기" : "포트폴리오 보기"}
