@@ -217,6 +217,48 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertTrue(classification["is_single_stock"])
         self.assertEqual(classification["underlying"], "NVIDIA Corporation")
 
+    def test_etf_catalog_enrichment_promotes_detail_metrics(self) -> None:
+        detail_index = {
+            "VOO": {
+                "source": "stockanalysis",
+                "ticker": "VOO",
+                "normalized": {
+                    "overview": {
+                        "expenseRatio": "0.03%",
+                        "dividendYield": "1.04%",
+                        "sharesOut": "2.36B",
+                        "inception": "Sep 7, 2010",
+                        "provider_page": "vanguard",
+                        "etf_website": "https://investor.vanguard.com/investment-products/etfs/profile/voo",
+                    },
+                    "holdings": [],
+                },
+                "raw": {
+                    "overview": {
+                        "performance": {
+                            "tr1m": 1.069,
+                            "trYTD": 9.851,
+                            "tr1y": 26.503,
+                        }
+                    }
+                },
+            }
+        }
+
+        enriched = self.fetcher.enrich_etf_records(
+            [{"ticker": "VOO", "name": "Vanguard S&P 500 ETF", "category": "Equity"}],
+            detail_index,
+        )[0]
+
+        self.assertEqual(enriched["expenseRatio"], "0.03%")
+        self.assertEqual(enriched["expense_ratio"], 0.03)
+        self.assertEqual(enriched["dividend_yield"], 1.04)
+        self.assertEqual(enriched["inceptionDate"], "Sep 7, 2010")
+        self.assertEqual(enriched["performance"]["tr1y"], 26.503)
+        counts = self.fetcher.etf_detail_enrichment_counts([enriched])
+        self.assertEqual(counts["expense_ratio"], 1)
+        self.assertEqual(counts["performance"], 1)
+
     def test_incremental_etf_backfill_selects_missing_fallback_and_stale(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         with tempfile.TemporaryDirectory() as tmp:

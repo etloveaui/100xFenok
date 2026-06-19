@@ -10,6 +10,18 @@ const SOURCE_SCREENER_PATH = `${ROOT}/../data/stockanalysis/surfaces/etf_screene
 const PUBLIC_SCREENER_PATH = `${ROOT}/public/data/stockanalysis/surfaces/etf_screener.json`;
 
 const REQUIRED_DETAIL_FILES = ["IEFA", "SQQQ", "TQQQ", "TSLL"];
+const ETF_DETAIL_FIELDS = [
+  "expenseRatio",
+  "expense_ratio",
+  "dividendYield",
+  "dividend_yield",
+  "sharesOut",
+  "beta",
+  "inceptionDate",
+  "provider_page",
+  "etf_website",
+  "performance",
+];
 
 function readText(path) {
   return readFileSync(path, "utf8");
@@ -81,6 +93,15 @@ function compactRecord(record) {
   );
 }
 
+function pickRecordFields(record, fields) {
+  if (!record) return {};
+  return Object.fromEntries(
+    fields
+      .filter((field) => field in record)
+      .map((field) => [field, record[field]]),
+  );
+}
+
 function buildMergedUniverse(universePayload, screenerPayload) {
   const universeRows = rowsFromSurface(universePayload);
   const screenerRows = rowsFromSurface(screenerPayload);
@@ -96,6 +117,7 @@ function buildMergedUniverse(universePayload, screenerPayload) {
       aum_raw: cleanText(row.aum_raw),
       aum: numericValue(row.aum),
       source_page: numericValue(row.source_page),
+      ...pickRecordFields(row, ETF_DETAIL_FIELDS),
       classification: classificationFrom(row.classification),
     }));
   }
@@ -115,6 +137,8 @@ function buildMergedUniverse(universePayload, screenerPayload) {
       aum_raw: cleanText(existing?.aum_raw),
       aum: numericValue(existing?.aum) ?? numericValue(row.aum),
       source_page: numericValue(existing?.source_page),
+      ...pickRecordFields(existing, ETF_DETAIL_FIELDS),
+      ...pickRecordFields(row, ETF_DETAIL_FIELDS),
       assetClass: cleanText(row.assetClass),
       price: numericValue(row.price),
       change: numericValue(row.change),
@@ -139,6 +163,8 @@ function buildMergedUniverse(universePayload, screenerPayload) {
       with_price: records.filter((row) => typeof row.price === "number").length,
       with_volume: records.filter((row) => typeof row.volume === "number").length,
       with_holdings: records.filter((row) => typeof row.holdings === "number").length,
+      with_expense_ratio: records.filter((row) => numericValue(row.expense_ratio ?? row.expenseRatio) !== null).length,
+      with_performance: records.filter((row) => asRecord(row.performance) !== null).length,
     },
     records,
   };
@@ -189,6 +215,14 @@ assert(counts.records >= counts.etf_screener, "Merged ETF universe must cover th
 assert(counts.with_price >= 5000, `Merged ETF universe expected price coverage >= 5000, got ${counts.with_price}`, errors);
 assert(counts.with_volume >= 4500, `Merged ETF universe expected volume coverage >= 4500, got ${counts.with_volume}`, errors);
 assert(counts.with_holdings >= 4900, `Merged ETF universe expected holdings coverage >= 4900, got ${counts.with_holdings}`, errors);
+assert(counts.with_expense_ratio >= 5000, `Merged ETF universe expected expense-ratio coverage >= 5000, got ${counts.with_expense_ratio}`, errors);
+assert(counts.with_performance >= 4400, `Merged ETF universe expected performance coverage >= 4400, got ${counts.with_performance}`, errors);
+
+assertTickerContract(merged, "VOO", {
+  numericFields: ["aum", "price", "volume", "holdings", "expense_ratio"],
+}, errors);
+const voo = findTicker(merged.records, "VOO");
+assert(voo?.performance?.tr1y !== undefined, "VOO: 1Y performance must be promoted into ETF universe", errors);
 
 assertTickerContract(merged, "IEFA", {
   numericFields: ["aum", "price", "volume", "holdings"],
@@ -233,5 +267,6 @@ if (errors.length > 0) {
 
 console.log(
   `stockanalysis ETF universe check passed ` +
-    `(${counts.records} records, ${counts.with_price} prices, ${counts.with_volume} volumes, ${counts.with_holdings} holdings)`,
+    `(${counts.records} records, ${counts.with_price} prices, ${counts.with_volume} volumes, ` +
+    `${counts.with_holdings} holdings, ${counts.with_expense_ratio} expense ratios, ${counts.with_performance} performance rows)`,
 );

@@ -197,7 +197,7 @@ External sources
   - is the dedicated ETF center route, separate from Explore and Screener;
   - exposes the full ETF universe with URL-backed type filters for leveraged,
     single-stock leveraged, inverse, newly listed ETFs, asset class, issuer,
-    and AUM range.
+    AUM range, and expense-ratio buckets.
 - `100xfenok-next/src/app/etfs/new/NewEtfsList.tsx`
   - is the full launch radar for the `new_etfs` surface;
   - supports query, recent 7/14/30-day windows, issuer, ETF type filters,

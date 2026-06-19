@@ -85,7 +85,7 @@ async function summarizeSurface(surface: string, fields: string[], limit: number
 }
 
 async function summarizeEtfScreener(limit: number) {
-  const fields = ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings"];
+  const fields = ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings", "expenseRatio", "expense_ratio", "dividendYield", "dividend_yield", "performance"];
   const payload = asRecord(await getStockanalysisSurface("etf_screener"));
   const rows = rowsFromSurface(payload);
   const pick = (row: JsonRecord) => pickFields(row, fields);

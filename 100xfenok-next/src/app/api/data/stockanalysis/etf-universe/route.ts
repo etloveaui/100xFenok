@@ -10,6 +10,18 @@ export const dynamic = "force-dynamic";
 export const revalidate = false;
 
 type JsonRecord = Record<string, unknown>;
+const ETF_DETAIL_FIELDS = [
+  "expenseRatio",
+  "expense_ratio",
+  "dividendYield",
+  "dividend_yield",
+  "sharesOut",
+  "beta",
+  "inceptionDate",
+  "provider_page",
+  "etf_website",
+  "performance",
+] as const;
 
 function asRecord(value: unknown): JsonRecord | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -65,6 +77,15 @@ function compactRecord(record: JsonRecord): JsonRecord {
   );
 }
 
+function pickRecordFields(record: JsonRecord | undefined, fields: readonly string[]): JsonRecord {
+  if (!record) return {};
+  return Object.fromEntries(
+    fields
+      .filter((field) => field in record)
+      .map((field) => [field, record[field]]),
+  );
+}
+
 export async function GET() {
   return withResponseCache(
     "stockanalysis:etf-universe-merged",
@@ -88,6 +109,7 @@ export async function GET() {
           aum_raw: cleanText(row.aum_raw),
           aum: numericValue(row.aum),
           source_page: numericValue(row.source_page),
+          ...pickRecordFields(row, ETF_DETAIL_FIELDS),
           classification: classificationFrom(row.classification),
         }));
       }
@@ -106,6 +128,8 @@ export async function GET() {
           aum_raw: cleanText(existing?.aum_raw),
           aum: numericValue(existing?.aum) ?? numericValue(row.aum),
           source_page: numericValue(existing?.source_page),
+          ...pickRecordFields(existing, ETF_DETAIL_FIELDS),
+          ...pickRecordFields(row, ETF_DETAIL_FIELDS),
           assetClass: cleanText(row.assetClass),
           price: numericValue(row.price),
           change: numericValue(row.change),
@@ -139,6 +163,8 @@ export async function GET() {
             with_price: records.filter((row) => typeof row.price === "number").length,
             with_volume: records.filter((row) => typeof row.volume === "number").length,
             with_holdings: records.filter((row) => typeof row.holdings === "number").length,
+            with_expense_ratio: records.filter((row) => numericValue(row.expense_ratio ?? row.expenseRatio) !== null).length,
+            with_performance: records.filter((row) => asRecord(row.performance) !== null).length,
           },
           records,
         },

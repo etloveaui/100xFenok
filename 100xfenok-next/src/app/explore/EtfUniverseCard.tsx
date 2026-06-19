@@ -6,8 +6,10 @@ import {
   ETF_TYPE_PARAM,
   asOfDate,
   cleanCategory,
+  expenseRatioValue,
   formatAum,
   formatNumber,
+  formatPercentPointsValue,
   formatTypeHint,
   isInverseEtf,
   isLeveragedEtf,
@@ -55,6 +57,7 @@ interface EtfSnapshotDoc {
 }
 
 type EtfAumFilter = "전체" | "1,000억 달러 이상" | "100억 달러 이상" | "10억 달러 이상" | "10억 달러 미만" | "운용자산 미표시";
+type EtfExpenseFilter = "전체" | "0.05% 이하" | "0.10% 이하" | "0.50% 이하" | "1.00% 이상" | "보수 미표시";
 
 const ETF_AUM_PARAM: Record<EtfAumFilter, string | null> = {
   "전체": null,
@@ -65,12 +68,30 @@ const ETF_AUM_PARAM: Record<EtfAumFilter, string | null> = {
   "운용자산 미표시": "unknown",
 };
 
+const ETF_EXPENSE_PARAM: Record<EtfExpenseFilter, string | null> = {
+  "전체": null,
+  "0.05% 이하": "ultra-low",
+  "0.10% 이하": "low",
+  "0.50% 이하": "mid",
+  "1.00% 이상": "high",
+  "보수 미표시": "unknown",
+};
+
 function aumFilterFromParam(value: string | null | undefined): EtfAumFilter {
   if (value === "mega") return "1,000억 달러 이상";
   if (value === "large") return "100억 달러 이상";
   if (value === "mid") return "10억 달러 이상";
   if (value === "small") return "10억 달러 미만";
   if (value === "unknown") return "운용자산 미표시";
+  return "전체";
+}
+
+function expenseFilterFromParam(value: string | null | undefined): EtfExpenseFilter {
+  if (value === "ultra-low") return "0.05% 이하";
+  if (value === "low") return "0.10% 이하";
+  if (value === "mid") return "0.50% 이하";
+  if (value === "high") return "1.00% 이상";
+  if (value === "unknown") return "보수 미표시";
   return "전체";
 }
 
@@ -83,6 +104,17 @@ function matchesAumFilter(value: number | null | undefined, filter: EtfAumFilter
   if (filter === "100억 달러 이상") return aum >= 10_000_000_000;
   if (filter === "10억 달러 이상") return aum >= 1_000_000_000;
   return aum < 1_000_000_000;
+}
+
+function matchesExpenseFilter(row: EtfUniverseRecord, filter: EtfExpenseFilter): boolean {
+  const expense = expenseRatioValue(row);
+  if (filter === "전체") return true;
+  if (filter === "보수 미표시") return expense === null;
+  if (expense === null) return false;
+  if (filter === "0.05% 이하") return expense <= 0.05;
+  if (filter === "0.10% 이하") return expense <= 0.10;
+  if (filter === "0.50% 이하") return expense <= 0.50;
+  return expense >= 1.00;
 }
 
 let universeCache: EtfUniverseDoc | null = null;
@@ -130,6 +162,7 @@ interface EtfUniverseCardProps {
   initialAssetClassFilter?: string;
   initialIssuerFilter?: string;
   initialAumFilter?: string;
+  initialExpenseFilter?: string;
   syncTypeParam?: boolean;
   enableLoadMore?: boolean;
 }
@@ -142,6 +175,7 @@ export default function EtfUniverseCard({
   initialAssetClassFilter = "전체",
   initialIssuerFilter = "전체",
   initialAumFilter,
+  initialExpenseFilter,
   syncTypeParam = false,
   enableLoadMore = false,
 }: EtfUniverseCardProps) {
@@ -154,6 +188,7 @@ export default function EtfUniverseCard({
   const [assetClassFilter, setAssetClassFilter] = useState(initialAssetClassFilter);
   const [issuerFilter, setIssuerFilter] = useState(initialIssuerFilter);
   const [aumFilter, setAumFilter] = useState<EtfAumFilter>(aumFilterFromParam(initialAumFilter));
+  const [expenseFilter, setExpenseFilter] = useState<EtfExpenseFilter>(expenseFilterFromParam(initialExpenseFilter));
   const [typeFilter, setTypeFilter] = useState<EtfTypeFilter>(initialTypeFilter);
   const [newOnly, setNewOnly] = useState(initialNewOnly);
   const [expanded, setExpanded] = useState<{ key: string; count: number }>({ key: "", count: 0 });
@@ -191,6 +226,10 @@ export default function EtfUniverseCard({
   useEffect(() => {
     setAumFilter(aumFilterFromParam(initialAumFilter));
   }, [initialAumFilter]);
+
+  useEffect(() => {
+    setExpenseFilter(expenseFilterFromParam(initialExpenseFilter));
+  }, [initialExpenseFilter]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query), 180);
@@ -291,6 +330,7 @@ export default function EtfUniverseCard({
       .filter((row) => assetClassFilter === "전체" || cleanCategory(row.assetClass) === assetClassFilter)
       .filter((row) => issuerFilter === "전체" || issuerNameFromEtfName(row.issuer ?? row.name ?? row.ticker) === issuerFilter)
       .filter((row) => matchesAumFilter(row.aum, aumFilter))
+      .filter((row) => matchesExpenseFilter(row, expenseFilter))
       .filter((row) => !newOnly || row.is_new === true)
       .filter((row) => {
         if (typeFilter === "레버리지") return isLeveragedEtf(row);
@@ -305,13 +345,13 @@ export default function EtfUniverseCard({
         }
         return (b.aum ?? -1) - (a.aum ?? -1);
       });
-  }, [assetClassFilter, aumFilter, category, debouncedQuery, issuerFilter, newOnly, rows, typeFilter]);
+  }, [assetClassFilter, aumFilter, category, debouncedQuery, expenseFilter, issuerFilter, newOnly, rows, typeFilter]);
 
   const total = doc?.counts?.records ?? rows.length;
   const newCount = snapshot?.newEtfs?.counts?.records ?? snapshot?.newEtfs?.counts?.rows ?? (snapshot?.newEtfs?.records ?? []).length;
   const displayTotal = newOnly ? newCount : total;
   const visibleLimit = newOnly ? Math.max(limit, 100) : limit;
-  const filterKey = `${debouncedQuery.trim()}|${category}|${assetClassFilter}|${issuerFilter}|${aumFilter}|${typeFilter}|${newOnly ? "new" : "all"}|${visibleLimit}`;
+  const filterKey = `${debouncedQuery.trim()}|${category}|${assetClassFilter}|${issuerFilter}|${aumFilter}|${expenseFilter}|${typeFilter}|${newOnly ? "new" : "all"}|${visibleLimit}`;
   const visibleCount = enableLoadMore && expanded.key === filterKey
     ? Math.max(visibleLimit, expanded.count)
     : visibleLimit;
@@ -331,6 +371,7 @@ export default function EtfUniverseCard({
     assetClassFilter?: string;
     issuerFilter?: string;
     aumFilter?: EtfAumFilter;
+    expenseFilter?: EtfExpenseFilter;
   }) => {
     if (!syncTypeParam || typeof window === "undefined") return;
     const nextFilter = next.typeFilter ?? typeFilter;
@@ -338,6 +379,7 @@ export default function EtfUniverseCard({
     const nextAssetClass = next.assetClassFilter ?? assetClassFilter;
     const nextIssuer = next.issuerFilter ?? issuerFilter;
     const nextAum = next.aumFilter ?? aumFilter;
+    const nextExpense = next.expenseFilter ?? expenseFilter;
     const nextUrl = new URL(window.location.href);
     const param = ETF_TYPE_PARAM[nextFilter];
     if (param) nextUrl.searchParams.set("type", param);
@@ -351,6 +393,9 @@ export default function EtfUniverseCard({
     const aumParam = ETF_AUM_PARAM[nextAum];
     if (aumParam) nextUrl.searchParams.set("aum", aumParam);
     else nextUrl.searchParams.delete("aum");
+    const feeParam = ETF_EXPENSE_PARAM[nextExpense];
+    if (feeParam) nextUrl.searchParams.set("fee", feeParam);
+    else nextUrl.searchParams.delete("fee");
     window.history.replaceState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
   };
 
@@ -372,7 +417,7 @@ export default function EtfUniverseCard({
         <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : doc?.screener_fetched_at ?? doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
       </div>
       <div className="panel-b">
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_150px_150px_180px_170px]">
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_140px_140px_170px_160px_150px]">
           <label className="sr-only" htmlFor="etf-universe-search">ETF 검색</label>
           <input
             id="etf-universe-search"
@@ -438,6 +483,21 @@ export default function EtfUniverseCard({
               <option key={item} value={item}>{item}</option>
             ))}
           </select>
+          <label className="sr-only" htmlFor="etf-universe-expense">보수율</label>
+          <select
+            id="etf-universe-expense"
+            value={expenseFilter}
+            onChange={(event) => {
+              const value = event.target.value as EtfExpenseFilter;
+              setExpenseFilter(value);
+              syncFilterParams({ expenseFilter: value });
+            }}
+            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
+          >
+            {Object.keys(ETF_EXPENSE_PARAM).map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
         </div>
         <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="ETF 유형">
           {typeOptions.map((option) => {
@@ -480,6 +540,7 @@ export default function EtfUniverseCard({
             {assetClassFilter !== "전체" ? <span> · 자산군 {assetClassFilter}</span> : null}
             {issuerFilter !== "전체" ? <span> · 운용사 {issuerFilter}</span> : null}
             {aumFilter !== "전체" ? <span> · 운용자산 {aumFilter}</span> : null}
+            {expenseFilter !== "전체" ? <span> · 보수율 {expenseFilter}</span> : null}
           </div>
         ) : null}
       </div>
@@ -502,7 +563,10 @@ export default function EtfUniverseCard({
                   <div className="n">{row.name ?? ticker}</div>
                   <div className="tk">{formatTypeHint(row)}</div>
                 </span>
-                <span className="pc num neutral">{formatAum(row)}</span>
+                <span className="pc num neutral">
+                  {formatAum(row)}
+                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-slate-400">보수 {formatPercentPointsValue(expenseRatioValue(row))}</small> : null}
+                </span>
               </TransitionLink>
             );
           })

@@ -6,6 +6,18 @@ export interface EtfUniverseRecord {
   issuer?: string;
   aum_raw?: string;
   aum?: number;
+  expenseRatio?: string | number | null;
+  expense_ratio?: number | null;
+  dividendYield?: string | number | null;
+  dividend_yield?: number | null;
+  performance?: {
+    tr1m?: number | null;
+    trYTD?: number | null;
+    tr1y?: number | null;
+    cagr5y?: number | null;
+    cagr10y?: number | null;
+    cagrMAX?: number | null;
+  } | null;
   inceptionDate?: string;
   price?: number;
   change?: number;
@@ -104,6 +116,22 @@ function formatSignedPercent(value: number | null | undefined): string | null {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
+export function percentPointsValue(value: string | number | null | undefined): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = Number(value.replace(/[$,%\s,]/g, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function expenseRatioValue(row: EtfUniverseRecord): number | null {
+  return percentPointsValue(row.expense_ratio ?? row.expenseRatio);
+}
+
+export function formatPercentPointsValue(value: number | null | undefined, digits = 2): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return `${value.toFixed(digits)}%`;
+}
+
 function formatCompactVolume(value: number | null | undefined): string | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
@@ -198,6 +226,10 @@ export function formatTypeHint(row: EtfUniverseRecord): string {
   if (price) parts.push(`가격 ${price}`);
   if (change) parts.push(`변동률 ${change}`);
   if (volume) parts.push(`거래량 ${volume}`);
+  const expenseRatio = formatPercentPointsValue(expenseRatioValue(row));
+  if (expenseRatio) parts.push(`보수 ${expenseRatio}`);
+  const oneYearReturn = formatSignedPercent(row.performance?.tr1y ?? null);
+  if (oneYearReturn) parts.push(`1년 ${oneYearReturn}`);
   if (typeof row.holdings === "number" && Number.isFinite(row.holdings)) {
     parts.push(`보유 ${formatNumber(row.holdings)}`);
   }

@@ -78,6 +78,18 @@ ETF_CLASSIFICATION_ROW_KEYS = {
     "is_single_stock",
     "underlying",
 }
+ETF_DETAIL_ENRICHMENT_ROW_KEYS = ETF_CLASSIFICATION_ROW_KEYS | {
+    "expenseRatio",
+    "expense_ratio",
+    "dividendYield",
+    "dividend_yield",
+    "sharesOut",
+    "beta",
+    "inceptionDate",
+    "provider_page",
+    "etf_website",
+    "performance",
+}
 
 DEFAULT_ETFS = [
     "SPY", "QQQ", "DIA", "IWM", "VOO", "VTI", "SMH", "SOXX",
@@ -883,25 +895,52 @@ def classify_etf(row: dict | None = None, overview: dict | None = None, holdings
 
 
 def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = None) -> dict:
-    base_row = {key: value for key, value in row.items() if key not in ETF_CLASSIFICATION_ROW_KEYS}
+    base_row = {key: value for key, value in row.items() if key not in ETF_DETAIL_ENRICHMENT_ROW_KEYS}
     ticker = row_ticker(base_row)
     payload = (detail_index or {}).get(ticker or "") or {}
     raw_overview = (payload.get("raw") or {}).get("overview") if isinstance(payload, dict) else {}
     overview = raw_overview if isinstance(raw_overview, dict) else {}
+    normalized_overview = (payload.get("normalized") or {}).get("overview") if isinstance(payload, dict) else {}
+    normalized_overview = normalized_overview if isinstance(normalized_overview, dict) else {}
     normalized_holdings = ((payload.get("normalized") or {}).get("holdings") or []) if isinstance(payload, dict) else []
     classification = classify_etf(base_row, overview=overview, holdings=normalized_holdings)
-    if not (
+
+    source_provider = payload.get("source_provider") if isinstance(payload, dict) else None
+    def percent_points(value):
+        parsed = parse_percent(value)
+        if parsed is None:
+            return None
+        if source_provider == "yahoo_finance" and isinstance(value, (int, float)) and 0 < parsed <= 1:
+            return parsed * 100
+        return parsed
+
+    performance = overview.get("performance") if isinstance(overview.get("performance"), dict) else None
+    detail_fields = {
+        "expenseRatio": normalized_overview.get("expenseRatio"),
+        "expense_ratio": percent_points(normalized_overview.get("expenseRatio")),
+        "dividendYield": normalized_overview.get("dividendYield"),
+        "dividend_yield": percent_points(normalized_overview.get("dividendYield")),
+        "sharesOut": normalized_overview.get("sharesOut"),
+        "beta": normalized_overview.get("beta"),
+        "inceptionDate": normalized_overview.get("inception"),
+        "provider_page": normalized_overview.get("provider_page"),
+        "etf_website": normalized_overview.get("etf_website"),
+        "performance": performance,
+    }
+    enriched = {
+        **base_row,
+        **{key: value for key, value in detail_fields.items() if value is not None},
+    }
+
+    if (
         classification["is_leveraged"]
         or classification["is_inverse"]
         or classification["is_single_stock"]
         or classification["leverage_factor"] is not None
         or classification["underlying"]
     ):
-        return base_row
-    return {
-        **base_row,
-        "classification": classification,
-    }
+        enriched["classification"] = classification
+    return enriched
 
 
 def etf_classification_counts(records: list[dict]) -> dict:
@@ -909,6 +948,15 @@ def etf_classification_counts(records: list[dict]) -> dict:
         "leveraged": sum(1 for row in records if (row.get("classification") or {}).get("is_leveraged") or row.get("is_leveraged")),
         "inverse": sum(1 for row in records if (row.get("classification") or {}).get("is_inverse") or row.get("is_inverse")),
         "single_stock": sum(1 for row in records if (row.get("classification") or {}).get("is_single_stock") or row.get("is_single_stock")),
+    }
+
+
+def etf_detail_enrichment_counts(records: list[dict]) -> dict:
+    return {
+        "expense_ratio": sum(1 for row in records if parse_percent(row.get("expense_ratio")) is not None or parse_percent(row.get("expenseRatio")) is not None),
+        "performance": sum(1 for row in records if isinstance(row.get("performance"), dict) and len(row["performance"]) > 0),
+        "inception": sum(1 for row in records if row.get("inceptionDate")),
+        "provider_link": sum(1 for row in records if row.get("etf_website") or row.get("provider_page")),
     }
 
 
@@ -1201,6 +1249,7 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
             "pages": len(pages),
             "duplicate_rows_removed": sum(page["record_count"] for page in pages) - len(records),
             "classification": classification_counts,
+            "detail_enrichment": etf_detail_enrichment_counts(records),
         },
         "warnings": warnings,
         "pages": pages,
@@ -2052,6 +2101,7 @@ def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | 
     payload["records"] = enriched
     counts = payload.get("counts") if isinstance(payload.get("counts"), dict) else {}
     counts["classification"] = etf_classification_counts(enriched)
+    counts["detail_enrichment"] = etf_detail_enrichment_counts(enriched)
     payload["counts"] = counts
     payload["classification_refreshed_at"] = now_iso()
     write_payload(rel_path, payload, mirror_public)

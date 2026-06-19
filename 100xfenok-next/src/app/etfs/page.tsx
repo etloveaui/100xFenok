@@ -69,6 +69,7 @@ export default async function EtfsPage({ searchParams }: Props) {
             initialAssetClassFilter={firstParam(params.asset) ?? "전체"}
             initialIssuerFilter={firstParam(params.issuer) ?? "전체"}
             initialAumFilter={firstParam(params.aum)}
+            initialExpenseFilter={firstParam(params.fee)}
             syncTypeParam
             enableLoadMore
           />

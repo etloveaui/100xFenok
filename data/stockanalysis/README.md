@@ -55,10 +55,13 @@ this joined classification over name-pattern inference when it is present. The
 ETF center summary card also surfaces these joined hints for new leveraged,
 single-stock, and inverse ETFs. `/api/data/stockanalysis/etf-universe` joins
 `etf_universe` with `etf_screener` into a slim ETF catalog so `/etfs` can show
-price, change, volume, holdings, and classification fields without downloading
-the full screener surface separately. The snapshot API also uses `etf_screener`
-for the `/etfs` AUM, volume, and absolute-change leaderboards so the lightweight
-ETF list is visible before users open a detail page.
+price, change, volume, holdings, expense ratio, performance, and classification
+fields without downloading the full screener surface separately. The catalog
+refresh promotes expense ratio, dividend yield, inception date, provider links,
+and return/CAGR metrics from local ETF detail payloads when those details
+already exist. The snapshot API also uses `etf_screener` for the `/etfs` AUM,
+expense-ratio, volume, and absolute-change leaderboards so the lightweight ETF
+list is visible before users open a detail page.
 
 `npm --prefix 100xfenok-next run qa:etf-universe` is the serverless contract
 gate for that joined ETF catalog. It rebuilds the same universe+screener merge
