@@ -185,13 +185,13 @@ export default function SlickchartsDiscoveryCard() {
       <div className="panel-h">
         <h2>수익률 리더보드</h2>
         <span className="desc">{asOf} · {doc.universe?.uniqueCount ?? "—"}개 종목</span>
-        <div className="seg" style={{ marginLeft: "auto" }}>
+        <div className="seg ml-auto">
           {[
             ["movers", "급등락"],
             ["returns", "수익률"],
             ["dividends", "배당"],
           ].map(([key, label]) => (
-            <button key={key} type="button" className={tab === key ? "on" : ""} onClick={() => setTab(key as DiscoveryTab)}>
+            <button key={key} type="button" aria-pressed={tab === key} className={tab === key ? "on" : ""} onClick={() => setTab(key as DiscoveryTab)}>
               {label}
             </button>
           ))}

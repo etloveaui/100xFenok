@@ -108,6 +108,9 @@ function loadWorkbench(): Promise<WorkbenchData> {
   ]).then(([actions, revisions, discovery]) => {
     cache = { actions, revisions, discovery };
     return cache;
+  }).catch(() => {
+    pending = null;
+    return { actions: null, revisions: null, discovery: null };
   });
   return pending;
 }
@@ -310,8 +313,8 @@ export default function StockWorkbenchCard() {
                 onClick={() => setTab(item.key)}
                 className={`min-h-9 rounded-full border px-3 text-[11px] font-black tracking-wide transition ${
                   tab === item.key
-                    ? "border-brand-interactive bg-brand-interactive text-white"
-                    : "border-slate-200 bg-white text-slate-500 hover:border-brand-interactive hover:text-brand-interactive"
+                    ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+                    : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
                 }`}
               >
                 {item.label} · {fmtCount(item.count)}
@@ -334,8 +337,8 @@ export default function StockWorkbenchCard() {
                     onClick={() => setActionBucket(key as ActionBucket)}
                     className={`min-h-8 rounded-full border px-2.5 text-[10px] font-black transition ${
                       actionBucket === key
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-400"
+                        ? "border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
+                        : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-3)]"
                     }`}
                   >
                     {label} · {fmtCount(actionBucketCounts[key])}

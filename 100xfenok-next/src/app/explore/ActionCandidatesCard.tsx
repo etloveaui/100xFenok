@@ -145,20 +145,20 @@ export default function ActionCandidatesCard() {
       <div className="panel-h">
         <h2>투자 후보</h2>
         <span className="desc">{doc.coverage?.indexed_stock_count ?? "—"}개 · 13F {doc.coverage?.conviction_matched_count ?? "—"}건</span>
-        <div className="seg" style={{ marginLeft: "auto" }}>
+        <div className="seg ml-auto">
           {[
             ["smart_money", "기관·고수"],
             ["value_momentum", "밸류+모멘텀"],
             ["index_core", "지수 핵심"],
           ].map(([key, label]) => (
-            <button key={key} type="button" className={tab === key ? "on" : ""} onClick={() => setTab(key as ActionTab)}>
+            <button key={key} type="button" aria-pressed={tab === key} className={tab === key ? "on" : ""} onClick={() => setTab(key as ActionTab)}>
               {label}
             </button>
           ))}
         </div>
       </div>
       <div className="mv-col">
-        {rows.map((row) => (
+        {rows.length > 0 ? rows.map((row) => (
           <TransitionLink key={row.symbol} href={`/stock/${encodeURIComponent(row.symbol)}`} className="mv-row">
             <span className="co">
               <div className="n">{row.company || row.symbol}</div>
@@ -172,11 +172,19 @@ export default function ActionCandidatesCard() {
             </span>
             <span className={`pc num ${tone(row.actionBucket, row.confidenceLabel, row.lowEvidence === true)}`}>
               {fmtScore(row.actionScore)}
-              <small style={{ display: "block", fontSize: 10, color: "var(--c-ink-3)" }}>{confidenceText(row.confidenceLabel)}</small>
-              <small style={{ display: "block", fontSize: 10, color: "var(--c-ink-3)" }}>{fmtPct(row.return12m)}</small>
+              <small className="block text-[10px] text-[var(--c-ink-3)]">{confidenceText(row.confidenceLabel)}</small>
+              <small className="block text-[10px] text-[var(--c-ink-3)]">{fmtPct(row.return12m)}</small>
             </span>
           </TransitionLink>
-        ))}
+        )) : (
+          <div className="mv-row">
+            <span className="co">
+              <div className="n">선택한 분류에 표시할 종목이 없습니다</div>
+              <div className="tk">다른 탭을 선택해 주세요</div>
+            </span>
+            <span className="pc num neutral">—</span>
+          </div>
+        )}
       </div>
       <div className="panel-foot">분기말 종가 {doc.coverage?.quarter_close_ticker_count ?? "—"}개 · 가격·수익률·기관 동향·자동 계산 점수 반영</div>
     </section>

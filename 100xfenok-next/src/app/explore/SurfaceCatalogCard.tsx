@@ -34,12 +34,12 @@ function loadCatalogData(): Promise<StockanalysisManifest | null> {
       catalogCache = payload;
       return payload;
     })
-    .catch(() => null);
+    .catch(() => { catalogPending = null; return null; });
   return catalogPending;
 }
 
 function fmtNumber(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "-";
+  return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
 }
 
 function groupLabel(value: string | null | undefined): string {
@@ -175,7 +175,7 @@ export default function SurfaceCatalogCard() {
             </span>
             <span className="pc num neutral">...</span>
           </div>
-        ) : (
+        ) : grouped.length > 0 ? (
           grouped.map((bucket) => (
             <div key={bucket.group} className="mv-row">
               <span className="co">
@@ -187,13 +187,20 @@ export default function SurfaceCatalogCard() {
               <span className="pc num neutral">{fmtNumber(bucket.rows)}</span>
             </div>
           ))
+        ) : (
+          <div className="mv-row">
+            <span className="co">
+              <div className="n">표시할 데이터 항목이 없습니다</div>
+            </span>
+            <span className="pc num neutral">—</span>
+          </div>
         )}
       </div>
 
       {grouped.length ? (
         <div className="panel-foot">
           <span>{fmtNumber(grouped.reduce((sum, bucket) => sum + bucket.items.length, 0))}개 데이터 항목</span>
-          <a href="/data/stockanalysis/surfaces/index.json" style={{ marginLeft: 8, fontWeight: 900 }}>
+          <a href="/data/stockanalysis/surfaces/index.json" style={{ marginLeft: "var(--s2)", fontWeight: 900 }}>
             원본 JSON
           </a>
         </div>

@@ -202,7 +202,7 @@ export default function DataCoverageCard() {
       </div>
       <div className="panel-foot">
         소스 비교 경고 {fmtNumber(parityWarnings)}
-        <TransitionLink href="/admin/data-lab" style={{ marginLeft: 8, fontWeight: 900 }}>
+        <TransitionLink href="/admin/data-lab" style={{ marginLeft: "var(--s2)", fontWeight: 900 }}>
           데이터 랩
         </TransitionLink>
       </div>

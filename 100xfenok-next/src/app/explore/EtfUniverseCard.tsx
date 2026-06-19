@@ -427,14 +427,14 @@ export default function EtfUniverseCard({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="티커 또는 이름 검색"
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           />
           <label className="sr-only" htmlFor="etf-universe-category">카테고리</label>
           <select
             id="etf-universe-category"
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
+            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체</option>
             {categories.map((item) => (
@@ -449,7 +449,7 @@ export default function EtfUniverseCard({
               setAssetClassFilter(event.target.value);
               syncFilterParams({ assetClassFilter: event.target.value });
             }}
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
+            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체 자산군</option>
             {assetClasses.map((item) => (
@@ -464,7 +464,7 @@ export default function EtfUniverseCard({
               setIssuerFilter(event.target.value);
               syncFilterParams({ issuerFilter: event.target.value });
             }}
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
+            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체 운용사</option>
             {issuers.map((item) => (
@@ -480,7 +480,7 @@ export default function EtfUniverseCard({
               setAumFilter(value);
               syncFilterParams({ aumFilter: value });
             }}
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
+            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             {Object.keys(ETF_AUM_PARAM).map((item) => (
               <option key={item} value={item}>{item}</option>
@@ -495,7 +495,7 @@ export default function EtfUniverseCard({
               setExpenseFilter(value);
               syncFilterParams({ expenseFilter: value });
             }}
-            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive"
+            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             {Object.keys(ETF_EXPENSE_PARAM).map((item) => (
               <option key={item} value={item}>{item}</option>
@@ -513,8 +513,8 @@ export default function EtfUniverseCard({
                 aria-pressed={selected}
                 className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
                   selected
-                    ? "border-brand-interactive bg-brand-interactive text-white shadow-sm"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
+                    ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white shadow-sm"
+                    : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
                 }`}
               >
                 <span>{option.label}</span>
@@ -528,8 +528,8 @@ export default function EtfUniverseCard({
             aria-pressed={newOnly}
             className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
               newOnly
-                ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
-                : "border-slate-200 bg-white text-slate-600 hover:border-emerald-600 hover:text-emerald-700"
+                ? "border-[var(--c-up)] bg-[var(--c-up)] text-white shadow-sm"
+                : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-up)] hover:text-[var(--c-up)]"
             }`}
           >
             <span>신규 상장</span>
@@ -538,8 +538,8 @@ export default function EtfUniverseCard({
         </div>
 
         {topCategory ? (
-          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
-            가장 많은 분류 <span className="text-slate-800">{topCategory.name}</span> · {formatNumber(topCategory.count)}개
+          <div className="mt-3 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
+            가장 많은 분류 <span className="text-[var(--c-ink)]">{topCategory.name}</span> · {formatNumber(topCategory.count)}개
             {assetClassFilter !== "전체" ? <span> · 자산군 {assetClassFilter}</span> : null}
             {issuerFilter !== "전체" ? <span> · 운용사 {issuerFilter}</span> : null}
             {aumFilter !== "전체" ? <span> · 운용자산 {aumFilter}</span> : null}
@@ -568,7 +568,7 @@ export default function EtfUniverseCard({
                 </span>
                 <span className="pc num neutral">
                   {formatAum(row)}
-                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-slate-400">보수 {formatPercentPointsValue(expenseRatioValue(row))}</small> : null}
+                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-[var(--c-ink-4)]">보수 {formatPercentPointsValue(expenseRatioValue(row))}</small> : null}
                 </span>
               </TransitionLink>
             );

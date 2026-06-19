@@ -108,10 +108,19 @@ export default function MarketStructureIndexCard() {
             <span className="pc num up">{fmt(topConcentration.top3Weight, "%")}</span>
           </div>
         ) : null}
+        {!change && !topConcentration ? (
+          <div className="mv-row">
+            <span className="co">
+              <div className="n">표시할 구조 데이터가 없습니다</div>
+              <div className="tk">리밸런싱·집중도 정보가 아직 준비 중입니다</div>
+            </span>
+            <span className="pc num neutral">—</span>
+          </div>
+        ) : null}
       </div>
       <div className="panel-foot">
         CNN 약한 축 {weakSentiment.map((item) => `${labelComponent(item.id)} ${fmt(item.value)}`).join(" · ") || "—"}
-        <TransitionLink href="/market-valuation" style={{ marginLeft: 8, fontWeight: 900 }}>
+        <TransitionLink href="/market-valuation" style={{ marginLeft: "var(--s2)", fontWeight: 900 }}>
           시장 상세
         </TransitionLink>
       </div>

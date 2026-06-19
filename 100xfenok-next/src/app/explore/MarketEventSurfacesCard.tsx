@@ -120,6 +120,9 @@ function loadRadarData(): Promise<SurfaceRadarData> {
   ]).then(([manifest, earnings, actions, splits, premarket, afterhours, calendar, prevValues]) => {
     radarCache = { manifest, earnings, actions, splits, premarket, afterhours, calendar, prevValues };
     return radarCache;
+  }).catch(() => {
+    radarPending = null;
+    return { manifest: null, earnings: null, actions: null, splits: null, premarket: null, afterhours: null, calendar: null, prevValues: null };
   });
   return radarPending;
 }
@@ -362,7 +365,7 @@ export default function MarketEventSurfacesCard() {
       </div>
 
       {loaded ? (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -371,8 +374,8 @@ export default function MarketEventSurfacesCard() {
               onClick={() => setActiveTab(tab.key)}
               className={`min-h-9 rounded-full border px-3 text-[11px] font-black uppercase tracking-wide transition ${
                 activeTab === tab.key
-                  ? "border-brand-interactive bg-brand-interactive text-white"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-brand-interactive hover:text-brand-interactive"
+                  ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+                  : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
               }`}
             >
               {tab.label} · {fmtNumber(tab.count)}
