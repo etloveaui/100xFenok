@@ -854,7 +854,7 @@ const Renderer = (function() {
     const total = Number(report.primary_stockanalysis_detail_files || 0);
     const missingByPeriod = report.missing_by_period || {};
     const plan = report.incremental_plan || {};
-    const planMatches = plan.matches_current_gap === true;
+    const planMatches = plan.matches_current_gap === true && plan.matches_required_periods === true;
     const marketFacts3y = report.market_facts_return_3y || {};
     const dispatchInputs = report.recommended_dispatch?.inputs || {};
 
@@ -872,7 +872,8 @@ const Renderer = (function() {
         ['커버리지', `${Formatters.formatNumber(report.coverage_pct || 0, 2)}%`],
         ['월간 3년 누락', missingByPeriod.monthly_3y],
         ['월간 5년 누락', missingByPeriod.monthly_5y],
-        ['계획과 일치', planMatches ? '일치' : '불일치'],
+        ['수량 계획 일치', plan.matches_current_gap === true ? '일치' : '불일치'],
+        ['기간 계획 일치', plan.matches_required_periods === true ? '일치' : '불일치'],
         ['계획 후보', plan.counts?.history_gap ?? '-'],
         ['추천 청크', dispatchInputs.incremental_etf_limit || '-'],
         ['시장 팩트 3년', `${Formatters.formatNumber(marketFacts3y.etf || 0, 0)} / ${Formatters.formatNumber(marketFacts3y.etf_denominator || 0, 0)}`]

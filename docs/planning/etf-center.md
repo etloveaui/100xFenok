@@ -155,7 +155,9 @@ Implementation pointers:
   `100xfenok-next/` before dispatching a live history refresh. It directly
   scans local primary StockAnalysis ETF detail files, compares the current
   missing-history count to `incremental_plan_latest.json`, and prints the
-  recommended workflow inputs without making network calls.
+  recommended workflow inputs without making network calls. Use
+  `-- --required-history-periods <comma-list>` when the workflow dispatch is
+  intentionally staged to a subset of periods.
 - **History gap report artifact**: run
   `npm run qa:history-gap -- --write-report` to persist the same direct-scan
   result to `data/stockanalysis/backfill/history_gap_report_latest.json` and
@@ -274,6 +276,7 @@ Representative ticker contracts:
 | Chart granularity | code-ready / data backfill needed | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files still mostly hold the 1Y keys, so 3Y/5Y charts open progressively after detail backfill. |
 | Missing multi-year history UX | done / data-dependent | ETF detail pages show the current 1Y chart/table and a short pending-data note when 3Y/5Y history ranges are not present, so disabled ranges are not mistaken for a broken chart. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
+| ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, so a transient route/API failure can recover on a later retry or navigation. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |
 
 ## 7. Related Files

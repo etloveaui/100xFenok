@@ -182,7 +182,12 @@ jobs:
         run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
 
       - name: Build ETF history-gap report
-        run: npm --prefix 100xfenok-next run qa:history-gap -- --write-report
+        env:
+          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
+        run: |
+          ARGS="--write-report"
+          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+          npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
 
       - name: Update manifest
         run: python3 scripts/update-manifest.py
@@ -198,11 +203,15 @@ jobs:
           python3 -m unittest scripts/test_audit_market_data.py
 
       - name: Validate StockAnalysis UI QA
+        env:
+          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
         run: |
           npm --prefix 100xfenok-next run qa:etf-universe
           npm --prefix 100xfenok-next run qa:surface-consumers
           npm --prefix 100xfenok-next run qa:market-audit
-          npm --prefix 100xfenok-next run qa:history-gap
+          ARGS=""
+          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+          npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
           npm --prefix 100xfenok-next run qa:copy
 
       - name: Commit and push

@@ -1,6 +1,6 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-06-19T06:23:32.989Z",
+  "generated_at": "2026-06-19T06:33:49.446Z",
   "required_history_periods": [
     "monthly_3y",
     "monthly_5y"
@@ -93,6 +93,10 @@
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
+    "required_history_periods": [
+      "monthly_3y",
+      "monthly_5y"
+    ],
     "counts": {
       "etfs_planned": 4579,
       "incremental_selected": 4579,
@@ -107,7 +111,8 @@
       "AAA",
       "AAAA"
     ],
-    "matches_current_gap": true
+    "matches_current_gap": true,
+    "matches_required_periods": true
   },
   "market_facts_return_3y": {
     "etf": 229,

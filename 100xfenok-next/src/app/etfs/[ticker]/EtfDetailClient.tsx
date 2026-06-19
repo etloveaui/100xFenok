@@ -148,11 +148,15 @@ function loadEtfPayload(ticker: string): Promise<EtfPayload | null> {
     .then((res) => (res.ok ? res.json() : null))
     .then((payload) => {
       const parsed = asRecord(payload) ? payload as EtfPayload : null;
-      etfCache[symbol] = parsed;
+      if (parsed) {
+        etfCache[symbol] = parsed;
+      } else {
+        delete etfCache[symbol];
+      }
       return parsed;
     })
     .catch(() => {
-      etfCache[symbol] = null;
+      delete etfCache[symbol];
       return null;
     });
   etfCache[symbol] = request;
@@ -170,11 +174,15 @@ function loadMarketFacts(ticker: string): Promise<MarketFactsPayload | null> {
     .then((res) => (res.ok ? res.json() : null))
     .then((payload) => {
       const parsed = asRecord(payload) ? payload as MarketFactsPayload : null;
-      factsCache[symbol] = parsed;
+      if (parsed) {
+        factsCache[symbol] = parsed;
+      } else {
+        delete factsCache[symbol];
+      }
       return parsed;
     })
     .catch(() => {
-      factsCache[symbol] = null;
+      delete factsCache[symbol];
       return null;
     });
   factsCache[symbol] = request;

@@ -36,6 +36,8 @@ const ACTIVE_ROUTE_PREFIXES = [
   "/stock/[ticker]",
 ];
 
+const ALLOWED_HISTORY_PERIODS = new Set(["daily_1y", "weekly_1y", "monthly_1y", "weekly_3y", "monthly_3y", "monthly_5y"]);
+
 const REQUIRED_RENDERED_SECTIONS = [
   "ETF 상세 수집",
   "가격 제공",
@@ -53,7 +55,8 @@ const REQUIRED_RENDERED_SECTIONS = [
   "계획 후보",
   "ETF 히스토리 사전 점검",
   "직접 스캔",
-  "계획과 일치",
+  "수량 계획 일치",
+  "기간 계획 일치",
   "실행/계획",
   "실행 증거 + 보강 계획",
   "계획: 다년 히스토리",
@@ -185,8 +188,10 @@ function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
   assert(incrementalPlan?.operation === "incremental_etf_backfill_plan", "ETF incremental plan: operation must be incremental_etf_backfill_plan", errors);
   assert(incrementalPlan?.mode === "history_gaps_only", "ETF incremental plan: mode must be history_gaps_only", errors);
   assert(incrementalPlan?.policy?.network === "none", "ETF incremental plan: policy.network must remain none", errors);
-  assert(requiredPeriods.includes("monthly_3y"), "ETF incremental plan: monthly_3y must be required", errors);
-  assert(requiredPeriods.includes("monthly_5y"), "ETF incremental plan: monthly_5y must be required", errors);
+  assert(requiredPeriods.length > 0, "ETF incremental plan: at least one history period must be required", errors);
+  for (const period of requiredPeriods) {
+    assert(ALLOWED_HISTORY_PERIODS.has(period), `ETF incremental plan: unsupported required history period ${period}`, errors);
+  }
   assert(plannedEtfs.length === Number(planCounts.etfs_planned || 0), "ETF incremental plan: etfs length must match etfs_planned", errors);
   assert(Number(planCounts.incremental_selected || 0) === Number(planCounts.etfs_planned || 0), "ETF incremental plan: incremental_selected must match etfs_planned", errors);
   assert(Number(nestedCounts.selected || 0) === Number(planCounts.incremental_selected || 0), "ETF incremental plan: nested selected count must match top-level selected count", errors);
@@ -198,18 +203,21 @@ function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
 
 function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) {
   const requiredPeriods = Array.isArray(report?.required_history_periods) ? report.required_history_periods : [];
+  const planRequiredPeriods = Array.isArray(incrementalPlan?.required_history_periods) ? incrementalPlan.required_history_periods : [];
   const missingByPeriod = report?.missing_by_period || {};
   const planCounts = incrementalPlan?.counts || {};
   const auditCounts = audit?.incremental_etf?.counts || {};
 
   assert(report?.schema_version === "stockanalysis-history-gap-report/v1", "ETF history gap report: schema version is required", errors);
   assert(typeof report?.generated_at === "string" && report.generated_at.length >= 10, "ETF history gap report: generated_at is required", errors);
-  assert(requiredPeriods.includes("monthly_3y"), "ETF history gap report: monthly_3y must be required", errors);
-  assert(requiredPeriods.includes("monthly_5y"), "ETF history gap report: monthly_5y must be required", errors);
+  assert(requiredPeriods.length > 0, "ETF history gap report: at least one required history period is required", errors);
+  assert(requiredPeriods.join(",") === planRequiredPeriods.join(","), "ETF history gap report: required periods must match incremental plan", errors);
   assert(Number(report?.primary_stockanalysis_detail_files || 0) > 0, "ETF history gap report: primary detail count must be positive", errors);
   assert(Number(report?.missing_required_history ?? -1) >= 0, "ETF history gap report: missing history count is required", errors);
-  assert(Number(missingByPeriod.monthly_3y ?? -1) >= 0, "ETF history gap report: monthly_3y missing count is required", errors);
-  assert(Number(missingByPeriod.monthly_5y ?? -1) >= 0, "ETF history gap report: monthly_5y missing count is required", errors);
+  for (const period of requiredPeriods) {
+    assert(ALLOWED_HISTORY_PERIODS.has(period), `ETF history gap report: unsupported required history period ${period}`, errors);
+    assert(Number(missingByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} missing count is required`, errors);
+  }
   assert(report?.incremental_plan?.matches_current_gap === true, "ETF history gap report: plan must match current direct scan", errors);
   assert(Number(report?.missing_required_history || 0) === Number(planCounts.history_gap || 0), "ETF history gap report: missing count must match incremental plan history_gap", errors);
   assert(Number(report?.missing_required_history || 0) === Number(auditCounts.plan_history_gap || 0), "ETF history gap report: missing count must match market audit plan_history_gap", errors);
