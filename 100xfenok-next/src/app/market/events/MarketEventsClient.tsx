@@ -56,6 +56,14 @@ interface IndustryMapRow {
   searchText: string;
 }
 
+interface LocalIndustrySurface {
+  id: string;
+  title: string;
+  description: string;
+  doc: SurfaceDoc | null | undefined;
+  rows: EventRow[];
+}
+
 interface EventData {
   earnings: SurfaceDoc;
   actions: SurfaceDoc;
@@ -344,6 +352,39 @@ function filterIndustryRows(rows: IndustryMapRow[], query: string, trend: Indust
     });
 }
 
+function hasIndustryConstituentDetail(row: IndustryMapRow | null | undefined): boolean {
+  return row?.name.toLowerCase() === "semiconductors";
+}
+
+function industryDetailStatus(row: IndustryMapRow | null | undefined): string {
+  if (!row) return "-";
+  return hasIndustryConstituentDetail(row) ? "구성종목 상세 있음" : "요약만 제공";
+}
+
+function industryConstituentRows(data: EventData | null, row: IndustryMapRow | null | undefined): EventRow[] {
+  if (!row || !hasIndustryConstituentDetail(row)) return [];
+  return rowsOf(data?.semiconductors);
+}
+
+function localIndustrySurfaces(data: EventData | null): LocalIndustrySurface[] {
+  return [
+    {
+      id: "technology",
+      title: "기술 섹터",
+      description: "섹터 단위 구성종목 표본",
+      doc: data?.technology,
+      rows: rowsOf(data?.technology),
+    },
+    {
+      id: "semiconductors",
+      title: "반도체 산업",
+      description: "산업 단위 구성종목 상세",
+      doc: data?.semiconductors,
+      rows: rowsOf(data?.semiconductors),
+    },
+  ];
+}
+
 function downloadIndustryCsv(rows: IndustryMapRow[]) {
   const header = ["산업", "종목 수", "시가총액", "배당수익률", "PER", "순이익률", "1일 변화", "1년 변화", "참고 링크"];
   const lines = [
@@ -398,6 +439,33 @@ function EmptyRows({ label }: { label: string }) {
         <div className="tk">{label}</div>
       </span>
       <span className="pc num neutral">-</span>
+    </div>
+  );
+}
+
+function IndustryConstituentList({
+  rows,
+  limit = 8,
+  emptyLabel,
+}: {
+  rows: EventRow[];
+  limit?: number;
+  emptyLabel: string;
+}) {
+  const visible = rows.slice(0, limit);
+  return (
+    <div className="mv-col">
+      {visible.length ? visible.map((row, index) => {
+        const symbol = rowSymbol(row);
+        return makeRow(
+          row,
+          `${symbol || index + 1} · ${text(row.company_name)}`,
+          `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`,
+          text(row.market_cap),
+          symbol ? stockHref(symbol) : undefined,
+          pctClass(row.pct_change),
+        );
+      }) : <EmptyRows label={emptyLabel} />}
     </div>
   );
 }
@@ -1184,6 +1252,7 @@ function IndustryPanel({
   const [industryTrend, setIndustryTrend] = useState<IndustryTrend>(industryTrendFromParam(initialTrend));
   const [industrySort, setIndustrySort] = useState<IndustrySort>(industrySortFromParam(initialSort));
   const [industryLimit, setIndustryLimit] = useState(36);
+  const [selectedIndustryId, setSelectedIndustryId] = useState("");
   const syncIndustryParams = useCallback((next: {
     query?: string;
     trend?: IndustryTrend;
@@ -1216,8 +1285,15 @@ function IndustryPanel({
   const profitableCount = useMemo(() => (
     industryRows.filter((row) => row.profitMargin !== null && row.profitMargin > 0).length
   ), [industryRows]);
-  const tech = rowsOf(data?.technology).slice(0, 8);
-  const semiconductors = rowsOf(data?.semiconductors).slice(0, 8);
+  const selectedIndustry = useMemo(() => (
+    industryRows.find((row) => row.id === selectedIndustryId)
+    ?? filteredIndustries[0]
+    ?? topIndustry
+    ?? null
+  ), [filteredIndustries, industryRows, selectedIndustryId, topIndustry]);
+  const selectedConstituents = useMemo(() => industryConstituentRows(data, selectedIndustry), [data, selectedIndustry]);
+  const localSurfaces = useMemo(() => localIndustrySurfaces(data), [data]);
+  const localSurfaceCount = localSurfaces.filter((surface) => surface.rows.length > 0).length;
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
       <section className="panel">
@@ -1243,6 +1319,13 @@ function IndustryPanel({
               <div className="text-[11px] font-black text-sky-600">순이익률 플러스</div>
               <div className="mt-1 text-sm font-black text-sky-800">{profitableCount.toLocaleString("ko-KR")}개 산업</div>
               <div className="mt-0.5 text-xs font-bold text-sky-700">순이익률 0% 초과</div>
+            </div>
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 md:col-span-3">
+              <div className="text-[11px] font-black text-indigo-600">로컬 구성종목 상세</div>
+              <div className="mt-1 text-sm font-black text-indigo-900">{localSurfaceCount.toLocaleString("ko-KR")}개 표면</div>
+              <div className="mt-0.5 text-xs font-bold text-indigo-700">
+                산업 전체 145개는 요약 기준, 구성종목 상세는 현재 기술 섹터·반도체만 제공
+              </div>
             </div>
           </div>
           <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_9rem_10rem_7rem]">
@@ -1302,10 +1385,11 @@ function IndustryPanel({
           </div>
         </div>
         <div className="panel-b pt-0">
-          <div className="grid auto-rows-[116px] gap-2 md:grid-cols-3 xl:grid-cols-4">
+          <div className="grid auto-rows-[132px] gap-2 md:grid-cols-3 xl:grid-cols-4">
             {visibleIndustries.length ? visibleIndustries.map((row) => {
               const tone = positiveNegativeClass(row.oneYearChange);
               const trendLabel = tone === "up" ? "상승" : tone === "down" ? "하락" : "보합";
+              const selected = selectedIndustry?.id === row.id;
               const spanClass = row.marketCap !== null && row.marketCap >= 5_000_000_000_000
                 ? "md:col-span-2 md:row-span-2"
                 : row.marketCap !== null && row.marketCap >= 1_000_000_000_000
@@ -1316,13 +1400,16 @@ function IndustryPanel({
                 : tone === "down"
                   ? "border-rose-200 bg-rose-50 text-rose-950"
                   : "border-slate-200 bg-slate-50 text-slate-800";
-              const tileClass = `flex min-w-0 flex-col justify-between rounded-lg border p-3 transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive ${toneClass} ${spanClass}`;
+              const tileClass = `flex min-w-0 flex-col justify-between rounded-lg border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive ${toneClass} ${spanClass} ${selected ? "ring-2 ring-brand-interactive" : ""}`;
               const tileContent = (
                 <>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-black">{row.name}</div>
                     <div className="mt-1 text-[11px] font-bold opacity-75">
                       {row.stocksRaw}개 종목 · 시총 {row.marketCapRaw}
+                    </div>
+                    <div className="mt-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-black opacity-90">
+                      {industryDetailStatus(row)}
                     </div>
                   </div>
                   <div>
@@ -1340,21 +1427,17 @@ function IndustryPanel({
                   </div>
                 </>
               );
-              return row.href ? (
-                <a
+              return (
+                <button
                   key={row.id}
-                  href={row.href}
-                  target="_blank"
-                  rel="noreferrer"
+                  type="button"
+                  onClick={() => setSelectedIndustryId(row.id)}
                   className={tileClass}
-                  aria-label={`${row.name} 산업 원문 열기`}
+                  aria-pressed={selected}
+                  aria-label={`${row.name} 산업 요약 보기`}
                 >
                   {tileContent}
-                </a>
-              ) : (
-                <div key={row.id} className={tileClass}>
-                  {tileContent}
-                </div>
+                </button>
               );
             }) : <EmptyRows label="조건에 맞는 산업이 없습니다." />}
           </div>
@@ -1372,28 +1455,80 @@ function IndustryPanel({
       <div className="grid gap-4">
         <section className="panel">
           <div className="panel-h">
-            <h2>기술 섹터 상위</h2>
-            <span className="desc">{countRows(data?.technology).toLocaleString("ko-KR")}개</span>
+            <h2>선택 산업</h2>
+            <span className="desc">{industryDetailStatus(selectedIndustry)}</span>
           </div>
-          <div className="mv-col">
-            {tech.length ? tech.map((row) => {
-              const symbol = rowSymbol(row);
-              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
-            }) : <EmptyRows label="기술 섹터 데이터가 없습니다." />}
+          <div className="panel-b">
+            {selectedIndustry ? (
+              <div className="grid gap-2">
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                  <div className="text-[11px] font-black text-slate-400">산업</div>
+                  <div className="mt-1 text-base font-black text-slate-900">{selectedIndustry.name}</div>
+                  <div className="mt-1 text-xs font-bold text-slate-500">
+                    {selectedIndustry.stocksRaw}개 종목 · 시총 {selectedIndustry.marketCapRaw} · PER {selectedIndustry.peRatioRaw}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="text-[10px] font-black text-slate-400">1일</div>
+                    <div className={`mt-1 text-sm font-black ${positiveNegativeClass(selectedIndustry.oneDayChange) === "down" ? "text-rose-700" : "text-emerald-700"}`}>
+                      {selectedIndustry.oneDayRaw}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="text-[10px] font-black text-slate-400">1년</div>
+                    <div className={`mt-1 text-sm font-black ${positiveNegativeClass(selectedIndustry.oneYearChange) === "down" ? "text-rose-700" : "text-emerald-700"}`}>
+                      {selectedIndustry.oneYearRaw}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="text-[10px] font-black text-slate-400">순이익률</div>
+                    <div className={`mt-1 text-sm font-black ${positiveNegativeClass(selectedIndustry.profitMargin) === "down" ? "text-rose-700" : "text-emerald-700"}`}>
+                      {selectedIndustry.profitMarginRaw}
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-800">
+                  {hasIndustryConstituentDetail(selectedIndustry)
+                    ? `구성종목 상세 ${selectedConstituents.length.toLocaleString("ko-KR")}개를 로컬 데이터로 제공합니다.`
+                    : "이 산업은 현재 요약 지표만 제공합니다. 전체 산업 구성종목 상세 수집은 별도 계약 확장 대상입니다."}
+                </div>
+                {selectedIndustry.href ? (
+                  <a
+                    href={selectedIndustry.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 hover:border-brand-interactive hover:text-brand-interactive"
+                  >
+                    원문 보기
+                  </a>
+                ) : null}
+              </div>
+            ) : <EmptyRows label="산업을 선택할 수 없습니다." />}
           </div>
         </section>
         <section className="panel">
           <div className="panel-h">
-            <h2>반도체 상위</h2>
-            <span className="desc">{countRows(data?.semiconductors).toLocaleString("ko-KR")}개</span>
+            <h2>선택 산업 구성종목</h2>
+            <span className="desc">{selectedConstituents.length.toLocaleString("ko-KR")}개</span>
           </div>
-          <div className="mv-col">
-            {semiconductors.length ? semiconductors.map((row) => {
-              const symbol = rowSymbol(row);
-              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `거래량 ${text(row.volume)} · 매출 ${text(row.revenue)}`, text(row.market_cap), symbol ? stockHref(symbol) : undefined, pctClass(row.pct_change));
-            }) : <EmptyRows label="반도체 산업 데이터가 없습니다." />}
-          </div>
+          <IndustryConstituentList
+            rows={selectedConstituents}
+            emptyLabel="이 산업은 아직 구성종목 상세가 없습니다."
+          />
         </section>
+        {localSurfaces.map((surface) => (
+          <section key={surface.id} className="panel">
+            <div className="panel-h">
+              <h2>{surface.title}</h2>
+              <span className="desc">{dateText(surface.doc?.fetched_at)} · {countRows(surface.doc).toLocaleString("ko-KR")}개</span>
+            </div>
+            <div className="panel-b pb-0 pt-2 text-xs font-bold text-slate-500">
+              {surface.description}
+            </div>
+            <IndustryConstituentList rows={surface.rows} emptyLabel={`${surface.title} 데이터가 없습니다.`} />
+          </section>
+        ))}
       </div>
     </div>
   );
