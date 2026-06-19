@@ -428,9 +428,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## 📚 References
 
-- [SPRINT5_ARCHITECTURE.md](./SPRINT5_ARCHITECTURE.md): Sprint 5 전체 아키텍처
-- [SPRINT5_TEST_REPORT.md](./SPRINT5_TEST_REPORT.md): 상세 테스트 결과 (Week 2)
-- [SPRINT5_USAGE_GUIDE.md](./SPRINT5_USAGE_GUIDE.md): 사용 가이드
+- [SPRINT5_ARCHITECTURE.md](../SPRINT5_ARCHITECTURE.md): Sprint 5 전체 아키텍처
+- SPRINT5_TEST_REPORT.md: 상세 테스트 결과 (Week 2)
+- [SPRINT5_USAGE_GUIDE.md](../SPRINT5_USAGE_GUIDE.md): 사용 가이드
 - [SPRINT5_WEEK2_RETROSPECTIVE.md](./SPRINT5_WEEK2_RETROSPECTIVE.md): Week 2 회고
 - Commit `2481601`: Week 2 완료 + Week 3 시작
 - Commit `7394e1b`: Week 3 완료

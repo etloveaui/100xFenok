@@ -448,7 +448,7 @@ test('User workflow description', async ({ page }) => {
 ## 11. Support Resources
 
 **Documentation**:
-- [Comprehensive Test Strategy](COMPREHENSIVE_TEST_STRATEGY.md) - Full testing guide
+- [Comprehensive Test Strategy](archives/COMPREHENSIVE_TEST_STRATEGY.md) - Full testing guide
 - [Vitest Documentation](https://vitest.dev/) - Official Vitest docs
 - [Playwright Documentation](https://playwright.dev/) - Official Playwright docs
 

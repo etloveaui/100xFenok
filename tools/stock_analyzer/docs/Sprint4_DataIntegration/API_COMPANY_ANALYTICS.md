@@ -2066,7 +2066,7 @@ console.log(`Return range: ${Math.min(...returns).toFixed(2)} to ${Math.max(...r
 
 **🎉 End of Documentation**
 
-**Questions?** Check [Troubleshooting](#troubleshooting) or review [E2E Tests](../../../tests/modules/company-analytics-provider.spec.js) for usage examples.
+**Questions?** Check [Troubleshooting](#troubleshooting) or review [E2E Tests](../../tests/modules/company-analytics-provider.spec.js) for usage examples.
 
 **Last Updated**: 2025-10-19
 **Author**: Claude Code (Sonnet 4.5)

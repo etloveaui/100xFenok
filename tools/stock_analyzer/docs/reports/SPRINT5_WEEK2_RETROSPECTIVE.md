@@ -290,9 +290,9 @@ Tools:
 
 ## 🔖 References
 
-- [SPRINT5_ARCHITECTURE.md](./SPRINT5_ARCHITECTURE.md): Sprint 5 전체 아키텍처
-- [SPRINT5_TEST_REPORT.md](./SPRINT5_TEST_REPORT.md): 상세 테스트 결과
-- [SPRINT5_USAGE_GUIDE.md](./SPRINT5_USAGE_GUIDE.md): 사용 가이드
+- [SPRINT5_ARCHITECTURE.md](../SPRINT5_ARCHITECTURE.md): Sprint 5 전체 아키텍처
+- SPRINT5_TEST_REPORT.md: 상세 테스트 결과
+- [SPRINT5_USAGE_GUIDE.md](../SPRINT5_USAGE_GUIDE.md): 사용 가이드
 - Commit: `7440c2c` - Sprint 5 Week 2 changes
 
 ---

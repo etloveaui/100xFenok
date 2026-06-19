@@ -12,7 +12,7 @@ This comprehensive documentation suite provides everything you need to effective
 
 | Document | Purpose | Pages | Audience |
 |----------|---------|-------|----------|
-| **[USER_GUIDE.md](USER_GUIDE.md)** | Complete user manual | 70+ | All users |
+| **[USER_GUIDE.md](../USER_GUIDE.md)** | Complete user manual | 70+ | All users |
 | **[FEATURE_DOCUMENTATION.md](FEATURE_DOCUMENTATION.md)** | Detailed feature specs | 85+ | Intermediate users |
 | **[DATA_DICTIONARY.md](DATA_DICTIONARY.md)** | All metrics explained | 95+ | Analysts, investors |
 | **[FAQ.md](FAQ.md)** | Common questions | 50+ Q&A | All users |
@@ -21,8 +21,8 @@ This comprehensive documentation suite provides everything you need to effective
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| **[API_DOCUMENTATION.md](../API_DOCUMENTATION.md)** | Developer API reference | Developers extending the app |
-| **[RELEASE_NOTES_TEMPLATE.md](../RELEASE_NOTES_TEMPLATE.md)** | Release documentation template | Contributors |
+| **API_DOCUMENTATION.md** | Developer API reference | Developers extending the app |
+| **RELEASE_NOTES_TEMPLATE.md** | Release documentation template | Contributors |
 
 ---
 
@@ -30,12 +30,12 @@ This comprehensive documentation suite provides everything you need to effective
 
 **New Users - Start Here**:
 
-1. **[USER_GUIDE.md](USER_GUIDE.md) → Getting Started** (10 min)
+1. **[USER_GUIDE.md](../USER_GUIDE.md) → Getting Started** (10 min)
    - System requirements
    - First launch walkthrough
    - Navigation overview
 
-2. **[USER_GUIDE.md](USER_GUIDE.md) → Screening Stocks** (15 min)
+2. **[USER_GUIDE.md](../USER_GUIDE.md) → Screening Stocks** (15 min)
    - Basic search
    - Using filters
    - Preset strategies
@@ -140,7 +140,7 @@ This comprehensive documentation suite provides everything you need to effective
 ### Screening & Filtering
 
 **Primary Documents**:
-- [USER_GUIDE.md → Screening Stocks](USER_GUIDE.md#screening-stocks)
+- [USER_GUIDE.md → Screening Stocks](../USER_GUIDE.md#screening-stocks)
 - [FEATURE_DOCUMENTATION.md → Advanced Filters](FEATURE_DOCUMENTATION.md#advanced-filters)
 
 **Topics Covered**:
@@ -177,7 +177,7 @@ This comprehensive documentation suite provides everything you need to effective
 ### Company Comparison
 
 **Primary Documents**:
-- [USER_GUIDE.md → Analytics Modules → Deep Compare](USER_GUIDE.md#deep-compare)
+- [USER_GUIDE.md → Analytics Modules → Deep Compare](../USER_GUIDE.md#deep-compare)
 - [FEATURE_DOCUMENTATION.md → Deep Compare](FEATURE_DOCUMENTATION.md#deep-compare)
 
 **Topics Covered**:
@@ -195,7 +195,7 @@ This comprehensive documentation suite provides everything you need to effective
 ### Portfolio Management
 
 **Primary Documents**:
-- [USER_GUIDE.md → Portfolio Management](USER_GUIDE.md#portfolio-management)
+- [USER_GUIDE.md → Portfolio Management](../USER_GUIDE.md#portfolio-management)
 - [FEATURE_DOCUMENTATION.md → Portfolio Builder](FEATURE_DOCUMENTATION.md#portfolio-builder)
 
 **Topics Covered**:

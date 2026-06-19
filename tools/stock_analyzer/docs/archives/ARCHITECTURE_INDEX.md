@@ -11,7 +11,7 @@
 ### 🎯 Start Here
 
 **New to the project?** → Read [ARCHITECTURE_SUMMARY.md](ARCHITECTURE_SUMMARY.md) (15 min)
-**Ready to implement?** → Read [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) (30 min)
+**Ready to implement?** → Read IMPLEMENTATION_GUIDE.md (30 min)
 **Need technical details?** → Reference [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md) (2 hours)
 **Visual learner?** → Browse [ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md) (45 min)
 

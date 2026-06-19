@@ -242,7 +242,7 @@ test.describe('Feature Name', () => {
 - [Playwright Documentation](https://playwright.dev)
 - [Chart.js Documentation](https://www.chartjs.org)
 - [Project README](../README.md)
-- [Sprint 4 Implementation Details](../WORKFLOW.md)
+- Sprint 4 Implementation Details
 
 ## Contact
 

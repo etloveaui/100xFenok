@@ -482,10 +482,10 @@ With Foundation complete, the project is ready for:
 
 ## 📚 References
 
-- [Master Plan](../../../fenomeno_knowledge/stock-analyzer-global-expansion/master_plan.md)
-- [Architecture Design](../../../fenomeno_knowledge/stock-analyzer-global-expansion/architecture.md)
-- [API Specification](../../../fenomeno_knowledge/stock-analyzer-global-expansion/api_specification.md)
-- [Data Schema](../../../fenomeno_knowledge/stock-analyzer-global-expansion/data_schema.md)
+- Master Plan
+- Architecture Design
+- API Specification
+- Data Schema
 
 ## 🤝 Contributing
 

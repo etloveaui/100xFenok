@@ -126,11 +126,11 @@ http://localhost:8001/stock_analyzer.html
 
 ## 📝 참고 문서
 
-- [Specification](../../fenomeno_knowledge/stock-analyzer-global-expansion/specification.md)
-- [Architecture](../../fenomeno_knowledge/stock-analyzer-global-expansion/architecture.md)
-- [API Specification](../../fenomeno_knowledge/stock-analyzer-global-expansion/api_specification.md)
-- [Data Schema](../../fenomeno_knowledge/stock-analyzer-global-expansion/data_schema.md)
-- [Master Plan](../../fenomeno_knowledge/stock-analyzer-global-expansion/master_plan.md)
+- Specification
+- Architecture
+- API Specification
+- Data Schema
+- Master Plan
 
 ## 🤝 에이전트 협업
 
