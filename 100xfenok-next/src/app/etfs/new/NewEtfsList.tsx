@@ -6,6 +6,7 @@ import {
   isInverseEtf,
   isLeveragedEtf,
   isSingleStockLeveragedEtf,
+  issuerNameFromEtfName,
   type EtfClassification,
   type EtfTypeFilter,
   type EtfUniverseRecord,
@@ -150,16 +151,6 @@ function sortFromParam(value: string | null | undefined): NewEtfSort {
   return "date";
 }
 
-function issuerName(name: string): string {
-  const text = name.trim();
-  const dash = text.indexOf(" - ");
-  if (dash > 0) return text.slice(0, dash).trim();
-  const trust = text.match(/^(.+?\b(?:Trust|Funds?|Shares|ETF Trust|Exchange-Traded Funds Inc\.?))\b/i);
-  if (trust?.[1]) return trust[1].trim();
-  const firstWords = text.split(/\s+/).slice(0, 2).join(" ").trim();
-  return firstWords || "미분류";
-}
-
 function toUniverseRecord(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "price" | "change" | "classification">): EtfUniverseRecord {
   return {
     ticker: row.s,
@@ -298,7 +289,7 @@ export default function NewEtfsList({
         s: row.s!.trim().toUpperCase(),
         n: typeof row.n === "string" && row.n.trim() ? row.n.trim() : row.s!.trim().toUpperCase(),
         detailStatus: detailStatus(row.s!, state.coverage),
-        issuer: issuerName(typeof row.n === "string" && row.n.trim() ? row.n.trim() : row.s!.trim().toUpperCase()),
+        issuer: issuerNameFromEtfName(typeof row.n === "string" && row.n.trim() ? row.n.trim() : row.s!.trim().toUpperCase()),
       }))
       .map((row) => ({
         ...row,

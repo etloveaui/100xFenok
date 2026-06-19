@@ -3,6 +3,7 @@ export interface EtfUniverseRecord {
   name?: string;
   category?: string;
   assetClass?: string;
+  issuer?: string;
   aum_raw?: string;
   aum?: number;
   inceptionDate?: string;
@@ -43,6 +44,38 @@ export function cleanCategory(value: string | null | undefined): string {
   return text && text !== "-" ? text : "미분류";
 }
 
+export function issuerNameFromEtfName(value: string | null | undefined): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text || text === "-") return "미분류";
+  const knownIssuers = [
+    ["state street spdr", "State Street"],
+    ["spdr", "State Street"],
+    ["ishares", "iShares"],
+    ["vanguard", "Vanguard"],
+    ["invesco", "Invesco"],
+    ["proshares", "ProShares"],
+    ["direxion", "Direxion"],
+    ["global x", "Global X"],
+    ["jpmorgan", "JPMorgan"],
+    ["fidelity", "Fidelity"],
+    ["schwab", "Schwab"],
+    ["goldman sachs", "Goldman Sachs"],
+    ["first trust", "First Trust"],
+    ["dimensional", "Dimensional"],
+    ["vaneck", "VanEck"],
+    ["ark", "ARK"],
+    ["pimco", "PIMCO"],
+  ] as const;
+  const lower = text.toLowerCase();
+  const known = knownIssuers.find(([prefix]) => lower.startsWith(prefix));
+  if (known) return known[1];
+  const dash = text.indexOf(" - ");
+  if (dash > 0) return text.slice(0, dash).trim();
+  const trust = text.match(/^(.+?\b(?:Trust|Funds?|Shares|ETF Trust|Exchange-Traded Funds Inc\.?))\b/i);
+  if (trust?.[1]) return trust[1].trim();
+  return text.split(/\s+/).slice(0, 2).join(" ").trim() || "미분류";
+}
+
 export function formatNumber(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("ko-KR") : "—";
 }
@@ -79,7 +112,7 @@ function formatCompactVolume(value: number | null | undefined): string | null {
 }
 
 function etfSearchText(row: EtfUniverseRecord): string {
-  return [row.ticker, row.name, row.category, row.assetClass, row.inceptionDate, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
+  return [row.ticker, row.name, row.category, row.assetClass, row.issuer, row.inceptionDate, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
 }
 
 function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
@@ -140,6 +173,9 @@ export function formatTypeHint(row: EtfUniverseRecord): string {
   const classification = rowClassification(row);
   const category = row.category ?? row.assetClass;
   const parts = [row.ticker, category];
+  if (row.issuer && row.issuer !== "미분류") {
+    parts.push(row.issuer);
+  }
   const factor = classification?.leverage_factor;
   if (typeof factor === "number" && Number.isFinite(factor)) {
     parts.push(`${factor.toFixed(factor % 1 === 0 ? 0 : 2)}x`);
