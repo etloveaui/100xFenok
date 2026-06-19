@@ -25,6 +25,7 @@ const PAGE_ROUTES = [
   "/etfs/SQQQ",
   "/etfs/TSLL",
   "/etfs/ADIU",
+  "/admin/data-lab/",
   "/market/events",
   "/market/events?tab=industry",
   "/market/events?section=IPO%20%EC%8B%A0%EC%B2%AD&range=30&sort=section",

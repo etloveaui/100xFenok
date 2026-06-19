@@ -202,6 +202,8 @@ External sources
   - treats `coverage/etf_detail.json` missing samples as a live contract:
     missing detail files must still open through the ETF asset API as
     `surface_only` or `universe_only` fallback responses.
+  - includes `/admin/data-lab/` in the live smoke route list so Admin-facing
+    StockAnalysis/Data Lab regressions are checked after Worker deploys.
 - `100xfenok-next/src/app/screener/StockDetailPanel.tsx`
   - reads `computed/market_facts/tickers/{TICKER}.json`;
   - shows selected values, user-facing source-role labels, candidate counts, and
