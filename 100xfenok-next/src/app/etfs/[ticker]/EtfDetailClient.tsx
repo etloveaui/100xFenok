@@ -276,6 +276,8 @@ function performanceFromPayload(
     tr1y: factNumber(marketFacts, "return_1y"),
     cagr3y: factNumber(marketFacts, "return_3y_avg"),
     cagr5y: factNumber(marketFacts, "return_5y_avg"),
+    cagr10y: factNumber(marketFacts, "return_10y_avg"),
+    cagrMAX: factNumber(marketFacts, "return_max_avg"),
   };
   const fields = ["tr1m", "trYTD", "tr1y", "cagr3y", "cagr5y", "cagr10y", "cagrMAX"] as const;
   const merged: EtfPerformance = {};

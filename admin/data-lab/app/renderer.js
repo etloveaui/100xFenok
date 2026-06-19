@@ -386,7 +386,9 @@ const Renderer = (function() {
           ['YTD', formatReturnCoverage(returnCoverage.return_ytd, returnEtfDenominator)],
           ['1년', formatReturnCoverage(returnCoverage.return_1y, returnEtfDenominator)],
           ['3년 CAGR', formatReturnCoverage(returnCoverage.return_3y_avg, returnEtfDenominator)],
-          ['5년 CAGR', formatReturnCoverage(returnCoverage.return_5y_avg, returnEtfDenominator)]
+          ['5년 CAGR', formatReturnCoverage(returnCoverage.return_5y_avg, returnEtfDenominator)],
+          ['10년 CAGR', formatReturnCoverage(returnCoverage.return_10y_avg, returnEtfDenominator)],
+          ['상장 이후 CAGR', formatReturnCoverage(returnCoverage.return_max_avg, returnEtfDenominator)]
         ]
       })}
       ${renderMarketAuditCard({

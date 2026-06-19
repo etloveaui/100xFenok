@@ -69,7 +69,7 @@ Detail page for a single ETF.
 - Sections:
   - Header: ticker, name, classification tags.
   - Key metrics: price, change, AUM, expense ratio, dividend yield, beta, P/E, 52-week range.
-  - Performance: 1M, YTD, 1Y, CAGR 3Y/5Y/10Y/max (raw StockAnalysis `performance` + Yahoo-derived `market_facts`).
+  - Performance: 1M, YTD, 1Y, CAGR 3Y/5Y/10Y/max (raw StockAnalysis `performance` + normalized `market_facts`).
   - Holdings: top holdings, sector/country/asset allocation breakdowns.
   - History: 1-year monthly bar chart + table.
 - Fallback states:
@@ -232,7 +232,7 @@ Representative ticker contracts:
 
 | Gap | Status | Notes |
 |-----|--------|-------|
-| 3M / 3Y return coverage | partial coverage | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, and 5Y CAGR. 3M and 3Y still need staged ETF history backfill or a new source field because the current catalog performance payload has no matching 3M/3Y key. |
+| 3M / 3Y return coverage | partial coverage | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M and 3Y still need staged ETF history backfill or a new source field because the current catalog performance payload has no matching 3M/3Y key. |
 | Chart granularity | partial coverage | ETF detail fetcher stores `daily_1y`, `weekly_1y`, and `monthly_1y`; detail UI enables only ranges that exist in the payload. 3Y/5Y remain follow-up data-collection work. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |

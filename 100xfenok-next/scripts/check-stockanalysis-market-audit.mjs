@@ -49,6 +49,8 @@ const REQUIRED_RENDERED_SECTIONS = [
   "가장 빠른 재시도일",
   "반복 미확인",
   "소스 일치성 진단 상세",
+  "10년 CAGR",
+  "상장 이후 CAGR",
 ];
 
 const REJECTED_RENDERED_COPY = [
@@ -136,6 +138,27 @@ function assertBackfillContract(audit, incremental, pendingLedger, factsIndex, e
   const coverage = factsIndex?.coverage || audit?.market_facts?.coverage || {};
   assert(Number(coverage.etf || 0) > 0, "Market facts: ETF coverage must be present", errors);
   assert("stockanalysis_yf_fallback" in coverage, "Market facts: fallback coverage key must be present", errors);
+}
+
+function assertReturnCoverageContract(audit, errors) {
+  const returnCoverage = audit?.market_facts?.return_field_coverage || {};
+  const requiredFields = [
+    "return_1m",
+    "return_3m",
+    "return_ytd",
+    "return_1y",
+    "return_3y_avg",
+    "return_5y_avg",
+    "return_10y_avg",
+    "return_max_avg",
+  ];
+
+  for (const field of requiredFields) {
+    assert(returnCoverage[field] && typeof returnCoverage[field] === "object", `Market facts: ${field} coverage is required`, errors);
+    assert(Number(returnCoverage[field]?.etf || 0) >= 0, `Market facts: ${field} ETF coverage count is required`, errors);
+  }
+  assert(Number(returnCoverage.return_10y_avg?.stockanalysis_performance || 0) > 0, "Market facts: return_10y_avg must include StockAnalysis performance coverage", errors);
+  assert(Number(returnCoverage.return_max_avg?.stockanalysis_performance || 0) > 0, "Market facts: return_max_avg must include StockAnalysis performance coverage", errors);
 }
 
 function assertSurfaceConsumerContract(surfaceIndex, consumers, errors) {
@@ -277,6 +300,7 @@ payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, paylo
 
 assertCoverageContract(payloads.coverage, errors);
 assertBackfillContract(payloads.audit, payloads.incremental, payloads.pendingLedger, payloads.marketFactsIndex, errors);
+assertReturnCoverageContract(payloads.audit, errors);
 assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
 assertRenderedMarketAudit(payloads, errors);
 

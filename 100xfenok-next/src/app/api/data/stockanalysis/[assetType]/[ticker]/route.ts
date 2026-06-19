@@ -125,6 +125,7 @@ async function getEtfSurfaceFallback(ticker: string) {
     .map((match) => asRecord(match.row.classification))
     .find((item): item is JsonRecord => item !== null)
     ?? asRecord(universeRow?.classification);
+  const performance = asRecord(row.performance) ?? asRecord(universeRow?.performance);
   if (name) overview.name = name;
   if (category) overview.category = category;
   if (aum !== undefined && aum !== null) overview.aum = aum;
@@ -148,6 +149,7 @@ async function getEtfSurfaceFallback(ticker: string) {
       holdings: [],
       holding_count: holdingCount,
       overview,
+      performance,
       classification,
       quote: {
         p: price,

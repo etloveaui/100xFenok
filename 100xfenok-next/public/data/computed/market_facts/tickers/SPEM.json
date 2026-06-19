@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SPEM",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:41:58Z",
+  "generated_at": "2026-06-19T03:54:06Z",
   "identity": {
     "name": "SPEM",
     "exchange": null,
@@ -291,6 +291,54 @@
       "candidates": [
         {
           "value": 5.874,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_10y_avg": {
+      "value": 9.634,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-06-17T14:00:25Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 9.634,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_max_avg": {
+      "value": 5.699,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-06-17T14:00:25Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 5.699,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-06-17T14:00:25Z",
@@ -939,6 +987,16 @@
       ],
       "return_5y_avg": [
         "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_10y_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_max_avg": [
         "stockanalysis.detail.performance",
         "stockanalysis.etf_screener.performance",
         "stockanalysis.etf_universe.performance"

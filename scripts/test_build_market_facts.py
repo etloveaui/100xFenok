@@ -112,6 +112,8 @@ class BuildMarketFactsTest(unittest.TestCase):
                 "trYTD": 9.8,
                 "tr1y": 26.5,
                 "cagr5y": 13.7,
+                "cagr10y": 15.9,
+                "cagrMAX": 14.8,
             },
         }
 
@@ -124,7 +126,11 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(facts["return_ytd"]["source"], "stockanalysis.etf_screener.performance")
         self.assertEqual(facts["return_1y"]["source"], "stockanalysis.etf_screener.performance")
         self.assertEqual(facts["return_5y_avg"]["source"], "stockanalysis.etf_screener.performance")
+        self.assertEqual(facts["return_10y_avg"]["source"], "stockanalysis.etf_screener.performance")
+        self.assertEqual(facts["return_max_avg"]["source"], "stockanalysis.etf_screener.performance")
         self.assertEqual(facts["return_1m"]["unit"], "percent_points")
+        self.assertEqual(facts["return_10y_avg"]["unit"], "percent_points")
+        self.assertAlmostEqual(facts["return_max_avg"]["value"], 14.8)
 
     def test_history_return_stays_primary_when_catalog_performance_exists(self) -> None:
         yf_payload = {

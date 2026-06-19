@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BSJR",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T03:41:58Z",
+  "generated_at": "2026-06-19T03:54:06Z",
   "identity": {
     "name": "BSJR",
     "exchange": null,
@@ -291,6 +291,30 @@
       "candidates": [
         {
           "value": 3.301,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-17T14:00:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_max_avg": {
+      "value": 4.02,
+      "source": "stockanalysis.etf_screener.performance",
+      "as_of": null,
+      "fetched_at": "2026-06-17T14:00:25Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 4.02,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-06-17T14:00:25Z",
@@ -768,6 +792,16 @@
       ],
       "return_5y_avg": [
         "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_10y_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_max_avg": [
         "stockanalysis.detail.performance",
         "stockanalysis.etf_screener.performance",
         "stockanalysis.etf_universe.performance"

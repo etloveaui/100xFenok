@@ -65,12 +65,24 @@ FIELD_SOURCE_POLICY = {
         "stockanalysis.etf_screener.performance",
         "stockanalysis.etf_universe.performance",
     ],
+    "return_10y_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+    ],
+    "return_max_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+    ],
 }
 STOCKANALYSIS_PERFORMANCE_FIELD_MAP = {
     "return_1m": "tr1m",
     "return_ytd": "trYTD",
     "return_1y": "tr1y",
     "return_5y_avg": "cagr5y",
+    "return_10y_avg": "cagr10y",
+    "return_max_avg": "cagrMAX",
 }
 
 
@@ -421,6 +433,16 @@ def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=
             yf_annual_return_fact(yf_payload, "fiveYearAverageReturn"),
             stockanalysis_performance_fact(sa_payload, "return_5y_avg", "stockanalysis.detail.performance"),
             stockanalysis_performance_fact(sa_catalog_payload, "return_5y_avg", (sa_catalog_payload or {}).get("market_facts_source")),
+        ),
+        "return_10y_avg": resolve_fact(
+            "return_10y_avg",
+            stockanalysis_performance_fact(sa_payload, "return_10y_avg", "stockanalysis.detail.performance"),
+            stockanalysis_performance_fact(sa_catalog_payload, "return_10y_avg", (sa_catalog_payload or {}).get("market_facts_source")),
+        ),
+        "return_max_avg": resolve_fact(
+            "return_max_avg",
+            stockanalysis_performance_fact(sa_payload, "return_max_avg", "stockanalysis.detail.performance"),
+            stockanalysis_performance_fact(sa_catalog_payload, "return_max_avg", (sa_catalog_payload or {}).get("market_facts_source")),
         ),
     }
     facts = {key: value for key, value in facts.items() if value is not None}

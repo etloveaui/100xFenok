@@ -120,7 +120,8 @@ External sources
     market-facts coverage, resolver candidate preservation, policy-source
     mismatches, and large percent-scale candidate disagreements;
   - reports ETF return-fact coverage for `return_1m`, `return_3m`,
-    `return_ytd`, `return_1y`, `return_3y_avg`, and `return_5y_avg` against the
+    `return_ytd`, `return_1y`, `return_3y_avg`, `return_5y_avg`,
+    `return_10y_avg`, and `return_max_avg` against the
     normalized ETF universe so Yahoo history backfills have a durable progress
     metric;
   - reports completed/missing backfill offsets, next expected offset, hard-error
@@ -280,7 +281,9 @@ This keeps UI consumption simple while preserving overlapping source evidence.
 | return_1m / return_3m | Yahoo 1Y daily history close-to-close derived |
 | return_ytd | Yahoo 1Y daily history derived → Yahoo ytdReturn |
 | return_1y | Yahoo 1Y daily history derived → Yahoo 52-week change |
-| return_3y_avg / return_5y_avg | Yahoo average-return fields normalized from ratio to percent points |
+| return_3y_avg | Yahoo average-return field normalized from ratio to percent points |
+| return_5y_avg | Yahoo average-return field normalized from ratio to percent points → StockAnalysis ETF performance |
+| return_10y_avg / return_max_avg | StockAnalysis ETF performance |
 
 This is intentionally not a single-provider takeover. Yahoo, SlickCharts, and
 StockAnalysis all remain visible when their values overlap.

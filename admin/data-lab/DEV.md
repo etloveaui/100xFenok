@@ -162,6 +162,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.25 | 2026-06-19 | Added normalized ETF 10Y and inception-to-date CAGR coverage from StockAnalysis performance, including Data Lab return-coverage visibility |
 | 2.2.24 | 2026-06-19 | Market facts now use StockAnalysis ETF catalog performance for 1M/YTD/1Y/5Y ETF return coverage, and Data Lab audit exposes the expanded coverage from generated data |
 | 2.2.23 | 2026-06-19 | Clarified the StockAnalysis index card as the latest ETF detail refresh, while keeping full ETF detail coverage visible in the same card |
 | 2.2.22 | 2026-06-19 | Added ETF list coverage metrics for expense ratio and period-return availability |

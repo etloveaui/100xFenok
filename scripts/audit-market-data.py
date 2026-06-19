@@ -22,6 +22,8 @@ RETURN_FIELDS = (
     "return_1y",
     "return_3y_avg",
     "return_5y_avg",
+    "return_10y_avg",
+    "return_max_avg",
 )
 
 
