@@ -34,8 +34,8 @@ function dateOnly(value: string | null | undefined): string | null {
 }
 
 function metricTone(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "text-slate-400";
-  return value >= 0 ? "text-emerald-600" : "text-rose-600";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "text-[var(--c-ink-3)]";
+  return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
 function mobilePanelClass(active: boolean, display = "block"): string {
@@ -70,12 +70,12 @@ function SectionCard({
   return (
     <section
       className={cx(
-        "rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-6",
+        "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-6",
         className,
       )}
     >
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{kicker}</p>
-      <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950 sm:text-xl">{title}</h2>
+      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--c-ink-3)]">{kicker}</p>
+      <h2 className="mt-1 text-lg font-black tracking-tight text-[var(--c-ink)] sm:text-xl">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -83,13 +83,13 @@ function SectionCard({
 
 function LoadingSkeleton() {
   return (
-    <div className="rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-16px_rgba(15,23,42,0.18)]">
-      <div className="h-3 w-32 animate-pulse rounded-full bg-slate-200" />
+    <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-16px_rgba(15,23,42,0.18)]">
+      <div className="h-3 w-32 animate-pulse rounded-full bg-[var(--c-surface-2)]" />
       <div className="mt-3 grid gap-2 sm:grid-cols-4">
         {Array.from({ length: 8 }, (_, index) => (
           <div
             key={index}
-            className="h-10 animate-pulse rounded-lg bg-slate-100"
+            className="h-10 animate-pulse rounded-lg bg-[var(--c-surface-2)]"
             style={{ animationDelay: `${index * 70}ms` }}
           />
         ))}
@@ -106,19 +106,19 @@ const valuationHelp = {
 
 function valuationTone(percentile: number | null | undefined): { label: string; className: string } {
   if (typeof percentile !== "number" || !Number.isFinite(percentile)) {
-    return { label: "범위 없음", className: "bg-slate-100 text-slate-500" };
+    return { label: "범위 없음", className: "bg-[var(--c-surface-2)] text-[var(--c-ink-3)]" };
   }
-  if (percentile <= 0.25) return { label: "저평가권", className: "bg-emerald-50 text-emerald-700" };
-  if (percentile >= 0.75) return { label: "고평가권", className: "bg-rose-50 text-rose-700" };
-  return { label: "평균권", className: "bg-slate-100 text-slate-600" };
+  if (percentile <= 0.25) return { label: "저평가권", className: "bg-[var(--c-up-soft)] text-[var(--c-up)]" };
+  if (percentile >= 0.75) return { label: "고평가권", className: "bg-[var(--c-down-soft)] text-[var(--c-down)]" };
+  return { label: "평균권", className: "bg-[var(--c-surface-2)] text-[var(--c-ink-2)]" };
 }
 
 function PeBandGauge({ value, band }: { value: number | null; band: SectorValuationBand | null }) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return <span className="orbitron text-sm font-bold text-slate-400">—</span>;
+    return <span className="orbitron text-sm font-bold text-[var(--c-ink-3)]">—</span>;
   }
   if (!band) {
-    return <span className="orbitron text-sm font-bold text-slate-900">{value.toFixed(1)}</span>;
+    return <span className="orbitron text-sm font-bold text-[var(--c-ink)]">{value.toFixed(1)}</span>;
   }
   const span = band.max - band.min;
   const position = span > 0 ? Math.min(100, Math.max(0, ((value - band.min) / span) * 100)) : 50;
@@ -128,18 +128,19 @@ function PeBandGauge({ value, band }: { value: number | null; band: SectorValuat
     <div
       className="ml-auto w-full max-w-[190px]"
       title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
+      aria-label={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${band.min.toFixed(1)}~${band.max.toFixed(1)}`}
     >
       <div className="mb-1 flex items-center justify-end gap-2">
-        <span className="orbitron text-sm font-black tabular-nums text-slate-950">{value.toFixed(1)}</span>
+        <span className="orbitron text-sm font-black tabular-nums text-[var(--c-ink)]">{value.toFixed(1)}</span>
         <span className={cx("rounded-full px-2 py-0.5 text-[10px] font-black", tone.className)}>{tone.label}</span>
       </div>
-      <div className="relative h-2 rounded-full bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200">
+      <div className="relative h-2 rounded-full bg-gradient-to-r from-[var(--c-up-soft)] via-[var(--c-line-2)] to-[var(--c-down-soft)]">
         <span
-          className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-navy shadow"
+          className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--c-brand)] shadow"
           style={{ left: `${position}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[9px] font-bold text-slate-400">
+      <div className="mt-1 flex justify-between text-[9px] font-bold text-[var(--c-ink-3)]">
         <span>{band.min.toFixed(1)}</span>
         <span>{percentile}%</span>
         <span>{band.max.toFixed(1)}</span>
@@ -170,7 +171,7 @@ function MobileViewSwitch({
 }) {
   return (
     <div className="md:hidden">
-      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
+      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
         {MOBILE_VIEWS.map((view) => {
           const active = view.key === value;
           return (
@@ -178,9 +179,10 @@ function MobileViewSwitch({
               key={view.key}
               type="button"
               onClick={() => onChange(view.key)}
+              aria-pressed={active}
               className={cx(
                 "min-h-10 rounded-xl px-2 text-[11px] font-black transition",
-                active ? "bg-brand-navy text-white" : "text-slate-500 hover:bg-slate-50",
+                active ? "bg-[var(--c-brand)] text-white" : "text-[var(--c-ink-3)] hover:bg-[var(--c-surface-2)]",
               )}
             >
               {view.label}
@@ -221,37 +223,37 @@ function SectorPulse({
   const laggardValue = laggard?.momentum ? laggard.momentum[activeWindowKey] : null;
   return (
     <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{activeWindowLabel} 주도</p>
-        <p className="mt-1 text-sm font-black text-slate-950">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">{activeWindowLabel} 주도</p>
+        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {leader ? `${leader.name} ${pct(leaderValue, 1)}` : "데이터 없음"}
         </p>
-        <p className="mt-0.5 text-[11px] font-bold text-slate-500">
+        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]">
           약세 {laggard ? `${laggard.name} ${pct(laggardValue, 1)}` : "—"}
         </p>
       </div>
-      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">시장 대비</p>
-        <p className="mt-1 text-sm font-black text-slate-950">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">시장 대비</p>
+        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {beatCount === null ? "S&P 기준 없음" : `${beatCount}/${totalCount}개 섹터가 S&P 상회`}
         </p>
-        <p className="mt-0.5 text-[11px] font-bold text-slate-500"><SourceLine sourceMeta={sourceMeta} /></p>
+        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"><SourceLine sourceMeta={sourceMeta} /></p>
       </div>
-      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">가치 위치</p>
-        <p className="mt-1 text-sm font-black text-slate-950">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">가치 위치</p>
+        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           저평가 {cheapest ? cheapest.name : "—"} · 고평가 {richest ? richest.name : "—"}
         </p>
-        <p className="mt-0.5 text-[11px] font-bold text-slate-500">
+        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]">
           {valuationSourceLine(sourceMeta)}
         </p>
       </div>
-      <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">기관 보유</p>
-        <p className="mt-1 text-sm font-black text-slate-950">
+      <div className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.30)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">기관 보유</p>
+        <p className="mt-1 text-sm font-black text-[var(--c-ink)]">
           {smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "기관 보유 없음"}
         </p>
-        <p className="mt-0.5 text-[11px] font-bold text-slate-500">
+        <p className="mt-0.5 text-[11px] font-bold text-[var(--c-ink-2)]">
           증가 {smartDeltaLeader?.smartMoney ? `${smartDeltaLeader.name} ${pp(smartDeltaLeader.smartMoney.delta4q, 1)}` : "—"}
         </p>
       </div>
@@ -272,18 +274,18 @@ function SectorMomentumCard({
   const relative = typeof value === "number" && typeof benchmarkValue === "number" ? value - benchmarkValue : null;
   const tone = valuationTone(row.valuation?.peBand?.percentile);
   return (
-    <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+    <article className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-slate-950">{row.name}</p>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{row.etf}</p>
+          <p className="truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</p>
         </div>
         <div className="shrink-0 text-right">
           <p className={cx("orbitron text-base font-black tabular-nums", metricTone(value))}>{pct(value, 1)}</p>
           <p className={cx("orbitron text-[10px] font-bold tabular-nums", metricTone(relative))}>S&P {pp(relative, 1)}</p>
         </div>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-[var(--c-ink-2)]">
         <span className="rounded-lg bg-white px-2 py-1">당일 {pct(row.dayChange, 2)}</span>
         <span className="rounded-lg bg-white px-2 py-1">{tone.label}</span>
         <span className="rounded-lg bg-white px-2 py-1">기관 {pct(row.smartMoney?.weight, 1)}</span>
@@ -295,17 +297,17 @@ function SectorMomentumCard({
 function EtfMobileCard({ row }: { row: SectorRow }) {
   const etf = row.etfInfo;
   return (
-    <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+    <article className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-slate-950">{row.etf}</p>
-          <p className="truncate text-[11px] font-bold text-slate-500">{row.name}</p>
+          <p className="truncate text-sm font-black text-[var(--c-ink)]">{row.etf}</p>
+          <p className="truncate text-[11px] font-bold text-[var(--c-ink-2)]">{row.name}</p>
         </div>
         <p className={cx("orbitron shrink-0 text-base font-black tabular-nums", metricTone(etf?.returns["1m"]))}>
           {pct(etf?.returns["1m"], 1)}
         </p>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-[var(--c-ink-2)]">
         <span className="rounded-lg bg-white px-2 py-1">YTD {pct(etf?.returns.ytd, 1)}</span>
         <span className="rounded-lg bg-white px-2 py-1">1Y {pct(etf?.returns["1y"], 1)}</span>
         <span className="rounded-lg bg-white px-2 py-1">3Y {pct(etf?.cagr["3y"], 1)}</span>
@@ -321,15 +323,15 @@ function ValuationMobileCard({ row }: { row: SectorRow }) {
   const value = row.valuation;
   const tone = valuationTone(value?.peBand?.percentile);
   return (
-    <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+    <article className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-slate-950">{row.name}</p>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">{row.etf}</p>
+          <p className="truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</p>
         </div>
         <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", tone.className)}>{tone.label}</span>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-slate-500">
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-bold text-[var(--c-ink-2)]">
         <span className="rounded-lg bg-white px-2 py-1">Fwd P/E {typeof value?.pe === "number" ? value.pe.toFixed(1) : "—"}</span>
         <span className="rounded-lg bg-white px-2 py-1">P/B {typeof value?.pb === "number" ? value.pb.toFixed(2) : "—"}</span>
         <span className="rounded-lg bg-white px-2 py-1">ROE {typeof value?.roe === "number" ? formatPercent(value.roe * 100, 1) : "—"}</span>
@@ -437,7 +439,7 @@ export default function SectorsClient() {
       {/* Heatmap */}
       <div className={mobilePanelClass(mobileView === "heatmap")}>
       <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과" className={isMuted ? "opacity-60" : undefined}>
-        <p className="mb-3 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-[var(--c-ink-2)]">
           {beatCount === null ? "S&P 500 기준선을 불러오는 중입니다." : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
         </p>
         <div className="grid gap-2 md:hidden">
@@ -449,10 +451,10 @@ export default function SectorsClient() {
           <table className="w-full min-w-[640px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
                   업종
                 </th>
-                <th className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">당일</th>
+                <th className="px-2 py-2 text-right text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">당일</th>
                 {MOMENTUM_WINDOWS.map((window) => {
                   const active = window.key === sortWindow;
                   return (
@@ -464,11 +466,12 @@ export default function SectorsClient() {
                       <button
                         type="button"
                         onClick={() => setSortWindow(window.key)}
+                        aria-pressed={active}
                         className={cx(
-                          "inline-flex min-h-11 w-full items-center justify-center rounded-md px-2 text-[11px] font-black uppercase tracking-[0.08em] transition sm:min-h-7",
+                          "inline-flex min-h-11 w-full items-center justify-center rounded-md px-2 text-[11px] font-black uppercase tracking-[0.08em] transition",
                           active
-                            ? "bg-brand-navy text-white"
-                            : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
+                            ? "bg-[var(--c-brand)] text-white"
+                            : "text-[var(--c-ink-3)] hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink-2)]",
                         )}
                       >
                         {window.label}
@@ -481,12 +484,12 @@ export default function SectorsClient() {
             </thead>
             <tbody>
               {benchmarkMomentum ? (
-                <tr className="border-b border-slate-200">
-                  <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
-                    <span className="block text-sm font-black text-slate-950">S&amp;P 500</span>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">시장 기준선</span>
+                <tr className="border-b border-[var(--c-line)]">
+                  <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                    <span className="block text-sm font-black text-[var(--c-ink)]">S&amp;P 500</span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">시장 기준선</span>
                   </th>
-                  <td className="px-2 py-1.5 text-right text-xs font-black text-slate-400">기준</td>
+                  <td className="px-2 py-1.5 text-right text-xs font-black text-[var(--c-ink-3)]">기준</td>
                   {MOMENTUM_WINDOWS.map((window) => {
                     const value = benchmarkMomentum[window.key];
                     return (
@@ -510,14 +513,14 @@ export default function SectorsClient() {
                     : null;
                 return (
                   <tr key={row.key}>
-                    <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
-                      <span className="block text-sm font-black text-slate-950">{row.name}</span>
-                      <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">{row.etf}</span>
+                    <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                      <span className="block text-sm font-black text-[var(--c-ink)]">{row.name}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</span>
                       {relativeThreeMonth !== null ? (
                         <span
                           className={cx(
                             "ml-2 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-black",
-                            relativeThreeMonth >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700",
+                            relativeThreeMonth >= 0 ? "bg-[var(--c-up-soft)] text-[var(--c-up)]" : "bg-[var(--c-down-soft)] text-[var(--c-down)]",
                           )}
                           title="3개월 S&P 500 대비 성과"
                         >
@@ -527,12 +530,12 @@ export default function SectorsClient() {
                     </th>
                     <td className="px-2 py-1.5 text-right">
                       {row.dayChange === null ? (
-                        <span className="text-xs font-semibold text-slate-300">—</span>
+                        <span className="text-xs font-semibold text-[var(--c-line-2)]">—</span>
                       ) : (
                         <span
                           className={cx(
                             "orbitron text-sm font-black",
-                            row.dayChange >= 0 ? "text-emerald-600" : "text-rose-600",
+                            row.dayChange >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]",
                           )}
                         >
                           {pct(row.dayChange, 2)}
@@ -576,7 +579,7 @@ export default function SectorsClient() {
       <div className={mobilePanelClass(mobileView === "etf")}>
       <SectionCard kicker="섹터 ETF" title="섹터 ETF 비교">
         {etfRows.length === 0 ? (
-          <p className="text-sm text-slate-500">ETF 데이터를 불러오지 못했습니다.</p>
+          <p className="text-sm text-[var(--c-ink-2)]">ETF 데이터를 불러오지 못했습니다.</p>
         ) : (
           <>
           <div className="grid gap-2 md:hidden">
@@ -587,8 +590,8 @@ export default function SectorsClient() {
           <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
             <table className="w-full min-w-[680px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
-                  <th className="sticky left-0 z-10 bg-white px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">ETF</th>
+                <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                  <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">ETF</th>
                   <th className="px-2 py-2 text-right">1M</th>
                   <th className="px-2 py-2 text-right">YTD</th>
                   <th className="px-2 py-2 text-right">1Y</th>
@@ -602,20 +605,20 @@ export default function SectorsClient() {
                 {etfRows.map((row) => {
                   const etf = row.etfInfo!;
                   return (
-                    <tr key={row.key} className="border-b border-slate-100 last:border-0">
-                      <td className="sticky left-0 z-10 bg-white px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
-                        <span className="text-sm font-black text-slate-950">{row.etf}</span>
-                        <span className="ml-2 text-xs font-semibold text-slate-500">{row.name}</span>
+                    <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
+                      <td className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left shadow-[8px_0_14px_-14px_rgba(15,23,42,0.45)]">
+                        <span className="text-sm font-black text-[var(--c-ink)]">{row.etf}</span>
+                        <span className="ml-2 text-xs font-semibold text-[var(--c-ink-2)]">{row.name}</span>
                       </td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns["1m"], 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns.ytd, 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.returns["1y"], 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.cagr["3y"], 1)}</td>
                       <td className="orbitron px-2 py-2 text-right tabular-nums">{pct(etf.cagr["5y"], 1)}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">
                         {typeof etf.beta === "number" && Number.isFinite(etf.beta) ? etf.beta.toFixed(2) : "—"}
                       </td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-500">
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">
                         {typeof etf.expenseRatio === "number" && Number.isFinite(etf.expenseRatio) ? formatPercent(etf.expenseRatio * 100, 2) : "—"}
                       </td>
                     </tr>
@@ -626,7 +629,7 @@ export default function SectorsClient() {
           </div>
           </>
         )}
-        <p className="mt-3 text-[11px] text-slate-400">
+        <p className="mt-3 text-[11px] text-[var(--c-ink-3)]">
           {etfCoverageText}
         </p>
       </SectionCard>
@@ -643,7 +646,7 @@ export default function SectorsClient() {
         <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+              <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
                 <th className="px-2 py-2 text-left">업종</th>
                 <th className="px-2 py-2 text-right">
                   <abbr title={valuationHelp.pe} className="cursor-help no-underline">Fwd P/E</abbr>
@@ -663,23 +666,23 @@ export default function SectorsClient() {
                   const v = row.valuation;
                   if (!v) return null;
                   return (
-                    <tr key={row.key} className="border-b border-slate-100 last:border-0">
+                    <tr key={row.key} className="border-b border-[var(--c-line-2)] last:border-0">
                       <td className="px-2 py-2 text-left">
-                        <span className="text-sm font-bold text-slate-900">{row.name}</span>
-                        <span className="ml-2 text-xs font-semibold text-slate-400">{row.etf}</span>
+                        <span className="text-sm font-bold text-[var(--c-ink)]">{row.name}</span>
+                        <span className="ml-2 text-xs font-semibold text-[var(--c-ink-3)]">{row.etf}</span>
                       </td>
                       <td className="px-2 py-2 text-right">
                         <PeBandGauge value={v.pe} band={v.peBand} />
                       </td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-700">{typeof v.pb === "number" && Number.isFinite(v.pb) ? v.pb.toFixed(2) : "—"}</td>
-                      <td className="orbitron px-2 py-2 text-right tabular-nums text-slate-600">{typeof v.roe === "number" && Number.isFinite(v.roe) ? formatPercent(v.roe * 100, 1) : "—"}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{typeof v.pb === "number" && Number.isFinite(v.pb) ? v.pb.toFixed(2) : "—"}</td>
+                      <td className="orbitron px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{typeof v.roe === "number" && Number.isFinite(v.roe) ? formatPercent(v.roe * 100, 1) : "—"}</td>
                     </tr>
                   );
                 })}
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-[11px] text-slate-400">
+        <p className="mt-3 text-[11px] text-[var(--c-ink-3)]">
           {valuationSourceLine(sourceMeta)}
         </p>
       </SectionCard>
@@ -694,27 +697,27 @@ export default function SectorsClient() {
 
 function RankList({ rows, window, tone }: { rows: SectorRow[]; window: MomentumWindow; tone: "up" | "down" }) {
   if (rows.length === 0) {
-    return <p className="text-sm text-slate-500">데이터 없음</p>;
+    return <p className="text-sm text-[var(--c-ink-3)]">데이터 없음</p>;
   }
   return (
     <ol className="space-y-2">
       {rows.map((row, index) => {
         const value = row.momentum[window];
         return (
-          <li key={row.key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+          <li key={row.key} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
               <span className="flex min-w-0 items-center gap-2">
               <span
                 className={cx(
                   "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black",
-                  tone === "up" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
+                  tone === "up" ? "bg-[var(--c-up-soft)] text-[var(--c-up)]" : "bg-[var(--c-down-soft)] text-[var(--c-down)]",
                 )}
               >
                 {index + 1}
               </span>
-              <span className="truncate text-sm font-bold text-slate-900">{row.name}</span>
-              <span className="shrink-0 text-[11px] font-bold uppercase text-slate-400">{row.etf}</span>
+              <span className="truncate text-sm font-bold text-[var(--c-ink)]">{row.name}</span>
+              <span className="shrink-0 text-[11px] font-bold uppercase text-[var(--c-ink-3)]">{row.etf}</span>
             </span>
-              <span className={cx("orbitron shrink-0 text-sm font-black tabular-nums", tone === "up" ? "text-emerald-600" : "text-rose-600")}>
+              <span className={cx("orbitron shrink-0 text-sm font-black tabular-nums", tone === "up" ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
               {pct(value, 1)}
             </span>
           </li>
