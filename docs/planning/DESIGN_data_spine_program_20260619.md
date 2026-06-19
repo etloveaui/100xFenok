@@ -1,7 +1,6 @@
 # Data Spine Program
 
-Date: 2026-06-19
-Status: P0 inventory shell, DRAFT/UNVERIFIED until the measured inventory gates pass.
+Date/status: 2026-06-19; P0 inventory baseline measured, v0 contract still DRAFT/UNVERIFIED.
 
 ## Purpose
 
@@ -33,31 +32,18 @@ it consumes data already emitted through the DataPack or a documented API route.
 
 Measured locally on 2026-06-19 from `data/` in this repo.
 
-Command:
+Current durable P0 inventory artifacts:
+`DATA_SPINE_P0_INVENTORY_20260619.md` and
+`scripts/audit-data-spine-inventory.py`. The script is the read-only baseline
+for `dataset -> emitter -> schedule -> asOf/freshness -> provenance -> consumers`,
+separating runtime consumers, pipeline references, and repo-local workflow
+evidence.
 
-```sh
-find data -type f | sed 's#^data/##' | awk -F/ '{count[$1]++} END {for (k in count) print k, count[k]}' | sort
-```
-
-| Data area | File count | Current role | P0 status |
-|---|---:|---|---|
-| `computed/` | 6,452 | normalized market facts, audits, signals | MEASURED |
-| `stockanalysis/` | 5,396 | ETF universe/detail, stock overview, financial candidates, surfaces | MEASURED |
-| `yf/` | 1,822 | Yahoo quote/history/funds/stock context | MEASURED |
-| `global-scouter/` | 1,086 | stock analyzer rows, forward/revision data | MEASURED |
-| `slickcharts/` | 570 | direct index membership, returns, dividends, movers | MEASURED |
-| `sec-13f/` | 79 | superinvestor holdings and analytics | MEASURED |
-| `sentiment/` | 15 | AAII/CNN/CFTC/VIX/MOVE/crypto sentiment | MEASURED |
-| `macro/` | 11 | FRED/FDIC/OECD/PMI style macro mirrors | MEASURED |
-| `benchmarks/` | 9 | benchmark valuation/time-series context | MEASURED |
-| `damodaran/` | 9 | specialist valuation factors | MEASURED |
-| `calendar/` | 4 | USD calendar mirror | MEASURED |
-| `indices/` | 4 | index snapshots | MEASURED |
-| `admin/` | 4 | admin/data-lab metadata | MEASURED |
-| `yardney/` | 2 | Yardeni model mirror | MEASURED |
-
-Note: `data/README.md` still reports older headline counts. The measured file
-inventory above is the current P0 baseline until the catalog README is refreshed.
+Current headline: 28 dataset groups, 15,451 root JSON files, and 15,505 public
+JSON files. `data/README.md` still reports older headline counts; use the P0
+inventory artifact for current counts until the catalog README is refreshed. The
+0 root-only / 54 public-only delta is accounted for through `benchmarks` and
+`public.report_metadata`.
 
 ## StockAnalysis / ETF Coverage Baseline
 
@@ -274,10 +260,10 @@ contract and the disagreement policy.
 
 ## Next P0 Work
 
-1. Build a dataset-by-dataset inventory table:
-   `dataset -> emitter -> schedule -> asOf/freshness -> provenance -> consumers`.
-2. Turn the direct-provider leak table into actionable backlog rows.
-3. Extend parity policy from alert-only to action-bearing disagreement rules.
-4. Add feno-data/feno-data-remote/feno-value consumer evidence from the
+1. Turn the direct-provider leak table into actionable backlog rows.
+2. Extend parity policy from alert-only to action-bearing disagreement rules.
+3. Add feno-data/feno-data-remote/feno-value consumer evidence from the
    claude-code-hub skill files before changing those skills.
-5. Decide the StockAnalysis route vs service-map IA before expanding A-phase UI.
+4. Decide the StockAnalysis route vs service-map IA before expanding A-phase UI.
+5. Ratify ownership/update policy for `public.report_metadata` before the v0
+   contract is frozen.
