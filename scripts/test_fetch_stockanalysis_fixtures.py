@@ -47,6 +47,25 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(rows[0]["aum"], 601_200_000_000.0)
         self.assertEqual(rows[1]["source_page"], 3)
 
+    def test_etf_universe_record_count_uses_payload_and_file_fallback(self) -> None:
+        self.assertEqual(self.fetcher.etf_universe_record_count({"counts": {"records": 7}, "records": []}), 7)
+        self.assertEqual(self.fetcher.etf_universe_record_count({"records": [{"ticker": "AAA"}, {"ticker": "BBB"}]}), 2)
+
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                out_dir.mkdir(parents=True)
+                (out_dir / "etf_universe.json").write_text(
+                    json.dumps({"counts": {"records": 3}, "records": [{"ticker": "AAA"}]}),
+                    encoding="utf-8",
+                )
+
+                self.assertEqual(self.fetcher.etf_universe_record_count(None), 3)
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
         tables = self.fetcher.parse_html_tables(html)

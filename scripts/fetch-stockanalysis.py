@@ -1336,6 +1336,17 @@ def read_json(path: Path):
         return None
 
 
+def etf_universe_record_count(payload: dict | None = None) -> int:
+    source = payload if isinstance(payload, dict) else read_json(OUT_DIR / "etf_universe.json")
+    if not isinstance(source, dict):
+        return 0
+    counts = source.get("counts")
+    if isinstance(counts, dict) and isinstance(counts.get("records"), int):
+        return counts["records"]
+    records = source.get("records")
+    return len(records) if isinstance(records, list) else 0
+
+
 def build_yf_payload(ticker: str, data: dict, fetched_at: str | None = None) -> dict:
     payload = {
         "schema_version": "yf-finance/v2",
@@ -1784,8 +1795,10 @@ def attach_etf_detail_coverage_to_index(coverage: dict, mirror_public: bool) -> 
         return
     counts = coverage.get("counts") if isinstance(coverage.get("counts"), dict) else {}
     index_counts = index.get("counts") if isinstance(index.get("counts"), dict) else {}
+    index["generated_at"] = now_iso()
     index["counts"] = {
         **index_counts,
+        "etf_universe": etf_universe_record_count(),
         "etf_candidate_total": counts.get("candidate_total", 0),
         "etf_detail_files": counts.get("detail_files", 0),
         "etf_detail_covered": counts.get("covered_detail_files", 0),
@@ -2340,7 +2353,7 @@ def main() -> None:
         "source": "stockanalysis",
         "generated_at": now_iso(),
         "counts": {
-            "etf_universe": (universe_payload or {}).get("counts", {}).get("records"),
+            "etf_universe": etf_universe_record_count(universe_payload),
             "etf_candidate_total": etf_detail_coverage_counts.get("candidate_total", 0),
             "etf_detail_files": etf_detail_coverage_counts.get("detail_files", 0),
             "etf_detail_covered": etf_detail_coverage_counts.get("covered_detail_files", 0),
