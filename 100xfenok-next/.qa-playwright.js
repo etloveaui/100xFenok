@@ -397,12 +397,19 @@ async function runEtfChecks(page, route) {
     const h1Visible = await h1.isVisible().catch(() => false);
     checks.push({ check: "etfDetailH1", pass: h1Visible && !!h1Text && h1Text.toUpperCase().includes(ticker), text: h1Text?.slice(0, 60) });
 
-    // Shell layout should render regardless of data-fetch state; avoid
-    // asserting on price/status because dev-server trailing-slash redirects
-    // can make client-side JSON fetches flaky in local QA.
     const shell = page.locator(".stock-shell").first();
     const shellVisible = await shell.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
     checks.push({ check: "etfDetailShell", pass: shellVisible });
+
+    const readySection = page.getByText("가격 히스토리").first();
+    const readyVisible = await readySection.waitFor({ state: "visible", timeout: 10000 }).then(() => true).catch(() => false);
+    const bodyText = await page.locator("body").innerText().catch(() => "");
+    checks.push({
+      check: "etfDetailLoaded",
+      pass: readyVisible && !bodyText.includes("ETF 정보 확인 중"),
+      readyVisible,
+      stillLoading: bodyText.includes("ETF 정보 확인 중"),
+    });
   } else if (route === "/etfs" || route === "/etfs?type=single-stock") {
     const heading = page.locator('h2:has-text("ETF 목록")').first();
     const headingVisible = await heading.isVisible().catch(() => false);

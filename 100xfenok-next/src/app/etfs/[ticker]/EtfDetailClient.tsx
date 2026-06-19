@@ -28,13 +28,19 @@ interface WeightedRow {
 
 interface HistoryPoint {
   t?: string | null;
+  date?: string | null;
   o?: number | null;
   h?: number | null;
   l?: number | null;
   c?: number | null;
+  close?: number | null;
   v?: number | null;
   ch?: number | null;
 }
+
+type HistoryMode = "daily" | "weekly" | "monthly";
+type HistoryRange = "1Y" | "3Y" | "5Y";
+type HistoryPeriodKey = `${HistoryMode}_${Lowercase<HistoryRange>}`;
 
 interface EtfPerformance {
   tr1m?: number | null;
@@ -62,6 +68,7 @@ interface EtfPayload {
     performance?: EtfPerformance | null;
     quote?: Record<string, unknown> | null;
     history?: HistoryPoint[];
+    history_periods?: Partial<Record<HistoryPeriodKey, HistoryPoint[]>>;
     classification?: EtfClassification | null;
   };
   raw?: {
@@ -137,7 +144,7 @@ function loadEtfPayload(ticker: string): Promise<EtfPayload | null> {
   if (cached instanceof Promise) return cached;
   if (cached !== undefined) return Promise.resolve(cached);
 
-  const request = fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}`, { cache: "no-store" })
+  const request = fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}/`, { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : null))
     .then((payload) => {
       const parsed = asRecord(payload) ? payload as EtfPayload : null;
@@ -484,34 +491,180 @@ function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined;
   );
 }
 
-function HistoryView({ history, currency }: { history: HistoryPoint[]; currency: string }) {
-  const rows = history.filter((point) => isFiniteNumber(point.c));
+const HISTORY_MODES: HistoryMode[] = ["daily", "weekly", "monthly"];
+const HISTORY_RANGES: HistoryRange[] = ["1Y", "3Y", "5Y"];
+
+function historyModeLabel(mode: HistoryMode) {
+  if (mode === "daily") return "일간";
+  if (mode === "weekly") return "주간";
+  return "월간";
+}
+
+function historyPointDate(point: HistoryPoint) {
+  return point.t ?? point.date ?? null;
+}
+
+function historyPointClose(point: HistoryPoint) {
+  return isFiniteNumber(point.c) ? point.c : isFiniteNumber(point.close) ? point.close : null;
+}
+
+function legacyHistoryMode(history: HistoryPoint[]): HistoryMode {
+  if (history.length >= 120) return "daily";
+  if (history.length >= 30) return "weekly";
+  return "monthly";
+}
+
+function historyPeriodKey(mode: HistoryMode, range: HistoryRange): HistoryPeriodKey {
+  return `${mode}_${range.toLowerCase()}` as HistoryPeriodKey;
+}
+
+function normalizedHistoryRows(rows: HistoryPoint[] | null | undefined) {
+  return Array.isArray(rows) ? rows.filter((point) => historyPointClose(point) !== null) : [];
+}
+
+function historyRowsForSelection(
+  periods: Partial<Record<HistoryPeriodKey, HistoryPoint[]>> | null | undefined,
+  legacyHistory: HistoryPoint[],
+  mode: HistoryMode,
+  range: HistoryRange,
+) {
+  const direct = normalizedHistoryRows(periods?.[historyPeriodKey(mode, range)]);
+  if (direct.length > 0) return direct;
+  if (range !== "1Y" || legacyHistory.length === 0) return [];
+  return legacyHistoryMode(legacyHistory) === mode ? normalizedHistoryRows(legacyHistory) : [];
+}
+
+function firstAvailableHistorySelection(
+  periods: Partial<Record<HistoryPeriodKey, HistoryPoint[]>> | null | undefined,
+  legacyHistory: HistoryPoint[],
+) {
+  for (const mode of HISTORY_MODES) {
+    for (const range of HISTORY_RANGES) {
+      if (historyRowsForSelection(periods, legacyHistory, mode, range).length > 0) {
+        return { mode, range };
+      }
+    }
+  }
+  return null;
+}
+
+function HistoryControls({
+  mode,
+  onModeChange,
+  range,
+  onRangeChange,
+  isAvailable,
+}: {
+  mode: HistoryMode;
+  onModeChange: (mode: HistoryMode, range: HistoryRange) => void;
+  range: HistoryRange;
+  onRangeChange: (range: HistoryRange) => void;
+  isAvailable: (mode: HistoryMode, range: HistoryRange) => boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="seg" role="group" aria-label="차트 간격">
+        {HISTORY_MODES.map((m) => {
+          const nextRange = isAvailable(m, range)
+            ? range
+            : HISTORY_RANGES.find((candidate) => isAvailable(m, candidate));
+          return (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              className={mode === m ? "on" : ""}
+              disabled={!nextRange}
+              onClick={() => nextRange && onModeChange(m, nextRange)}
+            >
+              {historyModeLabel(m)}
+            </button>
+          );
+        })}
+      </div>
+      <div className="seg" role="group" aria-label="구간">
+        {HISTORY_RANGES.map((r) => (
+          <button
+            key={r}
+            type="button"
+            aria-pressed={range === r}
+            className={range === r ? "on" : ""}
+            disabled={!isAvailable(mode, r)}
+            onClick={() => onRangeChange(r)}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HistoryView({
+  history,
+  historyPeriods,
+  currency,
+  mode,
+  onModeChange,
+  range,
+  onRangeChange,
+}: {
+  history: HistoryPoint[];
+  historyPeriods?: Partial<Record<HistoryPeriodKey, HistoryPoint[]>>;
+  currency: string;
+  mode: HistoryMode;
+  onModeChange: (mode: HistoryMode) => void;
+  range: HistoryRange;
+  onRangeChange: (range: HistoryRange) => void;
+}) {
+  const fallback = firstAvailableHistorySelection(historyPeriods, history);
+  const requestedRows = historyRowsForSelection(historyPeriods, history, mode, range);
+  const activeMode = requestedRows.length > 0 ? mode : fallback?.mode ?? mode;
+  const activeRange = requestedRows.length > 0 ? range : fallback?.range ?? range;
+  const rows = requestedRows.length > 0
+    ? requestedRows
+    : historyRowsForSelection(historyPeriods, history, activeMode, activeRange);
+  const isAvailable = (candidateMode: HistoryMode, candidateRange: HistoryRange) =>
+    historyRowsForSelection(historyPeriods, history, candidateMode, candidateRange).length > 0;
   if (!rows.length) return <p className="text-sm font-semibold text-slate-400">가격 히스토리 없음</p>;
+
   const chronological = [...rows].reverse();
-  const closes = chronological.map((point) => point.c).filter(isFiniteNumber);
+  const closes = chronological.map(historyPointClose).filter(isFiniteNumber);
   const min = Math.min(...closes);
   const max = Math.max(...closes);
-  const range = max - min || 1;
+  const priceRange = max - min || 1;
   const firstClose = closes[0] ?? null;
   const lastClose = closes[closes.length - 1] ?? null;
   const periodReturn = firstClose && lastClose !== null ? ((lastClose - firstClose) / firstClose) * 100 : null;
+  const activeLabel = historyModeLabel(activeMode);
   return (
     <div className="space-y-3">
+      <HistoryControls
+        mode={activeMode}
+        onModeChange={(nextMode, nextRange) => {
+          onModeChange(nextMode);
+          onRangeChange(nextRange);
+        }}
+        range={activeRange}
+        onRangeChange={onRangeChange}
+        isAvailable={isAvailable}
+      />
       <div className="grid gap-2 sm:grid-cols-3">
-        <MetricCard label="월간 구간 수익률" value={fmtCompactSignedPercent(periodReturn)} note="표시된 월간 종가 기준" />
-        <MetricCard label="구간 고점" value={formatMoney(max, currency)} note="월간 종가 기준" />
-        <MetricCard label="구간 저점" value={formatMoney(min, currency)} note="월간 종가 기준" />
+        <MetricCard label={`${activeLabel} 구간 수익률`} value={fmtCompactSignedPercent(periodReturn)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label="구간 고점" value={formatMoney(max, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
+        <MetricCard label="구간 저점" value={formatMoney(min, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
-        <div className="flex h-40 items-end gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+        <div className="flex h-40 items-end gap-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
           {chronological.map((point, index) => {
-            const close = isFiniteNumber(point.c) ? point.c : min;
-            const height = 10 + ((close - min) / range) * 90;
+            const date = historyPointDate(point);
+            const close = historyPointClose(point) ?? min;
+            const height = 10 + ((close - min) / priceRange) * 90;
             const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
             return (
-              <div key={`${point.t ?? "month"}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${point.t}: ${formatMoney(close, currency)}`}>
+              <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatMoney(close, currency)}`}>
                 <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
-                <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(point.t ?? "").slice(5, 7)}</span>
+                <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(date ?? "").slice(5, 7)}</span>
               </div>
             );
           })}
@@ -520,7 +673,7 @@ function HistoryView({ history, currency }: { history: HistoryPoint[]; currency:
           <table className="w-full min-w-[360px] text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                <th className="px-2 py-2 text-left">월</th>
+                <th className="px-2 py-2 text-left">일자</th>
                 <th className="px-2 py-2 text-right">종가</th>
                 <th className="px-2 py-2 text-right">변화</th>
                 <th className="px-2 py-2 text-right">거래량</th>
@@ -528,9 +681,9 @@ function HistoryView({ history, currency }: { history: HistoryPoint[]; currency:
             </thead>
             <tbody>
               {rows.map((point, index) => (
-                <tr key={`${point.t ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
-                  <td className="px-2 py-2 font-bold text-slate-700">{point.t ?? "—"}</td>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(point.c, currency)}</td>
+                <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
+                  <td className="px-2 py-2 font-bold text-slate-700">{historyPointDate(point) ?? "—"}</td>
+                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(historyPointClose(point), currency)}</td>
                   <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtSignedPercentPoints(point.ch)}</td>
                   <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
                 </tr>
@@ -590,6 +743,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
   const history = Array.isArray(normalized.history) ? normalized.history : [];
+  const historyPeriods = normalized.history_periods ?? {};
+  const [historyMode, setHistoryMode] = useState<HistoryMode>("monthly");
+  const [historyRange, setHistoryRange] = useState<HistoryRange>("1Y");
   const performance = performanceFromPayload(etfData, normalized, marketFacts);
   const statusMeta = detailStatusMeta(etfData?.detail_status ?? null);
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
@@ -758,8 +914,16 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             </SectionCard>
           </div>
 
-          <SectionCard title="가격 히스토리" desc="월간 종가">
-            <HistoryView history={history} currency={currency} />
+          <SectionCard title="가격 히스토리" desc="보유 데이터 기준 종가">
+            <HistoryView
+              history={history}
+              historyPeriods={historyPeriods}
+              currency={currency}
+              mode={historyMode}
+              onModeChange={setHistoryMode}
+              range={historyRange}
+              onRangeChange={setHistoryRange}
+            />
           </SectionCard>
 
           <footer className="stock-footer">
