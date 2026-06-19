@@ -217,8 +217,8 @@ def build_public_report_metadata_decision() -> dict[str, Any]:
     reports_index = load_json(REPORTS_INDEX) if REPORTS_INDEX.exists() else []
     latest = latest_metadata_payload() or {}
     return {
-        "decision": "live_consumed_pending_subsystem_decision",
-        "owner": "100x Daily Wrap / report browser subsystem owner required",
+        "decision": "keep_intentional_placeholder",
+        "owner": "future automated report-publishing pipeline",
         "metadata_file_count": len(dates),
         "reports_index_count": len(reports_index) if isinstance(reports_index, list) else None,
         "latest_metadata_id": dates[-1] if dates else None,
@@ -233,12 +233,12 @@ def build_public_report_metadata_decision() -> dict[str, Any]:
         ],
         "rationale": (
             "consumer guard found live report-browser readers, so data-only sunset would break pages; "
-            "the subsystem is stale because the latest metadata is a test placeholder and reports-index "
-            "lists only three legacy _data files"
+            "the user confirmed the stale/test placeholder is intentionally retained for a future "
+            "fully automated report-publishing pipeline"
         ),
-        "v0_action": "keep data in place; do not delete/archive until the report-browser subsystem is retired or revived",
-        "user_decision_required": "retire report browser + data together, or revive publishing with owner/source/freshness",
-        "freshness_policy": "required if revived: root source + publisher + owner + Data Lab freshness check",
+        "v0_action": "keep data in place; Track 1 data-only cleanup is permanently cancelled",
+        "deferred_backlog": "revive publishing only after the future automation pipeline exists",
+        "freshness_policy": "deferred until revival: root source + publisher + owner + Data Lab freshness check",
     }
 
 

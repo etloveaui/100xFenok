@@ -2,7 +2,8 @@
 
 Date: 2026-06-19
 Status: RATIFIED after peer review `fh-20260619-395-cc-138ca71d`;
-amended by consumer guard `fh-20260619-400-cc-800917b0`.
+amended by consumer guard `fh-20260619-400-cc-800917b0`;
+final KEEP decision from `fh-20260619-402-cc-b2fff276`.
 
 ## Scope
 
@@ -46,9 +47,9 @@ This is not a silent authority/fallback change. The current authority is already
 
 ### `public.report_metadata`
 
-Decision: `live_consumed_pending_subsystem_decision`.
+Decision: `keep_intentional_placeholder`.
 
-Owner required: 100x Daily Wrap / report browser subsystem.
+Owner: future automated report-publishing pipeline.
 
 Measured rationale:
 
@@ -58,6 +59,8 @@ Measured rationale:
 - latest summary: test automation placeholder text
 - `reports-index.json` lists only 3 legacy `_data` files
 - no root `data/` source and no active repo-local schedule
+- user confirmed this placeholder is intentional for a future fully automated
+  report-publishing pipeline
 
 Consumer guard overturned the original data-only sunset. Live consumers still
 read the report browser metadata/index:
@@ -69,14 +72,12 @@ read the report browser metadata/index:
 - `100xfenok-next/src/generated/static-route-manifest.ts:21-32`, consumed by
   `src/lib/server/data-loader.ts:4,151-175`
 
-V0 action: keep the files in place. Do not delete or archive them until the
-report-browser subsystem is handled as a unit.
+V0 action: keep the files in place. Track 1 data-only cleanup is permanently
+cancelled.
 
-User decision required:
-
-1. Retire the 100x Daily Wrap report browser pages and their metadata together.
-2. Revive report publishing with a root source, publisher, owner, and Data Lab
-   freshness check.
+Deferred backlog: revive publishing only after the future automation pipeline
+exists. At that point, add a root source, publisher, owner, and Data Lab
+freshness check.
 
 ### `ticker.ts`
 
@@ -132,6 +133,6 @@ exception, or sunset candidates.
 
 - Peer review confirmed the spread distribution and pass/fail fractions.
 - Status changed from REVIEW DRAFT to RATIFIED before push.
-- `public.report_metadata` is not removed by data-only cleanup; subsystem-level
-  retire-or-revive decision remains open.
+- `public.report_metadata` is retained as an intentional future-automation
+  placeholder; data-only cleanup is cancelled.
 - Any future authority/fallback change is tagged `PROPOSED CHANGE`.
