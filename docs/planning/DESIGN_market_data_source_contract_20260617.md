@@ -192,6 +192,10 @@ External sources
 - `100xfenok-next/src/lib/server/data-loader.ts`
   - classifies `stockanalysis` ETF/stock details as stock data, ETF universe as
     explore inventory, and backfill indexes as admin fetch-audit artifacts.
+- `100xfenok-next/package.json`
+  - `sync-static` copies static/data mirrors with preserved timestamps so
+    `src/generated/static-route-manifest.ts` changes when source data freshness
+    changes, not every time the public mirror is refreshed.
 - `100xfenok-next/src/app/api/data/stockanalysis/route.ts`
   - exposes a lightweight StockAnalysis manifest with top-level, ETF, stock,
     and backfill file counts plus small samples and universe/latest-run counts.

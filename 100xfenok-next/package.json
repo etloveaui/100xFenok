@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "sync-static": "cp -r ../100x ../alpha-scout ../tools ../ib ../admin ../data public/ 2>/dev/null || true; mkdir -p public/posts-raw public/data/metadata; rm -f public/data/fred-banking-*.json public/data/fdic-tier1.json; cp -r ../posts/. public/posts-raw/ 2>/dev/null || true; cp -r ../100x/data/* public/data/ 2>/dev/null || true; cp -r ../alpha-scout/data/metadata/* public/data/metadata/ 2>/dev/null || true; cp ../alpha-scout/data/reports-index.json public/data/reports-index.json 2>/dev/null || true; node sync-static-overrides.mjs; npm run build:static-route-manifest",
+    "sync-static": "cp -Rp ../100x ../alpha-scout ../tools ../ib ../admin ../data public/ 2>/dev/null || true; mkdir -p public/posts-raw public/data/metadata; rm -f public/data/fred-banking-*.json public/data/fdic-tier1.json; cp -Rp ../posts/. public/posts-raw/ 2>/dev/null || true; cp -Rp ../100x/data/* public/data/ 2>/dev/null || true; cp -Rp ../alpha-scout/data/metadata/* public/data/metadata/ 2>/dev/null || true; cp -p ../alpha-scout/data/reports-index.json public/data/reports-index.json 2>/dev/null || true; node sync-static-overrides.mjs; npm run build:static-route-manifest",
     "build:version": "node scripts/generate-build-version.mjs",
     "build:static-route-manifest": "node scripts/generate-static-route-manifest.mjs",
     "predev": "npm run build:version && npm run sync-static",
