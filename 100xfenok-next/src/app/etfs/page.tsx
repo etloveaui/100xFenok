@@ -56,11 +56,11 @@ export default async function EtfsPage({ searchParams }: Props) {
           </div>
         </section>
 
-        <div style={{ marginTop: "var(--s4)" }}>
+        <div className="mt-[var(--s4)]">
           <EtfSurfaceSnapshotCard />
         </div>
 
-        <div style={{ marginTop: "var(--s4)" }}>
+        <div className="mt-[var(--s4)]">
           <EtfUniverseCard
             limit={100}
             showOpenLink={false}

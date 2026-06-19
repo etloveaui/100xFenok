@@ -77,7 +77,10 @@ function loadSnapshot(): Promise<EtfSnapshotPayload | null> {
       cache = payload;
       return payload;
     })
-    .catch(() => null);
+    .catch(() => {
+      pending = null;
+      return null;
+    });
   return pending;
 }
 
@@ -90,7 +93,10 @@ function loadCoverage(): Promise<EtfCoveragePayload | null> {
       coverageCache = payload;
       return payload;
     })
-    .catch(() => null);
+    .catch(() => {
+      coveragePending = null;
+      return null;
+    });
   return coveragePending;
 }
 
@@ -374,7 +380,7 @@ export default function NewEtfsList({
                   syncParams({ query: event.target.value });
                 }}
                 placeholder="티커, ETF명, 운용사 검색"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-brand-interactive focus:ring-2 focus:ring-brand-interactive/10"
+                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-bold text-[var(--c-ink)] outline-none transition focus:border-brand-interactive focus:ring-2 focus:ring-brand-interactive/10"
               />
               <label className="sr-only" htmlFor="new-etf-date-filter">상장일 필터</label>
               <select
@@ -385,7 +391,7 @@ export default function NewEtfsList({
                   setDateFilter(value);
                   syncParams({ dateFilter: value });
                 }}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 outline-none transition focus:border-brand-interactive"
+                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-brand-interactive"
               >
                 {(["전체", "7일", "14일", "30일"] as DateFilter[]).map((value) => (
                   <option key={value} value={value}>{value === "전체" ? "전체 기간" : `최근 ${value}`}</option>
@@ -399,7 +405,7 @@ export default function NewEtfsList({
                   setIssuerFilter(event.target.value);
                   syncParams({ issuerFilter: event.target.value });
                 }}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 outline-none transition focus:border-brand-interactive"
+                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-brand-interactive"
               >
                 <option value="전체">전체 운용사</option>
                 {issuers.map(([issuer, count]) => (
@@ -415,7 +421,7 @@ export default function NewEtfsList({
                   setSort(value);
                   syncParams({ sort: value });
                 }}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 outline-none transition focus:border-brand-interactive"
+                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-brand-interactive"
               >
                 <option value="date">상장일순</option>
                 <option value="ticker">티커순</option>
@@ -429,6 +435,7 @@ export default function NewEtfsList({
                 <button
                   key={option.value}
                   type="button"
+                  aria-pressed={typeFilter === option.value}
                   onClick={() => {
                     setTypeFilter(option.value);
                     syncParams({ typeFilter: option.value });
@@ -436,7 +443,7 @@ export default function NewEtfsList({
                   className={`min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
                     typeFilter === option.value
                       ? "border-brand-interactive bg-brand-interactive text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
+                      : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-brand-interactive hover:text-brand-interactive"
                   }`}
                 >
                   {option.label} {option.count.toLocaleString("ko-KR")}
@@ -445,7 +452,7 @@ export default function NewEtfsList({
               <button
                 type="button"
                 onClick={() => downloadCsv(filteredRows)}
-                className="ml-auto min-h-8 rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive"
+                className="ml-auto min-h-8 rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive"
               >
                 CSV 저장
               </button>
@@ -463,7 +470,7 @@ export default function NewEtfsList({
                 </span>
                 <span className="flex min-w-[92px] flex-col items-end gap-1">
                   <span className={`pc num ${changeClass(row.change)}`}>{fmtChange(row.change)}</span>
-                  <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-500">
+                  <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
                     {detailStatusLabel(row.detailStatus)}
                   </span>
                 </span>

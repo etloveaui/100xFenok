@@ -39,7 +39,7 @@ export default async function NewEtfsPage({ searchParams }: Props) {
           </div>
         </section>
 
-        <div style={{ marginTop: "var(--s4)" }}>
+        <div className="mt-[var(--s4)]">
           <NewEtfsList
             initialQuery={firstParam(params.q)}
             initialType={firstParam(params.type)}

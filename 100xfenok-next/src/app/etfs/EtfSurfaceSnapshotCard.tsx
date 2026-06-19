@@ -88,7 +88,10 @@ function loadEtfSurfaceData(): Promise<EtfSurfaceData | null> {
       etfSurfaceCache = payload;
       return payload;
     })
-    .catch(() => null);
+    .catch(() => {
+      etfSurfacePending = null;
+      return null;
+    });
   return etfSurfacePending;
 }
 
@@ -277,9 +280,9 @@ export default function EtfSurfaceSnapshotCard() {
       ) : (
         <div className="panel-b grid gap-3 lg:grid-cols-2">
           <div className="mv-col">
-            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
+            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">
               <span>신규 상장 ETF · {fmtNumber(countRows(data?.newEtfs))}개</span>
-              <TransitionLink href="/etfs/new" className="text-brand-interactive hover:text-slate-950">
+              <TransitionLink href="/etfs/new" className="text-brand-interactive hover:text-[var(--c-ink)]">
                 {countLabel(newEtfCount)} 전체 보기
               </TransitionLink>
             </div>
@@ -298,7 +301,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">운용자산 상위 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">운용자산 상위 ETF</div>
             {largestEtfs.map((row) => (
               <EtfLink
                 key={`large-${row.s}`}
@@ -311,7 +314,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">거래량 상위 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">거래량 상위 ETF</div>
             {volumeLeaders.map((row) => (
               <EtfLink
                 key={`volume-${row.s}`}
@@ -324,7 +327,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">변동률 큰 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">변동률 큰 ETF</div>
             {changeLeaders.map((row) => (
               <EtfLink
                 key={`change-${row.s}`}
@@ -337,7 +340,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">대형 운용사 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">대형 운용사 ETF</div>
             {providerLeaders.map((row) => (
               <EtfLink
                 key={`provider-${row.symbol}`}
@@ -350,7 +353,7 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">비트코인 ETF</div>
+            <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">비트코인 ETF</div>
             {bitcoinEtfs.map((row) => (
               <EtfLink
                 key={`btc-${row.symbol}`}
@@ -363,10 +366,10 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col lg:col-span-2">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-[var(--panel-pad)] pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--c-line)] px-[var(--panel-pad)] pb-2">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">ETF 모음</div>
-                <div className="mt-1 text-xs font-semibold text-slate-500">
+                <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">ETF 모음</div>
+                <div className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
                   {collectionLabel(collectionKey)} · {fmtNumber(activeCollection.total)}개 중 {fmtNumber(activeCollection.rows.length)}개 표시
                 </div>
               </div>
@@ -375,11 +378,12 @@ export default function EtfSurfaceSnapshotCard() {
                   <button
                     key={key}
                     type="button"
+                    aria-pressed={collectionKey === key}
                     onClick={() => setCollectionKey(key)}
                     className={`min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
                       collectionKey === key
                         ? "border-brand-interactive bg-brand-interactive text-white"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
+                        : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-brand-interactive hover:text-brand-interactive"
                     }`}
                   >
                     {collectionLabel(key)} {fmtNumber(collections[key].total)}
@@ -411,7 +415,7 @@ export default function EtfSurfaceSnapshotCard() {
                 />
               );
             })}
-            <div className="px-[var(--panel-pad)] py-2 text-[10px] font-bold text-slate-400">
+            <div className="px-[var(--panel-pad)] py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
               기준일 {asOf(activeCollection.fetchedAt)}
             </div>
           </div>
@@ -420,7 +424,7 @@ export default function EtfSurfaceSnapshotCard() {
 
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
         <span>기준일 {asOf(data?.screener?.fetched_at, data?.newEtfs?.fetched_at)}</span>
-        <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
+        <TransitionLink href="/etfs/new" className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-brand-interactive transition hover:border-brand-interactive">
           신규 상장 {countLabel(newEtfCount)} 보기
         </TransitionLink>
       </div>

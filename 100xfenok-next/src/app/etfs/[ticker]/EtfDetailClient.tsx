@@ -342,8 +342,8 @@ function SkeletonSection() {
   return (
     <div className="panel stock-section">
       <div className="panel-b">
-        <div className="h-5 w-1/3 rounded bg-slate-200" />
-        <div className="mt-3 h-32 rounded bg-slate-200" />
+        <div className="h-5 w-1/3 rounded bg-[var(--c-surface-2)]" />
+        <div className="mt-3 h-32 rounded bg-[var(--c-surface-2)]" />
       </div>
     </div>
   );
@@ -351,10 +351,10 @@ function SkeletonSection() {
 
 function MetricCard({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{value}</p>
-      {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{note}</p> : null}
+    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
+      {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-[var(--c-ink-3)]">{note}</p> : null}
     </div>
   );
 }
@@ -371,19 +371,19 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
   ].filter((item) => isFiniteNumber(item.value));
 
   if (!items.length) {
-    return <p className="text-sm font-semibold text-slate-500">기간 수익률 데이터 없음</p>;
+    return <p className="text-sm font-semibold text-[var(--c-ink-3)]">기간 수익률 데이터 없음</p>;
   }
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item) => {
         const value = item.value ?? 0;
-        const tone = value >= 0 ? "text-emerald-600" : "text-rose-600";
+        const tone = value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
         return (
-          <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+          <div key={item.label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
             <p className={`orbitron mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
-            <p className="mt-1 text-[10px] font-semibold text-slate-500">{item.note}</p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">{item.note}</p>
           </div>
         );
       })}
@@ -434,13 +434,13 @@ function DetailAvailabilityCallout({
 
 function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currency: string }) {
   if (!holdings.length) {
-    return <p className="text-sm font-semibold text-slate-500">보유 구성 데이터 없음</p>;
+    return <p className="text-sm font-semibold text-[var(--c-ink-3)]">보유 구성 데이터 없음</p>;
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0}>
       <table className="w-full min-w-[620px] text-xs">
         <thead className="sticky top-0 z-10 bg-white">
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+          <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
             <th className="px-2 py-2 text-right">#</th>
             <th className="px-2 py-2 text-left">종목/계약</th>
             <th className="px-2 py-2 text-left">티커</th>
@@ -451,27 +451,27 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
         <tbody>
           {holdings.map((item, index) => {
             const weight = isFiniteNumber(item.weight_pct) ? item.weight_pct : null;
-            const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
+            const weightClass = weight !== null && weight < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]";
             return (
-              <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-500">{item.rank ?? index + 1}</td>
-                <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
-                <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
+              <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0">
+                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 font-bold text-[var(--c-ink)]">{item.name ?? "—"}</td>
+                <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-[var(--c-ink-3)]">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
+                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-500">표시 통화: {currency}</p> : null}
+      {currency ? <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">표시 통화: {currency}</p> : null}
     </div>
   );
 }
 
 function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined; empty: string }) {
   const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
-  if (!items.length) return <p className="text-sm font-semibold text-slate-500">{empty}</p>;
+  if (!items.length) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">{empty}</p>;
   return (
     <div className="space-y-2">
       {items.map((row, index) => {
@@ -480,11 +480,11 @@ function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined;
         return (
           <div key={`${weightedRowName(row)}-${index}`}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-              <span className="min-w-0 truncate font-bold text-slate-700">{weightedRowName(row)}</span>
-              <span className={`orbitron tabular-nums font-black ${value < 0 ? "text-rose-600" : "text-slate-900"}`}>{fmtPercentPoints(value)}</span>
+              <span className="min-w-0 truncate font-bold text-[var(--c-ink)]">{weightedRowName(row)}</span>
+              <span className={`orbitron tabular-nums font-black ${value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]"}`}>{fmtPercentPoints(value)}</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className={`h-2 rounded-full ${value < 0 ? "bg-rose-400" : "bg-brand-interactive"}`} style={{ width: `${width}%` }} />
+            <div className="h-2 overflow-hidden rounded-full bg-[var(--c-surface-2)]">
+              <div className={`h-2 rounded-full ${value < 0 ? "bg-[color:var(--c-down)]" : "bg-brand-interactive"}`} style={{ width: `${width}%` }} />
             </div>
           </div>
         );
@@ -628,7 +628,7 @@ function HistoryView({
     : historyRowsForSelection(historyPeriods, history, activeMode, activeRange);
   const isAvailable = (candidateMode: HistoryMode, candidateRange: HistoryRange) =>
     historyRowsForSelection(historyPeriods, history, candidateMode, candidateRange).length > 0;
-  if (!rows.length) return <p className="text-sm font-semibold text-slate-500">가격 히스토리 없음</p>;
+  if (!rows.length) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">가격 히스토리 없음</p>;
 
   const chronological = [...rows].reverse();
   const closes = chronological.map(historyPointClose).filter(isFiniteNumber);
@@ -657,7 +657,7 @@ function HistoryView({
         <MetricCard label="구간 저점" value={formatMoney(min, currency)} note={`${activeRange} ${activeLabel} 종가 기준`} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
-        <div className="flex h-40 items-end gap-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+        <div className="flex h-40 items-end gap-1 overflow-hidden rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3">
           {chronological.map((point, index) => {
             const date = historyPointDate(point);
             const close = historyPointClose(point) ?? min;
@@ -665,8 +665,8 @@ function HistoryView({
             const up = isFiniteNumber(point.ch) ? point.ch >= 0 : true;
             return (
               <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatMoney(close, currency)}`}>
-                <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
-                <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-500 sm:block">{(date ?? "").slice(5, 7)}</span>
+                <div className={`w-full rounded-t ${up ? "bg-[color:var(--c-up)]" : "bg-[color:var(--c-down)]"}`} style={{ height: `${height}%` }} />
+                <span className="hidden max-w-full truncate text-[9px] font-bold text-[var(--c-ink-3)] sm:block">{(date ?? "").slice(5, 7)}</span>
               </div>
             );
           })}
@@ -674,7 +674,7 @@ function HistoryView({
         <div className="-mx-1 overflow-x-auto px-1" role="region" aria-label="가격 히스토리 표" tabIndex={0}>
           <table className="w-full min-w-[360px] text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th className="px-2 py-2 text-left">일자</th>
                 <th className="px-2 py-2 text-right">종가</th>
                 <th className="px-2 py-2 text-right">변화</th>
@@ -683,11 +683,11 @@ function HistoryView({
             </thead>
             <tbody>
               {rows.map((point, index) => (
-                <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
-                  <td className="px-2 py-2 font-bold text-slate-700">{historyPointDate(point) ?? "—"}</td>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(historyPointClose(point), currency)}</td>
-                  <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtSignedPercentPoints(point.ch)}</td>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
+                <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-[var(--c-line)] last:border-b-0">
+                  <td className="px-2 py-2 font-bold text-[var(--c-ink)]">{historyPointDate(point) ?? "—"}</td>
+                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-[var(--c-ink)]">{formatMoney(historyPointClose(point), currency)}</td>
+                  <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
+                  <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>
                 </tr>
               ))}
             </tbody>
@@ -823,11 +823,11 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     return (
       <div className="stock-shell">
         <div className="panel stock-empty">
-          <p className="text-lg font-black text-slate-700">ETF 정보 연결 전</p>
-          <p className="mt-2 text-sm font-semibold text-slate-500">
+          <p className="text-lg font-black text-[var(--c-ink)]">ETF 정보 연결 전</p>
+          <p className="mt-2 text-sm font-semibold text-[var(--c-ink-3)]">
             {symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.
           </p>
-          <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+          <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
         </div>
       </div>
     );
@@ -854,7 +854,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             {labels.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {labels.map((label) => (
-                  <span key={label} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black text-slate-600">{label}</span>
+                  <span key={label} className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2.5 py-1 text-[10px] font-black text-[var(--c-ink-3)]">{label}</span>
                 ))}
               </div>
             ) : null}
@@ -885,7 +885,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 href={website}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 transition hover:border-brand-interactive hover:bg-white hover:text-brand-interactive"
+                className="mt-3 inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:bg-white hover:text-brand-interactive"
               >
                 운용사 웹사이트
               </a>
@@ -897,7 +897,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${holdings.length.toLocaleString("ko-KR")}개 표시`}>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
               <span>{holdingCount.toLocaleString("ko-KR")}개 원장 중 표시 가능한 항목</span>
               <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
             </div>
@@ -929,8 +929,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <footer className="stock-footer">
-            <TransitionLink href="/etfs" className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
-            <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+            <TransitionLink href="/etfs" className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+            <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
           </footer>
         </div>
       </div>
