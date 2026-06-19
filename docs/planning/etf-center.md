@@ -36,6 +36,7 @@ Entry point for the ETF Center.
   - Curated provider collections (BlackRock, ProShares) and strategy/digital-asset buckets.
 - **ETF universe card** (`EtfUniverseCard`): searchable, filterable list with load-more.
   - Loads from `/api/data/stockanalysis/etf-universe`.
+  - Merges `etf-snapshot.newEtfs` so newly listed ETFs keep classification tags before the next deep detail refresh.
   - URL-synced filters: `type`, `new`, `asset`, `issuer`, `aum`, `fee`.
   - Columns: ticker, name, type tags, AUM, price, change, volume, holdings count, expense ratio, returns.
 

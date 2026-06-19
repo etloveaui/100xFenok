@@ -15,6 +15,7 @@ import {
   isLeveragedEtf,
   isSingleStockLeveragedEtf,
   issuerNameFromEtfName,
+  type EtfClassification,
   type EtfTypeFilter,
   type EtfUniverseRecord,
 } from "./etfUniverseUtils";
@@ -43,6 +44,7 @@ interface NewEtfRecord {
   inceptionDate?: string;
   price?: number;
   change?: number;
+  classification?: EtfClassification;
 }
 
 interface EtfSnapshotDoc {
@@ -271,6 +273,7 @@ export default function EtfUniverseCard({
         inceptionDate: row.inceptionDate,
         price: row.price,
         change: row.change,
+        classification: existing?.classification ?? row.classification,
         is_new: true,
       });
     }
