@@ -43,7 +43,9 @@ Current headline: 28 dataset groups, 15,451 root JSON files, and 15,505 public
 JSON files. `data/README.md` still reports older headline counts; use the P0
 inventory artifact for current counts until the catalog README is refreshed. The
 0 root-only / 54 public-only delta is accounted for through `benchmarks` and
-`public.report_metadata`.
+`public.report_metadata`; consumer guard later found `public.report_metadata`
+is live-consumed, so it needs subsystem retire-or-revive rather than data-only
+sunset.
 
 ## StockAnalysis / ETF Coverage Baseline
 
@@ -252,8 +254,8 @@ contract and the disagreement policy.
    - DRAFT/UNVERIFIED: decide whether ETF/market-event dedicated pages stay
      parallel to Explore, or whether Explore becomes a navigation summary only.
 2. Live quote route policy:
-   - DRAFT/UNVERIFIED: decide whether `/api/ticker` is a sanctioned live quote
-     gateway or must be fully backed by scheduled DataPack data.
+   - RATIFIED: `ticker.ts` is a sanctioned live-gateway exception until a
+     Data Spine live-quote service exists.
 3. Data catalog refresh:
    - DRAFT/UNVERIFIED: reconcile `data/README.md` counts with measured current
      data counts.
@@ -262,7 +264,7 @@ contract and the disagreement policy.
 
 ## Next P0 Work
 
-1. Execute the `public.report_metadata` sunset cleanup slice.
+1. Decide whether to retire or revive the stale Daily Wrap report browser.
 2. Add feno-data/feno-data-remote/feno-value consumer evidence from CCH skills.
-3. Decide the StockAnalysis route vs service-map IA before A-phase UI.
+3. Review `DATA_SPINE_A_PHASE_PROPOSAL_20260619.md` before A-phase UI.
 4. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.

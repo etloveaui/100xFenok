@@ -1,7 +1,8 @@
 # Data Spine V0 Ratification
 
 Date: 2026-06-19
-Status: RATIFIED after peer review `fh-20260619-395-cc-138ca71d`.
+Status: RATIFIED after peer review `fh-20260619-395-cc-138ca71d`;
+amended by consumer guard `fh-20260619-400-cc-800917b0`.
 
 ## Scope
 
@@ -45,10 +46,9 @@ This is not a silent authority/fallback change. The current authority is already
 
 ### `public.report_metadata`
 
-Decision: `sunset_from_public_mirror`.
+Decision: `live_consumed_pending_subsystem_decision`.
 
-Owner for cleanup: 100x Data Spine cleanup. Deprecated source owner was the
-100x Daily Wrap index agent.
+Owner required: 100x Daily Wrap / report browser subsystem.
 
 Measured rationale:
 
@@ -59,9 +59,24 @@ Measured rationale:
 - `reports-index.json` lists only 3 legacy `_data` files
 - no root `data/` source and no active repo-local schedule
 
-V0 action: remove or archive `metadata/*.json` and `reports-index.json` from
-the served public DataPack in a cleanup slice. Reintroduce only with a root
-source, publisher, owner, and Data Lab freshness check.
+Consumer guard overturned the original data-only sunset. Live consumers still
+read the report browser metadata/index:
+
+- `100x/100x-main.html:94-96`
+- `100xfenok-next/public/100x/100x-main.html:94-96`
+- `admin/design-lab/reports/v5-unified-premium.html:797-799`
+- `100x/daily-wrap/daily-wrap-system/renderer.js:273-276`
+- `100xfenok-next/src/generated/static-route-manifest.ts:21-32`, consumed by
+  `src/lib/server/data-loader.ts:4,151-175`
+
+V0 action: keep the files in place. Do not delete or archive them until the
+report-browser subsystem is handled as a unit.
+
+User decision required:
+
+1. Retire the 100x Daily Wrap report browser pages and their metadata together.
+2. Revive report publishing with a root source, publisher, owner, and Data Lab
+   freshness check.
 
 ### `ticker.ts`
 
@@ -117,5 +132,6 @@ exception, or sunset candidates.
 
 - Peer review confirmed the spread distribution and pass/fail fractions.
 - Status changed from REVIEW DRAFT to RATIFIED before push.
-- Cleanup slice removes/sunsets `public.report_metadata`.
+- `public.report_metadata` is not removed by data-only cleanup; subsystem-level
+  retire-or-revive decision remains open.
 - Any future authority/fallback change is tagged `PROPOSED CHANGE`.

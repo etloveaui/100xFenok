@@ -217,19 +217,28 @@ def build_public_report_metadata_decision() -> dict[str, Any]:
     reports_index = load_json(REPORTS_INDEX) if REPORTS_INDEX.exists() else []
     latest = latest_metadata_payload() or {}
     return {
-        "decision": "sunset_from_public_mirror",
-        "owner": "100x Data Spine cleanup; deprecated source owner was 100x Daily Wrap index agent",
+        "decision": "live_consumed_pending_subsystem_decision",
+        "owner": "100x Daily Wrap / report browser subsystem owner required",
         "metadata_file_count": len(dates),
         "reports_index_count": len(reports_index) if isinstance(reports_index, list) else None,
         "latest_metadata_id": dates[-1] if dates else None,
         "latest_metadata_title": latest.get("title"),
         "latest_metadata_summary": latest.get("summary"),
+        "live_consumers": [
+            "100x/100x-main.html:94-96",
+            "100xfenok-next/public/100x/100x-main.html:94-96",
+            "admin/design-lab/reports/v5-unified-premium.html:797-799",
+            "100x/daily-wrap/daily-wrap-system/renderer.js:273-276",
+            "100xfenok-next/src/generated/static-route-manifest.ts:21-32 via src/lib/server/data-loader.ts:4,151-175",
+        ],
         "rationale": (
-            "public-only report metadata has no root DataPack source, no active repo-local schedule, "
-            "a stale/test latest file, and a reports-index that lists only three legacy _data files"
+            "consumer guard found live report-browser readers, so data-only sunset would break pages; "
+            "the subsystem is stale because the latest metadata is a test placeholder and reports-index "
+            "lists only three legacy _data files"
         ),
-        "v0_action": "remove or archive metadata/*.json and reports-index.json from served public DataPack in cleanup slice",
-        "freshness_policy": "not applicable after sunset; reintroduce only with root source + publisher + Data Lab freshness check",
+        "v0_action": "keep data in place; do not delete/archive until the report-browser subsystem is retired or revived",
+        "user_decision_required": "retire report browser + data together, or revive publishing with owner/source/freshness",
+        "freshness_policy": "required if revived: root source + publisher + owner + Data Lab freshness check",
     }
 
 
