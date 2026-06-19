@@ -93,6 +93,9 @@ External sources
     thematic list, and industry pages;
   - supports scheduled incremental ETF detail self-heal with
     `--incremental-etf-backfill --incremental-etf-limit --incremental-etf-max-age-hours`;
+  - supports `--history-gaps-only --plan-only` so operators can preview existing
+    primary StockAnalysis ETF detail files missing `monthly_3y` / `monthly_5y`
+    before making live external refresh calls;
   - retries new/missing/stale and prior `yf_fallback` ETF detail files against
     StockAnalysis automatically before writing any fallback;
   - supports source-tagged `--yf-etf-fallback` when StockAnalysis ETF detail
@@ -306,8 +309,10 @@ StockAnalysis all remain visible when their values overlap.
    finalize only when audit reports no missing offsets and no hard errors.
 4. Run `scripts/finalize-market-data.py` after full backfill, then commit the
    generated DataPack + public mirror outputs as a separate data commit.
-5. Run staged ETF detail refreshes for the multi-year history keys so 3Y CAGR
-   and 3Y/5Y detail charts graduate from code-ready to broad local coverage.
+5. Run `fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only
+   --history-gaps-only --plan-only` first, then run staged ETF detail refreshes
+   for the multi-year history keys so 3Y CAGR and 3Y/5Y detail charts graduate
+   from code-ready to broad local coverage.
 6. Keep shipped StockAnalysis surfaces actively reachable through canonical
    tabs/routes, Admin, or Data Lab and guarded by `qa:stockanalysis`,
    `qa:surface-consumers`, and `qa:market-audit` so committed surface data does

@@ -83,6 +83,13 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.fetcher.parse_surface_names("missing_surface", "core")
 
+    def test_parse_history_periods_dedupe_and_validation(self) -> None:
+        periods = self.fetcher.parse_history_periods("monthly_3y,monthly_3y,monthly_5y")
+        self.assertEqual(periods, ("monthly_3y", "monthly_5y"))
+
+        with self.assertRaises(SystemExit):
+            self.fetcher.parse_history_periods("monthly_99y")
+
     def test_select_base_etfs_uses_default_focus_set_without_incremental_only(self) -> None:
         etfs = self.fetcher.select_base_etfs(
             [],
@@ -406,6 +413,76 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["selected"][0]["source"], "etf_screener")
         self.assertEqual(summary["selected"][0]["reason"], "missing")
         self.assertEqual(summary["counts"]["missing"], 1)
+
+    def test_incremental_etf_backfill_history_gaps_only_selects_existing_primary_gaps(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "etfs" / "AAA.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "stockanalysis",
+                            "asset_type": "etf",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                            "normalized": {
+                                "history_periods": {
+                                    "monthly_1y": [{"t": "2026-06-01", "c": 100}],
+                                    "monthly_3y": [],
+                                }
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "BBB.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "stockanalysis",
+                            "asset_type": "etf",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                            "normalized": {
+                                "history_periods": {
+                                    "monthly_3y": [{"t": "2026-06-01", "c": 100}],
+                                    "monthly_5y": [{"t": "2026-06-01", "c": 90}],
+                                }
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "YF.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "yahoo_finance",
+                            "source_provider": "yahoo_finance",
+                            "detail_status": "yf_fallback",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": [{"ticker": "AAA"}, {"ticker": "BBB"}, {"ticker": "CCC"}, {"ticker": "YF"}]},
+                    limit=10,
+                    max_age_hours=720,
+                    exclude=set(),
+                    required_history_periods=("monthly_3y", "monthly_5y"),
+                    history_gaps_only=True,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["AAA"])
+        self.assertEqual(summary["selected"][0]["reason"], "history_gap")
+        self.assertEqual(summary["selected"][0]["missing_history_periods"], ["monthly_3y", "monthly_5y"])
+        self.assertEqual(summary["counts"]["history_gap"], 1)
+        self.assertEqual(summary["counts"]["missing"], 0)
+        self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
     def test_incremental_etf_backfill_skips_pending_ledger_cooldown(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

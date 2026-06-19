@@ -142,6 +142,10 @@ Implementation pointers:
   - Optional `--stockanalysis-etfs` flag for staged full-ETF backfills.
   - `--plan-only` can preview the exact AUM-prioritized candidate slice before any Yahoo call or data write.
 - **Incremental backfill**: scheduled default is conservative; staged full-ETF backfills are triggered manually via `workflow_dispatch`.
+- **Multi-year history gap plan**: before a live 3Y/5Y ETF history refresh, run
+  `python3 scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --incremental-etf-limit <N>`
+  to preview only existing primary StockAnalysis ETF detail files that lack
+  `monthly_3y` / `monthly_5y`, without network calls or data writes.
 
 ## 4. Filters & Display Fields
 
@@ -232,7 +236,7 @@ Representative ticker contracts:
 
 | Gap | Status | Notes |
 |-----|--------|-------|
-| 3Y return coverage | code-ready / data backfill needed | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data is backfilled. Current local coverage remains 229 / 5,267 until that live history refresh runs. |
+| 3Y return coverage | plan-ready / live data backfill needed | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data is backfilled. `fetch-stockanalysis.py --history-gaps-only --plan-only` previews the exact local candidate slice first. Current local coverage remains 229 / 5,267 until that live history refresh runs. |
 | Chart granularity | code-ready / data backfill needed | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files still mostly hold the 1Y keys, so 3Y/5Y charts open progressively after detail backfill. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | Header logo style | unified | Extracted shared `BrandLogo` component and applied to root `Navbar` and `AppShell` (rail + appbar). Both now use the same white rounded background, shadow, and border. |

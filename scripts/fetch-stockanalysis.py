@@ -114,6 +114,7 @@ HISTORY_PERIOD_ENDPOINTS = {
     "monthly_3y": {"range": "3Y", "period": "Monthly"},
     "monthly_5y": {"range": "5Y", "period": "Monthly"},
 }
+DEFAULT_HISTORY_GAP_PERIODS = ("monthly_3y", "monthly_5y")
 FINANCIAL_STATEMENT_PATHS = {
     "income": "financials",
     "balance_sheet": "financials/balance-sheet",
@@ -702,6 +703,24 @@ def parse_symbols(value: str) -> list[str]:
             out.append(symbol)
             seen.add(symbol)
     return out
+
+
+def parse_history_periods(value: str) -> tuple[str, ...]:
+    if not value:
+        return ()
+    out = []
+    seen = set()
+    for raw in value.split(","):
+        key = raw.strip()
+        if not key:
+            continue
+        if key not in HISTORY_PERIOD_ENDPOINTS:
+            known = ", ".join(sorted(HISTORY_PERIOD_ENDPOINTS))
+            raise SystemExit(f"Unknown history period(s): {key}. Known: {known}")
+        if key not in seen:
+            out.append(key)
+            seen.add(key)
+    return tuple(out)
 
 
 def select_base_etfs(
@@ -1471,6 +1490,31 @@ def payload_age_hours(payload: dict | None) -> float | None:
     return (datetime.now(timezone.utc) - fetched).total_seconds() / 3600
 
 
+def history_period_rows(payload: dict | None, period_key: str) -> list | None:
+    if not isinstance(payload, dict):
+        return None
+    containers = []
+    normalized = payload.get("normalized")
+    raw = payload.get("raw")
+    if isinstance(normalized, dict):
+        containers.append(normalized.get("history_periods"))
+    if isinstance(raw, dict):
+        containers.append(raw.get("history_periods"))
+    for container in containers:
+        if isinstance(container, dict) and isinstance(container.get(period_key), list):
+            return container.get(period_key)
+    return None
+
+
+def missing_history_periods(payload: dict | None, required_periods: tuple[str, ...]) -> list[str]:
+    missing = []
+    for period_key in required_periods:
+        rows = history_period_rows(payload, period_key)
+        if not rows:
+            missing.append(period_key)
+    return missing
+
+
 def load_pending_ledger() -> dict:
     payload = read_json(OUT_DIR / PENDING_LEDGER_REL_PATH)
     if not isinstance(payload, dict):
@@ -1627,16 +1671,22 @@ def update_pending_ledger(
     return ledger
 
 
-def etf_detail_backfill_reason(ticker: str, max_age_hours: float) -> tuple[str | None, float | None]:
+def etf_detail_backfill_reason(
+    ticker: str,
+    max_age_hours: float,
+    required_history_periods: tuple[str, ...] = (),
+) -> tuple[str | None, float | None]:
     payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
     if payload is None:
         return "missing", None
     source = payload.get("source")
     detail_status = payload.get("detail_status")
     source_provider = payload.get("source_provider")
-    if source != "stockanalysis" or source_provider == "yahoo_finance" or detail_status == "yf_fallback":
-        return "fallback_retry", payload_age_hours(payload)
     age_hours = payload_age_hours(payload)
+    if source != "stockanalysis" or source_provider == "yahoo_finance" or detail_status == "yf_fallback":
+        return "fallback_retry", age_hours
+    if required_history_periods and missing_history_periods(payload, required_history_periods):
+        return "history_gap", age_hours
     if max_age_hours > 0 and (age_hours is None or age_hours >= max_age_hours):
         return "stale", age_hours
     return None, age_hours
@@ -1905,6 +1955,8 @@ def incremental_etf_backfill_candidates(
     cooldown_days: float = DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS,
     cooldown_failure_threshold: int = DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES,
     now_dt: datetime | None = None,
+    required_history_periods: tuple[str, ...] = (),
+    history_gaps_only: bool = False,
 ) -> dict:
     exclude = exclude or set()
     now_dt = now_dt or datetime.now(timezone.utc)
@@ -1919,13 +1971,16 @@ def incremental_etf_backfill_candidates(
     cooldown_rows = []
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
-    reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "stale": 2}
+    reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "history_gap": 2, "stale": 3}
 
     for source_name, symbols in sources:
         for ticker in unique_symbols(symbols):
             if ticker in seen or ticker in exclude:
                 continue
             pending_entry = pending_entries.get(ticker)
+            reason, age_hours = etf_detail_backfill_reason(ticker, max_age_hours, required_history_periods)
+            if reason is None or (history_gaps_only and reason != "history_gap"):
+                continue
             if pending_entry_in_cooldown(pending_entry, now_dt, cooldown_days, cooldown_failure_threshold):
                 seen.add(ticker)
                 cooldown_rows.append(
@@ -1938,22 +1993,21 @@ def incremental_etf_backfill_candidates(
                     }
                 )
                 continue
-            reason, age_hours = etf_detail_backfill_reason(ticker, max_age_hours)
-            if reason is None:
-                continue
             prior_failures = parse_int((pending_entry or {}).get("consecutive_failures")) or 0
             seen.add(ticker)
-            candidates.append(
-                {
-                    "ticker": ticker,
-                    "source": source_name,
-                    "reason": reason,
-                    "age_hours": round(age_hours, 2) if age_hours is not None else None,
-                    "prior_failures": prior_failures,
-                    "priority": source_priority.get(source_name, 99),
-                    "reason_priority": reason_priority.get(reason, 99),
-                }
-            )
+            row = {
+                "ticker": ticker,
+                "source": source_name,
+                "reason": reason,
+                "age_hours": round(age_hours, 2) if age_hours is not None else None,
+                "prior_failures": prior_failures,
+                "priority": source_priority.get(source_name, 99),
+                "reason_priority": reason_priority.get(reason, 99),
+            }
+            if reason == "history_gap":
+                payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+                row["missing_history_periods"] = missing_history_periods(payload, required_history_periods)
+            candidates.append(row)
 
     candidates.sort(
         key=lambda row: (
@@ -1975,13 +2029,20 @@ def incremental_etf_backfill_candidates(
             "max_age_hours": max_age_hours,
             "cooldown_days": cooldown_days,
             "cooldown_failure_threshold": cooldown_failure_threshold,
-            "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows",
+            "required_history_periods": list(required_history_periods),
+            "history_gaps_only": history_gaps_only,
+            "selection": (
+                "primary StockAnalysis ETF detail files missing required history_periods only"
+                if history_gaps_only
+                else "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
+            ),
         },
         "counts": {
             "candidates": len(candidates),
             "selected": len(selected),
             "missing": sum(1 for row in candidates if row["reason"] == "missing"),
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
+            "history_gap": sum(1 for row in candidates if row["reason"] == "history_gap"),
             "stale": sum(1 for row in candidates if row["reason"] == "stale"),
             "cooldown_skipped": len(cooldown_rows),
             "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
@@ -2268,6 +2329,9 @@ def main() -> None:
     parser.add_argument("--universe-backfill", action="store_true", help="deep-fetch ETFs from etf_universe.json instead of the focus ETF list")
     parser.add_argument("--incremental-etf-backfill", action="store_true", help="auto deep-fetch new/missing/stale ETF details without a full universe run")
     parser.add_argument("--incremental-etf-only", action="store_true", help="with --incremental-etf-backfill, skip the default focus ETF refresh and fetch only explicit --etfs plus selected incremental candidates")
+    parser.add_argument("--history-gaps-only", action="store_true", help="with --incremental-etf-backfill, select only primary StockAnalysis ETF details missing required history_periods")
+    parser.add_argument("--required-history-periods", default="", help="comma-separated history_periods required for --history-gaps-only; default monthly_3y,monthly_5y")
+    parser.add_argument("--plan-only", action="store_true", help="print the selected incremental ETF plan without network fetches or data writes")
     parser.add_argument("--coverage-only", action="store_true", help="rebuild local ETF detail coverage proof without network fetches")
     parser.add_argument("--incremental-etf-limit", type=int, default=DEFAULT_INCREMENTAL_ETF_LIMIT, help="maximum incremental ETF detail retries per run")
     parser.add_argument("--incremental-etf-max-age-hours", type=float, default=DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS, help="existing StockAnalysis ETF detail age before it becomes stale")
@@ -2290,8 +2354,23 @@ def main() -> None:
 
     if args.incremental_etf_only and not args.incremental_etf_backfill:
         raise SystemExit("--incremental-etf-only requires --incremental-etf-backfill")
+    if args.history_gaps_only and not args.incremental_etf_backfill:
+        raise SystemExit("--history-gaps-only requires --incremental-etf-backfill")
+    if args.required_history_periods and not args.incremental_etf_backfill:
+        raise SystemExit("--required-history-periods requires --incremental-etf-backfill")
+    if args.plan_only and not args.incremental_etf_backfill:
+        raise SystemExit("--plan-only currently supports --incremental-etf-backfill")
+    if args.plan_only and any((args.discover_etf_universe, args.fetch_surfaces, args.coverage_only, args.classify_etf_catalogs)):
+        raise SystemExit("--plan-only uses existing local files; do not combine it with fetch/write modes")
 
     mirror_public = not args.no_public_mirror
+    required_history_periods = (
+        parse_history_periods(args.required_history_periods)
+        if args.required_history_periods
+        else DEFAULT_HISTORY_GAP_PERIODS
+        if args.history_gaps_only
+        else ()
+    )
     classify_catalogs_requested = args.classify_etf_catalogs
     no_other_work = not any(
         (
@@ -2367,9 +2446,38 @@ def main() -> None:
             exclude=set(etfs),
             cooldown_days=args.incremental_etf_cooldown_days,
             cooldown_failure_threshold=args.incremental_etf_cooldown_failures,
+            required_history_periods=required_history_periods,
+            history_gaps_only=args.history_gaps_only,
         )
         incremental_etfs = [row["ticker"] for row in incremental_summary["selected"]]
-        etfs = unique_symbols(etfs + incremental_etfs)
+        planned_etfs = unique_symbols(etfs + incremental_etfs)
+        if args.plan_only:
+            print(
+                json.dumps(
+                    {
+                        "schema_version": SCHEMA_VERSION,
+                        "source": "stockanalysis",
+                        "operation": "incremental_etf_backfill_plan",
+                        "generated_at": now_iso(),
+                        "mode": "history_gaps_only" if args.history_gaps_only else "incremental",
+                        "required_history_periods": list(required_history_periods),
+                        "counts": {
+                            "etfs_planned": len(planned_etfs),
+                            "incremental_selected": incremental_summary["counts"]["selected"],
+                            "incremental_candidates": incremental_summary["counts"]["candidates"],
+                            "history_gap": incremental_summary["counts"].get("history_gap", 0),
+                            "cooldown_skipped": incremental_summary["counts"]["cooldown_skipped"],
+                        },
+                        "etfs": planned_etfs,
+                        "incremental_etf_backfill": incremental_summary,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                flush=True,
+            )
+            return
+        etfs = planned_etfs
         write_payload("backfill/incremental_latest.json", incremental_summary, mirror_public)
         print(
             "[incremental-etf-backfill] "
@@ -2377,6 +2485,7 @@ def main() -> None:
             f"candidates={incremental_summary['counts']['candidates']} "
             f"missing={incremental_summary['counts']['missing']} "
             f"fallback_retry={incremental_summary['counts']['fallback_retry']} "
+            f"history_gap={incremental_summary['counts']['history_gap']} "
             f"stale={incremental_summary['counts']['stale']} "
             f"cooldown_skipped={incremental_summary['counts']['cooldown_skipped']}",
             flush=True,
