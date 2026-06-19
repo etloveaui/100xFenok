@@ -148,7 +148,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF API route smoke**: Ops Console probes `/api/data/stockanalysis/etf-universe` as JSON so the Admin surface catches route-level failures separately from static `etf_universe.json` freshness.
 - **ETF list coverage**: Data Lab renders `with_expense_ratio` and `with_performance` from the joined ETF list API, falling back to static universe enrichment counts only when the API omits them.
 - **ETF multi-year history**: StockAnalysis ETF detail files may now expose `weekly_3y`, `monthly_3y`, and `monthly_5y` under `history_periods`; market facts can derive 3Y CAGR from those arrays after the staged refresh writes them.
-- **ETF history-gap plan**: `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only` previews existing primary ETF detail files missing `monthly_3y` / `monthly_5y` without network calls or data writes.
+- **ETF history-gap plan**: `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only` previews existing primary ETF detail files missing `monthly_3y` / `monthly_5y` without network calls. Add `--write-plan` to persist the preview to `data/stockanalysis/backfill/incremental_plan_latest.json`; this is a plan artifact, not completed-run evidence.
 - **ETF history-gap visibility**: The incremental backfill and queue cards render `history_gap` as `다년 히스토리 보강`, and label candidate sources such as `new_etfs` / `etf_screener` in Korean.
 
 ---
@@ -165,6 +165,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.30 | 2026-06-19 | Added a durable no-network ETF history-gap plan artifact and Data Lab plan-file visibility without treating it as completed fetch evidence |
 | 2.2.29 | 2026-06-19 | Rendered StockAnalysis ETF `history_gap` candidates in Data Lab backfill cards with Korean operator labels |
 | 2.2.28 | 2026-06-19 | Added a local plan-only StockAnalysis ETF history-gap selector so staged 3Y/5Y history backfills can be reviewed before live refresh calls |
 | 2.2.27 | 2026-06-19 | Prepared StockAnalysis ETF detail fetches for multi-year history keys and wired market facts to derive 3Y CAGR from local monthly history after backfill |

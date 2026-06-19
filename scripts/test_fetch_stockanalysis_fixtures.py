@@ -484,6 +484,64 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["counts"]["missing"], 0)
         self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
+    def test_incremental_etf_backfill_plan_payload_is_separate_from_run_proof(self) -> None:
+        summary = {
+            "counts": {
+                "selected": 2,
+                "candidates": 9,
+                "history_gap": 9,
+                "cooldown_skipped": 1,
+            },
+            "selected": [
+                {"ticker": "AAA", "reason": "history_gap"},
+                {"ticker": "BBB", "reason": "history_gap"},
+            ],
+        }
+
+        payload = self.fetcher.build_incremental_etf_backfill_plan(
+            ["AAA", "BBB"],
+            summary,
+            ("monthly_3y", "monthly_5y"),
+            history_gaps_only=True,
+        )
+
+        self.assertEqual(payload["operation"], "incremental_etf_backfill_plan")
+        self.assertEqual(payload["mode"], "history_gaps_only")
+        self.assertEqual(payload["required_history_periods"], ["monthly_3y", "monthly_5y"])
+        self.assertEqual(payload["counts"]["etfs_planned"], 2)
+        self.assertEqual(payload["counts"]["incremental_selected"], 2)
+        self.assertEqual(payload["counts"]["incremental_candidates"], 9)
+        self.assertEqual(payload["counts"]["history_gap"], 9)
+        self.assertEqual(payload["policy"]["network"], "none")
+        self.assertIn("incremental_latest.json", payload["policy"]["execution_proof"])
+
+    def test_write_incremental_plan_mirrors_without_latest_run_artifact(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_public_dir = self.fetcher.PUBLIC_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                tmp_path = Path(tmp)
+                self.fetcher.OUT_DIR = tmp_path / "stockanalysis"
+                self.fetcher.PUBLIC_DIR = tmp_path / "public" / "stockanalysis"
+                payload = self.fetcher.build_incremental_etf_backfill_plan(
+                    ["AAA"],
+                    {"counts": {"selected": 1, "candidates": 1, "history_gap": 1, "cooldown_skipped": 0}, "selected": []},
+                    ("monthly_3y", "monthly_5y"),
+                    history_gaps_only=True,
+                )
+
+                self.fetcher.write_payload(self.fetcher.INCREMENTAL_PLAN_REL_PATH, payload, mirror_public=True)
+
+                source_path = self.fetcher.OUT_DIR / "backfill" / "incremental_plan_latest.json"
+                public_path = self.fetcher.PUBLIC_DIR / "backfill" / "incremental_plan_latest.json"
+                self.assertTrue(source_path.exists())
+                self.assertTrue(public_path.exists())
+                self.assertFalse((self.fetcher.OUT_DIR / "backfill" / "incremental_latest.json").exists())
+                self.assertEqual(json.loads(source_path.read_text(encoding="utf-8")), json.loads(public_path.read_text(encoding="utf-8")))
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.PUBLIC_DIR = original_public_dir
+
     def test_incremental_etf_backfill_skips_pending_ledger_cooldown(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         try:

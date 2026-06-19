@@ -12,6 +12,7 @@ const JSON_PAIRS = [
   ["ETF universe", "../data/stockanalysis/etf_universe.json", "public/data/stockanalysis/etf_universe.json"],
   ["ETF coverage", "../data/stockanalysis/coverage/etf_detail.json", "public/data/stockanalysis/coverage/etf_detail.json"],
   ["ETF incremental proof", "../data/stockanalysis/backfill/incremental_latest.json", "public/data/stockanalysis/backfill/incremental_latest.json"],
+  ["ETF incremental plan", "../data/stockanalysis/backfill/incremental_plan_latest.json", "public/data/stockanalysis/backfill/incremental_plan_latest.json"],
   ["ETF pending ledger", "../data/stockanalysis/backfill/pending_ledger.json", "public/data/stockanalysis/backfill/pending_ledger.json"],
   ["StockAnalysis index", "../data/stockanalysis/index.json", "public/data/stockanalysis/index.json"],
   ["StockAnalysis classification", "../data/stockanalysis/classification/latest.json", "public/data/stockanalysis/classification/latest.json"],
@@ -45,6 +46,8 @@ const REQUIRED_RENDERED_SECTIONS = [
   "시장 데이터 수집 현황",
   "최근 ETF 상세 갱신",
   "ETF 수집 대기열",
+  "계획 파일",
+  "계획 후보",
   "지금 재시도 가능",
   "가장 빠른 재시도일",
   "반복 미확인",
@@ -116,9 +119,10 @@ function assertCoverageContract(coverage, errors) {
   }
 }
 
-function assertBackfillContract(audit, incremental, pendingLedger, factsIndex, errors) {
+function assertBackfillContract(audit, incremental, incrementalPlan, pendingLedger, factsIndex, errors) {
   const auditCounts = audit?.incremental_etf?.counts || {};
   const incrementalCounts = incremental?.counts || {};
+  const planCounts = incrementalPlan?.counts || {};
   const ledgerEntries = pendingLedger?.entries && typeof pendingLedger.entries === "object" && !Array.isArray(pendingLedger.entries)
     ? pendingLedger.entries
     : {};
@@ -128,7 +132,10 @@ function assertBackfillContract(audit, incremental, pendingLedger, factsIndex, e
 
   assert(audit?.incremental_etf && typeof audit.incremental_etf === "object", "Market audit: incremental_etf block is required", errors);
   assert(audit.incremental_etf.proof_file_exists === true, "Market audit: incremental_etf.proof_file_exists must be true when incremental proof exists", errors);
+  assert(audit.incremental_etf.plan_file_exists === true, "Market audit: incremental_etf.plan_file_exists must be true when incremental plan exists", errors);
   assert(Number(incrementalCounts.selected ?? auditCounts.selected ?? -1) >= 0, "ETF incremental proof: selected count is required", errors);
+  assert(Number(planCounts.incremental_selected ?? auditCounts.plan_selected ?? -1) >= 0, "ETF incremental plan: selected count is required", errors);
+  assert(Number(planCounts.history_gap ?? auditCounts.plan_history_gap ?? -1) >= 0, "ETF incremental plan: history_gap count is required", errors);
   assert(Number(auditCounts.hard_failed ?? 0) === 0, "Market audit: hard_failed must remain zero for the current QA data pack", errors);
   assert(ledgerRows.length === ledgerTracked, "ETF pending ledger: entries count must match tracked count", errors);
   if (ledgerCooldown > 0) {
@@ -257,6 +264,7 @@ function renderMarketAuditHtml(payloads) {
     payloads.etfUniverseApi,
     payloads.newEtfs,
     payloads.incremental,
+    payloads.incrementalPlan,
     payloads.pendingLedger,
     payloads.marketFactsIndex,
   );
@@ -294,13 +302,14 @@ const payloads = {
   etfScreener: readJson("public/data/stockanalysis/surfaces/etf_screener.json"),
   newEtfs: readJson("public/data/stockanalysis/surfaces/new_etfs.json"),
   incremental: readJson("public/data/stockanalysis/backfill/incremental_latest.json"),
+  incrementalPlan: readJson("public/data/stockanalysis/backfill/incremental_plan_latest.json"),
   pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
   marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
 };
 payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener);
 
 assertCoverageContract(payloads.coverage, errors);
-assertBackfillContract(payloads.audit, payloads.incremental, payloads.pendingLedger, payloads.marketFactsIndex, errors);
+assertBackfillContract(payloads.audit, payloads.incremental, payloads.incrementalPlan, payloads.pendingLedger, payloads.marketFactsIndex, errors);
 assertReturnCoverageContract(payloads.audit, errors);
 assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
 assertRenderedMarketAudit(payloads, errors);

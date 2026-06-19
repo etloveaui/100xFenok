@@ -92,6 +92,8 @@ Implementation pointers:
 | `data/stockanalysis/surfaces/etf_screener.json` | Price, change, volume, holdings, assetClass | `fetch-stockanalysis.py --fetch-surfaces` |
 | `data/stockanalysis/surfaces/new_etfs.json` | Recently listed ETFs | `fetch-stockanalysis.py --fetch-surfaces` |
 | `data/stockanalysis/etfs/{TICKER}.json` | Individual ETF detail (overview, holdings, `history_periods`, performance) | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
+| `data/stockanalysis/backfill/incremental_plan_latest.json` | No-network preflight plan for the next incremental ETF detail/history refresh | `fetch-stockanalysis.py --plan-only --write-plan` |
+| `data/stockanalysis/backfill/incremental_latest.json` | Post-run proof from a completed incremental ETF detail refresh | `fetch-stockanalysis.py --incremental-etf-backfill` |
 | `data/stockanalysis/coverage/etf_detail.json` | Coverage counts and missing samples | coverage builder |
 | `data/computed/market_facts/tickers/{TICKER}.json` | Normalized facts (price, returns, expense_ratio, etc.) | `build-market-facts.py` |
 | `data/yf/finance/{TICKER}.json` | Yahoo Finance fallback info + history | `fetch-yf-finance.py` |
@@ -143,9 +145,11 @@ Implementation pointers:
   - `--plan-only` can preview the exact AUM-prioritized candidate slice before any Yahoo call or data write.
 - **Incremental backfill**: scheduled default is conservative; staged full-ETF backfills are triggered manually via `workflow_dispatch`.
 - **Multi-year history gap plan**: before a live 3Y/5Y ETF history refresh, run
-  `python3 scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --incremental-etf-limit <N>`
+  `python3 scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit <N>`
   to preview only existing primary StockAnalysis ETF detail files that lack
-  `monthly_3y` / `monthly_5y`, without network calls or data writes.
+  `monthly_3y` / `monthly_5y`, without network calls. The written
+  `incremental_plan_latest.json` is a plan artifact; `incremental_latest.json`
+  remains the completed-run evidence.
 
 ## 4. Filters & Display Fields
 

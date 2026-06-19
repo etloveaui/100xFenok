@@ -115,8 +115,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "computed": [
     {
       "name": "market_data_audit.json",
-      "sizeBytes": 8261,
-      "updatedAt": "2026-06-19T04:46:29.541Z"
+      "sizeBytes": 8468,
+      "updatedAt": "2026-06-19T05:00:48.860Z"
     },
     {
       "name": "market_source_parity.json",
@@ -41518,8 +41518,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "schema.json",
-      "sizeBytes": 5508,
-      "updatedAt": "2026-06-19T04:46:34.245Z"
+      "sizeBytes": 6112,
+      "updatedAt": "2026-06-19T05:01:03.820Z"
     },
     {
       "name": "surface_consumers.json",
@@ -41532,6 +41532,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "incremental_latest.json",
       "sizeBytes": 32405,
       "updatedAt": "2026-06-19T04:46:31.976Z"
+    },
+    {
+      "name": "incremental_plan_latest.json",
+      "sizeBytes": 1492267,
+      "updatedAt": "2026-06-19T05:00:36.393Z"
     },
     {
       "name": "index_offset_0_limit_100.json",

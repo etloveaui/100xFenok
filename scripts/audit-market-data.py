@@ -85,6 +85,7 @@ def list_transient_files(directory: Path, base_dir: Path) -> list[str]:
 def build_incremental_etf_audit(
     index_payload: dict | None,
     incremental_payload: dict | None,
+    plan_payload: dict | None,
     market_coverage: dict,
     pending_ledger: dict | None,
 ) -> dict:
@@ -104,12 +105,16 @@ def build_incremental_etf_audit(
     ledger_tracked = as_int(ledger_counts.get("tracked", index_counts.get("incremental_etf_ledger_tracked")))
     ledger_cooldown = as_int(ledger_counts.get("cooldown", index_counts.get("incremental_etf_ledger_cooldown")))
     proof_file_exists = incremental_payload is not None
+    plan_file_exists = plan_payload is not None
+    plan_counts = (plan_payload or {}).get("counts") or {}
     has_run_evidence = proof_file_exists or selected > 0 or fallback_ok > 0 or facts_fallback > 0
     notes = []
     if not index_file_exists:
         notes.append("stockanalysis_index_missing")
     if not proof_file_exists:
         notes.append("incremental_latest_missing")
+    if plan_file_exists:
+        notes.append("incremental_plan_available")
     if proof_file_exists and selected > 0 and index_selected <= 0:
         notes.append("incremental_not_reflected_in_fetch_index")
     if still_pending > 0:
@@ -138,14 +143,19 @@ def build_incremental_etf_audit(
         "has_run_evidence": has_run_evidence,
         "index_file_exists": index_file_exists,
         "proof_file_exists": proof_file_exists,
+        "plan_file_exists": plan_file_exists,
         "index_generated_at": index_payload.get("generated_at"),
         "proof_generated_at": (incremental_payload or {}).get("generated_at"),
+        "plan_generated_at": (plan_payload or {}).get("generated_at"),
         "counts": {
             "candidates": candidates,
             "selected": selected,
             "missing": as_int(incremental_counts.get("missing")),
             "fallback_retry": as_int(incremental_counts.get("fallback_retry")),
             "stale": as_int(incremental_counts.get("stale")),
+            "plan_selected": as_int(plan_counts.get("incremental_selected")),
+            "plan_candidates": as_int(plan_counts.get("incremental_candidates")),
+            "plan_history_gap": as_int(plan_counts.get("history_gap")),
             "cooldown_skipped": cooldown_skipped,
             "pending_ledger_tracked": ledger_tracked,
             "pending_ledger_cooldown": ledger_cooldown,
@@ -237,6 +247,7 @@ def build_payload() -> dict:
 
     stockanalysis_index = load_json(DATA / "stockanalysis" / "index.json")
     incremental_latest = load_json(DATA / "stockanalysis" / "backfill" / "incremental_latest.json")
+    incremental_plan_latest = load_json(DATA / "stockanalysis" / "backfill" / "incremental_plan_latest.json")
     pending_ledger = load_json(DATA / "stockanalysis" / "backfill" / "pending_ledger.json")
     market_index = load_json(DATA / "computed" / "market_facts" / "index.json") or {}
     market_rows = market_index.get("rows") or []
@@ -362,7 +373,7 @@ def build_payload() -> dict:
             "generated_at": source_parity.get("generated_at"),
             "summary": source_parity.get("summary"),
         },
-        "incremental_etf": build_incremental_etf_audit(stockanalysis_index, incremental_latest, market_coverage, pending_ledger),
+        "incremental_etf": build_incremental_etf_audit(stockanalysis_index, incremental_latest, incremental_plan_latest, market_coverage, pending_ledger),
     }
 
 

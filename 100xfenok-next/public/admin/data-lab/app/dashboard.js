@@ -236,9 +236,13 @@ const DataLabUI = (function() {
         fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/new_etfs.json`, '신규 ETF 목록')
       ]);
       const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
-      const [stockanalysisIncremental, stockanalysisPendingLedger, marketFactsIndex] = await Promise.all([
+      const shouldFetchIncrementalPlan = audit?.incremental_etf?.plan_file_exists === true;
+      const [stockanalysisIncremental, stockanalysisIncrementalPlan, stockanalysisPendingLedger, marketFactsIndex] = await Promise.all([
         shouldFetchIncremental
           ? fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_latest.json`, 'ETF 증분 수집')
+          : Promise.resolve(null),
+        shouldFetchIncrementalPlan
+          ? fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/incremental_plan_latest.json`, 'ETF 증분 수집 계획')
           : Promise.resolve(null),
         fetchOptionalJson(`${basePath}/data/stockanalysis/backfill/pending_ledger.json`, 'ETF 수집 대기열'),
         fetchOptionalJson(`${basePath}/data/computed/market_facts/index.json`, '시장 팩트 인덱스')
@@ -255,6 +259,7 @@ const DataLabUI = (function() {
         stockanalysisEtfUniverseApi,
         stockanalysisNewEtfs,
         stockanalysisIncremental,
+        stockanalysisIncrementalPlan,
         stockanalysisPendingLedger,
         marketFactsIndex
       );

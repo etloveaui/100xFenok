@@ -44,6 +44,7 @@ DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
+INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
 NON_DIRECTIONAL_SHORT_RE = re.compile(
     r"\b(?:"
     r"short[-\s]?(?:term|duration|maturity|intermediate)"
@@ -2052,6 +2053,37 @@ def incremental_etf_backfill_candidates(
     }
 
 
+def build_incremental_etf_backfill_plan(
+    planned_etfs: list[str],
+    incremental_summary: dict,
+    required_history_periods: tuple[str, ...],
+    history_gaps_only: bool,
+) -> dict:
+    counts = incremental_summary.get("counts") if isinstance(incremental_summary.get("counts"), dict) else {}
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "operation": "incremental_etf_backfill_plan",
+        "generated_at": now_iso(),
+        "mode": "history_gaps_only" if history_gaps_only else "incremental",
+        "required_history_periods": list(required_history_periods),
+        "policy": {
+            "network": "none",
+            "writes": "plan artifact only when --write-plan is used",
+            "execution_proof": "backfill/incremental_latest.json remains reserved for completed fetch runs",
+        },
+        "counts": {
+            "etfs_planned": len(planned_etfs),
+            "incremental_selected": counts.get("selected", 0),
+            "incremental_candidates": counts.get("candidates", 0),
+            "history_gap": counts.get("history_gap", 0),
+            "cooldown_skipped": counts.get("cooldown_skipped", 0),
+        },
+        "etfs": planned_etfs,
+        "incremental_etf_backfill": incremental_summary,
+    }
+
+
 def load_yf_finance_module():
     path = ROOT / "scripts" / "fetch-yf-finance.py"
     spec = importlib.util.spec_from_file_location("yf_finance_fetcher", path)
@@ -2332,6 +2364,7 @@ def main() -> None:
     parser.add_argument("--history-gaps-only", action="store_true", help="with --incremental-etf-backfill, select only primary StockAnalysis ETF details missing required history_periods")
     parser.add_argument("--required-history-periods", default="", help="comma-separated history_periods required for --history-gaps-only; default monthly_3y,monthly_5y")
     parser.add_argument("--plan-only", action="store_true", help="print the selected incremental ETF plan without network fetches or data writes")
+    parser.add_argument("--write-plan", action="store_true", help="with --plan-only, also write backfill/incremental_plan_latest.json without network fetches")
     parser.add_argument("--coverage-only", action="store_true", help="rebuild local ETF detail coverage proof without network fetches")
     parser.add_argument("--incremental-etf-limit", type=int, default=DEFAULT_INCREMENTAL_ETF_LIMIT, help="maximum incremental ETF detail retries per run")
     parser.add_argument("--incremental-etf-max-age-hours", type=float, default=DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS, help="existing StockAnalysis ETF detail age before it becomes stale")
@@ -2360,6 +2393,8 @@ def main() -> None:
         raise SystemExit("--required-history-periods requires --incremental-etf-backfill")
     if args.plan_only and not args.incremental_etf_backfill:
         raise SystemExit("--plan-only currently supports --incremental-etf-backfill")
+    if args.write_plan and not args.plan_only:
+        raise SystemExit("--write-plan requires --plan-only")
     if args.plan_only and any((args.discover_etf_universe, args.fetch_surfaces, args.coverage_only, args.classify_etf_catalogs)):
         raise SystemExit("--plan-only uses existing local files; do not combine it with fetch/write modes")
 
@@ -2452,30 +2487,15 @@ def main() -> None:
         incremental_etfs = [row["ticker"] for row in incremental_summary["selected"]]
         planned_etfs = unique_symbols(etfs + incremental_etfs)
         if args.plan_only:
-            print(
-                json.dumps(
-                    {
-                        "schema_version": SCHEMA_VERSION,
-                        "source": "stockanalysis",
-                        "operation": "incremental_etf_backfill_plan",
-                        "generated_at": now_iso(),
-                        "mode": "history_gaps_only" if args.history_gaps_only else "incremental",
-                        "required_history_periods": list(required_history_periods),
-                        "counts": {
-                            "etfs_planned": len(planned_etfs),
-                            "incremental_selected": incremental_summary["counts"]["selected"],
-                            "incremental_candidates": incremental_summary["counts"]["candidates"],
-                            "history_gap": incremental_summary["counts"].get("history_gap", 0),
-                            "cooldown_skipped": incremental_summary["counts"]["cooldown_skipped"],
-                        },
-                        "etfs": planned_etfs,
-                        "incremental_etf_backfill": incremental_summary,
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                ),
-                flush=True,
+            plan_payload = build_incremental_etf_backfill_plan(
+                planned_etfs,
+                incremental_summary,
+                required_history_periods,
+                args.history_gaps_only,
             )
+            if args.write_plan:
+                write_payload(INCREMENTAL_PLAN_REL_PATH, plan_payload, mirror_public)
+            print(json.dumps(plan_payload, ensure_ascii=False, indent=2), flush=True)
             return
         etfs = planned_etfs
         write_payload("backfill/incremental_latest.json", incremental_summary, mirror_public)

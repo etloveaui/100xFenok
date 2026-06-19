@@ -152,7 +152,34 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertEqual(payload["incremental_etf"]["status"], "waiting")
         self.assertFalse(payload["incremental_etf"]["has_run_evidence"])
         self.assertFalse(payload["incremental_etf"]["proof_file_exists"])
+        self.assertFalse(payload["incremental_etf"]["plan_file_exists"])
         self.assertIn("incremental_latest_missing", payload["incremental_etf"]["notes"])
+
+    def test_incremental_etf_audit_reports_plan_without_run_evidence(self) -> None:
+        write_json(
+            self.data / "stockanalysis" / "backfill" / "incremental_plan_latest.json",
+            {
+                "generated_at": "2026-06-19T01:00:00Z",
+                "operation": "incremental_etf_backfill_plan",
+                "counts": {
+                    "incremental_selected": 120,
+                    "incremental_candidates": 4579,
+                    "history_gap": 4579,
+                },
+            },
+        )
+
+        payload = self.audit.build_payload()
+
+        self.assertEqual(payload["incremental_etf"]["status"], "waiting")
+        self.assertFalse(payload["incremental_etf"]["has_run_evidence"])
+        self.assertFalse(payload["incremental_etf"]["proof_file_exists"])
+        self.assertTrue(payload["incremental_etf"]["plan_file_exists"])
+        self.assertEqual(payload["incremental_etf"]["plan_generated_at"], "2026-06-19T01:00:00Z")
+        self.assertEqual(payload["incremental_etf"]["counts"]["plan_selected"], 120)
+        self.assertEqual(payload["incremental_etf"]["counts"]["plan_candidates"], 4579)
+        self.assertEqual(payload["incremental_etf"]["counts"]["plan_history_gap"], 4579)
+        self.assertIn("incremental_plan_available", payload["incremental_etf"]["notes"])
 
     def test_incremental_etf_audit_warns_when_pending_details_remain(self) -> None:
         write_json(

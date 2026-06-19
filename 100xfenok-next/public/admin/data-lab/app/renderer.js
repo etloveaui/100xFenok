@@ -299,6 +299,7 @@ const Renderer = (function() {
     stockanalysisEtfUniverseApi,
     stockanalysisNewEtfs,
     stockanalysisIncremental,
+    stockanalysisIncrementalPlan,
     stockanalysisPendingLedger,
     marketFactsIndex
   ) {
@@ -407,8 +408,8 @@ const Renderer = (function() {
       ${renderEtfCoverageGapAudit(detailCoverage)}
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
-      ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, marketFactsIndex, audit?.incremental_etf)}
-      ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisPendingLedger)}
+      ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, stockanalysisIncrementalPlan, marketFactsIndex, audit?.incremental_etf)}
+      ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisIncrementalPlan, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
     `;
   }
@@ -761,26 +762,34 @@ const Renderer = (function() {
     });
   }
 
-  function renderIncrementalBackfillAudit(index, incremental, marketFactsIndex, auditIncremental) {
+  function renderIncrementalBackfillAudit(index, incremental, incrementalPlan, marketFactsIndex, auditIncremental) {
     const counts = index?.counts || {};
     const auditCounts = auditIncremental?.counts || {};
     const incrementalCounts = incremental?.counts || {};
+    const planCounts = incrementalPlan?.counts || {};
     const selected = Number(incrementalCounts.selected ?? auditCounts.selected ?? counts.incremental_etf_backfill_selected ?? 0);
     const candidates = Number(incrementalCounts.candidates ?? auditCounts.candidates ?? counts.incremental_etf_backfill_candidates ?? 0);
     const fallbackRetry = Number(incrementalCounts.fallback_retry ?? auditCounts.fallback_retry ?? 0);
     const historyGap = Number(incrementalCounts.history_gap ?? auditCounts.history_gap ?? 0);
+    const planSelected = Number(planCounts.incremental_selected ?? auditCounts.plan_selected ?? 0);
+    const planCandidates = Number(planCounts.incremental_candidates ?? auditCounts.plan_candidates ?? 0);
+    const planHistoryGap = Number(planCounts.history_gap ?? auditCounts.plan_history_gap ?? 0);
     const cooldownSkipped = Number(incrementalCounts.cooldown_skipped ?? auditCounts.cooldown_skipped ?? counts.incremental_etf_cooldown_skipped ?? 0);
     const cooldownActive = Number(auditCounts.pending_ledger_cooldown ?? incrementalCounts.ledger_cooldown ?? counts.incremental_etf_ledger_cooldown ?? 0);
     const fallbackOk = Number(auditCounts.etfs_yahoo_fallback_ok ?? counts.etfs_yahoo_fallback_ok ?? 0);
     const stillPending = Number(auditCounts.etfs_still_pending ?? counts.etfs_still_pending ?? 0);
     const fallbackCoverage = Number(auditCounts.market_facts_yf_fallback ?? marketFactsIndex?.coverage?.stockanalysis_yf_fallback ?? 0);
     const generatedAt = incremental?.generated_at || auditIncremental?.proof_generated_at || auditIncremental?.index_generated_at || index?.generated_at || '-';
+    const planGeneratedAt = incrementalPlan?.generated_at || auditIncremental?.plan_generated_at || '-';
     const hasIncrementalFile = Boolean(incremental) || auditIncremental?.proof_file_exists === true;
+    const hasPlanFile = Boolean(incrementalPlan) || auditIncremental?.plan_file_exists === true;
     const hasRunEvidence = Boolean(auditIncremental?.has_run_evidence) || hasIncrementalFile || selected > 0 || fallbackOk > 0 || fallbackCoverage > 0;
     const auditStatus = auditIncremental?.status || (hasRunEvidence ? 'observed' : 'waiting');
     const status = auditStatus === 'pass' ? 'pass' : 'warn';
     const code = hasRunEvidence
       ? `${Formatters.formatNumber(selected, 0)}개 선택`
+      : hasPlanFile
+      ? `${Formatters.formatNumber(planSelected, 0)}개 계획`
       : '대기';
     const notes = Array.isArray(auditIncremental?.notes) ? auditIncremental.notes : [];
 
@@ -791,8 +800,12 @@ const Renderer = (function() {
       rows: [
         ['감사 상태', auditStatus],
         ['생성일', escapeHtml(generatedAt).slice(0, 10)],
+        ['계획일', escapeHtml(planGeneratedAt).slice(0, 10)],
         ['후보', candidates],
         ['선택', selected],
+        ['계획 후보', planCandidates],
+        ['계획 선택', planSelected],
+        ['계획 히스토리 보강', planHistoryGap],
         ['보조 가격 재시도', fallbackRetry],
         ['다년 히스토리 보강', historyGap],
         ['이번 선택 제외', cooldownSkipped],
@@ -801,16 +814,20 @@ const Renderer = (function() {
         ['아직 대기', stillPending],
         ['정규화 반영', fallbackCoverage],
         ['증거 파일', hasIncrementalFile ? '있음' : '대기'],
+        ['계획 파일', hasPlanFile ? '있음' : '대기'],
         ['메모', notes.length ? notes.join(', ') : '-']
       ]
     });
   }
 
-  function renderEtfBackfillDrilldown(index, incremental, pendingLedger) {
-    if (!index && !incremental && !pendingLedger) return '';
+  function renderEtfBackfillDrilldown(index, incremental, incrementalPlan, pendingLedger) {
+    if (!index && !incremental && !incrementalPlan && !pendingLedger) return '';
     const counts = index?.counts || {};
-    const incrementalCounts = incremental?.counts || index?.incremental_etf_backfill?.counts || {};
-    const selected = Array.isArray(incremental?.selected)
+    const planBackfill = incrementalPlan?.incremental_etf_backfill || null;
+    const incrementalCounts = planBackfill?.counts || incremental?.counts || index?.incremental_etf_backfill?.counts || {};
+    const selected = Array.isArray(planBackfill?.selected)
+      ? planBackfill.selected
+      : Array.isArray(incremental?.selected)
       ? incremental.selected
       : (Array.isArray(index?.incremental_etf_backfill?.selected) ? index.incremental_etf_backfill.selected : []);
     const failedResults = Array.isArray(index?.results)
@@ -823,7 +840,7 @@ const Renderer = (function() {
     const trackedCount = Number(pendingLedger?.counts?.tracked ?? counts.incremental_etf_ledger_tracked ?? ledgerRows.length) || 0;
     const cooldownCount = Number(pendingLedger?.counts?.cooldown ?? counts.incremental_etf_ledger_cooldown ?? 0) || 0;
     const retryNowCount = Math.max(trackedCount - cooldownCount, 0);
-    const generatedAt = incremental?.generated_at || index?.incremental_etf_backfill?.generated_at || index?.generated_at || '-';
+    const generatedAt = incrementalPlan?.generated_at || incremental?.generated_at || index?.incremental_etf_backfill?.generated_at || index?.generated_at || '-';
     const nextRetryAt = findEarliestIso(ledgerRows.map((row) => row.next_attempt_after_utc));
     const lastAttemptAt = findLatestIso(ledgerRows.map((row) => row.last_attempt_utc));
     const repeatedFailureCount = ledgerRows.filter((row) => Number(row.consecutive_failures || 0) >= 3).length;
@@ -833,7 +850,7 @@ const Renderer = (function() {
         <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div class="min-w-0">
             <h3 class="font-semibold text-gray-800">ETF 수집 대기열</h3>
-            <p class="text-xs text-gray-500 mt-1">index.json · incremental_latest.json · pending_ledger.json</p>
+            <p class="text-xs text-gray-500 mt-1">index.json · incremental_latest.json · incremental_plan_latest.json · pending_ledger.json</p>
           </div>
           <span class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
             ${escapeHtml(generatedAt).slice(0, 10)}

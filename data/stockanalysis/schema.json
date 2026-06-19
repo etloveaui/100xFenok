@@ -5,6 +5,7 @@
   "primary_paths": {
     "index": "index.json",
     "incremental_backfill": "backfill/incremental_latest.json",
+    "incremental_backfill_plan": "backfill/incremental_plan_latest.json",
     "etf_universe": "etf_universe.json",
     "etf": "etfs/{TICKER}.json",
     "stock": "stocks/{TICKER}.json",
@@ -70,12 +71,16 @@
     "counts.classification": "leveraged/inverse/single_stock counts computed from records[].classification"
   },
   "backfill_fields": {
-    "operation": "incremental_etf_backfill_select",
+    "operation": "incremental_etf_backfill_select|incremental_etf_backfill_plan",
+    "plan_path": "backfill/incremental_plan_latest.json is the no-network preflight plan and must not be treated as completed fetch evidence",
+    "run_proof_path": "backfill/incremental_latest.json is reserved for completed incremental ETF fetch runs",
     "policy.limit": "maximum ETF detail retries in a scheduled run",
     "policy.max_age_hours": "existing StockAnalysis ETF detail age before stale retry",
     "counts.candidates": "new/missing/fallback/stale ETFs eligible for automatic retry",
     "counts.selected": "ETFs selected for this run",
-    "selected[].reason": "missing|fallback_retry|stale",
+    "selected[].reason": "missing|fallback_retry|history_gap|stale",
+    "plan.counts.incremental_selected": "number of ETFs selected by the latest no-network preflight plan",
+    "plan.counts.history_gap": "number of primary StockAnalysis ETF detail files missing required multi-year history periods",
     "index.counts.etfs_stockanalysis_ok": "ETF detail records filled from StockAnalysis in the run",
     "index.counts.etfs_yahoo_fallback_ok": "ETF detail records filled from Yahoo fallback in the run",
     "index.counts.etfs_still_pending": "ETF detail records still waiting after StockAnalysis 404 and failed or disabled fallback"

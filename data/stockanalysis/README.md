@@ -85,6 +85,7 @@ stockanalysis/
 ├── index.json
 ├── backfill/
 │   ├── incremental_latest.json
+│   ├── incremental_plan_latest.json
 │   ├── pending_ledger.json
 │   └── ...
 ├── coverage/
@@ -106,6 +107,11 @@ stockanalysis/
     ├── earnings_calendar.json
     └── ...
 ```
+
+`backfill/incremental_plan_latest.json` is a no-network preflight artifact for
+the next staged ETF detail/history refresh. It is intentionally separate from
+`backfill/incremental_latest.json`, which remains the post-run proof from a
+completed incremental fetch.
 
 Manifest note: `data/manifest.json` and the public mirror count JSON data files
 with `schema.json` excluded. The raw filesystem total can be higher because it
