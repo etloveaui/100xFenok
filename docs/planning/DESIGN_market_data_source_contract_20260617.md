@@ -206,11 +206,17 @@ External sources
     auxiliary price data exists, the page labels what is currently available
     and what is still waiting for deeper holdings/allocation data instead of
     exposing internal status names.
+  - renders available ETF overview facts such as inception date and shares
+    outstanding alongside price, assets, fees, dividend yield, holdings, and
+    allocation breakdowns.
 - `100xfenok-next/src/app/market/events/MarketEventsClient.tsx`
   - is the dedicated route for StockAnalysis earnings, corporate actions,
     IPO, market-mover, and industry surfaces;
   - provides tabbed views plus a full cross-surface drilldown search with
     section/date filters, sort modes, industry map controls, and CSV export.
+- `100xfenok-next/.qa-playwright.js` and `.qa-a11y.js`
+  - include the ETF center, new-ETF radar, ETF detail, ETF fallback, and market
+    events routes in their default browser/a11y route lists.
 - `100xfenok-next/scripts/smoke-stockanalysis-routes.mjs`
   - treats `coverage/etf_detail.json` missing samples as a live contract:
     missing detail files must still open through the ETF asset API as

@@ -503,6 +503,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
   const labels = classificationLabels(classification);
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
+  const inceptionDate = rawText(overview.inception);
+  const sharesOutstanding = rawText(overview.sharesOut);
   const updateDate = factDate(marketFacts, "price") ?? rawText(quote.u) ?? etfData?.fetched_at ?? marketFacts?.generated_at;
 
   const totalAssets = factNumber(marketFacts, "total_assets");
@@ -516,6 +518,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     totalAssets !== null || rawText(overview.aum) !== "—" ? "운용자산" : null,
     expenseRatio !== null || rawText(overview.expenseRatio) !== "—" ? "보수율" : null,
     dividendYield !== null || rawText(overview.dividendYield) !== "—" ? "배당률" : null,
+    inceptionDate !== "—" ? "상장일" : null,
+    sharesOutstanding !== "—" ? "발행 주식 수" : null,
     category !== "—" ? "카테고리" : null,
     labels.length > 0 ? "분류 태그" : null,
     holdingCount > 0 ? "보유 항목 수" : null,
@@ -534,6 +538,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "총 운용자산" },
     { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
     { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
+    { label: "상장일", value: inceptionDate, note: "상장 시작일" },
+    { label: "발행 주식 수", value: sharesOutstanding, note: "현재 원장 기준" },
     { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "시장 민감도" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
     { label: "PER", value: trailingPe !== null ? trailingPe.toFixed(1) : rawText(overview.peRatio), note: "최근 실적 기준" },

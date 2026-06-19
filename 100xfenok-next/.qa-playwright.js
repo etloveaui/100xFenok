@@ -126,6 +126,12 @@ const defaultRoutes = [
   "/posts",
   postsDeepLinkRoute,
   "/sectors",
+  "/etfs",
+  "/etfs?type=single-stock",
+  "/etfs/new",
+  "/etfs/SPY",
+  "/etfs/ADIU",
+  "/market/events",
   // Week 2 routes
   "/100x/daily-wrap",
   "/admin",

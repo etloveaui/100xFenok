@@ -9,7 +9,7 @@ const strictMode = process.env.QA_A11Y_STRICT !== "0";
 
 const routes = (
   process.env.QA_A11Y_ROUTES ||
-  "/,/posts,/vr,/tools/stock-analyzer/native,/market,/alpha-scout,/ib"
+  "/,/posts,/vr,/tools/stock-analyzer/native,/market,/alpha-scout,/ib,/etfs,/etfs/new,/etfs/SPY,/etfs/ADIU,/market/events"
 )
   .split(",")
   .map((route) => route.trim())
