@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import sys
@@ -110,6 +111,45 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         selected = self.fetcher.filter_history_gaps(["READY", "SHORT", "MISSING", "EMPTY"], min_rows=200)
 
         self.assertEqual(selected, ["SHORT", "MISSING", "EMPTY"])
+
+    def test_plan_only_prints_resolved_plan_without_fetching_or_writing_summary(self) -> None:
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
+        write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "BIG", "aum": "10B"}]})
+        write_json(self.fetcher.ETF_INDEX, {"etfs": {}})
+        self.fetcher.DASHBOARD_CONSTANTS.parent.mkdir(parents=True)
+        self.fetcher.DASHBOARD_CONSTANTS.write_text("", encoding="utf-8")
+        self.fetcher.PORTFOLIO_TS.write_text("", encoding="utf-8")
+
+        calls = []
+        self.fetcher.fetch_with_retry = lambda *args, **kwargs: calls.append((args, kwargs))
+        original_argv = sys.argv
+        original_stdout = sys.stdout
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py",
+                "--stockanalysis-etfs",
+                "--history-gaps-only",
+                "--limit",
+                "1",
+                "--plan-only",
+                "--plan-sample-size",
+                "1",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv = original_argv
+            sys.stdout = original_stdout
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(calls, [])
+        self.assertFalse((self.fetcher.OUT_DIR / "_summary.json").exists())
+        self.assertEqual(payload["mode"], "plan_only")
+        self.assertEqual(payload["sample"], ["BIG"])
+        self.assertEqual(payload["count"], 1)
+        self.assertTrue(payload["history_gaps_only"])
+        self.assertEqual(payload["priority"], "stockanalysis_etf_aum")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ Usage:
   python3 scripts/fetch-yf-finance.py --shard 0/4      # shard i of n
   python3 scripts/fetch-yf-finance.py --tickers AAPL,005930.KS
   python3 scripts/fetch-yf-finance.py --include-options --tickers AAPL
+  python3 scripts/fetch-yf-finance.py --stockanalysis-etfs --history-gaps-only --plan-only
 
 Output: data/yf/finance/{TICKER}.json + data/yf/finance/_summary.json
 """
@@ -688,6 +689,26 @@ def write_empty_summary(profile, args, candidate_count, reason):
     (OUT_DIR / "_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
 
+def plan_summary(args, tickers, candidate_count):
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "mode": "plan_only",
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "count": len(tickers),
+        "candidate_count_before_filters": candidate_count,
+        "profile": args.profile,
+        "stockanalysis_etfs": args.stockanalysis_etfs,
+        "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
+        "history_gaps_only": args.history_gaps_only,
+        "history_min_rows": args.history_min_rows,
+        "limit": args.limit,
+        "shard": args.shard,
+        "tickers_override": bool(args.tickers),
+        "sample_size": args.plan_sample_size,
+        "sample": tickers[: args.plan_sample_size],
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
@@ -702,6 +723,8 @@ def main():
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
     parser.add_argument("--max-age-hours", type=float, default=0, help="skip usable local payloads fetched within N hours")
     parser.add_argument("--sleep", type=float, default=0.8)
+    parser.add_argument("--plan-only", action="store_true", help="print the resolved ticker plan and exit before any Yahoo calls or file writes")
+    parser.add_argument("--plan-sample-size", type=int, default=25, help="number of resolved tickers to include in --plan-only output")
     args = parser.parse_args()
 
     if args.tickers:
@@ -717,6 +740,10 @@ def main():
         tickers = tickers[i::n]
     if args.limit:
         tickers = tickers[: args.limit]
+
+    if args.plan_only:
+        print(json.dumps(plan_summary(args, tickers, candidate_count), ensure_ascii=False, indent=2))
+        return
 
     if not tickers:
         if args.history_gaps_only:

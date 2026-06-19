@@ -70,6 +70,9 @@ External sources
     runs fill the most visible ETFs first;
   - supports `--history-gaps-only --history-min-rows 200` for return-history
     backfills that skip tickers already holding enough local `history_1y` rows;
+  - supports `--plan-only` so manual backfill runs can verify the exact
+    AUM-prioritized candidate slice without calling Yahoo or writing
+    `data/yf/finance/_summary.json`;
   - supports `profile=etf`;
   - collects Yahoo `funds_data` for ETF/fund-like tickers;
   - skips stock-only statement/holder/analyst modules for ETFs.
