@@ -1,6 +1,6 @@
 # Data Spine Program
 
-Date/status: 2026-06-19; P0 inventory measured, P1 policy draft opened, v0 contract still DRAFT/UNVERIFIED.
+Date/status: 2026-06-19; P0 inventory measured, P1 passed, v0 ratification RATIFIED.
 
 ## Purpose
 
@@ -87,9 +87,10 @@ Sample top disagreements already prove that parity alerts need an action policy:
 | FXB | `return_1y` | `yf.history_1y` +1.2328 | `yf` -1.2296 | sign_divergence |
 | GDXW | `return_3m` | `yf.history_1y` -6.8462 | `stockanalysis.detail.history` +6.7927 | sign_divergence |
 
-P1 draft: `DATA_SPINE_P1_POLICY_20260619.md` +
-`scripts/audit-data-spine-p1.py`; authority/fallback mirrors
-`scripts/build-market-facts.py`, while tolerance/action remain unratified.
+V0 ratification: `DATA_SPINE_V0_RATIFICATION_20260619.md` +
+`scripts/audit-data-spine-v0.py`; authority/fallback still mirrors
+`scripts/build-market-facts.py`, while tolerance uses measured spread
+distributions.
 
 ## Direct Provider Fetch Leak Inventory
 
@@ -261,7 +262,7 @@ contract and the disagreement policy.
 
 ## Next P0 Work
 
-1. Ratify or amend `DATA_SPINE_P1_POLICY_20260619.md`.
+1. Execute the `public.report_metadata` sunset cleanup slice.
 2. Add feno-data/feno-data-remote/feno-value consumer evidence from CCH skills.
 3. Decide the StockAnalysis route vs service-map IA before A-phase UI.
-4. Ratify ownership/update policy for `public.report_metadata`.
+4. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.
