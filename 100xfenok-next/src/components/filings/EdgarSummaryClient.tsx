@@ -235,7 +235,7 @@ function SummarySection({
   );
 }
 
-export default function EdgarSummaryPilotClient({
+export default function EdgarSummaryClient({
   embedded = false,
   ticker = "NVDA",
 }: {

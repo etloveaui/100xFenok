@@ -19,7 +19,7 @@ import {
   deriveProfitabilityEstimates,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
-import EdgarSummaryPilotClient from "@/app/filings/nvda-10k/EdgarSummaryPilotClient";
+import EdgarSummaryClient from "@/components/filings/EdgarSummaryClient";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
@@ -1070,7 +1070,7 @@ export default function StockDetailClient({
   function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
     if (activeStockTab === "filings") {
-      return <EdgarSummaryPilotClient ticker={symbol} embedded />;
+      return <EdgarSummaryClient ticker={symbol} embedded />;
     }
     if (activeStockTab === "etf") {
       return (
