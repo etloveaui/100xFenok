@@ -290,6 +290,21 @@ function readToneClass(tone: InterpretationReadTone): string {
   return "border-slate-100 bg-slate-50 text-slate-700";
 }
 
+type ScreenerVerdictSignal = {
+  id: "valuation" | "growth" | "revision" | "ownership";
+  label: string;
+  shortText: string;
+  text: string;
+  tone: InterpretationReadTone;
+};
+
+type ScreenerThreeSecondVerdict = {
+  badge: string;
+  badgeClass: string;
+  text: string;
+  signals: ScreenerVerdictSignal[];
+};
+
 type FiscalPoint = { label: string; value: number; index: number; estimate?: boolean };
 
 function normalizeEstimates(estimates?: MaybeNumber | EstimateSeries): EstimateSeries {
@@ -363,6 +378,23 @@ function lastFinite(data: NumberSeries | null | undefined): number | null {
   return values.length > 0 ? values[values.length - 1] : null;
 }
 
+function estimateTuple(series: EstimateSeries | undefined, fallback: [MaybeNumber, MaybeNumber, MaybeNumber]): [MaybeNumber, MaybeNumber, MaybeNumber] {
+  const values: [MaybeNumber, MaybeNumber, MaybeNumber] = [series?.fy1, series?.fy2, series?.fy3];
+  return values.some(isFiniteNumber) ? values : fallback;
+}
+
+function averageFinite(values: MaybeNumber[]): number | null {
+  const numbers = values.filter(isFiniteNumber);
+  if (numbers.length === 0) return null;
+  return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+}
+
+function verdictScore(tone: InterpretationReadTone): number {
+  if (tone === "positive") return 1;
+  if (tone === "risk") return -1;
+  return 0;
+}
+
 function validPerBands(
   perBands: DetailData["per_bands"],
 ): perBands is { current: number; min_8y: number; avg_8y: number; max_8y: number; source: string } {
@@ -374,6 +406,111 @@ function validPerBands(
       isFiniteNumber(perBands.max_8y) &&
       perBands.min_8y < perBands.max_8y,
   );
+}
+
+function buildScreenerThreeSecondVerdict({
+  stock,
+  detail,
+  f13Count,
+  interpretation,
+}: {
+  stock: ScreenerStock | undefined;
+  detail: DetailData;
+  f13Count: number;
+  interpretation: ReturnType<typeof interpretStockMetrics> | null;
+}): ScreenerThreeSecondVerdict | null {
+  if (!stock || !interpretation) return null;
+
+  const signals: ScreenerVerdictSignal[] = [];
+  const bands = validPerBands(detail.per_bands) ? detail.per_bands : null;
+  if (bands) {
+    const pct = bandPct(bands.current, bands.min_8y, bands.max_8y);
+    const pctLabel = `${Math.round(pct * 100)}%`;
+    const avgText = isFiniteNumber(bands.avg_8y)
+      ? `평균 ${bands.avg_8y.toFixed(1)}배 ${bands.current >= bands.avg_8y ? "위" : "아래"}`
+      : "평균 미확인";
+    const tone: InterpretationReadTone = pct <= 0.3 ? "positive" : pct >= 0.75 ? "risk" : "neutral";
+    signals.push({
+      id: "valuation",
+      label: "밸류",
+      shortText: `밴드 ${pctLabel}`,
+      text: `PER은 8년 밴드의 ${pctLabel} 지점, ${avgText}입니다.`,
+      tone,
+    });
+  }
+
+  const revenueGrowth = estimateTuple(detail.growth_estimates?.revenue_growth, [stock.revenueGrowthFy1, stock.revenueGrowthFy2, stock.revenueGrowthFy3]);
+  const epsGrowth = estimateTuple(detail.growth_estimates?.eps_growth, [stock.epsGrowthFy1, stock.epsGrowthFy2, stock.epsGrowthFy3]);
+  const revAvg = averageFinite(revenueGrowth);
+  const epsAvg = averageFinite(epsGrowth);
+  if (revAvg !== null || epsAvg !== null) {
+    const pairedPositiveYears = [0, 1, 2].filter((index) => {
+      const revenue = revenueGrowth[index];
+      const eps = epsGrowth[index];
+      return isFiniteNumber(revenue) && revenue > 0 && isFiniteNumber(eps) && eps > 0;
+    }).length;
+    const tone: InterpretationReadTone =
+      pairedPositiveYears >= 2 && (epsAvg ?? 0) >= 5
+        ? "positive"
+        : pairedPositiveYears === 0 || (epsAvg !== null && epsAvg < 0)
+          ? "risk"
+          : "watch";
+    signals.push({
+      id: "growth",
+      label: "성장",
+      shortText: `동시 플러스 ${pairedPositiveYears}/3`,
+      text: `FY+1~3 중 ${pairedPositiveYears}개 연도에서 매출과 EPS가 함께 플러스입니다${epsAvg !== null ? `, EPS 평균 ${epsAvg.toFixed(1)}%` : ""}.`,
+      tone,
+    });
+  }
+
+  const revisionValues = [
+    detail.eps_consensus?.weekly_change?.fy_plus_1,
+    detail.eps_consensus?.weekly_change?.fy_plus_2,
+    detail.eps_consensus?.weekly_change?.fy_plus_3,
+  ].filter(isFiniteNumber);
+  if (revisionValues.length > 0) {
+    const up = revisionValues.filter((value) => value > 0.001).length;
+    const down = revisionValues.filter((value) => value < -0.001).length;
+    const avg = averageFinite(revisionValues.map((value) => value * 100));
+    const tone: InterpretationReadTone = up >= 2 ? "positive" : down >= 2 ? "risk" : "watch";
+    const direction = up >= 2 ? "상향 우세" : down >= 2 ? "하향 우세" : "혼조";
+    signals.push({
+      id: "revision",
+      label: "수정",
+      shortText: direction,
+      text: `최근 EPS 추정은 상향 ${up}개, 하향 ${down}개로 ${direction}입니다${avg !== null ? `, 평균 변화 ${fmtSignedPercentPoints(avg, 2)}` : ""}.`,
+      tone,
+    });
+  }
+
+  if (f13Count > 0) {
+    signals.push({
+      id: "ownership",
+      label: "13F",
+      shortText: `${f13Count}명 보유`,
+      text: `기관 공시 기준 ${f13Count}명이 보유 중입니다.`,
+      tone: f13Count >= 3 ? "positive" : "neutral",
+    });
+  }
+
+  if (signals.length === 0) return null;
+  const score = signals.reduce((sum, signal) => sum + verdictScore(signal.tone), 0);
+  const riskCount = signals.filter((signal) => signal.tone === "risk").length;
+  const badge =
+    score >= 2 && riskCount === 0
+      ? "우호 신호 우세"
+      : riskCount >= 2 || score <= -1
+        ? "주의 신호 우세"
+        : "강점·확인 포인트 공존";
+  const badgeClass =
+    score >= 2 && riskCount === 0
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : riskCount >= 2 || score <= -1
+        ? "border-rose-200 bg-rose-50 text-rose-700"
+        : "border-amber-200 bg-amber-50 text-amber-700";
+  const text = [`Feno 분류는 ${interpretation.badge}입니다.`, ...signals.slice(0, 3).map((signal) => signal.text)].join(" ");
+  return { badge, badgeClass, text, signals };
 }
 
 function fmtPlainNumber(value: MaybeNumber, digits = 1): string {
@@ -1621,6 +1758,31 @@ export function PriceDividendHistoryDepth({
   );
 }
 
+function ScreenerThreeSecondVerdictCard({ verdict }: { verdict: ScreenerThreeSecondVerdict }) {
+  return (
+    <div className="mb-4 rounded-2xl border border-brand-interactive/20 bg-brand-interactive/[0.035] p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-interactive">3초 판정</p>
+          <p className="mt-0.5 text-[10px] font-bold text-[var(--c-ink-4)]">스크리너 상세 데이터를 핵심 신호로 압축</p>
+        </div>
+        <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black leading-none ${verdict.badgeClass}`}>
+          {verdict.badge}
+        </span>
+      </div>
+      <p className="text-[13px] font-bold leading-6 text-[var(--c-ink)]">{verdict.text}</p>
+      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-brand-interactive/10 pt-2.5">
+        {verdict.signals.map((signal) => (
+          <span key={signal.id} className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black ${readToneClass(signal.tone)}`}>
+            <span>{signal.label}</span>
+            <span className="min-w-0 truncate opacity-80">{signal.shortText}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function StockDetailBody({
   detail,
   f13Entries,
@@ -1643,9 +1805,16 @@ export function StockDetailBody({
 
   const interpretation = stock ? interpretStockMetrics(stock, detail) : null;
   const interpretationReads = Array.isArray(interpretation?.reads) ? interpretation.reads : [];
+  const threeSecondVerdict = buildScreenerThreeSecondVerdict({
+    stock,
+    detail,
+    f13Count: f13Entries?.length ?? 0,
+    interpretation,
+  });
 
   return (
     <>
+      {threeSecondVerdict ? <ScreenerThreeSecondVerdictCard verdict={threeSecondVerdict} /> : null}
       {interpretation ? (
         <div className="mb-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
