@@ -6,6 +6,8 @@ interface ExternalSourceLinksProps {
   ticker?: string | null;
   kind: ExternalSourceKind;
   secUrl?: string | null;
+  statusLine?: string | null;
+  asOf?: string | null;
   className?: string;
   compact?: boolean;
 }
@@ -31,14 +33,23 @@ function sourceDescription(kind: ExternalSourceKind, hasSecUrl: boolean) {
   return "한글 요약이나 원문 링크가 아직 연결되지 않은 경우 외부 자료로 종목 정보를 교차 확인할 수 있습니다.";
 }
 
+function cleanMeta(value?: string | null) {
+  const text = value?.trim();
+  return text && text !== "—" ? text : null;
+}
+
 export default function ExternalSourceLinks({
   ticker,
   kind,
   secUrl,
+  statusLine,
+  asOf,
   className = "",
   compact = false,
 }: ExternalSourceLinksProps) {
   const symbol = cleanTicker(ticker);
+  const status = cleanMeta(statusLine);
+  const date = cleanMeta(asOf);
   const links: Array<{ label: string; href: string; hint: string }> = [];
   const hasSecUrl = Boolean(kind === "filing" && secUrl);
 
@@ -71,6 +82,11 @@ export default function ExternalSourceLinks({
           <p className="mt-1 text-[11px] font-semibold leading-relaxed text-slate-500">
             {sourceDescription(kind, hasSecUrl)} 아래 링크는 100xFenok 내부 데이터가 아닌 외부 사이트로 이동합니다.
           </p>
+          {status || date ? (
+            <p className="mt-1 text-[10px] font-black leading-relaxed text-slate-500">
+              {[status, date ? `기준 ${date}` : null].filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
         </div>
         <div className="mt-3 flex flex-wrap gap-2 sm:mt-0">
           {links.map((link) => (

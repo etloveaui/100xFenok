@@ -324,7 +324,7 @@ export default function EdgarSummaryPilotClient({
           <p className="mt-2 text-sm text-slate-500">
             {symbol}의 10-K, 10-Q, 8-K 요약이 manifest에 등록되면 이 탭에 자동으로 표시됩니다.
           </p>
-          <ExternalSourceLinks ticker={symbol} kind="filing" className="mt-4" />
+          <ExternalSourceLinks ticker={symbol} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
         </div>
       </section>
     );
@@ -438,6 +438,17 @@ export default function EdgarSummaryPilotClient({
                       {filing.caveats.map((caveat) => <li key={caveat}>· {caveat}</li>)}
                     </ul>
                   ) : null}
+                  {!canShowSummary ? (
+                    <ExternalSourceLinks
+                      ticker={symbol}
+                      kind="filing"
+                      secUrl={filing.sourceUrl}
+                      statusLine="한글 요약 준비 전"
+                      asOf={filing.filingDate}
+                      compact
+                      className="mt-3"
+                    />
+                  ) : null}
                 </article>
               );
             })}
@@ -493,7 +504,14 @@ export default function EdgarSummaryPilotClient({
         <section className="panel">
           <div className="panel-b">
             <p className="text-sm font-semibold text-slate-700">선택한 공시의 한글 요약이 아직 준비되지 않았습니다.</p>
-            <ExternalSourceLinks ticker={symbol} kind="filing" secUrl={selectedFiling?.sourceUrl} className="mt-3" />
+            <ExternalSourceLinks
+              ticker={symbol}
+              kind="filing"
+              secUrl={selectedFiling?.sourceUrl}
+              statusLine="한글 요약 준비 전"
+              asOf={selectedFiling?.filingDate}
+              className="mt-3"
+            />
           </div>
         </section>
       )}
