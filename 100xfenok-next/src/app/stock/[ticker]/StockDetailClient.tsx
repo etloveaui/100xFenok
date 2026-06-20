@@ -811,7 +811,7 @@ export default function StockDetailClient({
 
   useEffect(() => {
     let cancelled = false;
-    const shouldLoadEtfData = assetHint === "etf" || marketFactsAssetType === "etf";
+    const shouldLoadEtfData = assetHint === "etf" || marketFactsAssetType === "etf" || (row === null && !marketFactsLoading);
     if (!shouldLoadEtfData) {
       Promise.resolve().then(() => {
         if (!cancelled) setEtfData(null);
@@ -823,11 +823,11 @@ export default function StockDetailClient({
     });
     loadStockanalysisEtf(symbol).then((d) => { if (!cancelled) setEtfData(d); });
     return () => { cancelled = true; };
-  }, [assetHint, marketFactsAssetType, symbol]);
+  }, [assetHint, marketFactsAssetType, marketFactsLoading, row, symbol]);
 
   useEffect(() => {
     let cancelled = false;
-    const shouldLoadEtfSurfaceData = assetHint === "etf" || marketFactsAssetType === "etf";
+    const shouldLoadEtfSurfaceData = assetHint === "etf" || marketFactsAssetType === "etf" || (row === null && !marketFactsLoading);
     if (!shouldLoadEtfSurfaceData) {
       Promise.resolve().then(() => {
         if (!cancelled) setEtfSurfaceData(null);
@@ -839,7 +839,7 @@ export default function StockDetailClient({
     });
     loadTickerSurfaces(symbol, "etf").then((d) => { if (!cancelled) setEtfSurfaceData(d); });
     return () => { cancelled = true; };
-  }, [assetHint, marketFactsAssetType, symbol]);
+  }, [assetHint, marketFactsAssetType, marketFactsLoading, row, symbol]);
 
   useEffect(() => {
     let cancelled = false;

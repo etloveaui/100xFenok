@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
@@ -114,6 +114,48 @@ export interface F13Entry {
   weight?: number;
 }
 
+type StockDetailBoundaryProps = {
+  ticker: string;
+  children: ReactNode;
+};
+
+type StockDetailBoundaryState = {
+  hasError: boolean;
+};
+
+class StockDetailBoundary extends Component<StockDetailBoundaryProps, StockDetailBoundaryState> {
+  constructor(props: StockDetailBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): StockDetailBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error(`[StockDetailBoundary] ${this.props.ticker} detail panel crashed:`, error, info.componentStack);
+  }
+
+  componentDidUpdate(previousProps: StockDetailBoundaryProps) {
+    if (previousProps.ticker !== this.props.ticker && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return (
+        <div role="alert" className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-3)]">
+          이 종목 상세를 표시하는 중 일시적 오류가 발생했습니다. 다른 종목과 스크리너 목록은 계속 사용할 수 있습니다.
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 interface SlickMetricPoint {
   date?: string;
   price?: MaybeNumber;
@@ -221,8 +263,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function asNumberSeries(data: NumberSeries | null | undefined): NumberSeries {
+  return Array.isArray(data) ? data : [];
+}
+
+function asStringSeries(data: string[] | null | undefined): string[] {
+  return Array.isArray(data) ? data : [];
+}
+
 function finiteValues(data: NumberSeries | null | undefined): number[] {
-  return (data ?? []).filter(isFiniteNumber);
+  return asNumberSeries(data).filter(isFiniteNumber);
 }
 
 function finiteNumber(value: unknown): number | null {
@@ -247,10 +297,12 @@ function normalizeEstimates(estimates?: MaybeNumber | EstimateSeries): EstimateS
   return estimates && typeof estimates === "object" ? estimates : {};
 }
 
-function buildFiscalPoints(years: string[], data: NumberSeries | null | undefined, estimates?: MaybeNumber | EstimateSeries) {
-  const actualCount = Math.max(years.length, data?.length ?? 0);
-  const labels = Array.from({ length: actualCount }, (_, index) => years[index] ?? `P${index + 1}`);
-  const points: FiscalPoint[] = (data ?? [])
+function buildFiscalPoints(years: string[] | null | undefined, data: NumberSeries | null | undefined, estimates?: MaybeNumber | EstimateSeries) {
+  const safeYears = asStringSeries(years);
+  const safeData = asNumberSeries(data);
+  const actualCount = Math.max(safeYears.length, safeData.length);
+  const labels = Array.from({ length: actualCount }, (_, index) => safeYears[index] ?? `P${index + 1}`);
+  const points: FiscalPoint[] = safeData
     .map((value, index) => ({
       label: labels[index] ?? `P${index + 1}`,
       value,
@@ -1747,7 +1799,9 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
           전체 화면 →
         </TransitionLink>
       </div>
-      <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+      <StockDetailBoundary ticker={ticker}>
+        <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+      </StockDetailBoundary>
     </div>
   );
 }
