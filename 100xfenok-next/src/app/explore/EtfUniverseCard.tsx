@@ -47,6 +47,14 @@ interface NewEtfRecord {
   classification?: EtfClassification;
 }
 
+interface DigitalAssetEtfRecord {
+  symbol?: string;
+  fund_name?: string;
+  assets?: string;
+  stock_price?: string;
+  pct_change?: string;
+}
+
 interface EtfSnapshotDoc {
   newEtfs?: {
     fetched_at?: string | null;
@@ -56,11 +64,19 @@ interface EtfSnapshotDoc {
     } | null;
     records?: NewEtfRecord[];
   } | null;
+  bitcoin?: {
+    fetched_at?: string | null;
+    counts?: {
+      records?: number | null;
+      rows?: number | null;
+    } | null;
+    records?: DigitalAssetEtfRecord[];
+  } | null;
 }
 
 type EtfAumFilter = "전체" | "1,000억 달러 이상" | "100억 달러 이상" | "10억 달러 이상" | "10억 달러 미만" | "운용자산 미표시";
 type EtfExpenseFilter = "전체" | "0.05% 이하" | "0.10% 이하" | "0.50% 이하" | "1.00% 이상" | "보수 미표시";
-type EtfSegmentFilter = "전체" | "신규" | "레버리지" | "단일종목 레버리지" | "인버스";
+type EtfSegmentFilter = "전체" | "신규" | "디지털자산" | "레버리지" | "단일종목 레버리지" | "인버스";
 
 const ETF_AUM_PARAM: Record<EtfAumFilter, string | null> = {
   "전체": null,
@@ -162,6 +178,7 @@ interface EtfUniverseCardProps {
   showOpenLink?: boolean;
   initialTypeFilter?: EtfTypeFilter;
   initialNewOnly?: boolean;
+  initialDigitalOnly?: boolean;
   initialAssetClassFilter?: string;
   initialIssuerFilter?: string;
   initialAumFilter?: string;
@@ -175,6 +192,7 @@ export default function EtfUniverseCard({
   showOpenLink = true,
   initialTypeFilter = "전체",
   initialNewOnly = false,
+  initialDigitalOnly = false,
   initialAssetClassFilter = "전체",
   initialIssuerFilter = "전체",
   initialAumFilter,
@@ -194,6 +212,7 @@ export default function EtfUniverseCard({
   const [expenseFilter, setExpenseFilter] = useState<EtfExpenseFilter>(expenseFilterFromParam(initialExpenseFilter));
   const [typeFilter, setTypeFilter] = useState<EtfTypeFilter>(initialTypeFilter);
   const [newOnly, setNewOnly] = useState(initialNewOnly);
+  const [digitalOnly, setDigitalOnly] = useState(initialDigitalOnly);
   const [expanded, setExpanded] = useState<{ key: string; count: number }>({ key: "", count: 0 });
 
   useEffect(() => {
@@ -211,9 +230,10 @@ export default function EtfUniverseCard({
   }, []);
 
   useEffect(() => {
-    setNewOnly(initialNewOnly);
-    setTypeFilter(initialNewOnly ? "전체" : initialTypeFilter);
-  }, [initialNewOnly, initialTypeFilter]);
+    setDigitalOnly(initialDigitalOnly);
+    setNewOnly(initialDigitalOnly ? false : initialNewOnly);
+    setTypeFilter(initialNewOnly || initialDigitalOnly ? "전체" : initialTypeFilter);
+  }, [initialDigitalOnly, initialNewOnly, initialTypeFilter]);
 
   useEffect(() => {
     setAssetClassFilter(initialAssetClassFilter);
@@ -324,6 +344,16 @@ export default function EtfUniverseCard({
     return { leveraged, singleStock, inverse };
   }, [rows]);
 
+  const digitalTickerSet = useMemo(() => {
+    const tickers = new Set<string>();
+    for (const row of snapshot?.bitcoin?.records ?? []) {
+      if (typeof row.symbol === "string" && row.symbol.trim()) {
+        tickers.add(row.symbol.trim().toUpperCase());
+      }
+    }
+    return tickers;
+  }, [snapshot]);
+
   const filteredRows = useMemo(() => {
     const q = debouncedQuery.trim().toUpperCase();
     return rows
@@ -333,8 +363,9 @@ export default function EtfUniverseCard({
       .filter((row) => matchesAumFilter(row.aum, aumFilter))
       .filter((row) => matchesExpenseFilter(row, expenseFilter))
       .filter((row) => !newOnly || row.is_new === true)
+      .filter((row) => !digitalOnly || digitalTickerSet.has((row.ticker ?? "").toUpperCase()))
       .filter((row) => {
-        if (newOnly) return true;
+        if (newOnly || digitalOnly) return true;
         if (typeFilter === "레버리지") return isLeveragedEtf(row);
         if (typeFilter === "단일종목 레버리지") return isSingleStockLeveragedEtf(row);
         if (typeFilter === "인버스") return isInverseEtf(row);
@@ -345,15 +376,19 @@ export default function EtfUniverseCard({
         if (newOnly) {
           return String(b.inceptionDate ?? "").localeCompare(String(a.inceptionDate ?? "")) || String(a.ticker ?? "").localeCompare(String(b.ticker ?? ""));
         }
+        if (digitalOnly) {
+          return (b.aum ?? -1) - (a.aum ?? -1) || String(a.ticker ?? "").localeCompare(String(b.ticker ?? ""));
+        }
         return (b.aum ?? -1) - (a.aum ?? -1);
       });
-  }, [assetClassFilter, aumFilter, category, debouncedQuery, expenseFilter, issuerFilter, newOnly, rows, typeFilter]);
+  }, [assetClassFilter, aumFilter, category, debouncedQuery, digitalOnly, digitalTickerSet, expenseFilter, issuerFilter, newOnly, rows, typeFilter]);
 
   const total = doc?.counts?.records ?? rows.length;
   const newCount = snapshot?.newEtfs?.counts?.records ?? snapshot?.newEtfs?.counts?.rows ?? (snapshot?.newEtfs?.records ?? []).length;
-  const displayTotal = newOnly ? newCount : total;
-  const visibleLimit = newOnly ? Math.max(limit, 100) : limit;
-  const filterKey = `${debouncedQuery.trim()}|${category}|${assetClassFilter}|${issuerFilter}|${aumFilter}|${expenseFilter}|${typeFilter}|${newOnly ? "new" : "all"}|${visibleLimit}`;
+  const digitalCount = (snapshot?.bitcoin?.records ?? []).length || digitalTickerSet.size;
+  const displayTotal = digitalOnly ? digitalCount : newOnly ? newCount : total;
+  const visibleLimit = newOnly || digitalOnly ? Math.max(limit, 100) : limit;
+  const filterKey = `${debouncedQuery.trim()}|${category}|${assetClassFilter}|${issuerFilter}|${aumFilter}|${expenseFilter}|${typeFilter}|${newOnly ? "new" : digitalOnly ? "digital" : "all"}|${visibleLimit}`;
   const visibleCount = enableLoadMore && expanded.key === filterKey
     ? Math.max(visibleLimit, expanded.count)
     : visibleLimit;
@@ -363,15 +398,17 @@ export default function EtfUniverseCard({
   const segmentOptions: Array<{ value: EtfSegmentFilter; label: string; count: number | null }> = [
     { value: "전체", label: "전체", count: total },
     { value: "신규", label: "신규", count: newCount },
+    { value: "디지털자산", label: "디지털", count: digitalCount },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
     { value: "단일종목 레버리지", label: "단일종목", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
   ];
-  const activeSegment: EtfSegmentFilter = newOnly ? "신규" : typeFilter;
+  const activeSegment: EtfSegmentFilter = newOnly ? "신규" : digitalOnly ? "디지털자산" : typeFilter;
 
   const syncFilterParams = (next: {
     typeFilter?: EtfTypeFilter;
     newOnly?: boolean;
+    digitalOnly?: boolean;
     assetClassFilter?: string;
     issuerFilter?: string;
     aumFilter?: EtfAumFilter;
@@ -380,16 +417,19 @@ export default function EtfUniverseCard({
     if (!syncTypeParam || typeof window === "undefined") return;
     const nextFilter = next.typeFilter ?? typeFilter;
     const nextNewOnly = next.newOnly ?? newOnly;
+    const nextDigitalOnly = next.digitalOnly ?? digitalOnly;
     const nextAssetClass = next.assetClassFilter ?? assetClassFilter;
     const nextIssuer = next.issuerFilter ?? issuerFilter;
     const nextAum = next.aumFilter ?? aumFilter;
     const nextExpense = next.expenseFilter ?? expenseFilter;
     const nextUrl = new URL(window.location.href);
     const param = ETF_TYPE_PARAM[nextFilter];
-    if (!nextNewOnly && param) nextUrl.searchParams.set("type", param);
+    if (!nextNewOnly && !nextDigitalOnly && param) nextUrl.searchParams.set("type", param);
     else nextUrl.searchParams.delete("type");
     if (nextNewOnly) nextUrl.searchParams.set("new", "1");
     else nextUrl.searchParams.delete("new");
+    if (nextDigitalOnly) nextUrl.searchParams.set("digital", "1");
+    else nextUrl.searchParams.delete("digital");
     if (nextAssetClass === "전체") nextUrl.searchParams.delete("asset");
     else nextUrl.searchParams.set("asset", nextAssetClass);
     if (nextIssuer === "전체") nextUrl.searchParams.delete("issuer");
@@ -406,21 +446,30 @@ export default function EtfUniverseCard({
   const handleSegmentChange = (nextSegment: EtfSegmentFilter) => {
     if (nextSegment === "신규") {
       setNewOnly(true);
+      setDigitalOnly(false);
       setTypeFilter("전체");
-      syncFilterParams({ newOnly: true, typeFilter: "전체" });
+      syncFilterParams({ newOnly: true, digitalOnly: false, typeFilter: "전체" });
+      return;
+    }
+    if (nextSegment === "디지털자산") {
+      setNewOnly(false);
+      setDigitalOnly(true);
+      setTypeFilter("전체");
+      syncFilterParams({ newOnly: false, digitalOnly: true, typeFilter: "전체" });
       return;
     }
     const nextFilter = nextSegment as EtfTypeFilter;
     setNewOnly(false);
+    setDigitalOnly(false);
     setTypeFilter(nextFilter);
-    syncFilterParams({ newOnly: false, typeFilter: nextFilter });
+    syncFilterParams({ newOnly: false, digitalOnly: false, typeFilter: nextFilter });
   };
 
   return (
     <section className="panel">
       <div className="panel-h">
         <h2>ETF 목록</h2>
-        <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : doc?.screener_fetched_at ?? doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
+        <span className="desc">{asOfDate(newOnly ? snapshot?.newEtfs?.fetched_at : digitalOnly ? snapshot?.bitcoin?.fetched_at : doc?.screener_fetched_at ?? doc?.generated_at)} · {formatNumber(displayTotal)}개</span>
       </div>
       <div className="panel-b">
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_140px_140px_170px_160px_150px]">

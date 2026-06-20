@@ -19,6 +19,7 @@ const PAGE_ROUTES = [
   "/etfs?type=single-stock",
   "/etfs?type=inverse",
   "/etfs?new=1",
+  "/etfs?digital=1",
   "/etfs?asset=Equity&issuer=Vanguard&aum=large&fee=low",
   "/etfs/new",
   "/etfs/new?type=single-stock&days=14&sort=change",

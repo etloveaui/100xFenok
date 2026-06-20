@@ -10,7 +10,7 @@ interface Props {
 
 export const metadata: Metadata = {
   title: "ETF 센터 | 100xFenok",
-  description: "ETF 목록, 신규 상장, 레버리지·단일종목 ETF를 확인합니다.",
+  description: "ETF 목록, 신규 상장, 디지털자산, 레버리지·단일종목 ETF를 확인합니다.",
 };
 
 function typeFilterFromParams(params: Record<string, string | string[] | undefined>): EtfTypeFilter {
@@ -28,6 +28,12 @@ function newOnlyFromParams(params: Record<string, string | string[] | undefined>
   return value === "1" || value === "true";
 }
 
+function digitalOnlyFromParams(params: Record<string, string | string[] | undefined>): boolean {
+  const rawDigital = params.digital;
+  const value = Array.isArray(rawDigital) ? rawDigital[0] : rawDigital;
+  return value === "1" || value === "true";
+}
+
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -35,7 +41,8 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 export default async function EtfsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialTypeFilter = typeFilterFromParams(params);
-  const initialNewOnly = newOnlyFromParams(params);
+  const initialDigitalOnly = digitalOnlyFromParams(params);
+  const initialNewOnly = initialDigitalOnly ? false : newOnlyFromParams(params);
 
   return (
     <div className="fnk-shell">
@@ -46,7 +53,7 @@ export default async function EtfsPage({ searchParams }: Props) {
               <p className="data-shell-kicker">ETF</p>
               <h1 className="data-shell-title">ETF 센터</h1>
               <p className="data-shell-desc">
-                ETF 목록, 신규 상장, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
+                ETF 목록, 신규 상장, 디지털자산, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
               </p>
             </div>
           </div>
@@ -62,6 +69,7 @@ export default async function EtfsPage({ searchParams }: Props) {
             showOpenLink={false}
             initialTypeFilter={initialTypeFilter}
             initialNewOnly={initialNewOnly}
+            initialDigitalOnly={initialDigitalOnly}
             initialAssetClassFilter={firstParam(params.asset) ?? "전체"}
             initialIssuerFilter={firstParam(params.issuer) ?? "전체"}
             initialAumFilter={firstParam(params.aum)}
