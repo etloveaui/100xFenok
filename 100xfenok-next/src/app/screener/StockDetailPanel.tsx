@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
-import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
+import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 
 export type MaybeNumber = number | null | undefined;
@@ -231,6 +231,13 @@ function finiteNumber(value: unknown): number | null {
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+function readToneClass(tone: InterpretationReadTone): string {
+  if (tone === "positive") return "border-emerald-100 bg-emerald-50 text-emerald-700";
+  if (tone === "risk") return "border-rose-100 bg-rose-50 text-rose-700";
+  if (tone === "watch") return "border-amber-100 bg-amber-50 text-amber-700";
+  return "border-slate-100 bg-slate-50 text-slate-700";
 }
 
 type FiscalPoint = { label: string; value: number; index: number; estimate?: boolean };
@@ -1582,7 +1589,7 @@ export function StockDetailBody({
   const latestRevenue = lastFinite(revenue);
   const latestEps = lastFinite(eps);
 
-  const interpretation = stock ? interpretStockMetrics(stock) : null;
+  const interpretation = stock ? interpretStockMetrics(stock, detail) : null;
 
   return (
     <>
@@ -1599,6 +1606,18 @@ export function StockDetailBody({
           <p className="text-xs font-semibold leading-relaxed text-[var(--c-ink-2)]">
             {interpretation.text}
           </p>
+          {interpretation.reads.length > 0 ? (
+            <ul className="mt-3 space-y-1.5 border-t border-[var(--c-line-2)] pt-2">
+              {interpretation.reads.map((read) => (
+                <li key={read.id} className="flex min-w-0 flex-wrap items-start gap-2 text-[11px] leading-relaxed">
+                  <span className={`shrink-0 rounded-full border px-2 py-0.5 font-black ${readToneClass(read.tone)}`}>
+                    {read.label}
+                  </span>
+                  <span className="min-w-0 flex-1 font-semibold text-[var(--c-ink-2)]">{read.text}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
       {ticker ? <MarketFactsDepth ticker={ticker} compact /> : null}

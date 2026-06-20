@@ -7,6 +7,7 @@ import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/typ
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandClass, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
+import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
 import StockDetailPanel from "./StockDetailPanel";
 
@@ -394,7 +395,7 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
   );
 }
 
-function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode {
+function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset): React.ReactNode {
   switch (key) {
     case "ticker":
       return <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>;
@@ -404,16 +405,21 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
       const lowEvidence = stock.lowEvidence === true;
       const confidence = confidenceText(stock.confidenceLabel);
       const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
+      const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
       const title = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
       return (
-        <span className="flex min-w-0 max-w-[150px] flex-col items-start gap-1" title={title}>
+        <span className="flex min-w-0 max-w-[180px] flex-col items-start gap-1" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
           <span className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
             {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
           </span>
           <span className={cx("max-w-full truncate text-[10px] font-black", confidenceClass(stock.confidenceLabel, lowEvidence))}>
             {detail}
           </span>
-          {stock.actionReasons?.[0] ? <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-4)]">{stock.actionReasons[0]}</span> : null}
+          {estimateSummary ? (
+            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-brand)]">{estimateSummary}</span>
+          ) : stock.actionReasons?.[0] ? (
+            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-4)]">{stock.actionReasons[0]}</span>
+          ) : null}
         </span>
       );
     }
@@ -539,7 +545,7 @@ function columnLabel(key: ScreenerSortKey): string {
   return COLUMNS.find((column) => column.key === key)?.label ?? key;
 }
 
-function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode {
+function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset): React.ReactNode {
   switch (key) {
     case "perBandCurrent": {
       const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
@@ -562,18 +568,18 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey): React.Rea
       );
     }
     default:
-      return renderCell(stock, key);
+      return renderCell(stock, key, preset);
   }
 }
 
-function MobileMetric({ stock, metricKey }: { stock: ScreenerStock; metricKey: ScreenerSortKey }) {
+function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metricKey: ScreenerSortKey; preset?: ColumnPreset }) {
   return (
     <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
       <span className="block truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
         <MetricHelp label={columnLabel(metricKey)} metricKey={metricKey} align="right" />
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
-        {renderMobileCell(stock, metricKey)}
+        {renderMobileCell(stock, metricKey, preset)}
       </span>
     </div>
   );
@@ -596,6 +602,7 @@ function MobileStockCard({
   const confidence = confidenceText(stock.confidenceLabel);
   const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
   const actionTitle = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
+  const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
   const metrics = MOBILE_PRESET_KEYS[preset];
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
@@ -628,6 +635,9 @@ function MobileStockCard({
             {stock.sector || "섹터 미정"}
             {stock.actionReasons?.[0] ? ` · ${stock.actionReasons[0]}` : ""}
           </span>
+          {estimateSummary ? (
+            <span className="mt-1 block min-w-0 truncate text-[11px] font-black text-[var(--c-brand)]">{estimateSummary}</span>
+          ) : null}
         </span>
         <span className="shrink-0 text-right">
           <span className="orbitron block text-sm font-black tabular-nums text-slate-950">
@@ -643,7 +653,7 @@ function MobileStockCard({
       </button>
       <div className="grid grid-cols-2 gap-2 px-3 pb-3">
         {metrics.map((metricKey) => (
-          <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} />
+          <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
         ))}
       </div>
       {expanded ? (
@@ -1225,7 +1235,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                               <span className="w-3 text-center text-[10px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
                               <span className="truncate">{stock.ticker}</span>
                             </button>
-                          ) : renderCell(stock, column.key)}
+                          ) : renderCell(stock, column.key, preset)}
                         </td>
                       ))}
                     </tr>
