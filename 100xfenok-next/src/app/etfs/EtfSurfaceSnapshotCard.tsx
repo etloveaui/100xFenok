@@ -77,8 +77,20 @@ interface EtfSurfaceData {
 }
 
 type CollectionKey = "largeProvider" | "strategy" | "bitcoin";
+type ProviderCollectionKey = Extract<CollectionKey, "largeProvider" | "strategy">;
+
+interface ProviderCollectionLoadState {
+  doc: SurfaceDoc<ProviderRow> | null;
+  loading: boolean;
+  failed: boolean;
+}
+
 const ETF_COLLECTION_TABS_ID = "etf-surface-collections-tabs";
 const ETF_COLLECTION_KEYS: CollectionKey[] = ["largeProvider", "strategy", "bitcoin"];
+const PROVIDER_COLLECTION_SURFACES: Record<ProviderCollectionKey, string> = {
+  largeProvider: "etf_provider_blackrock",
+  strategy: "etf_provider_proshares",
+};
 
 let etfSurfaceCache: EtfSurfaceData | undefined;
 let etfSurfacePending: Promise<EtfSurfaceData | null> | null = null;
@@ -112,6 +124,17 @@ function loadEtfSurfaceData(): Promise<EtfSurfaceData | null> {
 function clearEtfSurfaceData() {
   etfSurfaceCache = undefined;
   etfSurfacePending = null;
+}
+
+function initialProviderCollectionLoads(): Record<ProviderCollectionKey, ProviderCollectionLoadState> {
+  return {
+    largeProvider: { doc: null, loading: false, failed: false },
+    strategy: { doc: null, loading: false, failed: false },
+  };
+}
+
+function isProviderCollectionKey(key: CollectionKey): key is ProviderCollectionKey {
+  return key === "largeProvider" || key === "strategy";
 }
 
 function rows<T>(doc: SurfaceDoc<T> | null | undefined): T[] {
@@ -252,6 +275,7 @@ export default function EtfSurfaceSnapshotCard() {
     failed: boolean;
   }>({ reloadKey: 0, data: null, loaded: false, failed: false });
   const [collectionKey, setCollectionKey] = useState<CollectionKey>("largeProvider");
+  const [providerCollectionLoads, setProviderCollectionLoads] = useState(initialProviderCollectionLoads);
   const collectionTabsId = useTabsBaseId(ETF_COLLECTION_TABS_ID);
 
   useEffect(() => {
@@ -268,7 +292,35 @@ export default function EtfSurfaceSnapshotCard() {
 
   const retryLoad = () => {
     clearEtfSurfaceData();
+    setProviderCollectionLoads(initialProviderCollectionLoads());
     setReloadKey((value) => value + 1);
+  };
+
+  const loadProviderCollection = (key: ProviderCollectionKey) => {
+    const current = providerCollectionLoads[key];
+    if (current.loading || current.doc) return;
+    const surface = PROVIDER_COLLECTION_SURFACES[key];
+    setProviderCollectionLoads((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], loading: true, failed: false },
+    }));
+    fetch(`/api/data/stockanalysis/surfaces/${encodeURIComponent(surface)}/`, { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error(`surface ${surface} failed`);
+        return response.json() as Promise<SurfaceDoc<ProviderRow>>;
+      })
+      .then((doc) => {
+        setProviderCollectionLoads((prev) => ({
+          ...prev,
+          [key]: { doc, loading: false, failed: false },
+        }));
+      })
+      .catch(() => {
+        setProviderCollectionLoads((prev) => ({
+          ...prev,
+          [key]: { ...prev[key], loading: false, failed: true },
+        }));
+      });
   };
 
   const isCurrentLoad = loadState.reloadKey === reloadKey;
@@ -291,14 +343,14 @@ export default function EtfSurfaceSnapshotCard() {
   const collections = useMemo(
     () => ({
       largeProvider: {
-        rows: rows(data?.blackrock),
-        total: countRows(data?.blackrock),
-        fetchedAt: data?.blackrock?.fetched_at,
+        rows: rows(providerCollectionLoads.largeProvider.doc ?? data?.blackrock),
+        total: countRows(providerCollectionLoads.largeProvider.doc ?? data?.blackrock),
+        fetchedAt: (providerCollectionLoads.largeProvider.doc ?? data?.blackrock)?.fetched_at,
       },
       strategy: {
-        rows: rows(data?.proshares),
-        total: countRows(data?.proshares),
-        fetchedAt: data?.proshares?.fetched_at,
+        rows: rows(providerCollectionLoads.strategy.doc ?? data?.proshares),
+        total: countRows(providerCollectionLoads.strategy.doc ?? data?.proshares),
+        fetchedAt: (providerCollectionLoads.strategy.doc ?? data?.proshares)?.fetched_at,
       },
       bitcoin: {
         rows: rows(data?.bitcoin),
@@ -306,7 +358,7 @@ export default function EtfSurfaceSnapshotCard() {
         fetchedAt: data?.bitcoin?.fetched_at,
       },
     }),
-    [data],
+    [data, providerCollectionLoads],
   );
   const activeCollection = collections[collectionKey];
   const collectionTabs: Array<TabItem<CollectionKey> & { total: number | null; shown: number }> = ETF_COLLECTION_KEYS.map((key) => ({
@@ -458,6 +510,12 @@ export default function EtfSurfaceSnapshotCard() {
             </div>
             {collectionTabs.map((item) => {
               const collection = collections[item.id];
+              const providerLoad = isProviderCollectionKey(item.id) ? providerCollectionLoads[item.id] : null;
+              const hasMoreRows = Boolean(
+                providerLoad
+                  && typeof collection.total === "number"
+                  && collection.total > collection.rows.length,
+              );
               return (
                 <TabPanel key={item.id} idBase={collectionTabsId} item={item} active={collectionKey === item.id}>
                   {collection.rows.map((row) => {
@@ -484,6 +542,33 @@ export default function EtfSurfaceSnapshotCard() {
                       />
                     );
                   })}
+                  {providerLoad ? (
+                    <div className="flex flex-wrap items-center gap-2 px-[var(--panel-pad)] py-2">
+                      {hasMoreRows && !providerLoad.failed ? (
+                        <button
+                          type="button"
+                          onClick={() => loadProviderCollection(item.id as ProviderCollectionKey)}
+                          disabled={providerLoad.loading}
+                          className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--c-brand)] disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {providerLoad.loading
+                            ? "전체 목록 불러오는 중"
+                            : `전체 목록 불러오기 · ${fmtNumber(collection.rows.length)} / ${fmtNumber(collection.total)}`}
+                        </button>
+                      ) : providerLoad.doc ? (
+                        <span className="text-[10px] font-bold text-[var(--c-ink-3)]">전체 목록 표시 중</span>
+                      ) : null}
+                      {providerLoad.failed ? (
+                        <button
+                          type="button"
+                          onClick={() => loadProviderCollection(item.id as ProviderCollectionKey)}
+                          className="inline-flex min-h-8 items-center rounded-full border border-red-200 bg-red-50 px-3 text-[11px] font-black text-red-700 transition hover:border-red-300"
+                        >
+                          전체 목록 다시 불러오기
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <div className="px-[var(--panel-pad)] py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
                     기준일 {asOf(collection.fetchedAt)}
                   </div>

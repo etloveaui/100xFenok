@@ -10,6 +10,7 @@ const SOURCE_CONSUMERS_PATH = `${ROOT}/../data/stockanalysis/surface_consumers.j
 const CODE_FILES = [
   `${ROOT}/src/app/market/events/MarketEventsClient.tsx`,
   `${ROOT}/src/app/sectors/IndustryMapPanel.tsx`,
+  `${ROOT}/src/app/etfs/EtfSurfaceSnapshotCard.tsx`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-universe/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-snapshot/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`,
