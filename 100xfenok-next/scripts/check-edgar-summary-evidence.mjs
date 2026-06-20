@@ -137,6 +137,8 @@ for (const ticker of tickers) {
     }
     if (!Array.isArray(artifact.sourceStatus?.sectionsExtracted)) {
       errors.push(`${ticker}/${filing.accession}: sourceStatus.sectionsExtracted must be an array`);
+    } else if (["10-K", "10-Q"].includes(String(filing.form ?? "").toUpperCase()) && artifact.sourceStatus.sectionsExtracted.length === 0) {
+      errors.push(`${ticker}/${filing.accession}: ready ${filing.form} summary must include at least one extracted SEC filing section`);
     }
     if (!Array.isArray(artifact.sourceStatus?.missingSections)) {
       errors.push(`${ticker}/${filing.accession}: sourceStatus.missingSections must be an array`);
@@ -154,6 +156,12 @@ for (const ticker of tickers) {
     const evidenceRows = Array.isArray(artifact.evidence) ? artifact.evidence : [];
     const evidenceById = new Map(evidenceRows.map((row) => [row.id, row]));
     evidenceCount += evidenceRows.length;
+    if (["10-K", "10-Q"].includes(String(filing.form ?? "").toUpperCase())) {
+      const filingDigestCount = evidenceRows.filter((row) => row.kind === "filing_digest").length;
+      if (filingDigestCount === 0) {
+        errors.push(`${ticker}/${filing.accession}: ready ${filing.form} summary must include filing_digest evidence`);
+      }
+    }
 
     for (const evidence of evidenceRows) {
       if (!evidence.id) errors.push(`${ticker}/${filing.accession}: evidence row missing id`);
