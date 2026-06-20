@@ -159,6 +159,20 @@ function countRows<T>(doc: SurfaceDoc<T> | null | undefined): number | null {
   return typeof value === "number" ? value : rows(doc).length || null;
 }
 
+function shownTotalLabel(shown: number, total: number | null | undefined): string {
+  if (typeof total === "number" && Number.isFinite(total)) {
+    return `${fmtNumber(total)}개 중 ${fmtNumber(shown)}개 표시`;
+  }
+  return `${fmtNumber(shown)}개 표시`;
+}
+
+function compactShownTotalLabel(shown: number, total: number | null | undefined): string {
+  if (typeof total === "number" && Number.isFinite(total)) {
+    return `${fmtNumber(shown)}/${fmtNumber(total)}`;
+  }
+  return fmtNumber(shown);
+}
+
 function short(value: string | null | undefined, max = 34): string {
   const text = typeof value === "string" ? value.trim() : "";
   if (!text || text === "-") return "-";
@@ -269,6 +283,10 @@ export default function EtfSurfaceSnapshotCard() {
     () => [...rows(data?.blackrock).slice(0, 3), ...rows(data?.proshares).slice(0, 3)],
     [data],
   );
+  const providerShown = providerLeaders.length;
+  const blackrockTotal = countRows(data?.blackrock);
+  const prosharesTotal = countRows(data?.proshares);
+  const providerTotal = (blackrockTotal ?? 0) + (prosharesTotal ?? 0);
   const bitcoinEtfs = useMemo(() => rows(data?.bitcoin).slice(0, 4), [data]);
   const collections = useMemo(
     () => ({
@@ -291,9 +309,10 @@ export default function EtfSurfaceSnapshotCard() {
     [data],
   );
   const activeCollection = collections[collectionKey];
-  const collectionTabs: Array<TabItem<CollectionKey> & { total: number | null }> = ETF_COLLECTION_KEYS.map((key) => ({
+  const collectionTabs: Array<TabItem<CollectionKey> & { total: number | null; shown: number }> = ETF_COLLECTION_KEYS.map((key) => ({
     id: key,
     label: collectionLabel(key),
+    shown: collections[key].rows.length,
     total: collections[key].total,
   }));
   const newEtfCount = countRows(data?.newEtfs);
@@ -386,7 +405,10 @@ export default function EtfSurfaceSnapshotCard() {
           </div>
 
           <div className="mv-col">
-            <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">대형 운용사 ETF</div>
+            <div className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">
+              <span>대형 운용사 ETF</span>
+              <span className="text-[10px] font-bold normal-case tracking-normal">{shownTotalLabel(providerShown, providerTotal || null)}</span>
+            </div>
             {providerLeaders.map((row) => (
               <EtfLink
                 key={`provider-${row.symbol}`}
@@ -416,7 +438,7 @@ export default function EtfSurfaceSnapshotCard() {
               <div>
                 <div className="text-[11px] font-black uppercase tracking-wide text-[var(--c-ink-3)]">ETF 모음</div>
                 <div className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
-                  {collectionLabel(collectionKey)} · {fmtNumber(activeCollection.total)}개 중 {fmtNumber(activeCollection.rows.length)}개 표시
+                  {collectionLabel(collectionKey)} · {shownTotalLabel(activeCollection.rows.length, activeCollection.total)}
                 </div>
               </div>
               <Tabs
@@ -431,7 +453,7 @@ export default function EtfSurfaceSnapshotCard() {
                     ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
                     : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
                 }`}
-                renderLabel={(item) => <>{item.label} {fmtNumber(item.total)}</>}
+                renderLabel={(item) => <>{item.label} {compactShownTotalLabel(item.shown, item.total)}</>}
               />
             </div>
             {collectionTabs.map((item) => {
