@@ -385,7 +385,7 @@ export default function EtfUniverseCard({
 
   const total = doc?.counts?.records ?? rows.length;
   const newCount = snapshot?.newEtfs?.counts?.records ?? snapshot?.newEtfs?.counts?.rows ?? (snapshot?.newEtfs?.records ?? []).length;
-  const digitalCount = (snapshot?.bitcoin?.records ?? []).length || digitalTickerSet.size;
+  const digitalCount = snapshot?.bitcoin?.counts?.records ?? snapshot?.bitcoin?.counts?.rows ?? ((snapshot?.bitcoin?.records ?? []).length || digitalTickerSet.size);
   const displayTotal = digitalOnly ? digitalCount : newOnly ? newCount : total;
   const visibleLimit = newOnly || digitalOnly ? Math.max(limit, 100) : limit;
   const filterKey = `${debouncedQuery.trim()}|${category}|${assetClassFilter}|${issuerFilter}|${aumFilter}|${expenseFilter}|${typeFilter}|${newOnly ? "new" : digitalOnly ? "digital" : "all"}|${visibleLimit}`;

@@ -7,6 +7,7 @@ type JsonRecord = Record<string, unknown>;
 const ETF_SNAPSHOT_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
 } as const;
+const DIGITAL_ASSET_ETF_SNAPSHOT_LIMIT = 100;
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -141,7 +142,7 @@ export async function GET() {
         summarizeEtfScreener(5),
         summarizeSurface("etf_provider_blackrock", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
         summarizeSurface("etf_provider_proshares", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
-        summarizeSurface("list_bitcoin_etfs", ["symbol", "fund_name", "assets", "stock_price", "pct_change"], 20),
+        summarizeSurface("list_bitcoin_etfs", ["symbol", "fund_name", "assets", "stock_price", "pct_change"], DIGITAL_ASSET_ETF_SNAPSHOT_LIMIT),
       ]);
 
       return NextResponse.json(
