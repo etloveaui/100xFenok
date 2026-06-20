@@ -101,7 +101,7 @@ function rowLine(section: SectionKey, row: Record<string, unknown>): string {
 
 function flattenSection(payload: TickerSurfacePayload | null, section: SectionKey) {
   return (payload?.sections?.[section] ?? []).flatMap((surface) => (
-    surface.matches.map((row) => ({ surface, row }))
+    (Array.isArray(surface.matches) ? surface.matches : []).map((row) => ({ surface, row }))
   ));
 }
 

@@ -21,6 +21,10 @@ function finiteNumber(value: unknown): number | null {
   return null;
 }
 
+function asArray(value: unknown): any[] {
+  return Array.isArray(value) ? value : [];
+}
+
 function clamp(value: number, min = 0, max = 100): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -420,7 +424,7 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
 
 function OwnershipTab({ data }: { data: YfData }) {
   const mh = data.major_holders ?? {};
-  const ih = (data.institutional_holders ?? []) as any[];
+  const ih = asArray(data.institutional_holders);
   const currency = data.info?.currency ?? "USD";
 
   return (
@@ -496,9 +500,9 @@ function OwnershipTab({ data }: { data: YfData }) {
 function EstimatesTab({ data }: { data: YfData }) {
   const infoCurrency = normalizeCurrency(data.info?.currency ?? "USD");
   const targets = data.analyst_price_targets ?? {};
-  const earnings = (data.earnings_estimate ?? []) as any[];
-  const revenue = (data.revenue_estimate ?? []) as any[];
-  const recs = (data.recommendations ?? []) as any[];
+  const earnings = asArray(data.earnings_estimate);
+  const revenue = asArray(data.revenue_estimate);
+  const recs = asArray(data.recommendations);
   const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
   const targetLow = finiteNumber(targets.low);
   const targetMean = finiteNumber(targets.mean);
@@ -711,7 +715,7 @@ function pushCheck(checks: ScoreCheck[], label: string, pass: boolean | null) {
 }
 
 function estGrowth(rows: any[] | null | undefined, idx: string): number | null {
-  const r = (rows ?? []).find((e: any) => e._index === idx);
+  const r = asArray(rows).find((e: any) => e._index === idx);
   return finiteNumber(r?.growth);
 }
 
@@ -915,7 +919,7 @@ export function buildThreeSecondSummary(
 
   // 2) fundamentals direction
   const fun: string[] = [];
-  const g = finiteNumber((data.earnings_estimate ?? []).find((e: any) => e._index === "+1y")?.growth);
+  const g = finiteNumber(asArray(data.earnings_estimate).find((e: any) => e._index === "+1y")?.growth);
   if (g !== null) {
     fun.push(g > 0.05 ? `내년 EPS ${(g * 100).toFixed(0)}% 성장 전망` : g < 0 ? "내년 이익 감소 전망" : "내년 이익 정체 전망");
   }

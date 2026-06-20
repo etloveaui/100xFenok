@@ -1590,6 +1590,7 @@ export function StockDetailBody({
   const latestEps = lastFinite(eps);
 
   const interpretation = stock ? interpretStockMetrics(stock, detail) : null;
+  const interpretationReads = Array.isArray(interpretation?.reads) ? interpretation.reads : [];
 
   return (
     <>
@@ -1606,9 +1607,9 @@ export function StockDetailBody({
           <p className="text-xs font-semibold leading-relaxed text-[var(--c-ink-2)]">
             {interpretation.text}
           </p>
-          {interpretation.reads.length > 0 ? (
+          {interpretationReads.length > 0 ? (
             <ul className="mt-3 space-y-1.5 border-t border-[var(--c-line-2)] pt-2">
-              {interpretation.reads.map((read) => (
+              {interpretationReads.map((read) => (
                 <li key={read.id} className="flex min-w-0 flex-wrap items-start gap-2 text-[11px] leading-relaxed">
                   <span className={`shrink-0 rounded-full border px-2 py-0.5 font-black ${readToneClass(read.tone)}`}>
                     {read.label}
