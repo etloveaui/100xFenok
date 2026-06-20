@@ -44,8 +44,8 @@
 - E2 (S, $0) — honest detail_status copy for source-gap ETFs (drop false backfill promise; lean on existing ExternalSourceLinks); show shown/total (e.g. "20/78").
 - E3 (S, $0) — rename 단일종목 → 단일종목 레버리지 (match actual filter).
 - E4 (M, $0) — live segment badges that respect active dropdowns; surface_only vs universe_only distinction in callout.
-- E5a (M, $0) — 🔄 in progress: promote stored `classification` signal / high-confidence plain classification as primary, keep regex as fallback when stored classification is absent or low-confidence no-signal, expose merged `counts.classification`, and make QA assert exact parity to source screener classification counts when the merged universe is screener-backed.
-- E5b (L, $0 + live fetch) — data-ops follow-up: retry 82 missing / 686 YF fallback. No-network plan/report/QA is possible, but actual source recovery requires explicit live StockAnalysis/Yahoo fetch.
+- E5a (M, $0) — ✅ landed: promote stored `classification` signal / high-confidence plain classification as primary, keep regex as fallback when stored classification is absent or low-confidence no-signal, expose merged `counts.classification`, and make QA assert exact parity to source screener classification counts when the merged universe is screener-backed. Gate kept merged counts stable at leveraged 704 / single-stock 239 / inverse 283.
+- E5b/E5c (L, $0 + owner-gated live fetch only when fetchable gaps exist) — ✅ no-network plan/report/QA landed, then E5c split the 11 remaining 3Y/5Y history gaps into fetchable vs inception-limited using ETF inception dates. Current state: `history_gap=0`, `inception_limited_history_gap=11`, `total_history_gap=11`, `etfs_planned=0`, and `recommended_dispatch.status=not_recommended`. The 11 gaps are recent-launch ETFs (oldest FEAT/FIVY 2024-12-16), so no live fetch is currently useful; dispatch becomes relevant only when a future report shows `fetchable_required_history > 0`.
 
 ---
 

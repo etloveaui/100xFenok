@@ -160,7 +160,8 @@ Implementation pointers:
 - **History gap QA summary**: run `npm run qa:history-gap` from
   `100xfenok-next/` before dispatching a live history refresh. It directly
   scans local primary StockAnalysis ETF detail files, compares the current
-  missing-history count to `incremental_plan_latest.json`, and prints the
+  fetchable-history count to `incremental_plan_latest.json`, separates
+  fetchable gaps from inception-limited recent-launch ETFs, and prints the
   recommended workflow inputs without making network calls. Use
   `-- --required-history-periods <comma-list>` when the workflow dispatch is
   intentionally staged to a subset of periods.
@@ -178,6 +179,11 @@ Implementation pointers:
     StockAnalysis ETF files missing the required multi-year history periods. It
     skips the normal surface/financial refresh bundle and uses
     `incremental_etf_limit` as the chunk size.
+  - Dispatch only when the report shows `fetchable_required_history > 0`.
+    Current E5c state is `missing_required_history=11`,
+    `fetchable_required_history=0`, and `inception_limited_required_history=11`;
+    all 11 are recent-launch ETFs younger than the requested 3Y/5Y windows, so
+    `recommended_dispatch.status` is `not_recommended`.
   - After a live `history_gaps_only=true` chunk, the workflow regenerates the
     no-network plan artifact so `incremental_plan_latest.json` reflects the
     remaining gap, then runs `qa:history-gap` before committing.
@@ -280,7 +286,7 @@ Representative ticker contracts:
 
 | Gap | Status | Notes |
 |-----|--------|-------|
-| 3Y return coverage | effectively backfilled / source-gap limited | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data exists. Current local 3Y CAGR coverage is 2,863 / 5,267, including 2,634 StockAnalysis-history-derived records; the history-gap report shows 4,568 / 4,579 primary detail files complete and 11 remaining source gaps. |
+| 3Y return coverage | effectively backfilled / inception-limited | `market_facts` now uses StockAnalysis ETF catalog performance for 1M, YTD, 1Y, 5Y CAGR, 10Y CAGR, and inception-to-date CAGR. 3M is derived from local StockAnalysis detail history when Yahoo daily history is missing. 3Y CAGR can now be derived from StockAnalysis multi-year monthly history when `monthly_3y` or `monthly_5y` detail data exists. Current local 3Y CAGR coverage is 2,863 / 5,267, including 2,634 StockAnalysis-history-derived records; the history-gap report shows 4,568 / 4,579 primary detail files complete, 11 missing required-history rows, 0 fetchable rows, and 11 inception-limited recent-launch rows. |
 | Chart granularity | code-ready / source-gap limited | ETF detail fetcher stores `daily_1y`, `weekly_1y`, `monthly_1y`, `weekly_3y`, `monthly_3y`, and `monthly_5y` when fetched; detail UI enables only ranges that exist in the payload. Current local detail files are almost fully backfilled for 3Y/5Y; the remaining 11 open progressively only if source history appears. |
 | Missing multi-year history UX | done / data-dependent | ETF detail pages show the current 1Y chart/table and a short pending-data note when 3Y/5Y history ranges are not present, so disabled ranges are not mistaken for a broken chart. |
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
