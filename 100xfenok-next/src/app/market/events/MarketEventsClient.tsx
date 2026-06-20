@@ -7,10 +7,13 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 type EventTab = "earnings" | "actions" | "ipo" | "movers";
 
 interface SurfaceDoc<T = EventRow> {
+  surface?: string;
   fetched_at?: string | null;
   counts?: Record<string, number | null | undefined> | null;
   records?: T[];
   tables?: Array<{ records?: T[] }>;
+  load_failed?: boolean;
+  status_code?: number;
 }
 
 type EventRow = Record<string, unknown>;
@@ -81,6 +84,46 @@ const SURFACES: Record<keyof EventData, string> = {
   losersYtd: "market_losers_ytd",
 };
 
+const SURFACE_STATUS_GROUPS: Array<{
+  group: string;
+  items: Array<{ key: keyof EventData; label: string }>;
+}> = [
+  {
+    group: "어닝",
+    items: [{ key: "earnings", label: "어닝 일정" }],
+  },
+  {
+    group: "기업",
+    items: [
+      { key: "actions", label: "기업 이벤트" },
+      { key: "splits", label: "분할·병합" },
+    ],
+  },
+  {
+    group: "IPO",
+    items: [
+      { key: "ipoCalendar", label: "예정 IPO" },
+      { key: "ipoRecent", label: "최근 IPO" },
+      { key: "ipoFilings", label: "IPO 신청" },
+      { key: "ipoStats", label: "IPO 활동" },
+      { key: "ipoWithdrawn", label: "IPO 철회" },
+    ],
+  },
+  {
+    group: "급등락",
+    items: [
+      { key: "gainers", label: "당일 상승" },
+      { key: "losers", label: "당일 하락" },
+      { key: "active", label: "거래량" },
+      { key: "premarket", label: "장전 거래" },
+      { key: "afterhours", label: "장후 거래" },
+      { key: "gainersWeek", label: "이번 주 상승" },
+      { key: "gainersMonth", label: "한 달 상승" },
+      { key: "losersYtd", label: "YTD 하락" },
+    ],
+  },
+];
+
 const TABS: Array<{ key: EventTab; label: string }> = [
   { key: "earnings", label: "어닝" },
   { key: "actions", label: "기업 이벤트" },
@@ -93,8 +136,13 @@ let pending: Promise<EventData | null> | null = null;
 
 function loadSurface(name: string): Promise<SurfaceDoc> {
   return fetch(`/api/data/stockanalysis/surfaces/${name}`, { cache: "no-store" })
-    .then((response) => (response.ok ? response.json() as Promise<SurfaceDoc> : {}))
-    .catch(() => ({}));
+    .then((response) => (
+      response.ok
+        ? response.json() as Promise<SurfaceDoc>
+        : { surface: name, load_failed: true, status_code: response.status }
+    ))
+    .then((doc) => ({ ...doc, surface: doc.surface ?? name }))
+    .catch(() => ({ surface: name, load_failed: true }));
 }
 
 function loadEventData(): Promise<EventData | null> {
@@ -144,6 +192,16 @@ function countRows(doc: SurfaceDoc | null | undefined): number {
   const value = counts.records ?? counts.rows;
   if (typeof value === "number") return value;
   return rowsOf(doc).length;
+}
+
+function surfaceStatus(doc: SurfaceDoc | null | undefined): "ok" | "warn" {
+  if (doc?.load_failed) return "warn";
+  return doc?.fetched_at ? "ok" : "warn";
+}
+
+function surfaceStatusLabel(doc: SurfaceDoc | null | undefined): string {
+  if (doc?.load_failed) return doc.status_code ? `오류 ${doc.status_code}` : "오류";
+  return doc?.fetched_at ? "정상" : "확인 필요";
 }
 
 function asOf(data: EventData | null): string {
@@ -378,6 +436,7 @@ export default function MarketEventsClient({
               섹터로 이동
             </TransitionLink>
           </div>
+          {loaded ? <SurfaceStatusBoard data={data} /> : null}
         </div>
       </section>
 
@@ -429,6 +488,51 @@ function LoadingPanel() {
         <span className="pc num neutral">...</span>
       </div>
     </section>
+  );
+}
+
+function SurfaceStatusBoard({ data }: { data: EventData | null }) {
+  if (!data) return null;
+  return (
+    <div className="mt-3 rounded-xl border border-[var(--c-line)] bg-white px-3 py-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-3)]">자료 상태</span>
+        <span className="text-[11px] font-bold text-[var(--c-ink-4)]">
+          {Object.keys(SURFACES).length.toLocaleString("ko-KR")}개 이벤트 자료
+        </span>
+      </div>
+      <div className="grid gap-2 lg:grid-cols-4">
+        {SURFACE_STATUS_GROUPS.map((group) => (
+          <div key={group.group} className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-2.5 py-2">
+            <div className="mb-1.5 text-[10px] font-black text-[var(--c-ink-3)]">{group.group}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {group.items.map((item) => {
+                const doc = data[item.key];
+                const status = surfaceStatus(doc);
+                const count = countRows(doc);
+                const fetchedAt = dateText(doc?.fetched_at);
+                const title = `${item.label} · ${surfaceStatusLabel(doc)} · ${count.toLocaleString("ko-KR")}개 · 기준 ${fetchedAt}`;
+                return (
+                  <span
+                    key={item.key}
+                    title={title}
+                    className={`inline-flex min-h-7 max-w-full items-center gap-1 rounded-full border px-2 text-[10px] font-black ${
+                      status === "ok"
+                        ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                        : "border-amber-200 bg-amber-50 text-amber-800"
+                    }`}
+                  >
+                    <span className="truncate">{item.label}</span>
+                    <span className="shrink-0 tabular-nums">{count.toLocaleString("ko-KR")}</span>
+                    <span className="shrink-0 text-[9px] opacity-75">{fetchedAt}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
