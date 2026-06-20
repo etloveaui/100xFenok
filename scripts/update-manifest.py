@@ -84,6 +84,20 @@ DEFAULT_FOLDER_META = {
         "schema": True,
         "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces.",
     },
+    "edgar": {
+        "version": "1.0.0",
+        "update_frequency": "weekly / on-demand",
+        "source": "SEC company_tickers.json",
+        "schema": True,
+        "description": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder.",
+    },
+    "edgar-korean-summaries": {
+        "version": "1.0.0",
+        "update_frequency": "weekly / on-demand",
+        "source": "SEC EDGAR submissions and feno-edgar Korean summary artifacts",
+        "schema": True,
+        "description": "Ticker availability index, ticker-level SEC filing timeline manifests, original filing links, and Korean summary artifacts when available.",
+    },
 }
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -182,6 +196,17 @@ def refresh_default_folder_metadata(
     )
 
     reasons: list[str] = []
+    for key in ("update_frequency", "source", "description"):
+        default_value = defaults.get(key)
+        current_value = entry.get(key)
+        is_generic_frequency = key == "update_frequency" and current_value == "on-demand" and default_value != "on-demand"
+        if isinstance(default_value, str) and (not current_value or current_value == "TBD" or is_generic_frequency):
+            entry[key] = default_value
+            reasons.append(f"{key} filled")
+    if defaults.get("schema") is True and entry.get("schema") is not True:
+        entry["schema"] = True
+        reasons.append("schema enabled")
+
     if parse_semver(target_version) > parse_semver(current_version):
         entry["version"] = target_version
         reasons.append(f"version {current_version}→{target_version}")
