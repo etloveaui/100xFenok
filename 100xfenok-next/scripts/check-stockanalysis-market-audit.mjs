@@ -197,8 +197,12 @@ function assertIncrementalPlanContract(audit, incrementalPlan, errors) {
   assert(Number(planCounts.incremental_selected || 0) === Number(planCounts.etfs_planned || 0), "ETF incremental plan: incremental_selected must match etfs_planned", errors);
   assert(Number(nestedCounts.selected || 0) === Number(planCounts.incremental_selected || 0), "ETF incremental plan: nested selected count must match top-level selected count", errors);
   assert(Number(nestedCounts.history_gap || 0) === Number(planCounts.history_gap || 0), "ETF incremental plan: nested history_gap count must match top-level history_gap count", errors);
+  assert(Number(nestedCounts.inception_limited_history_gap || 0) === Number(planCounts.inception_limited_history_gap || 0), "ETF incremental plan: nested inception_limited_history_gap count must match top-level count", errors);
+  assert(Number(planCounts.total_history_gap ?? planCounts.history_gap ?? 0) >= Number(planCounts.history_gap || 0), "ETF incremental plan: total_history_gap must cover fetchable history_gap", errors);
   assert(Number(auditCounts.plan_selected ?? -1) === Number(planCounts.incremental_selected || 0), "Market audit: plan_selected must match incremental plan selected count", errors);
   assert(Number(auditCounts.plan_history_gap ?? -1) === Number(planCounts.history_gap || 0), "Market audit: plan_history_gap must match incremental plan history_gap count", errors);
+  assert(Number(auditCounts.plan_inception_limited_history_gap ?? 0) === Number(planCounts.inception_limited_history_gap || 0), "Market audit: plan_inception_limited_history_gap must match incremental plan", errors);
+  assert(Number(auditCounts.plan_total_history_gap ?? -1) === Number(planCounts.total_history_gap ?? planCounts.history_gap ?? 0), "Market audit: plan_total_history_gap must match incremental plan", errors);
   assert(audit?.incremental_etf?.plan_generated_at === incrementalPlan?.generated_at, "Market audit: plan_generated_at must match incremental plan generated_at", errors);
 }
 
@@ -206,6 +210,8 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
   const requiredPeriods = Array.isArray(report?.required_history_periods) ? report.required_history_periods : [];
   const planRequiredPeriods = Array.isArray(incrementalPlan?.required_history_periods) ? incrementalPlan.required_history_periods : [];
   const missingByPeriod = report?.missing_by_period || {};
+  const fetchableByPeriod = report?.fetchable_by_period || {};
+  const inceptionLimitedByPeriod = report?.inception_limited_by_period || {};
   const planCounts = incrementalPlan?.counts || {};
   const auditCounts = audit?.incremental_etf?.counts || {};
 
@@ -215,14 +221,32 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
   assert(requiredPeriods.join(",") === planRequiredPeriods.join(","), "ETF history gap report: required periods must match incremental plan", errors);
   assert(Number(report?.primary_stockanalysis_detail_files || 0) > 0, "ETF history gap report: primary detail count must be positive", errors);
   assert(Number(report?.missing_required_history ?? -1) >= 0, "ETF history gap report: missing history count is required", errors);
+  assert(Number(report?.fetchable_required_history ?? -1) >= 0, "ETF history gap report: fetchable history count is required", errors);
+  assert(Number(report?.inception_limited_required_history ?? -1) >= 0, "ETF history gap report: inception-limited history count is required", errors);
+  assert(
+    Number(report?.missing_required_history || 0) ===
+      Number(report?.fetchable_required_history || 0) + Number(report?.inception_limited_required_history || 0),
+    "ETF history gap report: missing history must split into fetchable + inception-limited",
+    errors,
+  );
   for (const period of requiredPeriods) {
     assert(ALLOWED_HISTORY_PERIODS.has(period), `ETF history gap report: unsupported required history period ${period}`, errors);
     assert(Number(missingByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} missing count is required`, errors);
+    assert(Number(fetchableByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} fetchable count is required`, errors);
+    assert(Number(inceptionLimitedByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} inception-limited count is required`, errors);
   }
   assert(report?.incremental_plan?.matches_current_gap === true, "ETF history gap report: plan must match current direct scan", errors);
-  assert(Number(report?.missing_required_history || 0) === Number(planCounts.history_gap || 0), "ETF history gap report: missing count must match incremental plan history_gap", errors);
-  assert(Number(report?.missing_required_history || 0) === Number(auditCounts.plan_history_gap || 0), "ETF history gap report: missing count must match market audit plan_history_gap", errors);
-  assert(report?.recommended_dispatch?.inputs?.history_gaps_only === "true", "ETF history gap report: recommended dispatch must stay history_gaps_only", errors);
+  assert(report?.incremental_plan?.matches_total_gap === true, "ETF history gap report: plan must match total current gap", errors);
+  assert(report?.incremental_plan?.matches_inception_limited === true, "ETF history gap report: plan must match inception-limited gap", errors);
+  assert(Number(report?.fetchable_required_history || 0) === Number(planCounts.history_gap || 0), "ETF history gap report: fetchable count must match incremental plan history_gap", errors);
+  assert(Number(report?.missing_required_history || 0) === Number(planCounts.total_history_gap ?? planCounts.history_gap ?? 0), "ETF history gap report: missing count must match incremental plan total_history_gap", errors);
+  assert(Number(report?.inception_limited_required_history || 0) === Number(planCounts.inception_limited_history_gap || 0), "ETF history gap report: inception-limited count must match incremental plan", errors);
+  assert(Number(report?.fetchable_required_history || 0) === Number(auditCounts.plan_history_gap || 0), "ETF history gap report: fetchable count must match market audit plan_history_gap", errors);
+  if (Number(report?.fetchable_required_history || 0) > 0) {
+    assert(report?.recommended_dispatch?.inputs?.history_gaps_only === "true", "ETF history gap report: fetchable gaps need history_gaps_only dispatch inputs", errors);
+  } else {
+    assert(report?.recommended_dispatch?.status === "not_recommended", "ETF history gap report: no fetchable gaps must disable dispatch recommendation", errors);
+  }
 }
 
 function assertReturnCoverageContract(audit, errors) {

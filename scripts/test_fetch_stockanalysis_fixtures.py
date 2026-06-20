@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
 import unittest
@@ -510,6 +511,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                             "asset_type": "etf",
                             "fetched_at": "2026-06-18T00:00:00Z",
                             "normalized": {
+                                "overview": {
+                                    "inception": "Jan 1, 2020",
+                                },
                                 "history_periods": {
                                     "monthly_1y": [{"t": "2026-06-01", "c": 100}],
                                     "monthly_3y": [],
@@ -535,6 +539,22 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     ),
                     encoding="utf-8",
                 )
+                (out_dir / "etfs" / "RECENT.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "stockanalysis",
+                            "asset_type": "etf",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                            "normalized": {
+                                "overview": {
+                                    "inception": "Jun 12, 2026",
+                                },
+                                "history_periods": {},
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
                 (out_dir / "etfs" / "YF.json").write_text(
                     json.dumps(
                         {
@@ -548,10 +568,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 )
 
                 summary = self.fetcher.incremental_etf_backfill_candidates(
-                    universe_payload={"records": [{"ticker": "AAA"}, {"ticker": "BBB"}, {"ticker": "CCC"}, {"ticker": "YF"}]},
+                    universe_payload={"records": [{"ticker": "AAA"}, {"ticker": "BBB"}, {"ticker": "CCC"}, {"ticker": "RECENT"}, {"ticker": "YF"}]},
                     limit=10,
                     max_age_hours=720,
                     exclude=set(),
+                    now_dt=datetime(2026, 6, 18, tzinfo=timezone.utc),
                     required_history_periods=("monthly_3y", "monthly_5y"),
                     history_gaps_only=True,
                 )
@@ -562,6 +583,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["selected"][0]["reason"], "history_gap")
         self.assertEqual(summary["selected"][0]["missing_history_periods"], ["monthly_3y", "monthly_5y"])
         self.assertEqual(summary["counts"]["history_gap"], 1)
+        self.assertEqual(summary["counts"]["inception_limited_history_gap"], 1)
+        self.assertEqual(summary["counts"]["total_history_gap"], 2)
+        self.assertEqual([row["ticker"] for row in summary["inception_limited"]], ["RECENT"])
+        self.assertEqual(summary["inception_limited"][0]["inception_date"], "2026-06-12")
+        self.assertEqual(summary["inception_limited"][0]["inception_limited_history_periods"], ["monthly_3y", "monthly_5y"])
         self.assertEqual(summary["counts"]["missing"], 0)
         self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
@@ -571,6 +597,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "selected": 2,
                 "candidates": 9,
                 "history_gap": 9,
+                "inception_limited_history_gap": 3,
+                "total_history_gap": 12,
                 "cooldown_skipped": 1,
             },
             "selected": [
@@ -593,6 +621,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(payload["counts"]["incremental_selected"], 2)
         self.assertEqual(payload["counts"]["incremental_candidates"], 9)
         self.assertEqual(payload["counts"]["history_gap"], 9)
+        self.assertEqual(payload["counts"]["inception_limited_history_gap"], 3)
+        self.assertEqual(payload["counts"]["total_history_gap"], 12)
         self.assertEqual(payload["policy"]["network"], "none")
         self.assertIn("incremental_latest.json", payload["policy"]["execution_proof"])
 

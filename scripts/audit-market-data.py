@@ -156,6 +156,8 @@ def build_incremental_etf_audit(
             "plan_selected": as_int(plan_counts.get("incremental_selected")),
             "plan_candidates": as_int(plan_counts.get("incremental_candidates")),
             "plan_history_gap": as_int(plan_counts.get("history_gap")),
+            "plan_inception_limited_history_gap": as_int(plan_counts.get("inception_limited_history_gap")),
+            "plan_total_history_gap": as_int(plan_counts.get("total_history_gap", plan_counts.get("history_gap"))),
             "cooldown_skipped": cooldown_skipped,
             "pending_ledger_tracked": ledger_tracked,
             "pending_ledger_cooldown": ledger_cooldown,

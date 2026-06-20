@@ -116,6 +116,32 @@ HISTORY_PERIOD_ENDPOINTS = {
     "monthly_5y": {"range": "5Y", "period": "Monthly"},
 }
 DEFAULT_HISTORY_GAP_PERIODS = ("monthly_3y", "monthly_5y")
+MONTH_NAME_TO_NUMBER = {
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
+    "may": 5,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
+}
 FINANCIAL_STATEMENT_PATHS = {
     "income": "financials",
     "balance_sheet": "financials/balance-sheet",
@@ -1556,6 +1582,74 @@ def missing_history_periods(payload: dict | None, required_periods: tuple[str, .
     return missing
 
 
+def history_period_required_years(period_key: str) -> int | None:
+    match = re.search(r"_(\d+)y$", period_key)
+    return int(match.group(1)) if match else None
+
+
+def parse_stockanalysis_date(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    parsed = parse_iso_timestamp(text)
+    if parsed is not None:
+        return parsed
+    match = re.match(r"^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})$", text)
+    if not match:
+        return None
+    month = MONTH_NAME_TO_NUMBER.get(match.group(1).lower())
+    if month is None:
+        return None
+    try:
+        return datetime(int(match.group(3)), month, int(match.group(2)), tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def etf_inception_date(payload: dict | None) -> datetime | None:
+    if not isinstance(payload, dict):
+        return None
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    normalized_overview = normalized.get("overview") if isinstance(normalized.get("overview"), dict) else {}
+    raw_overview = raw.get("overview") if isinstance(raw.get("overview"), dict) else {}
+    candidates = (
+        normalized_overview.get("inception"),
+        raw_overview.get("inception"),
+        normalized.get("inceptionDate"),
+        raw.get("inceptionDate"),
+        payload.get("inceptionDate"),
+    )
+    for candidate in candidates:
+        parsed = parse_stockanalysis_date(candidate)
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def history_gap_classification(payload: dict | None, required_periods: tuple[str, ...], now_dt: datetime) -> dict:
+    missing = missing_history_periods(payload, required_periods)
+    inception = etf_inception_date(payload)
+    fetchable = []
+    inception_limited = []
+    if inception is None:
+        fetchable = missing[:]
+    else:
+        age_days = max(0, (now_dt - inception).days)
+        for period_key in missing:
+            required_years = history_period_required_years(period_key)
+            if required_years is not None and age_days < required_years * 365:
+                inception_limited.append(period_key)
+            else:
+                fetchable.append(period_key)
+    return {
+        "missing_history_periods": missing,
+        "fetchable_missing_history_periods": fetchable,
+        "inception_limited_history_periods": inception_limited,
+        "inception_date": inception.date().isoformat() if inception is not None else None,
+    }
+
+
 def load_pending_ledger() -> dict:
     payload = read_json(OUT_DIR / PENDING_LEDGER_REL_PATH)
     if not isinstance(payload, dict):
@@ -2010,6 +2104,7 @@ def incremental_etf_backfill_candidates(
     ]
     candidates = []
     cooldown_rows = []
+    inception_limited_rows = []
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
     reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "history_gap": 2, "stale": 3}
@@ -2047,7 +2142,12 @@ def incremental_etf_backfill_candidates(
             }
             if reason == "history_gap":
                 payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
-                row["missing_history_periods"] = missing_history_periods(payload, required_history_periods)
+                gap = history_gap_classification(payload, required_history_periods, now_dt)
+                row.update(gap)
+                if gap["missing_history_periods"] and not gap["fetchable_missing_history_periods"]:
+                    row["status"] = "inception_limited"
+                    inception_limited_rows.append(row)
+                    continue
             candidates.append(row)
 
     candidates.sort(
@@ -2084,12 +2184,15 @@ def incremental_etf_backfill_candidates(
             "missing": sum(1 for row in candidates if row["reason"] == "missing"),
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
             "history_gap": sum(1 for row in candidates if row["reason"] == "history_gap"),
+            "inception_limited_history_gap": len(inception_limited_rows),
+            "total_history_gap": sum(1 for row in candidates if row["reason"] == "history_gap") + len(inception_limited_rows),
             "stale": sum(1 for row in candidates if row["reason"] == "stale"),
             "cooldown_skipped": len(cooldown_rows),
             "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
         },
         "selected": selected,
         "cooldown": cooldown_rows,
+        "inception_limited": inception_limited_rows,
     }
 
 
@@ -2117,6 +2220,8 @@ def build_incremental_etf_backfill_plan(
             "incremental_selected": counts.get("selected", 0),
             "incremental_candidates": counts.get("candidates", 0),
             "history_gap": counts.get("history_gap", 0),
+            "inception_limited_history_gap": counts.get("inception_limited_history_gap", 0),
+            "total_history_gap": counts.get("total_history_gap", counts.get("history_gap", 0)),
             "cooldown_skipped": counts.get("cooldown_skipped", 0),
         },
         "etfs": planned_etfs,

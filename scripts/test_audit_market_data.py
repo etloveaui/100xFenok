@@ -165,6 +165,8 @@ class MarketDataAuditTest(unittest.TestCase):
                     "incremental_selected": 120,
                     "incremental_candidates": 4579,
                     "history_gap": 4579,
+                    "inception_limited_history_gap": 11,
+                    "total_history_gap": 4590,
                 },
             },
         )
@@ -179,6 +181,8 @@ class MarketDataAuditTest(unittest.TestCase):
         self.assertEqual(payload["incremental_etf"]["counts"]["plan_selected"], 120)
         self.assertEqual(payload["incremental_etf"]["counts"]["plan_candidates"], 4579)
         self.assertEqual(payload["incremental_etf"]["counts"]["plan_history_gap"], 4579)
+        self.assertEqual(payload["incremental_etf"]["counts"]["plan_inception_limited_history_gap"], 11)
+        self.assertEqual(payload["incremental_etf"]["counts"]["plan_total_history_gap"], 4590)
         self.assertIn("incremental_plan_available", payload["incremental_etf"]["notes"])
 
     def test_incremental_etf_audit_warns_when_pending_details_remain(self) -> None:

@@ -12,6 +12,32 @@ const PUBLIC_REPORT_PATH = path.join(ROOT, "public", "data", "stockanalysis", "b
 const AUDIT_PATH = path.resolve(ROOT, "..", "data", "computed", "market_data_audit.json");
 const DEFAULT_REQUIRED_PERIODS = ["monthly_3y", "monthly_5y"];
 const ALLOWED_PERIODS = new Set(["daily_1y", "weekly_1y", "monthly_1y", "weekly_3y", "monthly_3y", "monthly_5y"]);
+const MONTH_NAME_TO_INDEX = new Map([
+  ["jan", 0],
+  ["january", 0],
+  ["feb", 1],
+  ["february", 1],
+  ["mar", 2],
+  ["march", 2],
+  ["apr", 3],
+  ["april", 3],
+  ["may", 4],
+  ["jun", 5],
+  ["june", 5],
+  ["jul", 6],
+  ["july", 6],
+  ["aug", 7],
+  ["august", 7],
+  ["sep", 8],
+  ["sept", 8],
+  ["september", 8],
+  ["oct", 9],
+  ["october", 9],
+  ["nov", 10],
+  ["november", 10],
+  ["dec", 11],
+  ["december", 11],
+]);
 
 const args = parseArgs(process.argv.slice(2));
 const WRITE_REPORT = args.flags.has("--write-report");
@@ -79,6 +105,68 @@ function isPrimaryStockAnalysisDetail(payload) {
   return true;
 }
 
+function historyPeriodRequiredYears(period) {
+  const match = String(period).match(/_(\d+)y$/);
+  return match ? Number(match[1]) : null;
+}
+
+function parseStockAnalysisDate(value) {
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  const text = value.trim();
+  const match = text.match(/^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})$/);
+  if (match) {
+    const month = MONTH_NAME_TO_INDEX.get(match[1].toLowerCase());
+    if (month === undefined) return null;
+    const date = new Date(Date.UTC(Number(match[3]), month, Number(match[2])));
+    return Number.isFinite(date.valueOf()) ? date : null;
+  }
+  const isoMs = Date.parse(text);
+  return Number.isFinite(isoMs) ? new Date(isoMs) : null;
+}
+
+function etfInceptionDate(payload) {
+  const normalized = asObject(payload.normalized);
+  const raw = asObject(payload.raw);
+  const normalizedOverview = asObject(normalized.overview);
+  const rawOverview = asObject(raw.overview);
+  const candidates = [
+    normalizedOverview.inception,
+    rawOverview.inception,
+    normalized.inceptionDate,
+    raw.inceptionDate,
+    payload.inceptionDate,
+  ];
+  for (const candidate of candidates) {
+    const parsed = parseStockAnalysisDate(candidate);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function classifyHistoryGap(payload, missing, now = new Date()) {
+  const inception = etfInceptionDate(payload);
+  const fetchable = [];
+  const inceptionLimited = [];
+  if (!inception) {
+    fetchable.push(...missing);
+  } else {
+    const ageDays = Math.max(0, Math.floor((now.valueOf() - inception.valueOf()) / 86400000));
+    for (const period of missing) {
+      const years = historyPeriodRequiredYears(period);
+      if (years && ageDays < years * 365) {
+        inceptionLimited.push(period);
+      } else {
+        fetchable.push(period);
+      }
+    }
+  }
+  return {
+    fetchable,
+    inceptionLimited,
+    inceptionDate: inception ? inception.toISOString().slice(0, 10) : null,
+  };
+}
+
 function percent(part, total) {
   if (!total) return 0;
   return Number(((part / total) * 100).toFixed(2));
@@ -101,20 +189,39 @@ function main() {
   const primaryRows = [];
   const completeRows = [];
   const missingRows = [];
+  const fetchableGapRows = [];
+  const inceptionLimitedRows = [];
   const missingByPeriod = Object.fromEntries(REQUIRED_PERIODS.map((period) => [period, 0]));
+  const fetchableByPeriod = Object.fromEntries(REQUIRED_PERIODS.map((period) => [period, 0]));
+  const inceptionLimitedByPeriod = Object.fromEntries(REQUIRED_PERIODS.map((period) => [period, 0]));
 
   for (const fileName of detailFiles) {
     const payload = readJson(path.join(DETAIL_DIR, fileName));
     if (!isPrimaryStockAnalysisDetail(payload)) continue;
     const ticker = payload.ticker || fileName.replace(/\.json$/, "");
     const missing = REQUIRED_PERIODS.filter((period) => rowsForPeriod(payload, period).length === 0);
-    const row = { ticker, missing };
+    const gap = classifyHistoryGap(payload, missing);
+    const row = {
+      ticker,
+      missing,
+      fetchable_missing: gap.fetchable,
+      inception_limited_missing: gap.inceptionLimited,
+      inception_date: gap.inceptionDate,
+    };
     primaryRows.push(row);
     if (missing.length === 0) {
       completeRows.push(row);
     } else {
       missingRows.push(row);
       for (const period of missing) missingByPeriod[period] += 1;
+      if (gap.fetchable.length > 0) {
+        fetchableGapRows.push(row);
+        for (const period of gap.fetchable) fetchableByPeriod[period] += 1;
+      }
+      if (gap.inceptionLimited.length > 0 && gap.fetchable.length === 0) {
+        inceptionLimitedRows.push(row);
+      }
+      for (const period of gap.inceptionLimited) inceptionLimitedByPeriod[period] += 1;
     }
   }
 
@@ -132,10 +239,16 @@ function main() {
     primary_stockanalysis_detail_files: primaryRows.length,
     complete_required_history: completeRows.length,
     missing_required_history: missingRows.length,
+    fetchable_required_history: fetchableGapRows.length,
+    inception_limited_required_history: inceptionLimitedRows.length,
     coverage_pct: percent(completeRows.length, primaryRows.length),
     missing_by_period: missingByPeriod,
+    fetchable_by_period: fetchableByPeriod,
+    inception_limited_by_period: inceptionLimitedByPeriod,
     samples: {
       missing: missingRows.slice(0, 10),
+      fetchable: fetchableGapRows.slice(0, 10),
+      inception_limited: inceptionLimitedRows.slice(0, 10),
       complete: completeRows.slice(0, 5),
     },
     incremental_plan: plan
@@ -147,7 +260,9 @@ function main() {
           required_history_periods: planRequiredPeriods,
           counts: plan.counts,
           first5: Array.isArray(plan.etfs) ? plan.etfs.slice(0, 5) : [],
-          matches_current_gap: Number(plan.counts?.history_gap || 0) === missingRows.length,
+          matches_current_gap: Number(plan.counts?.history_gap || 0) === fetchableGapRows.length,
+          matches_total_gap: Number(plan.counts?.total_history_gap ?? plan.counts?.history_gap ?? 0) === missingRows.length,
+          matches_inception_limited: Number(plan.counts?.inception_limited_history_gap || 0) === inceptionLimitedRows.length,
           matches_required_periods: planRequiredPeriods.join(",") === REQUIRED_PERIODS.join(","),
         }
       : null,
@@ -158,15 +273,23 @@ function main() {
       etf_denominator: Number(denominators.etf || 0),
       stockanalysis_universe_denominator: Number(denominators.stockanalysis_universe || 0),
     },
-    recommended_dispatch: {
-      workflow: "fetch-stockanalysis.yml",
-      inputs: {
-        history_gaps_only: "true",
-        required_history_periods: REQUIRED_PERIODS.join(","),
-        incremental_etf_limit: "120",
-      },
-      note: "External StockAnalysis calls; run only after explicit approval.",
-    },
+    recommended_dispatch: fetchableGapRows.length > 0
+      ? {
+          status: "owner_gated",
+          workflow: "fetch-stockanalysis.yml",
+          inputs: {
+            history_gaps_only: "true",
+            required_history_periods: REQUIRED_PERIODS.join(","),
+            incremental_etf_limit: "120",
+          },
+          note: "External StockAnalysis calls; run only after explicit approval.",
+        }
+      : {
+          status: "not_recommended",
+          workflow: "fetch-stockanalysis.yml",
+          inputs: null,
+          note: "All current gaps are inception-limited; a live fetch is expected to be futile until the funds age into the requested windows.",
+        },
   };
 
   console.log(JSON.stringify(report, null, 2));
@@ -180,7 +303,17 @@ function main() {
 
   if (plan && !report.incremental_plan.matches_current_gap) {
     throw new Error(
-      `incremental_plan history_gap=${plan.counts?.history_gap} does not match current missing_required_history=${missingRows.length}`,
+      `incremental_plan history_gap=${plan.counts?.history_gap} does not match current fetchable_required_history=${fetchableGapRows.length}`,
+    );
+  }
+  if (plan && !report.incremental_plan.matches_total_gap) {
+    throw new Error(
+      `incremental_plan total_history_gap=${plan.counts?.total_history_gap} does not match current missing_required_history=${missingRows.length}`,
+    );
+  }
+  if (plan && !report.incremental_plan.matches_inception_limited) {
+    throw new Error(
+      `incremental_plan inception_limited_history_gap=${plan.counts?.inception_limited_history_gap} does not match current inception_limited_required_history=${inceptionLimitedRows.length}`,
     );
   }
   if (plan && !report.incremental_plan.matches_required_periods) {
