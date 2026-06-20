@@ -40,7 +40,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-19T12:49:22.002Z"
+      "updatedAt": "2026-06-19T20:25:28.322Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -32420,6 +32420,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-05T02:15:20.148Z"
     }
   ],
+  "edgar-korean-summaries/pilot": [
+    {
+      "name": "nvda-10-k-0001045810-26-000021.json",
+      "sizeBytes": 10782,
+      "updatedAt": "2026-06-19T20:47:51.064Z"
+    }
+  ],
   "global-scouter": [
     {
       "name": "schema.json",
@@ -37912,18 +37919,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1033212,
-      "updatedAt": "2026-06-19T12:49:22.009Z"
+      "sizeBytes": 1033156,
+      "updatedAt": "2026-06-19T20:36:08.484Z"
     },
     {
       "name": "tga.json",
       "sizeBytes": 774892,
-      "updatedAt": "2026-06-19T14:49:50.270Z"
+      "updatedAt": "2026-06-19T20:25:28.325Z"
     },
     {
       "name": "yahoo-ticker.json",
       "sizeBytes": 731,
-      "updatedAt": "2026-06-19T12:49:22.010Z"
+      "updatedAt": "2026-06-19T20:25:28.325Z"
     }
   ],
   "metadata": [
