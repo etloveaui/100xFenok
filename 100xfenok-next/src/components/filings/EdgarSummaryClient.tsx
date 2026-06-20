@@ -142,20 +142,35 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
-function joinOrDash(values: string[] | undefined) {
-  return values?.length ? values.join(", ") : "없음";
-}
-
 function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
   return `${filing.form} · ${formatDate(filing.filingDate)}`;
+}
+
+function sectionLabel(form: string | undefined, section: string | undefined) {
+  const normalizedForm = String(form ?? "").toUpperCase();
+  const normalizedSection = String(section ?? "").toLowerCase();
+  if (normalizedForm === "10-Q") {
+    if (normalizedSection === "item_7") return "Part I Item 2 · MD&A";
+    if (normalizedSection === "item_1a") return "Part II Item 1A · 리스크 요인";
+  }
+  if (normalizedSection === "item_1") return "Item 1 · 사업";
+  if (normalizedSection === "item_1a") return "Item 1A · 리스크 요인";
+  if (normalizedSection === "item_7") return "Item 7 · MD&A";
+  return section || "섹션 미상";
+}
+
+function sectionListLabel(form: string | undefined, sections: string[] | undefined) {
+  return sections?.length ? sections.map((section) => sectionLabel(form, section)).join(", ") : "없음";
 }
 
 function EvidenceList({
   evidenceIds,
   evidenceById,
+  form,
 }: {
   evidenceIds: string[];
   evidenceById: Map<string, FilingEvidence>;
+  form?: string;
 }) {
   const evidenceRows = evidenceIds
     .map((id) => evidenceById.get(id))
@@ -178,7 +193,7 @@ function EvidenceList({
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[11px] font-semibold text-slate-500">{evidence.id}</span>
-            <span className="rounded-full bg-white px-2 py-0.5 font-semibold text-slate-500">{evidence.section}</span>
+            <span className="rounded-full bg-white px-2 py-0.5 font-semibold text-slate-500">{sectionLabel(form, evidence.section)}</span>
             <a
               href={evidenceUrl(evidence)}
               target="_blank"
@@ -200,11 +215,13 @@ function SummarySection({
   description,
   bullets,
   evidenceById,
+  form,
 }: {
   title: string;
   description: string;
   bullets: FilingSummaryBullet[];
   evidenceById: Map<string, FilingEvidence>;
+  form?: string;
 }) {
   return (
     <section className="panel">
@@ -226,7 +243,7 @@ function SummarySection({
                 </span>
                 <p className="min-w-0 flex-1 text-sm font-semibold leading-relaxed text-slate-800">{bullet.text}</p>
               </div>
-              <EvidenceList evidenceIds={bullet.evidence} evidenceById={evidenceById} />
+              <EvidenceList evidenceIds={bullet.evidence} evidenceById={evidenceById} form={form} />
             </article>
           ))}
         </div>
@@ -495,7 +512,7 @@ export default function EdgarSummaryClient({
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <p className="text-xs font-bold text-slate-500">추출 범위</p>
               <p className="mt-1 text-sm text-slate-700">
-                사용: {joinOrDash(artifact.sourceStatus.sectionsExtracted)} · 누락: {joinOrDash(artifact.sourceStatus.missingSections)}
+                사용: {sectionListLabel(artifact.filing.form, artifact.sourceStatus.sectionsExtracted)} · 누락: {sectionListLabel(artifact.filing.form, artifact.sourceStatus.missingSections)}
               </p>
             </div>
           </div>
@@ -523,6 +540,7 @@ export default function EdgarSummaryClient({
           description={section.description}
           bullets={artifact.summaryKo[section.key]}
           evidenceById={evidenceById}
+          form={artifact.filing.form}
         />
       )) : null}
     </div>

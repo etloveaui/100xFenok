@@ -13,6 +13,14 @@ const SUMMARY_STANCES = new Set(["fact", "management_claim", "feno_interpretatio
 const MAX_EVIDENCE_DIGEST_CHARS = 1000;
 const COMMA_GROUPED_NUMBER_RE = /(?:^|[^\d,])(\d+(?:,\d+)+)(?![\d,])/g;
 const VALID_COMMA_GROUPED_NUMBER_RE = /^\d{1,3}(?:,\d{3})*$/;
+const FORM_SECTION_REQUESTS = {
+  "10-K": ["item_1", "item_1a", "item_7"],
+  "10-Q": ["item_1a", "item_7"],
+};
+const FORM_REQUIRED_EXTRACTED = {
+  "10-K": ["item_1a", "item_7"],
+  "10-Q": ["item_1a", "item_7"],
+};
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -77,6 +85,12 @@ function expectEqual(actual, expected, label, errors) {
   if (actual !== expected) errors.push(`${label}: expected '${expected}', got '${actual}'`);
 }
 
+function expectArrayEqual(actual, expected, label, errors) {
+  const actualText = Array.isArray(actual) ? actual.join(",") : String(actual);
+  const expectedText = expected.join(",");
+  if (actualText !== expectedText) errors.push(`${label}: expected '${expectedText}', got '${actualText}'`);
+}
+
 function checkMirror(publicPath, sourcePath, errors) {
   if (!existsSync(publicPath)) errors.push(`${publicPath}: missing public file`);
   if (!existsSync(sourcePath)) errors.push(`${sourcePath}: missing source mirror`);
@@ -118,6 +132,16 @@ for (const ticker of tickers) {
   for (const filing of filings) {
     filingCount += 1;
     if (!filing.sourceUrl) errors.push(`${ticker}/${filing.accession}: missing sourceUrl`);
+    if (filing.translationStatus === "ready") {
+      if (!filing.translationPath) {
+        errors.push(`${ticker}/${filing.accession}: translationStatus='ready' requires translationPath`);
+      } else {
+        checkMirror(publicPathFromDataPath(filing.translationPath), sourcePathFromDataPath(filing.translationPath), errors);
+      }
+    }
+    if (filing.translationPath && filing.translationStatus !== "ready") {
+      errors.push(`${ticker}/${filing.accession}: translationPath requires translationStatus='ready'`);
+    }
     if (!filing.summaryPath) continue;
 
     const publicArtifactPath = publicPathFromDataPath(filing.summaryPath);
@@ -147,13 +171,27 @@ for (const ticker of tickers) {
     if (filing.summaryOneLine && artifact.summaryKo?.oneLine !== filing.summaryOneLine) {
       errors.push(`${ticker}/${filing.accession}: manifest summaryOneLine must match artifact summaryKo.oneLine`);
     }
+    const form = String(filing.form ?? "").toUpperCase();
     if (!Array.isArray(artifact.sourceStatus?.sectionsRequested)) {
       errors.push(`${ticker}/${filing.accession}: sourceStatus.sectionsRequested must be an array`);
+    } else if (form in FORM_SECTION_REQUESTS) {
+      expectArrayEqual(
+        artifact.sourceStatus.sectionsRequested,
+        FORM_SECTION_REQUESTS[form],
+        `${ticker}/${filing.accession}: sourceStatus.sectionsRequested`,
+        errors,
+      );
     }
     if (!Array.isArray(artifact.sourceStatus?.sectionsExtracted)) {
       errors.push(`${ticker}/${filing.accession}: sourceStatus.sectionsExtracted must be an array`);
-    } else if (["10-K", "10-Q"].includes(String(filing.form ?? "").toUpperCase()) && artifact.sourceStatus.sectionsExtracted.length === 0) {
+    } else if (["10-K", "10-Q"].includes(form) && artifact.sourceStatus.sectionsExtracted.length === 0) {
       errors.push(`${ticker}/${filing.accession}: ready ${filing.form} summary must include at least one extracted SEC filing section`);
+    } else if (form in FORM_REQUIRED_EXTRACTED) {
+      const extracted = new Set(artifact.sourceStatus.sectionsExtracted);
+      const hasRequiredSection = FORM_REQUIRED_EXTRACTED[form].some((section) => extracted.has(section));
+      if (!hasRequiredSection) {
+        errors.push(`${ticker}/${filing.accession}: ready ${filing.form} summary must include one of ${FORM_REQUIRED_EXTRACTED[form].join(",")}`);
+      }
     }
     if (!Array.isArray(artifact.sourceStatus?.missingSections)) {
       errors.push(`${ticker}/${filing.accession}: sourceStatus.missingSections must be an array`);

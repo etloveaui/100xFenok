@@ -11,6 +11,8 @@ This folder mirrors the public Korean SEC filing summary data contract.
 - `summaryPath` is optional. Rows without it remain visible as original-only filings with a pending summary state.
 - `translationPath` is optional. Full Korean translations are separate from short summaries.
 - Summary artifacts must keep short evidence digests and source anchors. Do not embed long SEC source text.
+- Section keys are canonicalized for the app. For `10-K`, request `item_1`, `item_1a`, and `item_7`. For `10-Q`, request only `item_1a` and `item_7`; `item_7` represents Part I Item 2 MD&A, and `item_1a` represents Part II Item 1A Risk Factors.
+- A manifest row with `translationStatus: "ready"` must include `translationPath`; rows with `translationPath` must keep source/public mirrors in sync.
 - Run `npm run qa:edgar-summaries` from `100xfenok-next` after adding or editing manifests/artifacts. The check blocks missing evidence anchors and numeric claims that are not present in cited evidence digests.
 
 ## Current Coverage
