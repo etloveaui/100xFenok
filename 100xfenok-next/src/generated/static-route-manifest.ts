@@ -22,8 +22,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   ".": [
     {
       "name": "manifest.json",
-      "sizeBytes": 25689,
-      "updatedAt": "2026-06-19T13:28:31.180Z"
+      "sizeBytes": 26130,
+      "updatedAt": "2026-06-20T00:22:21.647Z"
     },
     {
       "name": "reports-index.json",
@@ -34,13 +34,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 40798,
-      "updatedAt": "2026-06-19T13:28:31.169Z"
+      "sizeBytes": 41202,
+      "updatedAt": "2026-06-20T00:22:21.644Z"
     },
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-19T12:49:22.002Z"
+      "updatedAt": "2026-06-20T00:22:21.644Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -126,12 +126,12 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "market_structure_index.json",
       "sizeBytes": 42437,
-      "updatedAt": "2026-06-19T13:28:31.169Z"
+      "updatedAt": "2026-06-20T00:22:21.645Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12716,
-      "updatedAt": "2026-06-19T13:28:31.170Z"
+      "sizeBytes": 12724,
+      "updatedAt": "2026-06-20T00:22:21.645Z"
     },
     {
       "name": "stock_action_index.json",
@@ -32420,6 +32420,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-05T02:15:20.148Z"
     }
   ],
+  "edgar-korean-summaries/pilot": [
+    {
+      "name": "nvda-10-k-0001045810-26-000021.json",
+      "sizeBytes": 10782,
+      "updatedAt": "2026-06-19T20:47:51.064Z"
+    }
+  ],
   "global-scouter": [
     {
       "name": "schema.json",
@@ -37870,8 +37877,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "sp500.json",
-      "sizeBytes": 438499,
-      "updatedAt": "2026-06-18T21:55:04.307Z"
+      "sizeBytes": 438537,
+      "updatedAt": "2026-06-20T00:22:21.645Z"
     }
   ],
   "macro": [
@@ -37912,18 +37919,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1033212,
-      "updatedAt": "2026-06-19T12:49:22.009Z"
+      "sizeBytes": 1033590,
+      "updatedAt": "2026-06-20T00:22:21.646Z"
     },
     {
       "name": "tga.json",
       "sizeBytes": 774892,
-      "updatedAt": "2026-06-19T14:49:50.270Z"
+      "updatedAt": "2026-06-19T20:25:28.325Z"
     },
     {
       "name": "yahoo-ticker.json",
       "sizeBytes": 731,
-      "updatedAt": "2026-06-19T12:49:22.010Z"
+      "updatedAt": "2026-06-20T00:22:21.647Z"
     }
   ],
   "metadata": [
@@ -38597,48 +38604,48 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "cnn-breadth.json",
-      "sizeBytes": 57964,
-      "updatedAt": "2026-06-18T22:22:49.324Z"
+      "sizeBytes": 58050,
+      "updatedAt": "2026-06-20T00:22:21.647Z"
     },
     {
       "name": "cnn-components.json",
-      "sizeBytes": 34812,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 35016,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-fear-greed.json",
-      "sizeBytes": 201075,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 201128,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-junk-bond.json",
-      "sizeBytes": 55371,
-      "updatedAt": "2026-06-18T22:22:49.325Z"
+      "sizeBytes": 55454,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-momentum.json",
-      "sizeBytes": 58126,
-      "updatedAt": "2026-06-18T22:22:49.325Z"
+      "sizeBytes": 58213,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-put-call.json",
-      "sizeBytes": 55289,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 55372,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-safe-haven.json",
-      "sizeBytes": 55573,
-      "updatedAt": "2026-06-18T22:22:49.326Z"
+      "sizeBytes": 55657,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-strength.json",
-      "sizeBytes": 55559,
-      "updatedAt": "2026-06-18T22:22:49.326Z"
+      "sizeBytes": 55642,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "crypto-fear-greed.json",
-      "sizeBytes": 257520,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 257608,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "move.json",
@@ -38652,8 +38659,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "vix.json",
-      "sizeBytes": 496238,
-      "updatedAt": "2026-06-18T23:29:54.633Z"
+      "sizeBytes": 496291,
+      "updatedAt": "2026-06-20T00:22:21.649Z"
     }
   ],
   "slickcharts": [
