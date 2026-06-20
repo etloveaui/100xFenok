@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-19T22:19:52.560Z",
+  "generated_at": "2026-06-20T02:13:23.120Z",
   "totals": {
     "rootJsonCount": 15452,
-    "publicJsonCount": 15504,
-    "mirroredRootJsonCount": 15450,
-    "missingPublicMirrorCount": 2,
+    "publicJsonCount": 15505,
+    "mirroredRootJsonCount": 15451,
+    "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 54,
-    "directDataFetchCount": 110,
+    "directDataFetchCount": 111,
     "dynamicPatternCount": 9
   },
   "mirror_sync_status": "partial",
@@ -159,11 +159,11 @@
     {
       "category": "edgar-korean-summaries",
       "rootJsonCount": 1,
-      "publicJsonCount": 0,
-      "directFetchCount": 0,
+      "publicJsonCount": 1,
+      "directFetchCount": 1,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
-      "status": "catalog_only",
+      "status": "active",
       "usage": "manifest/catalog coverage"
     },
     {
@@ -448,6 +448,13 @@
       "category": "damodaran",
       "consumers": [
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
+      ]
+    },
+    {
+      "dataPath": "edgar-korean-summaries/pilot/nvda-10-k-0001045810-26-000021.json",
+      "category": "edgar-korean-summaries",
+      "consumers": [
+        "100xfenok-next/src/app/filings/nvda-10k/EdgarSummaryPilotClient.tsx"
       ]
     },
     {
@@ -1224,7 +1231,6 @@
   },
   "mirrorGaps": {
     "missingPublic": [
-      "edgar-korean-summaries/pilot/nvda-10-k-0001045810-26-000021.json",
       "sec-13f/investors/griffin.json"
     ],
     "publicOnly": [
