@@ -187,6 +187,12 @@ Dedicated route or drawer surfaces:
      surfaces and required fields.
    - Remaining route design: decide whether IPO, industry, and movers deserve
      their own deeper subroutes after `/market/events` stabilizes.
+   - **SUPERSEDED for industry by DEC-246 (2026-06-20)**: industry OWNERSHIP
+     (the industry map / taxonomy / constituents / CSV) moves to `/sectors`;
+     `/market/events` keeps at most a one-line industry-momentum teaser +
+     cross-link to `/sectors`, not the owning surface. The cross-route ownership
+     SSOT is `FORGE_feno_data_market_ia_20260612.md` (Placement Map). IPO and
+     movers stay event-page surfaces.
 5. **Event module split**: keep event data complete in a dedicated route before
    deciding what, if anything, re-enters Explore.
    Current route state:

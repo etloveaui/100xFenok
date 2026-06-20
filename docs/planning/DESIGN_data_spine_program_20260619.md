@@ -251,8 +251,7 @@ contract and the disagreement policy.
 ## Open Design Decisions
 
 1. StockAnalysis dedicated routes vs service-map overlap:
-   - DRAFT/UNVERIFIED: decide whether ETF/market-event dedicated pages stay
-     parallel to Explore, or whether Explore becomes a navigation summary only.
+   - **RESOLVED by DEC-246 (2026-06-20)**: dedicated pages own their surfaces; Explore is preview-only. Cross-route ownership SSOT = `FORGE_feno_data_market_ia_20260612.md` (Placement Map), NOT service-map. Industry→`/sectors`, filings→stock `공시` tab, ETF families→`/etfs` segments, shared market 3-tab nav. UI plan is NOT duplicated here — see DEC-246.
 2. Live quote route policy:
    - RATIFIED: `ticker.ts` is a sanctioned live-gateway exception until a
      Data Spine live-quote service exists.
@@ -261,6 +260,7 @@ contract and the disagreement policy.
      data counts.
 4. Korean filing summaries:
    - DRAFT/UNVERIFIED: separate LLM track with cost/provider/anchor validation.
+   - Surface/route RESOLVED by DEC-246 (stock `공시` tab first; NVDA pilot → `/stock/NVDA?tab=filings`; by-ticker manifest). Cost/provider/scaling stays user-gated.
 
 ## Next P0 Work
 

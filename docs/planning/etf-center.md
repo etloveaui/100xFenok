@@ -31,7 +31,7 @@ Design principles:
 
 Entry point for the ETF Center.
 
-- **Header**: title "ETF 센터", link to `/etfs/new`.
+- **Header**: title "ETF 센터". **A unified segment toggle (전체 / 신규 / 레버리지 / 단일종목 / 인버스 / 디지털) with self-active state drives the `EtfUniverseCard` filter inline (DEC-246, 2026-06-20).** The previous standalone "신규 상장" pill link is replaced by the 신규 segment; `/etfs/new` is still reachable as a deep view from that segment (see 2.2). The segment maps to existing URL params: 신규 → `new=1`, 레버리지 → `type=leveraged`, 단일종목 → `type=single-stock`, 인버스 → `type=inverse`, 디지털 → `asset`-class value (confirm the digital/crypto asset value exists in `etf_screener.assetClass`; if absent it is a small data addition, not a new route).
 - **Surface snapshot card** (`EtfSurfaceSnapshotCard`): quick leaderboards and curated collections.
   - Volume leaders / change leaders from `etf_screener`.
   - Curated provider collections (BlackRock, ProShares) and strategy/digital-asset buckets.
@@ -50,6 +50,8 @@ Implementation pointers:
 ### 2.2 `/etfs/new` — New Launch Radar
 
 Recently listed ETFs.
+
+> **DEC-246 (2026-06-20)**: `/etfs/new` is NOT demoted to a dumb redirect. It stays a deep view reachable from the `/etfs` 신규 segment because it carries features the universe list does not: the date-window filter (7/14/30 days anchored on surface `fetched_at`), coverage status chips (상세 가능 / 가격 제공 / 요약 제공 from `coverage/etf_detail.json`), date sort, and CSV export. Only the separate top-nav pill entry is replaced by the segment. If/when these features are ported into the 신규 segment, `/etfs/new` may then become an alias.
 
 - Data source: `etf-snapshot.newEtfs` (from `surfaces/new_etfs.json`).
 - Filters: query, type (leveraged / single-stock / inverse), date range (7 / 14 / 30 days), issuer, sort (date / ticker / change / price).

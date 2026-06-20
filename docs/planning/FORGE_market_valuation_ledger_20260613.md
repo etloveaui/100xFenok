@@ -50,6 +50,7 @@ Brand (#3): header square is a real `<Image>` boxed tile, assets diverge — V1 
 - **D1 (LOCK)**: Market = full ledger, zero dormant surfaced + reachable. Explore = curated preview. Curation belongs in Explore only.
 - **D2 (LOCK, Claude+cx-9 consensus)**: Market Structure = FIRST real detail route now (densest mixed-domain panel). ERP / Yardeni / Annual Returns / PMI = in-page `MarketChartFrame` + drill drawers first; promote to own routes later only if usage warrants (explicit, logged).
 - **Ordering constraint (cx-9)**: model/coverage + a minimal chart contract land before the route; route reuses the SAME adapters as ledger/Explore (no second model). `MarketChartFrame` thin, client-only. 125% scoped first.
+- **D3 (LOCK, DEC-246, Claude+Codex consensus, owner-approved 2026-06-20)**: the market section uses ONE shared 3-tab nav component — **밸류에이션 (`/market-valuation`) / 국면 (`/regime`) / 이벤트 (`/market/events`)** — with self-active (`aria-current`) so the current page reads as pressed. `탐색` is NOT a market-nav tab (Explore is the preview surface, per D1). `구조 상세` (`/market-valuation/structure`) is a secondary link inside 밸류에이션, NOT a 4th top tab. This replaces today's per-page divergent header link sets (`MarketValuationClient.tsx:543` 국면/이벤트/탐색, `RegimeClient.tsx:406` 밸류에이션/구조상세/이벤트, `MarketEventsClient.tsx:579` 시장/국면) with a single component. Implementation is the route/UI wave P0 (Codex), Claude-verified.
 
 ## 3. Architecture
 
