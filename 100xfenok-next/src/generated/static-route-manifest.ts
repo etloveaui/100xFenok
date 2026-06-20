@@ -22,8 +22,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   ".": [
     {
       "name": "manifest.json",
-      "sizeBytes": 25689,
-      "updatedAt": "2026-06-19T13:28:31.180Z"
+      "sizeBytes": 27053,
+      "updatedAt": "2026-06-20T09:44:20.357Z"
     },
     {
       "name": "reports-index.json",
@@ -34,13 +34,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 40798,
-      "updatedAt": "2026-06-19T13:28:31.169Z"
+      "sizeBytes": 41320,
+      "updatedAt": "2026-06-20T08:16:34.403Z"
     },
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-19T12:49:22.002Z"
+      "updatedAt": "2026-06-20T08:16:34.404Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -125,13 +125,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "market_structure_index.json",
-      "sizeBytes": 42437,
-      "updatedAt": "2026-06-19T13:28:31.169Z"
+      "sizeBytes": 42438,
+      "updatedAt": "2026-06-20T08:16:34.404Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12716,
-      "updatedAt": "2026-06-19T13:28:31.170Z"
+      "sizeBytes": 12724,
+      "updatedAt": "2026-06-20T08:16:34.405Z"
     },
     {
       "name": "stock_action_index.json",
@@ -32420,6 +32420,272 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-05T02:15:20.148Z"
     }
   ],
+  "edgar-korean-summaries": [
+    {
+      "name": "index.json",
+      "sizeBytes": 3879,
+      "updatedAt": "2026-06-20T09:42:07.184Z"
+    }
+  ],
+  "edgar-korean-summaries/by-ticker": [
+    {
+      "name": "aapl.json",
+      "sizeBytes": 7842,
+      "updatedAt": "2026-06-20T09:41:23.498Z"
+    },
+    {
+      "name": "abbv.json",
+      "sizeBytes": 7891,
+      "updatedAt": "2026-06-20T09:41:48.834Z"
+    },
+    {
+      "name": "amat.json",
+      "sizeBytes": 8153,
+      "updatedAt": "2026-06-20T09:41:44.523Z"
+    },
+    {
+      "name": "amd.json",
+      "sizeBytes": 8147,
+      "updatedAt": "2026-06-20T09:41:36.458Z"
+    },
+    {
+      "name": "amzn.json",
+      "sizeBytes": 7970,
+      "updatedAt": "2026-06-20T09:41:25.325Z"
+    },
+    {
+      "name": "arm.json",
+      "sizeBytes": 8073,
+      "updatedAt": "2026-06-20T09:41:47.964Z"
+    },
+    {
+      "name": "asml.json",
+      "sizeBytes": 8155,
+      "updatedAt": "2026-06-20T09:41:37.301Z"
+    },
+    {
+      "name": "avgo.json",
+      "sizeBytes": 7901,
+      "updatedAt": "2026-06-20T09:41:27.197Z"
+    },
+    {
+      "name": "azn.json",
+      "sizeBytes": 7778,
+      "updatedAt": "2026-06-20T09:42:03.837Z"
+    },
+    {
+      "name": "bac.json",
+      "sizeBytes": 8150,
+      "updatedAt": "2026-06-20T09:41:49.780Z"
+    },
+    {
+      "name": "brk.a.json",
+      "sizeBytes": 8111,
+      "updatedAt": "2026-06-20T09:41:33.059Z"
+    },
+    {
+      "name": "brk.b.json",
+      "sizeBytes": 8111,
+      "updatedAt": "2026-06-20T09:41:31.301Z"
+    },
+    {
+      "name": "cat.json",
+      "sizeBytes": 7922,
+      "updatedAt": "2026-06-20T09:41:47.112Z"
+    },
+    {
+      "name": "cost.json",
+      "sizeBytes": 8242,
+      "updatedAt": "2026-06-20T09:41:45.370Z"
+    },
+    {
+      "name": "csco.json",
+      "sizeBytes": 8061,
+      "updatedAt": "2026-06-20T09:41:42.531Z"
+    },
+    {
+      "name": "cvx.json",
+      "sizeBytes": 7821,
+      "updatedAt": "2026-06-20T09:41:50.634Z"
+    },
+    {
+      "name": "dell.json",
+      "sizeBytes": 8134,
+      "updatedAt": "2026-06-20T09:42:06.582Z"
+    },
+    {
+      "name": "ge.json",
+      "sizeBytes": 7987,
+      "updatedAt": "2026-06-20T09:41:53.230Z"
+    },
+    {
+      "name": "goog.json",
+      "sizeBytes": 7893,
+      "updatedAt": "2026-06-20T09:41:22.586Z"
+    },
+    {
+      "name": "googl.json",
+      "sizeBytes": 7906,
+      "updatedAt": "2026-06-20T09:41:21.715Z"
+    },
+    {
+      "name": "gs.json",
+      "sizeBytes": 8077,
+      "updatedAt": "2026-06-20T09:42:00.261Z"
+    },
+    {
+      "name": "hd.json",
+      "sizeBytes": 7930,
+      "updatedAt": "2026-06-20T09:41:59.127Z"
+    },
+    {
+      "name": "intc.json",
+      "sizeBytes": 7808,
+      "updatedAt": "2026-06-20T09:41:38.169Z"
+    },
+    {
+      "name": "jnj.json",
+      "sizeBytes": 7980,
+      "updatedAt": "2026-06-20T09:41:40.806Z"
+    },
+    {
+      "name": "jpm.json",
+      "sizeBytes": 7978,
+      "updatedAt": "2026-06-20T09:41:35.562Z"
+    },
+    {
+      "name": "klac.json",
+      "sizeBytes": 7758,
+      "updatedAt": "2026-06-20T09:41:57.338Z"
+    },
+    {
+      "name": "ko.json",
+      "sizeBytes": 7798,
+      "updatedAt": "2026-06-20T09:41:52.372Z"
+    },
+    {
+      "name": "lly.json",
+      "sizeBytes": 7873,
+      "updatedAt": "2026-06-20T09:41:32.186Z"
+    },
+    {
+      "name": "lrcx.json",
+      "sizeBytes": 8017,
+      "updatedAt": "2026-06-20T09:41:43.386Z"
+    },
+    {
+      "name": "ma.json",
+      "sizeBytes": 7888,
+      "updatedAt": "2026-06-20T09:41:46.239Z"
+    },
+    {
+      "name": "meta.json",
+      "sizeBytes": 8100,
+      "updatedAt": "2026-06-20T09:41:29.452Z"
+    },
+    {
+      "name": "mrk.json",
+      "sizeBytes": 7998,
+      "updatedAt": "2026-06-20T09:42:02.070Z"
+    },
+    {
+      "name": "ms.json",
+      "sizeBytes": 7868,
+      "updatedAt": "2026-06-20T09:41:56.487Z"
+    },
+    {
+      "name": "msft.json",
+      "sizeBytes": 7914,
+      "updatedAt": "2026-06-20T09:41:24.436Z"
+    },
+    {
+      "name": "mu.json",
+      "sizeBytes": 8073,
+      "updatedAt": "2026-06-20T09:41:30.343Z"
+    },
+    {
+      "name": "nflx.json",
+      "sizeBytes": 7857,
+      "updatedAt": "2026-06-20T09:41:54.991Z"
+    },
+    {
+      "name": "nvda.json",
+      "sizeBytes": 8616,
+      "updatedAt": "2026-06-20T09:41:20.798Z"
+    },
+    {
+      "name": "orcl.json",
+      "sizeBytes": 7833,
+      "updatedAt": "2026-06-20T09:41:41.670Z"
+    },
+    {
+      "name": "pg.json",
+      "sizeBytes": 7959,
+      "updatedAt": "2026-06-20T09:41:54.089Z"
+    },
+    {
+      "name": "pltr.json",
+      "sizeBytes": 8268,
+      "updatedAt": "2026-06-20T09:42:01.199Z"
+    },
+    {
+      "name": "pm.json",
+      "sizeBytes": 8342,
+      "updatedAt": "2026-06-20T09:42:04.696Z"
+    },
+    {
+      "name": "ry.json",
+      "sizeBytes": 7990,
+      "updatedAt": "2026-06-20T09:41:58.261Z"
+    },
+    {
+      "name": "sndk.json",
+      "sizeBytes": 7890,
+      "updatedAt": "2026-06-20T09:42:02.932Z"
+    },
+    {
+      "name": "tsla.json",
+      "sizeBytes": 7895,
+      "updatedAt": "2026-06-20T09:41:28.153Z"
+    },
+    {
+      "name": "tsm.json",
+      "sizeBytes": 8836,
+      "updatedAt": "2026-06-20T09:41:26.323Z"
+    },
+    {
+      "name": "txn.json",
+      "sizeBytes": 8038,
+      "updatedAt": "2026-06-20T09:42:05.670Z"
+    },
+    {
+      "name": "unh.json",
+      "sizeBytes": 8101,
+      "updatedAt": "2026-06-20T09:41:51.523Z"
+    },
+    {
+      "name": "v.json",
+      "sizeBytes": 7722,
+      "updatedAt": "2026-06-20T09:41:39.920Z"
+    },
+    {
+      "name": "wmt.json",
+      "sizeBytes": 7849,
+      "updatedAt": "2026-06-20T09:41:33.904Z"
+    },
+    {
+      "name": "xom.json",
+      "sizeBytes": 7923,
+      "updatedAt": "2026-06-20T09:41:39.051Z"
+    }
+  ],
+  "edgar-korean-summaries/pilot": [
+    {
+      "name": "nvda-10-k-0001045810-26-000021.json",
+      "sizeBytes": 10893,
+      "updatedAt": "2026-06-20T02:35:44.232Z"
+    }
+  ],
   "global-scouter": [
     {
       "name": "schema.json",
@@ -37871,7 +38137,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "sp500.json",
       "sizeBytes": 438499,
-      "updatedAt": "2026-06-18T21:55:04.307Z"
+      "updatedAt": "2026-06-20T01:41:40.801Z"
     }
   ],
   "macro": [
@@ -37913,17 +38179,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "stablecoins.json",
       "sizeBytes": 1033212,
-      "updatedAt": "2026-06-19T12:49:22.009Z"
+      "updatedAt": "2026-06-20T01:41:40.803Z"
     },
     {
       "name": "tga.json",
       "sizeBytes": 774892,
-      "updatedAt": "2026-06-19T14:49:50.270Z"
+      "updatedAt": "2026-06-20T01:41:40.804Z"
     },
     {
       "name": "yahoo-ticker.json",
       "sizeBytes": 731,
-      "updatedAt": "2026-06-19T12:49:22.010Z"
+      "updatedAt": "2026-06-20T01:41:40.804Z"
     }
   ],
   "metadata": [
@@ -38598,47 +38864,47 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "cnn-breadth.json",
       "sizeBytes": 57964,
-      "updatedAt": "2026-06-18T22:22:49.324Z"
+      "updatedAt": "2026-06-20T01:41:40.804Z"
     },
     {
       "name": "cnn-components.json",
-      "sizeBytes": 34812,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 35016,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-fear-greed.json",
-      "sizeBytes": 201075,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 201128,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-junk-bond.json",
       "sizeBytes": 55371,
-      "updatedAt": "2026-06-18T22:22:49.325Z"
+      "updatedAt": "2026-06-20T01:41:40.804Z"
     },
     {
       "name": "cnn-momentum.json",
       "sizeBytes": 58126,
-      "updatedAt": "2026-06-18T22:22:49.325Z"
+      "updatedAt": "2026-06-20T01:41:40.804Z"
     },
     {
       "name": "cnn-put-call.json",
-      "sizeBytes": 55289,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 55372,
+      "updatedAt": "2026-06-20T00:22:21.648Z"
     },
     {
       "name": "cnn-safe-haven.json",
       "sizeBytes": 55573,
-      "updatedAt": "2026-06-18T22:22:49.326Z"
+      "updatedAt": "2026-06-20T01:41:40.804Z"
     },
     {
       "name": "cnn-strength.json",
       "sizeBytes": 55559,
-      "updatedAt": "2026-06-18T22:22:49.326Z"
+      "updatedAt": "2026-06-20T01:41:40.805Z"
     },
     {
       "name": "crypto-fear-greed.json",
-      "sizeBytes": 257520,
-      "updatedAt": "2026-06-18T23:29:54.632Z"
+      "sizeBytes": 257609,
+      "updatedAt": "2026-06-20T01:41:40.805Z"
     },
     {
       "name": "move.json",
@@ -38652,8 +38918,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "vix.json",
-      "sizeBytes": 496238,
-      "updatedAt": "2026-06-18T23:29:54.633Z"
+      "sizeBytes": 496292,
+      "updatedAt": "2026-06-20T01:41:40.805Z"
     }
   ],
   "slickcharts": [
@@ -41523,8 +41789,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "surface_consumers.json",
-      "sizeBytes": 6259,
-      "updatedAt": "2026-06-18T23:29:54.776Z"
+      "sizeBytes": 6274,
+      "updatedAt": "2026-06-20T02:03:28.376Z"
     }
   ],
   "stockanalysis/backfill": [
