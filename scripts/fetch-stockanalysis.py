@@ -937,6 +937,46 @@ def classify_etf(row: dict | None = None, overview: dict | None = None, holdings
     }
 
 
+def compact_etf_classification(value: dict | None) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    return {
+        "is_leveraged": bool(value.get("is_leveraged")),
+        "leverage_factor": value.get("leverage_factor") if isinstance(value.get("leverage_factor"), (int, float)) else None,
+        "is_inverse": bool(value.get("is_inverse")),
+        "is_single_stock": bool(value.get("is_single_stock")),
+        "underlying": value.get("underlying") if isinstance(value.get("underlying"), str) and value.get("underlying").strip() else None,
+        "source": value.get("source") if isinstance(value.get("source"), str) and value.get("source").strip() else "stockanalysis.etf_list.name",
+        "confidence": value.get("confidence") if isinstance(value.get("confidence"), str) and value.get("confidence").strip() else "low",
+    }
+
+
+def etf_classification_has_signal(value: dict | None) -> bool:
+    if not isinstance(value, dict):
+        return False
+    return bool(
+        value.get("is_leveraged")
+        or value.get("is_inverse")
+        or value.get("is_single_stock")
+        or value.get("leverage_factor") is not None
+        or value.get("underlying")
+    )
+
+
+def choose_etf_classification(detail_classification: dict | None, row_classification: dict) -> dict:
+    detail = compact_etf_classification(detail_classification)
+    row = compact_etf_classification(row_classification) or row_classification
+    if detail is None:
+        return row
+    if etf_classification_has_signal(detail):
+        return detail
+    if etf_classification_has_signal(row):
+        return row
+    if detail.get("confidence") == "high":
+        return detail
+    return detail
+
+
 def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = None) -> dict:
     base_row = {key: value for key, value in row.items() if key not in ETF_DETAIL_ENRICHMENT_ROW_KEYS}
     ticker = row_ticker(base_row)
@@ -946,7 +986,9 @@ def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = Non
     normalized_overview = (payload.get("normalized") or {}).get("overview") if isinstance(payload, dict) else {}
     normalized_overview = normalized_overview if isinstance(normalized_overview, dict) else {}
     normalized_holdings = ((payload.get("normalized") or {}).get("holdings") or []) if isinstance(payload, dict) else []
-    classification = classify_etf(base_row, overview=overview, holdings=normalized_holdings)
+    detail_classification = (payload.get("normalized") or {}).get("classification") if isinstance(payload, dict) else None
+    row_classification = classify_etf(base_row, overview=overview, holdings=normalized_holdings)
+    classification = choose_etf_classification(detail_classification, row_classification)
 
     source_provider = payload.get("source_provider") if isinstance(payload, dict) else None
     def percent_points(value):
@@ -975,19 +1017,15 @@ def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = Non
         **{key: value for key, value in detail_fields.items() if value is not None},
     }
 
-    if (
-        classification["is_leveraged"]
-        or classification["is_inverse"]
-        or classification["is_single_stock"]
-        or classification["leverage_factor"] is not None
-        or classification["underlying"]
-    ):
-        enriched["classification"] = classification
+    enriched["classification"] = classification
     return enriched
 
 
 def etf_classification_counts(records: list[dict]) -> dict:
+    classified = sum(1 for row in records if isinstance(row.get("classification"), dict))
     return {
+        "classified": classified,
+        "coverage_pct": round((classified / len(records)) * 100, 2) if records else 0,
         "leveraged": sum(1 for row in records if (row.get("classification") or {}).get("is_leveraged") or row.get("is_leveraged")),
         "inverse": sum(1 for row in records if (row.get("classification") or {}).get("is_inverse") or row.get("is_inverse")),
         "single_stock": sum(1 for row in records if (row.get("classification") or {}).get("is_single_stock") or row.get("is_single_stock")),

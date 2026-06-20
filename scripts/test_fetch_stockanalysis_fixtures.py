@@ -265,6 +265,15 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                         "etf_website": "https://investor.vanguard.com/investment-products/etfs/profile/voo",
                     },
                     "holdings": [],
+                    "classification": {
+                        "is_leveraged": False,
+                        "leverage_factor": None,
+                        "is_inverse": False,
+                        "is_single_stock": False,
+                        "underlying": None,
+                        "source": "stockanalysis.overview.description",
+                        "confidence": "high",
+                    },
                 },
                 "raw": {
                     "overview": {
@@ -288,9 +297,61 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(enriched["dividend_yield"], 1.04)
         self.assertEqual(enriched["inceptionDate"], "Sep 7, 2010")
         self.assertEqual(enriched["performance"]["tr1y"], 26.503)
+        self.assertFalse(enriched["classification"]["is_leveraged"])
+        self.assertEqual(enriched["classification"]["confidence"], "high")
         counts = self.fetcher.etf_detail_enrichment_counts([enriched])
         self.assertEqual(counts["expense_ratio"], 1)
         self.assertEqual(counts["performance"], 1)
+
+    def test_etf_catalog_classification_promotes_detail_and_keeps_row_fallback(self) -> None:
+        detail_index = {
+            "PLAIN": {
+                "normalized": {
+                    "classification": {
+                        "is_leveraged": False,
+                        "leverage_factor": None,
+                        "is_inverse": False,
+                        "is_single_stock": False,
+                        "underlying": None,
+                        "source": "stockanalysis.overview.description",
+                        "confidence": "high",
+                    }
+                }
+            },
+            "ADIU": {
+                "normalized": {
+                    "classification": {
+                        "is_leveraged": False,
+                        "leverage_factor": None,
+                        "is_inverse": False,
+                        "is_single_stock": False,
+                        "underlying": None,
+                        "source": "stockanalysis.overview.description",
+                        "confidence": "high",
+                    }
+                }
+            },
+        }
+
+        enriched = self.fetcher.enrich_etf_records(
+            [
+                {"ticker": "PLAIN", "name": "Plain Vanilla ETF", "category": "Equity"},
+                {"ticker": "ADIU", "name": "Leverage Shares 2X Long ADI Daily ETF", "category": "Equity"},
+            ],
+            detail_index,
+        )
+
+        self.assertIn("classification", enriched[0])
+        self.assertFalse(enriched[0]["classification"]["is_leveraged"])
+        self.assertEqual(enriched[0]["classification"]["confidence"], "high")
+        self.assertTrue(enriched[1]["classification"]["is_leveraged"])
+        self.assertEqual(enriched[1]["classification"]["leverage_factor"], 2.0)
+        self.assertTrue(enriched[1]["classification"]["is_single_stock"])
+
+        counts = self.fetcher.etf_classification_counts(enriched)
+        self.assertEqual(counts["classified"], 2)
+        self.assertEqual(counts["coverage_pct"], 100.0)
+        self.assertEqual(counts["leveraged"], 1)
 
     def test_incremental_etf_backfill_selects_missing_fallback_and_stale(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

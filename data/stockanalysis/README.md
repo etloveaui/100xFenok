@@ -65,8 +65,12 @@ single-stock, and inverse ETFs. `/api/data/stockanalysis/etf-universe` joins
 price, change, volume, holdings, expense ratio, performance, and classification
 fields without downloading the full screener surface separately. The catalog
 refresh promotes expense ratio, dividend yield, inception date, provider links,
-and return/CAGR metrics from local ETF detail payloads when those details
-already exist. The snapshot API also uses `etf_screener` for the `/etfs` AUM,
+return/CAGR metrics, and the stored `normalized.classification` object from
+local ETF detail payloads when those details already exist. Rows without detail
+fall back to the catalog classifier. Catalog records intentionally keep an
+explicit classification object even when all flags are false, so downstream
+badge counts and filters can distinguish measured "not leveraged" from missing
+data. The snapshot API also uses `etf_screener` for the `/etfs` AUM,
 expense-ratio, volume, and absolute-change leaderboards so the lightweight ETF
 list is visible before users open a detail page.
 
@@ -212,12 +216,13 @@ The denominator is the union of the lightweight ETF list, ETF screener, and new
 ETF launch surface so newly listed ETFs such as single-stock or leveraged funds
 are visible before a full detail endpoint exists.
 
-ETF classification is rebuilt with the lightweight catalog surfaces. The
-classifier treats newer names such as `2X Long ADI Daily ETF` as single-stock
-leveraged ETFs while excluding index, volatility, commodity, crypto, bond, and
-futures contexts. Detail API fallback responses must carry the best available
-classification from matched surfaces or `etf_universe` so new ETF pages can show
-leverage/single-stock labels before a deep detail file exists.
+ETF classification is rebuilt from stored ETF detail classification first, then
+from lightweight catalog surfaces as fallback. The classifier treats newer names
+such as `2X Long ADI Daily ETF` as single-stock leveraged ETFs while excluding
+index, volatility, commodity, crypto, bond, and futures contexts. Detail API
+fallback responses must carry the best available classification from matched
+surfaces or `etf_universe` so new ETF pages can show leverage/single-stock
+labels before a deep detail file exists.
 
 ```json
 {
