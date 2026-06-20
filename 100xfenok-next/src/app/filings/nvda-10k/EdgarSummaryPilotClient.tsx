@@ -7,6 +7,7 @@ import {
   normalizeEdgarTicker,
   type EdgarKoreanSummaryFilingEntry,
 } from "@/lib/edgarKoreanSummaries";
+import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 
 type Stance = "fact" | "management_claim" | "feno_interpretation";
 
@@ -323,6 +324,7 @@ export default function EdgarSummaryPilotClient({
           <p className="mt-2 text-sm text-slate-500">
             {symbol}의 10-K, 10-Q, 8-K 요약이 manifest에 등록되면 이 탭에 자동으로 표시됩니다.
           </p>
+          <ExternalSourceLinks ticker={symbol} kind="filing" className="mt-4" />
         </div>
       </section>
     );
@@ -491,11 +493,7 @@ export default function EdgarSummaryPilotClient({
         <section className="panel">
           <div className="panel-b">
             <p className="text-sm font-semibold text-slate-700">선택한 공시의 한글 요약이 아직 준비되지 않았습니다.</p>
-            {selectedFiling?.sourceUrl ? (
-              <a href={selectedFiling.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700">
-                SEC 원문 보기
-              </a>
-            ) : null}
+            <ExternalSourceLinks ticker={symbol} kind="filing" secUrl={selectedFiling?.sourceUrl} className="mt-3" />
           </div>
         </section>
       )}

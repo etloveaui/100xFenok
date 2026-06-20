@@ -25,6 +25,7 @@ import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
+import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -1004,6 +1005,7 @@ export default function StockDetailClient({
             <p className="mt-2 text-sm font-semibold text-slate-500">
               {symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.
             </p>
+            <ExternalSourceLinks ticker={symbol} kind="etf" className="mt-4" />
             <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
         </div>
@@ -1014,6 +1016,7 @@ export default function StockDetailClient({
         <div className="panel stock-empty">
           <p className="text-lg font-black text-slate-700">해당 티커를 찾을 수 없습니다</p>
           <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} — 아직 데이터에 등록되지 않았거나 갱신 전인 티커입니다.</p>
+          <ExternalSourceLinks ticker={symbol} kind="stock" className="mt-4" />
           <TransitionLink href="/screener" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
       </div>
@@ -1183,6 +1186,7 @@ export default function StockDetailClient({
             <div className="py-8 text-center">
               <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
               <p className="mt-1 text-xs font-semibold text-slate-500">상세 데이터를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
+              <ExternalSourceLinks ticker={symbol} kind="stock" className="mx-auto mt-4 max-w-xl" />
             </div>
           </SectionCard>
         )}
@@ -1362,6 +1366,7 @@ export default function StockDetailClient({
               <div className="py-8 text-center">
                 <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">상세 데이터를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
+                <ExternalSourceLinks ticker={symbol} kind="stock" className="mx-auto mt-4 max-w-xl" />
               </div>
             </SectionCard>
           )}
@@ -1675,6 +1680,8 @@ function EtfDataPanel({
     ? "보유 구성 준비 중 · 신규 상장 정보로 요약 표시"
     : detailStatus === "universe_only"
       ? "보유 구성 준비 중 · ETF 기본 정보로 요약 표시"
+      : detailStatus === "yf_fallback"
+        ? "가격 정보 연결됨 · 보유 구성 보강 중"
       : null;
 
   const cards = [
@@ -1696,6 +1703,7 @@ function EtfDataPanel({
         <div className="py-8 text-center">
           <p className="text-sm font-black text-slate-700">ETF 상세 데이터는 아직 없습니다</p>
           <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 상세 데이터가 열리기 전에도 목록과 가격 정보를 먼저 확인할 수 있습니다.</p>
+          <ExternalSourceLinks ticker={ticker} kind="etf" className="mx-auto mt-4 max-w-xl" />
         </div>
       </SectionCard>
     );
@@ -1709,6 +1717,7 @@ function EtfDataPanel({
             {detailStatusText}
           </div>
         ) : null}
+        {detailStatusText ? <ExternalSourceLinks ticker={ticker} kind="etf" compact className="mb-3" /> : null}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
             <div key={`${card.label}-${card.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">

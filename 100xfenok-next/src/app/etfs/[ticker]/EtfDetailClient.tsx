@@ -6,6 +6,7 @@ import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
+import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 
 type MaybeNumber = number | null | undefined;
 
@@ -937,6 +938,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               desc="일시적인 연결 문제일 수 있습니다. 다시 시도하면 ETF 상세와 가격 정보를 새로 요청합니다."
               onRetry={retryLoads}
             />
+            <ExternalSourceLinks ticker={symbol} kind="etf" className="mt-4" />
             <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
         </div>
@@ -949,6 +951,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           <p className="mt-2 text-sm font-semibold text-[var(--c-ink-3)]">
             {symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.
           </p>
+          <ExternalSourceLinks ticker={symbol} kind="etf" className="mt-4" />
           <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
         </div>
       </div>
@@ -1007,6 +1010,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               </div>
             ) : null}
             {statusMeta ? <DetailAvailabilityCallout meta={statusMeta} available={availableDetailItems} pending={pendingDetailItems} /> : null}
+            {statusMeta ? <ExternalSourceLinks ticker={symbol} kind="etf" compact className="mb-3" /> : null}
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {metrics.map((metric) => (
                 <MetricCard key={`${metric.label}-${metric.value}`} label={metric.label} value={metric.value} note={metric.note} />
