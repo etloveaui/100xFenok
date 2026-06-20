@@ -1,7 +1,7 @@
 # ETF Center
 
 > Scope: public ETF surfaces in 100xFenok (`/etfs`, `/etfs/new`, `/etfs/[ticker]`).
-> Last updated: 2026-06-19.
+> Last updated: 2026-06-21.
 
 ## 1. Overview
 
@@ -35,6 +35,7 @@ Entry point for the ETF Center.
 - **Surface snapshot card** (`EtfSurfaceSnapshotCard`): quick leaderboards and curated collections.
   - Volume leaders / change leaders from `etf_screener`.
   - Curated provider collections (BlackRock, ProShares) and strategy/digital-asset buckets.
+  - Provider collections intentionally keep the initial snapshot light (20 rows per provider) and lazy-load the full provider list only after the user clicks "전체 목록 불러오기". Current provider totals: BlackRock 485, ProShares 167.
 - **ETF universe card** (`EtfUniverseCard`): searchable, filterable list with load-more.
   - Loads from `/api/data/stockanalysis/etf-universe`.
   - Merges `etf-snapshot.newEtfs` so newly listed ETFs keep classification tags before the next deep detail refresh.
@@ -118,7 +119,10 @@ Implementation pointers:
 - Returns curated subsets:
   - `newEtfs`: up to 100 newest ETFs with joined classification.
   - `screener`: AUM top 5 + volume leaders + change leaders.
-  - `blackrock`, `proshares`, `bitcoin`: provider/strategy surfaces.
+  - `blackrock`, `proshares`: capped at 20 rows each with full `counts.rows` preserved for shown/total UI.
+  - `bitcoin`: full digital-asset ETF bucket.
+
+Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapshotCard` uses the existing `/api/data/stockanalysis/surfaces/{surface}/` route on demand so provider full-view growth does not slow the initial `/etfs` load.
 
 ### 3.4 Detail API
 
@@ -292,6 +296,7 @@ Representative ticker contracts:
 | Browser QA for ETF routes | content/a11y assertions added | `.qa-playwright.js`, `.qa-a11y.js`, and `qa:stockanalysis` include `/etfs`, `/etfs/new`, `/etfs/SPY`, and `/etfs/ADIU`. Playwright is pinned as a dev dependency, and ETF list/new/detail content plus ETF route color-contrast checks pass on the local Next dev server; screenshot-level visual assertions remain a follow-up. |
 | ETF detail transient fetch | improved | ETF detail client no longer stores a failed ETF detail or market-facts response as a permanent module-level `null`, distinguishes transient fetch failure from missing/backfill-pending data, and exposes an in-place retry action. |
 | ETF snapshot transient fetch | improved | The `/etfs` snapshot card clears failed surface fetches, avoids stale failed pending state, and shows a retry callout instead of rendering empty leaderboards as if data were valid. |
+| Provider full-list reachability | done / lazy | `/etfs` shows provider shown/total from the capped snapshot, then loads BlackRock/ProShares full provider rows from `/api/data/stockanalysis/surfaces/{surface}/` only when the user clicks "전체 목록 불러오기". Gate covered snapshot cap unchanged, click-before surface requests 0, BlackRock 485/485 rendered after click, desktop/mobile overflow false. |
 | New ETF date/filter cache | improved | `/etfs/new` date filters use the surface `fetched_at` date as the "recent N days" anchor, show an explicit no-date-baseline note if a recent-period filter cannot be evaluated, and new-ETF snapshot/coverage loaders no longer keep failed non-OK responses as permanent pending promises. |
 | Global focus indicator | improved / browser-smoked | The app-wide `:focus-visible` outline now uses the brand interaction token and has an interactive-element override so controls that use utility `outline-none` still keep a visible keyboard focus. Browser focus checks covered Superinvestors and new-ETF filter inputs. |
 | Table header semantics | improved | ETF detail, sector desktop tables, and market-valuation benchmark tables declare column and row header scope so assistive technologies can map table cells to their headers reliably. |

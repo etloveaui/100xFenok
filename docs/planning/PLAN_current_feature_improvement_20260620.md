@@ -1,6 +1,6 @@
 # PLAN: Current-Feature Improvement Wave (measured survey → priority)
 
-> **Status**: 🔄 DRAFT — owner-requested measured survey done; awaiting owner approval before any implementation.
+> **Status**: ✅ owner-independent implementation wave shipped through E1b/E5c; remaining work is owner-gated data/LLM generation or phase choice.
 > **Owner mandate**: do ALL candidates, but survey + measure first, then plan. No new pages (/portfolio deprioritized), no route-contract meta-doc pass — improve EXISTING live surfaces.
 > **Method**: dual independent read-only survey — Claude (4 parallel subagents) + Codex (cx-80) — integrated here. Divergence = signal.
 > **Decision anchor**: this plan → owner approval → per-slice CONTRACT → Codex impl → Claude reproduction gate → push. 완료 선언 = owner.
@@ -40,7 +40,7 @@
 
 **Slices**:
 - E1 (S, $0) — lift **digital** cap 20→78 (etf-snapshot/route.ts limit); UI auto-grows count+set. **True S; fixes a data-loss bug.**
-- E1b (M, $0) — **provider** surfaces (BlackRock 485 / ProShares 167): do NOT blind-lift to full (snapshot payload/perf grows). Show "shown/total" now (S part), add load-more / full provider view later (M part). [split per Codex fh-107]
+- E1b (M, $0) — ✅ landed: **provider** surfaces (BlackRock 485 / ProShares 167) keep the initial ETF snapshot capped at 20 rows each, show shown/total, and expose a user-triggered "전체 목록 불러오기" action that lazy-loads the full provider list from the existing `/api/data/stockanalysis/surfaces/{surface}/` route. Gate: snapshot unchanged at 20/485 and 20/167, click-before surface requests 0, click-after BlackRock 485/485 rendered, desktop/mobile overflow false. [split per Codex fh-107; Claude gate fh-074]
 - E2 (S, $0) — honest detail_status copy for source-gap ETFs (drop false backfill promise; lean on existing ExternalSourceLinks); show shown/total (e.g. "20/78").
 - E3 (S, $0) — rename 단일종목 → 단일종목 레버리지 (match actual filter).
 - E4 (M, $0) — live segment badges that respect active dropdowns; surface_only vs universe_only distinction in callout.
@@ -113,6 +113,8 @@
 | **P4** | F2/F3/E5/S5 (summary gen, translation, data-ops backfill, mobile trend) | larger / some LLM cost | M–L | mixed |
 
 **Owner decisions embedded**: (a) M3 nav-IA — sectors into market subnav (Codex) vs regime/events into global nav (Claude); (b) F2 summary auto-gen uses free pool only (this week spark/gemini OK), paid still gated; (c) start point — recommend P0 pair (E1 + S1) first as both are S/$0 and hit a real bug + the owner's stated complaint.
+
+**Current remaining owner-gated work after the autonomous wave**: 10-Q bulk summary generation, F3 translation generation, and F1 phase-2/full-universe data-ops. E5 history dispatch is currently not useful because `fetchable_required_history=0`; the 11 open history rows are inception-limited recent-launch ETFs.
 
 ---
 
