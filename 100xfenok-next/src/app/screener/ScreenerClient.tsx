@@ -573,6 +573,122 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
   }
 }
 
+const ESTIMATE_PERIOD_LABELS = ["FY+1", "FY+2", "FY+3"] as const;
+
+type MobileEstimateTrendRow = {
+  label: string;
+  values: Array<number | null | undefined>;
+  formatValue: (value: number | null) => string;
+  tone?: "signed" | "neutral";
+};
+
+type MobileEstimateTrendSection = {
+  title: string;
+  rows: MobileEstimateTrendRow[];
+};
+
+function hasFiniteTrendValue(row: MobileEstimateTrendRow): boolean {
+  return row.values.some((value) => typeof value === "number" && Number.isFinite(value));
+}
+
+function normalizeTrendValue(value: number | null | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function trendValueClass(value: number | null, tone: MobileEstimateTrendRow["tone"]): string {
+  if (value === null || tone !== "signed") return "text-slate-900";
+  return getMomentumClass(value);
+}
+
+function buildMobileEstimateTrendSections(stock: ScreenerStock): MobileEstimateTrendSection[] {
+  const sections: MobileEstimateTrendSection[] = [
+    {
+      title: "밸류",
+      rows: [
+        { label: "PER", values: [stock.forwardPeFy1, stock.forwardPeFy2, stock.forwardPeFy3], formatValue: (value) => fmtNum(value, 1) },
+        { label: "EPS", values: [stock.forwardEpsFy1, stock.forwardEpsFy2, stock.forwardEpsFy3], formatValue: fmtEps },
+      ],
+    },
+    {
+      title: "성장",
+      rows: [
+        { label: "매출", values: [stock.revenueGrowthFy1, stock.revenueGrowthFy2, stock.revenueGrowthFy3], formatValue: fmtSignedPctPoint, tone: "signed" },
+        { label: "EPS", values: [stock.epsGrowthFy1, stock.epsGrowthFy2, stock.epsGrowthFy3], formatValue: fmtSignedPctPoint, tone: "signed" },
+      ],
+    },
+    {
+      title: "수익성",
+      rows: [
+        { label: "ROE", values: [stock.roeFy1, stock.roeFy2, stock.roeFy3], formatValue: (value) => (value === null ? "—" : `${value.toFixed(1)}%`), tone: "signed" },
+        { label: "OPM", values: [stock.operatingMarginFy1, stock.operatingMarginFy2, stock.operatingMarginFy3], formatValue: (value) => (value === null ? "—" : `${value.toFixed(1)}%`), tone: "signed" },
+        { label: "GPM", values: [stock.grossMarginFy1, stock.grossMarginFy2, stock.grossMarginFy3], formatValue: (value) => (value === null ? "—" : `${value.toFixed(1)}%`), tone: "signed" },
+      ],
+    },
+  ];
+
+  return sections
+    .map((section) => ({ ...section, rows: section.rows.filter(hasFiniteTrendValue) }))
+    .filter((section) => section.rows.length > 0);
+}
+
+function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
+  const sections = buildMobileEstimateTrendSections(stock);
+  if (sections.length === 0) {
+    return (
+      <div className="px-3 pb-3">
+        <div className="border-t border-slate-100 pt-3 text-xs font-bold text-slate-400">추정치 없음</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 px-3 pb-3">
+      {sections.map((section) => (
+        <div key={section.title} className="border-t border-slate-100 pt-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
+            <span className="grid min-w-[132px] grid-cols-3 gap-1 text-center text-[9px] font-black text-slate-400">
+              {ESTIMATE_PERIOD_LABELS.map((label) => <span key={`${section.title}-${label}`}>{label}</span>)}
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {section.rows.map((row) => {
+              const completeness = estimateCompletenessFromValues(row.values);
+              const showGap = hasEstimateGap(completeness);
+              return (
+                <div key={`${section.title}-${row.label}`} className="grid grid-cols-[62px_minmax(0,1fr)] items-center gap-2">
+                  <span className="min-w-0 truncate text-[10px] font-black text-slate-500">
+                    {row.label}
+                    {showGap ? (
+                      <span className={cx("ml-1 rounded-full px-1 py-[1px] text-[8px]", estimateCompletenessTone(completeness))}>
+                        {completeness.label}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="grid min-w-0 grid-cols-3 gap-1">
+                    {row.values.map((raw, index) => {
+                      const value = normalizeTrendValue(raw);
+                      return (
+                        <span
+                          key={`${section.title}-${row.label}-${ESTIMATE_PERIOD_LABELS[index]}`}
+                          className={cx("orbitron min-w-0 truncate text-right text-[11px] font-black tabular-nums", trendValueClass(value, row.tone))}
+                          title={`${row.label} ${ESTIMATE_PERIOD_LABELS[index]} ${row.formatValue(value)}`}
+                        >
+                          {row.formatValue(value)}
+                        </span>
+                      );
+                    })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metricKey: ScreenerSortKey; preset?: ColumnPreset }) {
   return (
     <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
@@ -652,11 +768,15 @@ function MobileStockCard({
           </span>
         </span>
       </button>
-      <div className="grid grid-cols-2 gap-2 px-3 pb-3">
-        {metrics.map((metricKey) => (
-          <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
-        ))}
-      </div>
+      {preset === "estimate" ? (
+        <MobileEstimateTrendSections stock={stock} />
+      ) : (
+        <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+          {metrics.map((metricKey) => (
+            <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
+          ))}
+        </div>
+      )}
       {expanded ? (
         <div id={detailId}>
           <StockDetailPanel ticker={stock.ticker} stock={stock} />
