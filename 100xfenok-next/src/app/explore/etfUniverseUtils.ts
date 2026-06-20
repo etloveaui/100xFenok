@@ -212,7 +212,7 @@ export function formatTypeHint(row: EtfUniverseRecord): string {
   }
   const singleStock = classification?.is_single_stock || isSingleStockLeveragedEtf(row);
   if (singleStock) {
-    parts.push(classification?.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
+    parts.push(classification?.underlying ? `단일종목 레버리지 ${classification.underlying}` : "단일종목 레버리지");
   }
   if (classification?.is_inverse || isInverseEtf(row)) {
     parts.push("인버스");

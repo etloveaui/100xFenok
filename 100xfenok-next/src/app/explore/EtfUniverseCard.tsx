@@ -400,7 +400,7 @@ export default function EtfUniverseCard({
     { value: "신규", label: "신규", count: newCount },
     { value: "디지털자산", label: "디지털", count: digitalCount },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
-    { value: "단일종목 레버리지", label: "단일종목", count: typeCounts.singleStock },
+    { value: "단일종목 레버리지", label: "단일종목 레버리지", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
   ];
   const activeSegment: EtfSegmentFilter = newOnly ? "신규" : digitalOnly ? "디지털자산" : typeFilter;

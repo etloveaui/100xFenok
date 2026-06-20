@@ -187,7 +187,7 @@ function classificationDetail(row: NewEtfRow): string | null {
     labels.push(typeof factor === "number" && Number.isFinite(factor) ? `${factor}x` : "레버리지");
   }
   if (classification.is_single_stock) {
-    labels.push(classification.underlying ? `단일종목 ${classification.underlying}` : "단일종목");
+    labels.push(classification.underlying ? `단일종목 레버리지 ${classification.underlying}` : "단일종목 레버리지");
   }
   if (classification.is_inverse) labels.push("인버스");
   return labels.length ? labels.join(" · ") : null;

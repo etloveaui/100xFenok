@@ -351,7 +351,7 @@ function detailStatusMeta(status: string | null): DetailStatusMeta | null {
   if (status === "surface_only") {
     return {
       title: "기본 가격·변동률 제공 중",
-      description: "ETF 목록과 신규 상장 데이터로 요약을 먼저 보여줍니다. 상세 보유 구성과 분석은 데이터 갱신 후 자동으로 추가됩니다.",
+      description: "ETF 목록과 신규 상장 데이터로 요약을 먼저 보여줍니다. 보유 구성과 세부 분석은 수집이 확인된 항목부터 반영합니다.",
     };
   }
   if (status === "universe_only") {
@@ -363,7 +363,7 @@ function detailStatusMeta(status: string | null): DetailStatusMeta | null {
   if (status === "yf_fallback") {
     return {
       title: "가격 정보는 연결됐고 보강 중",
-      description: "가격과 일부 기본 지표를 먼저 보여줍니다. 보유 구성과 분류 지표는 데이터 갱신 시 자동으로 보강됩니다.",
+      description: "가격과 일부 기본 지표를 먼저 보여줍니다. 보유 구성과 분류 지표는 수집이 확인된 항목부터 반영합니다.",
     };
   }
   return null;
@@ -376,8 +376,11 @@ function classificationLabels(classification: EtfClassification | null | undefin
     labels.push(isFiniteNumber(classification.leverage_factor) ? `${classification.leverage_factor}x 레버리지` : "레버리지");
   }
   if (classification.is_inverse) labels.push("인버스");
-  if (classification.is_single_stock) labels.push("단일종목");
-  if (classification.underlying) labels.push(`기초 ${classification.underlying}`);
+  if (classification.is_single_stock) {
+    labels.push(classification.underlying ? `단일종목 레버리지 ${classification.underlying}` : "단일종목 레버리지");
+  } else if (classification.underlying) {
+    labels.push(`기초 ${classification.underlying}`);
+  }
   return labels;
 }
 

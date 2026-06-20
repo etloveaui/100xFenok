@@ -1703,11 +1703,11 @@ function EtfDataPanel({
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
   const detailStatusText = detailStatus === "surface_only"
-    ? "보유 구성 준비 중 · 신규 상장 정보로 요약 표시"
+    ? "보유 구성 확인 전 · 신규 상장 정보로 요약 표시"
     : detailStatus === "universe_only"
-      ? "보유 구성 준비 중 · ETF 기본 정보로 요약 표시"
+      ? "보유 구성 확인 전 · ETF 기본 정보로 요약 표시"
       : detailStatus === "yf_fallback"
-        ? "가격 정보 연결됨 · 보유 구성 보강 중"
+        ? "가격 정보 연결됨 · 보유 구성은 확인된 항목부터 반영"
       : null;
 
   const cards = [

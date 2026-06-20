@@ -390,6 +390,12 @@ export default function IndustryMapPanel() {
           </span>
         </div>
         <div className="panel-b">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
+            <span>시장 이벤트의 산업 흐름은 이 섹터 화면에서 이어서 확인합니다.</span>
+            <TransitionLink href="/market/events" className="font-black text-brand-interactive hover:underline">
+              이벤트 보기
+            </TransitionLink>
+          </div>
           <div className="grid gap-2 md:grid-cols-3">
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <div className="text-[11px] font-black text-slate-400">가장 큰 산업</div>

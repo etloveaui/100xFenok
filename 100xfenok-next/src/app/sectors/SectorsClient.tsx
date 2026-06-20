@@ -3,7 +3,7 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
-import TransitionLink from "@/components/TransitionLink";
+import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { useSectorData } from "@/hooks/useSectorData";
 import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorSourceMeta, type SectorValuationBand } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
@@ -434,9 +434,7 @@ export default function SectorsClient() {
               <SourceLine sourceMeta={sourceMeta} failedSources={failedSources} />
             </span>
           </span>
-          <TransitionLink href="/" className="data-shell-link">
-            홈
-          </TransitionLink>
+          <MarketSectionNav active="sectors" />
         </div>
       </section>
 

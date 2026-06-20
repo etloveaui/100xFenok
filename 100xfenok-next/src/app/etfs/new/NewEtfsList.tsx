@@ -180,7 +180,7 @@ function typeTags(row: Pick<RadarRow, "s" | "n" | "inceptionDate" | "price" | "c
   const record = toUniverseRecord(row);
   const tags: string[] = [];
   if (isLeveragedEtf(record)) tags.push("레버리지");
-  if (isSingleStockLeveragedEtf(record)) tags.push("단일종목");
+  if (isSingleStockLeveragedEtf(record)) tags.push("단일종목 레버리지");
   if (isInverseEtf(record)) tags.push("인버스");
   return tags.length > 0 ? tags : ["일반"];
 }
@@ -358,7 +358,7 @@ export default function NewEtfsList({
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number }> = [
     { value: "전체", label: "전체", count: rows.length },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
-    { value: "단일종목 레버리지", label: "단일종목", count: typeCounts.singleStock },
+    { value: "단일종목 레버리지", label: "단일종목 레버리지", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
   ];
 
