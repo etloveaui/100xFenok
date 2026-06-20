@@ -6,6 +6,7 @@ import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandClass, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
+import MetricHelp from "@/components/MetricHelp";
 import StockDetailPanel from "./StockDetailPanel";
 
 const PAGE_SIZE = 50;
@@ -524,7 +525,7 @@ function MobileMetric({ stock, metricKey }: { stock: ScreenerStock; metricKey: S
   return (
     <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
       <span className="block truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
-        {columnLabel(metricKey)}
+        <MetricHelp label={columnLabel(metricKey)} metricKey={metricKey} align="right" />
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
         {renderMobileCell(stock, metricKey)}
@@ -1117,7 +1118,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
-                <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
                   {activeColumns.map((column) => {
                     const active = column.key === sortKey;
                     return (
@@ -1126,19 +1127,22 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                         aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
                         className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
                       >
-                        <button
-                          type="button"
-                          onClick={() => toggleSort(column.key)}
-                          aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
-                          className={cx(
-                            "inline-flex items-center gap-1 transition hover:text-[var(--c-ink)]",
-                            column.align === "right" && "flex-row-reverse",
-                            active && "text-brand-interactive",
-                          )}
-                        >
-                          {column.label}
-                          <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
-                        </button>
+                        <div className={cx("inline-flex items-center gap-1", column.align === "right" && "justify-end")}>
+                          <button
+                            type="button"
+                            onClick={() => toggleSort(column.key)}
+                            aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
+                            className={cx(
+                              "inline-flex items-center gap-1 transition hover:text-[var(--c-ink)]",
+                              column.align === "right" && "flex-row-reverse",
+                              active ? "text-brand-navy" : "text-[var(--c-ink)]",
+                            )}
+                          >
+                            {column.label}
+                            <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                          </button>
+                          <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
+                        </div>
                       </th>
                     );
                   })}

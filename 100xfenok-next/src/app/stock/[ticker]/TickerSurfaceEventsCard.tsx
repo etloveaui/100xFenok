@@ -150,7 +150,7 @@ export default function TickerSurfaceEventsCard({
       <section className="panel stock-section">
         <div className="panel-h"><h2>관련 이벤트</h2></div>
         <div className="panel-b">
-          <p className="text-xs font-semibold text-slate-400">티커별 관련 이벤트를 확인하고 있습니다.</p>
+          <p className="text-xs font-semibold text-slate-500">티커별 관련 이벤트를 확인하고 있습니다.</p>
         </div>
       </section>
     );
@@ -189,7 +189,7 @@ export default function TickerSurfaceEventsCard({
             </div>
           </div>
         ))}
-        <p className="text-[9px] font-semibold text-slate-400">
+        <p className="text-[9px] font-semibold text-slate-500">
           관련 이벤트는 서버에서 티커별로 정리해 표시합니다.
         </p>
       </div>

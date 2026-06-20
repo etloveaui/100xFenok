@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import MetricHelp from "@/components/MetricHelp";
 import { formatPlainPercent, formatSignedPercent } from "@/lib/format";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -309,7 +310,7 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
           const better = r.lowerBetter ? (r.stock as number) < (r.ind as number) : (r.stock as number) > (r.ind as number);
           return (
             <div key={r.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
-              <span className="text-[10px] font-medium text-slate-500">{r.label}</span>
+              <MetricHelp label={r.label} className="text-[10px] font-medium text-slate-500" />
               <span className="orbitron tabular-nums text-[11px] font-black">
                 <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
                 <span className="mx-1 font-semibold text-slate-300">/</span>
@@ -828,7 +829,7 @@ export function SummaryScoreCard({ data, perBand, industry }: {
             {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
           </p>
         </div>
-        <span className="text-[10px] font-bold text-slate-400">{open ? "접기 ▲" : "상세 ▼"}</span>
+        <span className="text-[10px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
       </button>
 
       <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
@@ -865,7 +866,7 @@ export function SummaryScoreCard({ data, perBand, industry }: {
           ))}
         </div>
       ) : null}
-      <p className="mt-2 text-[9px] font-semibold text-slate-400">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
+      <p className="mt-2 text-[9px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
     </div>
   );
 }
@@ -967,7 +968,7 @@ export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench 
 function KV({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
-      <span className="text-[10px] font-medium text-slate-500">{label}</span>
+      <MetricHelp label={label} className="text-[10px] font-medium text-slate-500" />
       <span className="orbitron tabular-nums text-xs font-black text-slate-900">{value}</span>
     </div>
   );

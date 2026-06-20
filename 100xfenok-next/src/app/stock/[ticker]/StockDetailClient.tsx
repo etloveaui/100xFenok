@@ -22,6 +22,7 @@ import EdgarSummaryPilotClient from "@/app/filings/nvda-10k/EdgarSummaryPilotCli
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
+import MetricHelp from "@/components/MetricHelp";
 import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
@@ -463,7 +464,7 @@ function MiniBarChart({
 
   return (
     <div className="space-y-1">
-      <div className="truncate text-[8px] font-bold tabular-nums text-slate-400" title={axisLabel}>
+      <div className="truncate text-[8px] font-bold tabular-nums text-slate-500" title={axisLabel}>
         {axisLabel}
       </div>
       <div className="relative flex gap-[2px]" style={{ height: 72 }}>
@@ -505,16 +506,16 @@ function MiniBarChart({
           );
         })}
       </div>
-      <div className="flex text-[8px] font-bold text-slate-400">
+      <div className="flex text-[8px] font-bold text-slate-500">
         {bars.map((bar) => (
-          <span key={bar.key} className={`flex-1 text-center ${bar.estimate ? "text-slate-400" : ""}`}>
+          <span key={bar.key} className={`flex-1 text-center ${bar.estimate ? "text-slate-500" : ""}`}>
             {bar.label}
           </span>
         ))}
       </div>
       <div className="flex text-[8px] font-black tabular-nums text-slate-500">
         {bars.map((bar) => (
-          <span key={`${bar.key}-value`} className={`min-w-0 flex-1 truncate text-center ${bar.estimate ? "text-slate-400" : ""}`}>
+          <span key={`${bar.key}-value`} className={`min-w-0 flex-1 truncate text-center ${bar.estimate ? "text-slate-500" : ""}`}>
             {isFiniteNumber(bar.value) ? formatValue(bar.value) : "—"}
           </span>
         ))}
@@ -523,7 +524,7 @@ function MiniBarChart({
         <span className="min-w-0 truncate">
           최신 {latestActual ? `${latestActual.label} ${formatValue(latestActual.value as number)}` : "—"}
         </span>
-        <span className="min-w-0 truncate text-slate-400">
+        <span className="min-w-0 truncate text-slate-500">
           추정 {nextEstimate ? `${nextEstimate.label} ${formatValue(nextEstimate.value as number)}` : "—"}
         </span>
       </div>
@@ -557,7 +558,11 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
             <th className="px-2 py-1.5 text-left" />
             {years.map((y) => <th key={y} className="px-2 py-1.5 text-right">{y}</th>)}
-            {estKeys.map((k) => <th key={k} className="px-2 py-1.5 text-right bg-slate-50 text-slate-400">{ESTIMATE_LABELS[k] ?? k.toUpperCase()}</th>)}
+            {estKeys.map((k) => (
+              <th key={k} className="px-2 py-1.5 text-right bg-slate-50 text-slate-500">
+                <MetricHelp label={ESTIMATE_LABELS[k] ?? k.toUpperCase()} metricKey={k} align="right" />
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -576,7 +581,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           ))}
         </tbody>
       </table>
-      <p className="mt-1 text-[9px] font-semibold text-slate-400">E = 시장 예상치</p>
+      <p className="mt-1 text-[9px] font-semibold text-slate-500">E = 시장 예상치</p>
     </div>
   );
 }
@@ -696,12 +701,12 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
   return (
     <div className="rounded-xl border border-slate-200 p-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-slate-500">{label}</span>
+        <MetricHelp label={label} className="text-[10px] font-bold text-slate-500" />
         <span className="orbitron tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
       {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} years={years} estimates={estimates ?? undefined} formatValue={formatValue} /></div> : null}
       {(isFiniteNumber(nextEstimate) || benchValue !== null) ? (
-        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-black tabular-nums text-slate-400">
+        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-black tabular-nums text-slate-500">
           {isFiniteNumber(nextEstimate) ? (
             <span>추정 {ESTIMATE_LABELS[nextEstimateKey!] ?? nextEstimateKey!.toUpperCase()} {formatValue(nextEstimate)}</span>
           ) : null}
@@ -719,7 +724,7 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
 function KV({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.05em] text-slate-500">{label}</span>
+      <MetricHelp label={label} className="text-[10px] font-semibold uppercase tracking-[0.05em] text-slate-500" />
       <span className="orbitron tabular-nums text-xs font-black text-slate-900">{value}</span>
     </div>
   );
@@ -965,9 +970,10 @@ export default function StockDetailClient({
                 <button
                   key={t.id}
                   type="button"
+                  role="tab"
+                  aria-selected={activeStockTab === t.id}
                   onClick={() => setStockTab(t.id)}
                   className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
-                  aria-current={activeStockTab === t.id ? "page" : undefined}
                 >
                   {t.label}
                 </button>
@@ -1140,7 +1146,7 @@ export default function StockDetailClient({
                         <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
                       </div>
                       {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
-                        <p className="mt-2 text-[10px] font-semibold text-slate-400">
+                        <p className="mt-2 text-[10px] font-semibold text-slate-500">
                           다모다란 산업 자본비용 {fmtWholePct(industryBench.cost_of_capital * 100)}
                         </p>
                       ) : null}
@@ -1235,9 +1241,10 @@ export default function StockDetailClient({
             <button
               key={t.id}
               type="button"
+              role="tab"
+              aria-selected={activeStockTab === t.id}
               onClick={() => setStockTab(t.id)}
               className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
-              aria-current={activeStockTab === t.id ? "page" : undefined}
             >
               {t.label}
             </button>
@@ -1276,7 +1283,7 @@ export default function StockDetailClient({
             <div className="panel-b">
             <div className="mb-3">
               <h1 className="text-lg font-black tracking-tight text-slate-950">{row ? row.companyName : "..."}</h1>
-              <p className="orbitron text-sm font-black text-slate-400">{symbol}</p>
+              <p className="orbitron text-sm font-black text-slate-500">{symbol}</p>
             </div>
             {canonical ? (
               <div className="mb-3">
@@ -1335,7 +1342,7 @@ export default function StockDetailClient({
                     { label: "최근 EPS", value: formatMoney(lastFinite(numberSeries(detail.per_share?.eps)), displayCurrency) },
                   ].map((item) => (
                     <div key={item.label} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+                      <MetricHelp label={item.label} className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500" />
                       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{item.value}</p>
                     </div>
                   ))}
@@ -1354,7 +1361,7 @@ export default function StockDetailClient({
                       className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left transition hover:border-brand-interactive hover:bg-white"
                     >
                       <span className="block text-[11px] font-black text-slate-800">{label}</span>
-                      <span className="mt-0.5 block text-[10px] font-semibold text-slate-400">{desc}</span>
+                      <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{desc}</span>
                     </button>
                   ))}
                 </div>
@@ -1507,9 +1514,9 @@ function StockAuxiliaryPanel({
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {metrics.map((metric) => (
           <div key={`${metric.label}-${metric.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{metric.label}</p>
+            <MetricHelp label={metric.label} className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500" />
             <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{metric.value}</p>
-            {metric.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{metric.note}</p> : null}
+            {metric.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{metric.note}</p> : null}
           </div>
         ))}
       </div>
@@ -1614,7 +1621,7 @@ function FinancialCandidatePanel({
                   <p className="orbitron mt-0.5 text-xs font-black tabular-nums text-slate-900">
                     {fmtCandidateCount(info?.field_count)}필드
                   </p>
-                  <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                  <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
                     {fmtCandidateCount(info?.period_count)}기간
                   </p>
                 </div>
@@ -1723,7 +1730,7 @@ function EtfDataPanel({
             <div key={`${card.label}-${card.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
               <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{card.value}</p>
-              {card.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-400">{card.note}</p> : null}
+              {card.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{card.note}</p> : null}
             </div>
           ))}
         </div>
@@ -1740,7 +1747,7 @@ function EtfDataPanel({
       </SectionCard>
 
       <SectionCard title="보유·스왑 구성">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
           <span>{ticker} · {holdings.length.toLocaleString()}개 표시</span>
           <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
         </div>
@@ -1768,7 +1775,7 @@ function EtfDataPanel({
 
 function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHolding[]; currency: string }) {
   if (!holdings.length) {
-    return <p className="text-sm font-semibold text-slate-400">보유 데이터 없음</p>;
+    return <p className="text-sm font-semibold text-slate-500">보유 데이터 없음</p>;
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1">
@@ -1788,7 +1795,7 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
             const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-400">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-500">{item.rank ?? index + 1}</td>
                 <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
                 <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
@@ -1798,7 +1805,7 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
           })}
         </tbody>
       </table>
-      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-400">표시 통화: {currency}</p> : null}
+      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-500">표시 통화: {currency}</p> : null}
     </div>
   );
 }
@@ -1816,7 +1823,7 @@ function weightedRowValue(row: StockanalysisWeightedRow): number | null {
 
 function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | null | undefined; empty: string }) {
   const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
-  if (!items.length) return <p className="text-sm font-semibold text-slate-400">{empty}</p>;
+  if (!items.length) return <p className="text-sm font-semibold text-slate-500">{empty}</p>;
   return (
     <div className="space-y-2">
       {items.map((row, index) => {
@@ -1840,7 +1847,7 @@ function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | n
 
 function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPoint[]; currency: string }) {
   const rows = history.filter((point) => isFiniteNumber(point.c));
-  if (!rows.length) return <p className="text-sm font-semibold text-slate-400">가격 히스토리 없음</p>;
+  if (!rows.length) return <p className="text-sm font-semibold text-slate-500">가격 히스토리 없음</p>;
   const chronological = [...rows].reverse();
   const closes = chronological.map((point) => point.c).filter(isFiniteNumber);
   const min = Math.min(...closes);
@@ -1856,7 +1863,7 @@ function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPo
           return (
             <div key={`${point.t ?? "month"}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${point.t}: ${formatMoney(close, currency)}`}>
               <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
-              <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-400 sm:block">{(point.t ?? "").slice(5, 7)}</span>
+              <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-500 sm:block">{(point.t ?? "").slice(5, 7)}</span>
             </div>
           );
         })}
