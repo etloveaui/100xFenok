@@ -143,8 +143,26 @@ function etfSearchText(row: EtfUniverseRecord): string {
   return [row.ticker, row.name, row.category, row.assetClass, row.issuer, row.inceptionDate, row.underlying, row.classification?.underlying].filter(Boolean).join(" ").toLowerCase();
 }
 
-function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
-  if (row.classification && typeof row.classification === "object") return row.classification;
+function hasClassificationSignal(classification: EtfClassification): boolean {
+  return (
+    classification.is_leveraged === true ||
+    classification.is_inverse === true ||
+    classification.is_single_stock === true ||
+    typeof classification.leverage_factor === "number" ||
+    Boolean(classification.underlying?.trim())
+  );
+}
+
+function classificationConfidence(classification: EtfClassification): string {
+  return typeof classification.confidence === "string" ? classification.confidence.trim().toLowerCase() : "";
+}
+
+function shouldUseStoredClassification(classification: EtfClassification): boolean {
+  if (hasClassificationSignal(classification)) return true;
+  return classificationConfidence(classification) !== "low";
+}
+
+function flatRowClassification(row: EtfUniverseRecord): EtfClassification | null {
   if (
     typeof row.is_leveraged === "boolean" ||
     typeof row.is_inverse === "boolean" ||
@@ -161,6 +179,13 @@ function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
     };
   }
   return null;
+}
+
+function rowClassification(row: EtfUniverseRecord): EtfClassification | null {
+  if (row.classification && typeof row.classification === "object") {
+    return shouldUseStoredClassification(row.classification) ? row.classification : null;
+  }
+  return flatRowClassification(row);
 }
 
 export function isLeveragedEtf(row: EtfUniverseRecord): boolean {
