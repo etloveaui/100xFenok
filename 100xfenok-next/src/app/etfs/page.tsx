@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import AppShell from "@/components/shell/AppShell";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
 import type { EtfTypeFilter } from "../explore/etfUniverseUtils";
@@ -55,6 +56,9 @@ export default async function EtfsPage({ searchParams }: Props) {
               <p className="data-shell-desc">
                 ETF 목록, 신규 상장, 디지털자산, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
               </p>
+            </div>
+            <div className="data-shell-head-actions">
+              <MarketQuickLinks />
             </div>
           </div>
         </section>

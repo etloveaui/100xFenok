@@ -2,6 +2,7 @@
 
 import { Fragment, useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
@@ -916,6 +917,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
           <TransitionLink href="/sectors" className="data-shell-link">
             섹터
           </TransitionLink>
+          <MarketQuickLinks />
         </div>
       </section>
 

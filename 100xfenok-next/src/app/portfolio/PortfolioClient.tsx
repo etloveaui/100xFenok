@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import {
   usePortfolios,
   savePortfolios,
@@ -279,6 +280,9 @@ export default function PortfolioClient() {
             <h1 className="data-shell-title">내 포트폴리오</h1>
             <p className="data-shell-desc">기기 안에서만 보관되는 개인 포트폴리오입니다.</p>
           </div>
+          <div className="data-shell-head-actions">
+            <MarketQuickLinks />
+          </div>
         </section>
 
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
@@ -296,7 +300,7 @@ export default function PortfolioClient() {
           <button
             type="button"
             onClick={handleCreateEmpty}
-            className="mt-4 inline-flex min-h-9 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-4 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10"
+            className="mt-4 inline-flex min-h-9 items-center rounded-full border border-brand-interactive bg-brand-interactive px-4 text-[11px] font-black text-white transition hover:bg-brand-interactive/90"
           >
             내 포트폴리오 만들기
           </button>
@@ -333,10 +337,11 @@ export default function PortfolioClient() {
           <button
             type="button"
             onClick={handleCreateEmpty}
-            className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-3 text-[11px] font-black text-slate-400 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+            className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             + 새 포트폴리오
           </button>
+          <MarketQuickLinks />
         </div>
       </section>
 
@@ -363,7 +368,7 @@ export default function PortfolioClient() {
           <HoldingsTable rows={holdingRows} onDelete={handleDeleteHolding} />
         </div>
         {missingCount > 0 && (
-          <p className="mt-2 text-[10px] font-semibold text-slate-400">
+          <p className="mt-2 text-[10px] font-semibold text-slate-500">
             시세 없는 {missingCount}종목은 합계에서 제외
           </p>
         )}
@@ -618,7 +623,7 @@ function HoldingsTable({
 
 function Disclaimer() {
   return (
-    <p className="text-[10px] font-semibold text-slate-400">
+    <p className="text-[10px] font-semibold text-slate-600">
       이 브라우저에만 저장 · 서버 전송 없음 · 시세는 주간 데이터 기준으로 지연될 수 있음
     </p>
   );

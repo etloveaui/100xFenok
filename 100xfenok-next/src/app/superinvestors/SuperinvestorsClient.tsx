@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import TransitionLink from "@/components/TransitionLink";
+import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
@@ -806,12 +807,7 @@ export default function SuperinvestorsClient({
               변환 {generatedAtLabel}
             </span>
           ) : null}
-          <TransitionLink href="/market/events" className="data-shell-link">
-            이벤트
-          </TransitionLink>
-          <TransitionLink href="/regime" className="data-shell-link">
-            국면
-          </TransitionLink>
+          <MarketQuickLinks />
           <span className="data-shell-note">{delayLabel}</span>
           {excludedStale.length > 0 ? (
             <span className="data-shell-note warn">

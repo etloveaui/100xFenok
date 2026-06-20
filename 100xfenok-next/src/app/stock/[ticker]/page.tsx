@@ -23,7 +23,7 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const initialTab = requestedTab === "filings" ? "filings" : undefined;
   return (
     <div className="fnk-shell">
-      <AppShell title={symbol} backHref={`/screener?ticker=${encodeURIComponent(symbol)}`}>
+      <AppShell active="screener" title={symbol} backHref={`/screener?ticker=${encodeURIComponent(symbol)}`}>
         <StockDetailClient ticker={symbol} initialTab={initialTab} />
       </AppShell>
     </div>

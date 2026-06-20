@@ -82,7 +82,7 @@ export default function ExternalSourceLinks({
               className="inline-flex min-h-10 flex-col items-start justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black leading-tight text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
             >
               <span>{link.label}</span>
-              <span className="mt-0.5 font-semibold text-slate-400">{link.hint}</span>
+              <span className="mt-0.5 font-semibold text-slate-600">{link.hint}</span>
             </a>
           ))}
         </div>

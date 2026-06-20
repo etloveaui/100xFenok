@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import {
@@ -984,6 +985,7 @@ export default function StockDetailClient({
                 <span className="delay">{delayText}</span>
               </div>
             </div>
+            <MarketQuickLinks className="stock-market-links" />
             <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
               {stockTabs.map((t) => (
                 <button
@@ -1255,6 +1257,7 @@ export default function StockDetailClient({
             <span className="delay">데이터 지연 가능</span>
           </div>
         </div>
+        <MarketQuickLinks className="stock-market-links" />
         <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
           {stockTabs.map((t) => (
             <button
@@ -1323,7 +1326,7 @@ export default function StockDetailClient({
                 <KV label="12개월 수익률" value={isFiniteNumber(row.return12m) ? fmtPct(row.return12m) : "—"} />
                 {rowPerBand ? (
                   <div className={`rounded-lg px-2.5 py-1.5 ${perBandPositionColor(rowPerBand.current, rowPerBand.min, rowPerBand.max)}`}>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.05em] opacity-70">PER 밴드 위치</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-slate-600">PER 밴드 위치</p>
                     <p className="orbitron tabular-nums text-sm font-black">{perBandPositionText(rowPerBand.current, rowPerBand.min, rowPerBand.max)}</p>
                   </div>
                 ) : null}
