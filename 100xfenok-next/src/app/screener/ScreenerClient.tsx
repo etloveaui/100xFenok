@@ -6,6 +6,7 @@ import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandClass, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
+import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import MetricHelp from "@/components/MetricHelp";
 import StockDetailPanel from "./StockDetailPanel";
 
@@ -238,6 +239,50 @@ function fmtOpm(value: number | null): string {
 function fmtEps(value: number | null): string {
   return value === null ? "—" : value.toFixed(2);
 }
+
+type EstimateCellKey =
+  | "forwardPeFy1" | "forwardPeFy2" | "forwardPeFy3"
+  | "forwardEpsFy1" | "forwardEpsFy2" | "forwardEpsFy3"
+  | "revenueGrowthFy1" | "revenueGrowthFy2" | "revenueGrowthFy3"
+  | "epsGrowthFy1" | "epsGrowthFy2" | "epsGrowthFy3"
+  | "roeFy1" | "roeFy2" | "roeFy3"
+  | "operatingMarginFy1" | "operatingMarginFy2" | "operatingMarginFy3"
+  | "grossMarginFy1" | "grossMarginFy2" | "grossMarginFy3";
+
+function estimateGroupValues(stock: ScreenerStock, key: EstimateCellKey): Array<number | null | undefined> {
+  if (key.startsWith("forwardPeFy")) return [stock.forwardPeFy1, stock.forwardPeFy2, stock.forwardPeFy3];
+  if (key.startsWith("forwardEpsFy")) return [stock.forwardEpsFy1, stock.forwardEpsFy2, stock.forwardEpsFy3];
+  if (key.startsWith("revenueGrowthFy")) return [stock.revenueGrowthFy1, stock.revenueGrowthFy2, stock.revenueGrowthFy3];
+  if (key.startsWith("epsGrowthFy")) return [stock.epsGrowthFy1, stock.epsGrowthFy2, stock.epsGrowthFy3];
+  if (key.startsWith("roeFy")) return [stock.roeFy1, stock.roeFy2, stock.roeFy3];
+  if (key.startsWith("operatingMarginFy")) return [stock.operatingMarginFy1, stock.operatingMarginFy2, stock.operatingMarginFy3];
+  return [stock.grossMarginFy1, stock.grossMarginFy2, stock.grossMarginFy3];
+}
+
+function renderEstimateCell(
+  stock: ScreenerStock,
+  key: EstimateCellKey,
+  formatValue: (value: number | null) => string,
+  valueClass: string,
+): React.ReactNode {
+  const raw = stock[key];
+  const value = typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+  const completeness = estimateCompletenessFromValues(estimateGroupValues(stock, key));
+  const showGap = hasEstimateGap(completeness);
+  return (
+    <span
+      className="inline-flex min-w-[58px] flex-col items-end gap-0.5 leading-none"
+      title={`FY+1~FY+3 추정치 ${completeness.label}`}
+    >
+      <span className={cx("orbitron tabular-nums", valueClass)}>{formatValue(value)}</span>
+      {showGap ? (
+        <span className={cx("rounded-full px-1.5 py-[1px] text-[9px] font-black", estimateCompletenessTone(completeness))}>
+          {completeness.label}
+        </span>
+      ) : null}
+    </span>
+  );
+}
 function fmtRank(value: number | null): string {
   return value === null ? "—" : value.toLocaleString();
 }
@@ -407,15 +452,15 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
     case "roeFy1":
     case "roeFy2":
     case "roeFy3":
-      return <span className="orbitron tabular-nums text-slate-900">{stock[key] == null ? "—" : `${stock[key].toFixed(1)}%`}</span>;
+      return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-900");
     case "operatingMarginFy1":
     case "operatingMarginFy2":
     case "operatingMarginFy3":
-      return <span className="orbitron tabular-nums text-slate-700">{stock[key] == null ? "—" : `${stock[key].toFixed(1)}%`}</span>;
+      return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-700");
     case "grossMarginFy1":
     case "grossMarginFy2":
     case "grossMarginFy3":
-      return <span className="orbitron tabular-nums text-slate-700">{stock[key] == null ? "—" : `${stock[key].toFixed(1)}%`}</span>;
+      return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-700");
     case "guruHolders":
       return stock.guruHolders != null ? (
         <span className="orbitron tabular-nums font-bold text-violet-700">{stock.guruHolders}</span>
@@ -433,18 +478,18 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey): React.ReactNode
     case "forwardPeFy1":
     case "forwardPeFy2":
     case "forwardPeFy3":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock[key] ?? null, 1)}</span>;
+      return renderEstimateCell(stock, key, (value) => fmtNum(value, 1), "text-slate-900");
     case "forwardEpsFy1":
     case "forwardEpsFy2":
     case "forwardEpsFy3":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock[key] ?? null)}</span>;
+      return renderEstimateCell(stock, key, fmtEps, "text-slate-700");
     case "revenueGrowthFy1":
     case "revenueGrowthFy2":
     case "revenueGrowthFy3":
     case "epsGrowthFy1":
     case "epsGrowthFy2":
     case "epsGrowthFy3":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock[key] ?? null))}>{fmtSignedPctPoint(stock[key] ?? null)}</span>;
+      return renderEstimateCell(stock, key, fmtSignedPctPoint, cx("font-black", getMomentumClass(stock[key] ?? null)));
     case "dividendTtm":
       return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
     case "ret1y":

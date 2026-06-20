@@ -27,6 +27,7 @@ import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
+import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -566,19 +567,30 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           </tr>
         </thead>
         <tbody>
-          {validRows.map((row) => (
-            <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
-              <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{row.label}</td>
-              {row.actuals!.map((v, i) => (
-                <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
-              ))}
-              {estKeys.map((k) => (
-                <td key={k} className="px-2 py-1.5 text-right bg-slate-50 orbitron tabular-nums font-semibold text-slate-500">
-                  {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
+          {validRows.map((row) => {
+            const completeness = estimateCompletenessFromSeries(row.estimates);
+            const showGap = hasEstimateGap(completeness);
+            return (
+              <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
+                <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">
+                  <span className="block">{row.label}</span>
+                  {showGap ? (
+                    <span className={`mt-0.5 inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(completeness)}`}>
+                      {completeness.label}
+                    </span>
+                  ) : null}
                 </td>
-              ))}
-            </tr>
-          ))}
+                {row.actuals!.map((v, i) => (
+                  <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
+                ))}
+                {estKeys.map((k) => (
+                  <td key={k} className="px-2 py-1.5 text-right bg-slate-50 orbitron tabular-nums font-semibold text-slate-500">
+                    {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <p className="mt-1 text-[9px] font-semibold text-slate-500">E = 시장 예상치</p>
@@ -697,6 +709,8 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
 }) {
   const nextEstimateKey = ["fy1", "fy2", "fy3"].find((key) => isFiniteNumber(estimates?.[key])) ?? null;
   const nextEstimate = nextEstimateKey ? estimates?.[nextEstimateKey] : null;
+  const estimateCompleteness = estimateCompletenessFromSeries(estimates);
+  const showEstimateCompleteness = estimates !== undefined && hasEstimateGap(estimateCompleteness);
   const benchValue = isFiniteNumber(benchmark?.value) ? benchmark.value : null;
   return (
     <div className="rounded-xl border border-slate-200 p-3">
@@ -705,10 +719,15 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
         <span className="orbitron tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
       {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} years={years} estimates={estimates ?? undefined} formatValue={formatValue} /></div> : null}
-      {(isFiniteNumber(nextEstimate) || benchValue !== null) ? (
+      {(showEstimateCompleteness || isFiniteNumber(nextEstimate) || benchValue !== null) ? (
         <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-black tabular-nums text-slate-500">
+          {showEstimateCompleteness ? (
+            <span className={`rounded-full px-1.5 py-[1px] ${estimateCompletenessTone(estimateCompleteness)}`}>
+              {estimateCompleteness.label}
+            </span>
+          ) : null}
           {isFiniteNumber(nextEstimate) ? (
-            <span>추정 {ESTIMATE_LABELS[nextEstimateKey!] ?? nextEstimateKey!.toUpperCase()} {formatValue(nextEstimate)}</span>
+            <span>{ESTIMATE_LABELS[nextEstimateKey!] ?? nextEstimateKey!.toUpperCase()} {formatValue(nextEstimate)}</span>
           ) : null}
           {benchValue !== null ? <span>{benchmark?.label ?? "산업"} {formatValue(benchValue)}</span> : null}
         </div>

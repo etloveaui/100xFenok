@@ -5,6 +5,7 @@ import TransitionLink from "@/components/TransitionLink";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
+import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 
 export type MaybeNumber = number | null | undefined;
 export type NumberSeries = MaybeNumber[];
@@ -817,6 +818,7 @@ export function Sparkline({
   formatValue?: (value: number) => string;
 }) {
   const { labels, points } = buildFiscalPoints(years, data, estimates ?? estimate);
+  const estimateCompleteness = estimates ? estimateCompletenessFromSeries(estimates) : null;
   const actualPoints = points.filter((point) => !point.estimate);
   const estimatePoints = points.filter((point) => point.estimate);
   const firstEstimatePoint = estimatePoints[0] ?? null;
@@ -852,7 +854,7 @@ export function Sparkline({
     } as const;
   };
 
-  return (
+  const chart = (
     <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="block w-full max-w-full overflow-visible" role="img" aria-label="FY별 추이 차트">
       <polyline points={actualLine} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       {firstEstimatePoint && currentPoint ? (
@@ -919,6 +921,15 @@ export function Sparkline({
       ))}
     </svg>
   );
+
+  return estimateCompleteness && hasEstimateGap(estimateCompleteness) ? (
+    <div className="space-y-1">
+      {chart}
+      <span className={`inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(estimateCompleteness)}`}>
+        {estimateCompleteness.label}
+      </span>
+    </div>
+  ) : chart;
 }
 
 export function PerBandChart({
@@ -933,6 +944,7 @@ export function PerBandChart({
   estimates?: EstimateSeries;
 }) {
   const { labels: periodLabels, points: allPerPoints } = buildFiscalPoints(years, per, estimates);
+  const estimateCompleteness = estimates ? estimateCompletenessFromSeries(estimates) : null;
   const perPoints = allPerPoints.filter((point) => !point.estimate);
   const forwardPoints = allPerPoints.filter((point) => point.estimate);
   const forwardPoint = forwardPoints[0] ?? null;
@@ -993,7 +1005,7 @@ export function PerBandChart({
     } as const;
   };
 
-  return (
+  const chart = (
     <div>
       <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="block w-full max-w-full overflow-visible" role="img" aria-label="FY별 PER 밴드 차트">
         {/* Shaded band */}
@@ -1181,6 +1193,15 @@ export function PerBandChart({
       </svg>
     </div>
   );
+
+  return estimateCompleteness && hasEstimateGap(estimateCompleteness) ? (
+    <div className="space-y-1">
+      {chart}
+      <span className={`inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(estimateCompleteness)}`}>
+        {estimateCompleteness.label}
+      </span>
+    </div>
+  ) : chart;
 }
 
 export function fmtLarge(n: MaybeNumber): string {
