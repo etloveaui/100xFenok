@@ -60,6 +60,7 @@ interface EtfSnapshotDoc {
 
 type EtfAumFilter = "전체" | "1,000억 달러 이상" | "100억 달러 이상" | "10억 달러 이상" | "10억 달러 미만" | "운용자산 미표시";
 type EtfExpenseFilter = "전체" | "0.05% 이하" | "0.10% 이하" | "0.50% 이하" | "1.00% 이상" | "보수 미표시";
+type EtfSegmentFilter = "전체" | "신규" | "레버리지" | "단일종목 레버리지" | "인버스";
 
 const ETF_AUM_PARAM: Record<EtfAumFilter, string | null> = {
   "전체": null,
@@ -210,12 +211,9 @@ export default function EtfUniverseCard({
   }, []);
 
   useEffect(() => {
-    setTypeFilter(initialTypeFilter);
-  }, [initialTypeFilter]);
-
-  useEffect(() => {
     setNewOnly(initialNewOnly);
-  }, [initialNewOnly]);
+    setTypeFilter(initialNewOnly ? "전체" : initialTypeFilter);
+  }, [initialNewOnly, initialTypeFilter]);
 
   useEffect(() => {
     setAssetClassFilter(initialAssetClassFilter);
@@ -336,6 +334,7 @@ export default function EtfUniverseCard({
       .filter((row) => matchesExpenseFilter(row, expenseFilter))
       .filter((row) => !newOnly || row.is_new === true)
       .filter((row) => {
+        if (newOnly) return true;
         if (typeFilter === "레버리지") return isLeveragedEtf(row);
         if (typeFilter === "단일종목 레버리지") return isSingleStockLeveragedEtf(row);
         if (typeFilter === "인버스") return isInverseEtf(row);
@@ -361,12 +360,14 @@ export default function EtfUniverseCard({
   const visibleRows = filteredRows.slice(0, visibleCount);
   const hasMoreRows = enableLoadMore && filteredRows.length > visibleRows.length;
   const topCategory = categories[0];
-  const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number | null }> = [
+  const segmentOptions: Array<{ value: EtfSegmentFilter; label: string; count: number | null }> = [
     { value: "전체", label: "전체", count: total },
+    { value: "신규", label: "신규", count: newCount },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
-    { value: "단일종목 레버리지", label: "단일종목 레버리지", count: typeCounts.singleStock },
+    { value: "단일종목 레버리지", label: "단일종목", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
   ];
+  const activeSegment: EtfSegmentFilter = newOnly ? "신규" : typeFilter;
 
   const syncFilterParams = (next: {
     typeFilter?: EtfTypeFilter;
@@ -385,7 +386,7 @@ export default function EtfUniverseCard({
     const nextExpense = next.expenseFilter ?? expenseFilter;
     const nextUrl = new URL(window.location.href);
     const param = ETF_TYPE_PARAM[nextFilter];
-    if (param) nextUrl.searchParams.set("type", param);
+    if (!nextNewOnly && param) nextUrl.searchParams.set("type", param);
     else nextUrl.searchParams.delete("type");
     if (nextNewOnly) nextUrl.searchParams.set("new", "1");
     else nextUrl.searchParams.delete("new");
@@ -402,15 +403,17 @@ export default function EtfUniverseCard({
     window.history.replaceState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
   };
 
-  const handleTypeFilterChange = (nextFilter: EtfTypeFilter) => {
+  const handleSegmentChange = (nextSegment: EtfSegmentFilter) => {
+    if (nextSegment === "신규") {
+      setNewOnly(true);
+      setTypeFilter("전체");
+      syncFilterParams({ newOnly: true, typeFilter: "전체" });
+      return;
+    }
+    const nextFilter = nextSegment as EtfTypeFilter;
+    setNewOnly(false);
     setTypeFilter(nextFilter);
-    syncFilterParams({ typeFilter: nextFilter });
-  };
-
-  const handleNewOnlyChange = () => {
-    const nextNewOnly = !newOnly;
-    setNewOnly(nextNewOnly);
-    syncFilterParams({ newOnly: nextNewOnly });
+    syncFilterParams({ newOnly: false, typeFilter: nextFilter });
   };
 
   return (
@@ -502,14 +505,14 @@ export default function EtfUniverseCard({
             ))}
           </select>
         </div>
-        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="ETF 유형">
-          {typeOptions.map((option) => {
-            const selected = typeFilter === option.value;
+        <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label="ETF 세그먼트">
+          {segmentOptions.map((option) => {
+            const selected = activeSegment === option.value;
             return (
               <button
                 key={option.value}
                 type="button"
-                onClick={() => handleTypeFilterChange(option.value)}
+                onClick={() => handleSegmentChange(option.value)}
                 aria-pressed={selected}
                 className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
                   selected
@@ -522,19 +525,11 @@ export default function EtfUniverseCard({
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={handleNewOnlyChange}
-            aria-pressed={newOnly}
-            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
-              newOnly
-                ? "border-[var(--c-up)] bg-[var(--c-up)] text-white shadow-sm"
-                : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-up)] hover:text-[var(--c-up)]"
-            }`}
-          >
-            <span>신규 상장</span>
-            <span className={newOnly ? "text-white/80" : "text-[var(--c-ink-4)]"}>{formatNumber(newCount)}</span>
-          </button>
+          {newOnly ? (
+            <TransitionLink href="/etfs/new" className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive">
+              신규 ETF 상세
+            </TransitionLink>
+          ) : null}
         </div>
 
         {topCategory ? (

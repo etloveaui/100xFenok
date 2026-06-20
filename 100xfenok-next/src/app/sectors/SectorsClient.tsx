@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import TransitionLink from "@/components/TransitionLink";
 import { useSectorData } from "@/hooks/useSectorData";
@@ -721,6 +722,8 @@ export default function SectorsClient() {
       <div className={mobilePanelClass(mobileView === "guru")}>
         <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
       </div>
+
+      <IndustryMapPanel />
 
     </div>
   );

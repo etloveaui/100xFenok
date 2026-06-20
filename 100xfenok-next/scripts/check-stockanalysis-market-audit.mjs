@@ -33,6 +33,7 @@ const ACTIVE_ROUTE_PREFIXES = [
   "/api/data/stockanalysis",
   "/etfs",
   "/market/events",
+  "/sectors",
   "/stock/[ticker]",
 ];
 

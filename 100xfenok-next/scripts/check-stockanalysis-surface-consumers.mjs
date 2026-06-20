@@ -9,6 +9,7 @@ const SOURCE_CONSUMERS_PATH = `${ROOT}/../data/stockanalysis/surface_consumers.j
 
 const CODE_FILES = [
   `${ROOT}/src/app/market/events/MarketEventsClient.tsx`,
+  `${ROOT}/src/app/sectors/IndustryMapPanel.tsx`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-universe/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-snapshot/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`,
@@ -58,6 +59,18 @@ const ROUTE_CONTRACTS = {
       "src/app/market/events/page.tsx",
       "src/app/market/events/MarketEventsClient.tsx",
       "src/app/api/data/stockanalysis/surfaces/[surface]/route.ts",
+    ],
+  },
+  "/sectors": {
+    files: [
+      "src/app/sectors/page.tsx",
+      "src/app/sectors/SectorsClient.tsx",
+      "src/app/sectors/IndustryMapPanel.tsx",
+      "src/app/api/data/stockanalysis/surfaces/[surface]/route.ts",
+    ],
+    contains: [
+      ["src/app/sectors/SectorsClient.tsx", "IndustryMapPanel"],
+      ["src/app/sectors/IndustryMapPanel.tsx", "industries_all"],
     ],
   },
   "/stock/[ticker]": {
@@ -157,6 +170,7 @@ for (const surface of referencedByCode) {
 }
 
 if (!routeContractsChecked.has("/market/events")) errors.push("surface consumer contracts must include /market/events");
+if (!routeContractsChecked.has("/sectors")) errors.push("surface consumer contracts must include /sectors");
 if (!routeContractsChecked.has("/stock/[ticker]")) errors.push("surface consumer contracts must include /stock/[ticker]");
 
 if (errors.length > 0) fail(errors);

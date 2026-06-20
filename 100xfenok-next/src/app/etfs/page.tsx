@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
-import TransitionLink from "@/components/TransitionLink";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
 import type { EtfTypeFilter } from "../explore/etfUniverseUtils";
 import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
@@ -49,9 +48,6 @@ export default async function EtfsPage({ searchParams }: Props) {
               <p className="data-shell-desc">
                 ETF 목록, 신규 상장, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
               </p>
-            </div>
-            <div className="data-shell-head-actions">
-              <TransitionLink href="/etfs/new" className="data-shell-pill ok"><span />신규 상장</TransitionLink>
             </div>
           </div>
         </section>

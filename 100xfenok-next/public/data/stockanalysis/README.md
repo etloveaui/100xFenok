@@ -50,11 +50,11 @@ period-count sentinels. Those statements are preserved as cross-check
 candidates and must not override Yahoo/current or future SEC EDGAR financial
 statement SSOTs.
 
-The `/market/events` industry tab consumes `industries_all`,
-`sector_technology`, and `industry_semiconductors` directly. The
-`qa:stockanalysis` route smoke verifies that those surfaces still contain enough
-rows and the fields required by the industry map, sort/filter controls, and CSV
-export.
+The `/sectors` industry map consumes `industries_all`, `sector_technology`,
+and `industry_semiconductors` directly. `/market/events` now links to that owner
+instead of carrying a second industry tab. The `qa:stockanalysis` route smoke
+verifies that those surfaces still contain enough rows and the fields required
+by the industry map, sort/filter controls, and CSV export.
 
 The ETF snapshot API enriches the `new_etfs` rows with classification joined
 from `etf_screener` or `etf_universe` by ticker. New ETF filtering should prefer

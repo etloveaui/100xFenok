@@ -8,7 +8,7 @@ interface Props {
 
 export const metadata: Metadata = {
   title: "시장 이벤트 | 100xFenok",
-  description: "어닝, 기업 이벤트, IPO, 산업 흐름, 급등락 데이터를 한곳에서 확인합니다.",
+  description: "어닝, 기업 이벤트, IPO, 급등락 데이터를 한곳에서 확인합니다.",
 };
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -29,9 +29,6 @@ export default async function MarketEventsPage({ searchParams }: Props) {
           initialFrom={firstParam(params.from)}
           initialTo={firstParam(params.to)}
           initialSort={firstParam(params.sort)}
-          initialIndustryQuery={firstParam(params.industry_q)}
-          initialIndustryTrend={firstParam(params.industry_trend)}
-          initialIndustrySort={firstParam(params.industry_sort)}
         />
       </AppShell>
     </div>
