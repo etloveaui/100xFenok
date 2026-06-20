@@ -34,6 +34,9 @@ interface EtfUniverseDoc {
   screener_fetched_at?: string | null;
   counts?: {
     records?: number | null;
+    etf_universe?: number | null;
+    etf_screener?: number | null;
+    screener_only?: number | null;
   } | null;
   records?: EtfUniverseRecord[];
 }
@@ -332,18 +335,6 @@ export default function EtfUniverseCard({
       .map(([name, count]) => ({ name, count }));
   }, [rows]);
 
-  const typeCounts = useMemo(() => {
-    let leveraged = 0;
-    let singleStock = 0;
-    let inverse = 0;
-    for (const row of rows) {
-      if (isLeveragedEtf(row)) leveraged += 1;
-      if (isSingleStockLeveragedEtf(row)) singleStock += 1;
-      if (isInverseEtf(row)) inverse += 1;
-    }
-    return { leveraged, singleStock, inverse };
-  }, [rows]);
-
   const digitalTickerSet = useMemo(() => {
     const tickers = new Set<string>();
     for (const row of snapshot?.bitcoin?.records ?? []) {
@@ -354,14 +345,30 @@ export default function EtfUniverseCard({
     return tickers;
   }, [snapshot]);
 
-  const filteredRows = useMemo(() => {
-    const q = debouncedQuery.trim().toUpperCase();
+  const dropdownFilteredRows = useMemo(() => {
     return rows
       .filter((row) => category === "전체" || row.category === category)
       .filter((row) => assetClassFilter === "전체" || cleanCategory(row.assetClass) === assetClassFilter)
       .filter((row) => issuerFilter === "전체" || issuerNameFromEtfName(row.issuer ?? row.name ?? row.ticker) === issuerFilter)
       .filter((row) => matchesAumFilter(row.aum, aumFilter))
-      .filter((row) => matchesExpenseFilter(row, expenseFilter))
+      .filter((row) => matchesExpenseFilter(row, expenseFilter));
+  }, [assetClassFilter, aumFilter, category, expenseFilter, issuerFilter, rows]);
+
+  const typeCounts = useMemo(() => {
+    let leveraged = 0;
+    let singleStock = 0;
+    let inverse = 0;
+    for (const row of dropdownFilteredRows) {
+      if (isLeveragedEtf(row)) leveraged += 1;
+      if (isSingleStockLeveragedEtf(row)) singleStock += 1;
+      if (isInverseEtf(row)) inverse += 1;
+    }
+    return { leveraged, singleStock, inverse };
+  }, [dropdownFilteredRows]);
+
+  const filteredRows = useMemo(() => {
+    const q = debouncedQuery.trim().toUpperCase();
+    return dropdownFilteredRows
       .filter((row) => !newOnly || row.is_new === true)
       .filter((row) => !digitalOnly || digitalTickerSet.has((row.ticker ?? "").toUpperCase()))
       .filter((row) => {
@@ -381,12 +388,13 @@ export default function EtfUniverseCard({
         }
         return (b.aum ?? -1) - (a.aum ?? -1);
       });
-  }, [assetClassFilter, aumFilter, category, debouncedQuery, digitalOnly, digitalTickerSet, expenseFilter, issuerFilter, newOnly, rows, typeFilter]);
+  }, [debouncedQuery, digitalOnly, digitalTickerSet, dropdownFilteredRows, newOnly, typeFilter]);
 
-  const total = doc?.counts?.records ?? rows.length;
-  const newCount = snapshot?.newEtfs?.counts?.records ?? snapshot?.newEtfs?.counts?.rows ?? (snapshot?.newEtfs?.records ?? []).length;
-  const digitalCount = snapshot?.bitcoin?.counts?.records ?? snapshot?.bitcoin?.counts?.rows ?? ((snapshot?.bitcoin?.records ?? []).length || digitalTickerSet.size);
-  const displayTotal = digitalOnly ? digitalCount : newOnly ? newCount : total;
+  const total = dropdownFilteredRows.length;
+  const newCount = dropdownFilteredRows.filter((row) => row.is_new === true).length;
+  const digitalCount = dropdownFilteredRows.filter((row) => digitalTickerSet.has((row.ticker ?? "").toUpperCase())).length;
+  const displayTotal = filteredRows.length;
+  const screenerOnlyCount = doc?.counts?.screener_only ?? 0;
   const visibleLimit = newOnly || digitalOnly ? Math.max(limit, 100) : limit;
   const filterKey = `${debouncedQuery.trim()}|${category}|${assetClassFilter}|${issuerFilter}|${aumFilter}|${expenseFilter}|${typeFilter}|${newOnly ? "new" : digitalOnly ? "digital" : "all"}|${visibleLimit}`;
   const visibleCount = enableLoadMore && expanded.key === filterKey
@@ -394,7 +402,16 @@ export default function EtfUniverseCard({
     : visibleLimit;
   const visibleRows = filteredRows.slice(0, visibleCount);
   const hasMoreRows = enableLoadMore && filteredRows.length > visibleRows.length;
-  const topCategory = categories[0];
+  const currentTopCategory = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of dropdownFilteredRows) {
+      const categoryName = cleanCategory(row.category);
+      counts.set(categoryName, (counts.get(categoryName) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({ name, count }))[0] ?? null;
+  }, [dropdownFilteredRows]);
   const segmentOptions: Array<{ value: EtfSegmentFilter; label: string; count: number | null }> = [
     { value: "전체", label: "전체", count: total },
     { value: "신규", label: "신규", count: newCount },
@@ -581,13 +598,19 @@ export default function EtfUniverseCard({
           ) : null}
         </div>
 
-        {topCategory ? (
+        {currentTopCategory ? (
           <div className="mt-3 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
-            가장 많은 분류 <span className="text-[var(--c-ink)]">{topCategory.name}</span> · {formatNumber(topCategory.count)}개
+            현재 조건에서 가장 많은 분류 <span className="text-[var(--c-ink)]">{currentTopCategory.name}</span> · {formatNumber(currentTopCategory.count)}개
             {assetClassFilter !== "전체" ? <span> · 자산군 {assetClassFilter}</span> : null}
             {issuerFilter !== "전체" ? <span> · 운용사 {issuerFilter}</span> : null}
             {aumFilter !== "전체" ? <span> · 운용자산 {aumFilter}</span> : null}
             {expenseFilter !== "전체" ? <span> · 보수율 {expenseFilter}</span> : null}
+          </div>
+        ) : null}
+        {screenerOnlyCount > 0 ? (
+          <div className="mt-2 rounded-xl border border-[var(--c-line)] bg-white px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
+            전체 ETF 목록과 스크리너 데이터를 합쳐 보여줍니다. 세부 데이터가 아직 없는 ETF는 기본 정보부터 먼저 표시됩니다.
+            <span className="text-[var(--c-ink)]"> 스크리너에서만 확인된 항목 {formatNumber(screenerOnlyCount)}개 포함.</span>
           </div>
         ) : null}
       </div>
