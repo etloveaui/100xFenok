@@ -9,20 +9,20 @@
 
 ## Cross-cutting finding (both sides agree)
 
-**Core stock/ETF *current* surfaces are data-rich (88–100% on price/valuation/estimate fields); filings and auxiliary sources are NOT yet broad** (filings = NVDA 1-file pilot; StockAnalysis stock/financials 40/1066; SlickCharts stock intersection 418/1066). So for the rich surfaces the problem is **expression / interpretation / exposure**, not data scarcity, and most fixes there are **S-tier and $0**. Filings/aux need actual data breadth work (still mostly $0 via free SEC API, but integration effort, not a UI tweak). [corrected per Codex fh-107]
+**Core stock/ETF *current* surfaces are data-rich (88–100% on price/valuation/estimate fields); filings are now phase-1 broadened but summaries are still sparse** (filings phase-1 = 50 tickers / 600 SEC rows, Korean summary ready = NVDA 1-file pilot; StockAnalysis stock/financials 40/1066; SlickCharts stock intersection 418/1066). So for the rich surfaces the problem is **expression / interpretation / exposure**, not data scarcity, and most fixes there are **S-tier and $0**. Filings/aux need actual data breadth work (still mostly $0 via free SEC API, but integration effort, not a UI tweak). [corrected per Codex fh-107; F1 phase-1 per fh-133]
 
 ---
 
 ## Surface 1 — Stock filings (공시)
 
-**Measured**: index.json = 1 ticker (NVDA); 1 filing (10-K 2026-02-25); summary 1/1, translation 0/1; sections item_1a+item_7, item_1 missing (partial). App makes **0 direct SEC API calls**. No manifest generator (only `qa:edgar-summaries` validator). Free external asset exists but unwired: `feno-edgar` skill → `Asset_Allocator/scripts/edgar/edgar_client.py` `fetch_submissions()` (data.sec.gov, no key, 2req/s) + ~21GB EDGAR cache (~5,769 issuers).
+**Measured**: F1 phase-1 now writes `index.json` = 50 tickers and 600 SEC filing rows (latest 12 each; 10-K/10-Q/8-K/20-F/6-K). NVDA 10-K 2026-02-25 remains the only Korean summary-ready row; translation 0/1; sections item_1a+item_7, item_1 missing (partial). App makes **0 direct SEC API calls**. Generator + weekly/manual workflow now exist; `qa:edgar-summaries` validates ready summary artifacts while skipping pending rows. Free external asset still exists for deeper summary work: `feno-edgar` skill → `Asset_Allocator/scripts/edgar/edgar_client.py` `fetch_submissions()` (data.sec.gov, no key, 2req/s) + ~21GB EDGAR cache (~5,769 issuers).
 
-**Gaps**: NVDA-only demo; no real filing list/timeline (10-K/10-Q/8-K by form/date); non-covered tickers dead-end (tab hidden); 번역 0; no auto-generate pipeline.
+**Gaps**: phase-1 is 50-ticker small batch, not full universe yet; Korean summary remains NVDA-only; 번역 0; no auto-summary generation pipeline; full-universe run is data-ops after live phase-1 verification.
 
 **Divergence**: Claude rated the "all-ticker timeline" **S** (edgar_client.py already has `fetch_submissions`/`resolve_cik`); Codex rated it **M** (needs build-pipeline wiring into Next). Both agree **$0**.
 
 **Slices**:
-- F1 (**M for production**, S only for a single-ticker raw-SEC prototype, $0) — all-ticker filing timeline: build-time cron writes `by-ticker/{ticker}.json` rows from SEC submissions (form/date/accession/doc URL), `summaryPath=null` where no summary. UI already supports summary-optional rows → renders 원문-only + "요약 준비중". Gate the 공시 tab open for any stock (StockDetailClient.tsx:884). Production integration (Next build artifact wiring, ticker→CIK coverage, manifest generator, QA, tab-open logic) = M; feno-edgar lowers acquisition risk but does not remove the integration work. [Codex fh-107]
+- F1 (**M for production**, S only for a single-ticker raw-SEC prototype, $0) — ✅ phase-1 landed: `scripts/build-edgar-filing-timeline.mjs` writes by-ticker SEC filing timelines, preserves existing ready summary rows by accession, and adds `summaryPath=null` pending rows for 원문-only display. `.github/workflows/fetch-edgar-filings.yml` runs weekly/manual with small-batch default, `plan_only`, `full_universe`, and rebase retry. Gate: 50 tickers / 600 filings, NVDA ready row preserved, pending rows all have `sourceUrl`, `qa:edgar-summaries` PASS. Full universe = phase-2 data-ops only after phase-1 live verification. [Codex fh-107; Claude gate fh-133]
 - F2 (M, $-LLM) — summary auto-gen pipeline (feno-edgar extract → free LLM → artifact + manifest → qa gate). Free pool only.
 - F3 (L, $$-LLM) — full-text translation. Lowest ROI, last.
 
@@ -103,7 +103,7 @@
 |------|-------|-----|--------|------|
 | **P0** | E1 digital 20→78 | both flagged; **data-loss bug**, wrong count (provider cap = separate E1b/M) | S | $0 |
 | **P0** | S1 metric glossary/help | **owner's literal complaint**; UI has zero today | S | $0 |
-| **P1** | F1 all-ticker filing timeline | NVDA-demo → real utility; free SEC API | S–M | $0 |
+| **P1** | F1 filing timeline phase-1 landed; full-universe data-ops next | NVDA-demo → 50-ticker filing utility; free SEC API | M | $0 |
 | **P1** | S2 landed; S3 estimate interpretation next | turns dense numbers into reads; fixes YF +1y-only mismatch | S+M | $0 |
 | **P1** | E2/E3 honest detail copy + label fix | correctness/clarity | S | $0 |
 | **P2** | M1 + M2 nav contrast + bidirectional cue | high UX leverage, tiny | S | $0 |
