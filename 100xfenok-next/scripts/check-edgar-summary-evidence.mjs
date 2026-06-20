@@ -10,7 +10,7 @@ const INDEX_PATH = `${PUBLIC_ROOT}/index.json`;
 const SOURCE_INDEX_PATH = `${SOURCE_ROOT}/index.json`;
 const SUMMARY_SECTIONS = ["keyPoints", "riskChanges", "businessChanges", "financialHighlights", "watchItems"];
 const SUMMARY_STANCES = new Set(["fact", "management_claim", "feno_interpretation"]);
-const MAX_EVIDENCE_DIGEST_CHARS = 500;
+const MAX_EVIDENCE_DIGEST_CHARS = 1000;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
