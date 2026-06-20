@@ -96,6 +96,8 @@ async function checkEtfSnapshot(root) {
   const newEtfRecords = payload?.newEtfs?.records ?? [];
   const classifiedNewEtfs = newEtfRecords.filter((row) => row?.classification);
   const adiuNewEtf = newEtfRecords.find((row) => row?.s === "ADIU");
+  const bitcoinSourceTotal = payload?.bitcoin?.counts?.rows ?? payload?.bitcoin?.counts?.records;
+  const expectedBitcoinPreview = typeof bitcoinSourceTotal === "number" ? Math.min(bitcoinSourceTotal, 100) : null;
   const counts = {
     newEtfs: newEtfRecords.length,
     screener: payload?.screener?.records?.length ?? 0,
@@ -111,7 +113,8 @@ async function checkEtfSnapshot(root) {
   assert(counts.screenerChange === 5, `screener change leaders expected 5, got ${counts.screenerChange}`);
   assert(counts.blackrock === 20, `blackrock expected 20, got ${counts.blackrock}`);
   assert(counts.proshares === 20, `proshares expected 20, got ${counts.proshares}`);
-  assert(counts.bitcoin === 20, `bitcoin expected 20, got ${counts.bitcoin}`);
+  assert(typeof expectedBitcoinPreview === "number", "bitcoin source count missing");
+  assert(counts.bitcoin === expectedBitcoinPreview, `bitcoin expected ${expectedBitcoinPreview} of ${bitcoinSourceTotal}, got ${counts.bitcoin}`);
   assert(classifiedNewEtfs.length > 0, "new ETF snapshot must include joined classification rows");
   if (adiuNewEtf) {
     assert(adiuNewEtf.classification?.is_leveraged === true, "ADIU new ETF snapshot leveraged classification missing");
