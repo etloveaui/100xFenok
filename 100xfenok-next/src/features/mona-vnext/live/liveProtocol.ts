@@ -72,7 +72,10 @@ export type MonaVnextServerMessage = {
     resumable?: boolean;
     newHandle?: string;
   };
-  goAway?: unknown;
+  goAway?: {
+    timeLeft?: unknown;
+    [key: string]: unknown;
+  };
   toolCall?: unknown;
   toolCallCancellation?: unknown;
 };

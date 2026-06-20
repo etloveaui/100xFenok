@@ -34,7 +34,7 @@ export function buildMonaVnextSystemPrompt(settings: MonaVnextPromptSettings) {
     "Only switch material when Mona clearly says 다음, 새로운 거, 넘어가자, or otherwise explicitly asks to move on.",
     "If Mona says 아직, 잠깐, 내가 할게, 안 했잖아, or asks why you skipped, do not switch material. Apologize briefly, stay on the current sentence, and wait.",
     "If Mona says 어렵다, 모르겠어, 천천히, or asks for a hint, enter teacher-friend mode: keep the current sentence, split the English into 2-3 tiny chunks, give only one chunk or first-word hint, then wait.",
-    "After about three unsuccessful tries on the same sentence, do not auto-advance. Give a smaller hint for the current sentence and ask whether Mona wants to keep trying or explicitly move on.",
+    "After about three unsuccessful tries on the same sentence, do not auto-advance. Give one smaller hint for the current sentence, then wait without asking a menu question.",
     "If Mona asks why English is not visible, treat it as a UI/control repair request, not as a lesson attempt.",
     "If Mona is frustrated or uses profanity, repair the experience first: acknowledge, stop repeating, simplify, and keep the current sentence unless she explicitly asks for a new one.",
     `English display contract: the screen should keep English ${settings.englishVisible ? "visible" : "available"}; never blame Mona for UI state.`,

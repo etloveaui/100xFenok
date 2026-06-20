@@ -10,10 +10,12 @@ type WindDownTheme = "light" | "dark";
 
 type Props = {
   phase: WindDownPhase;
+  modeLabel?: string;
   message: string;
   card: ExpressionCard | null;
   coachLine: string | null;
   errorText: string | null;
+  answerVisible?: boolean;
   voiceName: string;
   vadPreset: string;
   onVoiceChange: (voice: string) => void;
@@ -21,6 +23,8 @@ type Props = {
   settingsSlot?: ReactNode;
   onStart: () => void;
   onStop: () => void;
+  onRevealAnswer?: () => void;
+  onNext?: () => void;
 };
 
 const THEME_STORAGE_KEY = "winddown-theme";
@@ -99,10 +103,10 @@ function studyPlanLine(): string {
 }
 
 export default function MonaWindDown({
-  phase, message, card, coachLine, errorText,
+  phase, modeLabel = "vNext", message, card, coachLine, errorText, answerVisible = false,
   voiceName, vadPreset, onVoiceChange, onVadChange,
   settingsSlot,
-  onStart, onStop,
+  onStart, onStop, onRevealAnswer, onNext,
 }: Props) {
   const [theme, setTheme] = useState<WindDownTheme>(() => {
     if (typeof window === "undefined") return "light";
@@ -167,6 +171,7 @@ export default function MonaWindDown({
   const live = phase === "live";
   const busy = phase === "connecting" || phase === "boot";
   const activeFlowStep = cardFlowStep(card);
+  const controlDisabled = !card || !live || busy || !onRevealAnswer || !onNext;
 
   const buttonLabel = phase === "live"
     ? "듣고 있어 · 누르면 마침"
@@ -193,7 +198,12 @@ export default function MonaWindDown({
           <p className="font-[family-name:var(--font-wd-serif)] text-[26px] font-medium tracking-tight">
             Wind-Down
           </p>
-          <p className="mt-1 text-[13px] font-medium tracking-[0.08em] text-[var(--wd-muted)]">{planLine}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-[13px] font-medium tracking-[0.08em] text-[var(--wd-muted)]">{planLine}</p>
+            <span className="rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-2 py-0.5 text-[11px] font-semibold text-[var(--wd-accent)]">
+              {modeLabel}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -313,6 +323,27 @@ export default function MonaWindDown({
         <p className="min-h-[44px] max-w-[400px] px-2 text-center text-[14px] leading-relaxed text-[var(--wd-muted)]">
           {errorText ?? coachLine ?? message}
         </p>
+
+        {card ? (
+          <div className="wd-enter grid w-full max-w-[420px] grid-cols-2 gap-3" style={{ animationDelay: "180ms" }}>
+            <button
+              type="button"
+              onClick={onRevealAnswer}
+              disabled={controlDisabled}
+              className="min-h-12 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-card)] px-3 text-[14px] font-semibold text-[var(--wd-ink)] shadow-sm transition active:scale-[0.98] disabled:opacity-45"
+            >
+              {answerVisible ? "정답 다시 보기" : "정답 보기"}
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={controlDisabled}
+              className="min-h-12 rounded-2xl bg-[var(--wd-accent)] px-3 text-[14px] font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-45"
+            >
+              다음
+            </button>
+          </div>
+        ) : null}
       </main>
 
       <footer className="relative flex flex-col items-center gap-3 px-6 pb-[max(env(safe-area-inset-bottom),24px)]">

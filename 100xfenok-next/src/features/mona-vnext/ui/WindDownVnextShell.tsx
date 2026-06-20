@@ -24,9 +24,12 @@ type Props = {
   events: MonaVnextLogEvent[];
   lastPersistedFile: string | null;
   persistenceError: string | null;
+  modeLabel: string;
   onStart: () => void;
   onStop: () => void;
   onSendStart: () => void;
+  onRevealAnswer: () => void;
+  onNext: () => void;
 };
 
 const STATUS_LABEL: Record<MonaVnextLiveStatus, string> = {
@@ -55,9 +58,12 @@ export function WindDownVnextShell({
   events,
   lastPersistedFile,
   persistenceError,
+  modeLabel,
   onStart,
   onStop,
   onSendStart,
+  onRevealAnswer,
+  onNext,
 }: Props) {
   const latestTurns = transcriptState.turns.slice(-3);
   const latestEvents = events.slice(-4);
@@ -70,9 +76,14 @@ export function WindDownVnextShell({
             <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#857b8d]">Mona vNext</p>
             <h1 className="mt-2 text-[26px] font-semibold leading-tight">격리 음성 테스트</h1>
           </div>
-          <span className="rounded-full border border-[#dfd4c4] bg-white/80 px-3 py-1 text-[12px] font-semibold text-[#7d6f85]">
-            {STATUS_LABEL[status]}
-          </span>
+          <div className="flex flex-col items-end gap-2">
+            <span className="rounded-full border border-[#dfd4c4] bg-white/80 px-3 py-1 text-[12px] font-semibold text-[#7d6f85]">
+              {STATUS_LABEL[status]}
+            </span>
+            <span className="rounded-full border border-[#dfd4c4] bg-white/70 px-3 py-1 text-[12px] font-semibold text-[#6d5d8f]">
+              {modeLabel}
+            </span>
+          </div>
         </header>
 
         <div className="flex flex-1 flex-col justify-center gap-4 py-6">
@@ -111,6 +122,13 @@ export function WindDownVnextShell({
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">input Hz</p>
                 <p className="mt-1 font-semibold text-[#2f2b33]">{metrics.inputSampleRate ?? "-"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#857b8d]">reconnects</p>
+                <p className="mt-1 font-semibold text-[#2f2b33]">
+                  {metrics.reconnectCount}
+                  {metrics.lastReconnectMs === null ? "" : ` · ${metrics.lastReconnectMs}ms`}
+                </p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
@@ -179,9 +197,12 @@ export function WindDownVnextShell({
 
         <SessionControls
           status={status}
+          answerVisible={lessonState.englishVisible}
           onStart={onStart}
           onStop={onStop}
           onSendStart={onSendStart}
+          onRevealAnswer={onRevealAnswer}
+          onNext={onNext}
         />
       </section>
     </main>

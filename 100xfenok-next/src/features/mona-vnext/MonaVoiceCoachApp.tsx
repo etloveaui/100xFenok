@@ -6,6 +6,8 @@ import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
 import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 import {
   createInitialLessonState,
+  pickNextExpression,
+  recordPromptExposure,
   type MonaVnextLessonState,
   type MonaVnextSessionExpressionBank,
 } from "@/features/mona-vnext/coach/coachPolicy";
@@ -65,7 +67,7 @@ type PersistResult = {
   error?: unknown;
 };
 
-type FinalizeReason = "manual-stop" | "strict-stop";
+type FinalizeReason = "manual-stop" | "strict-stop" | "reconnect-failed" | "pagehide";
 
 type FinalizeOptions = {
   reason: FinalizeReason;
@@ -97,6 +99,13 @@ function buildWindDownMessage(status: ReturnType<typeof useGeminiLiveSession>["s
   if (status === "stopped") return "저장까지 마쳤어. 다시 시작해도 돼.";
   if (status === "blocked" || status === "error") return "지금은 시작할 수 없어. 설정이나 권한을 확인해야 해.";
   return "마이크를 켜면 오늘 문장부터 바로 시작할게.";
+}
+
+function buildFinalEventMessage(reason: FinalizeReason) {
+  if (reason === "strict-stop") return "Mona vNext session finalized by strict stop phrase.";
+  if (reason === "reconnect-failed") return "Mona vNext session finalized after reconnect failure.";
+  if (reason === "pagehide") return "Mona vNext session finalized by pagehide.";
+  return "Mona vNext session finalized by owner/dev control.";
 }
 
 function isWindDownSettingsLocked(status: ReturnType<typeof useGeminiLiveSession>["status"]) {
@@ -312,7 +321,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     if (evaluation.pedagogyAction === "intervene") {
       return [
         ...base,
-        `반복 한계에 닿았다. 자동으로 넘기지 말고 "${firstHint}" 힌트만 주고, 계속할지 다음으로 갈지 모나가 직접 말하게 해.`,
+        `반복 한계에 닿았다. 자동으로 넘기지 말고 "${firstHint}" 힌트만 아주 짧게 주고 기다려. 계속할지 다음으로 갈지 묻지 마.`,
       ].join(" ");
     }
     return [
@@ -418,6 +427,16 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       });
     },
     onEvent: bufferEvent,
+    onRecoverFailed: (reason) => {
+      bufferEvent({
+        type: "session-reconnect-failed",
+        message: reason,
+        atIso: new Date().toISOString(),
+      });
+      queueMicrotask(() => {
+        finalizeSessionRef.current({ reason: "reconnect-failed" });
+      });
+    },
     onServerContent: (serverContent) => {
       setTranscriptState((current) => {
         const result = applyMonaVnextServerContent(current, serverContent);
@@ -510,9 +529,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     live.stop("stopped");
     const finalEvent: MonaVnextLogEvent = {
       type: "session-finalized",
-      message: reason === "strict-stop"
-        ? "Mona vNext session finalized by strict stop phrase."
-        : "Mona vNext session finalized by owner/dev control.",
+      message: buildFinalEventMessage(reason),
       atIso: stoppedAt,
       detail: { reason },
     };
@@ -547,9 +564,81 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     finalizeSessionRef.current = finalizeSession;
   }, [finalizeSession]);
 
+  useEffect(() => {
+    const handlePageHide = () => {
+      if (!sessionRef.current || sessionFinalizedRef.current) return;
+      finalizeSessionRef.current({ reason: "pagehide" });
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, []);
+
   const stopSession = useCallback(() => {
     finalizeSession({ reason: "manual-stop" });
   }, [finalizeSession]);
+
+  const revealAnswer = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || sessionFinalizedRef.current) return;
+    const currentLesson = lessonStateRef.current;
+    const nextLesson: MonaVnextLessonState = {
+      ...currentLesson,
+      englishVisible: true,
+      expression: {
+        ...currentLesson.expression,
+        state: "reveal",
+      },
+    };
+    lessonStateRef.current = nextLesson;
+    setLessonState(nextLesson);
+    bufferEvent({
+      type: "manual-answer-reveal",
+      message: "Mona vNext answer reveal button pressed.",
+      atIso: new Date().toISOString(),
+      detail: {
+        promptId: currentLesson.expression.id,
+        englishVisible: true,
+      },
+    });
+    sendControlTextRef.current([
+      "정답은 화면에 보여줬어.",
+      `자연스러운 영어는 "${currentLesson.expression.en}"야.`,
+      "짧게 한 번 따라 말하게 도와줘.",
+    ].join(" "));
+  }, [bufferEvent]);
+
+  const advanceLesson = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || sessionFinalizedRef.current) return;
+    const currentLesson = lessonStateRef.current;
+    const nextExpression = pickNextExpression(
+      currentLesson.expression.id,
+      currentLesson.promptHistory,
+      currentLesson.expressionBank,
+    );
+    const nextLesson = recordPromptExposure({
+      ...currentLesson,
+      englishVisible: surface === "winddown" ? PRODUCT_INITIAL_ENGLISH_VISIBLE : currentLesson.englishVisible,
+    }, {
+      ...nextExpression,
+      state: "prompt",
+    });
+    lessonStateRef.current = nextLesson;
+    setLessonState(nextLesson);
+    bufferEvent({
+      type: "manual-next",
+      message: "Mona vNext next button advanced prompt.",
+      atIso: new Date().toISOString(),
+      detail: {
+        promptId: currentLesson.expression.id,
+        nextPromptId: nextLesson.expression.id,
+        materialChanged: nextLesson.expression.id !== currentLesson.expression.id,
+      },
+    });
+    sendControlTextRef.current(buildNextLessonPrompt(nextLesson));
+  }, [bufferEvent, buildNextLessonPrompt, surface]);
 
   useEffect(() => {
     if (surface !== "winddown") return;
@@ -571,10 +660,12 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     return (
       <MonaWindDown
         phase={mapWindDownPhase(live.status)}
+        modeLabel="메인"
         message={buildWindDownMessage(live.status)}
         card={live.session ? windDownCard : null}
         coachLine={latestCoachLine}
         errorText={windDownError}
+        answerVisible={lessonState.englishVisible}
         voiceName={voiceName}
         vadPreset={vadPreset}
         onVoiceChange={setVoiceName}
@@ -582,6 +673,8 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         settingsSlot={<MonaVnextEntry locked={settingsLocked} />}
         onStart={live.start}
         onStop={stopSession}
+        onRevealAnswer={revealAnswer}
+        onNext={advanceLesson}
       />
     );
   }
@@ -602,9 +695,12 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       events={events}
       lastPersistedFile={persistenceState.lastPersistedFile}
       persistenceError={persistenceState.conversationSaveError}
+      modeLabel="실험판"
       onStart={live.start}
       onStop={stopSession}
       onSendStart={() => live.sendText("시작. 한 문장씩 천천히 해줘.")}
+      onRevealAnswer={revealAnswer}
+      onNext={advanceLesson}
     />
   );
 }
