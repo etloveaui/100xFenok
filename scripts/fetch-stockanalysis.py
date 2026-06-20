@@ -968,13 +968,9 @@ def choose_etf_classification(detail_classification: dict | None, row_classifica
     row = compact_etf_classification(row_classification) or row_classification
     if detail is None:
         return row
-    if etf_classification_has_signal(detail):
+    if etf_classification_has_signal(detail) or detail.get("confidence") == "high":
         return detail
-    if etf_classification_has_signal(row):
-        return row
-    if detail.get("confidence") == "high":
-        return detail
-    return detail
+    return row
 
 
 def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = None) -> dict:
@@ -1023,12 +1019,18 @@ def add_etf_classification(row: dict, detail_index: dict[str, dict] | None = Non
 
 def etf_classification_counts(records: list[dict]) -> dict:
     classified = sum(1 for row in records if isinstance(row.get("classification"), dict))
+    def flag(row: dict, key: str) -> bool:
+        classification = row.get("classification")
+        if isinstance(classification, dict):
+            return bool(classification.get(key))
+        return bool(row.get(key))
+
     return {
         "classified": classified,
         "coverage_pct": round((classified / len(records)) * 100, 2) if records else 0,
-        "leveraged": sum(1 for row in records if (row.get("classification") or {}).get("is_leveraged") or row.get("is_leveraged")),
-        "inverse": sum(1 for row in records if (row.get("classification") or {}).get("is_inverse") or row.get("is_inverse")),
-        "single_stock": sum(1 for row in records if (row.get("classification") or {}).get("is_single_stock") or row.get("is_single_stock")),
+        "leveraged": sum(1 for row in records if flag(row, "is_leveraged")),
+        "inverse": sum(1 for row in records if flag(row, "is_inverse")),
+        "single_stock": sum(1 for row in records if flag(row, "is_single_stock")),
     }
 
 

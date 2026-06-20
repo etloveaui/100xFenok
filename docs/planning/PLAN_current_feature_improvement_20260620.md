@@ -30,7 +30,7 @@
 
 ## Surface 2 — ETF segments + detail
 
-**Measured**: universe 5,280 / screener 5,347 (joined renderable 5,347). Field coverage: price 100%, aum 91.4%, volume 90.6%, holdings 96.3%, expense 97.5%, dividend 77.9%, performance 85.4% (tr1y 68%, cagr5y 35%). Detail: covered 5,265 (98.47%), primary 4,579 (full), YF fallback 686, **missing 82 (all external_quote_type_mismatch)**. Segment counts: leveraged ~692, single-stock ~283, inverse ~259/268 (regex drift), new 100 (capped), **digital 20**.
+**Measured**: universe 5,280 / screener 5,347 (joined renderable 5,347). Field coverage: price 100%, aum 91.4%, volume 90.6%, holdings 96.3%, expense 97.5%, dividend 77.9%, performance 85.4% (tr1y 68%, cagr5y 35%). Detail: covered 5,265 (98.47%), primary 4,579 (full), YF fallback 686, **missing 82 (all external_quote_type_mismatch)**. Current merged classification counts after E5 lock: leveraged 704, single-stock 239, inverse 283; new 100 (capped), **digital 20**.
 
 **Both sides flagged the same bug**:
 - **🔴 Digital capped 20/78** — source `list_bitcoin_etfs.json` has 78 rows, all 78 renderable, but snapshot API slices `limit=20`. 58 dropped; pill reads "디지털 20" (wrong). One number fix.
@@ -44,7 +44,8 @@
 - E2 (S, $0) — honest detail_status copy for source-gap ETFs (drop false backfill promise; lean on existing ExternalSourceLinks); show shown/total (e.g. "20/78").
 - E3 (S, $0) — rename 단일종목 → 단일종목 레버리지 (match actual filter).
 - E4 (M, $0) — live segment badges that respect active dropdowns; surface_only vs universe_only distinction in callout.
-- E5 (L, $0) — promote stored `classification` object as primary (regex fallback) to fix count/label drift; data-ops backfill of 82 missing / 686 YF fallback.
+- E5a (M, $0) — 🔄 in progress: promote stored `classification` signal / high-confidence plain classification as primary, keep regex as fallback when stored classification is absent or low-confidence no-signal, expose merged `counts.classification`, and make QA assert exact parity to source screener classification counts when the merged universe is screener-backed.
+- E5b (L, $0 + live fetch) — data-ops follow-up: retry 82 missing / 686 YF fallback. No-network plan/report/QA is possible, but actual source recovery requires explicit live StockAnalysis/Yahoo fetch.
 
 ---
 

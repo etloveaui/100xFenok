@@ -102,6 +102,17 @@ function pickRecordFields(record, fields) {
   );
 }
 
+function classificationCounts(records) {
+  const classified = records.filter((row) => asRecord(row.classification));
+  return {
+    classified: classified.length,
+    coverage_pct: records.length > 0 ? Number(((classified.length / records.length) * 100).toFixed(2)) : 0,
+    leveraged: records.filter((row) => asRecord(row.classification)?.is_leveraged === true).length,
+    inverse: records.filter((row) => asRecord(row.classification)?.is_inverse === true).length,
+    single_stock: records.filter((row) => asRecord(row.classification)?.is_single_stock === true).length,
+  };
+}
+
 function buildMergedUniverse(universePayload, screenerPayload) {
   const universeRows = rowsFromSurface(universePayload);
   const screenerRows = rowsFromSurface(screenerPayload);
@@ -165,6 +176,11 @@ function buildMergedUniverse(universePayload, screenerPayload) {
       with_holdings: records.filter((row) => typeof row.holdings === "number").length,
       with_expense_ratio: records.filter((row) => numericValue(row.expense_ratio ?? row.expenseRatio) !== null).length,
       with_performance: records.filter((row) => asRecord(row.performance) !== null).length,
+      classification: classificationCounts(records),
+      source_classification: {
+        etf_universe: classificationCounts(universeRows),
+        etf_screener: classificationCounts(screenerRows),
+      },
     },
     records,
   };
@@ -230,6 +246,14 @@ assert(counts.with_volume >= 4500, `Merged ETF universe expected volume coverage
 assert(counts.with_holdings >= 4900, `Merged ETF universe expected holdings coverage >= 4900, got ${counts.with_holdings}`, errors);
 assert(counts.with_expense_ratio >= 5000, `Merged ETF universe expected expense-ratio coverage >= 5000, got ${counts.with_expense_ratio}`, errors);
 assert(counts.with_performance >= 4400, `Merged ETF universe expected performance coverage >= 4400, got ${counts.with_performance}`, errors);
+assert(counts.classification?.classified === counts.records, `Merged ETF universe classification coverage expected ${counts.records}, got ${counts.classification?.classified}`, errors);
+assert(counts.classification?.coverage_pct === 100, `Merged ETF universe classification coverage expected 100%, got ${counts.classification?.coverage_pct}`, errors);
+if (counts.records === counts.etf_screener) {
+  const screenerClassification = counts.source_classification?.etf_screener;
+  assert(counts.classification?.leveraged === screenerClassification?.leveraged, `Merged ETF universe leveraged count drift: expected screener ${screenerClassification?.leveraged}, got ${counts.classification?.leveraged}`, errors);
+  assert(counts.classification?.single_stock === screenerClassification?.single_stock, `Merged ETF universe single-stock count drift: expected screener ${screenerClassification?.single_stock}, got ${counts.classification?.single_stock}`, errors);
+  assert(counts.classification?.inverse === screenerClassification?.inverse, `Merged ETF universe inverse count drift: expected screener ${screenerClassification?.inverse}, got ${counts.classification?.inverse}`, errors);
+}
 
 assertTickerContract(merged, "VOO", {
   numericFields: ["aum", "price", "volume", "holdings", "expense_ratio"],
@@ -282,5 +306,6 @@ if (errors.length > 0) {
 console.log(
   `stockanalysis ETF universe check passed ` +
     `(${counts.records} records, ${counts.with_price} prices, ${counts.with_volume} volumes, ` +
-    `${counts.with_holdings} holdings, ${counts.with_expense_ratio} expense ratios, ${counts.with_performance} performance rows)`,
+    `${counts.with_holdings} holdings, ${counts.with_expense_ratio} expense ratios, ${counts.with_performance} performance rows, ` +
+    `${counts.classification.leveraged}/${counts.classification.single_stock}/${counts.classification.inverse} classification flags)`,
 );

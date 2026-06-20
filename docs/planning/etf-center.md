@@ -257,6 +257,8 @@ From `100xfenok-next/scripts/check-stockanalysis-etf-universe.mjs`:
 - holdings coverage >= 4,900
 - expense ratio coverage >= 5,000
 - performance coverage >= 4,400
+- merged `classification` coverage = 100%
+- when merged records equal the screener universe, leveraged / single-stock / inverse counts must exactly match `etf_screener` source classification counts
 
 Representative ticker contracts:
 

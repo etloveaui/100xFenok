@@ -303,7 +303,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(counts["expense_ratio"], 1)
         self.assertEqual(counts["performance"], 1)
 
-    def test_etf_catalog_classification_promotes_detail_and_keeps_row_fallback(self) -> None:
+    def test_etf_catalog_classification_keeps_detail_primary_and_row_fallback(self) -> None:
         detail_index = {
             "PLAIN": {
                 "normalized": {
@@ -331,12 +331,27 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     }
                 }
             },
+            "LOWFALSE": {
+                "normalized": {
+                    "classification": {
+                        "is_leveraged": False,
+                        "leverage_factor": None,
+                        "is_inverse": False,
+                        "is_single_stock": False,
+                        "underlying": None,
+                        "source": "stockanalysis.etf_list.name",
+                        "confidence": "low",
+                    }
+                }
+            },
         }
 
         enriched = self.fetcher.enrich_etf_records(
             [
                 {"ticker": "PLAIN", "name": "Plain Vanilla ETF", "category": "Equity"},
                 {"ticker": "ADIU", "name": "Leverage Shares 2X Long ADI Daily ETF", "category": "Equity"},
+                {"ticker": "ROWONLY", "name": "Leverage Shares 2X Long ADI Daily ETF", "category": "Equity"},
+                {"ticker": "LOWFALSE", "name": "Leverage Shares 2X Long ADI Daily ETF", "category": "Equity"},
             ],
             detail_index,
         )
@@ -344,14 +359,19 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertIn("classification", enriched[0])
         self.assertFalse(enriched[0]["classification"]["is_leveraged"])
         self.assertEqual(enriched[0]["classification"]["confidence"], "high")
-        self.assertTrue(enriched[1]["classification"]["is_leveraged"])
-        self.assertEqual(enriched[1]["classification"]["leverage_factor"], 2.0)
-        self.assertTrue(enriched[1]["classification"]["is_single_stock"])
+        self.assertFalse(enriched[1]["classification"]["is_leveraged"])
+        self.assertEqual(enriched[1]["classification"]["confidence"], "high")
+        self.assertTrue(enriched[2]["classification"]["is_leveraged"])
+        self.assertEqual(enriched[2]["classification"]["leverage_factor"], 2.0)
+        self.assertTrue(enriched[2]["classification"]["is_single_stock"])
+        self.assertTrue(enriched[3]["classification"]["is_leveraged"])
+        self.assertEqual(enriched[3]["classification"]["leverage_factor"], 2.0)
+        self.assertTrue(enriched[3]["classification"]["is_single_stock"])
 
         counts = self.fetcher.etf_classification_counts(enriched)
-        self.assertEqual(counts["classified"], 2)
+        self.assertEqual(counts["classified"], 4)
         self.assertEqual(counts["coverage_pct"], 100.0)
-        self.assertEqual(counts["leveraged"], 1)
+        self.assertEqual(counts["leveraged"], 2)
 
     def test_incremental_etf_backfill_selects_missing_fallback_and_stale(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

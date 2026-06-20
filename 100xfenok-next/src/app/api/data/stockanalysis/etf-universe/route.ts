@@ -86,6 +86,17 @@ function pickRecordFields(record: JsonRecord | undefined, fields: readonly strin
   );
 }
 
+function classificationCounts(records: JsonRecord[]): JsonRecord {
+  const classified = records.filter((row) => asRecord(row.classification) !== null);
+  return {
+    classified: classified.length,
+    coverage_pct: records.length > 0 ? Number(((classified.length / records.length) * 100).toFixed(2)) : 0,
+    leveraged: records.filter((row) => asRecord(row.classification)?.is_leveraged === true).length,
+    inverse: records.filter((row) => asRecord(row.classification)?.is_inverse === true).length,
+    single_stock: records.filter((row) => asRecord(row.classification)?.is_single_stock === true).length,
+  };
+}
+
 export async function GET() {
   return withResponseCache(
     "stockanalysis:etf-universe-merged",
@@ -165,6 +176,7 @@ export async function GET() {
             with_holdings: records.filter((row) => typeof row.holdings === "number").length,
             with_expense_ratio: records.filter((row) => numericValue(row.expense_ratio ?? row.expenseRatio) !== null).length,
             with_performance: records.filter((row) => asRecord(row.performance) !== null).length,
+            classification: classificationCounts(records),
           },
           records,
         },
