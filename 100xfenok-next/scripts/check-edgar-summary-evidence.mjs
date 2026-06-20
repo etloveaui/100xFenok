@@ -9,6 +9,8 @@ const SOURCE_ROOT = `${ROOT}/../data/edgar-korean-summaries`;
 const INDEX_PATH = `${PUBLIC_ROOT}/index.json`;
 const SOURCE_INDEX_PATH = `${SOURCE_ROOT}/index.json`;
 const SUMMARY_SECTIONS = ["keyPoints", "riskChanges", "businessChanges", "financialHighlights", "watchItems"];
+const SUMMARY_STANCES = new Set(["fact", "management_claim", "feno_interpretation"]);
+const MAX_EVIDENCE_DIGEST_CHARS = 500;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -51,6 +53,14 @@ function numericTokens(text) {
 
 function evidenceDigestFor(ids, evidenceById) {
   return ids.map((id) => evidenceById.get(id)?.sourceTextDigest ?? "").join(" ");
+}
+
+function normalizeTicker(ticker) {
+  return String(ticker ?? "").trim().toUpperCase();
+}
+
+function expectEqual(actual, expected, label, errors) {
+  if (actual !== expected) errors.push(`${label}: expected '${expected}', got '${actual}'`);
 }
 
 function checkMirror(publicPath, sourcePath, errors) {
@@ -102,6 +112,45 @@ for (const ticker of tickers) {
     if (!existsSync(publicArtifactPath)) continue;
 
     const artifact = readJson(publicArtifactPath);
+    expectEqual(artifact.schemaVersion, 1, `${ticker}/${filing.accession}: artifact.schemaVersion`, errors);
+    expectEqual(
+      artifact.artifactType,
+      "edgar_korean_summary_pilot",
+      `${ticker}/${filing.accession}: artifact.artifactType`,
+      errors,
+    );
+    expectEqual(normalizeTicker(artifact.company?.ticker), ticker, `${ticker}/${filing.accession}: company.ticker`, errors);
+    expectEqual(artifact.company?.cik, filing.cik, `${ticker}/${filing.accession}: company.cik`, errors);
+    expectEqual(artifact.filing?.form, filing.form, `${ticker}/${filing.accession}: filing.form`, errors);
+    expectEqual(artifact.filing?.accession, filing.accession, `${ticker}/${filing.accession}: filing.accession`, errors);
+    expectEqual(artifact.filing?.filingDate, filing.filingDate, `${ticker}/${filing.accession}: filing.filingDate`, errors);
+    expectEqual(artifact.filing?.periodEnd, filing.periodEnd, `${ticker}/${filing.accession}: filing.periodEnd`, errors);
+    expectEqual(artifact.filing?.sourceUrl, filing.sourceUrl, `${ticker}/${filing.accession}: filing.sourceUrl`, errors);
+    if (filing.summaryStatus !== "ready") errors.push(`${ticker}/${filing.accession}: summaryPath requires summaryStatus='ready'`);
+
+    if (!artifact.summaryKo?.oneLine) errors.push(`${ticker}/${filing.accession}: summaryKo.oneLine is required`);
+    if (filing.summaryOneLine && artifact.summaryKo?.oneLine !== filing.summaryOneLine) {
+      errors.push(`${ticker}/${filing.accession}: manifest summaryOneLine must match artifact summaryKo.oneLine`);
+    }
+    if (!Array.isArray(artifact.sourceStatus?.sectionsRequested)) {
+      errors.push(`${ticker}/${filing.accession}: sourceStatus.sectionsRequested must be an array`);
+    }
+    if (!Array.isArray(artifact.sourceStatus?.sectionsExtracted)) {
+      errors.push(`${ticker}/${filing.accession}: sourceStatus.sectionsExtracted must be an array`);
+    }
+    if (!Array.isArray(artifact.sourceStatus?.missingSections)) {
+      errors.push(`${ticker}/${filing.accession}: sourceStatus.missingSections must be an array`);
+    }
+    if (!artifact.generation?.generatedAtUtc) errors.push(`${ticker}/${filing.accession}: generation.generatedAtUtc is required`);
+    if (!artifact.generation?.promptVersion) errors.push(`${ticker}/${filing.accession}: generation.promptVersion is required`);
+    if (!artifact.generation?.model) errors.push(`${ticker}/${filing.accession}: generation.model is required`);
+    if (Number(artifact.generation?.costUsedUsd) !== 0) {
+      errors.push(`${ticker}/${filing.accession}: generation.costUsedUsd must be 0`);
+    }
+    if (artifact.generation?.paidQuotaUsed !== false) {
+      errors.push(`${ticker}/${filing.accession}: generation.paidQuotaUsed must be false`);
+    }
+
     const evidenceRows = Array.isArray(artifact.evidence) ? artifact.evidence : [];
     const evidenceById = new Map(evidenceRows.map((row) => [row.id, row]));
     evidenceCount += evidenceRows.length;
@@ -111,6 +160,9 @@ for (const ticker of tickers) {
       if (!evidence.sourceUrl) errors.push(`${ticker}/${filing.accession}/${evidence.id}: missing sourceUrl`);
       if (!evidence.anchor) errors.push(`${ticker}/${filing.accession}/${evidence.id}: missing anchor`);
       if (!evidence.sourceTextDigest) errors.push(`${ticker}/${filing.accession}/${evidence.id}: missing sourceTextDigest`);
+      if (String(evidence.sourceTextDigest ?? "").length > MAX_EVIDENCE_DIGEST_CHARS) {
+        errors.push(`${ticker}/${filing.accession}/${evidence.id}: sourceTextDigest exceeds ${MAX_EVIDENCE_DIGEST_CHARS} chars`);
+      }
     }
 
     const oneLineDigest = canonical(evidenceRows.map((row) => row.sourceTextDigest ?? "").join(" "));
@@ -128,6 +180,10 @@ for (const ticker of tickers) {
       }
       for (const [index, bullet] of rows.entries()) {
         bulletCount += 1;
+        if (!bullet?.text) errors.push(`${ticker}/${filing.accession}/${section}[${index}]: missing text`);
+        if (!SUMMARY_STANCES.has(bullet?.stance)) {
+          errors.push(`${ticker}/${filing.accession}/${section}[${index}]: invalid stance '${bullet?.stance}'`);
+        }
         const evidenceIds = Array.isArray(bullet.evidence) ? bullet.evidence : [];
         if (evidenceIds.length === 0) errors.push(`${ticker}/${filing.accession}/${section}[${index}]: missing evidence ids`);
         for (const id of evidenceIds) {
