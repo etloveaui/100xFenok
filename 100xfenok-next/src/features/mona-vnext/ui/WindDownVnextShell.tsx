@@ -25,6 +25,7 @@ type Props = {
   lastPersistedFile: string | null;
   persistenceError: string | null;
   modeLabel: string;
+  activeExperimentalFeatures: string[];
   onStart: () => void;
   onStop: () => void;
   onSendStart: () => void;
@@ -59,6 +60,7 @@ export function WindDownVnextShell({
   lastPersistedFile,
   persistenceError,
   modeLabel,
+  activeExperimentalFeatures,
   onStart,
   onStop,
   onSendStart,
@@ -82,6 +84,11 @@ export function WindDownVnextShell({
             </span>
             <span className="rounded-full border border-[#dfd4c4] bg-white/70 px-3 py-1 text-[12px] font-semibold text-[#6d5d8f]">
               {modeLabel}
+            </span>
+            <span className="max-w-[220px] rounded-md border border-[#dfd4c4] bg-white/60 px-3 py-1 text-right text-[11px] font-medium leading-4 text-[#857b8d]">
+              {activeExperimentalFeatures.length > 0
+                ? activeExperimentalFeatures.join(", ")
+                : "실험 기능 없음"}
             </span>
           </div>
         </header>

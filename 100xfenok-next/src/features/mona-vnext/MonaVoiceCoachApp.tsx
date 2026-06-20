@@ -19,6 +19,10 @@ import {
   MONA_VNEXT_GEMINI_MODELS,
   type MonaVnextGeminiModel,
 } from "@/features/mona-vnext/live/modelOptions";
+import {
+  listActiveExperimentalFeatures,
+  type MonaVoiceCoachSurface,
+} from "@/features/mona-vnext/featureGates";
 import { MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE } from "@/features/mona-vnext/live/generationOptions";
 import { useGeminiLiveSession, type MonaVnextSessionMetrics } from "@/features/mona-vnext/live/useGeminiLiveSession";
 import {
@@ -54,8 +58,6 @@ const PRODUCT_INITIAL_ENGLISH_VISIBLE = false;
 
 // Durable event buffer cap, matched to the writer's events.slice(-1000).
 const MAX_PENDING_EVENTS = 1000;
-
-type MonaVoiceCoachSurface = "winddown" | "debug";
 
 type Props = {
   surface?: MonaVoiceCoachSurface;
@@ -132,6 +134,7 @@ function buildWindDownCard(lessonState: MonaVnextLessonState): ExpressionCard {
 }
 
 export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
+  const activeExperimentalFeatures = useMemo(() => listActiveExperimentalFeatures(surface), [surface]);
   const [transcriptState, setTranscriptState] = useState<MonaVnextTranscriptState>(
     () => createMonaVnextTranscriptState(createMonaVnextConversationId()),
   );
@@ -696,6 +699,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       lastPersistedFile={persistenceState.lastPersistedFile}
       persistenceError={persistenceState.conversationSaveError}
       modeLabel="실험판"
+      activeExperimentalFeatures={activeExperimentalFeatures}
       onStart={live.start}
       onStop={stopSession}
       onSendStart={() => live.sendText("시작. 한 문장씩 천천히 해줘.")}

@@ -32,6 +32,11 @@ import {
   createInitialPersistenceState,
   reducePersistence,
 } from "../src/features/mona-vnext/logging/persistenceState";
+import {
+  createMonaVnextFeatureGateEvaluator,
+  isMonaVnextFeatureEnabled,
+  listActiveExperimentalFeatures,
+} from "../src/features/mona-vnext/featureGates";
 
 type Result = {
   id: string;
@@ -622,6 +627,28 @@ function checkPersistenceSeveritySplit(): Result {
   );
 }
 
+function checkFeatureGates(): Result {
+  const gates = createMonaVnextFeatureGateEvaluator({
+    promoted: new Set(["promoted-feature"]),
+    experimental: new Set(["experimental-feature"]),
+  });
+  const ok = gates.isEnabled("promoted-feature", "winddown")
+    && gates.isEnabled("promoted-feature", "debug")
+    && !gates.isEnabled("experimental-feature", "winddown")
+    && gates.isEnabled("experimental-feature", "debug")
+    && !gates.isEnabled("unknown-feature", "winddown")
+    && !gates.isEnabled("unknown-feature", "debug")
+    && gates.listActiveExperimentalFeatures("winddown").length === 0
+    && gates.listActiveExperimentalFeatures("debug").join(",") === "experimental-feature"
+    && !isMonaVnextFeatureEnabled("future-feature", "winddown")
+    && !isMonaVnextFeatureEnabled("future-feature", "debug")
+    && listActiveExperimentalFeatures("winddown").length === 0
+    && listActiveExperimentalFeatures("debug").length === 0;
+  return ok
+    ? pass("feature-gates", "promoted hits both surfaces; experimental hits debug only; unknown/default stays off")
+    : fail("feature-gates", "feature gate isolation semantics regressed");
+}
+
 const results = [
   checkSetupShape(),
   checkTemperatureOverride(),
@@ -646,6 +673,7 @@ const results = [
   checkNamespace(),
   checkPersistenceFailureVisibility(),
   checkPersistenceSeveritySplit(),
+  checkFeatureGates(),
 ];
 
 for (const result of results) {
