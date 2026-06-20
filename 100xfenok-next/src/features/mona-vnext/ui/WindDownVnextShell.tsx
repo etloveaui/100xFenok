@@ -9,6 +9,12 @@ import type { MonaVnextTranscriptState } from "@/features/mona-vnext/transcript/
 import { ExpressionCard } from "@/features/mona-vnext/ui/ExpressionCard";
 import { SessionControls } from "@/features/mona-vnext/ui/SessionControls";
 
+type MonaVnextAnswerVerdict = {
+  symbol: string;
+  label: string;
+  detail: string;
+};
+
 type Props = {
   baseline: MonaVnextBaselineLog;
   promptPolicy: MonaVnextBaselinePromptPolicy;
@@ -26,6 +32,7 @@ type Props = {
   persistenceError: string | null;
   modeLabel: string;
   activeExperimentalFeatures: string[];
+  answerVerdict: MonaVnextAnswerVerdict | null;
   onStart: () => void;
   onStop: () => void;
   onSendStart: () => void;
@@ -61,6 +68,7 @@ export function WindDownVnextShell({
   persistenceError,
   modeLabel,
   activeExperimentalFeatures,
+  answerVerdict,
   onStart,
   onStop,
   onSendStart,
@@ -98,6 +106,7 @@ export function WindDownVnextShell({
             ko={lessonState.expression.ko}
             en={lessonState.englishVisible ? lessonState.expression.en : "English hidden"}
             state={lessonState.expression.state}
+            verdict={answerVerdict}
           />
 
           <section className="rounded-lg border border-[#dfd4c4] bg-white/80 p-4 text-sm leading-6 text-[#5f5867]">

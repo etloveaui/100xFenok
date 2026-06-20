@@ -11,6 +11,7 @@ import {
   type MonaVnextLessonState,
   type MonaVnextSessionExpressionBank,
 } from "@/features/mona-vnext/coach/coachPolicy";
+import type { MonaVnextAnswerMatch, MonaVnextAnswerMatchTier } from "@/features/mona-vnext/coach/answerMatcher";
 import { MONA_VNEXT_BASELINE_LOG, MONA_VNEXT_BASELINE_PROMPT_POLICY } from "@/features/mona-vnext/coach/baselineEvidence";
 import { applyMonaVnextLessonEvaluation } from "@/features/mona-vnext/coach/lessonFlow";
 import { evaluateMonaVnextTurn, type MonaVnextPostTurnEvaluation } from "@/features/mona-vnext/coach/postTurnEvaluator";
@@ -20,6 +21,11 @@ import {
   type MonaVnextGeminiModel,
 } from "@/features/mona-vnext/live/modelOptions";
 import {
+  MONA_VNEXT_ANSWER_MATCHER_GATE,
+  MONA_VNEXT_APP_OWNED_NEXT_MATERIAL_GATE,
+  MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE,
+  MONA_VNEXT_STT_GARBAGE_GATE,
+  isMonaVnextFeatureEnabled,
   listActiveExperimentalFeatures,
   type MonaVoiceCoachSurface,
 } from "@/features/mona-vnext/featureGates";
@@ -73,6 +79,13 @@ type FinalizeReason = "manual-stop" | "strict-stop" | "reconnect-failed" | "page
 
 type FinalizeOptions = {
   reason: FinalizeReason;
+};
+
+export type MonaVnextAnswerVerdict = {
+  tier: MonaVnextAnswerMatchTier;
+  symbol: string;
+  label: string;
+  detail: string;
 };
 
 function buildExpressionBankLogSettings(expressionBank: MonaVnextSessionExpressionBank) {
@@ -133,8 +146,38 @@ function buildWindDownCard(lessonState: MonaVnextLessonState): ExpressionCard {
   };
 }
 
+function buildAnswerVerdict(answerMatch: MonaVnextAnswerMatch | null): MonaVnextAnswerVerdict | null {
+  if (!answerMatch) return null;
+  if (answerMatch.tier === "canonical") {
+    return { tier: answerMatch.tier, symbol: "✓", label: "맞음", detail: answerMatch.reason };
+  }
+  if (answerMatch.tier === "close") {
+    return { tier: answerMatch.tier, symbol: "≈", label: "거의", detail: answerMatch.reason };
+  }
+  if (answerMatch.tier === "garbage") {
+    return { tier: answerMatch.tier, symbol: "✗", label: "인식오류", detail: answerMatch.reason };
+  }
+  return { tier: answerMatch.tier, symbol: "✗", label: "다시", detail: answerMatch.reason };
+}
+
+function shouldInjectPedagogyControl(evaluation: MonaVnextPostTurnEvaluation) {
+  return evaluation.pedagogyAction === "hold"
+    || evaluation.pedagogyAction === "teach_slow"
+    || evaluation.pedagogyAction === "repair"
+    || evaluation.pedagogyAction === "intervene"
+    || evaluation.pedagogyAction === "answer_close"
+    || evaluation.pedagogyAction === "answer_miss"
+    || evaluation.pedagogyAction === "reject_garbage";
+}
+
 export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   const activeExperimentalFeatures = useMemo(() => listActiveExperimentalFeatures(surface), [surface]);
+  const p15Gates = useMemo(() => ({
+    answerMatcher: isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, surface),
+    autoAdvanceOnCanonical: isMonaVnextFeatureEnabled(MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE, surface),
+    sttGarbageGate: isMonaVnextFeatureEnabled(MONA_VNEXT_STT_GARBAGE_GATE, surface),
+    appOwnedNextMaterial: isMonaVnextFeatureEnabled(MONA_VNEXT_APP_OWNED_NEXT_MATERIAL_GATE, surface),
+  }), [surface]);
   const [transcriptState, setTranscriptState] = useState<MonaVnextTranscriptState>(
     () => createMonaVnextTranscriptState(createMonaVnextConversationId()),
   );
@@ -145,6 +188,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   // Single source of truth for the "저장 실패" banner. Only turn/final
   // conversation saves can set it; partial-event logging never does.
   const [persistenceState, setPersistenceState] = useState(() => createInitialPersistenceState());
+  const [answerVerdict, setAnswerVerdict] = useState<MonaVnextAnswerVerdict | null>(null);
   const [selectedModel, setSelectedModel] = useState<MonaVnextGeminiModel>(MONA_VNEXT_DEFAULT_GEMINI_MODEL);
   const [voiceName, setVoiceName] = useState<string>(DEFAULT_SETTINGS.voiceName);
   const [vadPreset, setVadPreset] = useState<"relaxed" | "balanced">(DEFAULT_SETTINGS.vadPreset);
@@ -244,7 +288,11 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     turn: MonaVnextTurn,
     currentLesson: MonaVnextLessonState,
   ) => {
-    const evaluation = evaluateMonaVnextTurn(turn, currentLesson);
+    const evaluation = evaluateMonaVnextTurn(turn, currentLesson, {
+      answerMatcherEnabled: p15Gates.answerMatcher,
+      autoAdvanceOnCanonical: p15Gates.autoAdvanceOnCanonical,
+      sttGarbageGateEnabled: p15Gates.sttGarbageGate,
+    });
     const advisory = buildMonaVnextSrsAdvisory(turn, evaluation);
     const nextLesson = applyMonaVnextLessonEvaluation(currentLesson, evaluation);
     const event: MonaVnextLogEvent = {
@@ -260,12 +308,14 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         materialChanged: nextLesson.expression.id !== currentLesson.expression.id,
         samePromptCount: evaluation.samePromptCount,
         sttDrift: evaluation.sttDrift,
+        answerMatch: evaluation.answerMatch ? {
+          tier: evaluation.answerMatch.tier,
+          confidence: evaluation.answerMatch.confidence,
+          reason: evaluation.answerMatch.reason,
+        } : null,
       },
     };
-    const controlEvent: MonaVnextLogEvent | null = evaluation.pedagogyAction === "hold"
-      || evaluation.pedagogyAction === "teach_slow"
-      || evaluation.pedagogyAction === "repair"
-      || evaluation.pedagogyAction === "intervene"
+    const controlEvent: MonaVnextLogEvent | null = shouldInjectPedagogyControl(evaluation)
       ? {
         type: "pedagogy-control-injected",
         message: `Mona vNext pedagogy action injected: ${evaluation.pedagogyAction}.`,
@@ -279,7 +329,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       }
       : null;
     return { evaluation, advisory, nextLesson, event, controlEvent };
-  }, []);
+  }, [p15Gates]);
 
   const buildMetaQuestionAnswer = useCallback((currentLesson: MonaVnextLessonState) => (
     [
@@ -289,9 +339,11 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     ].join(" ")
   ), []);
 
-  const buildNextLessonPrompt = useCallback((nextLesson: MonaVnextLessonState) => (
+  const buildNextLessonPrompt = useCallback((nextLesson: MonaVnextLessonState, appOwnedNextMaterial = false) => (
     [
-      "새 문장으로 자연스럽게 넘어가.",
+      appOwnedNextMaterial
+        ? "앱이 고른 아래 새 문장만 사용해. 방금 다른 새 문장을 말했으면 짧게 정정하고 아래 문장으로 돌아와."
+        : "새 문장으로 자연스럽게 넘어가.",
       `한국어로 먼저 물어볼 문장: "${nextLesson.expression.ko}"`,
       `모나가 시도한 뒤 알려줄 자연스러운 영어: "${nextLesson.expression.en}"`,
       "한 턴에 하나만 묻고, 모나가 답할 때까지 기다려.",
@@ -327,6 +379,24 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         `반복 한계에 닿았다. 자동으로 넘기지 말고 "${firstHint}" 힌트만 아주 짧게 주고 기다려. 계속할지 다음으로 갈지 묻지 마.`,
       ].join(" ");
     }
+    if (evaluation.pedagogyAction === "reject_garbage") {
+      return [
+        ...base,
+        "방금 발화는 인식 오류로 보고 채점하지 마. 칭찬하지 말고 아주 짧게 다시 말해달라고 해.",
+      ].join(" ");
+    }
+    if (evaluation.pedagogyAction === "answer_close") {
+      return [
+        ...base,
+        `모나 답은 비슷하지만 자동 통과시키지 마. 자연스러운 목표 문장 "${current.en}"을 짧게 보여주고 한 번만 따라 하게 해.`,
+      ].join(" ");
+    }
+    if (evaluation.pedagogyAction === "answer_miss") {
+      return [
+        ...base,
+        `정답으로 칭찬하지 마. "${firstHint}" 힌트만 주고 현재 문장을 다시 시도하게 해.`,
+      ].join(" ");
+    }
     return [
       ...base,
       "불만이나 인식오류를 먼저 수습해. 사과는 짧게, 현재 문장으로 다시 잡아줘.",
@@ -340,6 +410,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     const session = sessionRef.current;
     if (!session || sessionFinalizedRef.current) return;
     const { evaluation, advisory, nextLesson, event, controlEvent } = buildPostTurnArtifacts(turn, currentLesson);
+    setAnswerVerdict(p15Gates.answerMatcher ? buildAnswerVerdict(evaluation.answerMatch) : null);
     setEvents((current) => appendEvent(current, event));
     if (controlEvent) {
       setEvents((current) => appendEvent(current, controlEvent));
@@ -380,7 +451,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       nextLesson.expression.id !== currentLesson.expression.id
       && !evaluation.stopRequested
     ) {
-      sendControlTextRef.current(buildNextLessonPrompt(nextLesson));
+      sendControlTextRef.current(buildNextLessonPrompt(nextLesson, p15Gates.appOwnedNextMaterial));
     }
   }, [
     buildMetaQuestionAnswer,
@@ -390,6 +461,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     drainPendingEvents,
     postConversationLog,
     postMemoryAdvisory,
+    p15Gates,
     sessionSettings,
   ]);
 
@@ -416,6 +488,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       pendingEventsRef.current = [];
       sessionFinalizedRef.current = false;
       hardStopHandledRef.current = false;
+      setAnswerVerdict(null);
       setPersistenceState(createInitialPersistenceState());
       autoStartConversationRef.current = null;
       bufferEvent({
@@ -630,6 +703,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     });
     lessonStateRef.current = nextLesson;
     setLessonState(nextLesson);
+    setAnswerVerdict(null);
     bufferEvent({
       type: "manual-next",
       message: "Mona vNext next button advanced prompt.",
@@ -640,8 +714,8 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         materialChanged: nextLesson.expression.id !== currentLesson.expression.id,
       },
     });
-    sendControlTextRef.current(buildNextLessonPrompt(nextLesson));
-  }, [bufferEvent, buildNextLessonPrompt, surface]);
+    sendControlTextRef.current(buildNextLessonPrompt(nextLesson, p15Gates.appOwnedNextMaterial));
+  }, [bufferEvent, buildNextLessonPrompt, p15Gates.appOwnedNextMaterial, surface]);
 
   useEffect(() => {
     if (surface !== "winddown") return;
@@ -700,6 +774,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       persistenceError={persistenceState.conversationSaveError}
       modeLabel="실험판"
       activeExperimentalFeatures={activeExperimentalFeatures}
+      answerVerdict={p15Gates.answerMatcher ? answerVerdict : null}
       onStart={live.start}
       onStop={stopSession}
       onSendStart={() => live.sendText("시작. 한 문장씩 천천히 해줘.")}

@@ -39,7 +39,10 @@ export function applyMonaVnextLessonEvaluation(
   if (evaluation.pedagogyAction === "hold"
     || evaluation.pedagogyAction === "teach_slow"
     || evaluation.pedagogyAction === "repair"
-    || evaluation.pedagogyAction === "intervene") {
+    || evaluation.pedagogyAction === "intervene"
+    || evaluation.pedagogyAction === "answer_close"
+    || evaluation.pedagogyAction === "answer_miss"
+    || evaluation.pedagogyAction === "reject_garbage") {
     return {
       ...state,
       englishVisible: true,

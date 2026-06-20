@@ -13,6 +13,7 @@ import {
   createInitialLessonState,
   recordPromptExposure,
 } from "../src/features/mona-vnext/coach/coachPolicy";
+import { evaluateMonaVnextAnswerAttempt } from "../src/features/mona-vnext/coach/answerMatcher";
 import { applyMonaVnextLessonEvaluation } from "../src/features/mona-vnext/coach/lessonFlow";
 import { evaluateMonaVnextTurn } from "../src/features/mona-vnext/coach/postTurnEvaluator";
 import { containsMonaVnextControlLeakage, scrubLearnerFacingText } from "../src/features/mona-vnext/logging/voiceLogSchema";
@@ -33,6 +34,10 @@ import {
   reducePersistence,
 } from "../src/features/mona-vnext/logging/persistenceState";
 import {
+  MONA_VNEXT_ANSWER_MATCHER_GATE,
+  MONA_VNEXT_APP_OWNED_NEXT_MATERIAL_GATE,
+  MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE,
+  MONA_VNEXT_STT_GARBAGE_GATE,
   createMonaVnextFeatureGateEvaluator,
   isMonaVnextFeatureEnabled,
   listActiveExperimentalFeatures,
@@ -415,6 +420,67 @@ function checkLessonAttemptExposure(): Result {
     : fail("lesson-attempt-exposure", JSON.stringify({ afterOne, afterTwo, beforeAdvance, lesson }));
 }
 
+function checkAnswerMatcher(): Result {
+  const exact = evaluateMonaVnextAnswerAttempt("I see what you mean.", "I see what you mean.");
+  const close = evaluateMonaVnextAnswerAttempt("I hope it makes sense.", "I hope that makes sense.");
+  const japaneseGarbage = evaluateMonaVnextAnswerAttempt("夜 を", "You look like you could use a break.");
+  const numericGarbage = evaluateMonaVnextAnswerAttempt("1 2 3 4 아이가", "From now on.");
+  const miss = evaluateMonaVnextAnswerAttempt("정답 알려줘", "You look like you could use a break.");
+  const ok = exact.tier === "canonical"
+    && close.tier === "close"
+    && japaneseGarbage.tier === "garbage"
+    && numericGarbage.tier === "garbage"
+    && miss.tier === "miss";
+  return ok
+    ? pass("answer-matcher", "canonical/close/garbage/miss tiers classify conservatively")
+    : fail("answer-matcher", JSON.stringify({ exact, close, japaneseGarbage, numericGarbage, miss }));
+}
+
+function checkAnswerMatcherEvaluation(): Result {
+  const lesson = createInitialLessonState();
+  const baseTurn = {
+    conversationId: "c",
+    turnSeq: 1,
+    userText: lesson.expression.en,
+    modelText: "좋아.",
+    intent: "lesson_attempt" as const,
+    sttDrift: false,
+    interrupted: false,
+    startedAtIso: "2026-06-21T00:00:00.000Z",
+    completedAtIso: "2026-06-21T00:00:01.000Z",
+  };
+  const gated = {
+    answerMatcherEnabled: true,
+    autoAdvanceOnCanonical: true,
+    sttGarbageGateEnabled: true,
+  };
+  const canonical = evaluateMonaVnextTurn(baseTurn, lesson, gated);
+  const canonicalNext = applyMonaVnextLessonEvaluation(lesson, canonical);
+  const close = evaluateMonaVnextTurn({
+    ...baseTurn,
+    userText: "I hope it makes sense.",
+  }, lesson, gated);
+  const closeNext = applyMonaVnextLessonEvaluation(lesson, close);
+  let repeatedLesson = recordPromptExposure(lesson, lesson.expression);
+  repeatedLesson = recordPromptExposure(repeatedLesson, repeatedLesson.expression);
+  const garbage = evaluateMonaVnextTurn({
+    ...baseTurn,
+    userText: "夜 を",
+    sttDrift: true,
+  }, repeatedLesson, gated);
+  const ok = canonical.answerMatch?.tier === "canonical"
+    && canonical.pedagogyAction === "advance"
+    && canonicalNext.expression.id !== lesson.expression.id
+    && close.answerMatch?.tier === "close"
+    && close.pedagogyAction === "answer_close"
+    && closeNext.expression.id === lesson.expression.id
+    && garbage.pedagogyAction === "reject_garbage"
+    && garbage.samePromptCount >= MONA_VNEXT_MAX_SAME_PROMPT;
+  return ok
+    ? pass("answer-matcher-evaluation", "canonical advances; close holds; garbage beats repeat intervention")
+    : fail("answer-matcher-evaluation", JSON.stringify({ canonical, close, garbage, canonicalNext, closeNext }));
+}
+
 function checkEnglishVisibilityIntent(): Result {
   const lesson = createInitialLessonState();
   const hidden = { ...lesson, englishVisible: false };
@@ -628,6 +694,13 @@ function checkPersistenceSeveritySplit(): Result {
 }
 
 function checkFeatureGates(): Result {
+  const activeDebugFeatures = listActiveExperimentalFeatures("debug");
+  const expectedP15Gates = [
+    MONA_VNEXT_ANSWER_MATCHER_GATE,
+    MONA_VNEXT_APP_OWNED_NEXT_MATERIAL_GATE,
+    MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE,
+    MONA_VNEXT_STT_GARBAGE_GATE,
+  ].sort();
   const gates = createMonaVnextFeatureGateEvaluator({
     promoted: new Set(["promoted-feature"]),
     experimental: new Set(["experimental-feature"]),
@@ -642,11 +715,31 @@ function checkFeatureGates(): Result {
     && gates.listActiveExperimentalFeatures("debug").join(",") === "experimental-feature"
     && !isMonaVnextFeatureEnabled("future-feature", "winddown")
     && !isMonaVnextFeatureEnabled("future-feature", "debug")
+    && !isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, "winddown")
+    && isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, "debug")
+    && !isMonaVnextFeatureEnabled(MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE, "winddown")
+    && isMonaVnextFeatureEnabled(MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE, "debug")
     && listActiveExperimentalFeatures("winddown").length === 0
-    && listActiveExperimentalFeatures("debug").length === 0;
+    && activeDebugFeatures.join(",") === expectedP15Gates.join(",");
   return ok
-    ? pass("feature-gates", "promoted hits both surfaces; experimental hits debug only; unknown/default stays off")
+    ? pass("feature-gates", "promoted hits both surfaces; P1.5 experimental gates hit debug only")
     : fail("feature-gates", "feature gate isolation semantics regressed");
+}
+
+function checkDebugOnlyAnswerVerdictSource(): Result {
+  const appSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/MonaVoiceCoachApp.tsx"), "utf8");
+  const shellSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/ui/WindDownVnextShell.tsx"), "utf8");
+  const cardSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/ui/ExpressionCard.tsx"), "utf8");
+  const ok = appSource.includes("answerVerdict={p15Gates.answerMatcher ? answerVerdict : null}")
+    && !appSource.includes("answerVerdict={answerVerdict}")
+    && appSource.includes("buildNextLessonPrompt(nextLesson, p15Gates.appOwnedNextMaterial)")
+    && shellSource.includes("answerVerdict: MonaVnextAnswerVerdict | null")
+    && shellSource.includes("verdict={answerVerdict}")
+    && cardSource.includes("verdict.symbol")
+    && cardSource.includes("verdict.label");
+  return ok
+    ? pass("debug-only-answer-verdict", "matcher verdict chip is wired only through the debug vNext shell")
+    : fail("debug-only-answer-verdict", "answer verdict can leak outside the debug shell or app-owned next guard is missing");
 }
 
 const results = [
@@ -664,6 +757,8 @@ const results = [
   checkSkipComplaintIntent(),
   checkDifficultyIntent(),
   checkLessonAttemptExposure(),
+  checkAnswerMatcher(),
+  checkAnswerMatcherEvaluation(),
   checkEnglishVisibilityIntent(),
   checkProductCardFlow(),
   checkRepeatLimit(),
@@ -674,6 +769,7 @@ const results = [
   checkPersistenceFailureVisibility(),
   checkPersistenceSeveritySplit(),
   checkFeatureGates(),
+  checkDebugOnlyAnswerVerdictSource(),
 ];
 
 for (const result of results) {
