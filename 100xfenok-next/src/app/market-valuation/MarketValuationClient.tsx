@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import MarketSectionNav from "@/components/market/MarketSectionNav";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import type {
@@ -547,15 +548,7 @@ export default function MarketValuationClient() {
               {sourceDate}
             </span>
           ) : null}
-          <TransitionLink href="/regime" className="data-shell-link">
-            국면
-          </TransitionLink>
-          <TransitionLink href="/market/events" className="data-shell-link">
-            이벤트
-          </TransitionLink>
-          <TransitionLink href="/explore" className="data-shell-link">
-            탐색
-          </TransitionLink>
+          <MarketSectionNav active="valuation" />
         </div>
       </section>
 

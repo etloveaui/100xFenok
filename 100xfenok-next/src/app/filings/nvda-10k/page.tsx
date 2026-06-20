@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import AppShell from "@/components/shell/AppShell";
-import EdgarSummaryPilotClient from "./EdgarSummaryPilotClient";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "NVDA 10-K 자동 요약 파일럿 | 100xFenok",
@@ -8,11 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Nvda10kFilingSummaryPage() {
-  return (
-    <div className="fnk-shell">
-      <AppShell active="market" title="공시 요약" backHref="/market/events">
-        <EdgarSummaryPilotClient />
-      </AppShell>
-    </div>
-  );
+  redirect("/stock/NVDA?tab=filings");
 }

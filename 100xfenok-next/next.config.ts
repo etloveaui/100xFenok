@@ -62,6 +62,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/filings/nvda-10k",
+        destination: "/stock/NVDA?tab=filings",
+        permanent: false,
+      },
+      {
         source: "/vr/vr-complete-system.html",
         destination: "/vr/?path=vr/vr-complete-system.html",
         permanent: false,

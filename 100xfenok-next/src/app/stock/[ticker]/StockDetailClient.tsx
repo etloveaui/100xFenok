@@ -18,6 +18,7 @@ import {
   deriveProfitabilityEstimates,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
+import EdgarSummaryPilotClient from "@/app/filings/nvda-10k/EdgarSummaryPilotClient";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
@@ -252,7 +253,7 @@ function loadTradesRanking(): Promise<TradesCache | null> {
 
 type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
-type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates";
+type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates" | "filings";
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
 
 function isFiniteNumber(value: unknown): value is number {
@@ -726,7 +727,15 @@ function KV({ label, value }: { label: string; value: string }) {
 // StockDetailClient main
 // ---------------------------------------------------------------------------
 
-export default function StockDetailClient({ ticker, assetHint }: { ticker: string; assetHint?: "stock" | "etf" }) {
+export default function StockDetailClient({
+  ticker,
+  assetHint,
+  initialTab,
+}: {
+  ticker: string;
+  assetHint?: "stock" | "etf";
+  initialTab?: StockTab;
+}) {
   const symbol = ticker.trim().toUpperCase();
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
   const { data: marketFacts, loading: marketFactsLoading } = useMarketFacts(symbol, assetHint !== "etf");
@@ -753,7 +762,7 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
 
   const rowLoading = row === undefined;
   const [yfData, setYfData] = useState<any | undefined>(undefined);
-  const [stockTab, setStockTab] = useState<StockTab>("overview");
+  const [stockTab, setStockTab] = useState<StockTab>(initialTab ?? "overview");
   const [etfData, setEtfData] = useState<StockanalysisEtfPayload | null | undefined>(undefined);
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
@@ -852,14 +861,18 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
   const etfSurface = etfSurfaceFallback(etfSurfaceData, symbol);
   const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
   const isEtfOnlyAsset = isEtfAsset && !row;
+  const hasFilingPilot = symbol === "NVDA" && !isEtfOnlyAsset;
   const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf"
     ? "overview"
-    : isEtfOnlyAsset && stockTab === "overview"
-      ? "etf"
-      : stockTab;
+    : !hasFilingPilot && stockTab === "filings"
+      ? (isEtfOnlyAsset ? "etf" : "overview")
+      : isEtfOnlyAsset && stockTab === "overview"
+        ? "etf"
+        : stockTab;
   const stockTabs: Array<{ id: StockTab; label: string }> = [
     ...(!isEtfOnlyAsset ? [{ id: "overview" as const, label: "요약" }] : []),
     ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
+    ...(hasFilingPilot ? [{ id: "filings" as const, label: "공시" }] : []),
     ...(yfAvailable
       ? [
           { id: "financials" as const, label: "재무" },
@@ -1007,6 +1020,9 @@ export default function StockDetailClient({ ticker, assetHint }: { ticker: strin
 
   function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
+    if (activeStockTab === "filings") {
+      return <EdgarSummaryPilotClient embedded />;
+    }
     if (activeStockTab === "etf") {
       return (
         <div className="stock-main-stack">

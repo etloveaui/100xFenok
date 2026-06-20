@@ -4,6 +4,7 @@ import StockDetailClient from "./StockDetailClient";
 
 interface Props {
   params: Promise<{ ticker: string }>;
+  searchParams?: Promise<{ tab?: string | string[] }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -14,13 +15,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function StockDetailPage({ params }: Props) {
+export default async function StockDetailPage({ params, searchParams }: Props) {
   const { ticker } = await params;
+  const query = searchParams ? await searchParams : {};
   const symbol = ticker.toUpperCase();
+  const requestedTab = Array.isArray(query.tab) ? query.tab[0] : query.tab;
+  const initialTab = symbol === "NVDA" && requestedTab === "filings" ? "filings" : undefined;
   return (
     <div className="fnk-shell">
       <AppShell title={symbol} backHref={`/screener?ticker=${encodeURIComponent(symbol)}`}>
-        <StockDetailClient ticker={symbol} />
+        <StockDetailClient ticker={symbol} initialTab={initialTab} />
       </AppShell>
     </div>
   );

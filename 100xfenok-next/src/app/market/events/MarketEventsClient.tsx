@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import MarketSectionNav from "@/components/market/MarketSectionNav";
 
 type EventTab = "earnings" | "actions" | "ipo" | "industry" | "movers";
 
@@ -578,8 +579,7 @@ export default function MarketEventsClient({
         </div>
         <div className="data-shell-head-actions">
           <span className="data-shell-pill ok"><span />{asOf(data)}</span>
-          <TransitionLink href="/market-valuation" className="data-shell-link">시장</TransitionLink>
-          <TransitionLink href="/regime" className="data-shell-link">국면</TransitionLink>
+          <MarketSectionNav active="events" />
         </div>
       </section>
 

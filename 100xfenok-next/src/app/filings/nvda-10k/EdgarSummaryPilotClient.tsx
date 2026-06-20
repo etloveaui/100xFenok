@@ -216,7 +216,7 @@ function SummarySection({
   );
 }
 
-export default function EdgarSummaryPilotClient() {
+export default function EdgarSummaryPilotClient({ embedded = false }: { embedded?: boolean }) {
   const [artifact, setArtifact] = useState<EdgarKoreanSummaryArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -264,7 +264,7 @@ export default function EdgarSummaryPilotClient() {
   }
 
   return (
-    <div className="data-shell-page">
+    <div className={embedded ? "stock-main-stack" : "data-shell-page"}>
       <section className="panel">
         <div className="data-shell-header">
           <div className="data-shell-head-main">

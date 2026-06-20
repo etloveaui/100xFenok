@@ -1,6 +1,6 @@
 "use client";
 
-import TransitionLink from "@/components/TransitionLink";
+import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
 import type {
@@ -410,15 +410,7 @@ export default function RegimeClient() {
               기준 {formatAsOf(latestSource)}
             </span>
           ) : null}
-          <TransitionLink href="/market-valuation" className="data-shell-link">
-            밸류에이션
-          </TransitionLink>
-          <TransitionLink href="/market-valuation/structure" className="data-shell-link">
-            구조 상세
-          </TransitionLink>
-          <TransitionLink href="/market/events" className="data-shell-link">
-            이벤트
-          </TransitionLink>
+          <MarketSectionNav active="regime" />
         </div>
       </section>
 
