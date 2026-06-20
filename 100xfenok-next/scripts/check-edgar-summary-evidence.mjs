@@ -11,6 +11,8 @@ const SOURCE_INDEX_PATH = `${SOURCE_ROOT}/index.json`;
 const SUMMARY_SECTIONS = ["keyPoints", "riskChanges", "businessChanges", "financialHighlights", "watchItems"];
 const SUMMARY_STANCES = new Set(["fact", "management_claim", "feno_interpretation"]);
 const MAX_EVIDENCE_DIGEST_CHARS = 1000;
+const COMMA_GROUPED_NUMBER_RE = /(?:^|[^\d,])(\d+(?:,\d+)+)(?![\d,])/g;
+const VALID_COMMA_GROUPED_NUMBER_RE = /^\d{1,3}(?:,\d{3})*$/;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -49,6 +51,18 @@ function numericTokens(text) {
   return [...cleaned.matchAll(/(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*(?:%|%p|포인트|points?|억|만|달러|B)?/g)]
     .map((match) => match[0].replace(/\s+/g, ""))
     .filter(Boolean);
+}
+
+function malformedCommaNumbers(text) {
+  return [...String(text ?? "").matchAll(COMMA_GROUPED_NUMBER_RE)]
+    .map((match) => match[1])
+    .filter((token) => !VALID_COMMA_GROUPED_NUMBER_RE.test(token));
+}
+
+function checkNoMalformedCommaNumbers(label, text, errors) {
+  for (const token of malformedCommaNumbers(text)) {
+    errors.push(`${label}: malformed comma-grouped number '${token}'`);
+  }
 }
 
 function evidenceDigestFor(ids, evidenceById) {
@@ -129,6 +143,7 @@ for (const ticker of tickers) {
     if (filing.summaryStatus !== "ready") errors.push(`${ticker}/${filing.accession}: summaryPath requires summaryStatus='ready'`);
 
     if (!artifact.summaryKo?.oneLine) errors.push(`${ticker}/${filing.accession}: summaryKo.oneLine is required`);
+    checkNoMalformedCommaNumbers(`${ticker}/${filing.accession}/oneLine`, artifact.summaryKo?.oneLine ?? "", errors);
     if (filing.summaryOneLine && artifact.summaryKo?.oneLine !== filing.summaryOneLine) {
       errors.push(`${ticker}/${filing.accession}: manifest summaryOneLine must match artifact summaryKo.oneLine`);
     }
@@ -171,6 +186,7 @@ for (const ticker of tickers) {
       if (String(evidence.sourceTextDigest ?? "").length > MAX_EVIDENCE_DIGEST_CHARS) {
         errors.push(`${ticker}/${filing.accession}/${evidence.id}: sourceTextDigest exceeds ${MAX_EVIDENCE_DIGEST_CHARS} chars`);
       }
+      checkNoMalformedCommaNumbers(`${ticker}/${filing.accession}/${evidence.id}`, evidence.sourceTextDigest ?? "", errors);
     }
 
     const oneLineDigest = canonical(evidenceRows.map((row) => row.sourceTextDigest ?? "").join(" "));
@@ -189,6 +205,7 @@ for (const ticker of tickers) {
       for (const [index, bullet] of rows.entries()) {
         bulletCount += 1;
         if (!bullet?.text) errors.push(`${ticker}/${filing.accession}/${section}[${index}]: missing text`);
+        checkNoMalformedCommaNumbers(`${ticker}/${filing.accession}/${section}[${index}]`, bullet?.text ?? "", errors);
         if (!SUMMARY_STANCES.has(bullet?.stance)) {
           errors.push(`${ticker}/${filing.accession}/${section}[${index}]: invalid stance '${bullet?.stance}'`);
         }
