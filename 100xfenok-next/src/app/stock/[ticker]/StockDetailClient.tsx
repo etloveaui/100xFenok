@@ -24,6 +24,7 @@ import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
+import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -767,6 +768,7 @@ export default function StockDetailClient({
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
+  const [filingSummaryCount, setFilingSummaryCount] = useState<number | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
 
   useEffect(() => {
@@ -843,6 +845,23 @@ export default function StockDetailClient({
     return () => { cancelled = true; };
   }, [assetHint, symbol]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (assetHint === "etf") {
+      Promise.resolve().then(() => {
+        if (!cancelled) setFilingSummaryCount(0);
+      });
+      return () => { cancelled = true; };
+    }
+    Promise.resolve().then(() => {
+      if (!cancelled) setFilingSummaryCount(undefined);
+    });
+    loadEdgarKoreanSummariesForTicker(symbol).then((manifest) => {
+      if (!cancelled) setFilingSummaryCount(edgarFilingsForTicker(manifest, symbol).length);
+    });
+    return () => { cancelled = true; };
+  }, [assetHint, symbol]);
+
   const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
   useEffect(() => {
     let cancelled = false;
@@ -861,7 +880,7 @@ export default function StockDetailClient({
   const etfSurface = etfSurfaceFallback(etfSurfaceData, symbol);
   const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
   const isEtfOnlyAsset = isEtfAsset && !row;
-  const hasFilingPilot = symbol === "NVDA" && !isEtfOnlyAsset;
+  const hasFilingPilot = !isEtfOnlyAsset && ((filingSummaryCount ?? 0) > 0 || stockTab === "filings" || initialTab === "filings");
   const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf"
     ? "overview"
     : !hasFilingPilot && stockTab === "filings"
@@ -1021,7 +1040,7 @@ export default function StockDetailClient({
   function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
     if (activeStockTab === "filings") {
-      return <EdgarSummaryPilotClient embedded />;
+      return <EdgarSummaryPilotClient ticker={symbol} embedded />;
     }
     if (activeStockTab === "etf") {
       return (

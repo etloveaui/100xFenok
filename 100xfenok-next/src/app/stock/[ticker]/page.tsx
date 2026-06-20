@@ -20,7 +20,7 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const query = searchParams ? await searchParams : {};
   const symbol = ticker.toUpperCase();
   const requestedTab = Array.isArray(query.tab) ? query.tab[0] : query.tab;
-  const initialTab = symbol === "NVDA" && requestedTab === "filings" ? "filings" : undefined;
+  const initialTab = requestedTab === "filings" ? "filings" : undefined;
   return (
     <div className="fnk-shell">
       <AppShell title={symbol} backHref={`/screener?ticker=${encodeURIComponent(symbol)}`}>

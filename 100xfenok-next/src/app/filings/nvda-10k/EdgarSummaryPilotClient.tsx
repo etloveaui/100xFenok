@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-const ARTIFACT_URL = "/data/edgar-korean-summaries/pilot/nvda-10-k-0001045810-26-000021.json";
+import {
+  edgarFilingsForTicker,
+  loadEdgarKoreanSummariesForTicker,
+  normalizeEdgarTicker,
+  type EdgarKoreanSummaryFilingEntry,
+} from "@/lib/edgarKoreanSummaries";
 
 type Stance = "fact" | "management_claim" | "feno_interpretation";
 
@@ -137,6 +141,14 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
+function joinOrDash(values: string[] | undefined) {
+  return values?.length ? values.join(", ") : "없음";
+}
+
+function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
+  return `${filing.form} · ${formatDate(filing.filingDate)}`;
+}
+
 function EvidenceList({
   evidenceIds,
   evidenceById,
@@ -148,7 +160,13 @@ function EvidenceList({
     .map((id) => evidenceById.get(id))
     .filter((row): row is FilingEvidence => Boolean(row));
 
-  if (evidenceRows.length === 0) return null;
+  if (evidenceRows.length === 0) {
+    return (
+      <p className="mt-3 text-xs font-bold text-red-600">
+        근거 링크가 연결되지 않은 문장입니다. 원문 확인 전까지 해석에 사용하지 마세요.
+      </p>
+    );
+  }
 
   return (
     <div className="mt-3 flex flex-col gap-2">
@@ -216,13 +234,52 @@ function SummarySection({
   );
 }
 
-export default function EdgarSummaryPilotClient({ embedded = false }: { embedded?: boolean }) {
+export default function EdgarSummaryPilotClient({
+  embedded = false,
+  ticker = "NVDA",
+}: {
+  embedded?: boolean;
+  ticker?: string;
+}) {
+  const symbol = normalizeEdgarTicker(ticker);
+  const [filings, setFilings] = useState<EdgarKoreanSummaryFilingEntry[] | null>(null);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [artifact, setArtifact] = useState<EdgarKoreanSummaryArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch(ARTIFACT_URL, { cache: "no-store" })
+    Promise.resolve().then(() => {
+      if (!cancelled) {
+        setFilings(null);
+        setSelectedPath(null);
+        setError(null);
+      }
+    });
+    loadEdgarKoreanSummariesForTicker(symbol)
+      .then((manifest) => {
+        if (cancelled) return;
+        const nextFilings = edgarFilingsForTicker(manifest, symbol);
+        setFilings(nextFilings);
+        setSelectedPath(nextFilings.find((filing) => filing.summaryPath)?.summaryPath ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [symbol]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) {
+        setArtifact(null);
+        setError(null);
+      }
+    });
+    if (!selectedPath) return () => {
+      cancelled = true;
+    };
+    fetch(selectedPath, { cache: "no-store" })
       .then((response) => {
         if (!response.ok) throw new Error(`SUMMARY_FETCH_FAILED:${response.status}`);
         return response.json() as Promise<EdgarKoreanSummaryArtifact>;
@@ -236,7 +293,12 @@ export default function EdgarSummaryPilotClient({ embedded = false }: { embedded
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedPath]);
+
+  const selectedFiling = useMemo(
+    () => filings?.find((filing) => filing.summaryPath === selectedPath) ?? filings?.[0] ?? null,
+    [filings, selectedPath],
+  );
 
   const evidenceById = useMemo(() => {
     return new Map((artifact?.evidence ?? []).map((row) => [row.id, row]));
@@ -246,35 +308,52 @@ export default function EdgarSummaryPilotClient({ embedded = false }: { embedded
     return (
       <section className="panel">
         <div className="panel-b">
-          <p className="text-sm font-semibold text-red-700">NVDA 공시 요약 데이터를 불러오지 못했습니다.</p>
+          <p className="text-sm font-semibold text-red-700">{symbol} 공시 요약 데이터를 불러오지 못했습니다.</p>
           <p className="mt-2 font-mono text-xs text-slate-500">{error}</p>
         </div>
       </section>
     );
   }
 
-  if (!artifact) {
+  if (filings && filings.length === 0) {
     return (
       <section className="panel">
         <div className="panel-b">
-          <p className="text-sm font-semibold text-slate-600">NVDA 10-K 요약을 불러오는 중입니다.</p>
+          <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
+          <p className="mt-2 text-sm text-slate-500">
+            {symbol}의 10-K, 10-Q, 8-K 요약이 manifest에 등록되면 이 탭에 자동으로 표시됩니다.
+          </p>
         </div>
       </section>
     );
   }
+
+  if (!filings || (selectedPath && !artifact)) {
+    return (
+      <section className="panel">
+        <div className="panel-b">
+          <p className="text-sm font-semibold text-slate-600">{symbol} 공시 요약을 불러오는 중입니다.</p>
+        </div>
+      </section>
+    );
+  }
+
+  const displayTicker = artifact?.company.ticker ?? symbol;
+  const displayOneLine = artifact?.summaryKo.oneLine ?? selectedFiling?.summaryOneLine ?? "등록된 공시 원문과 요약 상태를 확인합니다.";
+  const displaySourceUrl = artifact?.filing.sourceUrl ?? selectedFiling?.sourceUrl;
 
   return (
     <div className={embedded ? "stock-main-stack" : "data-shell-page"}>
       <section className="panel">
         <div className="data-shell-header">
           <div className="data-shell-head-main">
-            <p className="data-shell-kicker">EDGAR SUMMARY PILOT</p>
-            <h1 className="data-shell-title">{artifact.company.ticker} 10-K 자동 요약</h1>
-            <p className="data-shell-desc">{artifact.summaryKo.oneLine}</p>
+            <p className="data-shell-kicker">공시 요약</p>
+            <h1 className="data-shell-title">{displayTicker} 공시 한글 요약</h1>
+            <p className="data-shell-desc">{displayOneLine}</p>
           </div>
           <div className="data-shell-head-actions">
-            <span className="data-shell-pill warn"><span />PILOT</span>
-            <span className="data-shell-pill"><span />NVDA ONLY</span>
+            <span className="data-shell-pill warn"><span />자동 요약</span>
+            <span className="data-shell-pill"><span />{filings.length}건</span>
           </div>
         </div>
       </section>
@@ -282,18 +361,95 @@ export default function EdgarSummaryPilotClient({ embedded = false }: { embedded
       <section className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
         <p className="font-bold">자동 생성 요약(AI)입니다. 공식 자료가 아니며, 공시 원문 확인이 필수입니다. 투자권유가 아닙니다.</p>
         <p className="mt-1">
-          현재는 파일럿 화면으로 {artifact.company.ticker} {artifact.filing.form} 한 건만 제공합니다. Item 1은 이번 추출에서
-          빠졌고, 화면은 Item 1A·Item 7·XBRL 재무수치만 사용합니다.
+          원문 전체 번역이 아니라 핵심 요약입니다. 화면은 manifest에 등록된 공시 요약 파일을 읽으며, 추출 누락 구간은 출처 카드에 표시합니다.
+          번역 파일이 없는 공시는 원문만 먼저 연결하고 준비 상태를 표시합니다.
         </p>
       </section>
 
       <section className="panel">
         <div className="panel-h">
           <div>
+            <h2>중요 공시</h2>
+            <p className="desc">등록된 공시를 고르고 원문과 한글 요약을 함께 확인합니다.</p>
+          </div>
+        </div>
+        <div className="panel-b">
+          <div className="grid gap-3">
+            {filings.map((filing) => {
+              const selected = Boolean(filing.summaryPath) && filing.summaryPath === selectedPath;
+              const canShowSummary = Boolean(filing.summaryPath);
+              const canShowTranslation = Boolean(filing.translationPath);
+              return (
+                <article
+                  key={`${filing.accession}-${filing.summaryPath}`}
+                  className={`rounded-lg border p-3 transition ${selected ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}
+                >
+                  <div className="flex flex-wrap items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (filing.summaryPath) setSelectedPath(filing.summaryPath);
+                      }}
+                      aria-pressed={selected}
+                      className="min-w-0 flex-1 text-left"
+                      disabled={!canShowSummary}
+                    >
+                      <span className="block text-xs font-black text-slate-500">{filingTitle(filing)}</span>
+                      <span className="mt-1 block text-sm font-bold text-slate-900">{filing.title}</span>
+                      <span className="mt-1 block text-xs leading-relaxed text-slate-500">{filing.summaryOneLine}</span>
+                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={filing.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                      >
+                        원문 보기
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (filing.summaryPath) setSelectedPath(filing.summaryPath);
+                        }}
+                        disabled={!canShowSummary}
+                        className={`inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold transition ${canShowSummary ? "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700" : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"}`}
+                      >
+                        {canShowSummary ? "요약 보기" : "요약 준비중"}
+                      </button>
+                      {canShowTranslation && filing.translationPath ? (
+                        <a
+                          href={filing.translationPath}
+                          className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                        >
+                          번역 보기
+                        </a>
+                      ) : (
+                        <span className="inline-flex min-h-8 cursor-not-allowed items-center rounded-full border border-slate-200 bg-slate-100 px-3 text-xs font-bold text-slate-400">
+                          번역 준비중
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {filing.caveats?.length ? (
+                    <ul className="mt-3 grid gap-1 text-xs font-semibold text-amber-700">
+                      {filing.caveats.map((caveat) => <li key={caveat}>· {caveat}</li>)}
+                    </ul>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {artifact ? <section className="panel">
+        <div className="panel-h">
+          <div>
             <h2>공시 출처</h2>
             <p className="desc">원문과 생성 이력을 먼저 확인합니다.</p>
           </div>
-          <a href={artifact.filing.sourceUrl} target="_blank" rel="noreferrer" className="act">
+          <a href={displaySourceUrl} target="_blank" rel="noreferrer" className="act">
             SEC 원문
           </a>
         </div>
@@ -305,7 +461,7 @@ export default function EdgarSummaryPilotClient({ embedded = false }: { embedded
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <dt className="text-xs font-bold text-slate-500">공시</dt>
-              <dd className="mt-1 text-sm font-semibold text-slate-800">{artifact.filing.form}</dd>
+              <dd className="mt-1 text-sm font-semibold text-slate-800">{selectedFiling ? filingTitle(selectedFiling) : artifact.filing.form}</dd>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <dt className="text-xs font-bold text-slate-500">접수일</dt>
@@ -326,14 +482,25 @@ export default function EdgarSummaryPilotClient({ embedded = false }: { embedded
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <p className="text-xs font-bold text-slate-500">추출 범위</p>
               <p className="mt-1 text-sm text-slate-700">
-                사용: {artifact.sourceStatus.sectionsExtracted.join(", ")} · 누락: {artifact.sourceStatus.missingSections.join(", ")}
+                사용: {joinOrDash(artifact.sourceStatus.sectionsExtracted)} · 누락: {joinOrDash(artifact.sourceStatus.missingSections)}
               </p>
             </div>
           </div>
         </div>
-      </section>
+      </section> : (
+        <section className="panel">
+          <div className="panel-b">
+            <p className="text-sm font-semibold text-slate-700">선택한 공시의 한글 요약이 아직 준비되지 않았습니다.</p>
+            {selectedFiling?.sourceUrl ? (
+              <a href={selectedFiling.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700">
+                SEC 원문 보기
+              </a>
+            ) : null}
+          </div>
+        </section>
+      )}
 
-      {SECTION_LABELS.map((section) => (
+      {artifact ? SECTION_LABELS.map((section) => (
         <SummarySection
           key={section.key}
           title={section.title}
@@ -341,7 +508,7 @@ export default function EdgarSummaryPilotClient({ embedded = false }: { embedded
           bullets={artifact.summaryKo[section.key]}
           evidenceById={evidenceById}
         />
-      ))}
+      )) : null}
     </div>
   );
 }
