@@ -1,6 +1,6 @@
 # EDGAR Korean Summaries
 
-This folder publishes Korean SEC filing summary artifacts for 100xFenok.
+This folder mirrors the public Korean SEC filing summary data contract.
 
 ## Contract
 
@@ -11,8 +11,9 @@ This folder publishes Korean SEC filing summary artifacts for 100xFenok.
 - `summaryPath` is optional. Rows without it remain visible as original-only filings with a pending summary state.
 - `translationPath` is optional. Full Korean translations are separate from short summaries.
 - Summary artifacts must keep short evidence digests and source anchors. Do not embed long SEC source text.
-- Run `npm run qa:edgar-summaries` after adding or editing manifests/artifacts. The check blocks missing evidence anchors and numeric claims that are not present in cited evidence digests.
+- Run `npm run qa:edgar-summaries` from `100xfenok-next` after adding or editing manifests/artifacts. The check blocks missing evidence anchors and numeric claims that are not present in cited evidence digests.
 
 ## Current Coverage
 
 - `NVDA`: 2026 Form 10-K pilot summary.
+- `AAPL`: 2025 Form 10-K pilot summary.

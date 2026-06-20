@@ -16,3 +16,4 @@ This folder mirrors the public Korean SEC filing summary data contract.
 ## Current Coverage
 
 - `NVDA`: 2026 Form 10-K pilot summary.
+- `AAPL`: 2025 Form 10-K pilot summary.

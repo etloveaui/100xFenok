@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "artifactType": "edgar_korean_summary_pilot",
+  "company": {
+    "ticker": "AAPL",
+    "cik": "0000320193",
+    "name": "Apple Inc."
+  },
+  "filing": {
+    "form": "10-K",
+    "accession": "0000320193-25-000079",
+    "filingDate": "2025-10-31",
+    "periodEnd": "2025-09-27",
+    "primaryDocument": "aapl-20250927.htm",
+    "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+  },
+  "sourceStatus": {
+    "edgarFilingsFromCache": true,
+    "sectionsRequested": [
+      "item_1",
+      "item_1a",
+      "item_7"
+    ],
+    "sectionsExtracted": [
+      "item_1a",
+      "item_7"
+    ],
+    "missingSections": [
+      "item_1"
+    ],
+    "xbrlFactsUsed": [
+      "Revenues",
+      "OperatingIncomeLoss",
+      "NetIncomeLoss",
+      "Assets",
+      "CashAndCashEquivalentsAtCarryingValue"
+    ],
+    "publicationPolicy": "No long SEC source text is embedded; evidence uses short digests and source URL anchors."
+  },
+  "summaryKo": {
+    "oneLine": "Apple Inc.는 2025 회계연도에 4,161억 6,100만 달러의 매출과 1,120억 1,000만 달러의 순이익을 기록하였습니다.",
+    "keyPoints": [
+      {
+        "text": "2025 회계연도 매출은 4,161억 6,100만 달러를 달성하였습니다.",
+        "evidence": [
+          "xbrl_revenue_fy2025"
+        ],
+        "stance": "fact"
+      },
+      {
+        "text": "순이익은 1,120억 1,000만 달러로 집계되었습니다.",
+        "evidence": [
+          "xbrl_net_income_fy2025"
+        ],
+        "stance": "fact"
+      }
+    ],
+    "riskChanges": [
+      {
+        "text": "회사의 사업, 평판, 운영 결과 및 재무 상태에 중대한 부정적 영향을 미칠 수 있는 위험 요인들을 관리하고 완화하는 데 어려움이 있을 수 있습니다.",
+        "evidence": [
+          "item_1a_digest_01"
+        ],
+        "stance": "management_claim"
+      }
+    ],
+    "businessChanges": [
+      {
+        "text": "경영진은 2025 회계연도와 2024 회계연도를 비교하여 재무 상태 및 운영 결과를 분석하였습니다.",
+        "evidence": [
+          "item_7_digest_01"
+        ],
+        "stance": "fact"
+      }
+    ],
+    "financialHighlights": [
+      {
+        "text": "영업이익은 1,330억 5,000만 달러이며, 총자산은 3,592억 4,100만 달러입니다.",
+        "evidence": [
+          "xbrl_operating_income_fy2025",
+          "xbrl_assets_fy2025"
+        ],
+        "stance": "fact"
+      },
+      {
+        "text": "현금및현금성자산은 359억 3,400만 달러를 보유하고 있습니다.",
+        "evidence": [
+          "xbrl_cash_fy2025"
+        ],
+        "stance": "fact"
+      }
+    ],
+    "watchItems": [
+      {
+        "text": "회사가 언급한 위험 요인들이 향후 재무 성과에 미칠 잠재적 영향에 대한 지속적인 모니터링이 필요합니다.",
+        "evidence": [
+          "item_1a_digest_01"
+        ],
+        "stance": "feno_interpretation"
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "id": "xbrl_revenue_fy2025",
+      "kind": "xbrl_fact",
+      "section": "companyfacts",
+      "anchor": "us-gaap:Revenues#FY2025",
+      "sourceTextDigest": "FY2025 revenue = 4,161억 6,100만 달러 (USD 416.161B), period ended 2025-09-27.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "id": "xbrl_operating_income_fy2025",
+      "kind": "xbrl_fact",
+      "section": "companyfacts",
+      "anchor": "us-gaap:OperatingIncomeLoss#FY2025",
+      "sourceTextDigest": "FY2025 operating income = 1,330억 5,000만 달러 (USD 133.05B), period ended 2025-09-27.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "id": "xbrl_net_income_fy2025",
+      "kind": "xbrl_fact",
+      "section": "companyfacts",
+      "anchor": "us-gaap:NetIncomeLoss#FY2025",
+      "sourceTextDigest": "FY2025 net income = 1,120억 1,000만 달러 (USD 112.01B), period ended 2025-09-27.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "id": "xbrl_assets_fy2025",
+      "kind": "xbrl_fact",
+      "section": "companyfacts",
+      "anchor": "us-gaap:Assets#FY2025",
+      "sourceTextDigest": "FY2025 total assets = 3,592억 4,100만 달러 (USD 359.241B), period ended 2025-09-27.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "id": "xbrl_cash_fy2025",
+      "kind": "xbrl_fact",
+      "section": "companyfacts",
+      "anchor": "us-gaap:CashAndCashEquivalentsAtCarryingValue#FY2025",
+      "sourceTextDigest": "FY2025 cash and cash equivalents = 359억 3,400만 달러 (USD 35.934B), period ended 2025-09-27.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "id": "item_1a_digest_01",
+      "kind": "filing_digest",
+      "section": "item_1a",
+      "anchor": "item_1a#summary",
+      "sourceTextDigest": "Item 1A. Risk Factors The following summarizes factors that could have a material adverse effect on the Company’s business, reputation, results of operations, financial condition and stock price. The Company may not be able to accurately predict, control or mitigate these risks. Statements in this section are based on the Company’s beliefs and opinions regarding matters that could materially adversely affect the Company in the future and are not representations as to whether ",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "id": "item_7_digest_01",
+      "kind": "filing_digest",
+      "section": "item_7",
+      "anchor": "item_7#summary",
+      "sourceTextDigest": "Item 7. Management’s Discussion and Analysis of Financial Condition and Results of Operations The following discussion should be read in conjunction with the consolidated financial statements and accompanying notes included in Part II, Item 8 of this Form 10-K. This Item generally discusses 2025 and 2024 items and year-to-year comparisons between 2025 and 2024. Discussions of 2023 items and year-to-year comparisons between 2024 and 2023 are not included, and can be found in “",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    }
+  ],
+  "qualityFlags": [
+    "Sections missing from source extraction: item_1",
+    "Financial data reflects 2025-09-27 fiscal year"
+  ],
+  "generation": {
+    "generatedAtUtc": "2026-06-20T16:31:55.686371+00:00",
+    "promptVersion": "filing-summary-ko-v1-free-pilot",
+    "model": "gemini-3.1-flash-lite",
+    "keySlot": 1,
+    "usageMetadata": {
+      "promptTokenCount": 970,
+      "candidatesTokenCount": 634,
+      "totalTokenCount": 1604,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 970
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "costUsedUsd": 0,
+    "paidQuotaUsed": false,
+    "costPolicy": "Gemini free-tier only; paid/pro models default-denied.",
+    "inputPromptChars": 2493,
+    "outputTextChars": 1301
+  }
+}
