@@ -146,21 +146,38 @@ function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
   return `${filing.form} · ${formatDate(filing.filingDate)}`;
 }
 
-function sectionLabel(form: string | undefined, section: string | undefined) {
-  const normalizedForm = String(form ?? "").toUpperCase();
-  const normalizedSection = String(section ?? "").toLowerCase();
-  if (normalizedForm === "10-Q") {
-    if (normalizedSection === "item_7") return "Part I Item 2 · MD&A";
-    if (normalizedSection === "item_1a") return "Part II Item 1A · 리스크 요인";
-  }
-  if (normalizedSection === "item_1") return "Item 1 · 사업";
-  if (normalizedSection === "item_1a") return "Item 1A · 리스크 요인";
-  if (normalizedSection === "item_7") return "Item 7 · MD&A";
-  return section || "섹션 미상";
+// Plain-Korean labels for SEC section codes so the UI never leaks raw codes
+// (item_1a, exhibit_99_1, companyfacts) or English section names to readers.
+const SECTION_LABELS_KO: Record<string, string> = {
+  item_1: "사업 개요",
+  item_1a: "위험요인",
+  item_7: "경영실적 분석(MD&A)",
+  item_2_02: "실적 발표",
+  exhibit_99_1: "실적 보도자료",
+  companyfacts: "주요 재무수치",
+};
+
+function sectionLabel(_form: string | undefined, section: string | undefined) {
+  const key = String(section ?? "").toLowerCase().trim();
+  return SECTION_LABELS_KO[key] ?? "주요 공시 항목";
+}
+
+// True when the last character carries a Korean final consonant (받침),
+// used to pick the correct connective/object particle (과/와, 을/를).
+function hasJongseong(word: string) {
+  const ch = word.trim().slice(-1);
+  const code = ch.charCodeAt(0);
+  if (Number.isNaN(code) || code < 0xac00 || code > 0xd7a3) return false;
+  return (code - 0xac00) % 28 !== 0;
 }
 
 function sectionListLabel(form: string | undefined, sections: string[] | undefined) {
-  return sections?.length ? sections.map((section) => sectionLabel(form, section)).join(", ") : "없음";
+  const labels = Array.from(new Set((sections ?? []).map((section) => sectionLabel(form, section))));
+  if (labels.length === 0) return "";
+  if (labels.length === 1) return labels[0];
+  const head = labels.slice(0, -1).join("·");
+  const last = labels[labels.length - 1];
+  return `${head}${hasJongseong(head) ? "과" : "와"} ${last}`;
 }
 
 function EvidenceList({
@@ -509,9 +526,13 @@ export default function EdgarSummaryClient({
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-bold text-slate-500">추출 범위</p>
+              <p className="text-xs font-bold text-slate-500">요약 근거</p>
               <p className="mt-1 text-sm text-slate-700">
-                사용: {sectionListLabel(artifact.filing.form, artifact.sourceStatus.sectionsExtracted)} · 누락: {sectionListLabel(artifact.filing.form, artifact.sourceStatus.missingSections)}
+                {(() => {
+                  const basis = sectionListLabel(artifact.filing.form, artifact.sourceStatus.sectionsExtracted);
+                  if (!basis) return "이 요약은 공시 원문을 바탕으로 작성했습니다.";
+                  return `이 요약은 ${basis}${hasJongseong(basis) ? "을" : "를"} 바탕으로 작성했습니다.`;
+                })()}
               </p>
             </div>
           </div>
