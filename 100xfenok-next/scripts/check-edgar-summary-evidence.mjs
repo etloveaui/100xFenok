@@ -101,6 +101,26 @@ function checkMirror(publicPath, sourcePath, errors) {
   }
 }
 
+function isApprovedPaidGeneration(generation) {
+  return generation?.provider === "deepseek_api"
+    && generation?.model === "deepseek-v4-flash"
+    && generation?.paidQuotaUsed === true
+    && typeof generation?.costUsedUsd === "number"
+    && Number.isFinite(generation.costUsedUsd)
+    && generation.costUsedUsd > 0;
+}
+
+function checkGenerationCostPolicy(generation, label, errors) {
+  const isFree =
+    generation?.paidQuotaUsed === false &&
+    typeof generation?.costUsedUsd === "number" &&
+    Number(generation.costUsedUsd) === 0;
+  if (isFree || isApprovedPaidGeneration(generation)) return;
+  errors.push(
+    `${label}: generation cost policy must be free-tier or approved deepseek-v4-flash paid fallback`,
+  );
+}
+
 const errors = [];
 checkMirror(INDEX_PATH, SOURCE_INDEX_PATH, errors);
 
@@ -199,12 +219,7 @@ for (const ticker of tickers) {
     if (!artifact.generation?.generatedAtUtc) errors.push(`${ticker}/${filing.accession}: generation.generatedAtUtc is required`);
     if (!artifact.generation?.promptVersion) errors.push(`${ticker}/${filing.accession}: generation.promptVersion is required`);
     if (!artifact.generation?.model) errors.push(`${ticker}/${filing.accession}: generation.model is required`);
-    if (Number(artifact.generation?.costUsedUsd) !== 0) {
-      errors.push(`${ticker}/${filing.accession}: generation.costUsedUsd must be 0`);
-    }
-    if (artifact.generation?.paidQuotaUsed !== false) {
-      errors.push(`${ticker}/${filing.accession}: generation.paidQuotaUsed must be false`);
-    }
+    checkGenerationCostPolicy(artifact.generation, `${ticker}/${filing.accession}`, errors);
 
     const evidenceRows = Array.isArray(artifact.evidence) ? artifact.evidence : [];
     const evidenceById = new Map(evidenceRows.map((row) => [row.id, row]));

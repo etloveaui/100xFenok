@@ -131,6 +131,26 @@ function assertNoEmbeddedSourceText(value, label, errors) {
   }
 }
 
+function isApprovedPaidGeneration(generation) {
+  return generation?.provider === "deepseek_api"
+    && generation?.model === "deepseek-v4-flash"
+    && generation?.paidQuotaUsed === true
+    && typeof generation?.costUsedUsd === "number"
+    && Number.isFinite(generation.costUsedUsd)
+    && generation.costUsedUsd > 0;
+}
+
+function checkGenerationCostPolicy(generation, label, errors) {
+  const isFree =
+    generation?.paidQuotaUsed === false &&
+    typeof generation?.costUsedUsd === "number" &&
+    Number(generation.costUsedUsd) === 0;
+  if (isFree || isApprovedPaidGeneration(generation)) return;
+  errors.push(
+    `${label}: generation cost policy must be free-tier or approved deepseek-v4-flash paid fallback`,
+  );
+}
+
 function validateTranslationArtifact(artifact, filing, ticker, label, errors, sourceEvidenceById = null) {
   expectEqual(artifact.schemaVersion, 1, `${label}: schemaVersion`, errors);
   expectEqual(artifact.artifactType, TRANSLATION_ARTIFACT_TYPE, `${label}: artifactType`, errors);
@@ -190,6 +210,7 @@ function validateTranslationArtifact(artifact, filing, ticker, label, errors, so
   } else if (artifact.generation.costUsedUsd < 0) {
     errors.push(`${label}: generation.costUsedUsd must not be negative`);
   }
+  checkGenerationCostPolicy(artifact.generation, label, errors);
   assertNoEmbeddedSourceText(artifact, label, errors);
 }
 
