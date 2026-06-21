@@ -402,7 +402,7 @@ export default function EdgarSummaryClient({
                   key={`${filing.accession}-${filing.summaryPath}`}
                   className={`rounded-lg border p-3 transition ${selected ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}
                 >
-                  <div className="flex flex-wrap items-start gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
                     <button
                       type="button"
                       onClick={() => {
