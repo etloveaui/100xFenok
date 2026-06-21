@@ -9,22 +9,22 @@
 
 ## Cross-cutting finding (both sides agree)
 
-**Core stock/ETF *current* surfaces are data-rich (88–100% on price/valuation/estimate fields); filings are now phase-1 broadened but summaries are still sparse** (filings phase-1 = 50 tickers / 600 SEC rows, Korean summary ready = NVDA 1-file pilot; StockAnalysis stock/financials 40/1066; SlickCharts stock intersection 418/1066). So for the rich surfaces the problem is **expression / interpretation / exposure**, not data scarcity, and most fixes there are **S-tier and $0**. Filings/aux need actual data breadth work (still mostly $0 via free SEC API, but integration effort, not a UI tweak). [corrected per Codex fh-107; F1 phase-1 per fh-133]
+**Core stock/ETF *current* surfaces are data-rich (88–100% on price/valuation/estimate fields); filings are now phase-1 broadened and 10-K/10-Q Korean coverage is complete for the 50-ticker batch** (filings phase-1 = 50 tickers / 600 SEC rows; Korean summary/translation ready = 39/39 10-K + 96/96 10-Q; remaining filing gap = 405 8-K rows, all pending; StockAnalysis stock/financials 40/1066; SlickCharts stock intersection 418/1066). So for the rich surfaces the problem is **expression / interpretation / exposure**, not data scarcity, and most fixes there are **S-tier and $0**. Filings/aux now need selective 8-K scoping, not blind bulk generation. [corrected per Codex fh-107; F1 phase-1 per fh-133; 10-Q close-out per Claude fh-168 / Codex fh-170]
 
 ---
 
 ## Surface 1 — Stock filings (공시)
 
-**Measured**: F1 phase-1 now writes `index.json` = 50 tickers and 600 SEC filing rows (latest 12 each; 10-K/10-Q/8-K/20-F/6-K). NVDA 10-K 2026-02-25 remains the only Korean summary-ready row; translation 0/1; sections item_1a+item_7, item_1 missing (partial). App makes **0 direct SEC API calls**. Generator + weekly/manual workflow now exist; `qa:edgar-summaries` validates ready summary artifacts while skipping pending rows. Free external asset still exists for deeper summary work: `feno-edgar` skill → `Asset_Allocator/scripts/edgar/edgar_client.py` `fetch_submissions()` (data.sec.gov, no key, 2req/s) + ~21GB EDGAR cache (~5,769 issuers).
+**Measured**: F1 phase-1 now writes `index.json` = 50 tickers and 600 SEC filing rows (latest 12 each; 10-K/10-Q/8-K/20-F/6-K). As of 2026-06-21, 10-K and 10-Q Korean summary/translation coverage is complete for this batch: 39/39 10-K and 96/96 10-Q have ready summaries and ready translations; `qa:edgar-summaries` and `qa:edgar-translations` pass. The remaining gap is 8-K: 405 rows across 45 tickers, summary ready 0/405, translation ready 0/405. App makes **0 direct SEC API calls**. Generator + weekly/manual workflow now exist; `qa:edgar-summaries` validates ready summary artifacts while skipping pending rows. Free external asset still exists for deeper summary work: `feno-edgar` skill → `Asset_Allocator/scripts/edgar/edgar_client.py` `fetch_submissions()` (data.sec.gov, no key, 2req/s) + ~21GB EDGAR cache (~5,769 issuers).
 
-**Gaps**: phase-1 is 50-ticker small batch, not full universe yet; Korean summary remains NVDA-only; 번역 0; no auto-summary generation pipeline; full-universe run is data-ops after live phase-1 verification.
+**Gaps**: phase-1 is 50-ticker small batch, not full universe yet; 8-K rows are all pending; full-universe run is data-ops after live phase-1 verification. 8-K should be scoped before generation: local SEC submissions cache classified 332/405 rows by Item code, with 118 known Item 2.02 earnings/financial-results 8-Ks, 106 governance/board/vote/charter, 85 Reg FD/other events, 16 agreements/M&A/financing/restructuring, 5 exhibits-only, 2 securities/rights/capital, and 73 still unclassified because the local submissions cache did not contain those newer accessions. Recommended next filing slice = classify/refresh the 73 unknowns, then generate the Item 2.02 earnings 8-Ks first; do not blindly generate all 405.
 
 **Divergence**: Claude rated the "all-ticker timeline" **S** (edgar_client.py already has `fetch_submissions`/`resolve_cik`); Codex rated it **M** (needs build-pipeline wiring into Next). Both agree **$0**.
 
 **Slices**:
 - F1 (**M for production**, S only for a single-ticker raw-SEC prototype, $0) — ✅ phase-1 landed: `scripts/build-edgar-filing-timeline.mjs` writes by-ticker SEC filing timelines, preserves existing ready summary rows by accession, and adds `summaryPath=null` pending rows for 원문-only display. `.github/workflows/fetch-edgar-filings.yml` runs weekly/manual with small-batch default, `plan_only`, `full_universe`, and rebase retry. Gate: 50 tickers / 600 filings, NVDA ready row preserved, pending rows all have `sourceUrl`, `qa:edgar-summaries` PASS. Full universe = phase-2 data-ops only after phase-1 live verification. [Codex fh-107; Claude gate fh-133]
-- F2 (M, $-LLM) — summary auto-gen pipeline (feno-edgar extract → free LLM → artifact + manifest → qa gate). Free pool only.
-- F3 (L, $$-LLM) — full-text translation. Lowest ROI, last.
+- F2 (M, $-LLM) — ✅ 10-K/10-Q batch landed: summary auto-gen pipeline (feno-edgar extract → free LLM → artifact + manifest → qa gate) produced ready summaries for 39 10-K + 96 10-Q rows. Remaining F2 scope = 8-K, starting with Item 2.02 earnings/financial-results after the 73 unknown 8-Ks are classified. Free pool only.
+- F3 (L, $$-LLM) — ✅ 10-K/10-Q translation batch landed: 135 total translations (39 10-K + 96 10-Q), source/public parity, English-scale scan 0, and `qa:edgar-translations` PASS. Remaining F3 scope = 8-K only after F2 8-K summary scope is chosen.
 
 ---
 
@@ -114,7 +114,7 @@
 
 **Owner decisions embedded**: (a) M3 nav-IA — sectors into market subnav (Codex) vs regime/events into global nav (Claude); (b) F2 summary auto-gen uses free pool only (this week spark/gemini OK), paid still gated; (c) start point — recommend P0 pair (E1 + S1) first as both are S/$0 and hit a real bug + the owner's stated complaint.
 
-**Current remaining owner-gated work after the autonomous wave**: 10-Q bulk summary generation, F3 translation generation, and F1 phase-2/full-universe data-ops. E5 history dispatch is currently not useful because `fetchable_required_history=0`; the 11 open history rows are inception-limited recent-launch ETFs.
+**Current remaining owner-gated work after the autonomous wave**: 8-K scoped summary/translation generation (measure first: 405 rows total, 118 known Item 2.02 earnings rows, 73 item-unclassified due stale local submissions cache), F1 phase-2/full-universe data-ops, and ETF data-ops only when future reports show fetchable gaps. E5 history dispatch is currently not useful because `fetchable_required_history=0`; the 11 open history rows are inception-limited recent-launch ETFs.
 
 ---
 
