@@ -16,10 +16,12 @@ const VALID_COMMA_GROUPED_NUMBER_RE = /^\d{1,3}(?:,\d{3})*$/;
 const FORM_SECTION_REQUESTS = {
   "10-K": ["item_1", "item_1a", "item_7"],
   "10-Q": ["item_1a", "item_7"],
+  "8-K": ["item_2_02", "exhibit_99_1"],
 };
 const FORM_REQUIRED_EXTRACTED = {
   "10-K": ["item_1a", "item_7"],
   "10-Q": ["item_1a", "item_7"],
+  "8-K": ["exhibit_99_1"],
 };
 
 function readJson(path) {
@@ -204,7 +206,7 @@ for (const ticker of tickers) {
     }
     if (!Array.isArray(artifact.sourceStatus?.sectionsExtracted)) {
       errors.push(`${ticker}/${filing.accession}: sourceStatus.sectionsExtracted must be an array`);
-    } else if (["10-K", "10-Q"].includes(form) && artifact.sourceStatus.sectionsExtracted.length === 0) {
+    } else if (["10-K", "10-Q", "8-K"].includes(form) && artifact.sourceStatus.sectionsExtracted.length === 0) {
       errors.push(`${ticker}/${filing.accession}: ready ${filing.form} summary must include at least one extracted SEC filing section`);
     } else if (form in FORM_REQUIRED_EXTRACTED) {
       const extracted = new Set(artifact.sourceStatus.sectionsExtracted);
@@ -224,7 +226,7 @@ for (const ticker of tickers) {
     const evidenceRows = Array.isArray(artifact.evidence) ? artifact.evidence : [];
     const evidenceById = new Map(evidenceRows.map((row) => [row.id, row]));
     evidenceCount += evidenceRows.length;
-    if (["10-K", "10-Q"].includes(String(filing.form ?? "").toUpperCase())) {
+    if (["10-K", "10-Q", "8-K"].includes(String(filing.form ?? "").toUpperCase())) {
       const filingDigestCount = evidenceRows.filter((row) => row.kind === "filing_digest").length;
       if (filingDigestCount === 0) {
         errors.push(`${ticker}/${filing.accession}: ready ${filing.form} summary must include filing_digest evidence`);
