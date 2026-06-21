@@ -56,7 +56,7 @@ function numericTokens(text) {
     .replace(/\b\d{4}\b/g, "")
     .replace(/상위\s*\d+\s*개/g, "")
     .replace(/Item\s*\d+[A-Z]?/gi, "");
-  return [...cleaned.matchAll(/(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*(?:%|%p|포인트|points?|억|만|달러|B)?/g)]
+  return [...cleaned.matchAll(/(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*(?:%|%p|포인트|points?|조|억|만|달러|B)?/g)]
     .map((match) => match[0].replace(/\s+/g, ""))
     .filter(Boolean);
 }
