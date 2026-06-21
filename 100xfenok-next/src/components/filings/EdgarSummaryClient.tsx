@@ -339,7 +339,7 @@ export default function EdgarSummaryClient({
         <div className="panel-b">
           <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
-            {symbol}의 10-K, 10-Q, 8-K 요약이 manifest에 등록되면 이 탭에 자동으로 표시됩니다.
+            {symbol}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.
           </p>
           <ExternalSourceLinks ticker={symbol} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
         </div>
@@ -380,8 +380,7 @@ export default function EdgarSummaryClient({
       <section className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
         <p className="font-bold">자동 생성 요약(AI)입니다. 공식 자료가 아니며, 공시 원문 확인이 필수입니다. 투자권유가 아닙니다.</p>
         <p className="mt-1">
-          원문 전체 번역이 아니라 핵심 요약입니다. 화면은 manifest에 등록된 공시 요약 파일을 읽으며, 추출 누락 구간은 출처 카드에 표시합니다.
-          번역 파일이 없는 공시는 원문만 먼저 연결하고 준비 상태를 표시합니다.
+          원문 전체 번역이 아니라 핵심만 추린 요약입니다. 원문에서 추출되지 않은 항목은 아래 출처 카드에 표시되며, 번역이 아직 없는 공시는 원문 링크를 먼저 제공합니다.
         </p>
       </section>
 
@@ -504,9 +503,9 @@ export default function EdgarSummaryClient({
           </dl>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-bold text-slate-500">생성 이력</p>
+              <p className="text-xs font-bold text-slate-500">요약 생성일</p>
               <p className="mt-1 text-sm text-slate-700">
-                {formatDateTime(artifact.generation.generatedAtUtc)} · {artifact.generation.model} · 비용 ${artifact.generation.costUsedUsd}
+                {formatDateTime(artifact.generation.generatedAtUtc)} · AI 자동 생성
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3">
