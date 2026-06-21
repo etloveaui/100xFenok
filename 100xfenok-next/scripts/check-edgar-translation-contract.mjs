@@ -10,6 +10,10 @@ const TRANSLATION_ARTIFACT_TYPE = "edgar_korean_translation";
 const DISALLOWED_SOURCE_TEXT_KEYS = new Set(["sourceText", "sourceTextRaw", "originalText", "englishText"]);
 const COMMA_GROUPED_NUMBER_RE = /(?:^|[^\d,])(\d+(?:,\d+)+)(?![\d,])/g;
 const VALID_COMMA_GROUPED_NUMBER_RE = /^\d{1,3}(?:,\d{3})*$/;
+const RAW_ENGLISH_SCALE_RE = /\b(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?\s*(?:million|billion|trillion)\b/gi;
+const RAW_MILLION_KO_RE = /(?:^|[^\d,])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*백만\s*달러)/g;
+const RAW_USD_PARENTHESES_RE = /\(\s*USD\s+[0-9,.]+\s*[BM]\s*\)/gi;
+const LARGE_EOK_AMOUNT_RE = /(?:^|[^\d,])((\d{1,3}(?:,\d{3})+|\d+)억(?:\s*(\d{1,3}(?:,\d{3})*)만)?\s*달러)/g;
 const ISO_UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
 function readJson(path) {
@@ -77,6 +81,33 @@ function malformedCommaNumbers(text) {
 function checkNoMalformedCommaNumbers(label, text, errors) {
   for (const token of malformedCommaNumbers(text)) {
     errors.push(`${label}: malformed comma-grouped number '${token}'`);
+  }
+}
+
+function checkNoRawEnglishScale(label, text, errors) {
+  for (const match of String(text ?? "").matchAll(RAW_ENGLISH_SCALE_RE)) {
+    errors.push(`${label}: raw English scale amount '${match[0]}' must use Korean 조/억/만 units`);
+  }
+}
+
+function checkNoRawMillionKo(label, text, errors) {
+  for (const match of String(text ?? "").matchAll(RAW_MILLION_KO_RE)) {
+    errors.push(`${label}: raw million-dollar amount '${match[1]}' must use Korean 조/억/만 units`);
+  }
+}
+
+function checkNoRawUsdParentheses(label, text, errors) {
+  for (const match of String(text ?? "").matchAll(RAW_USD_PARENTHESES_RE)) {
+    errors.push(`${label}: raw USD parenthetical '${match[0]}' must be omitted when Korean units are available`);
+  }
+}
+
+function checkNoLargeEok(label, text, errors) {
+  for (const match of String(text ?? "").matchAll(LARGE_EOK_AMOUNT_RE)) {
+    const eok = Number(String(match[2]).replace(/,/g, ""));
+    if (Number.isFinite(eok) && eok >= 10000) {
+      errors.push(`${label}: large 억 amount '${match[1]}' must use 조/억 units`);
+    }
   }
 }
 
@@ -179,6 +210,10 @@ function validateTranslationArtifact(artifact, filing, ticker, label, errors, so
     requireText(section?.titleKo, `${label}: translationKo.sections[${index}].titleKo`, errors);
     requireText(section?.bodyKo, `${label}: translationKo.sections[${index}].bodyKo`, errors);
     checkNoMalformedCommaNumbers(`${label}: translationKo.sections[${index}].bodyKo`, section?.bodyKo ?? "", errors);
+    checkNoRawEnglishScale(`${label}: translationKo.sections[${index}].bodyKo`, section?.bodyKo ?? "", errors);
+    checkNoRawMillionKo(`${label}: translationKo.sections[${index}].bodyKo`, section?.bodyKo ?? "", errors);
+    checkNoRawUsdParentheses(`${label}: translationKo.sections[${index}].bodyKo`, section?.bodyKo ?? "", errors);
+    checkNoLargeEok(`${label}: translationKo.sections[${index}].bodyKo`, section?.bodyKo ?? "", errors);
     if (!Array.isArray(section?.sourceAnchors) || section.sourceAnchors.length === 0) {
       errors.push(`${label}: translationKo.sections[${index}].sourceAnchors must not be empty`);
     } else {
