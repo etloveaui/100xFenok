@@ -53,10 +53,12 @@ function canonical(text) {
 function numericTokens(text) {
   const cleaned = String(text)
     .replace(/\d{4}\s*회계연도/g, "")
+    .replace(/\d{4}\s*년/g, "")
     .replace(/FY\s*\d{4}/gi, "")
     .replace(/\d{4}-\d{2}-\d{2}/g, "")
     .replace(/\b\d{4}\b/g, "")
     .replace(/상위\s*\d+\s*개/g, "")
+    .replace(/\b(?:8|10)\s*-\s*[KQ]\b/gi, "")
     .replace(/Item\s*\d+[A-Z]?/gi, "");
   return [...cleaned.matchAll(/(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*(?:%|%p|포인트|points?|조|억|만|달러|B)?/g)]
     .map((match) => match[0].replace(/\s+/g, ""))
