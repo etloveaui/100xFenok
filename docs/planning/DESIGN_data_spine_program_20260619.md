@@ -114,7 +114,7 @@ file/pattern and separates real fetchers from tests and string-only references.
 | Hits | File / pattern | Match type | P0 classification |
 |---:|---|---|---|
 | 1 | `100xfenok-next/src/lib/server/ticker.ts` | live provider fetch | RATIFIED: sanctioned live quote gateway until a Data Spine live-quote service exists |
-| 1 | `ib/ib-total-guide-calculator.html` | legacy browser/provider fetch through CORS proxy | CLASSIFIED 2026-06-22: migrate live embed before removing |
+| 1 | `ib/ib-total-guide-calculator.html` | same-origin `/api/ticker/{symbol}` consumer | CLOSED 2026-06-22: browser Yahoo/CORS proxy removed; long-term quote-service migration remains under `ticker.ts` |
 | 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | legacy GAS provider fetch | CLASSIFIED 2026-06-22: explicit IB exception |
 | 1 | `admin/market-data/yahoo-quotes.gs` | admin GAS provider fetch | CLASSIFIED 2026-06-22: explicit admin exception |
 | 1 | `admin/market-radar/scripts/yahoo-quotes.gs` | admin/radar GAS provider fetch | CLASSIFIED 2026-06-22: explicit admin/radar exception |

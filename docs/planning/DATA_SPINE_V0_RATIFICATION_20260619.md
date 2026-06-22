@@ -133,7 +133,8 @@ The direct-fetch backlog rows from P1 remain active until closed one by one.
 `DS-P1-001` is a sanctioned live gateway exception. `DS-P1-002`, `DS-P1-005`,
 and `DS-P1-008` are closed as sunset paths. `DS-P1-003`, `DS-P1-004`, and
 `DS-P1-006` are explicit legacy admin/IB exceptions until a quote contract route
-exists. `DS-P1-007` remains the live `/infinite-buying` migration target.
+exists. `DS-P1-007` is closed: `/infinite-buying` now consumes the same-origin
+100x ticker API instead of browser Yahoo/CORS.
 
 ## Exit Criteria
 

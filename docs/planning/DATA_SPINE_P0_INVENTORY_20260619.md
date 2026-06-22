@@ -151,8 +151,8 @@ files here.
 1. Continue reducing direct provider fetch backlog rows:
    `ticker.ts` is ratified as the live gateway exception; `fetch-yf-finance-v0.py`
    and legacy `100x/daily-wrap/fetcher.py` are sunset; admin/IB GAS helpers are
-   explicit legacy exceptions; `ib-total-guide-calculator.html` remains a live
-   embed migration target.
+   explicit legacy exceptions; `ib-total-guide-calculator.html` no longer calls
+   browser Yahoo/CORS directly and now consumes the same-origin 100x ticker API.
 2. Promote this inventory into a v0 source contract only after P1 defines
    authority/fallback/tolerance/disagreement action per field.
 3. Ratify ownership/update policy for public-only report metadata:

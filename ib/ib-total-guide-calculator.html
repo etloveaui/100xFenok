@@ -4,10 +4,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무한매수법 완전정복 인포그래픽 (API 연동 최종본)</title>
+    <title>무한매수법 완전정복 인포그래픽 (시세 연동)</title>
     <meta name="description" content="무한매수법 전략을 시각화한 인포그래픽과 계산기.">
     <link rel="canonical" href="./ib-total-guide-calculator.html">
-    <meta property="og:title" content="무한매수법 완전정복 인포그래픽 (API 연동 최종본)">
+    <meta property="og:title" content="무한매수법 완전정복 인포그래픽 (시세 연동)">
     <meta property="og:type" content="website">
     <meta property="og:image" content="${window.baseHref}favicon-96x96.png">
     <meta name="theme-color" content="#0ea5e9">
@@ -18,12 +18,12 @@
     2. The Evolution: Timeline of methodologies.
     3. Interactive Deep Dive: TQQQ vs SOXL strategy details.
     4. Crisis Management: Quarter Stop-loss flowchart.
-    5. NEW - Real-time Price API (Fixed): The previous CORS proxy is replaced with a more reliable one (allorigins.win) to fix the network errors.
+    5. Real-time Price: reads the same-origin 100x ticker gateway instead of browser-side provider/proxy calls.
     6. The Bigger Picture: Synergy with '밸류 리밸런싱(VR)'.
-    7. Manual Order Generator: The core utility, uses data from the fixed API call.
+    7. Manual Order Generator: The core utility, uses data from the 100x ticker gateway.
 
     Visualization Choices & Justification (NO SVG, NO MERMAID JS):
-    - Real-time Price Display: Goal=Inform -> JavaScript fetch & HTML. Justification: Switched to a more stable CORS proxy as suggested to resolve the persistent network errors.
+    - Real-time Price Display: Goal=Inform -> JavaScript fetch & HTML. Justification: use the same-origin 100x ticker gateway so the browser never calls Yahoo/CORS proxies directly.
     - All other visualizations remain as specified in previous versions.
     -->
     <style>
@@ -210,7 +210,7 @@
             </section>
             
             <section id="live-price" class="card">
-                <h2 class="text-3xl font-bold mb-6 text-center">6. 실시간 시세 (Yahoo Finance API)</h2>
+                <h2 class="text-3xl font-bold mb-6 text-center">6. 실시간 시세</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
                     <div class="p-6 bg-blue-50 rounded-lg">
                         <h3 class="text-2xl font-bold mb-2">TQQQ</h3>
@@ -270,15 +270,15 @@
             const livePrices = { TQQQ: null, SOXL: null };
 
             async function fetchStockPrice(symbol) {
-                const proxyUrl = 'https://api.allorigins.win/get?url=';
-                const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
                 try {
-                    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const response = await fetch(`/api/ticker/${encodeURIComponent(symbol)}/`, {
+                        headers: { Accept: 'application/json' },
+                        cache: 'no-store'
+                    });
                     if (!response.ok) throw new Error(`Network response was not ok for ${symbol}`);
                     const data = await response.json();
-                    const content = JSON.parse(data.contents);
-                    const price = content?.chart?.result?.[0]?.meta?.regularMarketPrice;
-                    return price ? price.toFixed(2) : 'N/A';
+                    const price = Number(data?.price);
+                    return Number.isFinite(price) && price > 0 ? price.toFixed(2) : 'N/A';
                 } catch (error) {
                     console.error('Price fetch error for ' + symbol + ':', error);
                     return '실패';
