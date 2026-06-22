@@ -1,8 +1,8 @@
 # Sentiment Data
 
-> **Source**: AAII, CNN, CFTC, Alternative.me
+> **Source**: AAII, CNN, CFTC, Yahoo ^VIX, Alternative.me
 > **Update**: Daily/Weekly
-> **Files**: 13
+> **Files**: 14
 
 ---
 
@@ -55,7 +55,7 @@ Schema:
 
 | File | Description | Update |
 |------|-------------|--------|
-| `vix.json` | CBOE Volatility Index | Daily |
+| `vix.json` | CBOE Volatility Index, refreshed by `scripts/fetch-sentiment.mjs` | Daily |
 | `move.json` | MOVE Bond Volatility Index | Daily |
 | `crypto-fear-greed.json` | Crypto Fear & Greed | Daily |
 
@@ -90,7 +90,7 @@ Schema:
 ## Usage
 
 ```javascript
-const BASE = 'https://100xfenok.pages.dev/data/sentiment';
+const BASE = 'https://100xfenok.etloveaui.workers.dev/data/sentiment';
 
 // Get Fear & Greed
 const fng = await fetch(`${BASE}/cnn-fear-greed.json`).then(r => r.json());
@@ -108,4 +108,4 @@ console.log(`Bullish: ${aaii.bullish}%`);
 
 ---
 
-*Last Updated: 2026-01-10*
+*Last Updated: 2026-06-22*

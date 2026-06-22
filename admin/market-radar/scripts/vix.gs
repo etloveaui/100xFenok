@@ -1,10 +1,22 @@
 /**
- * VIX Data Collector
- * Source: Yahoo Finance (^VIX)
- * Schedule: Daily 07:00~08:00 KST
+ * VIX Data Collector — DEPRECATED LOCAL BACKUP
+ *
+ * Runtime replacement:
+ *   - scripts/fetch-sentiment.mjs
+ *   - .github/workflows/fetch-sentiment.yml
+ *
+ * This file is kept only as the historical Apps Script backup for the old
+ * Market Radar project. Do not create a new trigger from this file. The
+ * scheduled Data Spine sentiment collector now owns data/sentiment/vix.json and
+ * its Next.js public mirror.
+ *
+ * Old source: Yahoo Finance (^VIX)
+ * Old schedule: Daily 07:00~08:00 KST
  * Field: value (Close price)
- * Last Updated: 2026-01-03 (DEC-091: FRED → Yahoo 전환)
+ * Sunset documented: 2026-06-22 (DS-P1-005)
  */
+
+const VIX_LEGACY_BACKUP_ONLY = true;
 
 const VIX_CONFIG = {
   REPO_OWNER: 'etloveaui',
@@ -19,6 +31,11 @@ function getGitHubToken() {
 }
 
 function updateVIX() {
+  if (VIX_LEGACY_BACKUP_ONLY) {
+    Logger.log('⚠️ VIX legacy GAS backup only. Use scripts/fetch-sentiment.mjs / fetch-sentiment.yml.');
+    return;
+  }
+
   // 1. Yahoo Finance에서 최근 데이터 가져오기 (15일)
   const endDate = Math.floor(Date.now() / 1000);
   const startDate = endDate - (15 * 24 * 60 * 60);
@@ -178,6 +195,11 @@ function pushToGitHub(filePath, data, message) {
  * - 매일 07:00~08:00 KST (미국 장 마감 후)
  */
 function createVIXTrigger() {
+  if (VIX_LEGACY_BACKUP_ONLY) {
+    Logger.log('⚠️ VIX trigger not created. This GAS backup is deprecated; use fetch-sentiment.yml.');
+    return;
+  }
+
   // 기존 VIX 트리거 삭제
   ScriptApp.getProjectTriggers()
     .filter(t => t.getHandlerFunction() === 'updateVIX')

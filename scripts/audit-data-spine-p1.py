@@ -72,9 +72,12 @@ DIRECT_FETCH_ROWS = (
         "provider": "Yahoo query1 + GitHub contents API",
         "patterns": ("YAHOO_SYMBOL", "query1.finance.yahoo.com"),
         "current_shape": "market-radar VIX collector that writes repo data",
-        "target": "migrate-to-contract under sentiment collector or explicit admin exception",
+        "target": "sunset documented; replaced by scheduled sentiment collector",
         "owner": "admin market-radar",
         "priority": "P1-medium",
+        "disposition": "sunset",
+        "status": "closed_2026-06-22",
+        "replacement": "scripts/fetch-sentiment.mjs + .github/workflows/fetch-sentiment.yml",
     },
     {
         "id": "DS-P1-006",
@@ -222,6 +225,9 @@ def build_direct_fetch_rows() -> list[dict[str, Any]]:
                 **row,
                 "exists": path.exists(),
                 "evidence": f"{row['path']}:{line}" if line else "[not verified]",
+                "disposition": row.get("disposition", "open"),
+                "status": row.get("status", "open"),
+                "replacement": row.get("replacement"),
             }
         )
     return rows
@@ -291,12 +297,13 @@ def print_markdown(payload: dict[str, Any]) -> None:
     print()
     print("## Direct Fetch Backlog Candidates")
     print()
-    print("| ID | Evidence | Provider | Current shape | Target | Owner | Priority |")
-    print("|---|---|---|---|---|---|---|")
+    print("| ID | Evidence | Provider | Current shape | Target | Disposition | Status | Replacement | Owner | Priority |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
     for row in payload["direct_fetch_rows"]:
         print(
             f"| `{row['id']}` | `{row['evidence']}` | {row['provider']} | "
-            f"{row['current_shape']} | {row['target']} | {row['owner']} | {row['priority']} |"
+            f"{row['current_shape']} | {row['target']} | {row['disposition']} | "
+            f"{row['status']} | {row.get('replacement') or '-'} | {row['owner']} | {row['priority']} |"
         )
 
 

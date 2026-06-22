@@ -118,7 +118,7 @@ file/pattern and separates real fetchers from tests and string-only references.
 | 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | legacy GAS provider fetch | DRAFT: legacy IB exception |
 | 1 | `admin/market-data/yahoo-quotes.gs` | admin GAS provider fetch | DRAFT: admin exception |
 | 1 | `admin/market-radar/scripts/yahoo-quotes.gs` | admin/radar GAS provider fetch | DRAFT: admin/radar exception |
-| 1 | `admin/market-radar/scripts/vix.gs` | admin/radar GAS provider fetch | DRAFT: admin/radar exception |
+| 1 | `admin/market-radar/scripts/vix.gs` | deprecated admin/radar GAS provider fetch | CLOSED 2026-06-22: sunset; replaced by scheduled `scripts/fetch-sentiment.mjs` collector |
 | 3 | `100x/daily-wrap/fetcher.py` | legacy content fetcher / dependency hints | DRAFT: legacy publication exception |
 | 1 | `scripts/fetch-yf-finance.py` | allowed scheduled collector | Allowed collector |
 | 1 | `scripts/fetch-stockanalysis.py` | allowed scheduled collector | Allowed collector |

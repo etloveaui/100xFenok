@@ -80,7 +80,7 @@ closed by V0 and stay as migration, legacy exception, or sunset candidates.
 | `DS-P1-002` | `100x/daily-wrap/fetcher.py` | Yahoo yfinance + FRED | legacy Daily Wrap publication fetcher | legacy-exception or migrate-to-contract | P2 |
 | `DS-P1-003` | `admin/market-data/yahoo-quotes.gs` | Yahoo query1 | admin GAS quote helper | legacy-exception or contract route | P2 |
 | `DS-P1-004` | `admin/market-radar/scripts/yahoo-quotes.gs` | Yahoo query1 + Stooq + GOOGLEFINANCE | market-radar GAS quote helper | legacy-exception or contract route | P2 |
-| `DS-P1-005` | `admin/market-radar/scripts/vix.gs` | Yahoo query1 + GitHub contents API | market-radar VIX collector writing repo data | migrate-to-contract under sentiment collector or explicit admin exception | P1-medium |
+| `DS-P1-005` | `admin/market-radar/scripts/vix.gs` | Yahoo query1 + GitHub contents API | deprecated market-radar VIX GAS backup | sunset documented; replaced by scheduled sentiment collector | CLOSED 2026-06-22 |
 | `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC + Yahoo + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper | legacy-exception until AA/IB route exists | P2 |
 | `DS-P1-007` | `ib/ib-total-guide-calculator.html` | browser Yahoo/CORS proxy | legacy browser provider fetch | sunset or contract route | P2 |
 | `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | old PoC collector | sunset/archive | P1-medium |
@@ -89,16 +89,34 @@ closed by V0 and stay as migration, legacy exception, or sunset candidates.
 
 Order is risk-first, not table-order:
 
-1. `DS-P1-005` first: inspect `admin/market-radar/scripts/vix.gs` usage,
-   writes, consumers, and whether the Yahoo/GitHub path should migrate under an
-   existing sentiment/Data Spine collector or stay as an explicit admin
-   exception.
-2. `DS-P1-008` second: prove whether `scripts/fetch-yf-finance-v0.py` is still
+1. `DS-P1-005` closed 2026-06-22: `admin/market-radar/scripts/vix.gs` is now a
+   deprecated local GAS backup only. The runtime replacement is the scheduled
+   sentiment collector (`scripts/fetch-sentiment.mjs` via
+   `.github/workflows/fetch-sentiment.yml`), which writes both
+   `data/sentiment/vix.json` and
+   `100xfenok-next/public/data/sentiment/vix.json`.
+2. `DS-P1-008` next: prove whether `scripts/fetch-yf-finance-v0.py` is still
    called by workflow, docs, or operators. If unused, mark it sunset/archive
    instead of carrying a confusing old collector.
 3. `DS-P1-002` through `DS-P1-007` remaining P2 legacy surfaces: classify each
    as `migrate`, `explicit_exception`, or `sunset`; avoid breaking GAS/IB/Daily
    Wrap runtime paths until a replacement route exists.
+
+### DS-P1-005 Closeout Evidence (2026-06-22)
+
+- Legacy source: `admin/market-radar/scripts/vix.gs` directly fetched Yahoo
+  chart data and wrote `data/sentiment/vix.json` through the GitHub contents API.
+- Replacement collector: `scripts/fetch-sentiment.mjs` declares that it replaces
+  the manual Apps Script path (`cnn.gs` / `vix.gs`), fetches `^VIX`, merges by
+  date, and dual-writes the repo SSOT plus the Next public mirror.
+- Schedule: `.github/workflows/fetch-sentiment.yml` runs the sentiment collector
+  on weekdays after US close and commits `data/sentiment/*.json` plus
+  `100xfenok-next/public/data/sentiment/*.json`.
+- Consumers remain unchanged: Home, Market Valuation, Regime, Macro Monitor, and
+  computed signals all read `/data/sentiment/vix.json`; none need the GAS
+  writer itself.
+- Disposition: `sunset`. Keep the GAS file only as a disabled historical backup;
+  do not create a new Apps Script trigger from it.
 
 For every row, the closeout must include:
 
@@ -116,4 +134,5 @@ For every row, the closeout must include:
 - Current parity counts regenerate from `market_source_parity.json`; they are not
   manually maintained here.
 - Direct-fetch rows `DS-P1-002` through `DS-P1-008` remain tracked until each is
-  migrated, explicitly excepted, or sunset.
+  migrated, explicitly excepted, or sunset; `DS-P1-005` is now closed as
+  `sunset` with `fetch-sentiment.mjs` as the replacement collector.

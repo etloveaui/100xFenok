@@ -2,6 +2,8 @@
 
 > Google Apps Script 코드 백업 및 참조용
 > **실제 실행**: Google Apps Script 콘솔에서 수행
+> **VIX 주의**: `vix.gs`는 2026-06-22 기준 deprecated backup입니다. VIX 운영 갱신은
+> `scripts/fetch-sentiment.mjs` + `.github/workflows/fetch-sentiment.yml`이 담당합니다.
 
 ---
 
@@ -26,7 +28,7 @@
 | 탭 | 수식 | 비고 |
 |----|------|------|
 | AAII | `=IMPORTHTML("https://www.aaii.com/sentimentsurvey/sent_results", "table", 1)` | ⚠️ 오래되면 #N/A → 수식 갱신 로직 |
-| VIX | 수동 | FRED API 직접 호출 |
+| VIX | deprecated | `fetch-sentiment.mjs` scheduled collector |
 | MOVE | 수동 | Yahoo Finance Proxy |
 | CNN | 수동 | CNN API 직접 호출 |
 | Crypto | 수동 | Alternative.me API |
@@ -39,7 +41,7 @@
 | 수집기 | 함수 | 트리거 |
 |--------|------|--------|
 | SP500/NASDAQ | `updateAllIndices()` | 매일 06:00, 09:00 |
-| VIX | `updateVIX()` | 매일 07:48 |
+| VIX | `updateVIX()` | deprecated; 트리거 생성 금지 |
 | MOVE | `updateMOVE()` | 매일 07:29 |
 | **AAII** | `updateAAII()` | **금요일 00:00, 06:00** |
 | **CFTC** | `updateCFTC()` | **토요일 06:00, 12:00** |
@@ -55,7 +57,7 @@
 |------|------------|-----------|
 | **`yahoo-quotes.gs`** | **Yahoo→Stooq→GOOGLEFINANCE** | **범용 실시간 주가 조회 (IB Helper 등)** |
 | `indices.gs` | GOOGLEFINANCE | `data/indices/sp500.json`, `nasdaq.json` |
-| `vix.gs` | Yahoo Finance | `data/sentiment/vix.json` |
+| `vix.gs` | deprecated Yahoo backup | `data/sentiment/vix.json` (runtime owner: `fetch-sentiment.mjs`) |
 | `move.gs` | Yahoo Proxy | `data/sentiment/move.json` |
 | `aaii.gs` | IMPORTHTML (AAII 웹사이트) | `data/sentiment/aaii.json` |
 | `cftc.gs` | CFTC API | `data/sentiment/cftc-sp500.json` |
