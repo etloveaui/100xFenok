@@ -111,7 +111,7 @@ file/pattern and separates real fetchers from tests and string-only references.
 
 | Hits | File / pattern | Match type | P0 classification |
 |---:|---|---|---|
-| 1 | `100xfenok-next/src/lib/server/ticker.ts` | live provider fetch | DRAFT: classify as sanctioned live quote gateway or migrate behind Data Spine |
+| 1 | `100xfenok-next/src/lib/server/ticker.ts` | live provider fetch | RATIFIED: sanctioned live quote gateway until a Data Spine live-quote service exists |
 | 1 | `ib/ib-total-guide-calculator.html` | legacy browser/provider fetch through CORS proxy | DRAFT: legacy exception or sunset/migrate |
 | 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | legacy GAS provider fetch | DRAFT: legacy IB exception |
 | 1 | `admin/market-data/yahoo-quotes.gs` | admin GAS provider fetch | DRAFT: admin exception |
@@ -132,40 +132,122 @@ file/pattern and separates real fetchers from tests and string-only references.
 Generated/public mirror hits are intentionally excluded from the action list
 unless the source file above remains active.
 
+### 2026-06-22 expanded recheck
+
+Peer/subagent recheck expanded the scan beyond the original P0 pattern to
+`tools/`, macro providers, GAS endpoints, and CCH consumers. Result:
+
+- No unexplained runtime `StockAnalysis` / `SlickCharts` / Yahoo scrape was found
+  in the Next product surfaces. StockAnalysis runtime reads go through
+  `/api/data/stockanalysis/*` or `/data/stockanalysis/*`; SlickCharts/YF runtime
+  reads are DataPack JSON except for the sanctioned quote gateway.
+- `100xfenok-next/src/lib/server/ticker.ts:1-2` remains the single sanctioned
+  live quote gateway; exposed by `/api/ticker` routes and used by dashboard,
+  sector data, footer ticker bar, and admin-live tools.
+- `tools/macro-monitor/shared/data-fetcher.js` is a partial legacy live-data
+  module, not part of the Next product Data Spine surface. Current code reads
+  FRED macro files, Treasury TGA, and stablecoins from same-origin JSON first
+  (`:534-594`, `:612-639`, `:699-717`), while FDIC still keeps an external
+  `api.fdic.gov` fallback after the local JSON attempt (`:650-675`). Classify as
+  migration debt: remove or proxy the FDIC fallback when this tool is promoted
+  back into product runtime.
+- GAS endpoints are legacy/admin exceptions, not Data Spine consumers:
+  `notification-control-panel-web.html:219,294`, `admin/stats.html:131,141`,
+  `admin/api-test.html:105,125,144,169`, and
+  `admin/design-lab/main/main-candidate.html:249`.
+- Scheduled workflow collectors are allowed emitters, not product runtime leaks:
+  `.github/workflows/fetch-fdic.yml`, `fetch-fred-banking.yml`,
+  `fetch-fred-macro.yml`, `fetch-treasury-tga.yml`, and `fetch-defillama.yml`.
+
 ## Consumer Inventory
 
-Known consumers from the current contract note, grep, and CCH skill files:
+Known consumers from the current contract note, grep, the inventory script, and
+CCH skill files.
 
-- 100x UI: `/explore`, `/market-valuation`, `/sectors`, `/screener`,
-  `/superinvestors`, `/stock/[ticker]`, `/etfs`, `/etfs/new`,
-  `/etfs/[ticker]`, `/market/events`, `/portfolio`.
-- Admin/Data Lab: `admin/data-lab` reads manifest, field usage, market audit,
-  and StockAnalysis/DataPack quality surfaces.
+Measured commands:
+
+```sh
+python3 scripts/audit-data-spine-inventory.py --json
+rg -n "fetch\\(|/api/data/|/data/" 100xfenok-next/src/app 100xfenok-next/src/components \
+  100xfenok-next/src/lib admin tools
+```
+
+Measured snapshot as of 2026-06-22:
+
+- root JSON files: 17,273; public JSON files: 17,327; tracked datasets: 28.
+- DataPack datasets with runtime consumers include `computed.market_facts`,
+  `computed.market_data_audit`, `computed.market_source_parity`,
+  `computed.signals`, `computed.stock_action`, `computed.market_structure`,
+  StockAnalysis index/ETF/stock/financial/surface/backfill, `yf.finance`,
+  Global Scouter, SlickCharts, SEC 13F, benchmarks, Damodaran, macro, sentiment,
+  calendar, yardney, indices, admin manifests, catalog manifests, and public
+  report metadata.
+
+File-level consumer map:
+
+- Central reader/facades:
+  - `100xfenok-next/src/lib/server/data-loader.ts:67-95` reads local public JSON
+    with Cloudflare asset fallback.
+  - `data-loader.ts:201-234` maps public paths to consumer lanes.
+  - `data-loader.ts:536-665` exposes StockAnalysis manifests, assets, ETF
+    universe, and surfaces from DataPack.
+  - `data-loader.ts:714-790` exposes SEC 13F and market-quality manifests.
+  - `/api/data/*` route facades cover atlas, benchmarks, damodaran, macro,
+    market-quality, sec-13f, sentiment, slickcharts, and StockAnalysis.
+- Stock and filings:
+  - `/stock/[ticker]` reads Global Scouter, cached YF finance, StockAnalysis
+    ETF/stock/financials, SEC 13F, Damodaran benchmarks, and per-ticker surfaces
+    (`StockDetailClient.tsx:61,90,193,206,219,241`,
+    `StockTabs.tsx:144`, `TickerSurfaceEventsCard.tsx:48`).
+  - Korean filing summaries read `/data/edgar-korean-summaries/*`
+    (`edgarKoreanSummaries.ts:1,55,61,100`; `EdgarSummaryClient.tsx:317`).
+- ETF center:
+  - `/etfs`, `/etfs/new`, and `/etfs/[ticker]` read StockAnalysis snapshot,
+    surfaces, coverage, ETF detail, and computed market facts
+    (`EtfSurfaceSnapshotCard.tsx:101,307`, `NewEtfsList.tsx:74,93`,
+    `EtfDetailClient.tsx:178,212`).
+- Explore / market / sectors / screener / superinvestors:
+  - Explore reads benchmarks, market-quality, StockAnalysis surfaces, computed
+    signals/actions/market structure, calendar, Global Scouter, SlickCharts, and
+    SEC 13F analytics (`ExploreDashboard.tsx:40`, `DataCoverageCard.tsx:65,68`,
+    `MarketEventSurfacesCard.tsx:115-122`, `SignalStrip.tsx:29`,
+    `StockWorkbenchCard.tsx:108-110`, `EtfUniverseCard.tsx:150,166`).
+  - Market events and sectors read StockAnalysis surfaces through contract routes
+    (`MarketEventsClient.tsx:138`, `IndustryMapPanel.tsx:62`).
+  - Screener detail reads SEC 13F, SlickCharts stock rows, computed market facts,
+    and Global Scouter detail (`ScreenerClient.tsx:796,807`,
+    `StockDetailPanel.tsx:562,603,721,773`).
+  - Superinvestors reads SEC 13F analytics
+    (`InsightsTab.tsx:26-86`, `SuperinvestorsClient.tsx:73,131,744`,
+    `GuruTrendBlock.tsx:48,66`, `PortfolioCharts.tsx:42`).
+- Admin/Data Lab and admin-live:
+  - `admin/data-lab` reads manifest, field usage, market audit/parity,
+    StockAnalysis coverage/backfill, and freshness surfaces.
+  - `100xfenok-next/src/lib/server/admin-live-tools.ts:318-325` exposes a
+    `feno-data` live tool that reads local DataPack context; the UI toggle lives
+    at `components/admin-live/AdminLiveBench.tsx:376-380`.
 - feno-data local:
   - exposes `data audit`, `data stockanalysis {etf|stock|financials|surface|coverage}`,
-    and the public categories including `computed`, `stockanalysis`, `yf`,
+    and public categories including `computed`, `stockanalysis`, `yf`,
     `slickcharts`, `sec-13f`, `benchmarks`, `macro`, `calendar`, and `yardney`.
-  - common paths already include `computed/market_facts`,
-    `computed/market_data_audit`, `computed/market_source_parity`,
-    `stockanalysis/etfs`, `stockanalysis/stocks`, `stockanalysis/financials`,
-    `stockanalysis/surfaces`, `stockanalysis/coverage`, and `yf/finance`.
 - feno-data-remote:
-  - exposes the same public financial categories except `admin`.
-  - bundled helper reads `computed/market_facts`, `computed/market_source_parity`,
-    StockAnalysis ETF/stock/financial/surface/coverage payloads, and `yf/finance`
-    through Cloudflare data route with GitHub Raw fallback.
+  - exposes the same public financial categories except `admin`; helper reads
+    Cloudflare first and GitHub Raw fallback.
 - feno-value:
-  - priority order already includes Global Scouter, computed market facts,
-    Benchmarks, Yahoo/yfinance DataPack, StockAnalysis DataPack, and Damodaran.
   - `DataPackProvider` resolves local `100xFenok/data` first, then public data
     route and GitHub Raw fallback.
-  - provider helpers already cover `computed/market_facts`,
+  - provider helpers cover `computed/market_facts`,
     `computed/market_data_audit`, `computed/market_source_parity`, `yf/finance`,
     StockAnalysis ETF universe/screener/new ETF/coverage/stock/financial/surface.
-  - `fetch_financial_statement_candidate()` explicitly keeps StockAnalysis
-    financials as cross-check candidates only, not DCF inputs.
+  - `fetch_financial_statement_candidate()` keeps StockAnalysis financials as
+    cross-check candidates only, not DCF inputs.
+  - Boundary: feno-value still contains direct provider paths for yfinance, SEC
+    EDGAR, SEC 13F live fallback, Stooq, Siblis, and mixed EV/Sales fallback
+    flows. Do not count those paths as Data Spine consumers until each one is
+    explicitly routed through DataPack or documented as a valuation-engine
+    exception.
 
-Evidence as of 2026-06-19:
+Evidence:
 
 - `claude-code-hub/docs/products/skills/feno-data/SKILL.md:45-50`
 - `claude-code-hub/docs/products/skills/feno-data/SKILL.md:195-212`
@@ -177,8 +259,9 @@ Evidence as of 2026-06-19:
 - `claude-code-hub/docs/products/skills/feno-value/scripts/providers/datapack.py:316-377`
 - `claude-code-hub/docs/products/skills/feno-value/scripts/core/policy.py:303-356`
 
-P0 still needs a dataset/file-level consumer map. The skill-level inventory
-above is MEASURED, but per-file consumer coverage remains DRAFT/UNVERIFIED.
+P0 consumer inventory is now file-level measured for 100x Next/admin surfaces and
+CCH skill consumers. It does not claim browser runtime execution success; live
+route smoke belongs to the implementation slices that change those surfaces.
 
 ## Draft Contract Matrix
 
@@ -191,7 +274,7 @@ SSOT relationship:
   `DESIGN_market_data_source_contract_20260617.md` under `Resolver Policy` and
   mirrors `scripts/build-market-facts.py`.
 - The matrix below is the future Data Spine v0 target to ratify after P0
-  inventory and P1 disagreement-policy work.
+  inventory, exception classification, and P1 disagreement-policy work.
 - If this matrix conflicts with the implemented resolver policy before v0
   ratification, the implemented resolver policy wins.
 
@@ -261,10 +344,20 @@ contract and the disagreement policy.
 4. Korean filing summaries:
    - DRAFT/UNVERIFIED: separate LLM track with cost/provider/anchor validation.
    - Surface/route RESOLVED by DEC-246 (stock `공시` tab first; NVDA pilot → `/stock/NVDA?tab=filings`; by-ticker manifest). Cost/provider/scaling stays user-gated.
+5. Legacy runtime fetch exceptions:
+   - `ticker.ts` is ratified as a live quote exception.
+   - `macro-monitor` FDIC fallback and GAS/admin HTML endpoints are classified,
+     but not yet migrated.
+   - feno-value has a DataPackProvider consumer path, but direct valuation-engine
+     providers remain separate exceptions until each path is promoted or routed.
 
-## Next P0 Work
+## Next Work
 
 1. Keep Daily Wrap report metadata; defer revival until report automation exists.
-2. Add feno-data/feno-data-remote/feno-value consumer evidence from CCH skills.
-3. Review `DATA_SPINE_A_PHASE_PROPOSAL_20260619.md` before A-phase UI.
-4. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.
+2. P1: freeze the per-field authority/fallback/tolerance/disagreement matrix
+   using the measured 28-dataset inventory and `market_source_parity`.
+3. P1: decide exception handling for `macro-monitor` FDIC fallback, GAS/admin
+   HTML endpoints, and feno-value direct provider paths.
+4. Filings: prioritize the foreign-filer 6-K / 20-F / 40-F path before any
+   top-300/top-400 EDGAR expansion.
+5. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.
