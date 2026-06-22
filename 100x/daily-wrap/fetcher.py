@@ -5,33 +5,37 @@
 Fetches market data from Yahoo Finance and FRED API, then saves to JSON.
 This powers the daily market wrap system.
 
+DEPRECATED: repo-local workflows and Next runtime do not call this fetcher.
+Runtime Daily Wrap reads report JSON/HTML assets, while macro/YF data updates
+are handled by Data Spine collectors. This file is retained only for historical
+manual reproduction.
+
 Usage:
-    python fetcher.py [--date YYYY-MM-DD] [--output-dir ./data]
+    python fetcher.py --allow-deprecated-fetcher [--date YYYY-MM-DD] [--output-dir ./data]
 
 Dependencies:
     pip install yfinance requests python-dotenv
+
+Sunset documented: 2026-06-22 (DS-P1-002)
 """
 
 import os
-import sys
 import json
 import argparse
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-try:
-    import yfinance as yf
-    import requests
-except ImportError:
-    print("⚠️ Missing dependencies. Install with:")
-    print("   pip install yfinance requests python-dotenv")
-    sys.exit(1)
-
 # Configuration
 DEFAULT_OUTPUT_DIR = Path(__file__).parent / "data"
 FRED_API_KEY = os.getenv("FRED_API_KEY", None)  # Set via environment or .env file
 FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
+DEPRECATION_MESSAGE = (
+    "DS-P1-002 closed: 100x/daily-wrap/fetcher.py is a deprecated legacy "
+    "publication PoC with direct Yahoo/FRED fetches and FRED mock fallback. "
+    "Use Data Spine collectors/report JSON assets. Pass --allow-deprecated-fetcher "
+    "only for historical manual reproduction."
+)
 
 # Market symbols to track
 SYMBOLS = {
@@ -89,6 +93,8 @@ def fetch_yahoo_data(symbol: str, date: datetime) -> Optional[Dict[str, Any]]:
         Dictionary with OHLCV data or None if failed
     """
     try:
+        import yfinance as yf
+
         ticker = yf.Ticker(symbol)
         
         # Get data for the target date (plus buffer for market closures)
@@ -142,6 +148,8 @@ def fetch_fred_data(series_id: str, date: datetime) -> Optional[Dict[str, Any]]:
         }
     
     try:
+        import requests
+
         params = {
             "series_id": series_id,
             "api_key": FRED_API_KEY,
@@ -267,8 +275,17 @@ def main():
         default=str(DEFAULT_OUTPUT_DIR),
         help=f"Output directory for JSON files (default: {DEFAULT_OUTPUT_DIR})"
     )
+    parser.add_argument(
+        "--allow-deprecated-fetcher",
+        action="store_true",
+        help="Run the deprecated Daily Wrap direct provider fetcher for historical reproduction only."
+    )
     
     args = parser.parse_args()
+
+    if not args.allow_deprecated_fetcher:
+        print(DEPRECATION_MESSAGE)
+        return 2
     
     # Determine target date
     if args.date:
@@ -296,7 +313,8 @@ def main():
     log("=" * 60)
     log("Fetch complete!", "SUCCESS")
     log("=" * 60)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

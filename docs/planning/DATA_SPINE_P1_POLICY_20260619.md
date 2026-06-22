@@ -77,12 +77,12 @@ closed by V0 and stay as migration, legacy exception, or sunset candidates.
 | ID | File | Provider | Current shape | Target | Priority |
 |---|---|---|---|---|---|
 | `DS-P1-001` | `100xfenok-next/src/lib/server/ticker.ts` | Yahoo query1 + ticker worker | product-runtime live fetch | ratified live-gateway exception until Data Spine live-quote service exists | P1-high |
-| `DS-P1-002` | `100x/daily-wrap/fetcher.py` | Yahoo yfinance + FRED | legacy Daily Wrap publication fetcher | legacy-exception or migrate-to-contract | P2 |
-| `DS-P1-003` | `admin/market-data/yahoo-quotes.gs` | Yahoo query1 | admin GAS quote helper | legacy-exception or contract route | P2 |
-| `DS-P1-004` | `admin/market-radar/scripts/yahoo-quotes.gs` | Yahoo query1 + Stooq + GOOGLEFINANCE | market-radar GAS quote helper | legacy-exception or contract route | P2 |
+| `DS-P1-002` | `100x/daily-wrap/fetcher.py` | Yahoo yfinance + FRED | deprecated legacy Daily Wrap publication PoC | CLOSED 2026-06-22: sunset; future Daily Wrap automation should use Data Spine/report contracts | P2 |
+| `DS-P1-003` | `admin/market-data/yahoo-quotes.gs` | Yahoo query1 | admin GAS quote helper | CLASSIFIED 2026-06-22: explicit admin GAS exception until retired or routed through Data Spine | P2 |
+| `DS-P1-004` | `admin/market-radar/scripts/yahoo-quotes.gs` | Yahoo query1 + Stooq + GOOGLEFINANCE | market-radar GAS quote helper | CLASSIFIED 2026-06-22: explicit admin/radar GAS exception until retired or routed through Data Spine | P2 |
 | `DS-P1-005` | `admin/market-radar/scripts/vix.gs` | Yahoo query1 + GitHub contents API | deprecated market-radar VIX GAS backup | sunset documented; replaced by scheduled sentiment collector | CLOSED 2026-06-22 |
-| `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC + Yahoo + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper | legacy-exception until AA/IB route exists | P2 |
-| `DS-P1-007` | `ib/ib-total-guide-calculator.html` | browser Yahoo/CORS proxy | legacy browser provider fetch | sunset or contract route | P2 |
+| `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC + Yahoo + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper | CLASSIFIED 2026-06-22: explicit exception until AA/IB quote contract exists | P2 |
+| `DS-P1-007` | `ib/ib-total-guide-calculator.html` | browser Yahoo/CORS proxy | legacy browser provider fetch | CLASSIFIED 2026-06-22: migrate live embed to server/Data Spine quote contract before removing | P2 |
 | `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | deprecated old 10-ticker PoC collector | sunset documented; replaced by scheduled YF v2 collector | CLOSED 2026-06-22 |
 
 ## Next Execution Plan
@@ -99,9 +99,12 @@ Order is risk-first, not table-order:
    10-ticker PoC. The runtime collector is `scripts/fetch-yf-finance.py` via
    `.github/workflows/fetch-yf-finance.yml`; the v0 PoC now fails closed unless
    explicitly run with `--allow-deprecated-v0` for historical reproduction.
-3. `DS-P1-002` through `DS-P1-007` remaining P2 legacy surfaces: classify each
-   as `migrate`, `explicit_exception`, or `sunset`; avoid breaking GAS/IB/Daily
-   Wrap runtime paths until a replacement route exists.
+3. `DS-P1-002` closed 2026-06-22: `100x/daily-wrap/fetcher.py` is not called by
+   repo-local workflows or Next runtime; it now fails closed unless
+   `--allow-deprecated-fetcher` is passed for historical manual reproduction.
+4. `DS-P1-003/004/006/007` classified 2026-06-22: keep admin/IB GAS helpers as
+   explicit legacy exceptions for now; migrate the live `/infinite-buying`
+   embedded HTML quote fetch before removing its browser provider path.
 
 ### DS-P1-005 Closeout Evidence (2026-06-22)
 
@@ -130,6 +133,21 @@ Order is risk-first, not table-order:
 - Disposition: `sunset`. The v0 file is retained only for historical
   reproduction and fails closed unless `--allow-deprecated-v0` is provided.
 
+### DS-P1-002~007 Legacy Classification Evidence (2026-06-22)
+
+- `DS-P1-002`: `100x/daily-wrap/fetcher.py` is not called by current workflows
+  or Next runtime. It also used a FRED mock fallback when `FRED_API_KEY` was
+  missing, so it is sunset and retained only for manual historical reproduction.
+- `DS-P1-003`: `admin/market-data/yahoo-quotes.gs` is documented as a standalone
+  Market Data Apps Script WebApp helper, not a Next runtime dependency.
+- `DS-P1-004`: `admin/market-radar/scripts/yahoo-quotes.gs` is a Market Radar
+  GAS/Sheet helper for live quote lookup and price-sheet updates.
+- `DS-P1-006`: `ib/ib-helper/apps-script/yahoo-quotes.gs` is documented as the
+  IB Helper Apps Script price API; keep it until an AA/IB contract route exists.
+- `DS-P1-007`: `ib/ib-total-guide-calculator.html` is embedded by the live Next
+  `/infinite-buying` page and still contains a browser Yahoo/CORS fetch path.
+  This is `migrate`, not immediate sunset.
+
 For every row, the closeout must include:
 
 - grep/runtime evidence for current consumers;
@@ -145,6 +163,6 @@ For every row, the closeout must include:
 - `scripts/test_data_spine_policy.py` passes and blocks future P1/V0 drift.
 - Current parity counts regenerate from `market_source_parity.json`; they are not
   manually maintained here.
-- Direct-fetch rows remain tracked until each is migrated, explicitly excepted,
-  or sunset; `DS-P1-005` and `DS-P1-008` are now closed as `sunset` with
-  scheduled collectors as their replacement paths.
+- Direct-fetch rows now have a concrete disposition: `DS-P1-002/005/008` are
+  closed as `sunset`; `DS-P1-003/004/006` are explicit legacy exceptions;
+  `DS-P1-007` is a live-embed migration target.

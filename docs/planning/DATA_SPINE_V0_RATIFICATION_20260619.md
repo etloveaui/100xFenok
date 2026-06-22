@@ -130,10 +130,10 @@ otherwise it is relative spread percent from the parity builder.
 ## Backlog Status
 
 The direct-fetch backlog rows from P1 remain active until closed one by one.
-`DS-P1-001` is a sanctioned live gateway exception. `DS-P1-005` and
-`DS-P1-008` are closed as sunset paths because scheduled collectors now own the
-runtime data updates. The other rows remain migration, legacy exception, or
-sunset candidates.
+`DS-P1-001` is a sanctioned live gateway exception. `DS-P1-002`, `DS-P1-005`,
+and `DS-P1-008` are closed as sunset paths. `DS-P1-003`, `DS-P1-004`, and
+`DS-P1-006` are explicit legacy admin/IB exceptions until a quote contract route
+exists. `DS-P1-007` remains the live `/infinite-buying` migration target.
 
 ## Exit Criteria
 
