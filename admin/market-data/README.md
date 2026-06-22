@@ -5,6 +5,21 @@ Real-time market data service for 100xFenok main page (v17.8).
 > **Architecture**: Standalone GAS project + Dedicated Google Sheet
 > **Not related to**: IB Helper GAS (separate project)
 
+## GAS Resources
+
+| Resource | Value |
+|----------|-------|
+| Google Sheet | `100x-Market-Data` |
+| Spreadsheet ID | `12up-z8YFyh8v3Rp6-F-V0z-3XDBDouZ9LkQNmtqV5zA` |
+| Apps Script project | `100x Market Data` |
+| Script ID | `1Ec-MKckCjKmIsqkVAmS4WdStJftJNU9edZm_y-CTr64MYZmOn_61gmP_` |
+| WebApp deployment ID | `AKfycbwu2wdFAGAKnZlsb7w7BHsZzVS7wxHHRoYsKNTBg3Jc4kLOLv8TVuTeOSOC_gUo_BRS` |
+| WebApp URL | `https://script.google.com/macros/s/AKfycbwu2wdFAGAKnZlsb7w7BHsZzVS7wxHHRoYsKNTBg3Jc4kLOLv8TVuTeOSOC_gUo_BRS/exec` |
+| Current deployment | v3 — `DS-P1-003 quote.v1 market-data v1.1 HEAD sync 2026-06-22` |
+| Rollback version | v1 — initial release |
+
+> Script ID exposure is acceptable; code update/deploy still requires Google OAuth.
+
 ## Files
 
 | File | Version | Purpose |
@@ -44,7 +59,7 @@ Real-time market data service for 100xFenok main page (v17.8).
   },
   "marketState": "REGULAR",
   "timestamp": "2026-02-11T15:30:00.000Z",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
 ```
 
@@ -102,7 +117,7 @@ Real-time market data service for 100xFenok main page (v17.8).
 1. Deploy → New deployment
 2. Type: Web app
 3. Settings:
-   - Description: "100x Market Data v1.0.0"
+   - Description: "100x Market Data v1.1.0"
    - Execute as: Me
    - Who has access: Anyone
 4. Deploy → Copy URL
