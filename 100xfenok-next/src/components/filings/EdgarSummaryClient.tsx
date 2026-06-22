@@ -154,6 +154,11 @@ const SECTION_LABELS_KO: Record<string, string> = {
   item_7: "경영실적 분석(MD&A)",
   item_2_02: "실적 발표",
   exhibit_99_1: "실적 보도자료",
+  item_3d: "위험요인",
+  item_5: "영업·재무 검토",
+  risk_factors: "위험요인",
+  mda: "경영실적 분석(MD&A)",
+  foreign_report: "해외 공시 본문",
   companyfacts: "주요 재무수치",
 };
 

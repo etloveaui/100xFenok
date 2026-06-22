@@ -1,6 +1,6 @@
 # PLAN: Current-Feature Improvement Wave (measured survey → priority)
 
-> **Status**: ✅ owner-independent UI/ETF/screener wave shipped; F2 top-200 first pass reached 182/202. Active next is the foreign-filer 6-K / 20-F / 40-F path before top-300/top-400 breadth; Data Spine/feno-value cleanup is the adjacent contract-layer continuation, not a separate product detour.
+> **Status**: ✅ owner-independent UI/ETF/screener wave shipped; F2 top-200 first pass reached 182/202. Foreign-filer 6-K / 20-F / 40-F extractor + best-per-ticker batch path is now implemented and gated; the remaining F2 data step is generating the 20 foreign-filer summary artifacts before top-300/top-400 breadth. Data Spine/feno-value cleanup is the adjacent contract-layer continuation, not a separate product detour.
 > **Owner mandate**: do ALL candidates, but survey + measure first, then plan. No new pages (/portfolio deprioritized), no route-contract meta-doc pass — improve EXISTING live surfaces.
 > **Method**: dual independent read-only survey — Claude (4 parallel subagents) + Codex (cx-80) — integrated here. Divergence = signal.
 > **Decision anchor**: this plan → owner approval → per-slice CONTRACT → Codex impl → Claude reproduction gate → push. 완료 선언 = owner.
@@ -17,13 +17,13 @@
 
 **Measured**: F1/F2 has moved past the original 50-ticker pilot. The current EDGAR summary universe is 202 manifests (top-150 US by market cap + 50 new 151-200 + BE/RKLB force-includes), with 182/202 covered by evidence-grounded Korean summaries. Global gates passed on the latest top-200 pass (`qa:edgar-summaries` + `qa:edgar-translations`; 2,424 filings / 7,379 bullets / 796 translations). The 20 uncovered names are foreign filers (ARM/ASML/AZN/BHP/BMO/BNS/CM/CNI/CNQ/MFC/NVO/RIO/RY/SPOT/SU/TD/TRI/TRP/TSM/WPM) that do not follow the 8-K Item 2.02 earnings path; they need a separate 6-K / 20-F / 40-F extractor path. App runtime still makes **0 direct SEC API calls**; generated artifacts are produced offline and served through DataPack/public mirrors.
 
-**Gaps**: the old "generate more 8-K Item 2.02" path has hit a structural ceiling for these 20 names. Do **not** spend the next tranche on top-300/top-400 breadth until foreign-filer handling is designed and gated. Current generation policy remains free-first/provider-agnostic: free model or self-gen evidence task first, paid fallback only behind explicit owner gate and cost metadata.
+**Gaps**: the old "generate more 8-K Item 2.02" path has hit a structural ceiling for these 20 names. The foreign-filer handling path is now designed and code-gated, but the top-200 coverage count stays 182/202 until those 20 summary artifacts are generated and mirrored. Do **not** spend the next tranche on top-300/top-400 breadth until that data run is complete. Current generation policy remains free-first/provider-agnostic: free model or self-gen evidence task first, paid fallback only behind explicit owner gate and cost metadata.
 
 **Divergence**: Claude rated the "all-ticker timeline" **S** (edgar_client.py already has `fetch_submissions`/`resolve_cik`); Codex rated it **M** (needs build-pipeline wiring into Next). Both agree **$0**.
 
 **Slices**:
 - F1 (**M for production**, $0) — ✅ filing timeline and by-ticker manifest landed, then expanded through top-200 tranche support. Continue only as a support layer for extractor outputs; no new UI surface needed for the next slice.
-- F2 (M/L, $-LLM but free-first) — 🔄 active next: add form-aware foreign-filer summary path for 6-K / 20-F / 40-F. Acceptance: identify report/disclosure candidates for the 20 uncovered names, extract evidence sections without embedding raw SEC text, generate Korean summary artifacts with existing numeric/evidence QA, keep source/public mirrors in parity, and preserve $0/free-first cost metadata.
+- F2 (M/L, $-LLM but free-first) — ✅ extractor/batch path landed for 6-K / 20-F / 40-F; 🔄 data run remains. Implemented: form-aware sections (`20-F` item_3d/item_5, `40-F` risk/MD&A, `6-K` substantive foreign_report), 6-K Exhibit 99.1 reuse, best-per-ticker batch planning, QA section contract, and Korean UI section labels. Remaining acceptance: generate the 20 foreign-filer Korean summary artifacts, pass numeric/evidence QA, keep source/public mirrors in parity, and preserve $0/free-first cost metadata.
 - F3 (L, $$-LLM) — translation generation follows only after F2 summaries are evidence-clean. The translation contract exists; do not bulk-generate foreign translations until F2 form handling passes.
 
 ---
@@ -104,7 +104,7 @@
 |------|-------|-----|--------|------|
 | **P0** | E1 digital 20→78 | both flagged; **data-loss bug**, wrong count (provider cap = separate E1b/M) | S | $0 |
 | **P0** | S1 metric glossary/help | **owner's literal complaint**; UI has zero today | S | $0 |
-| **P1** | F2 foreign-filer 6-K / 20-F / 40-F path | closes top-200 182/202 coverage ceiling before top-300/top-400 breadth | M/L | free-first |
+| **P1** | F2 foreign-filer 6-K / 20-F / 40-F data run | extractor/batch path is ready; generating the 20 artifacts closes the 182/202 coverage ceiling before top-300/top-400 breadth | M | free-first |
 | **P1** | S2 landed; S3 estimate interpretation next | turns dense numbers into reads; fixes YF +1y-only mismatch | S+M | $0 |
 | **P1** | E2/E3 honest detail copy + label fix | correctness/clarity | S | $0 |
 | **P2** | M1 + M2 nav contrast + bidirectional cue | high UX leverage, tiny | S | $0 |
@@ -114,7 +114,7 @@
 
 **Owner decisions embedded**: (a) M3 nav-IA resolved as A+B and shipped; (b) F2 summary auto-gen stays free-first/provider-agnostic, paid still gated; (c) next start point is foreign-filer form support because it closes a measured top-200 coverage ceiling, not because it is a new side project.
 
-**Current remaining work after the autonomous wave**: (1) foreign-filer 6-K / 20-F / 40-F extractor + summary path for the 20 uncovered top-200 names; (2) Data Spine contract-layer cleanup for remaining non-quote admin/GAS HTML paths and feno-value direct provider paths; (3) translation generation and top-300/top-400 breadth only after the foreign-filer path is measured clean; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
+**Current remaining work after the autonomous wave**: (1) run the now-gated foreign-filer summary batch for the 20 uncovered top-200 names; (2) Data Spine contract-layer cleanup for remaining non-quote admin/GAS HTML paths and feno-value direct provider paths; (3) translation generation and top-300/top-400 breadth only after the foreign-filer data run is measured clean; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
 
