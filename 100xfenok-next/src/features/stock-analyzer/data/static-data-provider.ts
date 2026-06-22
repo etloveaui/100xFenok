@@ -3,52 +3,20 @@ import type {
   StockAnalyzerDataProviderContext,
   StockAnalyzerRecord,
 } from "@/lib/stock-analyzer/types";
+import { loadActionSummaryMap } from "./action-summary-provider";
 
 type JsonValue = string | number | boolean | null | undefined;
 type JsonRecord = Record<string, JsonValue>;
 
 interface DatasetResponse {
+  source_date?: string;
   data?: JsonRecord[];
 }
 
-interface ActionSummaryResponse {
-  fields?: string[];
-  rows?: Array<JsonRecord | unknown[]>;
+interface NormalizedDataset {
+  sourceDate: string | null;
+  records: StockAnalyzerRecord[];
 }
-
-type ActionSummaryRow = Pick<
-  StockAnalyzerRecord,
-  | "symbol"
-  | "actionScore"
-  | "confidenceLabel"
-  | "actionLabel"
-  | "actionBucket"
-  | "actionReasons"
-  | "lowEvidence"
-  | "guruHolders"
-  | "return12m"
-  | "forwardPeFy1"
-  | "forwardEpsFy1"
-  | "revenueGrowthFy1"
-  | "epsGrowthFy1"
-  | "grossMarginFy1"
-  | "operatingMarginFy1"
-  | "roeFy1"
-  | "forwardPeFy2"
-  | "forwardEpsFy2"
-  | "revenueGrowthFy2"
-  | "epsGrowthFy2"
-  | "grossMarginFy2"
-  | "operatingMarginFy2"
-  | "roeFy2"
-  | "forwardPeFy3"
-  | "forwardEpsFy3"
-  | "revenueGrowthFy3"
-  | "epsGrowthFy3"
-  | "grossMarginFy3"
-  | "operatingMarginFy3"
-  | "roeFy3"
->;
 
 function parseNumber(value: JsonValue): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -78,14 +46,10 @@ function normalizeString(value: JsonValue): string {
   return "";
 }
 
-function isPlainRecord(value: unknown): value is JsonRecord {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
-async function fetchDataset(
+async function fetchDatasetDocument(
   path: string,
   context?: StockAnalyzerDataProviderContext,
-): Promise<JsonRecord[]> {
+): Promise<DatasetResponse> {
   const response = await fetch(path, {
     signal: context?.signal,
     cache: "no-store",
@@ -96,104 +60,104 @@ async function fetchDataset(
   }
 
   const payload = (await response.json()) as DatasetResponse;
-  return Array.isArray(payload.data) ? payload.data : [];
+  return payload && typeof payload === "object" ? payload : {};
 }
 
-function readActionValue(row: JsonRecord | unknown[], fields: string[], key: string): unknown {
-  if (Array.isArray(row)) {
-    const index = fields.indexOf(key);
-    return index >= 0 ? row[index] : undefined;
-  }
-  return row[key];
-}
+const DATASET_CACHE_TTL_MS = 5 * 60 * 1000;
+let cachedDataset: NormalizedDataset | null = null;
+let cachedDatasetAt = 0;
+let cachedDatasetPromise: Promise<NormalizedDataset> | null = null;
 
-function actionNumber(row: JsonRecord | unknown[], fields: string[], key: string): number | null {
-  const value = readActionValue(row, fields, key);
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function actionString(row: JsonRecord | unknown[], fields: string[], key: string): string | null {
-  const value = readActionValue(row, fields, key);
-  return typeof value === "string" && value.trim() ? value : null;
-}
-
-function actionBoolean(row: JsonRecord | unknown[], fields: string[], key: string): boolean | null {
-  const value = readActionValue(row, fields, key);
-  return typeof value === "boolean" ? value : null;
-}
-
-function actionReasons(row: JsonRecord | unknown[], fields: string[]): string[] {
-  const value = readActionValue(row, fields, "actionReasons");
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function normalizeActionSummaryRow(
-  row: JsonRecord | unknown[],
-  fields: string[],
-): ActionSummaryRow | null {
-  if (!Array.isArray(row) && !isPlainRecord(row)) return null;
-  const symbolValue = readActionValue(row, fields, "symbol");
-  const symbol = typeof symbolValue === "string" ? symbolValue.trim().toUpperCase() : "";
-  if (!symbol) return null;
-
-  return {
-    symbol,
-    actionScore: actionNumber(row, fields, "actionScore"),
-    confidenceLabel: actionString(row, fields, "confidenceLabel"),
-    actionLabel: actionString(row, fields, "actionLabel"),
-    actionBucket: actionString(row, fields, "actionBucket"),
-    actionReasons: actionReasons(row, fields),
-    lowEvidence: actionBoolean(row, fields, "lowEvidence"),
-    guruHolders: actionNumber(row, fields, "guruHolders"),
-    return12m: actionNumber(row, fields, "return12m") ?? undefined,
-    forwardPeFy1: actionNumber(row, fields, "forwardPeFy1"),
-    forwardEpsFy1: actionNumber(row, fields, "forwardEpsFy1"),
-    revenueGrowthFy1: actionNumber(row, fields, "revenueGrowthFy1"),
-    epsGrowthFy1: actionNumber(row, fields, "epsGrowthFy1"),
-    grossMarginFy1: actionNumber(row, fields, "grossMarginFy1"),
-    operatingMarginFy1: actionNumber(row, fields, "operatingMarginFy1"),
-    roeFy1: actionNumber(row, fields, "roeFy1"),
-    forwardPeFy2: actionNumber(row, fields, "forwardPeFy2"),
-    forwardEpsFy2: actionNumber(row, fields, "forwardEpsFy2"),
-    revenueGrowthFy2: actionNumber(row, fields, "revenueGrowthFy2"),
-    epsGrowthFy2: actionNumber(row, fields, "epsGrowthFy2"),
-    grossMarginFy2: actionNumber(row, fields, "grossMarginFy2"),
-    operatingMarginFy2: actionNumber(row, fields, "operatingMarginFy2"),
-    roeFy2: actionNumber(row, fields, "roeFy2"),
-    forwardPeFy3: actionNumber(row, fields, "forwardPeFy3"),
-    forwardEpsFy3: actionNumber(row, fields, "forwardEpsFy3"),
-    revenueGrowthFy3: actionNumber(row, fields, "revenueGrowthFy3"),
-    epsGrowthFy3: actionNumber(row, fields, "epsGrowthFy3"),
-    grossMarginFy3: actionNumber(row, fields, "grossMarginFy3"),
-    operatingMarginFy3: actionNumber(row, fields, "operatingMarginFy3"),
-    roeFy3: actionNumber(row, fields, "roeFy3"),
-  };
-}
-
-async function fetchActionSummaryMap(
+async function loadDataset(
   context?: StockAnalyzerDataProviderContext,
-): Promise<Map<string, ActionSummaryRow>> {
-  try {
-    const response = await fetch("/data/computed/stock_action_summary.json", {
-      signal: context?.signal,
-      cache: "no-store",
-    });
-    if (!response.ok) return new Map();
+): Promise<NormalizedDataset> {
+  const [dataset, actionMap] = await Promise.all([
+    fetchDatasetDocument(
+      "/data/global-scouter/core/stocks_analyzer.json",
+      context,
+    ),
+    loadActionSummaryMap(context),
+  ]);
+  const rows = Array.isArray(dataset.data) ? dataset.data : [];
+  const sourceDate = typeof dataset.source_date === "string" ? dataset.source_date : null;
 
-    const payload = (await response.json()) as ActionSummaryResponse;
-    const fields = Array.isArray(payload.fields) ? payload.fields : [];
-    const rows = Array.isArray(payload.rows) ? payload.rows : [];
-    const map = new Map<string, ActionSummaryRow>();
+  const records = rows
+    .map((row) => {
+      const symbol = normalizeString(row.symbol).toUpperCase();
+      if (!symbol) return null;
+      const action = actionMap.get(symbol);
 
-    for (const row of rows) {
-      const normalized = normalizeActionSummaryRow(row, fields);
-      if (normalized) map.set(normalized.symbol, normalized);
-    }
+      return {
+        symbol,
+        companyName:
+          normalizeString(row.companyName) || normalizeString(row.Corp),
+        sector:
+          normalizeString(row.sector) || normalizeString(row.WI26),
+        industry: normalizeString(row.industry) || normalizeString(row.Exchange),
+        country: normalizeString(row.country),
+        price: parseNumber(row.price),
+        marketCap: parseNumber(row.marketCap) ?? parseNumber(row["(USD mn)"]),
+        growthRate: parseNumber(row.growthRate) ?? parseNumber(row["3 M"]),
+        eps: parseNumber(row.eps) ?? parseNumber(row["EPS (Oct-25)"]),
+        per: parseNumber(row.per) ?? parseNumber(row["PER (Fwd)"]),
+        rank: parseNumber(row.rank) ?? parseNumber(row["PER+PBR"]),
+        pbr: parseNumber(row.pbr) ?? parseNumber(row["PBR (Fwd)"]),
+        dividendYield: parseNumber(row.dividendYield),
+        return12m: parseNumber(row.return12m) ?? action?.return12m ?? undefined,
+        roe: parseNumber(row.roe) ?? parseNumber(row["ROE (Fwd)"]),
+        opm: parseNumber(row.opm) ?? parseNumber(row["OPM (Fwd)"]),
+        momentum1m:
+          parseNumber(row.momentum1m) ?? parseNumber(row["1 M"]),
+        momentum3m:
+          parseNumber(row.momentum3m) ?? parseNumber(row["3 M"]),
+        momentum6m:
+          parseNumber(row.momentum6m) ?? parseNumber(row["6 M"]),
+        momentum12m:
+          parseNumber(row.momentum12m) ?? parseNumber(row["12 M"]),
+        perBandCurrent: parseNumber(row.perBandCurrent),
+        perBandMin: parseNumber(row.perBandMin),
+        perBandAvg: parseNumber(row.perBandAvg),
+        perBandMax: parseNumber(row.perBandMax),
+        peForward: parseNumber(row.peForward),
+        epsForward: parseNumber(row.epsForward),
+        dividendTtm: parseNumber(row.dividendTtm),
+        ret1y: parseNumber(row.ret1y),
+        ret3y: parseNumber(row.ret3y),
+        ret5y: parseNumber(row.ret5y),
+        guruHolders: action?.guruHolders ?? null,
+        actionScore: action?.actionScore ?? null,
+        confidenceLabel: action?.confidenceLabel ?? null,
+        actionLabel: action?.actionLabel ?? null,
+        actionBucket: action?.actionBucket ?? null,
+        actionReasons: action?.actionReasons ?? [],
+        lowEvidence: action?.lowEvidence ?? null,
+        forwardPeFy1: action?.forwardPeFy1 ?? parseNumber(row.peForward) ?? null,
+        forwardEpsFy1: action?.forwardEpsFy1 ?? parseNumber(row.epsForward) ?? null,
+        revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
+        epsGrowthFy1: action?.epsGrowthFy1 ?? null,
+        grossMarginFy1: action?.grossMarginFy1 ?? null,
+        operatingMarginFy1: action?.operatingMarginFy1 ?? null,
+        roeFy1: action?.roeFy1 ?? null,
+        forwardPeFy2: action?.forwardPeFy2 ?? null,
+        forwardEpsFy2: action?.forwardEpsFy2 ?? null,
+        revenueGrowthFy2: action?.revenueGrowthFy2 ?? null,
+        epsGrowthFy2: action?.epsGrowthFy2 ?? null,
+        grossMarginFy2: action?.grossMarginFy2 ?? null,
+        operatingMarginFy2: action?.operatingMarginFy2 ?? null,
+        roeFy2: action?.roeFy2 ?? null,
+        forwardPeFy3: action?.forwardPeFy3 ?? null,
+        forwardEpsFy3: action?.forwardEpsFy3 ?? null,
+        revenueGrowthFy3: action?.revenueGrowthFy3 ?? null,
+        epsGrowthFy3: action?.epsGrowthFy3 ?? null,
+        grossMarginFy3: action?.grossMarginFy3 ?? null,
+        operatingMarginFy3: action?.operatingMarginFy3 ?? null,
+        roeFy3: action?.roeFy3 ?? null,
+      } satisfies StockAnalyzerRecord;
+    })
+    .filter((row) => row !== null)
+    .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
 
-    return map;
-  } catch {
-    return new Map();
-  }
+  return { sourceDate, records: records as StockAnalyzerRecord[] };
 }
 
 export class StaticStockAnalyzerDataProvider
@@ -201,6 +165,7 @@ export class StaticStockAnalyzerDataProvider
 {
   readonly id = "stock-analyzer-static-json-provider";
   readonly source = "data/global-scouter/core/stocks_analyzer.json";
+  private sourceDate: string | null = null;
 
   /**
    * CAUTION: roe, opm, growthRate, and momentum fields are stored as
@@ -211,91 +176,38 @@ export class StaticStockAnalyzerDataProvider
   async load(
     context?: StockAnalyzerDataProviderContext,
   ): Promise<StockAnalyzerRecord[]> {
-    const [rows, actionMap] = await Promise.all([
-      fetchDataset(
-        "/data/global-scouter/core/stocks_analyzer.json",
-        context,
-      ),
-      fetchActionSummaryMap(context),
-    ]);
+    if (context?.signal) {
+      const dataset = await loadDataset(context);
+      this.sourceDate = dataset.sourceDate;
+      return dataset.records;
+    }
 
-    const parsed = rows
-      .map((row) => {
-        const symbol = normalizeString(row.symbol).toUpperCase();
-        if (!symbol) return null;
-        const action = actionMap.get(symbol);
+    if (cachedDataset && Date.now() - cachedDatasetAt < DATASET_CACHE_TTL_MS) {
+      this.sourceDate = cachedDataset.sourceDate;
+      return cachedDataset.records;
+    }
 
-        return {
-          symbol,
-          companyName:
-            normalizeString(row.companyName) || normalizeString(row.Corp),
-          sector:
-            normalizeString(row.sector) || normalizeString(row.WI26),
-          industry: normalizeString(row.industry) || normalizeString(row.Exchange),
-          country: normalizeString(row.country),
-          price: parseNumber(row.price),
-          marketCap: parseNumber(row.marketCap) ?? parseNumber(row["(USD mn)"]),
-          growthRate: parseNumber(row.growthRate) ?? parseNumber(row["3 M"]),
-          eps: parseNumber(row.eps) ?? parseNumber(row["EPS (Oct-25)"]),
-          per: parseNumber(row.per) ?? parseNumber(row["PER (Fwd)"]),
-          rank: parseNumber(row.rank) ?? parseNumber(row["PER+PBR"]),
-          pbr: parseNumber(row.pbr) ?? parseNumber(row["PBR (Fwd)"]),
-          dividendYield: parseNumber(row.dividendYield),
-          return12m: parseNumber(row.return12m) ?? action?.return12m,
-          roe: parseNumber(row.roe) ?? parseNumber(row["ROE (Fwd)"]),
-          opm: parseNumber(row.opm) ?? parseNumber(row["OPM (Fwd)"]),
-          momentum1m:
-            parseNumber(row.momentum1m) ?? parseNumber(row["1 M"]),
-          momentum3m:
-            parseNumber(row.momentum3m) ?? parseNumber(row["3 M"]),
-          momentum6m:
-            parseNumber(row.momentum6m) ?? parseNumber(row["6 M"]),
-          momentum12m:
-            parseNumber(row.momentum12m) ?? parseNumber(row["12 M"]),
-          perBandCurrent: parseNumber(row.perBandCurrent),
-          perBandMin: parseNumber(row.perBandMin),
-          perBandAvg: parseNumber(row.perBandAvg),
-          perBandMax: parseNumber(row.perBandMax),
-          peForward: parseNumber(row.peForward),
-          epsForward: parseNumber(row.epsForward),
-          dividendTtm: parseNumber(row.dividendTtm),
-          ret1y: parseNumber(row.ret1y),
-          ret3y: parseNumber(row.ret3y),
-          ret5y: parseNumber(row.ret5y),
-          guruHolders: action?.guruHolders ?? null,
-          actionScore: action?.actionScore ?? null,
-          confidenceLabel: action?.confidenceLabel ?? null,
-          actionLabel: action?.actionLabel ?? null,
-          actionBucket: action?.actionBucket ?? null,
-          actionReasons: action?.actionReasons ?? [],
-          lowEvidence: action?.lowEvidence ?? null,
-          forwardPeFy1: action?.forwardPeFy1 ?? parseNumber(row.peForward) ?? null,
-          forwardEpsFy1: action?.forwardEpsFy1 ?? parseNumber(row.epsForward) ?? null,
-          revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
-          epsGrowthFy1: action?.epsGrowthFy1 ?? null,
-          grossMarginFy1: action?.grossMarginFy1 ?? null,
-          operatingMarginFy1: action?.operatingMarginFy1 ?? null,
-          roeFy1: action?.roeFy1 ?? null,
-          forwardPeFy2: action?.forwardPeFy2 ?? null,
-          forwardEpsFy2: action?.forwardEpsFy2 ?? null,
-          revenueGrowthFy2: action?.revenueGrowthFy2 ?? null,
-          epsGrowthFy2: action?.epsGrowthFy2 ?? null,
-          grossMarginFy2: action?.grossMarginFy2 ?? null,
-          operatingMarginFy2: action?.operatingMarginFy2 ?? null,
-          roeFy2: action?.roeFy2 ?? null,
-          forwardPeFy3: action?.forwardPeFy3 ?? null,
-          forwardEpsFy3: action?.forwardEpsFy3 ?? null,
-          revenueGrowthFy3: action?.revenueGrowthFy3 ?? null,
-          epsGrowthFy3: action?.epsGrowthFy3 ?? null,
-          grossMarginFy3: action?.grossMarginFy3 ?? null,
-          operatingMarginFy3: action?.operatingMarginFy3 ?? null,
-          roeFy3: action?.roeFy3 ?? null,
-        } satisfies StockAnalyzerRecord;
-      })
-      .filter((row) => row !== null)
-      .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
+    if (!cachedDatasetPromise) {
+      cachedDatasetPromise = loadDataset()
+        .then((dataset) => {
+          cachedDataset = dataset;
+          cachedDatasetAt = Date.now();
+          cachedDatasetPromise = null;
+          return dataset;
+        })
+        .catch((error) => {
+          cachedDatasetPromise = null;
+          throw error;
+        });
+    }
 
-    return parsed as StockAnalyzerRecord[];
+    const dataset = await cachedDatasetPromise;
+    this.sourceDate = dataset.sourceDate;
+    return dataset.records;
+  }
+
+  getSourceDate(): string | null {
+    return this.sourceDate;
   }
 
   async getBySymbol(

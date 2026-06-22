@@ -357,6 +357,11 @@ contract and the disagreement policy.
 5. Legacy runtime fetch exceptions:
    - `quote.v1` + `ticker.ts` are ratified as the live quote gateway contract
      and internal provider exception.
+   - Static stock-analyzer product consumers are now routed through
+     `StaticStockAnalyzerDataProvider` and `action-summary-provider`; direct UI
+     reads of `global-scouter/core/stocks_analyzer.json` and
+     `computed/stock_action_summary.json` are closed outside those provider
+     boundaries.
    - `DS-P1-003/004/006` GAS quote helpers are now routed exceptions: quote.v1
      is used as the shared price boundary, but legacy fallbacks remain for OHLC
      and CNBC pre/post-market quality.

@@ -29,11 +29,13 @@ import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload 
 import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
+import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
+import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // ---------------------------------------------------------------------------
-// stocks_analyzer.json module-level cache
+// Stock analyzer provider module-level cache
 // ---------------------------------------------------------------------------
 
 interface AnalyzerRow {
@@ -54,18 +56,40 @@ interface AnalyzerRow {
 
 let analyzerCache: Record<string, AnalyzerRow> | null = null;
 let analyzerPromise: Promise<Record<string, AnalyzerRow> | null> | null = null;
+const stockAnalyzerProvider = new StaticStockAnalyzerDataProvider();
+
+function analyzerNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function toAnalyzerRow(record: StockAnalyzerRecord): AnalyzerRow {
+  return {
+    symbol: record.symbol,
+    companyName: record.companyName,
+    sector: record.sector ?? "",
+    price: analyzerNumber(record.price),
+    marketCap: analyzerNumber(record.marketCap),
+    per: analyzerNumber(record.per),
+    pbr: analyzerNumber(record.pbr),
+    dividendYield: analyzerNumber(record.dividendYield),
+    return12m: analyzerNumber(record.return12m),
+    perBandCurrent: analyzerNumber(record.perBandCurrent),
+    perBandMin: analyzerNumber(record.perBandMin),
+    perBandAvg: analyzerNumber(record.perBandAvg),
+    perBandMax: analyzerNumber(record.perBandMax),
+  };
+}
 
 function loadAnalyzer(): Promise<Record<string, AnalyzerRow> | null> {
   if (analyzerCache) return Promise.resolve(analyzerCache);
   if (analyzerPromise) return analyzerPromise;
-  analyzerPromise = fetch("/data/global-scouter/core/stocks_analyzer.json")
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
+  analyzerPromise = stockAnalyzerProvider
+    .load()
+    .then((records) => {
       const map: Record<string, AnalyzerRow> = {};
-      const rows = Array.isArray((data as any)?.data) ? (data as any).data : [];
-      for (const r of rows) {
-        if (typeof r?.symbol === "string" && r.symbol.trim()) {
-          map[r.symbol.trim().toUpperCase()] = r;
+      for (const record of records) {
+        if (record.symbol.trim()) {
+          map[record.symbol.trim().toUpperCase()] = toAnalyzerRow(record);
         }
       }
       analyzerCache = map;

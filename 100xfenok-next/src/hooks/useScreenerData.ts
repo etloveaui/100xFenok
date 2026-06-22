@@ -1,63 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import type { ScreenerStock, ScreenerDataResult } from "@/lib/screener/types";
+import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
 
 const FETCH_TIMEOUT_MS = 4000; // single payload
 
-interface RawStock {
-  symbol?: string;
-  companyName?: string;
-  sector?: string;
-  industry?: string;
-  country?: string;
-  price?: number;
-  marketCap?: number;
-  per?: number;
-  pbr?: number;
-  dividendYield?: number;
-  return12m?: number;
-  roe?: number;
-  opm?: number;
-  eps?: number;
-  growthRate?: number;
-  momentum1m?: number;
-  momentum3m?: number;
-  momentum6m?: number;
-  momentum12m?: number;
-  rank?: number;
-  perBandCurrent?: number;
-  perBandMin?: number;
-  perBandAvg?: number;
-  perBandMax?: number;
-  peForward?: number;
-  epsForward?: number;
-  dividendTtm?: number;
-  ret1y?: number;
-  ret3y?: number;
-  ret5y?: number;
-}
-interface RawIndex {
-  source_date?: string;
-  data?: RawStock[];
+function num(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
+const provider = new StaticStockAnalyzerDataProvider();
+
+async function loadRecords(timeoutMs = FETCH_TIMEOUT_MS): Promise<StockAnalyzerRecord[] | null> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
+    return await provider.load({ signal: controller.signal });
   } catch {
     return null;
   } finally {
     window.clearTimeout(timeoutId);
   }
-}
-
-function num(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 const EMPTY: ScreenerDataResult = {
@@ -77,15 +42,15 @@ export function useScreenerData(): ScreenerDataResult {
     isMountedRef.current = true;
 
     void (async () => {
-      const raw = await fetchJson<RawIndex>("/data/global-scouter/core/stocks_analyzer.json");
+      const records = await loadRecords();
       if (!isMountedRef.current) return;
 
-      if (!raw?.data || !Array.isArray(raw.data)) {
+      if (!records) {
         setResult({ ...EMPTY, failed: true });
         return;
       }
 
-      const stocks: ScreenerStock[] = raw.data.map((item) => ({
+      const stocks: ScreenerStock[] = records.map((item) => ({
         ticker: item.symbol ?? "",
         name: item.companyName ?? item.symbol ?? "",
         exchange: item.industry ?? "",
@@ -116,6 +81,34 @@ export function useScreenerData(): ScreenerDataResult {
         ret1y: num(item.ret1y),
         ret3y: num(item.ret3y),
         ret5y: num(item.ret5y),
+        guruHolders: num(item.guruHolders),
+        actionScore: num(item.actionScore),
+        confidenceLabel: typeof item.confidenceLabel === "string" ? item.confidenceLabel : null,
+        actionLabel: typeof item.actionLabel === "string" ? item.actionLabel : null,
+        actionBucket: typeof item.actionBucket === "string" ? item.actionBucket : null,
+        actionReasons: Array.isArray(item.actionReasons) ? item.actionReasons : [],
+        lowEvidence: typeof item.lowEvidence === "boolean" ? item.lowEvidence : null,
+        forwardPeFy1: num(item.forwardPeFy1),
+        forwardEpsFy1: num(item.forwardEpsFy1),
+        revenueGrowthFy1: num(item.revenueGrowthFy1),
+        epsGrowthFy1: num(item.epsGrowthFy1),
+        forwardPeFy2: num(item.forwardPeFy2),
+        forwardEpsFy2: num(item.forwardEpsFy2),
+        revenueGrowthFy2: num(item.revenueGrowthFy2),
+        epsGrowthFy2: num(item.epsGrowthFy2),
+        forwardPeFy3: num(item.forwardPeFy3),
+        forwardEpsFy3: num(item.forwardEpsFy3),
+        revenueGrowthFy3: num(item.revenueGrowthFy3),
+        epsGrowthFy3: num(item.epsGrowthFy3),
+        operatingMarginFy1: num(item.operatingMarginFy1),
+        roeFy1: num(item.roeFy1),
+        grossMarginFy1: num(item.grossMarginFy1),
+        operatingMarginFy2: num(item.operatingMarginFy2),
+        roeFy2: num(item.roeFy2),
+        grossMarginFy2: num(item.grossMarginFy2),
+        operatingMarginFy3: num(item.operatingMarginFy3),
+        roeFy3: num(item.roeFy3),
+        grossMarginFy3: num(item.grossMarginFy3),
       }));
 
       const sectors = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean))).sort();
@@ -125,7 +118,7 @@ export function useScreenerData(): ScreenerDataResult {
         stocks,
         dataReady: true,
         failed: false,
-        sourceDate: raw.source_date ?? null,
+        sourceDate: provider.getSourceDate(),
         sectors,
         countries,
       });

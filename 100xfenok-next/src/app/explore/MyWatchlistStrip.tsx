@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import { useWatchlist } from "@/lib/watchlist";
 
 interface AnalyzerLite {
@@ -12,15 +13,15 @@ interface AnalyzerLite {
 
 let rowsCache: Map<string, AnalyzerLite> | null = null;
 let rowsPending: Promise<Map<string, AnalyzerLite> | null> | null = null;
+const analyzerProvider = new StaticStockAnalyzerDataProvider();
+
 function loadRows(): Promise<Map<string, AnalyzerLite> | null> {
   if (rowsCache) return Promise.resolve(rowsCache);
   if (rowsPending) return rowsPending;
-  rowsPending = fetch("/data/global-scouter/core/stocks_analyzer.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc) => {
-      if (!doc?.data) return null;
+  rowsPending = analyzerProvider.load()
+    .then((records) => {
       const map = new Map<string, AnalyzerLite>();
-      for (const row of doc.data) {
+      for (const row of records) {
         if (!row.symbol) continue;
         map.set(String(row.symbol).toUpperCase(), {
           symbol: row.symbol,

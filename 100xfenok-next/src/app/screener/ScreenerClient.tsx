@@ -11,91 +11,11 @@ import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGa
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
 import StockDetailPanel from "./StockDetailPanel";
+import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 const PAGE_SIZE = 50;
 
-interface ActionRow {
-  symbol: string;
-  actionScore?: number | null;
-  confidenceLabel?: string | null;
-  actionLabel?: string | null;
-  actionBucket?: string | null;
-  actionReasons?: string[];
-  lowEvidence?: boolean | null;
-  guruHolders?: number | null;
-  forwardPeFy1?: number | null;
-  forwardEpsFy1?: number | null;
-  revenueGrowthFy1?: number | null;
-  epsGrowthFy1?: number | null;
-  forwardPeFy2?: number | null;
-  forwardEpsFy2?: number | null;
-  revenueGrowthFy2?: number | null;
-  epsGrowthFy2?: number | null;
-  forwardPeFy3?: number | null;
-  forwardEpsFy3?: number | null;
-  revenueGrowthFy3?: number | null;
-  epsGrowthFy3?: number | null;
-  grossMarginFy1?: number | null;
-  operatingMarginFy1?: number | null;
-  roeFy1?: number | null;
-  grossMarginFy2?: number | null;
-  operatingMarginFy2?: number | null;
-  roeFy2?: number | null;
-  grossMarginFy3?: number | null;
-  operatingMarginFy3?: number | null;
-  roeFy3?: number | null;
-}
-interface ActionSummaryDoc {
-  fields?: string[];
-  rows?: Array<ActionRow | unknown[]>;
-}
 type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
-
-function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): ActionRow | null {
-  if (!Array.isArray(row)) return row.symbol ? row : null;
-  const value = (key: string): unknown => {
-    const index = fields.indexOf(key);
-    return index >= 0 ? row[index] : undefined;
-  };
-  const numberValue = (key: string): number | null => {
-    const raw = value(key);
-    return typeof raw === "number" ? raw : null;
-  };
-  const symbol = value("symbol");
-  if (typeof symbol !== "string" || symbol.length === 0) return null;
-  const actionReasons = value("actionReasons");
-  return {
-    symbol,
-    actionScore: numberValue("actionScore"),
-    confidenceLabel: typeof value("confidenceLabel") === "string" ? value("confidenceLabel") as string : null,
-    actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
-    actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
-    actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
-    lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
-    guruHolders: numberValue("guruHolders"),
-    forwardPeFy1: numberValue("forwardPeFy1"),
-    forwardEpsFy1: numberValue("forwardEpsFy1"),
-    revenueGrowthFy1: numberValue("revenueGrowthFy1"),
-    epsGrowthFy1: numberValue("epsGrowthFy1"),
-    grossMarginFy1: numberValue("grossMarginFy1"),
-    operatingMarginFy1: numberValue("operatingMarginFy1"),
-    roeFy1: numberValue("roeFy1"),
-    forwardPeFy2: numberValue("forwardPeFy2"),
-    forwardEpsFy2: numberValue("forwardEpsFy2"),
-    revenueGrowthFy2: numberValue("revenueGrowthFy2"),
-    epsGrowthFy2: numberValue("epsGrowthFy2"),
-    grossMarginFy2: numberValue("grossMarginFy2"),
-    operatingMarginFy2: numberValue("operatingMarginFy2"),
-    roeFy2: numberValue("roeFy2"),
-    forwardPeFy3: numberValue("forwardPeFy3"),
-    forwardEpsFy3: numberValue("forwardEpsFy3"),
-    revenueGrowthFy3: numberValue("revenueGrowthFy3"),
-    epsGrowthFy3: numberValue("epsGrowthFy3"),
-    grossMarginFy3: numberValue("grossMarginFy3"),
-    operatingMarginFy3: numberValue("operatingMarginFy3"),
-    roeFy3: numberValue("roeFy3"),
-  };
-}
 
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
@@ -789,7 +709,7 @@ function MobileStockCard({
 export default function ScreenerClient({ initialSearch = "" }: { initialSearch?: string }) {
   const { stocks: rawStocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
-  const [actionMap, setActionMap] = useState<Record<string, ActionRow> | null>(null);
+  const [actionMap, setActionMap] = useState<Record<string, ActionSummaryRecord> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -804,15 +724,11 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/computed/stock_action_summary.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: ActionSummaryDoc | null) => {
-        if (cancelled || !Array.isArray(j?.rows)) return;
-        const next: Record<string, ActionRow> = {};
-        j.rows.forEach((row) => {
-          const normalized = normalizeActionRow(row, j.fields ?? []);
-          if (normalized?.symbol) next[normalized.symbol] = normalized;
-        });
+    loadActionSummaryMap()
+      .then((map) => {
+        if (cancelled) return;
+        const next: Record<string, ActionSummaryRecord> = {};
+        for (const [symbol, row] of map) next[symbol] = row;
         setActionMap(next);
       })
       .catch(() => {});

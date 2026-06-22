@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -33,17 +34,18 @@ interface Suggestion {
 
 let stocksCache: StockRow[] | null = null;
 let stocksPromise: Promise<StockRow[]> | null = null;
+const stocksProvider = new StaticStockAnalyzerDataProvider();
 
 function loadStocks(): Promise<StockRow[]> {
   if (stocksCache) return Promise.resolve(stocksCache);
   if (stocksPromise) return stocksPromise;
-  stocksPromise = fetch("/data/global-scouter/core/stocks_analyzer.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d: any) => {
-      const rows: StockRow[] = [];
-      for (const r of d?.data ?? []) {
-        rows.push({ symbol: String(r.symbol ?? ""), companyName: String(r.companyName ?? ""), sector: String(r.sector ?? "") });
-      }
+  stocksPromise = stocksProvider.load()
+    .then((records) => records.map((record) => ({
+      symbol: String(record.symbol ?? ""),
+      companyName: String(record.companyName ?? ""),
+      sector: String(record.sector ?? ""),
+    })))
+    .then((rows) => {
       stocksCache = rows;
       return rows;
     })

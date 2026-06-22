@@ -4,36 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
 type ActionBucket = "smart_money" | "value_momentum" | "index_core";
 
 const WORKBENCH_TABS_ID = "explore-stock-workbench-tabs";
 
-interface ActionRow {
-  symbol: string;
-  company?: string | null;
-  sector?: string | null;
-  actionScore?: number | null;
-  confidenceLabel?: string | null;
-  actionLabel?: string | null;
-  actionBucket?: string | null;
-  actionReasons?: string[];
-  lowEvidence?: boolean | null;
-  return12m?: number | null;
-}
-
-interface ActionDoc {
-  generated_at?: string;
-  coverage?: {
-    indexed_stock_count?: number | null;
-    conviction_matched_count?: number | null;
-    quarter_close_ticker_count?: number | null;
-    bucket_counts?: Record<string, number>;
-  };
-  fields?: string[];
-  rows?: Array<ActionRow | unknown[]>;
-}
+type ActionRow = ActionSummaryRecord;
+type ActionDoc = ActionSummaryDocument;
 
 interface RevisionRow {
   ticker: string;
@@ -105,7 +84,7 @@ function loadWorkbench(): Promise<WorkbenchData> {
   if (cache) return Promise.resolve(cache);
   if (pending) return pending;
   pending = Promise.all([
-    loadJson<ActionDoc>("/data/computed/stock_action_summary.json"),
+    loadActionSummaryDocument(),
     loadJson<RevisionDoc>("/data/global-scouter/core/revision_movers.json"),
     loadJson<DiscoveryDoc>("/data/slickcharts/discovery-summary.json"),
   ]).then(([actions, revisions, discovery]) => {
@@ -178,29 +157,6 @@ function actionTone(row: ActionRow): "up" | "neutral" {
   return "neutral";
 }
 
-function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): ActionRow | null {
-  if (!Array.isArray(row)) return row.symbol ? row : null;
-  const value = (key: string): unknown => {
-    const index = fields.indexOf(key);
-    return index >= 0 ? row[index] : undefined;
-  };
-  const symbol = value("symbol");
-  if (typeof symbol !== "string" || symbol.length === 0) return null;
-  const actionReasons = value("actionReasons");
-  return {
-    symbol,
-    company: typeof value("company") === "string" ? value("company") as string : null,
-    sector: typeof value("sector") === "string" ? value("sector") as string : null,
-    actionScore: typeof value("actionScore") === "number" ? value("actionScore") as number : null,
-    confidenceLabel: typeof value("confidenceLabel") === "string" ? value("confidenceLabel") as string : null,
-    actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
-    actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
-    actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
-    lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
-    return12m: typeof value("return12m") === "number" ? value("return12m") as number : null,
-  };
-}
-
 function StockRowLink({
   symbol,
   name,
@@ -254,10 +210,8 @@ export default function StockWorkbenchCard() {
   }, []);
 
   const allActions = useMemo(() => {
-    const fields = data?.actions?.fields ?? [];
     return (data?.actions?.rows ?? [])
-      .map((row) => normalizeActionRow(row, fields))
-      .filter((row): row is ActionRow => Boolean(row));
+      .filter((row): row is ActionRow => Boolean(row.symbol));
   }, [data]);
 
   const actionRows = useMemo(

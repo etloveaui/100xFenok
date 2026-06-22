@@ -128,6 +128,25 @@ Order is risk-first, not table-order:
   routing, consumer type imports, and IB mirror so browser-side Yahoo/proxy
   fetches do not reappear.
 
+### Static Stock Analyzer Consumer Slice (2026-06-22)
+
+- Runtime boundary: product UI consumers now route the static
+  `global-scouter/core/stocks_analyzer.json` dataset through
+  `100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts`,
+  and `computed/stock_action_summary.json` through
+  `100xfenok-next/src/features/stock-analyzer/data/action-summary-provider.ts`,
+  instead of each surface re-reading and normalizing the raw JSON shape.
+- Consumers converted: screener data hook, ticker typeahead, Explore watchlist
+  strip, portfolio price lookup, stock detail page analyzer preload, screener
+  action enrichment, Explore stock workbench, and Explore action candidates.
+- Provider behavior: the provider merges `stocks_analyzer.json` with
+  the normalized action summary, exposes `source_date`, and both providers use a
+  short in-memory TTL cache for same-session dedupe while keeping the underlying
+  fetch `no-store` so refreshed data applies after cache expiry or page reload.
+- Guard: targeted ESLint on the six touched files, full `tsc --noEmit`, and grep
+  now show no product-runtime `stocks_analyzer.json` or
+  `stock_action_summary.json` fetch outside the provider boundary.
+
 ### DS-P1-005 Closeout Evidence (2026-06-22)
 
 - Legacy source: `admin/market-radar/scripts/vix.gs` directly fetched Yahoo

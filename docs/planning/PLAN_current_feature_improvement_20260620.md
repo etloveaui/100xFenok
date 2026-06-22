@@ -114,7 +114,7 @@
 
 **Owner decisions embedded**: (a) M3 nav-IA resolved as A+B and shipped; (b) F2 summary auto-gen stays free-first/provider-agnostic, paid still gated; (c) next start point is foreign-filer form support because it closes a measured top-200 coverage ceiling, not because it is a new side project.
 
-**Current remaining work after the autonomous wave**: (1) run the now-gated foreign-filer summary batch for the 20 uncovered top-200 names; (2) Data Spine contract-layer cleanup for remaining non-quote admin/GAS HTML paths and feno-value direct provider paths; (3) translation generation and top-300/top-400 breadth only after the foreign-filer data run is measured clean; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
+**Current remaining work after the autonomous wave**: (1) run the now-gated foreign-filer summary batch for the 20 uncovered top-200 names; (2) continue Data Spine cleanup on remaining non-quote admin/GAS HTML paths and feno-value direct provider paths, while the static stock-analyzer product consumers are now routed through `StaticStockAnalyzerDataProvider`; (3) translation generation and top-300/top-400 breadth only after the foreign-filer data run is measured clean; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
 

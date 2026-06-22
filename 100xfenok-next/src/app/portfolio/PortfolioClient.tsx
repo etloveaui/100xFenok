@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
+import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import {
   usePortfolios,
   savePortfolios,
@@ -15,12 +16,10 @@ import { formatSignedPercent } from "@/lib/format";
 interface PriceDoc {
   data?: { info?: { currentPrice?: number | null } };
 }
-interface AnalyzerDoc {
-  data?: Array<{ symbol: string; price?: number | null }>;
-}
 
 const priceCache = new Map<string, number | null>();
 const pricePending = new Map<string, Promise<number | null>>();
+const analyzerProvider = new StaticStockAnalyzerDataProvider();
 
 async function fetchPrice(ticker: string): Promise<number | null> {
   const symbol = ticker.trim().toUpperCase();
@@ -30,19 +29,10 @@ async function fetchPrice(ticker: string): Promise<number | null> {
 
   const p = (async () => {
     try {
-      const r1 = await fetch("/data/global-scouter/core/stocks_analyzer.json");
-      if (r1.ok) {
-        const doc: AnalyzerDoc = await r1.json();
-        const rows = Array.isArray(doc.data) ? doc.data : [];
-        const row = rows.find((d) => d.symbol === symbol);
-        if (!row) {
-          priceCache.set(symbol, null);
-          return null;
-        }
-        if (typeof row.price === "number" && Number.isFinite(row.price)) {
-          priceCache.set(symbol, row.price);
-          return row.price;
-        }
+      const row = await analyzerProvider.getBySymbol(symbol);
+      if (typeof row?.price === "number" && Number.isFinite(row.price)) {
+        priceCache.set(symbol, row.price);
+        return row.price;
       }
     } catch {
       // fall through

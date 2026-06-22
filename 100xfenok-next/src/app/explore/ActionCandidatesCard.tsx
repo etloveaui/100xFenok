@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
+import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type ActionTab = "smart_money" | "value_momentum" | "index_core";
 
@@ -13,49 +14,11 @@ const ACTION_TABS: Array<TabItem<ActionTab>> = [
   { id: "index_core", label: "지수 핵심" },
 ];
 
-interface ActionRow {
-  symbol: string;
-  company?: string | null;
-  sector?: string | null;
-  marketScope?: string | null;
-  actionScore?: number | null;
-  confidenceLabel?: string | null;
-  actionLabel?: string | null;
-  actionBucket?: string | null;
-  actionReasons?: string[];
-  lowEvidence?: boolean | null;
-  return12m?: number | null;
-  guruHolders?: number | null;
-}
-
-interface ActionDoc {
-  generated_at?: string;
-  coverage?: {
-    indexed_stock_count?: number | null;
-    conviction_matched_count?: number | null;
-    quarter_close_ticker_count?: number | null;
-  };
-  fields?: string[];
-  rows?: Array<ActionRow | unknown[]>;
-}
-
-let cache: ActionDoc | null = null;
-let pending: Promise<ActionDoc | null> | null = null;
+type ActionRow = ActionSummaryRecord;
+type ActionDoc = ActionSummaryDocument;
 
 function loadActions(): Promise<ActionDoc | null> {
-  if (cache) return Promise.resolve(cache);
-  if (pending) return pending;
-  pending = fetch("/data/computed/stock_action_summary.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc) => {
-      cache = doc;
-      return doc;
-    })
-    .catch(() => {
-      pending = null;
-      return null;
-    });
-  return pending;
+  return loadActionSummaryDocument();
 }
 
 function fmtScore(value: number | null | undefined): string {
@@ -83,31 +46,6 @@ function tone(bucket: string | null | undefined, confidenceLabel?: string | null
   return "neutral";
 }
 
-function normalizeActionRow(row: ActionRow | unknown[], fields: string[]): ActionRow | null {
-  if (!Array.isArray(row)) return row.symbol ? row : null;
-  const value = (key: string): unknown => {
-    const index = fields.indexOf(key);
-    return index >= 0 ? row[index] : undefined;
-  };
-  const symbol = value("symbol");
-  if (typeof symbol !== "string" || symbol.length === 0) return null;
-  const actionReasons = value("actionReasons");
-  return {
-    symbol,
-    company: typeof value("company") === "string" ? value("company") as string : null,
-    sector: typeof value("sector") === "string" ? value("sector") as string : null,
-    marketScope: typeof value("marketScope") === "string" ? value("marketScope") as string : null,
-    actionScore: typeof value("actionScore") === "number" ? value("actionScore") as number : null,
-    confidenceLabel: typeof value("confidenceLabel") === "string" ? value("confidenceLabel") as string : null,
-    actionLabel: typeof value("actionLabel") === "string" ? value("actionLabel") as string : null,
-    actionBucket: typeof value("actionBucket") === "string" ? value("actionBucket") as string : null,
-    actionReasons: Array.isArray(actionReasons) ? actionReasons.filter((item): item is string => typeof item === "string") : [],
-    lowEvidence: typeof value("lowEvidence") === "boolean" ? value("lowEvidence") as boolean : false,
-    return12m: typeof value("return12m") === "number" ? value("return12m") as number : null,
-    guruHolders: typeof value("guruHolders") === "number" ? value("guruHolders") as number : null,
-  };
-}
-
 export default function ActionCandidatesCard() {
   const [doc, setDoc] = useState<ActionDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -130,7 +68,6 @@ export default function ActionCandidatesCard() {
   const rowsByTab = useMemo(() => {
     const all = Array.isArray(doc?.rows) ? doc.rows : [];
     const normalized = all
-      .map((row) => normalizeActionRow(row, doc?.fields ?? []))
       .filter((row): row is ActionRow => Boolean(row?.actionBucket));
     return ACTION_TABS.reduce((acc, item) => {
       acc[item.id] = normalized.filter((row) => row.actionBucket === item.id).slice(0, 6);
