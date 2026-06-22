@@ -85,6 +85,29 @@ closed by V0 and stay as migration, legacy exception, or sunset candidates.
 | `DS-P1-007` | `ib/ib-total-guide-calculator.html` | browser Yahoo/CORS proxy | legacy browser provider fetch | sunset or contract route | P2 |
 | `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | old PoC collector | sunset/archive | P1-medium |
 
+## Next Execution Plan
+
+Order is risk-first, not table-order:
+
+1. `DS-P1-005` first: inspect `admin/market-radar/scripts/vix.gs` usage,
+   writes, consumers, and whether the Yahoo/GitHub path should migrate under an
+   existing sentiment/Data Spine collector or stay as an explicit admin
+   exception.
+2. `DS-P1-008` second: prove whether `scripts/fetch-yf-finance-v0.py` is still
+   called by workflow, docs, or operators. If unused, mark it sunset/archive
+   instead of carrying a confusing old collector.
+3. `DS-P1-002` through `DS-P1-007` remaining P2 legacy surfaces: classify each
+   as `migrate`, `explicit_exception`, or `sunset`; avoid breaking GAS/IB/Daily
+   Wrap runtime paths until a replacement route exists.
+
+For every row, the closeout must include:
+
+- grep/runtime evidence for current consumers;
+- one of `migrate`, `explicit_exception`, or `sunset`;
+- docs update and a lightweight verification command;
+- no new direct provider fetch outside the ratified gateway or scheduled
+  collectors.
+
 ## Exit Criteria
 
 - `scripts/audit-data-spine-p1.py` and `scripts/audit-data-spine-v0.py` consume
