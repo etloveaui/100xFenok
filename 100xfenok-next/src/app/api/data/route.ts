@@ -9,6 +9,18 @@ const TREASURY_ACCOUNT_TYPES = [
   "Treasury General Account (TGA) Opening Balance",
 ] as const;
 
+interface TreasuryTgaRow {
+  record_date: string;
+  open_today_bal: string;
+}
+
+interface TreasuryTgaMirrorPayload {
+  updated?: string;
+  source?: string;
+  endpoint?: string;
+  series?: Array<{ date?: string; val?: number | string | null }>;
+}
+
 export const dynamic = "force-dynamic";
 export const revalidate = false;
 
@@ -44,7 +56,53 @@ async function fetchTreasuryRows(start: string, accountType: string) {
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
-async function getTreasuryTgaResponse(start: string): Promise<Response> {
+async function fetchTreasuryMirrorRows(request: Request, start: string): Promise<TreasuryTgaRow[]> {
+  const response = await fetch(new URL("/data/macro/tga.json", request.url), {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`TREASURY_MIRROR_FETCH_FAILED:${response.status}`);
+  }
+
+  const payload = (await response.json()) as TreasuryTgaMirrorPayload;
+  const rows = Array.isArray(payload.series) ? payload.series : [];
+
+  return rows
+    .filter((row) => typeof row.date === "string" && row.date >= start && row.val !== null && row.val !== undefined)
+    .map((row) => ({
+      record_date: row.date as string,
+      open_today_bal: String(row.val),
+    }));
+}
+
+function treasuryResponse(source: string, data: TreasuryTgaRow[]): Response {
+  return NextResponse.json(
+    {
+      source,
+      data,
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+      },
+    },
+  );
+}
+
+async function getTreasuryTgaResponse(request: Request, start: string): Promise<Response> {
+  try {
+    const mirrorRows = await fetchTreasuryMirrorRows(request, start);
+    if (mirrorRows.length > 0) {
+      return treasuryResponse("treasury-tga-datapack", mirrorRows);
+    }
+  } catch {
+    // Fall through to the live FiscalData fallback when the static mirror is unavailable.
+  }
+
   const settled = await Promise.allSettled(
     TREASURY_ACCOUNT_TYPES.map((accountType) =>
       fetchTreasuryRows(start, accountType),
@@ -84,17 +142,7 @@ async function getTreasuryTgaResponse(start: string): Promise<Response> {
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([record_date, open_today_bal]) => ({ record_date, open_today_bal }));
 
-  return NextResponse.json(
-    {
-      source: "treasury-fiscaldata",
-      data,
-    },
-    {
-      headers: {
-        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
-      },
-    },
-  );
+  return treasuryResponse("treasury-fiscaldata-fallback", data);
 }
 
 export async function GET(request: Request) {
@@ -123,6 +171,6 @@ export async function GET(request: Request) {
   return withResponseCache(
     `treasury-tga:${start}`,
     1800,
-    () => getTreasuryTgaResponse(start),
+    () => getTreasuryTgaResponse(request, start),
   );
 }

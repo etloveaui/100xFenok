@@ -87,6 +87,7 @@ and stay as migration, legacy exception, or sunset candidates.
 | `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC primary + 100x quote.v1 fallback + Yahoo OHLC + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper with CNBC quality preserved | ROUTED 2026-06-22: CNBC remains primary for pre/post-market quality; quote.v1 is first fallback before direct Yahoo | P2 |
 | `DS-P1-007` | `ib/ib-total-guide-calculator.html` | 100x same-origin ticker API | live embed consumes ratified server quote gateway | CLOSED 2026-06-22: browser Yahoo/CORS proxy removed; future quote-service migration stays under `DS-P1-001` | P2 |
 | `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | deprecated old 10-ticker PoC collector | sunset documented; replaced by scheduled YF v2 collector | CLOSED 2026-06-22 |
+| `DS-P1-009` | `100xfenok-next/src/app/api/data/route.ts` | local `data/macro/tga.json` mirror + Treasury FiscalData fallback | legacy `treasury-tga` API facade | ROUTED 2026-06-22: static DataPack mirror is primary; live FiscalData remains fallback only when the mirror is unavailable | P2 |
 
 ## Next Execution Plan
 
@@ -113,6 +114,9 @@ Order is risk-first, not table-order:
    `DS-P1-007` is closed: the live
    `/infinite-buying` embedded HTML now calls the same-origin 100x ticker API
    instead of a browser Yahoo/CORS provider path.
+5. `DS-P1-009` routed 2026-06-22: `/api/data?dataset=treasury-tga` now reads
+   the scheduled `data/macro/tga.json` mirror first and keeps FiscalData as a
+   fallback only. The scheduled emitter is `.github/workflows/fetch-treasury-tga.yml`.
 
 ### DS-P1-001 Contract Slice (2026-06-22)
 
@@ -146,6 +150,15 @@ Order is risk-first, not table-order:
 - Guard: targeted ESLint on the six touched files, full `tsc --noEmit`, and grep
   now show no product-runtime `stocks_analyzer.json` or
   `stock_action_summary.json` fetch outside the provider boundary.
+
+### DS-P1-009 Treasury Route Slice (2026-06-22)
+
+- Runtime boundary: `/api/data?dataset=treasury-tga&start=YYYY-MM-DD` keeps its
+  existing response shape but now serves from `/data/macro/tga.json` first.
+- Fallback: direct Treasury FiscalData is retained only when the static mirror is
+  missing or empty, so scheduled DataPack refresh is the normal path.
+- Guard: `rg` found no current product consumer for the legacy route; it remains
+  available as a compatibility facade.
 
 ### DS-P1-005 Closeout Evidence (2026-06-22)
 

@@ -167,6 +167,9 @@ Peer/subagent recheck expanded the scan beyond the original P0 pattern to
 - Scheduled workflow collectors are allowed emitters, not product runtime leaks:
   `.github/workflows/fetch-fdic.yml`, `fetch-fred-banking.yml`,
   `fetch-fred-macro.yml`, `fetch-treasury-tga.yml`, and `fetch-defillama.yml`.
+- `/api/data?dataset=treasury-tga` is now a compatibility facade over the
+  scheduled `data/macro/tga.json` DataPack mirror first, with live FiscalData as
+  fallback only when the mirror is unavailable.
 
 ## Consumer Inventory
 
@@ -367,6 +370,8 @@ contract and the disagreement policy.
      and CNBC pre/post-market quality.
    - `macro-monitor` FDIC fallback and non-quote GAS/admin HTML endpoints are
      classified, but not yet migrated.
+   - `/api/data?dataset=treasury-tga` is routed through the scheduled TGA mirror
+     first; live Treasury FiscalData remains fallback-only.
    - feno-value has a DataPackProvider consumer path, but direct valuation-engine
      providers remain separate exceptions until each path is promoted or routed.
 
