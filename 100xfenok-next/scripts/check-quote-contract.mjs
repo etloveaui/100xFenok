@@ -80,9 +80,90 @@ const CONTRACT_FILES = [
     forbidden: ["api.allorigins.win", "query1.finance.yahoo.com/v8/finance/chart"],
   },
   {
+    path: "../admin/market-data/yahoo-quotes.gs",
+    required: [
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "function fetchFromYahooQuote(symbol)",
+      "schemaVersion !== 'quote.v1'",
+      "100X_QUOTE+YAHOO_OHLC",
+      "json.postMarket",
+      "json.fetchedAt",
+    ],
+  },
+  {
+    path: "../admin/market-radar/scripts/yahoo-quotes.gs",
+    required: [
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "schemaVersion !== 'quote.v1'",
+      "100X_QUOTE+YAHOO_OHLC",
+      "json.postMarket",
+      "json.fetchedAt",
+    ],
+  },
+  {
+    path: "../ib/ib-helper/apps-script/yahoo-quotes.gs",
+    required: [
+      "CNBC stays primary for IB Helper",
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "schemaVersion !== 'quote.v1'",
+      "100X_QUOTE+YAHOO_OHLC",
+      "json.postMarket",
+      "json.fetchedAt",
+    ],
+  },
+  {
     path: "public/ib/ib-total-guide-calculator.html",
     required: ["/api/ticker/"],
     forbidden: ["api.allorigins.win", "query1.finance.yahoo.com/v8/finance/chart"],
+  },
+  {
+    path: "public/admin/market-data/yahoo-quotes.gs",
+    required: [
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "function fetchFromYahooQuote(symbol)",
+      "schemaVersion !== 'quote.v1'",
+      "100X_QUOTE+YAHOO_OHLC",
+    ],
+  },
+  {
+    path: "public/admin/market-radar/scripts/yahoo-quotes.gs",
+    required: [
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "100X_QUOTE+YAHOO_OHLC",
+      "schemaVersion !== 'quote.v1'",
+    ],
+  },
+  {
+    path: "public/ib/ib-helper/apps-script/yahoo-quotes.gs",
+    required: [
+      "CNBC stays primary for IB Helper",
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "100X_QUOTE+YAHOO_OHLC",
+      "schemaVersion !== 'quote.v1'",
+    ],
+  },
+  {
+    path: "public/ib-helper/apps-script/yahoo-quotes.gs",
+    required: [
+      "CNBC stays primary for IB Helper",
+      "QUOTE_GATEWAY_URL",
+      "https://100xfenok.etloveaui.workers.dev/api/ticker/",
+      "function fetchFrom100xQuote(symbol)",
+      "100X_QUOTE+YAHOO_OHLC",
+      "schemaVersion !== 'quote.v1'",
+    ],
   },
 ];
 

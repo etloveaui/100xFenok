@@ -115,9 +115,9 @@ file/pattern and separates real fetchers from tests and string-only references.
 |---:|---|---|---|
 | 1 | `100xfenok-next/src/lib/server/ticker.ts` + `100xfenok-next/src/lib/quote-contract.ts` | `quote.v1` live quote gateway | RATIFIED 2026-06-22: shared quote contract; provider internals remain sanctioned live exception until a Data Spine live-quote service exists |
 | 1 | `ib/ib-total-guide-calculator.html` | same-origin `/api/ticker/{symbol}` consumer | CLOSED 2026-06-22: browser Yahoo/CORS proxy removed; long-term quote-service migration remains under `ticker.ts` |
-| 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | legacy GAS provider fetch | CLASSIFIED 2026-06-22: explicit IB exception |
-| 1 | `admin/market-data/yahoo-quotes.gs` | admin GAS provider fetch | CLASSIFIED 2026-06-22: explicit admin exception |
-| 1 | `admin/market-radar/scripts/yahoo-quotes.gs` | admin/radar GAS provider fetch | CLASSIFIED 2026-06-22: explicit admin/radar exception |
+| 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC primary + quote.v1 fallback GAS quote helper | ROUTED 2026-06-22: CNBC remains primary; quote.v1 is first fallback before direct Yahoo |
+| 1 | `admin/market-data/yahoo-quotes.gs` | quote.v1 primary admin GAS quote helper | ROUTED 2026-06-22: quote.v1 primary plus Yahoo OHLC enrichment; Yahoo fallback retained |
+| 1 | `admin/market-radar/scripts/yahoo-quotes.gs` | quote.v1 primary admin/radar GAS quote helper | ROUTED 2026-06-22: quote.v1 primary plus Yahoo OHLC enrichment for Prices sheet |
 | 1 | `admin/market-radar/scripts/vix.gs` | deprecated admin/radar GAS provider fetch | CLOSED 2026-06-22: sunset; replaced by scheduled `scripts/fetch-sentiment.mjs` collector |
 | 3 | `100x/daily-wrap/fetcher.py` | deprecated legacy publication PoC | CLOSED 2026-06-22: sunset; future Daily Wrap automation should use Data Spine/report contracts |
 | 1 | `scripts/fetch-yf-finance.py` | allowed scheduled collector | Allowed collector |
@@ -154,7 +154,13 @@ Peer/subagent recheck expanded the scan beyond the original P0 pattern to
   `api.fdic.gov` fallback after the local JSON attempt (`:650-675`). Classify as
   migration debt: remove or proxy the FDIC fallback when this tool is promoted
   back into product runtime.
-- GAS endpoints are legacy/admin exceptions, not Data Spine consumers:
+- GAS endpoints are legacy/admin routed exceptions, not primary Next Data Spine
+  consumers. As of 2026-06-22, the three live quote helpers route through
+  quote.v1 where safe while preserving legacy fallbacks:
+  `admin/market-data/yahoo-quotes.gs`,
+  `admin/market-radar/scripts/yahoo-quotes.gs`, and
+  `ib/ib-helper/apps-script/yahoo-quotes.gs`.
+  Other GAS/admin endpoints remain classified:
   `notification-control-panel-web.html:219,294`, `admin/stats.html:131,141`,
   `admin/api-test.html:105,125,144,169`, and
   `admin/design-lab/main/main-candidate.html:249`.
@@ -351,8 +357,11 @@ contract and the disagreement policy.
 5. Legacy runtime fetch exceptions:
    - `quote.v1` + `ticker.ts` are ratified as the live quote gateway contract
      and internal provider exception.
-   - `macro-monitor` FDIC fallback and GAS/admin HTML endpoints are classified,
-     but not yet migrated.
+   - `DS-P1-003/004/006` GAS quote helpers are now routed exceptions: quote.v1
+     is used as the shared price boundary, but legacy fallbacks remain for OHLC
+     and CNBC pre/post-market quality.
+   - `macro-monitor` FDIC fallback and non-quote GAS/admin HTML endpoints are
+     classified, but not yet migrated.
    - feno-value has a DataPackProvider consumer path, but direct valuation-engine
      providers remain separate exceptions until each path is promoted or routed.
 
@@ -361,8 +370,8 @@ contract and the disagreement policy.
 1. Keep Daily Wrap report metadata; defer revival until report automation exists.
 2. P1: freeze the per-field authority/fallback/tolerance/disagreement matrix
    using the measured 28-dataset inventory and `market_source_parity`.
-3. P1: decide exception handling for `macro-monitor` FDIC fallback, GAS/admin
-   HTML endpoints, and feno-value direct provider paths.
+3. P1: decide exception handling for `macro-monitor` FDIC fallback, remaining
+   non-quote GAS/admin HTML endpoints, and feno-value direct provider paths.
 4. Filings: prioritize the foreign-filer 6-K / 20-F / 40-F path before any
    top-300/top-400 EDGAR expansion.
 5. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.

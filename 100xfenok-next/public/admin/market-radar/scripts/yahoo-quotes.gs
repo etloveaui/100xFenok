@@ -1,11 +1,12 @@
 /**
  * Yahoo Quotes - Universal Stock Price Fetcher
  *
- * Fallback Chain: Yahoo Finance → Stooq → GOOGLEFINANCE
+ * Fallback Chain: 100x Quote Gateway (+ Yahoo OHLC) → Yahoo Finance → Stooq → GOOGLEFINANCE
  *
  * Features:
- * - Real-time quotes (Yahoo/Stooq)
- * - Pre-market & After-hours support (Yahoo only)
+ * - Real-time quotes (100x quote.v1/Yahoo/Stooq)
+ * - High/Low/Open/Volume kept through Yahoo OHLC enrichment for Prices sheet
+ * - Pre-market & After-hours support (100x/Yahoo)
  * - Multi-symbol batch fetch
  * - Automatic fallback on failure
  * - 🔴 getBestPrice(): MarketState 기반 최적 가격 선택
@@ -28,6 +29,9 @@
 // =============================================================================
 
 const YAHOO_QUOTES_CONFIG = {
+  // 100x quote.v1 gateway (primary contract)
+  QUOTE_GATEWAY_URL: 'https://100xfenok.etloveaui.workers.dev/api/ticker/',
+
   // Stooq Proxy (Cloudflare Worker)
   STOOQ_PROXY: 'https://stooq-proxy.etloveaui.workers.dev',
 
@@ -47,7 +51,7 @@ const YAHOO_QUOTES_CONFIG = {
 
 /**
  * Get quote for a single symbol
- * Fallback: Yahoo → Stooq → GOOGLEFINANCE
+ * Fallback: 100x quote.v1 → Yahoo → Stooq → GOOGLEFINANCE
  *
  * @param {string} symbol - Stock symbol (e.g., 'TQQQ', 'SOXL')
  * @returns {Object} { symbol, price, previousClose, high, low, preMarket, afterHours, source, timestamp }
@@ -59,7 +63,18 @@ function getQuote(symbol) {
 
   symbol = symbol.toUpperCase().trim();
 
-  // Try Yahoo Finance first (supports pre/after hours)
+  // Try 100x quote contract first
+  try {
+    const gatewayResult = fetchFrom100xQuote(symbol);
+    if (gatewayResult && gatewayResult.price > 0) {
+      Logger.log(`✅ ${symbol}: 100x quote gateway (${gatewayResult.price})`);
+      return gatewayResult;
+    }
+  } catch (e) {
+    Logger.log(`⚠️ ${symbol}: 100x quote gateway failed - ${e.message}`);
+  }
+
+  // Fallback to Yahoo Finance (supports pre/after hours)
   try {
     const yahooResult = fetchFromYahoo(symbol);
     if (yahooResult && yahooResult.price > 0) {
@@ -144,6 +159,90 @@ function getQuotes(symbols) {
  */
 function getIBHelperQuotes() {
   return getQuotes(['TQQQ', 'SOXL', 'BITU']);
+}
+
+// =============================================================================
+// Data Source: 100x Quote Gateway
+// =============================================================================
+
+/**
+ * Fetch quote from the shared 100x quote.v1 gateway
+ *
+ * @param {string} symbol
+ * @returns {Object|null}
+ */
+function fetchFrom100xQuote(symbol) {
+  const url = YAHOO_QUOTES_CONFIG.QUOTE_GATEWAY_URL + encodeURIComponent(symbol) + '/';
+
+  const response = UrlFetchApp.fetch(url, {
+    headers: { 'Accept': 'application/json' },
+    muteHttpExceptions: true,
+    timeout: YAHOO_QUOTES_CONFIG.TIMEOUT_MS
+  });
+
+  if (response.getResponseCode() !== 200) {
+    throw new Error('100x quote gateway error: ' + response.getResponseCode());
+  }
+
+  const json = JSON.parse(response.getContentText());
+  if (!json || json.schemaVersion !== 'quote.v1') {
+    throw new Error('Invalid 100x quote schema');
+  }
+
+  const price = toNumber(json.price);
+  if (price === null || price <= 0) {
+    throw new Error('Invalid 100x quote price');
+  }
+
+  let previousClose = toNumber(json.previousClose);
+  if (previousClose === null || previousClose <= 0) {
+    previousClose = price;
+  }
+
+  let change = toNumber(json.change);
+  if (change === null) {
+    change = price - previousClose;
+  }
+
+  let changePercent = toNumber(json.changePercent);
+  if (changePercent === null) {
+    changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+  }
+
+  const quote = {
+    symbol: symbol,
+    price: roundPrice(price),
+    previousClose: roundPrice(previousClose),
+    change: roundPrice(change),
+    changePercent: roundPrice(changePercent),
+    high: 0,
+    low: 0,
+    open: 0,
+    volume: 0,
+
+    preMarket: positiveRoundOrNull(json.preMarket),
+    afterHours: positiveRoundOrNull(json.postMarket),
+    marketState: json.marketState || 'UNKNOWN',
+
+    source: '100X_QUOTE',
+    schemaVersion: json.schemaVersion,
+    timestamp: json.fetchedAt || new Date().toISOString()
+  };
+
+  try {
+    const yahooOhlc = fetchFromYahoo(symbol);
+    if (yahooOhlc && yahooOhlc.price > 0) {
+      quote.high = yahooOhlc.high || 0;
+      quote.low = yahooOhlc.low || 0;
+      quote.open = yahooOhlc.open || 0;
+      quote.volume = yahooOhlc.volume || 0;
+      quote.source = '100X_QUOTE+YAHOO_OHLC';
+    }
+  } catch (e) {
+    Logger.log(`⚠️ ${symbol}: 100x quote OHLC enrichment failed - ${e.message}`);
+  }
+
+  return quote;
 }
 
 // =============================================================================
@@ -449,6 +548,17 @@ function fetchFromGoogleFinance(symbol) {
 function roundPrice(value) {
   if (!value || isNaN(value)) return 0;
   return Math.round(parseFloat(value) * 100) / 100;
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return isNaN(n) ? null : n;
+}
+
+function positiveRoundOrNull(value) {
+  const n = toNumber(value);
+  return n && n > 0 ? roundPrice(n) : null;
 }
 
 /**

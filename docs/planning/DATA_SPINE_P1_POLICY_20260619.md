@@ -18,6 +18,7 @@ python3 scripts/audit-data-spine-p1.py --json
 python3 scripts/audit-data-spine-v0.py
 python3 scripts/audit-data-spine-v0.py --json
 python3 scripts/test_data_spine_policy.py
+python3 scripts/test_data_spine_gas_quote_gateway.py
 ```
 
 ## Policy SSOT
@@ -80,10 +81,10 @@ and stay as migration, legacy exception, or sunset candidates.
 |---|---|---|---|---|---|
 | `DS-P1-001` | `100xfenok-next/src/lib/server/ticker.ts` + `100xfenok-next/src/lib/quote-contract.ts` | Yahoo query1 + ticker worker behind `/api/ticker` | product-runtime `quote.v1` gateway | quote contract ratified; provider internals remain sanctioned live exception until Data Spine live-quote service exists | P1-high |
 | `DS-P1-002` | `100x/daily-wrap/fetcher.py` | Yahoo yfinance + FRED | deprecated legacy Daily Wrap publication PoC | CLOSED 2026-06-22: sunset; future Daily Wrap automation should use Data Spine/report contracts | P2 |
-| `DS-P1-003` | `admin/market-data/yahoo-quotes.gs` | Yahoo query1 | admin GAS quote helper | CLASSIFIED 2026-06-22: explicit admin GAS exception until retired or routed through Data Spine | P2 |
-| `DS-P1-004` | `admin/market-radar/scripts/yahoo-quotes.gs` | Yahoo query1 + Stooq + GOOGLEFINANCE | market-radar GAS quote helper | CLASSIFIED 2026-06-22: explicit admin/radar GAS exception until retired or routed through Data Spine | P2 |
+| `DS-P1-003` | `admin/market-data/yahoo-quotes.gs` | 100x quote.v1 + Yahoo OHLC + Yahoo query1 fallback | admin GAS quote helper routed through quote.v1 with OHLC preservation | ROUTED 2026-06-22: quote.v1 primary plus Yahoo OHLC enrichment; legacy Yahoo fallback remains until admin tool retirement or Data Spine live quote replacement | P2 |
+| `DS-P1-004` | `admin/market-radar/scripts/yahoo-quotes.gs` | 100x quote.v1 + Yahoo OHLC + Stooq + GOOGLEFINANCE | market-radar GAS quote helper with Prices sheet OHLC preservation | ROUTED 2026-06-22: quote.v1 primary plus Yahoo OHLC enrichment; Stooq/GOOGLEFINANCE remain deeper fallback | P2 |
 | `DS-P1-005` | `admin/market-radar/scripts/vix.gs` | Yahoo query1 + GitHub contents API | deprecated market-radar VIX GAS backup | sunset documented; replaced by scheduled sentiment collector | CLOSED 2026-06-22 |
-| `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC + Yahoo + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper | CLASSIFIED 2026-06-22: explicit exception until AA/IB quote contract exists | P2 |
+| `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC primary + 100x quote.v1 fallback + Yahoo OHLC + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper with CNBC quality preserved | ROUTED 2026-06-22: CNBC remains primary for pre/post-market quality; quote.v1 is first fallback before direct Yahoo | P2 |
 | `DS-P1-007` | `ib/ib-total-guide-calculator.html` | 100x same-origin ticker API | live embed consumes ratified server quote gateway | CLOSED 2026-06-22: browser Yahoo/CORS proxy removed; future quote-service migration stays under `DS-P1-001` | P2 |
 | `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | deprecated old 10-ticker PoC collector | sunset documented; replaced by scheduled YF v2 collector | CLOSED 2026-06-22 |
 
@@ -104,8 +105,12 @@ Order is risk-first, not table-order:
 3. `DS-P1-002` closed 2026-06-22: `100x/daily-wrap/fetcher.py` is not called by
    repo-local workflows or Next runtime; it now fails closed unless
    `--allow-deprecated-fetcher` is passed for historical manual reproduction.
-4. `DS-P1-003/004/006` classified 2026-06-22: keep admin/IB GAS helpers as
-   explicit legacy exceptions for now. `DS-P1-007` is closed: the live
+4. `DS-P1-003/004/006` routed 2026-06-22: admin/IB GAS helpers now consume the
+   shared quote.v1 gateway where safe, while legacy providers remain as
+   intentional fallback because quote.v1 does not yet carry OHLC fields and IB
+   still needs CNBC pre/post-market quality. The two admin quote helpers enrich
+   OHLC from Yahoo after quote.v1 succeeds so their return shape stays stable.
+   `DS-P1-007` is closed: the live
    `/infinite-buying` embedded HTML now calls the same-origin 100x ticker API
    instead of a browser Yahoo/CORS provider path.
 
@@ -119,8 +124,9 @@ Order is risk-first, not table-order:
   and ticker-worker remain internal providers only.
 - Consumers: dashboard sector/index rows, sector ETF data, footer ticker bar,
   admin live tools, and the IB embed consume the same `/api/ticker` gateway.
-- Guard: `npm run qa:quote-contract` checks the route contract, consumer type
-  imports, and IB mirror so browser-side Yahoo/proxy fetches do not reappear.
+- Guard: `npm run qa:quote-contract` checks the route contract, GAS quote helper
+  routing, consumer type imports, and IB mirror so browser-side Yahoo/proxy
+  fetches do not reappear.
 
 ### DS-P1-005 Closeout Evidence (2026-06-22)
 
@@ -155,11 +161,15 @@ Order is risk-first, not table-order:
   or Next runtime. It also used a FRED mock fallback when `FRED_API_KEY` was
   missing, so it is sunset and retained only for manual historical reproduction.
 - `DS-P1-003`: `admin/market-data/yahoo-quotes.gs` is documented as a standalone
-  Market Data Apps Script WebApp helper, not a Next runtime dependency.
+  Market Data Apps Script WebApp helper; it now tries `/api/ticker` quote.v1
+  first, enriches OHLC from Yahoo, and keeps Yahoo as fallback.
 - `DS-P1-004`: `admin/market-radar/scripts/yahoo-quotes.gs` is a Market Radar
-  GAS/Sheet helper for live quote lookup and price-sheet updates.
+  GAS/Sheet helper for live quote lookup and price-sheet updates; it uses
+  quote.v1 for price fields and Yahoo OHLC enrichment so Prices sheet
+  high/low/open/volume do not degrade.
 - `DS-P1-006`: `ib/ib-helper/apps-script/yahoo-quotes.gs` is documented as the
-  IB Helper Apps Script price API; keep it until an AA/IB contract route exists.
+  IB Helper Apps Script price API; CNBC remains primary, with quote.v1 as first
+  fallback before direct Yahoo until an AA/IB contract route exists.
 - `DS-P1-007`: `ib/ib-total-guide-calculator.html` is embedded by the live Next
   `/infinite-buying` page. Its browser Yahoo/CORS fetch path was removed on
   2026-06-22; it now consumes `/api/ticker/{symbol}`, which is the ratified
@@ -178,8 +188,11 @@ For every row, the closeout must include:
 - `scripts/audit-data-spine-p1.py` and `scripts/audit-data-spine-v0.py` consume
   the same shared policy constants.
 - `scripts/test_data_spine_policy.py` passes and blocks future P1/V0 drift.
+- `scripts/test_data_spine_gas_quote_gateway.py` passes and blocks GAS quote
+  helpers from drifting away from quote.v1 or IB CNBC-primary ordering.
 - Current parity counts regenerate from `market_source_parity.json`; they are not
   manually maintained here.
 - Direct-fetch rows now have a concrete disposition: `DS-P1-002/005/008` are
   closed as `sunset`; `DS-P1-007` is closed as `migrated`;
-  `DS-P1-003/004/006` are explicit legacy exceptions.
+  `DS-P1-003/004/006` are `routed_exception` paths with quote.v1 plus
+  intentional legacy fallbacks.

@@ -1,10 +1,10 @@
 /**
  * Yahoo Quotes - Universal Stock Price Fetcher
  *
- * Fallback Chain: CNBC → Yahoo Finance → Stooq → GOOGLEFINANCE
+ * Fallback Chain: CNBC → 100x Quote Gateway (+ Yahoo OHLC) → Yahoo Finance → Stooq → GOOGLEFINANCE
  *
  * Features:
- * - Real-time quotes (CNBC/Yahoo/Stooq)
+ * - Real-time quotes (CNBC/100x quote.v1/Yahoo/Stooq)
  * - Pre-market & After-hours support (CNBC)
  * - Multi-symbol batch fetch
  * - Automatic fallback on failure
@@ -34,6 +34,9 @@ const YAHOO_QUOTES_CONFIG = {
   // CNBC API (Primary - supports pre/post market)
   CNBC_BASE_URL: 'https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol',
 
+  // 100x quote.v1 gateway (fallback contract, after CNBC)
+  QUOTE_GATEWAY_URL: 'https://100xfenok.etloveaui.workers.dev/api/ticker/',
+
   // Stooq Proxy (Cloudflare Worker)
   STOOQ_PROXY: 'https://stooq-proxy.etloveaui.workers.dev',
 
@@ -57,7 +60,7 @@ const IB_HELPER_TICKERS = ['TQQQ', 'SOXL', 'BITU'].concat(CASH_ETFS);
 
 /**
  * Get quote for a single symbol
- * Fallback: CNBC → Yahoo → Stooq → GOOGLEFINANCE
+ * Fallback: CNBC → 100x quote.v1 → Yahoo → Stooq → GOOGLEFINANCE
  *
  * @param {string} symbol - Stock symbol (e.g., 'TQQQ', 'SOXL')
  * @returns {Object} { symbol, price, previousClose, high, low, preMarket, afterHours, marketState, source, timestamp }
@@ -106,7 +109,18 @@ function getQuote(symbol) {
     Logger.log(`⚠️ ${symbol}: CNBC failed - ${e.message}`);
   }
 
-  // 2. Fallback to Yahoo Finance
+  // 2. Fallback to 100x quote contract (keeps a shared quote.v1 boundary)
+  try {
+    const gatewayResult = fetchFrom100xQuote(symbol);
+    if (gatewayResult && gatewayResult.price > 0) {
+      Logger.log(`✅ ${symbol}: 100x quote gateway fallback (${gatewayResult.price})`);
+      return cacheResult(gatewayResult);
+    }
+  } catch (e) {
+    Logger.log(`⚠️ ${symbol}: 100x quote gateway failed - ${e.message}`);
+  }
+
+  // 3. Fallback to Yahoo Finance
   try {
     const yahooResult = fetchFromYahoo(symbol);
     if (yahooResult && yahooResult.price > 0) {
@@ -117,7 +131,7 @@ function getQuote(symbol) {
     Logger.log(`⚠️ ${symbol}: Yahoo failed - ${e.message}`);
   }
 
-  // 3. Fallback to Stooq (real-time, no pre/after)
+  // 4. Fallback to Stooq (real-time, no pre/after)
   try {
     const stooqResult = fetchFromStooq(symbol);
     if (stooqResult && stooqResult.price > 0) {
@@ -128,7 +142,7 @@ function getQuote(symbol) {
     Logger.log(`⚠️ ${symbol}: Stooq failed - ${e.message}`);
   }
 
-  // 4. Last resort: GOOGLEFINANCE (15min delay)
+  // 5. Last resort: GOOGLEFINANCE (15min delay)
   try {
     const googleResult = fetchFromGoogleFinance(symbol);
     if (googleResult && googleResult.price > 0) {
@@ -299,6 +313,86 @@ function fetchFromCNBC(symbol) {
     source: 'CNBC',
     timestamp: new Date().toISOString()
   };
+}
+
+// =============================================================================
+// Data Source: 100x Quote Gateway (Fallback Contract)
+// =============================================================================
+
+/**
+ * Fetch quote from the shared 100x quote.v1 gateway.
+ * CNBC stays primary for IB Helper; this path reduces direct Yahoo fallback usage
+ * without changing the public WebApp response shape.
+ *
+ * @param {string} symbol
+ * @returns {Object|null}
+ */
+function fetchFrom100xQuote(symbol) {
+  const url = YAHOO_QUOTES_CONFIG.QUOTE_GATEWAY_URL + encodeURIComponent(symbol) + '/';
+
+  const response = UrlFetchApp.fetch(url, {
+    headers: { 'Accept': 'application/json' },
+    muteHttpExceptions: true,
+    timeout: YAHOO_QUOTES_CONFIG.TIMEOUT_MS
+  });
+
+  if (response.getResponseCode() !== 200) {
+    throw new Error('100x quote gateway error: ' + response.getResponseCode());
+  }
+
+  const json = JSON.parse(response.getContentText());
+  if (!json || json.schemaVersion !== 'quote.v1') {
+    throw new Error('Invalid 100x quote schema');
+  }
+
+  const price = toNumber(json.price);
+  if (price === null || price <= 0) {
+    throw new Error('Invalid 100x quote price');
+  }
+
+  let previousClose = toNumber(json.previousClose);
+  if (previousClose === null || previousClose <= 0) {
+    previousClose = price;
+  }
+
+  const marketState = normalizeMarketState(json.marketState || 'UNKNOWN');
+  let priceSource = 'REGULAR';
+  if (marketState === 'PRE') priceSource = 'PRE';
+  if (marketState === 'POST') priceSource = 'POST';
+
+  const quote = {
+    symbol: symbol,
+    price: roundPrice(price),
+    priceSource: priceSource,
+    previousClose: roundPrice(previousClose),
+    high: 0,
+    low: 0,
+    open: 0,
+    volume: 0,
+
+    preMarket: positiveRoundOrNull(json.preMarket),
+    afterHours: positiveRoundOrNull(json.postMarket),
+    marketState: marketState,
+
+    source: '100X_QUOTE',
+    schemaVersion: json.schemaVersion,
+    timestamp: json.fetchedAt || new Date().toISOString()
+  };
+
+  try {
+    const yahooOhlc = fetchFromYahoo(symbol);
+    if (yahooOhlc && yahooOhlc.price > 0) {
+      quote.high = yahooOhlc.high || 0;
+      quote.low = yahooOhlc.low || 0;
+      quote.open = yahooOhlc.open || 0;
+      quote.volume = yahooOhlc.volume || 0;
+      quote.source = '100X_QUOTE+YAHOO_OHLC';
+    }
+  } catch (e) {
+    Logger.log(`⚠️ ${symbol}: 100x quote OHLC enrichment failed - ${e.message}`);
+  }
+
+  return quote;
 }
 
 /**
@@ -660,6 +754,17 @@ function fetchFromGoogleFinance(symbol) {
 function roundPrice(value) {
   if (!value || isNaN(value)) return 0;
   return Math.round(parseFloat(value) * 100) / 100;
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return isNaN(n) ? null : n;
+}
+
+function positiveRoundOrNull(value) {
+  const n = toNumber(value);
+  return n && n > 0 ? roundPrice(n) : null;
 }
 
 /**

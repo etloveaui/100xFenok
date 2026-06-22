@@ -1,10 +1,11 @@
 /**
  * Yahoo Quotes - Market Data Fetcher
  *
- * Reusable Yahoo Finance API wrapper for indices, ETFs, and stocks.
+ * Reusable 100x quote gateway wrapper for indices, ETFs, and stocks.
  * Adapted from IB Helper yahoo-quotes.gs, simplified for market data use.
  *
  * Features:
+ * - 100x quote.v1 gateway first, Yahoo OHLC enrichment, Yahoo Finance fallback
  * - Single and batch symbol fetching
  * - Pre-market / After-hours price support
  * - 5-minute CacheService for rate limiting
@@ -20,6 +21,7 @@
 // =============================================================================
 
 var YAHOO_CONFIG = {
+  QUOTE_GATEWAY_URL: 'https://100xfenok.etloveaui.workers.dev/api/ticker/',
   BASE_URL: 'https://query1.finance.yahoo.com/v8/finance/chart/',
   USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
   TIMEOUT_MS: 10000,
@@ -82,7 +84,37 @@ function yahooGetQuote(symbol) {
     try { return JSON.parse(cached); } catch (e) { /* stale cache, refetch */ }
   }
 
-  // Fetch from Yahoo
+  // Fetch from 100x quote contract first
+  try {
+    var gatewayObj = fetchFrom100xQuote(symbol);
+    if (gatewayObj && gatewayObj.price > 0) {
+      try {
+        cache.put(cacheKey, JSON.stringify(gatewayObj), YAHOO_CONFIG.CACHE_TTL_SECONDS);
+      } catch (e) { /* cache write failure is non-fatal */ }
+      return gatewayObj;
+    }
+  } catch (e) {
+    Logger.log('100x quote gateway error for ' + symbol + ': ' + e.message);
+  }
+
+  // Fetch from Yahoo fallback
+  var obj = fetchFromYahooQuote(symbol);
+  if (obj) {
+    try {
+      cache.put(cacheKey, JSON.stringify(obj), YAHOO_CONFIG.CACHE_TTL_SECONDS);
+    } catch (e) { /* cache write failure is non-fatal */ }
+  }
+
+  return obj;
+}
+
+/**
+ * Fetch quote directly from Yahoo Finance. Used for fallback and OHLC enrichment.
+ *
+ * @param {string} symbol
+ * @returns {Object|null}
+ */
+function fetchFromYahooQuote(symbol) {
   var url = YAHOO_CONFIG.BASE_URL +
     encodeURIComponent(symbol) +
     '?interval=1d&range=1d&includePrePost=true';
@@ -118,7 +150,7 @@ function yahooGetQuote(symbol) {
     // Use time-based market state (Yahoo's meta.marketState is unreliable)
     var marketState = getMarketState();
 
-    var obj = {
+    return {
       symbol: symbol,
       price: _round(price),
       previousClose: _round(previousClose),
@@ -135,17 +167,91 @@ function yahooGetQuote(symbol) {
       timestamp: new Date().toISOString()
     };
 
-    // Cache result
-    try {
-      cache.put(cacheKey, JSON.stringify(obj), YAHOO_CONFIG.CACHE_TTL_SECONDS);
-    } catch (e) { /* cache write failure is non-fatal */ }
-
-    return obj;
-
   } catch (e) {
     Logger.log('Yahoo fetch error for ' + symbol + ': ' + e.message);
     return null;
   }
+}
+
+/**
+ * Fetch quote from the shared 100x quote.v1 gateway.
+ *
+ * @param {string} symbol
+ * @returns {Object|null}
+ */
+function fetchFrom100xQuote(symbol) {
+  var url = YAHOO_CONFIG.QUOTE_GATEWAY_URL + encodeURIComponent(symbol) + '/';
+  var response = UrlFetchApp.fetch(url, {
+    headers: { 'Accept': 'application/json' },
+    muteHttpExceptions: true,
+    followRedirects: true,
+    timeout: YAHOO_CONFIG.TIMEOUT_MS
+  });
+
+  if (response.getResponseCode() !== 200) {
+    Logger.log('100x quote HTTP ' + response.getResponseCode() + ' for ' + symbol);
+    return null;
+  }
+
+  var json = JSON.parse(response.getContentText());
+  if (!json || json.schemaVersion !== 'quote.v1') {
+    Logger.log('100x quote invalid schema for ' + symbol);
+    return null;
+  }
+
+  var price = _toNumber(json.price);
+  if (price === null || price <= 0) {
+    Logger.log('100x quote invalid price for ' + symbol);
+    return null;
+  }
+
+  var previousClose = _toNumber(json.previousClose);
+  if (previousClose === null || previousClose <= 0) {
+    previousClose = price;
+  }
+
+  var change = _toNumber(json.change);
+  if (change === null) {
+    change = price - previousClose;
+  }
+
+  var changePercent = _toNumber(json.changePercent);
+  if (changePercent === null) {
+    changePercent = previousClose > 0 ? (change / previousClose * 100) : 0;
+  }
+
+  var obj = {
+    symbol: symbol,
+    price: _round(price),
+    previousClose: _round(previousClose),
+    change: _round(change),
+    changePercent: _round(changePercent),
+    high: 0,
+    low: 0,
+    open: 0,
+    volume: 0,
+    preMarket: _positiveRoundOrNull(json.preMarket),
+    afterHours: _positiveRoundOrNull(json.postMarket),
+    marketState: json.marketState || getMarketState(),
+    source: '100X_QUOTE',
+    schemaVersion: json.schemaVersion,
+    timestamp: json.fetchedAt || new Date().toISOString()
+  };
+
+  try {
+    var yahooOhlc = fetchFromYahooQuote(symbol);
+    if (yahooOhlc && yahooOhlc.price > 0) {
+      obj.high = yahooOhlc.high || 0;
+      obj.low = yahooOhlc.low || 0;
+      obj.open = yahooOhlc.open || 0;
+      obj.volume = yahooOhlc.volume || 0;
+      obj.source = '100X_QUOTE+YAHOO_OHLC';
+    }
+  } catch (e) {
+    Logger.log('100x quote OHLC enrichment failed for ' + symbol + ': ' + e.message);
+  }
+
+  return obj;
 }
 
 /**
@@ -199,4 +305,15 @@ function yahooBestPrice(quote) {
 function _round(v) {
   if (!v || isNaN(v)) return 0;
   return Math.round(parseFloat(v) * 100) / 100;
+}
+
+function _toNumber(v) {
+  if (v === null || v === undefined || v === '') return null;
+  var n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
+function _positiveRoundOrNull(v) {
+  var n = _toNumber(v);
+  return n && n > 0 ? _round(n) : null;
 }
