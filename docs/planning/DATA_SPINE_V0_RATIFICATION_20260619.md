@@ -1,6 +1,7 @@
 # Data Spine V0 Ratification
 
 Date: 2026-06-19
+Last revalidated: 2026-06-22
 Status: RATIFIED after peer review `fh-20260619-395-cc-138ca71d`;
 amended by consumer guard `fh-20260619-400-cc-800917b0`;
 final KEEP decision from `fh-20260619-402-cc-b2fff276`.
@@ -19,10 +20,13 @@ Reproduce:
 ```sh
 python3 scripts/audit-data-spine-v0.py
 python3 scripts/audit-data-spine-v0.py --json
+python3 scripts/test_data_spine_policy.py
 ```
 
 No authority/fallback order is changed in this document. Implemented order still
 comes from `scripts/build-market-facts.py FIELD_SOURCE_POLICY[...]`.
+Ratified tolerance/action constants live in `scripts/data_spine_policy.py` and
+are consumed by both the P1 and V0 audits.
 
 ## V0 Decisions
 
@@ -36,11 +40,11 @@ use it to gate UI confidence until the formula/source mismatch is fixed.
 
 Measured rationale:
 
-- agreement: 8
-- value drift: 223
+- agreement: 64
+- value drift: 234
 - sign divergence: 243
 - scale mismatch: 88
-- value-drift spread: p50 6.4796pp, p90 29.721pp, p95 51.9813pp
+- value-drift spread: p50 5.4861pp, p90 27.0997pp, p95 49.7901pp
 
 This is not a silent authority/fallback change. The current authority is already
 `yf.history_1y`; V0 only disables noisy cross-source confidence gating.
@@ -104,23 +108,23 @@ otherwise it is relative spread percent from the parity builder.
 | Field | Metric | Tol | VD in/out | p50/p90/p95 | Quality | Rationale |
 |---|---|---:|---:|---|---|---|
 | `beta` | abs | 0.10 | n/a | n/a | no sample | keep 0.10 absolute guard |
-| `change` | rel % | 0.5 | n/a | n/a | no sample | sign divergence blocks |
-| `change_pct` | pp | 0.5 | n/a | n/a | no sample | sign divergence blocks |
-| `dividend_yield` | pp | 0.5 | 6/4 (60.0%) | 0.345/13.537/42.0535 | low | flags distribution-basis outliers |
+| `change` | rel % | 0.5 | 0/24 (0.0%) | 61.7027/81.9372/87.6869 | low | sign divergence blocks |
+| `change_pct` | pp | 0.5 | 10/16 (38.46%) | 0.9176/4.6459/6.2418 | low | sign divergence blocks |
+| `dividend_yield` | pp | 0.5 | 13/5 (72.22%) | 0.095/3.056/16.7055 | low | flags distribution-basis outliers |
 | `expense_ratio` | pp | 0.25 | n/a | n/a | no sample | all current rows agree |
-| `forward_pe` | rel % | 5.0 | 0/1 (0.0%) | 40.4445/40.4445/40.4445 | low | single severe sample fails |
-| `market_cap` | rel % | 5.0 | n/a | n/a | no sample | stale cleanup dominates |
-| `previous_close` | rel % | 0.5 | 0/14 (0.0%) | 8.7683/24.0072/27.7277 | low | rare but severe drift fails |
-| `price` | rel % | 0.5 | n/a | n/a | no sample | strict quote guard |
-| `return_10y_avg` | pp | 1.0 | 108/5 (95.58%) | 0.325/0.7408/0.9626 | measured | p95 rounded to 1pp |
-| `return_1m` | pp | 5.0 | 3381/295 (91.97%) | 0.8229/4.1225/6.6755 | measured | p90 rounded to 5pp |
-| `return_1y` | pp | 10.0 | 1677/162 (91.19%) | 2.207/8.9/14.648 | measured | p90 rounded to 10pp |
-| `return_3m` | authority-only | n/a | n/a | 6.4796/29.721/51.9813 | measured | comparison disabled until fix |
-| `return_3y_avg` | pp | 5.0 | 3/15 (16.67%) | 22.1948/58.8509/76.0766 | low | leveraged-ETF outliers fail |
-| `return_5y_avg` | pp | 1.25 | 568/35 (94.2%) | 0.467/1.0404/1.3029 | measured | p90 rounded to 1.25pp |
-| `return_max_avg` | pp | 5.0 | 511/45 (91.91%) | 0.7855/4.1895/8.1205 | measured | p90 rounded to 5pp |
-| `return_ytd` | pp | 7.0 | 2699/262 (91.15%) | 1.384/6.1271/12.2881 | measured | p90 rounded to 7pp |
-| `total_assets` | rel % | 5.0 | 0/25 (0.0%) | 12.3883/37.3558/42.5527 | low | definition drift stays visible |
+| `forward_pe` | rel % | 5.0 | 0/31 (0.0%) | 14.984/31.1475/33.0507 | measured | severe samples fail |
+| `market_cap` | rel % | 5.0 | 0/3 (0.0%) | 14.4118/17.4611/17.8422 | low | stale cleanup dominates |
+| `previous_close` | rel % | 0.5 | 0/18 (0.0%) | 7.7237/16.1968/17.3115 | low | rare but severe drift fails |
+| `price` | rel % | 0.5 | 0/3 (0.0%) | 14.3731/14.4038/14.4077 | low | strict quote guard |
+| `return_10y_avg` | pp | 1.0 | n/a | n/a | no sample | long-window CAGR guard |
+| `return_1m` | pp | 5.0 | 42/16 (72.41%) | 2.479/9.4515/14.3029 | measured | short-window mismatches stay visible |
+| `return_1y` | pp | 10.0 | 840/112 (88.24%) | 3.7169/11.4561/18.0544 | measured | formula/timing mismatches stay visible |
+| `return_3m` | authority-only | n/a | n/a | 5.4861/27.0997/49.7901 | measured | comparison disabled until fix |
+| `return_3y_avg` | pp | 5.0 | 10/35 (22.22%) | 8.7902/37.2336/53.4176 | measured | leveraged-ETF outliers fail |
+| `return_5y_avg` | pp | 1.25 | 8/2 (80.0%) | 0.438/1.4146/1.6108 | low | long-window CAGR guard |
+| `return_max_avg` | pp | 5.0 | n/a | n/a | no sample | MAX start-date differences stay visible |
+| `return_ytd` | pp | 7.0 | 247/137 (64.32%) | 3.1002/17.9185/30.2721 | measured | formula/timing mismatches stay visible |
+| `total_assets` | rel % | 5.0 | 0/35 (0.0%) | 10.2065/41.9737/46.8457 | measured | definition drift stays visible |
 | `trailing_pe` | rel % | 5.0 | n/a | n/a | no sample | stale cleanup dominates |
 
 ## Backlog Status

@@ -68,18 +68,20 @@ Measured from `data/stockanalysis/index.json` and
 
 ## Current Parity / Disagreement Baseline
 
-Measured from `data/computed/market_source_parity.json`.
+Measured from `data/computed/market_source_parity.json` generated at
+`2026-06-21T00:43:25Z`. These counts are a data snapshot; rerun
+`scripts/audit-data-spine-p1.py` after refreshes.
 
 | Metric | Value |
 |---|---:|
 | Inspected ticker files | 6,445 |
 | Fields with parity checks | 19 |
-| Multi-candidate field rows | 25,396 |
-| Agreement rows | 12,354 |
-| Value-drift rows | 10,039 |
-| Stale rows | 2,163 |
-| Sign-divergence rows | 716 |
-| Percent-scale warnings | 124 |
+| Multi-candidate field rows | 26,629 |
+| Agreement rows | 22,309 |
+| Value-drift rows | 1,841 |
+| Stale rows | 1,953 |
+| Sign-divergence rows | 418 |
+| Percent-scale warnings | 108 |
 
 Sample top disagreements already prove that parity alerts need an action policy:
 
@@ -91,8 +93,8 @@ Sample top disagreements already prove that parity alerts need an action policy:
 
 V0 ratification: `DATA_SPINE_V0_RATIFICATION_20260619.md` +
 `scripts/audit-data-spine-v0.py`; authority/fallback still mirrors
-`scripts/build-market-facts.py`, while tolerance uses measured spread
-distributions.
+`scripts/build-market-facts.py`, while ratified tolerance/action constants live
+in `scripts/data_spine_policy.py` and are consumed by the P1/V0 audits.
 
 ## Direct Provider Fetch Leak Inventory
 

@@ -13,60 +13,20 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
-ROOT = Path(__file__).resolve().parent.parent
+from data_spine_policy import DIAGNOSES, POLICY_RATIONALE, V0_FIELD_POLICY
+
+
+ROOT = SCRIPT_DIR.parent
 PARITY_BUILDER = ROOT / "scripts" / "build-market-source-parity.py"
 FACTS_BUILDER = ROOT / "scripts" / "build-market-facts.py"
 P1_AUDIT = ROOT / "scripts" / "audit-data-spine-p1.py"
 PUBLIC_DATA = ROOT / "100xfenok-next" / "public" / "data"
 METADATA_DIR = PUBLIC_DATA / "metadata"
 REPORTS_INDEX = PUBLIC_DATA / "reports-index.json"
-
-DIAGNOSES = ("agreement", "value_drift", "stale", "sign_divergence", "scale_mismatch")
-
-V0_FIELD_POLICY: dict[str, dict[str, Any]] = {
-    "price": {"metric": "relative_spread_pct", "tolerance": 0.5, "unit": "percent"},
-    "previous_close": {"metric": "relative_spread_pct", "tolerance": 0.5, "unit": "percent"},
-    "change": {"metric": "relative_spread_pct", "tolerance": 0.5, "unit": "percent"},
-    "change_pct": {"metric": "absolute_spread", "tolerance": 0.5, "unit": "percentage_points"},
-    "market_cap": {"metric": "relative_spread_pct", "tolerance": 5.0, "unit": "percent"},
-    "total_assets": {"metric": "relative_spread_pct", "tolerance": 5.0, "unit": "percent"},
-    "trailing_pe": {"metric": "relative_spread_pct", "tolerance": 5.0, "unit": "percent"},
-    "forward_pe": {"metric": "relative_spread_pct", "tolerance": 5.0, "unit": "percent"},
-    "dividend_yield": {"metric": "absolute_spread", "tolerance": 0.5, "unit": "percentage_points"},
-    "beta": {"metric": "absolute_spread", "tolerance": 0.10, "unit": "absolute"},
-    "expense_ratio": {"metric": "absolute_spread", "tolerance": 0.25, "unit": "percentage_points"},
-    "return_1m": {"metric": "absolute_spread", "tolerance": 5.0, "unit": "percentage_points"},
-    "return_3m": {"metric": "authority_only", "tolerance": None, "unit": "n/a"},
-    "return_ytd": {"metric": "absolute_spread", "tolerance": 7.0, "unit": "percentage_points"},
-    "return_1y": {"metric": "absolute_spread", "tolerance": 10.0, "unit": "percentage_points"},
-    "return_3y_avg": {"metric": "absolute_spread", "tolerance": 5.0, "unit": "percentage_points"},
-    "return_5y_avg": {"metric": "absolute_spread", "tolerance": 1.25, "unit": "percentage_points"},
-    "return_10y_avg": {"metric": "absolute_spread", "tolerance": 1.0, "unit": "percentage_points"},
-    "return_max_avg": {"metric": "absolute_spread", "tolerance": 5.0, "unit": "percentage_points"},
-}
-
-POLICY_RATIONALE = {
-    "price": "no value_drift sample; keep strict quote guard",
-    "previous_close": "rare but severe drift; fail all observed drift rows",
-    "change": "no value_drift sample; sign divergence remains blocking",
-    "change_pct": "no value_drift sample; sign divergence remains blocking",
-    "market_cap": "no value_drift sample; stale cleanup dominates",
-    "total_assets": "low sample; strict 5% keeps definition drift visible",
-    "trailing_pe": "no value_drift sample; stale cleanup dominates",
-    "forward_pe": "single severe sample; keep strict 5% guard",
-    "dividend_yield": "low sample; 0.5pp passes small rounding drift and flags distribution-basis outliers",
-    "beta": "no value_drift sample; keep 0.10 absolute guard",
-    "expense_ratio": "all current rows agree; keep 25bp fee guard",
-    "return_1m": "p90 is 4.12pp; rounded to 5pp",
-    "return_3m": "authority-only: cross-source comparison is unreliable",
-    "return_ytd": "p90 is 6.13pp; rounded to 7pp",
-    "return_1y": "p90 is 8.90pp; rounded to 10pp",
-    "return_3y_avg": "low sample and leveraged-ETF outliers; keep strict 5pp guard",
-    "return_5y_avg": "p90 is 1.04pp; rounded to 1.25pp",
-    "return_10y_avg": "p95 is 0.96pp; rounded to 1pp",
-    "return_max_avg": "p90 is 4.19pp; rounded to 5pp",
-}
 
 
 def now_iso() -> str:
@@ -244,16 +204,21 @@ def build_public_report_metadata_decision() -> dict[str, Any]:
 
 def build_return_3m_decision(field_rows: list[dict[str, Any]]) -> dict[str, Any]:
     row = next((item for item in field_rows if item["field"] == "return_3m"), None)
+    counts = row["diagnosis_counts"] if row else {}
+    agreement = counts.get("agreement", "[not verified]")
+    sign = counts.get("sign_divergence", "[not verified]")
+    scale = counts.get("scale_mismatch", "[not verified]")
     return {
         "decision": "authority_only_until_dedicated_fix",
         "authority": "yf.history_1y",
         "candidate_kept_as": "provenance/cross-check only; not confidence-gating",
-        "diagnosis_counts": row["diagnosis_counts"] if row else {},
+        "diagnosis_counts": counts,
         "value_drift_count": row["value_drift_count"] if row else None,
         "p50_absolute_spread_pp": row["p50"] if row else None,
         "p90_absolute_spread_pp": row["p90"] if row else None,
         "rationale": (
-            "return_3m has only 8 agreement rows versus 243 sign divergences and 88 scale mismatches; "
+            f"return_3m has {agreement} agreement rows versus {sign} sign divergences and "
+            f"{scale} scale mismatches; "
             "cross-source comparison is currently too noisy for UI confidence gating"
         ),
     }

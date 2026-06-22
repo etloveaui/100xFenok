@@ -12,8 +12,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
-ROOT = Path(__file__).resolve().parent.parent
+from data_spine_policy import DIAGNOSIS_ACTION, FIELD_UNIT, tolerance_label
+
+
+ROOT = SCRIPT_DIR.parent
 PARITY_JSON = ROOT / "data" / "computed" / "market_source_parity.json"
 PARITY_BUILDER = ROOT / "scripts" / "build-market-source-parity.py"
 FACTS_BUILDER = ROOT / "scripts" / "build-market-facts.py"
@@ -26,7 +32,7 @@ DIRECT_FETCH_ROWS = (
         "provider": "Yahoo query1 + ticker worker",
         "patterns": ("YAHOO_BASE_URL", "WORKER_TICKER_BASE"),
         "current_shape": "product-runtime live fetch",
-        "target": "migrate-to-contract or explicit live-gateway exception",
+        "target": "ratified live-gateway exception until Data Spine live-quote service exists",
         "owner": "100x Next runtime",
         "priority": "P1-high",
     },
@@ -101,59 +107,6 @@ DIRECT_FETCH_ROWS = (
         "priority": "P1-medium",
     },
 )
-
-
-FIELD_TOLERANCE = {
-    "price": "0.5% relative drift",
-    "previous_close": "0.5% relative drift",
-    "change": "same sign required; <= 0.5% of price for value drift",
-    "change_pct": "same sign required; <= 0.5 percentage points",
-    "market_cap": "5% relative drift",
-    "total_assets": "5% relative drift",
-    "trailing_pe": "5% relative drift",
-    "forward_pe": "5% relative drift",
-    "dividend_yield": "25 bps after percent-point normalization",
-    "beta": "0.10 absolute drift",
-    "expense_ratio": "25 bps after percent-point normalization",
-    "return_1m": "2 percentage points; sign divergence blocks",
-    "return_3m": "3 percentage points; sign divergence blocks",
-    "return_ytd": "3 percentage points; sign divergence blocks",
-    "return_1y": "5 percentage points; sign divergence blocks",
-    "return_3y_avg": "5 percentage points; sign divergence blocks",
-    "return_5y_avg": "5 percentage points; sign divergence blocks",
-    "return_10y_avg": "5 percentage points; sign divergence blocks",
-    "return_max_avg": "5 percentage points; sign divergence blocks",
-}
-
-FIELD_UNIT = {
-    "price": "currency",
-    "previous_close": "currency",
-    "change": "currency",
-    "change_pct": "percent_points",
-    "market_cap": "currency",
-    "total_assets": "currency",
-    "trailing_pe": "ratio",
-    "forward_pe": "ratio",
-    "dividend_yield": "percent_points",
-    "beta": "ratio",
-    "expense_ratio": "percent_points",
-    "return_1m": "percent_points",
-    "return_3m": "percent_points",
-    "return_ytd": "percent_points",
-    "return_1y": "percent_points",
-    "return_3y_avg": "percent_points",
-    "return_5y_avg": "percent_points",
-    "return_10y_avg": "percent_points",
-    "return_max_avg": "percent_points",
-}
-
-DIAGNOSIS_ACTION = {
-    "agreement": "serve selected value",
-    "stale": "prefer fresher candidate over static authority; retain stale source as provenance warning",
-    "scale_mismatch": "unit-normalize to percent_points before compare/serve; fail normalization if unresolved",
-    "sign_divergence": "do not silently pick; block confidence UI or require explicit authority tiebreak",
-    "value_drift": "apply per-field tolerance band; if outside tolerance, serve with warning or hold from confidence UI",
-}
 
 
 def now_iso() -> str:
@@ -241,11 +194,11 @@ def build_field_rows() -> list[dict[str, Any]]:
                 "authority_ref": f"scripts/build-market-facts.py:{line}" if line else "[not verified]",
                 "fallback_chain": chain,
                 "unit_scale": FIELD_UNIT.get(field, "[not verified]"),
-                "tolerance_band": FIELD_TOLERANCE.get(field, "DRAFT/UNVERIFIED"),
+                "tolerance_band": tolerance_label(field),
                 "disagreement_action": DIAGNOSIS_ACTION,
                 "provenance_surfaced": "yes: facts.{field}.source/as_of/fetched_at + candidates",
-                "implemented_vs_proposed": "authority/fallback implemented; tolerance/action proposed P1 draft",
-                "status": "DRAFT",
+                "implemented_vs_proposed": "authority/fallback implemented; tolerance/action aligned to V0",
+                "status": "V0_TOLERANCE_RATIFIED",
                 "multi_candidate_count": sum(counts.values()),
                 "agreement": counts["agreement"],
                 "value_drift": counts["value_drift"],
@@ -279,13 +232,15 @@ def build_payload() -> dict[str, Any]:
     return {
         "schema_version": "data-spine-p1-audit/v1",
         "generated_at": now_iso(),
+        "policy_status": "partially_ratified_by_v0_remaining_p1_backlog_open",
+        "policy_source": "authority/fallback: scripts/build-market-facts.py; tolerance/action: scripts/data_spine_policy.py",
         "parity_summary": parity_payload.get("summary", {}),
         "field_rows": build_field_rows(),
         "diagnosis_action": DIAGNOSIS_ACTION,
         "direct_fetch_rows": build_direct_fetch_rows(),
         "public_report_metadata": {
             "dataset": "public.report_metadata",
-            "status": "ownership/update-policy required",
+            "status": "ratified keep_intentional_placeholder",
             "current_as_of": "2026-01-28 (from P0 inventory)",
         },
     }
@@ -295,6 +250,8 @@ def print_markdown(payload: dict[str, Any]) -> None:
     print("# Data Spine P1 Audit")
     print()
     print(f"Generated: {payload['generated_at']}")
+    print(f"Policy status: {payload['policy_status']}")
+    print(f"Policy source: {payload['policy_source']}")
     print()
     print("## Parity Summary")
     print()
