@@ -126,7 +126,7 @@ file/pattern and separates real fetchers from tests and string-only references.
 | 2 | `scripts/build-quarter-closes.py` | allowed generated-data builder using yfinance | Allowed collector |
 | 2 | `scripts/fetch-sentiment.mjs` | allowed generated-data builder using Yahoo chart API | Allowed collector |
 | 37 | `scripts/scrapers/*.py` | allowed SlickCharts scrapers | Allowed collector |
-| 3 | `scripts/fetch-yf-finance-v0.py` | old PoC fetcher | DRAFT: archive/sunset candidate |
+| 3 | `scripts/fetch-yf-finance-v0.py` | deprecated old PoC fetcher | CLOSED 2026-06-22: sunset; replaced by `fetch-yf-finance.py` + workflow |
 | 1 | `scripts/test_fetch_stockanalysis_fixtures.py` | test fixture string | Test/string reference, not a fetch leak |
 | 1 | `scripts/test_fetch_yf_finance_selection.py` | test stub string | Test/string reference, not a fetch leak |
 | 1 | `scripts/build-market-facts.py` | source/provenance string reference | Build string reference, not a fetch leak |

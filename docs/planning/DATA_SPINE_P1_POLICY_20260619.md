@@ -83,7 +83,7 @@ closed by V0 and stay as migration, legacy exception, or sunset candidates.
 | `DS-P1-005` | `admin/market-radar/scripts/vix.gs` | Yahoo query1 + GitHub contents API | deprecated market-radar VIX GAS backup | sunset documented; replaced by scheduled sentiment collector | CLOSED 2026-06-22 |
 | `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC + Yahoo + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper | legacy-exception until AA/IB route exists | P2 |
 | `DS-P1-007` | `ib/ib-total-guide-calculator.html` | browser Yahoo/CORS proxy | legacy browser provider fetch | sunset or contract route | P2 |
-| `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | old PoC collector | sunset/archive | P1-medium |
+| `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | deprecated old 10-ticker PoC collector | sunset documented; replaced by scheduled YF v2 collector | CLOSED 2026-06-22 |
 
 ## Next Execution Plan
 
@@ -95,9 +95,10 @@ Order is risk-first, not table-order:
    `.github/workflows/fetch-sentiment.yml`), which writes both
    `data/sentiment/vix.json` and
    `100xfenok-next/public/data/sentiment/vix.json`.
-2. `DS-P1-008` next: prove whether `scripts/fetch-yf-finance-v0.py` is still
-   called by workflow, docs, or operators. If unused, mark it sunset/archive
-   instead of carrying a confusing old collector.
+2. `DS-P1-008` closed 2026-06-22: `scripts/fetch-yf-finance-v0.py` is an unused
+   10-ticker PoC. The runtime collector is `scripts/fetch-yf-finance.py` via
+   `.github/workflows/fetch-yf-finance.yml`; the v0 PoC now fails closed unless
+   explicitly run with `--allow-deprecated-v0` for historical reproduction.
 3. `DS-P1-002` through `DS-P1-007` remaining P2 legacy surfaces: classify each
    as `migrate`, `explicit_exception`, or `sunset`; avoid breaking GAS/IB/Daily
    Wrap runtime paths until a replacement route exists.
@@ -118,6 +119,17 @@ Order is risk-first, not table-order:
 - Disposition: `sunset`. Keep the GAS file only as a disabled historical backup;
   do not create a new Apps Script trigger from it.
 
+### DS-P1-008 Closeout Evidence (2026-06-22)
+
+- Legacy source: `scripts/fetch-yf-finance-v0.py` was a 10-ticker yfinance PoC
+  writing `data/yf/finance/{TICKER}.json`; it was not a full universe collector.
+- Runtime replacement: `.github/workflows/fetch-yf-finance.yml` calls
+  `scripts/fetch-yf-finance.py`, then rebuilds summary and mirror artifacts.
+- Consumers remain unchanged: stock and portfolio surfaces consume the generated
+  `/data/yf/finance/{ticker}.json` contract, not the v0 script.
+- Disposition: `sunset`. The v0 file is retained only for historical
+  reproduction and fails closed unless `--allow-deprecated-v0` is provided.
+
 For every row, the closeout must include:
 
 - grep/runtime evidence for current consumers;
@@ -133,6 +145,6 @@ For every row, the closeout must include:
 - `scripts/test_data_spine_policy.py` passes and blocks future P1/V0 drift.
 - Current parity counts regenerate from `market_source_parity.json`; they are not
   manually maintained here.
-- Direct-fetch rows `DS-P1-002` through `DS-P1-008` remain tracked until each is
-  migrated, explicitly excepted, or sunset; `DS-P1-005` is now closed as
-  `sunset` with `fetch-sentiment.mjs` as the replacement collector.
+- Direct-fetch rows remain tracked until each is migrated, explicitly excepted,
+  or sunset; `DS-P1-005` and `DS-P1-008` are now closed as `sunset` with
+  scheduled collectors as their replacement paths.

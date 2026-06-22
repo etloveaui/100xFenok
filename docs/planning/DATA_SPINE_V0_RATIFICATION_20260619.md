@@ -130,10 +130,10 @@ otherwise it is relative spread percent from the parity builder.
 ## Backlog Status
 
 The direct-fetch backlog rows from P1 remain active until closed one by one.
-`DS-P1-001` is a sanctioned live gateway exception. `DS-P1-005` is closed as a
-sunset path because `scripts/fetch-sentiment.mjs` and
-`.github/workflows/fetch-sentiment.yml` now own VIX sentiment updates. The other
-rows remain migration, legacy exception, or sunset candidates.
+`DS-P1-001` is a sanctioned live gateway exception. `DS-P1-005` and
+`DS-P1-008` are closed as sunset paths because scheduled collectors now own the
+runtime data updates. The other rows remain migration, legacy exception, or
+sunset candidates.
 
 ## Exit Criteria
 

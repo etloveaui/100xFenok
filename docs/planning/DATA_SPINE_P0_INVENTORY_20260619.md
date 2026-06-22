@@ -148,9 +148,10 @@ files here.
 
 ## P0 Gaps Still Open
 
-1. Turn direct provider fetch exceptions into actionable backlog rows:
-   `ticker.ts`, legacy `100x/daily-wrap/fetcher.py`, admin/IB GAS helpers, and
-   `fetch-yf-finance-v0.py`.
+1. Continue closing direct provider fetch backlog rows:
+   `ticker.ts` is ratified as the live gateway exception; `fetch-yf-finance-v0.py`
+   is sunset; legacy `100x/daily-wrap/fetcher.py` and admin/IB GAS helpers still
+   need one-by-one migrate / explicit-exception / sunset classification.
 2. Promote this inventory into a v0 source contract only after P1 defines
    authority/fallback/tolerance/disagreement action per field.
 3. Ratify ownership/update policy for public-only report metadata:

@@ -103,11 +103,14 @@ DIRECT_FETCH_ROWS = (
         "id": "DS-P1-008",
         "path": "scripts/fetch-yf-finance-v0.py",
         "provider": "Yahoo yfinance",
-        "patterns": ("yf Finance Engine v0 PoC", "import yfinance"),
-        "current_shape": "old PoC collector",
-        "target": "sunset/archive",
+        "patterns": ("DEPRECATED: yf Finance Engine v0 PoC", "allow-deprecated-v0"),
+        "current_shape": "deprecated old 10-ticker PoC collector",
+        "target": "sunset documented; replaced by scheduled YF v2 collector",
         "owner": "data pipeline",
         "priority": "P1-medium",
+        "disposition": "sunset",
+        "status": "closed_2026-06-22",
+        "replacement": "scripts/fetch-yf-finance.py + .github/workflows/fetch-yf-finance.yml",
     },
 )
 

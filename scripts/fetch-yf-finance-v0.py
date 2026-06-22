@@ -1,22 +1,40 @@
 #!/usr/bin/env python3
 """
-yf Finance Engine v0 PoC — fetch 10 tickers via yfinance.
+DEPRECATED: yf Finance Engine v0 PoC — fetch 10 tickers via yfinance.
+
+Runtime replacement:
+  - scripts/fetch-yf-finance.py
+  - .github/workflows/fetch-yf-finance.yml
+
 Output: data/yf/finance/{TICKER}.json
 Measure: per-ticker latency, blocks, retry behavior.
+Sunset documented: 2026-06-22 (DS-P1-008)
 """
 
+import argparse
 import json
-import os
 import sys
 import time
 from pathlib import Path
 
-import yfinance as yf
-
 TICKERS = ["AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "JPM", "LLY"]
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "yf" / "finance"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+DEPRECATION_MESSAGE = (
+    "DS-P1-008 closed: fetch-yf-finance-v0.py is a deprecated 10-ticker PoC. "
+    "Use scripts/fetch-yf-finance.py or .github/workflows/fetch-yf-finance.yml. "
+    "Pass --allow-deprecated-v0 only for historical reproduction."
+)
+
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Deprecated yf Finance Engine v0 PoC.")
+    parser.add_argument(
+        "--allow-deprecated-v0",
+        action="store_true",
+        help="Run the deprecated PoC for historical reproduction only.",
+    )
+    return parser.parse_args(argv)
 
 
 def df_to_records(df):
@@ -36,6 +54,8 @@ def series_to_records(s):
 
 def fetch_ticker(ticker):
     """Fetch all yfinance data for a single ticker. Returns (data_dict, latency_ms, error)."""
+    import yfinance as yf
+
     start = time.perf_counter()
     error = None
     data = {}
@@ -104,7 +124,14 @@ def fetch_ticker(ticker):
     return data, latency_ms, error
 
 
-def main():
+def main(argv=None):
+    args = parse_args(argv)
+    if not args.allow_deprecated_v0:
+        print(DEPRECATION_MESSAGE, file=sys.stderr)
+        return 2
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
     results = []
     total_start = time.perf_counter()
 
@@ -147,7 +174,8 @@ def main():
     print(f"\n[summary] total={total_ms}ms avg={summary['avg_latency_ms']}ms errors={len(summary['errors'])}")
     print(f"[summary] 1066 extrapolation: ~{summary['free_tier_estimate_1066_minutes']} minutes")
     print(f"[summary] saved to {summary_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
