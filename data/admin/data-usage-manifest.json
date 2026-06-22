@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-22T13:39:11.418Z",
+  "generated_at": "2026-06-22T15:03:46.826Z",
   "totals": {
     "rootJsonCount": 17273,
     "publicJsonCount": 17325,
     "mirroredRootJsonCount": 17272,
     "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 53,
-    "directDataFetchCount": 111,
+    "directDataFetchCount": 112,
     "dynamicPatternCount": 9
   },
   "mirror_sync_status": "partial",
@@ -200,7 +200,7 @@
       "category": "macro",
       "rootJsonCount": 10,
       "publicJsonCount": 10,
-      "directFetchCount": 5,
+      "directFetchCount": 6,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 2,
       "status": "active",
@@ -400,10 +400,7 @@
       "dataPath": "computed/stock_action_summary.json",
       "category": "computed",
       "consumers": [
-        "100xfenok-next/src/app/explore/ActionCandidatesCard.tsx",
-        "100xfenok-next/src/app/explore/StockWorkbenchCard.tsx",
-        "100xfenok-next/src/app/screener/ScreenerClient.tsx",
-        "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts"
+        "100xfenok-next/src/features/stock-analyzer/data/action-summary-provider.ts"
       ]
     },
     {
@@ -495,12 +492,7 @@
       "dataPath": "global-scouter/core/stocks_analyzer.json",
       "category": "global-scouter",
       "consumers": [
-        "100xfenok-next/src/app/explore/MyWatchlistStrip.tsx",
-        "100xfenok-next/src/app/portfolio/PortfolioClient.tsx",
-        "100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx",
-        "100xfenok-next/src/components/TickerTypeahead.tsx",
         "100xfenok-next/src/features/stock-analyzer/data/static-data-provider.ts",
-        "100xfenok-next/src/hooks/useScreenerData.ts",
         "100xfenok-next/src/lib/screener/types.ts"
       ]
     },
@@ -604,6 +596,13 @@
       "category": "macro",
       "consumers": [
         "100xfenok-next/src/hooks/useDashboardData.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/tga.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/app/api/data/route.ts"
       ]
     },
     {
