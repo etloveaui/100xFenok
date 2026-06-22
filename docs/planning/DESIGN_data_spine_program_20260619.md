@@ -113,7 +113,7 @@ file/pattern and separates real fetchers from tests and string-only references.
 
 | Hits | File / pattern | Match type | P0 classification |
 |---:|---|---|---|
-| 1 | `100xfenok-next/src/lib/server/ticker.ts` | live provider fetch | RATIFIED: sanctioned live quote gateway until a Data Spine live-quote service exists |
+| 1 | `100xfenok-next/src/lib/server/ticker.ts` + `100xfenok-next/src/lib/quote-contract.ts` | `quote.v1` live quote gateway | RATIFIED 2026-06-22: shared quote contract; provider internals remain sanctioned live exception until a Data Spine live-quote service exists |
 | 1 | `ib/ib-total-guide-calculator.html` | same-origin `/api/ticker/{symbol}` consumer | CLOSED 2026-06-22: browser Yahoo/CORS proxy removed; long-term quote-service migration remains under `ticker.ts` |
 | 1 | `ib/ib-helper/apps-script/yahoo-quotes.gs` | legacy GAS provider fetch | CLASSIFIED 2026-06-22: explicit IB exception |
 | 1 | `admin/market-data/yahoo-quotes.gs` | admin GAS provider fetch | CLASSIFIED 2026-06-22: explicit admin exception |
@@ -143,9 +143,10 @@ Peer/subagent recheck expanded the scan beyond the original P0 pattern to
   in the Next product surfaces. StockAnalysis runtime reads go through
   `/api/data/stockanalysis/*` or `/data/stockanalysis/*`; SlickCharts/YF runtime
   reads are DataPack JSON except for the sanctioned quote gateway.
-- `100xfenok-next/src/lib/server/ticker.ts:1-2` remains the single sanctioned
-  live quote gateway; exposed by `/api/ticker` routes and used by dashboard,
-  sector data, footer ticker bar, and admin-live tools.
+- `100xfenok-next/src/lib/quote-contract.ts` defines the shared `quote.v1`
+  boundary for `/api/ticker/{symbol}` and `/api/ticker?symbol={symbol}`.
+  `100xfenok-next/src/lib/server/ticker.ts` remains the single sanctioned live
+  provider gateway behind that contract; consumers use the route boundary.
 - `tools/macro-monitor/shared/data-fetcher.js` is a partial legacy live-data
   module, not part of the Next product Data Spine surface. Current code reads
   FRED macro files, Treasury TGA, and stablecoins from same-origin JSON first
@@ -338,8 +339,9 @@ contract and the disagreement policy.
 1. StockAnalysis dedicated routes vs service-map overlap:
    - **RESOLVED by DEC-246 (2026-06-20)**: dedicated pages own their surfaces; Explore is preview-only. Cross-route ownership SSOT = `FORGE_feno_data_market_ia_20260612.md` (Placement Map), NOT service-map. Industry→`/sectors`, filings→stock `공시` tab, ETF families→`/etfs` segments, shared market 3-tab nav. UI plan is NOT duplicated here — see DEC-246.
 2. Live quote route policy:
-   - RATIFIED: `ticker.ts` is a sanctioned live-gateway exception until a
-     Data Spine live-quote service exists.
+   - RATIFIED: `quote.v1` is the shared `/api/ticker` contract. `ticker.ts`
+     remains a sanctioned internal provider exception until a Data Spine
+     live-quote service exists.
 3. Data catalog refresh:
    - DRAFT/UNVERIFIED: reconcile `data/README.md` counts with measured current
      data counts.
@@ -347,7 +349,8 @@ contract and the disagreement policy.
    - DRAFT/UNVERIFIED: separate LLM track with cost/provider/anchor validation.
    - Surface/route RESOLVED by DEC-246 (stock `공시` tab first; NVDA pilot → `/stock/NVDA?tab=filings`; by-ticker manifest). Cost/provider/scaling stays user-gated.
 5. Legacy runtime fetch exceptions:
-   - `ticker.ts` is ratified as a live quote exception.
+   - `quote.v1` + `ticker.ts` are ratified as the live quote gateway contract
+     and internal provider exception.
    - `macro-monitor` FDIC fallback and GAS/admin HTML endpoints are classified,
      but not yet migrated.
    - feno-value has a DataPackProvider consumer path, but direct valuation-engine

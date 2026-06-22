@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SECTOR_DEFINITIONS } from "@/lib/dashboard/constants";
+import type { QuotePayload } from "@/lib/quote-contract";
 import type {
   SectorRow,
   SectorDataResult,
@@ -33,11 +34,6 @@ interface RawEtf {
 }
 interface EtfsPayload {
   etfs?: Record<string, RawEtf | undefined>;
-}
-interface TickerQuote {
-  price?: number;
-  changePercent?: number;
-  marketState?: string;
 }
 interface UsSectorPoint {
   date?: string;
@@ -233,12 +229,12 @@ export function useSectorData(): SectorDataResult {
         Promise.allSettled(
           etfSymbols.map(async (symbol) => ({
             symbol,
-            quote: await fetchJson<TickerQuote>(`/api/ticker/${symbol}`, TICKER_TIMEOUT_MS),
+            quote: await fetchJson<QuotePayload>(`/api/ticker/${symbol}`, TICKER_TIMEOUT_MS),
           })),
         ),
       ]);
 
-      const tickerMap: Record<string, TickerQuote | null> = {};
+      const tickerMap: Record<string, QuotePayload | null> = {};
       tickerSettled.forEach((settled) => {
         if (settled.status === "fulfilled") {
           tickerMap[settled.value.symbol] = settled.value.quote;

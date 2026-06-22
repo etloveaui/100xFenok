@@ -67,16 +67,18 @@ each data refresh.
 | field tolerance matrix | ratified; shared in `scripts/data_spine_policy.py` | `scripts/test_data_spine_policy.py` locks P1/V0 parity |
 | `return_3m` | `authority_only_until_dedicated_fix` | `DATA_SPINE_V0_RATIFICATION_20260619.md` |
 | `public.report_metadata` | keep intentional placeholder for future automated report publishing | `DATA_SPINE_V0_RATIFICATION_20260619.md` |
-| `DS-P1-001` / `ticker.ts` | sanctioned product-runtime live quote gateway exception | `DATA_SPINE_V0_RATIFICATION_20260619.md` |
+| `DS-P1-001` / `ticker.ts` | `quote.v1` product-runtime quote gateway contract; provider internals remain sanctioned live exception | `DATA_SPINE_V0_RATIFICATION_20260619.md` + `100xfenok-next/src/lib/quote-contract.ts` |
 
 ## Direct Fetch Backlog
 
-`DS-P1-001` is ratified as a live gateway exception. The remaining rows are not
-closed by V0 and stay as migration, legacy exception, or sunset candidates.
+`DS-P1-001` now has a `quote.v1` API contract at the Next runtime boundary. Its
+internal Yahoo/worker fetch is still the sanctioned live exception until a full
+Data Spine live-quote service exists. The remaining rows are not closed by V0
+and stay as migration, legacy exception, or sunset candidates.
 
 | ID | File | Provider | Current shape | Target | Priority |
 |---|---|---|---|---|---|
-| `DS-P1-001` | `100xfenok-next/src/lib/server/ticker.ts` | Yahoo query1 + ticker worker | product-runtime live fetch | ratified live-gateway exception until Data Spine live-quote service exists | P1-high |
+| `DS-P1-001` | `100xfenok-next/src/lib/server/ticker.ts` + `100xfenok-next/src/lib/quote-contract.ts` | Yahoo query1 + ticker worker behind `/api/ticker` | product-runtime `quote.v1` gateway | quote contract ratified; provider internals remain sanctioned live exception until Data Spine live-quote service exists | P1-high |
 | `DS-P1-002` | `100x/daily-wrap/fetcher.py` | Yahoo yfinance + FRED | deprecated legacy Daily Wrap publication PoC | CLOSED 2026-06-22: sunset; future Daily Wrap automation should use Data Spine/report contracts | P2 |
 | `DS-P1-003` | `admin/market-data/yahoo-quotes.gs` | Yahoo query1 | admin GAS quote helper | CLASSIFIED 2026-06-22: explicit admin GAS exception until retired or routed through Data Spine | P2 |
 | `DS-P1-004` | `admin/market-radar/scripts/yahoo-quotes.gs` | Yahoo query1 + Stooq + GOOGLEFINANCE | market-radar GAS quote helper | CLASSIFIED 2026-06-22: explicit admin/radar GAS exception until retired or routed through Data Spine | P2 |
@@ -106,6 +108,19 @@ Order is risk-first, not table-order:
    explicit legacy exceptions for now. `DS-P1-007` is closed: the live
    `/infinite-buying` embedded HTML now calls the same-origin 100x ticker API
    instead of a browser Yahoo/CORS provider path.
+
+### DS-P1-001 Contract Slice (2026-06-22)
+
+- Runtime boundary: `/api/ticker/{symbol}` and `/api/ticker?symbol={symbol}` now
+  share `QUOTE_CONTRACT_VERSION = "quote.v1"`, symbol validation, and cache
+  policy from `100xfenok-next/src/lib/quote-contract.ts`.
+- Server provider: `100xfenok-next/src/lib/server/ticker.ts` returns
+  `QuotePayload` with `schemaVersion`, `source`, and `fetchedAt`; Yahoo query1
+  and ticker-worker remain internal providers only.
+- Consumers: dashboard sector/index rows, sector ETF data, footer ticker bar,
+  admin live tools, and the IB embed consume the same `/api/ticker` gateway.
+- Guard: `npm run qa:quote-contract` checks the route contract, consumer type
+  imports, and IB mirror so browser-side Yahoo/proxy fetches do not reappear.
 
 ### DS-P1-005 Closeout Evidence (2026-06-22)
 

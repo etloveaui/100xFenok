@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { QuotePayload } from '@/lib/quote-contract';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
 type FooterTickerItem = {
@@ -9,12 +10,6 @@ type FooterTickerItem = {
   changePercent: number;
   marketState: string;
   source: 'live' | 'fallback';
-};
-
-type FooterTickerQuotePayload = {
-  price?: number;
-  changePercent?: number;
-  marketState?: string;
 };
 
 const FOOTER_TICKER_CATALOG = [
@@ -81,7 +76,7 @@ export default function FooterTickerBar({ marketStatus, tickerLabel, statusLabel
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
-          const payload = (await response.json()) as FooterTickerQuotePayload;
+          const payload = (await response.json()) as QuotePayload;
           return {
             symbol: item.symbol,
             price: typeof payload.price === 'number' ? payload.price : item.fallbackPrice,

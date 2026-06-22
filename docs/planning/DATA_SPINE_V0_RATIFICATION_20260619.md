@@ -88,12 +88,16 @@ freshness check.
 Decision: `sanctioned_live_gateway_exception`.
 
 `100xfenok-next/src/lib/server/ticker.ts` remains the only product-runtime live
-fetch exception. It uses Yahoo chart live quote data with a ticker-worker
-fallback.
+fetch exception. As of 2026-06-22, it is exposed through the shared `quote.v1`
+contract in `100xfenok-next/src/lib/quote-contract.ts`: `/api/ticker/{symbol}`
+and `/api/ticker?symbol={symbol}` return `schemaVersion`, source metadata, and
+freshness. Yahoo chart data and the ticker-worker fallback are internal provider
+details, not browser-consumed fetch paths.
 
 Contract requirements:
 
 - return `source` and `fetchedAt`
+- return `schemaVersion = quote.v1`
 - keep no-store and short timeout behavior
 - do not expand direct provider fetches outside this gateway
 - migrate to a Data Spine live-quote service only when that service exists

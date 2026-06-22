@@ -1,3 +1,5 @@
+import type { QuotePayload } from "@/lib/quote-contract";
+
 export type NumberPoint = {
   date: string;
   value: number;
@@ -37,14 +39,7 @@ export type FredSeriesPayload = {
   series?: Record<string, NumberPoint[]>;
 };
 
-export type TickerQuotePayload = {
-  symbol?: string;
-  price?: number;
-  changePercent?: number;
-  marketState?: string;
-  fetchedAt?: string;
-  source?: string;
-};
+export type TickerQuotePayload = QuotePayload;
 
 export type SectorTickerMap = Record<string, TickerQuotePayload | null>;
 

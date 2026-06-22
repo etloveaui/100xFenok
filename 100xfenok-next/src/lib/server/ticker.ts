@@ -1,3 +1,11 @@
+import {
+  QUOTE_CONTRACT_VERSION,
+  isValidQuoteSymbol,
+  normalizeQuoteSymbol,
+  type QuoteMarketState,
+  type QuotePayload,
+} from "@/lib/quote-contract";
+
 const YAHOO_BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/";
 const WORKER_TICKER_BASE = "https://ticker-api.etloveaui.workers.dev/api/ticker";
 const FETCH_TIMEOUT_MS = 5000;
@@ -57,27 +65,15 @@ type WorkerPayload = WorkerSymbolPayload & {
   symbols?: Record<string, WorkerSymbolPayload>;
 };
 
-export type TickerQuote = {
-  symbol: string;
-  price: number;
-  previousClose: number;
-  change: number;
-  changePercent: number;
-  preMarket: number | null;
-  postMarket: number | null;
-  marketState: "PRE" | "REGULAR" | "POST" | "CLOSED" | "UNKNOWN";
-  source: "yahoo" | "worker";
-  fetchedAt: string;
-};
+export type TickerQuote = QuotePayload;
 
 function normalizeSymbol(raw: string): string {
-  return raw.trim().toUpperCase();
+  return normalizeQuoteSymbol(raw);
 }
 
 function ensureValidSymbol(raw: string): string {
   const symbol = normalizeSymbol(raw);
-  const ok = /^[A-Z0-9^._-]{1,20}$/.test(symbol);
-  if (!ok) {
+  if (!isValidQuoteSymbol(symbol)) {
     throw new Error("Invalid symbol format");
   }
   return symbol;
@@ -101,7 +97,7 @@ function lastFinite(values: unknown): number | null {
   return null;
 }
 
-function normalizeMarketState(raw: unknown): TickerQuote["marketState"] {
+function normalizeMarketState(raw: unknown): QuoteMarketState {
   const value = String(raw ?? "").toUpperCase();
   if (value.includes("PRE")) return "PRE";
   if (value.includes("POST") || value.includes("AFTER")) return "POST";
@@ -121,7 +117,7 @@ export function deriveMarketStateFromTradingPeriods(params: {
   currentTradingPeriod?: YahooMeta["currentTradingPeriod"];
   regularMarketTime?: unknown;
   nowMs?: number;
-}): TickerQuote["marketState"] {
+}): QuoteMarketState {
   const parsed = normalizeMarketState(params.marketStateRaw);
   if (parsed !== "UNKNOWN") {
     return parsed;
@@ -159,7 +155,7 @@ export function deriveMarketStateFromTradingPeriods(params: {
 }
 
 function pickPrice(
-  marketState: TickerQuote["marketState"],
+  marketState: QuoteMarketState,
   regular: number,
   preMarket: number | null,
   postMarket: number | null,
@@ -221,6 +217,7 @@ async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
   const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
   return {
+    schemaVersion: QUOTE_CONTRACT_VERSION,
     symbol,
     price,
     previousClose,
@@ -267,6 +264,7 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
   });
 
   return {
+    schemaVersion: QUOTE_CONTRACT_VERSION,
     symbol,
     price,
     previousClose,

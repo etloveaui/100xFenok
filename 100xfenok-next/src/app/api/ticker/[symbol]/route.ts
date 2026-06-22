@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
+import {
+  QUOTE_CACHE_CONTROL,
+  QUOTE_CONTRACT_VERSION,
+  isValidQuoteSymbol,
+  normalizeQuoteSymbol,
+} from "@/lib/quote-contract";
 import { withResponseCache } from "@/lib/server/response-cache";
 import { getTickerQuote } from "@/lib/server/ticker";
 
 const TICKER_CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45",
+  "Cache-Control": QUOTE_CACHE_CONTROL,
 } as const;
 
 export const dynamic = "force-dynamic";
@@ -14,7 +20,22 @@ export async function GET(
   { params }: { params: Promise<{ symbol: string }> },
 ) {
   const { symbol } = await params;
-  const normalizedSymbol = symbol.trim().toUpperCase();
+  const normalizedSymbol = normalizeQuoteSymbol(symbol);
+
+  if (!isValidQuoteSymbol(normalizedSymbol)) {
+    return NextResponse.json(
+      {
+        schemaVersion: QUOTE_CONTRACT_VERSION,
+        error: "INVALID_SYMBOL",
+        symbol: normalizedSymbol,
+        message: "Symbol must match the quote contract symbol pattern.",
+      },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
 
   return withResponseCache(`ticker:${normalizedSymbol}`, 15, async () => {
     try {
@@ -24,7 +45,9 @@ export async function GET(
       const message = error instanceof Error ? error.message : "Unknown error";
       return NextResponse.json(
         {
+          schemaVersion: QUOTE_CONTRACT_VERSION,
           error: "TICKER_FETCH_FAILED",
+          symbol: normalizedSymbol,
           message,
         },
         {
