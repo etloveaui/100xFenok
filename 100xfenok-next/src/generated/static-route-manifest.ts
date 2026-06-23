@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 27935,
-      "updatedAt": "2026-06-23T15:51:16.114Z"
+      "updatedAt": "2026-06-23T15:51:16.115Z"
     },
     {
       "name": "reports-index.json",
@@ -40,12 +40,12 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-23T15:38:44.140Z"
+      "updatedAt": "2026-06-23T15:38:44.141Z"
     },
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-23T15:41:17.113Z"
+      "updatedAt": "2026-06-23T16:16:27.272Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -114,9 +114,14 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   ],
   "computed": [
     {
+      "name": "entity_graph_stock_index.json",
+      "sizeBytes": 872445,
+      "updatedAt": "2026-06-23T16:16:27.136Z"
+    },
+    {
       "name": "entity_graph.json",
       "sizeBytes": 6466799,
-      "updatedAt": "2026-06-23T16:01:33.882Z"
+      "updatedAt": "2026-06-23T16:16:27.119Z"
     },
     {
       "name": "market_data_audit.json",
@@ -131,7 +136,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "market_structure_index.json",
       "sizeBytes": 42440,
-      "updatedAt": "2026-06-23T15:51:16.114Z"
+      "updatedAt": "2026-06-23T15:51:16.115Z"
     },
     {
       "name": "signals.json",
@@ -47139,18 +47144,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1034901,
-      "updatedAt": "2026-06-23T15:13:48.620Z"
+      "sizeBytes": 1034965,
+      "updatedAt": "2026-06-23T15:51:59.502Z"
     },
     {
       "name": "tga.json",
       "sizeBytes": 775042,
-      "updatedAt": "2026-06-23T15:15:04.802Z"
+      "updatedAt": "2026-06-23T15:15:04.805Z"
     },
     {
       "name": "yahoo-ticker.json",
-      "sizeBytes": 731,
-      "updatedAt": "2026-06-23T15:13:48.620Z"
+      "sizeBytes": 547,
+      "updatedAt": "2026-06-23T12:23:52.834Z"
     }
   ],
   "metadata": [
