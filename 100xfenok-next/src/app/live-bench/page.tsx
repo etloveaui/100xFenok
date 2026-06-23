@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import AdminLiveBench from "@/components/admin-live/AdminLiveBench";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "음성 대화 | FenoK",
-  description: "Gemini 음성 대화",
+  title: "Voice Lab | 100xFenok",
+  description: "인증된 관리자용 음성 콘솔로 이동합니다.",
+  robots: { index: false, follow: false },
 };
 
 export default function PublicLiveBenchPage() {
-  return <AdminLiveBench />;
+  redirect("/admin/live");
 }

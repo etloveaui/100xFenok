@@ -11,7 +11,7 @@ interface Props {
 
 export const metadata: Metadata = {
   title: "ETF 센터 | 100xFenok",
-  description: "ETF 목록, 신규 상장, 디지털자산, 레버리지·단일종목 ETF를 확인합니다.",
+  description: "ETF 목록, 신규 상장, 비트코인 ETF 중심의 디지털자산, 레버리지·단일종목 ETF를 확인합니다.",
 };
 
 function typeFilterFromParams(params: Record<string, string | string[] | undefined>): EtfTypeFilter {
@@ -54,7 +54,7 @@ export default async function EtfsPage({ searchParams }: Props) {
               <p className="data-shell-kicker">ETF</p>
               <h1 className="data-shell-title">ETF 센터</h1>
               <p className="data-shell-desc">
-                ETF 목록, 신규 상장, 디지털자산, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
+                ETF 목록, 신규 상장, 비트코인 ETF 중심의 디지털자산, 레버리지·단일종목 ETF를 한곳에서 확인합니다.
               </p>
             </div>
             <div className="data-shell-head-actions">

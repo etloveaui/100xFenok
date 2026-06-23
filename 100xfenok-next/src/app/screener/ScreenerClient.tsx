@@ -910,7 +910,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       return makeDataState({
         status: "error",
         label: "종목 데이터 오류",
-        detail: "스크리너 데이터를 불러오지 못했습니다. 조건을 바꾸기 전에 데이터 연결 상태를 먼저 확인해야 합니다.",
+        detail: "스크리너 데이터를 불러오지 못했습니다. 잠시 후 다시 열거나 다른 화면으로 이동해 주세요.",
         asOf: sourceDate,
       });
     }

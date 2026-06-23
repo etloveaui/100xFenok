@@ -135,15 +135,15 @@ function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "ful
 }
 
 function detailStatusLabel(status: "full" | "partial" | "pending"): string {
-  if (status === "pending") return "요약 제공";
-  if (status === "partial") return "가격 제공";
+  if (status === "pending") return "기본 정보";
+  if (status === "partial") return "가격 중심";
   return "상세 가능";
 }
 
 function detailStatusHint(status: "full" | "partial" | "pending"): string {
-  if (status === "pending") return "요약 정보 제공";
-  if (status === "partial") return "가격 정보 제공";
-  return "상세 화면 준비됨";
+  if (status === "pending") return "기본 정보부터 확인 가능";
+  if (status === "partial") return "가격 정보부터 확인 가능";
+  return "상세 화면 확인 가능";
 }
 
 function typeFromParam(value: string | null | undefined): EtfTypeFilter {
@@ -203,7 +203,7 @@ function csvCell(value: string | number | null | undefined): string {
 
 function downloadCsv(rows: RadarRow[]) {
   const cappedRows = rows.slice(0, 500);
-  const headers = ["티커", "ETF명", "상장일", "가격", "변동률", "분류", "운용사", "상세 상태"];
+  const headers = ["티커", "ETF명", "상장일", "가격", "변동률", "분류", "운용사", "제공 범위"];
   const lines = [
     headers.map(csvCell).join(","),
     ...cappedRows.map((row) => [

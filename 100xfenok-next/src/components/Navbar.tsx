@@ -26,7 +26,12 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const isDashboard = pathname === '/';
-  const isMarket = pathname === '/market' || pathname === '/market-valuation' || pathname === '/alpha-scout';
+  const isMarket =
+    pathname === '/market' ||
+    pathname.startsWith('/market/') ||
+    pathname === '/market-valuation' ||
+    pathname.startsWith('/market-valuation/') ||
+    pathname === '/alpha-scout';
   const isAnalytics =
     pathname === '/multichart' ||
     pathname === '/radar' ||

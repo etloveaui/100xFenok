@@ -415,7 +415,7 @@ export default function EtfUniverseCard({
   const segmentOptions: Array<{ value: EtfSegmentFilter; label: string; count: number | null }> = [
     { value: "전체", label: "전체", count: total },
     { value: "신규", label: "신규", count: newCount },
-    { value: "디지털자산", label: "디지털", count: digitalCount },
+    { value: "디지털자산", label: "디지털자산", count: digitalCount },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
     { value: "단일종목 레버리지", label: "단일종목 레버리지", count: typeCounts.singleStock },
     { value: "인버스", label: "인버스", count: typeCounts.inverse },
@@ -605,6 +605,11 @@ export default function EtfUniverseCard({
             {issuerFilter !== "전체" ? <span> · 운용사 {issuerFilter}</span> : null}
             {aumFilter !== "전체" ? <span> · 운용자산 {aumFilter}</span> : null}
             {expenseFilter !== "전체" ? <span> · 보수율 {expenseFilter}</span> : null}
+          </div>
+        ) : null}
+        {digitalOnly ? (
+          <div className="mt-2 rounded-xl border border-[var(--c-line)] bg-white px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
+            디지털자산 필터는 현재 비트코인 ETF 목록과 전체 ETF 목록이 함께 확인되는 항목을 보여줍니다.
           </div>
         ) : null}
         {screenerOnlyCount > 0 ? (

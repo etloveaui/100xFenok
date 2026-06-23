@@ -948,7 +948,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               desc="일시적인 연결 문제일 수 있습니다. 다시 시도하면 ETF 상세와 가격 정보를 새로 요청합니다."
               onRetry={retryLoads}
             />
-            <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="내부 ETF 데이터 요청 실패" className="mt-4" />
+            <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 일시 확인 불가" className="mt-4" />
             <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
         </div>
@@ -961,7 +961,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           <p className="mt-2 text-sm font-semibold text-[var(--c-ink-3)]">
             {symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.
           </p>
-          <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="내부 ETF 상세 미연결" className="mt-4" />
+          <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 준비 전" className="mt-4" />
           <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink)] transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
         </div>
       </div>

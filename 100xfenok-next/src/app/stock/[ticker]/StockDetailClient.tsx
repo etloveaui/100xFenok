@@ -26,9 +26,8 @@ import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
 import { formatSignedPercent } from "@/lib/format";
-import { makeDataState, type DataReadinessStatus } from "@/lib/data-state";
+import { makeDataState } from "@/lib/data-state";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
-import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
@@ -776,150 +775,6 @@ function KV({ label, value }: { label: string; value: string }) {
   );
 }
 
-type DataConnectionState = "connected" | "loading" | "empty";
-
-interface DataConnectionRow {
-  label: string;
-  state: DataConnectionState;
-  detail: string;
-}
-
-function connectionStateLabel(state: DataConnectionState): string {
-  if (state === "connected") return "연결됨";
-  if (state === "loading") return "확인 중";
-  return "없음";
-}
-
-function connectionDataStatus(state: DataConnectionState): DataReadinessStatus {
-  if (state === "connected") return "ready";
-  if (state === "loading") return "pending";
-  return "unavailable";
-}
-
-function connectionSummary(rows: DataConnectionRow[], assetType: "stock" | "etf"): string {
-  const connected = rows.filter((row) => row.state === "connected").length;
-  const loading = rows.some((row) => row.state === "loading");
-  if (loading) return "연결 상태를 확인하고 있습니다. 확인된 데이터부터 먼저 표시합니다.";
-  if (assetType === "etf") {
-    return connected >= 2
-      ? "가격, 분류, 상세 데이터를 함께 읽어 ETF 화면을 구성합니다."
-      : "상세 데이터가 부족한 ETF는 목록·가격 중심으로 먼저 표시합니다.";
-  }
-  return connected >= 4
-    ? "종목 분석, 공시, 기관 데이터를 같은 기준으로 묶어 보여줍니다."
-    : "부족한 데이터는 계산하지 않고 준비 상태를 명확히 표시합니다.";
-}
-
-function DataConnectionCard({
-  assetType,
-  marketFacts,
-  marketFactsLoading,
-  row,
-  rowLoading,
-  yfData,
-  stockAuxData,
-  financialCandidate,
-  f13Entries,
-  filingSummaryCount,
-}: {
-  assetType: "stock" | "etf";
-  marketFacts: any;
-  marketFactsLoading: boolean;
-  row: AnalyzerRow | null | undefined;
-  rowLoading: boolean;
-  yfData: any | undefined;
-  stockAuxData: StockanalysisStockPayload | null | undefined;
-  financialCandidate: StockanalysisFinancialPayload | null | undefined;
-  f13Entries: F13Entry[] | null;
-  filingSummaryCount: number | undefined;
-}) {
-  const rows: DataConnectionRow[] = assetType === "etf"
-    ? [
-        {
-          label: "통합 시세",
-          state: marketFacts ? "connected" : marketFactsLoading ? "loading" : "empty",
-          detail: marketFacts?.generated_at ? `기준 ${fmtDateish(marketFacts.generated_at)}` : "가격·수익률 기준",
-        },
-        {
-          label: "ETF 상세",
-          state: marketFacts?.asset_type === "etf" ? "connected" : marketFactsLoading ? "loading" : "empty",
-          detail: "보유 구성·분류·성과",
-        },
-        {
-          label: "화면 보강",
-          state: marketFacts?.sources?.stockanalysis || marketFacts?.sources?.yf ? "connected" : marketFactsLoading ? "loading" : "empty",
-          detail: "상세가 부족하면 보조 가격으로 표시",
-        },
-      ]
-    : [
-        {
-          label: "통합 시세",
-          state: marketFacts ? "connected" : marketFactsLoading ? "loading" : "empty",
-          detail: marketFacts?.generated_at ? `기준 ${fmtDateish(marketFacts.generated_at)}` : "가격·시가총액·밸류",
-        },
-        {
-          label: "기본 분석",
-          state: row ? "connected" : rowLoading ? "loading" : "empty",
-          detail: "스크리너·상세 분석 기준",
-        },
-        {
-          label: "가격·재무 캐시",
-          state: yfData ? "connected" : yfData === undefined ? "loading" : "empty",
-          detail: "재무·통계·추정치 탭",
-        },
-        {
-          label: "추가 지표",
-          state: stockAuxData ? "connected" : stockAuxData === undefined ? "loading" : "empty",
-          detail: "교차 확인용 보조 지표",
-        },
-        {
-          label: "재무 보강",
-          state: financialCandidate ? "connected" : financialCandidate === undefined ? "loading" : "empty",
-          detail: "가치평가 입력이 아닌 검산 후보",
-        },
-        {
-          label: "기관 공시",
-          state: f13Entries ? (f13Entries.length > 0 ? "connected" : "empty") : "loading",
-          detail: f13Entries ? `${f13Entries.length.toLocaleString("ko-KR")}건` : "13F 확인 중",
-        },
-        {
-          label: "한글 공시",
-          state: filingSummaryCount === undefined ? "loading" : filingSummaryCount > 0 ? "connected" : "empty",
-          detail: filingSummaryCount === undefined ? "공시 요약 확인 중" : `${filingSummaryCount.toLocaleString("ko-KR")}건`,
-        },
-      ];
-
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
-      <div className="mb-2 flex min-w-0 items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h4 className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">데이터 연결 상태</h4>
-          <p className="mt-0.5 text-[10px] font-semibold leading-relaxed text-slate-500">{connectionSummary(rows, assetType)}</p>
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        {rows.map((row) => (
-          <div key={row.label} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/60 px-2 py-1.5">
-            <div className="min-w-0">
-              <p className="truncate text-[10px] font-black text-slate-700">{row.label}</p>
-              <p className="truncate text-[9px] font-semibold text-slate-500">{row.detail}</p>
-            </div>
-            <DataStateBadge
-              state={makeDataState({
-                status: connectionDataStatus(row.state),
-                label: connectionStateLabel(row.state),
-                detail: row.detail,
-              })}
-              prefix=""
-              className="shrink-0 px-2 py-0.5 text-[9px]"
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // StockDetailClient main
 // ---------------------------------------------------------------------------
@@ -964,7 +819,6 @@ export default function StockDetailClient({
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
-  const [filingSummaryCount, setFilingSummaryCount] = useState<number | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
 
   useEffect(() => {
@@ -1041,23 +895,6 @@ export default function StockDetailClient({
     return () => { cancelled = true; };
   }, [assetHint, symbol]);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (assetHint === "etf") {
-      Promise.resolve().then(() => {
-        if (!cancelled) setFilingSummaryCount(0);
-      });
-      return () => { cancelled = true; };
-    }
-    Promise.resolve().then(() => {
-      if (!cancelled) setFilingSummaryCount(undefined);
-    });
-    loadEdgarKoreanSummariesForTicker(symbol).then((manifest) => {
-      if (!cancelled) setFilingSummaryCount(edgarFilingsForTicker(manifest, symbol).length);
-    });
-    return () => { cancelled = true; };
-  }, [assetHint, symbol]);
-
   const [benchDoc, setBenchDoc] = useState<Awaited<ReturnType<typeof loadIndustryBenchmarks>>>(null);
   useEffect(() => {
     let cancelled = false;
@@ -1076,10 +913,10 @@ export default function StockDetailClient({
   const etfSurface = etfSurfaceFallback(etfSurfaceData, symbol);
   const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
   const isEtfOnlyAsset = isEtfAsset && !row;
-  const hasFilingPilot = !isEtfOnlyAsset && ((filingSummaryCount ?? 0) > 0 || stockTab === "filings" || initialTab === "filings");
+  const showFilingsTab = !isEtfAsset;
   const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf"
     ? "overview"
-    : !hasFilingPilot && stockTab === "filings"
+    : !showFilingsTab && stockTab === "filings"
       ? (isEtfOnlyAsset ? "etf" : "overview")
       : isEtfOnlyAsset && stockTab === "overview"
         ? "etf"
@@ -1087,7 +924,7 @@ export default function StockDetailClient({
   const stockTabs: Array<{ id: StockTab; label: string }> = [
     ...(!isEtfOnlyAsset ? [{ id: "overview" as const, label: "요약" }] : []),
     ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
-    ...(hasFilingPilot ? [{ id: "filings" as const, label: "공시" }] : []),
+    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
     ...(yfAvailable
       ? [
           { id: "financials" as const, label: "재무" },
@@ -1205,7 +1042,7 @@ export default function StockDetailClient({
                 detail: `${symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.`,
               })}
             />
-            <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="내부 ETF 상세 미연결" className="mt-4" />
+            <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 준비 전" className="mt-4" />
             <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
         </div>
@@ -1221,7 +1058,7 @@ export default function StockDetailClient({
               detail: `${symbol} — 아직 데이터에 등록되지 않았거나 갱신 전인 티커입니다.`,
             })}
           />
-          <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="내부 종목 데이터 미등록" className="mt-4" />
+          <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 데이터 준비 전" className="mt-4" />
           <TransitionLink href="/screener" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
       </div>
@@ -1414,7 +1251,7 @@ export default function StockDetailClient({
                   detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                 })}
               />
-              <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="내부 종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
+              <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
           </SectionCard>
         )}
@@ -1495,18 +1332,6 @@ export default function StockDetailClient({
             />
           ) : null}
           {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
-          <DataConnectionCard
-            assetType={isEtfAsset ? "etf" : "stock"}
-            marketFacts={marketFacts}
-            marketFactsLoading={marketFactsLoading}
-            row={row}
-            rowLoading={rowLoading}
-            yfData={yfData}
-            stockAuxData={stockAuxData}
-            financialCandidate={financialCandidate}
-            f13Entries={f13Entries}
-            filingSummaryCount={filingSummaryCount}
-          />
           <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
       </div>
 
@@ -1613,7 +1438,7 @@ export default function StockDetailClient({
                     detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
                   })}
                 />
-                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="내부 종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
+                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
               </div>
             </SectionCard>
           )}
@@ -1762,7 +1587,7 @@ function StockAuxiliaryPanel({
       </div>
       {(annualFieldCount > 0 || quarterlyFieldCount > 0) ? (
         <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
-          재무 보강 파일: 연간 {annualFieldCount.toLocaleString("ko-KR")}필드 · 분기 {quarterlyFieldCount.toLocaleString("ko-KR")}필드
+          재무 보강 범위: 연간 {annualFieldCount.toLocaleString("ko-KR")}개 항목 · 분기 {quarterlyFieldCount.toLocaleString("ko-KR")}개 항목
         </div>
       ) : null}
     </SectionCard>
@@ -1859,7 +1684,7 @@ function FinancialCandidatePanel({
                 <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
                   <p className="text-[10px] font-bold text-slate-500">{financialStatementLabel(key)}</p>
                   <p className="orbitron mt-0.5 text-xs font-black tabular-nums text-slate-900">
-                    {fmtCandidateCount(info?.field_count)}필드
+                    {fmtCandidateCount(info?.field_count)}개 항목
                   </p>
                   <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
                     {fmtCandidateCount(info?.period_count)}기간

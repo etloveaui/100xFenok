@@ -142,8 +142,21 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
+const FORM_LABELS_KO: Record<string, string> = {
+  "10-K": "연간보고서",
+  "10-Q": "분기보고서",
+  "8-K": "주요 이벤트 공시",
+  "6-K": "해외 발행사 공시",
+  "20-F": "해외 연간보고서",
+  "13F-HR": "기관 보유 보고",
+};
+
+function formLabel(form: string) {
+  return FORM_LABELS_KO[form] ?? "SEC 공시";
+}
+
 function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
-  return `${filing.form} · ${formatDate(filing.filingDate)}`;
+  return `${formLabel(filing.form)} (${filing.form}) · ${formatDate(filing.filingDate)}`;
 }
 
 // Plain-Korean labels for SEC section codes so the UI never leaks raw codes
@@ -321,7 +334,7 @@ export default function EdgarSummaryClient({
     };
     fetch(selectedPath, { cache: "no-store" })
       .then((response) => {
-        if (!response.ok) throw new Error(`SUMMARY_FETCH_FAILED:${response.status}`);
+        if (!response.ok) throw new Error("summary fetch failed");
         return response.json() as Promise<EdgarKoreanSummaryArtifact>;
       })
       .then((payload) => {
@@ -349,7 +362,8 @@ export default function EdgarSummaryClient({
       <section className="panel">
         <div className="panel-b">
           <p className="text-sm font-semibold text-red-700">{symbol} 공시 요약 데이터를 불러오지 못했습니다.</p>
-          <p className="mt-2 font-mono text-xs text-slate-500">{error}</p>
+          <p className="mt-2 text-sm text-slate-500">잠시 후 다시 확인하거나 SEC 원문과 종목 페이지를 먼저 열어볼 수 있습니다.</p>
+          <ExternalSourceLinks ticker={symbol} kind="filing" statusLine="한글 요약 일시 확인 불가" className="mt-4" />
         </div>
       </section>
     );

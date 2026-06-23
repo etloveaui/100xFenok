@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import MarketSectionNav from "@/components/market/MarketSectionNav";
 import AppShell from "@/components/shell/AppShell";
 import { MarketStructureDetailWired } from "@/lib/market-valuation/charts/marketStructurePanelComponents";
 
@@ -12,6 +13,11 @@ export default function MarketStructureDetailPage() {
   return (
     <div className="fnk-shell">
       <AppShell active="market" title="시장 구조" backHref="/market-valuation">
+        <section className="panel mb-[var(--s4)]">
+          <div className="panel-b">
+            <MarketSectionNav active="valuation" />
+          </div>
+        </section>
         <MarketStructureDetailWired />
       </AppShell>
     </div>

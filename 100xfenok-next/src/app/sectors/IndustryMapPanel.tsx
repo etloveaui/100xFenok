@@ -226,7 +226,7 @@ function hasIndustryConstituentDetail(row: IndustryMapRow | null | undefined): b
 
 function industryDetailStatus(row: IndustryMapRow | null | undefined): string {
   if (!row) return "-";
-  return hasIndustryConstituentDetail(row) ? "구성종목 상세 있음" : "요약 제공";
+  return hasIndustryConstituentDetail(row) ? "구성종목 상세 있음" : "기본 정보";
 }
 
 function industryConstituentRows(data: IndustryData | null, row: IndustryMapRow | null | undefined): EventRow[] {
