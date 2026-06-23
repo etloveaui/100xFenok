@@ -39,6 +39,8 @@
     "qa:stockanalysis": "node scripts/smoke-stockanalysis-routes.mjs",
     "qa:copy": "node scripts/lint-public-copy.mjs",
     "qa:quote-contract": "node scripts/check-quote-contract.mjs && python3 ../scripts/test_data_spine_gas_quote_gateway.py",
+    "qa:treasury-contract": "node scripts/check-treasury-data-contract.mjs",
+    "qa:data-spine-contract": "npm run qa:quote-contract && npm run qa:treasury-contract",
     "qa:etf-universe": "node scripts/check-stockanalysis-etf-universe.mjs",
     "qa:etf-classification": "tsx scripts/check-etf-classification-confidence.ts",
     "qa:surface-consumers": "node scripts/check-stockanalysis-surface-consumers.mjs",

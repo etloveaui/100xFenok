@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { addMinutesIso, makeDataState, type DataState } from "@/lib/data-state";
 import { withResponseCache } from "@/lib/server/response-cache";
 
 const TREASURY_API_URL =
   "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance";
+const TREASURY_CONTRACT_VERSION = "treasury-tga.v1" as const;
+const TREASURY_STALE_AFTER_MINUTES = 60 * 72;
 const TREASURY_ACCOUNT_TYPES = [
   "Federal Reserve Account",
   "Treasury General Account (TGA)",
@@ -19,6 +22,13 @@ interface TreasuryTgaMirrorPayload {
   source?: string;
   endpoint?: string;
   series?: Array<{ date?: string; val?: number | string | null }>;
+}
+
+type TreasuryTgaSource = "treasury-tga-datapack" | "treasury-fiscaldata-fallback";
+
+interface TreasuryTgaMirrorResult {
+  rows: TreasuryTgaRow[];
+  updated: string | null;
 }
 
 export const dynamic = "force-dynamic";
@@ -56,7 +66,7 @@ async function fetchTreasuryRows(start: string, accountType: string) {
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
-async function fetchTreasuryMirrorRows(request: Request, start: string): Promise<TreasuryTgaRow[]> {
+async function fetchTreasuryMirrorRows(request: Request, start: string): Promise<TreasuryTgaMirrorResult> {
   const response = await fetch(new URL("/data/macro/tga.json", request.url), {
     cache: "no-store",
     headers: {
@@ -71,19 +81,68 @@ async function fetchTreasuryMirrorRows(request: Request, start: string): Promise
   const payload = (await response.json()) as TreasuryTgaMirrorPayload;
   const rows = Array.isArray(payload.series) ? payload.series : [];
 
-  return rows
-    .filter((row) => typeof row.date === "string" && row.date >= start && row.val !== null && row.val !== undefined)
-    .map((row) => ({
-      record_date: row.date as string,
-      open_today_bal: String(row.val),
-    }));
+  return {
+    updated: typeof payload.updated === "string" && payload.updated.trim().length > 0
+      ? payload.updated
+      : null,
+    rows: rows
+      .filter((row) => typeof row.date === "string" && row.date >= start && row.val !== null && row.val !== undefined)
+      .map((row) => ({
+        record_date: row.date as string,
+        open_today_bal: String(row.val),
+      })),
+  };
 }
 
-function treasuryResponse(source: string, data: TreasuryTgaRow[]): Response {
+function latestTreasuryRecordDate(data: TreasuryTgaRow[]): string | null {
+  return data.reduce<string | null>((latest, row) => {
+    if (!row.record_date) return latest;
+    return latest === null || row.record_date > latest ? row.record_date : latest;
+  }, null);
+}
+
+function treasuryState(params: {
+  source: TreasuryTgaSource;
+  asOf: string | null;
+  staleAfter: string | null;
+}): DataState {
+  if (params.source === "treasury-fiscaldata-fallback") {
+    return makeDataState({
+      status: "ready",
+      label: "Treasury 직접 확인",
+      detail: "정적 DataPack 미러가 비어 있거나 응답하지 않아 Treasury FiscalData에서 직접 확인한 값입니다.",
+      asOf: params.asOf,
+      staleAfter: params.staleAfter,
+      reason: "mirror_unavailable_or_empty",
+    });
+  }
+
+  return makeDataState({
+    status: "ready",
+    label: "DataPack 미러",
+    detail: "예약 갱신된 Treasury TGA DataPack 미러에서 응답했습니다.",
+    asOf: params.asOf,
+    staleAfter: params.staleAfter,
+  });
+}
+
+function treasuryResponse(
+  source: TreasuryTgaSource,
+  data: TreasuryTgaRow[],
+  options: { lastUpdated?: string | null } = {},
+): Response {
+  const asOf = latestTreasuryRecordDate(data);
+  const lastUpdated = options.lastUpdated ?? asOf ?? new Date().toISOString();
+  const staleAfter = addMinutesIso(lastUpdated, TREASURY_STALE_AFTER_MINUTES);
   return NextResponse.json(
     {
+      schemaVersion: TREASURY_CONTRACT_VERSION,
+      dataset: "treasury-tga",
       source,
       data,
+      lastUpdated,
+      staleAfter,
+      state: treasuryState({ source, asOf, staleAfter }),
     },
     {
       headers: {
@@ -95,9 +154,11 @@ function treasuryResponse(source: string, data: TreasuryTgaRow[]): Response {
 
 async function getTreasuryTgaResponse(request: Request, start: string): Promise<Response> {
   try {
-    const mirrorRows = await fetchTreasuryMirrorRows(request, start);
-    if (mirrorRows.length > 0) {
-      return treasuryResponse("treasury-tga-datapack", mirrorRows);
+    const mirror = await fetchTreasuryMirrorRows(request, start);
+    if (mirror.rows.length > 0) {
+      return treasuryResponse("treasury-tga-datapack", mirror.rows, {
+        lastUpdated: mirror.updated,
+      });
     }
   } catch {
     // Fall through to the live FiscalData fallback when the static mirror is unavailable.
@@ -131,8 +192,16 @@ async function getTreasuryTgaResponse(request: Request, start: string): Promise<
 
     return NextResponse.json(
       {
+        schemaVersion: TREASURY_CONTRACT_VERSION,
+        dataset: "treasury-tga",
         error: "TREASURY_DATA_UNAVAILABLE",
         details: rejected,
+        state: makeDataState({
+          status: "error",
+          label: "TGA 확인 실패",
+          detail: "정적 DataPack 미러와 Treasury FiscalData fallback 모두 응답하지 않았습니다.",
+          reason: "treasury_data_unavailable",
+        }),
       },
       { status: 502, headers: { "Cache-Control": "no-store" } },
     );

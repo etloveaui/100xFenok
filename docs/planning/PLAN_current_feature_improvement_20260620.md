@@ -1,6 +1,6 @@
 # PLAN: Current-Feature Improvement Wave (measured survey → priority)
 
-> **Status**: ✅ owner-independent UI/ETF/screener wave shipped; F2 top-200 filing coverage is now 202/202. The foreign-filer 6-K / 20-F / 40-F extractor + best-per-ticker path has generated the 20 previously uncovered summary artifacts with source/public mirror parity. Data Spine residual cleanup is now the adjacent quote/treasury mirror continuation, not another feno-value adapter pass.
+> **Status**: ✅ owner-independent UI/ETF/screener wave shipped; F2 top-200 filing coverage is now 202/202. The foreign-filer 6-K / 20-F / 40-F extractor + best-per-ticker path has generated the 20 previously uncovered summary artifacts with source/public mirror parity, then enriched the 16 6-K artifacts with grounded headline figures. Data Spine residual cleanup has contracted quote.v1 and Treasury TGA; remaining work is macro-monitor FDIC / non-quote GAS-admin / feno-value direct-provider exception handling, not another broad adapter pass.
 > **Owner mandate**: do ALL candidates, but survey + measure first, then plan. No new pages (/portfolio deprioritized), no route-contract meta-doc pass — improve EXISTING live surfaces.
 > **Method**: dual independent read-only survey — Claude (4 parallel subagents) + Codex (cx-80) — integrated here. Divergence = signal.
 > **Decision anchor**: this plan → owner approval → per-slice CONTRACT → Codex impl → Claude reproduction gate → push. 완료 선언 = owner.
@@ -15,7 +15,7 @@
 
 ## Surface 1 — Stock filings (공시)
 
-**Measured**: F1/F2 has moved past the original 50-ticker pilot. The current EDGAR summary universe is 202 manifests (top-150 US by market cap + 50 new 151-200 + BE/RKLB force-includes), with 202/202 covered by evidence-grounded Korean summaries. Global gates passed after the foreign-filer run (`qa:edgar-summaries`: 2,424 filings / 7,513 bullets / 4,636 evidence rows; `qa:copy`: 61 files). The 20 formerly uncovered names (ARM/ASML/AZN/BHP/BMO/BNS/CM/CNI/CNQ/MFC/NVO/RIO/RY/SPOT/SU/TD/TRI/TRP/TSM/WPM) now each have one ready 6-K / 20-F artifact. BNS used an alternate substantive 6-K (`0001193125-26-240503`) after the best-per-ticker candidate failed the evidence-body gate. App runtime still makes **0 direct SEC API calls**; generated artifacts are produced offline and served through DataPack/public mirrors.
+**Measured**: F1/F2 has moved past the original 50-ticker pilot. The current EDGAR summary universe is 202 manifests (top-150 US by market cap + 50 new 151-200 + BE/RKLB force-includes), with 202/202 covered by evidence-grounded Korean summaries. Global gates passed after the foreign-filer run (`qa:edgar-summaries`: 2,424 filings / 7,513 bullets / 4,636 evidence rows; `qa:copy`: 61 files). The 20 formerly uncovered names (ARM/ASML/AZN/BHP/BMO/BNS/CM/CNI/CNQ/MFC/NVO/RIO/RY/SPOT/SU/TD/TRI/TRP/TSM/WPM) now each have one ready 6-K / 20-F artifact. The 16 6-K summaries were enriched with headline figures where evidence digests support them; TSM/BNS/BHP were peer-verified as substantive examples. BNS used an alternate substantive 6-K (`0001193125-26-240503`) after the best-per-ticker candidate failed the evidence-body gate. App runtime still makes **0 direct SEC API calls**; generated artifacts are produced offline and served through DataPack/public mirrors.
 
 **Gaps**: the old "generate more 8-K Item 2.02" path hit a structural ceiling for the 20 foreign filers, but that ceiling is now closed through the form-aware self/session path. Do **not** treat F2 as a blocker for top-300/top-400 anymore; the remaining filing work is translation breadth and future coverage expansion. Current generation policy remains free-first/provider-agnostic: self-gen evidence task first, paid fallback only behind explicit owner gate and cost metadata.
 
@@ -23,7 +23,7 @@
 
 **Slices**:
 - F1 (**M for production**, $0) — ✅ filing timeline and by-ticker manifest landed, then expanded through top-200 tranche support. Continue only as a support layer for extractor outputs; no new UI surface needed for the next slice.
-- F2 (M/L, $0 self/session path used) — ✅ extractor/batch path landed and ✅ data run complete for 6-K / 20-F / 40-F. Implemented: form-aware sections (`20-F` item_3d/item_5, `40-F` risk/MD&A, `6-K` substantive foreign_report), 6-K Exhibit 99.1 reuse, best-per-ticker batch planning, QA section contract, Korean UI section labels, and 20 source/public mirrored artifacts. Acceptance passed: numeric/evidence QA, source/public parity, and $0 self/session cost metadata.
+- F2 (M/L, $0 self/session path used) — ✅ extractor/batch path landed, ✅ data run complete for 6-K / 20-F / 40-F, and ✅ 6-K headline enrichment complete for the 16 applicable artifacts. Implemented: form-aware sections (`20-F` item_3d/item_5, `40-F` risk/MD&A, `6-K` substantive foreign_report), 6-K Exhibit 99.1 reuse, best-per-ticker batch planning, QA section contract, Korean UI section labels, and 20 source/public mirrored artifacts. Acceptance passed: numeric/evidence QA, source/public parity, $0 self/session cost metadata, and peer read-through on enriched 6-K examples.
 - F3 (L, $$-LLM) — translation generation follows only after F2 summaries are evidence-clean. The translation contract exists; do not bulk-generate foreign translations until F2 form handling passes.
 
 ---
@@ -128,7 +128,7 @@ addition to the localhost check. Public copy guard now blocks accidental
 language in Admin. Turbopack dynamic `public/data` filesystem warnings are
 tracked as a P3 infrastructure cleanup unless they turn into a build failure.
 
-**Current remaining work after the autonomous wave**: (1) continue Data Spine residual cleanup as quote/treasury mirror productization, not another feno-value adapter pass; (2) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (3) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
+**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice; continue with macro-monitor FDIC fallback, non-quote GAS/admin HTML endpoints, and feno-value direct-provider exception handling; (2) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (3) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
 

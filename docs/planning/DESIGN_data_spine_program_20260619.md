@@ -330,6 +330,12 @@ Implemented product state primitives:
 - `100xfenok-next/src/lib/quote-contract.ts` carries `state.quoteStatus`,
   `asOf`, and `staleAfter` so quote consumers can distinguish delayed and
   unavailable values without adding a snapshot pipeline.
+- `100xfenok-next/src/app/api/data/route.ts` now exposes
+  `schemaVersion: "treasury-tga.v1"`, `dataset`, `lastUpdated`, `staleAfter`,
+  and shared `DataState` metadata for the legacy Treasury TGA facade. The normal
+  path is still the scheduled DataPack mirror; live Treasury FiscalData remains a
+  compatibility fallback, but successful fallback data is still marked `ready`
+  and only `source`/`reason` expose the mirror outage.
 - `portfolio`, `screener`, screener detail, stock detail connection/price, and
   all mounted `/explore` cards consume the shared state primitive for
   unavailable, pending, partial, and error states instead of silent blank
@@ -369,6 +375,7 @@ Implemented product state primitives:
 Verification gate:
 
 - `npm run qa:quote-contract`
+- `npm run qa:treasury-contract`
 - `npm run qa:copy`
 - `npm run qa:market-audit`
 - `npm run qa:data-state`
@@ -596,7 +603,10 @@ contract and the disagreement policy.
    - `macro-monitor` FDIC fallback and non-quote GAS/admin HTML endpoints are
      classified, but not yet migrated.
    - `/api/data?dataset=treasury-tga` is routed through the scheduled TGA mirror
-     first; live Treasury FiscalData remains fallback-only.
+     first; live Treasury FiscalData remains fallback-only and now emits
+     `treasury-tga.v1` state/freshness metadata when used.
+     The scheduled workflow writes source + public mirrors and runs
+     `qa:treasury-contract` before committing.
    - feno-value has a DataPackProvider consumer path, but direct valuation-engine
      providers remain separate exceptions until each path is promoted or routed.
 
@@ -605,8 +615,12 @@ contract and the disagreement policy.
 1. Keep Daily Wrap report metadata; defer revival until report automation exists.
 2. P1: freeze the per-field authority/fallback/tolerance/disagreement matrix
    using the measured 28-dataset inventory and `market_source_parity`.
-3. P1: decide exception handling for `macro-monitor` FDIC fallback, remaining
-   non-quote GAS/admin HTML endpoints, and feno-value direct provider paths.
+3. P1/P2: handle residual legacy direct-provider surfaces:
+   `tools/asset/multichart.html`, `admin/design-lab/charts/v*.html`,
+   `tools/macro-monitor/shared/data-fetcher.js` FDIC fallback, and
+   `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`. Quote and
+   Treasury are contracted/routed; do not reopen them unless building the
+   deferred cached live-quote snapshot service.
 4. Filings: prioritize the foreign-filer 6-K / 20-F / 40-F path before any
    top-300/top-400 EDGAR expansion.
 5. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.

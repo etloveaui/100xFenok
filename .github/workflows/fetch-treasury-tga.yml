@@ -22,7 +22,7 @@ jobs:
           node-version: '20'
 
       - name: Create data directory
-        run: mkdir -p data data/macro
+        run: mkdir -p data/macro 100xfenok-next/public/data/macro
 
       - name: Fetch TGA JSON
         run: |
@@ -112,8 +112,11 @@ jobs:
             };
 
             fs.mkdirSync('data/macro', { recursive: true });
-            fs.writeFileSync('data/macro/tga.json', JSON.stringify(output, null, 2));
-            console.log(`Saved ${series.length} points to data/macro/tga.json`);
+            fs.mkdirSync('100xfenok-next/public/data/macro', { recursive: true });
+            const serialized = JSON.stringify(output, null, 2);
+            fs.writeFileSync('data/macro/tga.json', serialized);
+            fs.writeFileSync('100xfenok-next/public/data/macro/tga.json', serialized);
+            console.log(`Saved ${series.length} points to data/macro/tga.json and public mirror`);
           }
 
           main().catch((err) => {
@@ -128,12 +131,13 @@ jobs:
           head -20 data/macro/tga.json
           echo "..."
           echo "Total lines: $(wc -l < data/macro/tga.json)"
+          npm --prefix 100xfenok-next run qa:treasury-contract
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/macro/tga.json
+          git add data/macro/tga.json 100xfenok-next/public/data/macro/tga.json
           git diff --staged --quiet || git commit -m "chore: update Treasury TGA data"
           git pull --rebase origin main
           git push

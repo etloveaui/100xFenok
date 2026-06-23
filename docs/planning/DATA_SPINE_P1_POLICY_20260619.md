@@ -1,7 +1,7 @@
 # Data Spine P1 Policy
 
 Date: 2026-06-19
-Last revalidated: 2026-06-22
+Last revalidated: 2026-06-23
 Status: PARTIALLY RATIFIED BY V0; remaining direct-fetch backlog stays open.
 
 ## Purpose
@@ -87,7 +87,7 @@ and stay as migration, legacy exception, or sunset candidates.
 | `DS-P1-006` | `ib/ib-helper/apps-script/yahoo-quotes.gs` | CNBC primary + 100x quote.v1 fallback + Yahoo OHLC + Stooq + GOOGLEFINANCE | IB helper GAS live quote helper with CNBC quality preserved | ROUTED 2026-06-22: CNBC remains primary for pre/post-market quality; quote.v1 is first fallback before direct Yahoo | P2 |
 | `DS-P1-007` | `ib/ib-total-guide-calculator.html` | 100x same-origin ticker API | live embed consumes ratified server quote gateway | CLOSED 2026-06-22: browser Yahoo/CORS proxy removed; future quote-service migration stays under `DS-P1-001` | P2 |
 | `DS-P1-008` | `scripts/fetch-yf-finance-v0.py` | Yahoo yfinance | deprecated old 10-ticker PoC collector | sunset documented; replaced by scheduled YF v2 collector | CLOSED 2026-06-22 |
-| `DS-P1-009` | `100xfenok-next/src/app/api/data/route.ts` | local `data/macro/tga.json` mirror + Treasury FiscalData fallback | legacy `treasury-tga` API facade | ROUTED 2026-06-22: static DataPack mirror is primary; live FiscalData remains fallback only when the mirror is unavailable | P2 |
+| `DS-P1-009` | `100xfenok-next/src/app/api/data/route.ts` | local `data/macro/tga.json` mirror + Treasury FiscalData fallback | legacy `treasury-tga` API facade | CONTRACTED 2026-06-23: static DataPack mirror is primary; live FiscalData remains fallback only when the mirror is unavailable, and the route now exposes `treasury-tga.v1` state/freshness metadata | P2 |
 
 ## Next Execution Plan
 
@@ -114,9 +114,12 @@ Order is risk-first, not table-order:
    `DS-P1-007` is closed: the live
    `/infinite-buying` embedded HTML now calls the same-origin 100x ticker API
    instead of a browser Yahoo/CORS provider path.
-5. `DS-P1-009` routed 2026-06-22: `/api/data?dataset=treasury-tga` now reads
+5. `DS-P1-009` contracted 2026-06-23: `/api/data?dataset=treasury-tga` reads
    the scheduled `data/macro/tga.json` mirror first and keeps FiscalData as a
-   fallback only. The scheduled emitter is `.github/workflows/fetch-treasury-tga.yml`.
+   fallback only. The route now returns `schemaVersion: "treasury-tga.v1"`,
+   `dataset`, `lastUpdated`, `staleAfter`, and a shared `DataState` payload so a
+   fallback response is visible to consumers instead of being an implicit source
+   string. The scheduled emitter is `.github/workflows/fetch-treasury-tga.yml`.
 
 ### DS-P1-001 Contract Slice (2026-06-22)
 
@@ -151,14 +154,47 @@ Order is risk-first, not table-order:
   now show no product-runtime `stocks_analyzer.json` or
   `stock_action_summary.json` fetch outside the provider boundary.
 
-### DS-P1-009 Treasury Route Slice (2026-06-22)
+### DS-P1-009 Treasury Route Slice (2026-06-22 / 2026-06-23)
 
 - Runtime boundary: `/api/data?dataset=treasury-tga&start=YYYY-MM-DD` keeps its
-  existing response shape but now serves from `/data/macro/tga.json` first.
+  existing `source` + `data` response shape but now serves from
+  `/data/macro/tga.json` first.
 - Fallback: direct Treasury FiscalData is retained only when the static mirror is
   missing or empty, so scheduled DataPack refresh is the normal path.
+- State contract: 2026-06-23 added `treasury-tga.v1`, `lastUpdated`,
+  `staleAfter`, and `state`. DataPack responses return `state.status="ready"`;
+  successful FiscalData fallback responses also return `state.status="ready"` so
+  public screens do not imply incomplete data, while `source` and
+  `reason="mirror_unavailable_or_empty"` preserve the mirror-outage provenance
+  for ops/admin review.
+- Scheduled mirror: `.github/workflows/fetch-treasury-tga.yml` now writes both
+  `data/macro/tga.json` and `100xfenok-next/public/data/macro/tga.json`, then
+  runs `npm --prefix 100xfenok-next run qa:treasury-contract` before committing
+  the data. This prevents the public route mirror from drifting behind the source
+  DataPack on the next scheduled refresh.
 - Guard: `rg` found no current product consumer for the legacy route; it remains
-  available as a compatibility facade.
+  available as a compatibility facade. `npm run qa:treasury-contract` locks the
+  route contract and source/public TGA mirror parity.
+
+### 2026-06-23 residual direct-provider recheck
+
+Quote and Treasury are contracted/routed. The next residual rows are separate
+legacy/runtime cleanup items, not part of the quote/Treasury slice:
+
+- `tools/asset/multichart.html` + `tools/asset/config.js`: browser Stooq /
+  Alpha Vantage fallback and public config key exposure. Migrate to a DataPack or
+  first-party chart API before this tool is promoted.
+- `admin/design-lab/charts/v*.html`: prototype chart pages with direct Stooq
+  proxy fetches. Retire if unused; otherwise route through a first-party data
+  boundary.
+- `tools/macro-monitor/shared/data-fetcher.js`: local JSON first, but FDIC still
+  has a browser external fallback. Remove the fallback or server-route it before
+  promotion back into product runtime.
+- `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`: legacy
+  sentiment writers with direct provider calls. Either absorb into scheduled
+  collectors or mark sunset like `vix.gs`.
+- feno-value direct valuation-engine providers remain tracked outside this repo;
+  no direct feno-value provider call was found in the 100x Next runtime.
 
 ### DS-P1-005 Closeout Evidence (2026-06-22)
 

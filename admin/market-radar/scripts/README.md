@@ -55,7 +55,7 @@
 
 | 파일 | 데이터 소스 | 대상 JSON |
 |------|------------|-----------|
-| **`yahoo-quotes.gs`** | **Yahoo→Stooq→GOOGLEFINANCE** | **범용 실시간 주가 조회 (IB Helper 등)** |
+| **`yahoo-quotes.gs`** | **100x quote.v1→Yahoo OHLC→Stooq→GOOGLEFINANCE** | **범용 실시간 주가 조회 (IB Helper 등)** |
 | `indices.gs` | GOOGLEFINANCE | `data/indices/sp500.json`, `nasdaq.json` |
 | `vix.gs` | deprecated Yahoo backup | `data/sentiment/vix.json` (runtime owner: `fetch-sentiment.mjs`) |
 | `move.gs` | Yahoo Proxy | `data/sentiment/move.json` |
