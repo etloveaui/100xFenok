@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice from "@/components/DataStateNotice";
+import { makeDataState } from "@/lib/data-state";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 function fmtAmount(value: number): string {
@@ -93,8 +95,14 @@ export default function ExploreHotTopics() {
           <h2>13F 핫토픽</h2>
           <span className="desc">투자 대가 매매 동향</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">
-          {loading ? "13F 핫토픽 확인 중" : "13F 핫토픽 데이터를 불러오지 못했습니다."}
+        <div className="panel-b">
+          <DataStateNotice
+            state={makeDataState({
+              status: loading ? "pending" : "error",
+              label: loading ? "13F 핫토픽 확인 중" : "13F 핫토픽 오류",
+              detail: loading ? "투자 대가 매매 데이터를 읽고 있습니다." : "13F 핫토픽 데이터를 불러오지 못했습니다.",
+            })}
+          />
         </div>
       </section>
     );
@@ -108,7 +116,16 @@ export default function ExploreHotTopics() {
           <h2>13F 핫토픽</h2>
           <span className="desc">{data.metadata.quarter} 기준</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">표시할 13F 핫토픽이 없습니다.</div>
+        <div className="panel-b">
+          <DataStateNotice
+            state={makeDataState({
+              status: "unavailable",
+              label: "표시할 핫토픽 없음",
+              detail: "이번 분기에 표시할 주요 매매 동향이 없습니다.",
+              asOf: data.metadata.quarter,
+            })}
+          />
+        </div>
       </section>
     );
   }

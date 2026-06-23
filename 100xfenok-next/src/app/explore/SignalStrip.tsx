@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import DataStateNotice from "@/components/DataStateNotice";
+import { makeDataState } from "@/lib/data-state";
 import {
   loadSummaries,
   pick,
@@ -73,11 +75,15 @@ function label(status: SignalStatus | undefined): string {
 export default function SignalStrip() {
   const [doc, setDoc] = useState<SignalDoc | null>(null);
   const [bench, setBench] = useState<SummariesDoc | null>(null);
+  const [signalsLoaded, setSignalsLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     loadSignals().then((d) => {
-      if (!cancelled) setDoc(d);
+      if (!cancelled) {
+        setDoc(d);
+        setSignalsLoaded(true);
+      }
     });
     loadSummaries().then((d) => {
       if (!cancelled) setBench(d);
@@ -95,7 +101,19 @@ export default function SignalStrip() {
     return { px: sp.px, head: v.head, why: v.why };
   }, [bench]);
 
-  if (!doc?.signals) return null;
+  if (!doc?.signals) {
+    return (
+      <section className="panel signalbar">
+        <DataStateNotice
+          state={makeDataState({
+            status: signalsLoaded ? "error" : "pending",
+            label: signalsLoaded ? "시장 신호 오류" : "시장 신호 확인 중",
+            detail: signalsLoaded ? "유동성·뱅킹·센티먼트 신호를 불러오지 못했습니다." : "시장 신호와 벤치마크 요약을 읽고 있습니다.",
+          })}
+        />
+      </section>
+    );
+  }
 
   return (
     <section className="panel signalbar">

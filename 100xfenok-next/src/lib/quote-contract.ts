@@ -1,3 +1,5 @@
+import type { DataReadinessStatus } from "@/lib/data-state";
+
 export const QUOTE_CONTRACT_VERSION = "quote.v1" as const;
 export const QUOTE_ENDPOINT_PATTERN = "/api/ticker/{symbol}/" as const;
 export const QUOTE_CACHE_CONTROL = "public, s-maxage=15, stale-while-revalidate=45" as const;
@@ -7,9 +9,11 @@ export const QUOTE_SYMBOL_PATTERN = /^[A-Z0-9^._-]{1,20}$/;
 
 export type QuoteMarketState = "PRE" | "REGULAR" | "POST" | "CLOSED" | "UNKNOWN";
 export type QuoteProviderSource = "yahoo" | "worker";
+export type QuoteAvailabilityStatus = "live" | "delayed" | "unavailable";
 
 export type QuoteDataState = {
-  status: "partial" | "stale" | "unavailable" | "error";
+  status: DataReadinessStatus;
+  quoteStatus: QuoteAvailabilityStatus;
   label: string;
   detail: string;
   asOf: string | null;
@@ -45,6 +49,7 @@ export type QuoteErrorPayload = {
 export function quoteErrorState(detail: string): QuoteDataState {
   return {
     status: "error",
+    quoteStatus: "unavailable",
     label: "확인 불가",
     detail,
     asOf: null,

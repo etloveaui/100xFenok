@@ -109,3 +109,9 @@ The public forbidden-term grep now leaves only internal identifiers such as
   it uses plain product copy for the enriched sector view.
 - `npm run qa:copy` now blocks coverage-card imports and raw coverage counter
   identifiers on public routes.
+- Product readiness copy should use the shared DataState notice/badge language:
+  compact 기준일, 확인 중, 부분 준비, 확인 불가, 오류. Coverage percentages,
+  raw route counts, candidate counts, and Data Lab audit links remain admin-only.
+- DataState `label`, `detail`, `reason`, and tooltip text are public copy on
+  product routes. They must explain user impact, not expose provider names,
+  source paths, raw JSON counts, coverage percentages, or Data Lab diagnostics.

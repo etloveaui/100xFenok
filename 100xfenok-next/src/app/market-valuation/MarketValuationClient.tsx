@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { DataStateBadge } from "@/components/DataStateNotice";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
@@ -23,7 +24,8 @@ import {
   YardeniOverlayChartPanel,
 } from "@/lib/market-valuation/charts/ledgerChartPanels";
 import { formatPercent } from "@/lib/dashboard/formatters";
-import { formatAsOf, isStaleAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
+import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
+import { freshnessDataState } from "@/lib/data-state";
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -77,23 +79,7 @@ function EmptyPanel({ label }: { label: string }) {
 }
 
 function AsOfBadge({ value, prefix = "기준" }: { value: string | null | undefined; prefix?: string }) {
-  const label = formatAsOf(value);
-  if (!label) return null;
-  const stale = isStaleAsOf(value);
-  return (
-    <span
-      className={cx(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums",
-        stale
-          ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
-          : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
-      )}
-      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
-    >
-      {prefix} {label}
-      {stale ? " · 오래됨" : ""}
-    </span>
-  );
+  return <DataStateBadge state={freshnessDataState({ asOf: value })} prefix={prefix} />;
 }
 
 function PanelShell({

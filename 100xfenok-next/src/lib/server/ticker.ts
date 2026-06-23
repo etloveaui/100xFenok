@@ -5,6 +5,7 @@ import {
   normalizeQuoteSymbol,
   type QuoteMarketState,
   type QuotePayload,
+  type QuoteProviderSource,
 } from "@/lib/quote-contract";
 import { addMinutesIso } from "@/lib/data-state";
 
@@ -167,15 +168,18 @@ function pickPrice(
   return regular;
 }
 
-function quoteState(fetchedAt: string): Pick<TickerQuote, "lastUpdated" | "staleAfter" | "state"> {
+function quoteState(fetchedAt: string, source: QuoteProviderSource): Pick<TickerQuote, "lastUpdated" | "staleAfter" | "state"> {
   const staleAfter = addMinutesIso(fetchedAt, QUOTE_STALE_AFTER_MINUTES);
   return {
     lastUpdated: fetchedAt,
     staleAfter,
     state: {
       status: "partial",
-      label: "전환 중",
-      detail: "시세는 즉시 조회 경로로 확인합니다. 캐시 스냅샷 전환 전까지 갱신 시각을 함께 표시합니다.",
+      quoteStatus: "delayed",
+      label: "시세 연결됨",
+      detail: source === "yahoo"
+        ? "지연 가능 시세입니다. 기준 시각을 함께 확인하세요."
+        : "보조 시세 경로에서 받은 값입니다. 기준 시각을 함께 확인하세요.",
       asOf: fetchedAt,
       staleAfter,
     },
@@ -246,7 +250,7 @@ async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
     marketState,
     source: "yahoo",
     fetchedAt,
-    ...quoteState(fetchedAt),
+    ...quoteState(fetchedAt, "yahoo"),
   };
 }
 
@@ -295,7 +299,7 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
     marketState,
     source: "worker",
     fetchedAt,
-    ...quoteState(fetchedAt),
+    ...quoteState(fetchedAt, "worker"),
   };
 }
 

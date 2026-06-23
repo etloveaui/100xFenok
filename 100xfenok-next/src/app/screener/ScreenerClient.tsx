@@ -2,11 +2,13 @@
 
 import { Fragment, useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandClass, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
+import { makeDataState } from "@/lib/data-state";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
@@ -903,6 +905,48 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
+  const screenerDataState = useMemo(() => {
+    if (failed) {
+      return makeDataState({
+        status: "error",
+        label: "종목 데이터 오류",
+        detail: "스크리너 데이터를 불러오지 못했습니다. 조건을 바꾸기 전에 데이터 연결 상태를 먼저 확인해야 합니다.",
+        asOf: sourceDate,
+      });
+    }
+    if (!dataReady) {
+      return makeDataState({
+        status: "pending",
+        label: "종목 데이터 확인 중",
+        detail: "글로벌 종목 데이터와 보강 지표를 읽고 있습니다.",
+        asOf: sourceDate,
+      });
+    }
+    if (stocks.length === 0) {
+      return makeDataState({
+        status: "unavailable",
+        label: "표시할 종목 없음",
+        detail: "데이터 파일은 열렸지만 표시 가능한 종목이 없습니다.",
+        asOf: sourceDate,
+      });
+    }
+    const missingPrice = stocks.filter((stock) => stock.price === null).length;
+    if (missingPrice > 0) {
+      return makeDataState({
+        status: "partial",
+        label: "일부 가격 없음",
+        detail: `${missingPrice.toLocaleString("ko-KR")}개 종목은 가격 없이 표시됩니다. 정렬과 필터는 확인된 값 기준입니다.`,
+        asOf: sourceDate,
+      });
+    }
+    return makeDataState({
+      status: "ready",
+      label: "종목 데이터 준비됨",
+      detail: `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시할 수 있습니다.`,
+      asOf: sourceDate,
+    });
+  }, [dataReady, failed, sourceDate, stocks]);
+
   function toggleSort(key: ScreenerSortKey) {
     if (key === sortKey) {
       setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
@@ -944,12 +988,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
           </p>
         </div>
         <div className="data-shell-head-actions">
-          {sourceDate ? (
-            <span className="data-shell-pill ok">
-              <span />
-              {sourceDate}
-            </span>
-          ) : null}
+          <DataStateBadge state={screenerDataState} />
           <TransitionLink href="/sectors" className="data-shell-link">
             섹터
           </TransitionLink>
@@ -957,10 +996,8 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         </div>
       </section>
 
-      {failed ? (
-        <div role="alert" className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
-          종목 데이터를 불러오지 못했습니다.
-        </div>
+      {screenerDataState.status !== "ready" ? (
+        <DataStateNotice state={screenerDataState} />
       ) : null}
 
       {/* Filter bar */}

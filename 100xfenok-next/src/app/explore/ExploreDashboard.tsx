@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice from "@/components/DataStateNotice";
 import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import { formatSignedPercent } from "@/lib/format";
+import { makeDataState } from "@/lib/data-state";
 
 /**
  * 섹터 흐름 패널 — 11 sectors as sorted diverging-bar rows (shell v3).
@@ -58,8 +60,14 @@ export default function ExploreDashboard() {
           <h2>섹터 흐름</h2>
           <span className="desc">최근 1개월 · 수익률순</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">
-          {loaded ? "섹터 흐름 데이터를 불러오지 못했습니다." : "섹터 흐름 데이터 확인 중"}
+        <div className="panel-b">
+          <DataStateNotice
+            state={makeDataState({
+              status: loaded ? "error" : "pending",
+              label: loaded ? "섹터 흐름 오류" : "섹터 흐름 확인 중",
+              detail: loaded ? "섹터별 1개월 흐름 데이터를 불러오지 못했습니다." : "섹터별 수익률 데이터를 읽고 있습니다.",
+            })}
+          />
         </div>
       </section>
     );
@@ -79,7 +87,15 @@ export default function ExploreDashboard() {
           <h2>섹터 흐름</h2>
           <span className="desc">최근 1개월 · 수익률순</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">표시할 섹터 흐름 데이터가 없습니다.</div>
+        <div className="panel-b">
+          <DataStateNotice
+            state={makeDataState({
+              status: "unavailable",
+              label: "표시할 섹터 없음",
+              detail: "데이터 파일은 열렸지만 1개월 수익률을 계산할 섹터가 없습니다.",
+            })}
+          />
+        </div>
       </section>
     );
   }

@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
-import { makeDataState, type DataState } from "@/lib/data-state";
+import { makeDataState } from "@/lib/data-state";
 import {
   usePortfolios,
   savePortfolios,
@@ -319,7 +320,7 @@ export default function PortfolioClient() {
             <HoldingsTable rows={buildSampleRows()} />
           </div>
           <div className="mt-3">
-            <PortfolioDataStateNotice
+            <DataStateNotice
               state={makeDataState({
                 status: "unavailable",
                 label: "샘플 가격 없음",
@@ -383,7 +384,7 @@ export default function PortfolioClient() {
         </div>
       )}
 
-      <PortfolioDataStateNotice state={priceState} />
+      <DataStateNotice state={priceState} />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -676,19 +677,4 @@ function buildSampleRows(): HoldingRow[] {
       weight: null,
     };
   });
-}
-
-function PortfolioDataStateNotice({ state }: { state: DataState }) {
-  const tone =
-    state.status === "ready"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-      : state.status === "error"
-        ? "border-rose-200 bg-rose-50 text-rose-800"
-        : "border-amber-200 bg-amber-50 text-amber-800";
-  return (
-    <div className={`rounded-[1.25rem] border px-4 py-3 text-xs font-semibold leading-5 ${tone}`}>
-      <span className="font-black">{state.label}</span>
-      <span className="ml-2">{state.detail}</span>
-    </div>
-  );
 }

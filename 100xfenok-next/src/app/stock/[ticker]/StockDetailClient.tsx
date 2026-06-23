@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { bandPct, bandClass } from "@/lib/screener/bands";
@@ -25,6 +26,7 @@ import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
 import { formatSignedPercent } from "@/lib/format";
+import { makeDataState, type DataReadinessStatus } from "@/lib/data-state";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import { edgarFilingsForTicker, loadEdgarKoreanSummariesForTicker } from "@/lib/edgarKoreanSummaries";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -788,10 +790,10 @@ function connectionStateLabel(state: DataConnectionState): string {
   return "없음";
 }
 
-function connectionStateClass(state: DataConnectionState): string {
-  if (state === "connected") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (state === "loading") return "border-slate-200 bg-slate-50 text-slate-500";
-  return "border-amber-200 bg-amber-50 text-amber-700";
+function connectionDataStatus(state: DataConnectionState): DataReadinessStatus {
+  if (state === "connected") return "ready";
+  if (state === "loading") return "pending";
+  return "unavailable";
 }
 
 function connectionSummary(rows: DataConnectionRow[], assetType: "stock" | "etf"): string {
@@ -902,9 +904,15 @@ function DataConnectionCard({
               <p className="truncate text-[10px] font-black text-slate-700">{row.label}</p>
               <p className="truncate text-[9px] font-semibold text-slate-500">{row.detail}</p>
             </div>
-            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black ${connectionStateClass(row.state)}`}>
-              {connectionStateLabel(row.state)}
-            </span>
+            <DataStateBadge
+              state={makeDataState({
+                status: connectionDataStatus(row.state),
+                label: connectionStateLabel(row.state),
+                detail: row.detail,
+              })}
+              prefix=""
+              className="shrink-0 px-2 py-0.5 text-[9px]"
+            />
           </div>
         ))}
       </div>
@@ -1228,6 +1236,24 @@ export default function StockDetailClient({
   const marketCapLabel = yfMarketCap !== null ? "시가총액" : "시가총액(USD)";
   const returnText = isFiniteNumber(row?.return12m) ? fmtPct(row.return12m) : null;
   const returnUp = (row?.return12m ?? 0) >= 0;
+  const priceDataState = makeDataState({
+    status: marketFactsLoading
+      ? "pending"
+      : displayPrice !== null && marketFacts
+        ? "ready"
+        : displayPrice !== null
+          ? "partial"
+          : "unavailable",
+    label: marketFactsLoading
+      ? "가격 확인 중"
+      : displayPrice !== null
+        ? "가격 표시됨"
+        : "가격 없음",
+    detail: displayPrice !== null
+      ? "가격은 지연 가능 시세입니다."
+      : "표시할 가격 데이터를 찾지 못했습니다.",
+    asOf: typeof marketFacts?.generated_at === "string" ? marketFacts.generated_at : null,
+  });
 
   function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
@@ -1416,7 +1442,7 @@ export default function StockDetailClient({
           <div className="stock-price">
             <span className="big num">{priceText}</span>
             {returnText ? <span className={`stock-chip num ${returnUp ? "up" : "down"}`}>12M {returnText}</span> : null}
-            <span className="delay">데이터 지연 가능</span>
+            <DataStateBadge state={priceDataState} />
           </div>
         </div>
         <MarketQuickLinks className="stock-market-links" />

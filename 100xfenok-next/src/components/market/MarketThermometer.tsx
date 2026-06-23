@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import DataStateNotice from "@/components/DataStateNotice";
 import { formatSignedPercent } from "@/lib/format";
+import { makeDataState } from "@/lib/data-state";
 
 type Period = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y";
 
@@ -164,8 +166,14 @@ export default function MarketThermometer() {
           <h2>시장 체온계</h2>
           <span className="desc">이익 × 멀티플 분해</span>
         </div>
-        <div className="panel-b text-sm font-semibold text-slate-500">
-          {loaded ? "시장 체온계 데이터를 불러오지 못했습니다." : "시장 체온계 데이터 확인 중"}
+        <div className="panel-b">
+          <DataStateNotice
+            state={makeDataState({
+              status: loaded ? "error" : "pending",
+              label: loaded ? "시장 체온계 오류" : "시장 체온계 확인 중",
+              detail: loaded ? "이익과 멀티플 분해 데이터를 불러오지 못했습니다." : "벤치마크 수익률과 이익 데이터를 읽고 있습니다.",
+            })}
+          />
         </div>
       </section>
     );

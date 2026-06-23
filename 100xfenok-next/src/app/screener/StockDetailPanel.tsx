@@ -2,10 +2,12 @@
 
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice from "@/components/DataStateNotice";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
+import { makeDataState } from "@/lib/data-state";
 
 export type MaybeNumber = number | null | undefined;
 export type NumberSeries = MaybeNumber[];
@@ -895,7 +897,18 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       </div>
     );
   }
-  if (!data) return null;
+  if (!data) {
+    return (
+      <DataStateNotice
+        state={makeDataState({
+          status: "unavailable",
+          label: "통합 데이터 없음",
+          detail: "이 종목의 가격·분류·보조 지표를 아직 찾지 못했습니다.",
+        })}
+        className="mt-4"
+      />
+    );
+  }
 
   const facts = data.facts ?? {};
   const currency = data.identity?.currency ?? "USD";
@@ -1941,17 +1954,27 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
 
   if (loading) {
     return (
-      <div role="status" aria-busy="true" className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-6 text-sm text-[var(--c-ink-3)]">
-        상세 데이터 로딩 중…
-      </div>
+      <DataStateNotice
+        state={makeDataState({
+          status: "pending",
+          label: "상세 데이터 확인 중",
+          detail: "종목 상세 지표를 읽고 있습니다.",
+        })}
+        className="col-span-full border-t border-[var(--c-line-2)]"
+      />
     );
   }
 
   if (!detail) {
     return (
-      <div role="alert" className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-6 text-sm text-[var(--c-ink-3)]">
-        상세 데이터를 불러올 수 없습니다.
-      </div>
+      <DataStateNotice
+        state={makeDataState({
+          status: "unavailable",
+          label: "상세 데이터 없음",
+          detail: "이 종목의 상세 재무·추정치 데이터를 아직 찾지 못했습니다.",
+        })}
+        className="col-span-full border-t border-[var(--c-line-2)]"
+      />
     );
   }
 

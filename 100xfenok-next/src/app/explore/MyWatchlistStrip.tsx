@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice from "@/components/DataStateNotice";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
+import { makeDataState } from "@/lib/data-state";
 import { useWatchlist } from "@/lib/watchlist";
 
 interface AnalyzerLite {
@@ -39,11 +41,17 @@ function loadRows(): Promise<Map<string, AnalyzerLite> | null> {
 export default function MyWatchlistStrip() {
   const tickers = useWatchlist();
   const [rows, setRows] = useState<Map<string, AnalyzerLite> | null>(null);
+  const [rowsLoaded, setRowsLoaded] = useState(false);
 
   useEffect(() => {
     if (tickers.length === 0) return;
     let cancelled = false;
-    loadRows().then((m) => { if (!cancelled) setRows(m); });
+    loadRows().then((m) => {
+      if (!cancelled) {
+        setRows(m);
+        setRowsLoaded(true);
+      }
+    });
     return () => { cancelled = true; };
   }, [tickers.length]);
 
@@ -60,6 +68,19 @@ export default function MyWatchlistStrip() {
     );
   }
 
+  const missingCount = rows ? tickers.filter((ticker) => !rows.has(ticker)).length : 0;
+  const watchlistState = makeDataState({
+    status: !rowsLoaded ? "pending" : rows ? (missingCount > 0 ? "partial" : "ready") : "error",
+    label: !rowsLoaded ? "내 종목 확인 중" : rows ? (missingCount > 0 ? "일부 종목 정보 없음" : "내 종목 준비됨") : "내 종목 오류",
+    detail: !rowsLoaded
+      ? "관심 종목의 이름과 수익률을 읽고 있습니다."
+      : rows
+        ? missingCount > 0
+          ? `${missingCount.toLocaleString("ko-KR")}개 관심 종목은 기본 정보만 표시됩니다.`
+          : "관심 종목의 이름과 수익률을 표시할 수 있습니다."
+        : "관심 종목 정보를 불러오지 못했습니다.",
+  });
+
   return (
     <section className="panel wl">
       <div className="panel-h">
@@ -67,6 +88,11 @@ export default function MyWatchlistStrip() {
         <span className="desc num">({tickers.length})</span>
         <TransitionLink href="/portfolio" className="act">포트폴리오 →</TransitionLink>
       </div>
+      {watchlistState.status !== "ready" ? (
+        <div className="panel-b">
+          <DataStateNotice state={watchlistState} />
+        </div>
+      ) : null}
       <div className="rows">
         {tickers.map((t) => {
           const row = rows?.get(t) ?? null;

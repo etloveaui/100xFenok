@@ -302,8 +302,26 @@ Implemented product state primitives:
 
 - `100xfenok-next/src/lib/data-state.ts` defines the shared screen state union:
   `ready`, `partial`, `stale`, `pending`, `unavailable`, `error`.
-- `100xfenok-next/src/lib/quote-contract.ts` adds `lastUpdated`,
-  `staleAfter`, and `state` to quote success/error payloads.
+- `100xfenok-next/src/components/DataStateNotice.tsx` is the public render
+  primitive for compact readiness/freshness copy; diagnostic variants stay out
+  of public routes.
+  `label`, `detail`, `reason`, and hover titles are user-facing copy and must
+  stay free of source names, raw route counts, coverage percentages, and audit
+  links.
+- `100xfenok-next/src/lib/quote-contract.ts` carries `state.quoteStatus`,
+  `asOf`, and `staleAfter` so quote consumers can distinguish delayed and
+  unavailable values without adding a snapshot pipeline.
+- `portfolio`, `screener`, screener detail, stock detail connection/price, and
+  all mounted `/explore` cards consume the shared state primitive for
+  unavailable, pending, partial, and error states instead of silent blank
+  panels.
+- Stock detail keeps its small local `DataConnectionState` adapter as a
+  compatibility shim in this slice; the rendered status is mapped to
+  `DataReadinessStatus`. A later cleanup may remove the adapter once the tab
+  panels are fully migrated.
+- `/market-valuation` and `/sectors` are render-layer retrofits only: their
+  existing freshness/source hooks remain intact while their public badges use
+  the same state primitive.
 - `100xfenok-next/src/app/portfolio/PortfolioClient.tsx` no longer fabricates
   sample prices. Missing quotes render as unavailable/partial and are excluded
   from valuation totals instead of using hard-coded values.
@@ -319,6 +337,7 @@ Implemented product state primitives:
 Verification gate:
 
 - `npm run qa:quote-contract`
+- `npm run qa:copy`
 - `npm run qa:market-audit`
 - scoped ESLint on touched Next files and QA scripts
 - `npx tsc --noEmit --pretty false`

@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { latestAsOf, makeDataState } from "@/lib/data-state";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
@@ -241,6 +243,27 @@ export default function StockWorkbenchCard() {
   const moversTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "movers", label: "급등락", count: moverCount };
   const returnsTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "returns", label: "수익/배당", count: returnsCount };
   const tabs: Array<TabItem<WorkbenchTab> & { count: number | null }> = [actionTabItem, revisionTabItem, moversTabItem, returnsTabItem];
+  const workbenchAsOf = latestAsOf([
+    data?.actions?.generated_at,
+    data?.revisions?.generated_at,
+    data?.discovery?.generated_at,
+    data?.discovery?.movers?.gainers?.date,
+    data?.discovery?.returns?.asOf,
+    data?.discovery?.dividends?.asOf,
+  ]);
+  const loadedSources = [data?.actions, data?.revisions, data?.discovery].filter(Boolean).length;
+  const workbenchState = makeDataState({
+    status: !loaded ? "pending" : loadedSources === 0 ? "error" : loadedSources < 3 ? "partial" : "ready",
+    label: !loaded ? "종목 후보 확인 중" : loadedSources === 0 ? "종목 후보 오류" : loadedSources < 3 ? "일부 후보만 표시" : "종목 후보 준비됨",
+    detail: !loaded
+      ? "이벤트·추정치·급등락·수익률 데이터를 읽고 있습니다."
+      : loadedSources === 0
+        ? "종목 후보 데이터를 불러오지 못했습니다."
+        : loadedSources < 3
+          ? "확인된 후보 데이터만 먼저 표시합니다."
+          : "이벤트, 추정치, 급등락, 수익률 데이터를 함께 표시합니다.",
+    asOf: workbenchAsOf,
+  });
 
   return (
     <section className="panel">
@@ -250,6 +273,11 @@ export default function StockWorkbenchCard() {
           {datePart(data?.actions?.generated_at ?? data?.revisions?.generated_at ?? data?.discovery?.generated_at)} · 이벤트/추정치/급등락
         </span>
       </div>
+      {workbenchState.status !== "ready" ? (
+        <div className="px-[var(--panel-pad)] pt-3">
+          <DataStateNotice state={workbenchState} />
+        </div>
+      ) : null}
 
       {!loaded ? (
         <div className="mv-row">

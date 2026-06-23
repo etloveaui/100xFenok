@@ -3,11 +3,13 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
+import { DataStateBadge } from "@/components/DataStateNotice";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { useSectorData } from "@/hooks/useSectorData";
 import { MOMENTUM_WINDOWS, type MomentumWindow, type SectorRow, type SectorSourceMeta, type SectorValuationBand } from "@/lib/sectors/types";
 import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
 import { useMarketChartTheme, type MarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
+import { makeDataState } from "@/lib/data-state";
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -381,6 +383,18 @@ export default function SectorsClient() {
   const isMuted = !(benchmarksReady || etfsReady || valuationReady);
   const benchmarksFailed = failedSources.includes("benchmarks");
   const dateLabel = updatedAt ? updatedAt.slice(0, 10) : null;
+  const sectorDataState = makeDataState({
+    status: dataReady
+      ? failedSources.length > 0 ? "partial" : "ready"
+      : failedSources.length > 0 ? "error" : "pending",
+    label: dataReady
+      ? failedSources.length > 0 ? "일부 섹터 데이터만 표시" : "섹터 데이터 준비됨"
+      : failedSources.length > 0 ? "섹터 데이터 오류" : "섹터 데이터 확인 중",
+    detail: dataReady
+      ? failedSources.length > 0 ? "확인된 섹터 지표를 먼저 표시합니다." : "섹터 흐름과 보조 지표를 표시할 수 있습니다."
+      : failedSources.length > 0 ? "섹터 데이터를 불러오지 못했습니다." : "섹터 흐름 데이터를 읽고 있습니다.",
+    asOf: dateLabel,
+  });
   const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
   const marketThreeMonth = benchmarkMomentum?.["3m"] ?? null;
   const beatCount =
@@ -417,17 +431,7 @@ export default function SectorsClient() {
           </p>
         </div>
         <div className="data-shell-head-actions">
-          {dateLabel ? (
-            <span
-              className={cx(
-                "data-shell-pill",
-                benchmarksFailed ? "warn" : "ok",
-              )}
-            >
-              <span />
-              {dateLabel}
-            </span>
-          ) : null}
+          <DataStateBadge state={sectorDataState} />
           <span className="hidden sm:inline-flex">
             <span className="data-shell-pill">
               <span />
