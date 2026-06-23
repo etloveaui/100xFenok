@@ -55,6 +55,14 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:edgar-summaries
 
+      - name: Build data entity graph
+        working-directory: 100xfenok-next
+        run: npm run build:data-entity-graph
+
+      - name: Verify data entity graph
+        working-directory: 100xfenok-next
+        run: npm run qa:data-graph
+
       - name: Build product surface coverage
         working-directory: 100xfenok-next
         run: npm run build:product-surface-coverage

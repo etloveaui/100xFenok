@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "sync-static": "npm run build:product-surface-coverage && cp -Rp ../100x ../alpha-scout ../tools ../ib ../admin ../data public/ 2>/dev/null || true; mkdir -p public/posts-raw public/data/metadata; rm -f public/data/fred-banking-*.json public/data/fdic-tier1.json; cp -Rp ../posts/. public/posts-raw/ 2>/dev/null || true; cp -Rp ../100x/data/* public/data/ 2>/dev/null || true; cp -Rp ../alpha-scout/data/metadata/* public/data/metadata/ 2>/dev/null || true; cp -p ../alpha-scout/data/reports-index.json public/data/reports-index.json 2>/dev/null || true; node sync-static-overrides.mjs; npm run build:static-route-manifest",
+    "sync-static": "npm run build:data-entity-graph && npm run build:product-surface-coverage && cp -Rp ../100x ../alpha-scout ../tools ../ib ../admin ../data public/ 2>/dev/null || true; mkdir -p public/posts-raw public/data/metadata; rm -f public/data/fred-banking-*.json public/data/fdic-tier1.json; cp -Rp ../posts/. public/posts-raw/ 2>/dev/null || true; cp -Rp ../100x/data/* public/data/ 2>/dev/null || true; cp -Rp ../alpha-scout/data/metadata/* public/data/metadata/ 2>/dev/null || true; cp -p ../alpha-scout/data/reports-index.json public/data/reports-index.json 2>/dev/null || true; node sync-static-overrides.mjs; npm run build:static-route-manifest",
+    "build:data-entity-graph": "node ../scripts/build-data-entity-graph.mjs",
     "build:product-surface-coverage": "node ../scripts/generate-product-surface-coverage.mjs",
     "build:version": "node scripts/generate-build-version.mjs",
     "build:static-route-manifest": "node scripts/generate-static-route-manifest.mjs",
@@ -45,6 +46,7 @@
     "qa:etf-classification": "tsx scripts/check-etf-classification-confidence.ts",
     "qa:surface-consumers": "node scripts/check-stockanalysis-surface-consumers.mjs",
     "qa:market-audit": "node scripts/check-stockanalysis-market-audit.mjs",
+    "qa:data-graph": "node scripts/check-data-graph.mjs",
     "qa:data-freshness": "node scripts/check-data-freshness.mjs",
     "qa:data-state": "tsx scripts/check-data-state-render-contract.tsx",
     "qa:market-charts": "node scripts/check-market-chart-regression.mjs",

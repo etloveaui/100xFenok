@@ -98,6 +98,23 @@
 
 ---
 
+## P2.5 — Data entity graph / service connection layer
+
+**Owner signal 2026-06-24**: freshness/accuracy is only the first layer. The next layer should connect datasets so stock, ETF, filing, 13F, sector, and market facts can be composed into services instead of staying as isolated A/B/C/D/E/F/G files.
+
+**Implemented first base**: `data/computed/entity_graph.json` + public mirror. The graph uses canonical keys (`ticker:<SYMBOL>`, `etf:<SYMBOL>`, `sector:<CANONICAL>`, `filing:<SYMBOL>`, `sec13f:<SYMBOL>`) and stores source links, true-ish `source_as_of`, confidence, routes, service flags, and relations. Current measured coverage: 1,066 stocks, 5,280 ETFs, 10 sectors, 7 ETF categories, 200 filing nodes, 1,051 13F nodes, 1,066/1,066 stock market-facts links, 200 filing links, 456 stock↔13F intersections, 5,208 ETF market-facts links.
+
+**Gate**: `qa:data-graph` verifies root/public mirror parity, required `source_as_of`, key shape, duplicate ids, minimum coverage, and broken relation targets. It intentionally caught ETF classification `underlying` values that were company names or prose, so the graph now preserves `underlying_raw` but only creates `tracks_underlying` when a real `ticker:*` node exists.
+
+**Next slices**:
+- G1 (landed) — build graph artifact + QA + deploy/data workflow hooks.
+- G2 — add alias resolution for ETF single-stock underlyings (`NVIDIA` → `NVDA`, `TESLA` → `TSLA`, etc.) with confidence/source and no silent ticker invention.
+- G3 — expose graph-backed compare/export affordances in screener/stock/ETF surfaces.
+- G4 — add workflow observability: source freshness warn/error thresholds, failed-source fallback UI, and notification hooks.
+- G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources.
+
+---
+
 ## Integrated priority (both surveys merged)
 
 | Rank | Slice | Why | Effort | Cost |

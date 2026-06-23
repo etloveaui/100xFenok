@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 27935,
-      "updatedAt": "2026-06-23T12:50:12.920Z"
+      "updatedAt": "2026-06-23T15:51:16.114Z"
     },
     {
       "name": "reports-index.json",
@@ -114,6 +114,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   ],
   "computed": [
     {
+      "name": "entity_graph.json",
+      "sizeBytes": 6466799,
+      "updatedAt": "2026-06-23T16:01:33.882Z"
+    },
+    {
       "name": "market_data_audit.json",
       "sizeBytes": 8547,
       "updatedAt": "2026-06-21T03:00:10.295Z"
@@ -126,7 +131,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "market_structure_index.json",
       "sizeBytes": 42440,
-      "updatedAt": "2026-06-23T12:50:12.920Z"
+      "updatedAt": "2026-06-23T15:51:16.114Z"
     },
     {
       "name": "signals.json",

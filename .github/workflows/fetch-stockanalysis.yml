@@ -193,7 +193,9 @@ jobs:
         run: python3 scripts/update-manifest.py
 
       - name: Build product surface coverage
-        run: npm --prefix 100xfenok-next run build:product-surface-coverage
+        run: |
+          npm --prefix 100xfenok-next run build:data-entity-graph
+          npm --prefix 100xfenok-next run build:product-surface-coverage
 
       - name: Update static route manifest
         run: npm --prefix 100xfenok-next run build:static-route-manifest
@@ -212,6 +214,7 @@ jobs:
           npm --prefix 100xfenok-next run qa:etf-universe
           npm --prefix 100xfenok-next run qa:surface-consumers
           npm --prefix 100xfenok-next run qa:market-audit
+          npm --prefix 100xfenok-next run qa:data-graph
           npm --prefix 100xfenok-next run qa:data-freshness
           ARGS=""
           if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
@@ -222,7 +225,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stockanalysis data/yf/finance data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/admin/product-surface-coverage.json data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/yf/finance 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/admin/product-surface-coverage.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
+          git add data/stockanalysis data/yf/finance data/computed/market_facts data/computed/market_source_parity.json data/computed/market_data_audit.json data/computed/entity_graph.json data/admin/product-surface-coverage.json data/manifest.json 100xfenok-next/public/data/stockanalysis 100xfenok-next/public/data/yf/finance 100xfenok-next/public/data/computed/market_facts 100xfenok-next/public/data/computed/market_source_parity.json 100xfenok-next/public/data/computed/market_data_audit.json 100xfenok-next/public/data/computed/entity_graph.json 100xfenok-next/public/data/admin/product-surface-coverage.json 100xfenok-next/public/data/manifest.json 100xfenok-next/src/generated/static-route-manifest.ts
           git diff --staged --quiet || git commit -m "chore: update stockanalysis data"
           for attempt in $(seq 1 5); do
             git pull --rebase origin main
