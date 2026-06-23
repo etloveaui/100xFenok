@@ -115,3 +115,15 @@ The public forbidden-term grep now leaves only internal identifiers such as
 - DataState `label`, `detail`, `reason`, and tooltip text are public copy on
   product routes. They must explain user impact, not expose provider names,
   source paths, raw JSON counts, coverage percentages, or Data Lab diagnostics.
+
+## 2026-06-23 P2 Closeout Tightening
+
+- Public Explore no longer links directly to `/admin/data-lab`; operator audit
+  entry points stay under Admin.
+- `npm run qa:copy` now blocks public `href="/admin/data-lab"` regressions while
+  still allowing Admin/Data Lab itself to link to audit pages.
+- Sector ETF status copy now says "상세 정보 대기/상세 확인 중" instead of
+  data-coverage wording. Stock detail financial summary labels use "데이터 범위"
+  instead of public data-coverage jargon.
+- Freshness dates, item counts, and compact unavailable/partial states are still
+  valid public copy. Do not remove them as if they were diagnostics.

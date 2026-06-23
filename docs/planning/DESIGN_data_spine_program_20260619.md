@@ -353,12 +353,28 @@ Verification gate:
 - `npm run qa:copy`
 - `npm run qa:market-audit`
 - `npm run qa:data-state`
-- `QA_BASE_URL=http://127.0.0.1:3105 QA_DEV=1 npm run qa:browser:p2`
-- `QA_BASE_URL=http://127.0.0.1:3105 QA_DEV=1 npm run qa:a11y:p2`
+- Dev route gate: run Next dev on a free port, for example
+  `npx next dev --webpack -p 3107`, then
+  `QA_BASE_URL=http://127.0.0.1:3107 QA_DEV=1 npm run qa:browser:p2`.
+- Local production route gate: `npm run start:qa -- -p 3106`, then
+  `QA_BASE_URL=http://127.0.0.1:3106 npm run qa:browser:p2` and
+  `QA_BASE_URL=http://127.0.0.1:3106 npm run qa:a11y:p2`.
+  `start:qa` sets `FENOK_LOCAL_PROD_QA=1`; deployed Workers do not set this
+  env, so the local 5000-request rate-limit allowance remains QA-only.
 - `npm run build`
 - scoped ESLint on touched Next files and QA scripts
 - `npx tsc --noEmit --pretty false`
 - `git diff --check`
+
+Known non-blocking build warning class:
+
+- Turbopack can warn about broad dynamic filesystem reads in
+  `100xfenok-next/src/lib/server/data-loader.ts` and
+  `100xfenok-next/src/lib/server/public-assets.ts`. These readers intentionally
+  support local `public/data` files plus Cloudflare `ASSETS` fallback. Treat the
+  warning as a documented P3 infrastructure cleanup unless it becomes a build
+  failure or a trivial misconfigured glob is identified. Do not let warning
+  chasing block the P2 product-state closeout.
 
 ## Consumer Inventory
 

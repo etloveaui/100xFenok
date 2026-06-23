@@ -518,9 +518,6 @@ export default function MarketEventSurfacesCard() {
           ) : latestActions[0] ? (
             <span>최근 이벤트 {latestActions[0].symbol} · {shortName(latestActions[0].text)}</span>
           ) : null}
-          <TransitionLink href="/admin/data-lab" className="ml-2 font-black">
-            데이터 랩
-          </TransitionLink>
         </div>
       ) : null}
     </section>

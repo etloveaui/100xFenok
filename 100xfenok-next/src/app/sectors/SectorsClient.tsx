@@ -417,8 +417,8 @@ export default function SectorsClient() {
           : "섹터 데이터를 불러오는 중입니다.";
   const etfCoverageText =
     sourceMeta.etfMissing.length > 0
-      ? `ETF 상세 미수록: ${sourceMeta.etfMissing.join(", ")}`
-      : `${etfRows.length}개 섹터 ETF 상세 추적 중`;
+      ? `ETF 상세 정보 대기: ${sourceMeta.etfMissing.join(", ")}`
+      : `${etfRows.length}개 섹터 ETF 상세 확인 중`;
 
   return (
     <div className="data-shell-page">

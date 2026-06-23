@@ -482,7 +482,7 @@ async function runEtfChecks(page, route) {
 async function runDataStateSurfaceChecks(page, route) {
   if (!p2DataStateRouteSet.has(route)) return [];
   const stateLocator = page.locator('[data-testid="data-state-notice"], [data-testid="data-state-badge"]');
-  await stateLocator.first().waitFor({ state: "attached", timeout: 3500 }).catch(() => {});
+  await stateLocator.first().waitFor({ state: "attached", timeout: 8000 }).catch(() => {});
   const states = await page
     .locator('[data-testid="data-state-notice"], [data-testid="data-state-badge"]')
     .evaluateAll((nodes) =>

@@ -121,6 +121,13 @@ failure, no horizontal overflow, at least one public DataState marker per route,
 and zero serious/critical a11y findings. `/explore` uses a compact as-of badge;
 diagnostic coverage cards stay out of public routes.
 
+**P2 closeout tightening added 2026-06-23**: local production QA now uses
+`npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
+addition to the localhost check. Public copy guard now blocks accidental
+`/admin/data-lab` links from product routes and keeps coverage/diagnostic
+language in Admin. Turbopack dynamic `public/data` filesystem warnings are
+tracked as a P3 infrastructure cleanup unless they turn into a build failure.
+
 **Current remaining work after the autonomous wave**: (1) run the now-gated foreign-filer summary batch for the 20 uncovered top-200 names; (2) continue Data Spine cleanup on remaining non-quote admin/GAS HTML paths and feno-value direct provider paths, while the static stock-analyzer product consumers are now routed through `StaticStockAnalyzerDataProvider`; (3) translation generation and top-300/top-400 breadth only after the foreign-filer data run is measured clean; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---

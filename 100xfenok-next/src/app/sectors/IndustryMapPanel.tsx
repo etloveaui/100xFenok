@@ -398,17 +398,17 @@ export default function IndustryMapPanel() {
           </div>
           <div className="grid gap-2 md:grid-cols-3">
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-              <div className="text-[11px] font-black text-slate-400">가장 큰 산업</div>
+              <div className="text-[11px] font-black text-slate-600">가장 큰 산업</div>
               <div className="mt-1 truncate text-sm font-black text-slate-800">{topIndustry?.name ?? "-"}</div>
               <div className="mt-0.5 text-xs font-bold text-slate-500">{topIndustry?.marketCapRaw ?? "-"}</div>
             </div>
             <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
-              <div className="text-[11px] font-black text-emerald-600">1년 상승</div>
+              <div className="text-[11px] font-black text-emerald-800">1년 상승</div>
               <div className="mt-1 text-sm font-black text-emerald-800">{risingCount.toLocaleString("ko-KR")}개 산업</div>
               <div className="mt-0.5 text-xs font-bold text-emerald-700">전체 산업 기준</div>
             </div>
             <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
-              <div className="text-[11px] font-black text-sky-600">순이익률 플러스</div>
+              <div className="text-[11px] font-black text-sky-800">순이익률 플러스</div>
               <div className="mt-1 text-sm font-black text-sky-800">{profitableCount.toLocaleString("ko-KR")}개 산업</div>
               <div className="mt-0.5 text-xs font-bold text-sky-700">순이익률 0% 초과</div>
             </div>
@@ -541,7 +541,7 @@ export default function IndustryMapPanel() {
             {selectedIndustry ? (
               <div className="grid gap-2">
                 <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                  <div className="text-[11px] font-black text-slate-400">산업</div>
+                  <div className="text-[11px] font-black text-slate-600">산업</div>
                   <div className="mt-1 text-base font-black text-slate-900">{selectedIndustry.name}</div>
                   <div className="mt-1 text-xs font-bold text-slate-500">
                     {selectedIndustry.stocksRaw}개 종목 · 시총 {selectedIndustry.marketCapRaw} · PER {selectedIndustry.peRatioRaw}
@@ -549,19 +549,19 @@ export default function IndustryMapPanel() {
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <div className="text-[10px] font-black text-slate-400">1일</div>
+                    <div className="text-[10px] font-black text-slate-600">1일</div>
                     <div className={`mt-1 text-sm font-black ${positiveNegativeClass(selectedIndustry.oneDayChange) === "down" ? "text-rose-700" : "text-emerald-700"}`}>
                       {selectedIndustry.oneDayRaw}
                     </div>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <div className="text-[10px] font-black text-slate-400">1년</div>
+                    <div className="text-[10px] font-black text-slate-600">1년</div>
                     <div className={`mt-1 text-sm font-black ${positiveNegativeClass(selectedIndustry.oneYearChange) === "down" ? "text-rose-700" : "text-emerald-700"}`}>
                       {selectedIndustry.oneYearRaw}
                     </div>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <div className="text-[10px] font-black text-slate-400">순이익률</div>
+                    <div className="text-[10px] font-black text-slate-600">순이익률</div>
                     <div className={`mt-1 text-sm font-black ${positiveNegativeClass(selectedIndustry.profitMargin) === "down" ? "text-rose-700" : "text-emerald-700"}`}>
                       {selectedIndustry.profitMarginRaw}
                     </div>

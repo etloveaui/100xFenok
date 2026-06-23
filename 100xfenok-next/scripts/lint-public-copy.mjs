@@ -24,6 +24,7 @@ const BLOCKED_COPY = [
   { pattern: "데이터 준비도", message: "Public pages should show compact trust/freshness copy; detailed readiness belongs in Admin/Data Lab.", publicOnly: true },
   { pattern: "루트 JSON", message: "Raw JSON/file diagnostics belong in Admin/Data Lab.", publicOnly: true },
   { pattern: "복수 후보", message: "Source/parity diagnostics belong in Admin/Data Lab.", publicOnly: true },
+  { pattern: 'href="/admin/data-lab"', message: "Admin/Data Lab links should not be mounted on public product pages.", publicOnly: true },
   { pattern: "ProductSurfaceCoverageCard", message: "Coverage cards are Admin-only and must not be imported by public routes.", publicOnly: true },
   { pattern: "DataCoverageCard", message: "Coverage cards are Admin-only and must not be imported by public routes.", publicOnly: true },
   { pattern: "SurfaceCatalogCard", message: "Surface/catalog diagnostics are Admin-only.", publicOnly: true },

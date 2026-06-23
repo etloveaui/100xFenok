@@ -103,9 +103,16 @@ function isLocalHostRequest(request: NextRequest): boolean {
   );
 }
 
+function isLocalQaRateLimitAllowanceEnabled(): boolean {
+  return process.env.FENOK_LOCAL_PROD_QA === "1";
+}
+
 function getFallbackLimit(request: NextRequest, fallbackLimit: number): number {
-  // Local prod QA can exercise dozens of routes in one minute; deployed Workers still use CF bindings.
-  return isLocalHostRequest(request) ? Math.max(fallbackLimit, 5000) : fallbackLimit;
+  // Local production QA can exercise dozens of routes in one minute; deployed Workers do not set this env.
+  if (isLocalHostRequest(request) && isLocalQaRateLimitAllowanceEnabled()) {
+    return Math.max(fallbackLimit, 5000);
+  }
+  return fallbackLimit;
 }
 
 function isAdminPath(pathname: string): boolean {

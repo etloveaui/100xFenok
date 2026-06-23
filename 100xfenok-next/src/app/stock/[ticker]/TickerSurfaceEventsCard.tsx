@@ -177,7 +177,7 @@ export default function TickerSurfaceEventsCard({
                     <span className="min-w-0 truncate text-[11px] font-black text-slate-800">
                       {pickName(row)}
                     </span>
-                    <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.06em] text-slate-500">
+                    <span className="shrink-0 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.06em] text-slate-700">
                       {surface.label}
                     </span>
                   </div>

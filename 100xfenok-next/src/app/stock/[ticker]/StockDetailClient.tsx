@@ -1853,7 +1853,7 @@ function FinancialCandidatePanel({
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         {summaryGroups.map((group) => (
           <div key={group.label} className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{group.label} 커버리지</p>
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{group.label} 데이터 범위</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {Object.entries(group.data).map(([key, info]) => (
                 <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
