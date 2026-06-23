@@ -320,6 +320,46 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(second["generated_at"], "2026-06-19T01:00:00Z")
         self.assertEqual(third["generated_at"], "2026-06-19T03:00:00Z")
 
+    def test_market_facts_contract_accepts_valid_generated_payload(self) -> None:
+        payload = self.mod.build_one(
+            "VALID",
+            {
+                "fetched_at": "2026-06-19T00:00:00Z",
+                "data": {
+                    "info": {
+                        "quoteType": "EQUITY",
+                        "shortName": "Valid Inc.",
+                        "currentPrice": 100.0,
+                    }
+                },
+            },
+            None,
+            None,
+        )
+
+        self.mod.assert_market_facts_payload(payload, ticker="VALID")
+
+    def test_market_facts_contract_rejects_malformed_fact(self) -> None:
+        payload = self.mod.build_one(
+            "BROKEN",
+            {
+                "fetched_at": "2026-06-19T00:00:00Z",
+                "data": {
+                    "info": {
+                        "quoteType": "EQUITY",
+                        "shortName": "Broken Inc.",
+                        "currentPrice": 100.0,
+                    }
+                },
+            },
+            None,
+            None,
+        )
+        del payload["facts"]["price"]["source"]
+
+        with self.assertRaises(self.mod.MarketFactsContractError):
+            self.mod.assert_market_facts_payload(payload, ticker="BROKEN")
+
 
 if __name__ == "__main__":
     unittest.main()

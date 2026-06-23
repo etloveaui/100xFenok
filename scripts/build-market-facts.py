@@ -25,6 +25,27 @@ DATA = ROOT / "data"
 OUT = DATA / "computed" / "market_facts"
 PUBLIC_OUT = ROOT / "100xfenok-next" / "public" / "data" / "computed" / "market_facts"
 SCHEMA_VERSION = "market-facts/v1"
+MARKET_FACT_FIELDS = {
+    "price",
+    "previous_close",
+    "change",
+    "change_pct",
+    "market_cap",
+    "total_assets",
+    "trailing_pe",
+    "forward_pe",
+    "dividend_yield",
+    "beta",
+    "expense_ratio",
+    "return_1m",
+    "return_3m",
+    "return_ytd",
+    "return_1y",
+    "return_3y_avg",
+    "return_5y_avg",
+    "return_10y_avg",
+    "return_max_avg",
+}
 FIELD_SOURCE_POLICY = {
     "price": ["yf", "yf.fast_info", "stockanalysis.quote", "yf.stockanalysis_fallback.quote", "slickcharts"],
     "previous_close": ["yf", "stockanalysis.quote", "yf.stockanalysis_fallback.quote"],
@@ -100,6 +121,54 @@ def load_json(path: Path):
 def write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+class MarketFactsContractError(ValueError):
+    """Raised before generated market_facts files are written."""
+
+
+def validate_market_facts_payload(payload: dict | None, *, ticker: str | None = None) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["payload must be a dict"]
+    if payload.get("schema_version") != SCHEMA_VERSION:
+        errors.append(f"schema_version must be {SCHEMA_VERSION!r}")
+    payload_ticker = payload.get("ticker")
+    if ticker is not None and payload_ticker != ticker.upper():
+        errors.append(f"ticker must be {ticker.upper()!r}, got {payload_ticker!r}")
+    elif not isinstance(payload_ticker, str) or not payload_ticker:
+        errors.append("ticker must be a non-empty string")
+    if payload.get("asset_type") not in {"stock", "etf"}:
+        errors.append("asset_type must be 'stock' or 'etf'")
+    if not payload.get("generated_at"):
+        errors.append("generated_at is required")
+    facts = payload.get("facts")
+    if not isinstance(facts, dict):
+        errors.append("facts must be a dict")
+        return errors
+    for field, fact_payload in facts.items():
+        if field not in MARKET_FACT_FIELDS:
+            continue
+        if not isinstance(fact_payload, dict):
+            errors.append(f"facts.{field} must be an object")
+            continue
+        if "value" not in fact_payload:
+            errors.append(f"facts.{field}.value key is required")
+        if "source" not in fact_payload:
+            errors.append(f"facts.{field}.source key is required")
+        candidates = fact_payload.get("candidates")
+        if candidates is not None and not isinstance(candidates, list):
+            errors.append(f"facts.{field}.candidates must be a list when present")
+    if not isinstance(payload.get("source_files"), dict):
+        errors.append("source_files must be a dict")
+    return errors
+
+
+def assert_market_facts_payload(payload: dict | None, *, ticker: str | None = None) -> None:
+    errors = validate_market_facts_payload(payload, ticker=ticker)
+    if errors:
+        label = ticker or (payload or {}).get("ticker") or "<unknown>"
+        raise MarketFactsContractError(f"{label}: {'; '.join(errors)}")
 
 
 def stable_payload_for_compare(payload: dict) -> str:
@@ -704,6 +773,7 @@ def main() -> None:
             payload["source_files"]["stockanalysis_financials"] = f"stockanalysis/financials/{ticker}.json"
         rel = Path("tickers") / f"{ticker}.json"
         payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
+        assert_market_facts_payload(payload, ticker=ticker)
         write_json(OUT / rel, payload)
         write_json(PUBLIC_OUT / rel, payload)
         rows.append({
