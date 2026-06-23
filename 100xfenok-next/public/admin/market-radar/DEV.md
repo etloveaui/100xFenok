@@ -2,6 +2,9 @@
 
 > Market Radar 차트 개발 메모
 > 생성일: 2025-12-31
+> VIX update note: `scripts/vix.gs` is deprecated as of 2026-06-22. Runtime VIX
+> updates are owned by `../../scripts/fetch-sentiment.mjs` via
+> `../../.github/workflows/fetch-sentiment.yml`.
 
 ---
 
@@ -101,7 +104,7 @@ admin/market-radar/
 ### Sentiment
 | 파일 | 레코드 | 기간 | 소스 |
 |------|--------|------|------|
-| `data/sentiment/vix.json` | 9,091+ | 1990-01-02 ~ | FRED API |
+| `data/sentiment/vix.json` | 9,091+ | 1990-01-02 ~ | `fetch-sentiment.mjs` (Yahoo ^VIX) |
 | `data/sentiment/move.json` | 1,249+ | 2020-12-29 ~ | Yahoo Proxy |
 
 **필드**: `{ date, value }`
@@ -115,7 +118,7 @@ admin/market-radar/
 | 수집기 | 트리거 | 방식 |
 |--------|--------|------|
 | SP500/NASDAQ | 06:00, 09:00 | GOOGLEFINANCE → merge → GitHub |
-| VIX | 07:48 | FRED API → merge → GitHub |
+| VIX | GitHub Actions 평일 after-close | `fetch-sentiment.mjs` → merge → repo SSOT + Next public mirror |
 | MOVE | 07:29 | Yahoo Proxy → merge → GitHub |
 
 **⚠️ 필수**: 모든 수집기는 **merge 패턴** 사용 (기존 데이터 보호)

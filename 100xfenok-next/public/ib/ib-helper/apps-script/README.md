@@ -2,6 +2,21 @@
 
 Google Apps Script code for IB Helper automation.
 
+## GAS Resources
+
+| Resource | Value |
+|----------|-------|
+| Google Sheet | `IB Helper` |
+| Spreadsheet ID | `1shNx-xmzsJ7ninBly4HUjOjrMFqlvj-u3aBg6PmTGBE` |
+| Apps Script project | `Ib_helper` |
+| Script ID | `11e-BN2t7f30sspqGRuxiwbh0GTcVG92HtyKmeBszIq1MytkcO_z3VbuO` |
+| WebApp deployment ID | `AKfycbz2oCTIJyMFyAKUqoaZfcHMDz46rUEcSNFXnq2VDnXIKsdJcUl4oQQT6_FHRoeDyQAA` |
+| WebApp URL | `https://script.google.com/macros/s/AKfycbz2oCTIJyMFyAKUqoaZfcHMDz46rUEcSNFXnq2VDnXIKsdJcUl4oQQT6_FHRoeDyQAA/exec` |
+| Current deployment | v33 — `DS-P1-006 quote.v1 fallback 2026-06-22` |
+| Rollback version | v32 |
+
+> Script ID exposure is acceptable; code update/deploy still requires Google OAuth.
+
 ## Files
 
 | File | Version | Purpose |
