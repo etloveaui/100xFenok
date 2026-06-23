@@ -95,6 +95,25 @@ python3 scripts/audit-data-spine-inventory.py --json
 - `sec-13f`: 78 JSON files
 - `slickcharts`: 569 JSON files
 
+### 2026-06-23 F2 foreign-filer closeout
+
+The filings layer is no longer the immediate Data Spine blocker. The 20
+previously uncovered foreign filers now each have one evidence-grounded Korean
+summary artifact generated through the self/session path, with no external
+LLM/API quota used:
+
+- coverage: 202/202 by-ticker manifests have at least one ready summary
+- QA: `node scripts/check-edgar-summary-evidence.mjs` passed across 2,424
+  filings, 7,513 bullets, and 4,636 evidence rows
+- mirror: source and public by-ticker manifests are byte-identical for the 20
+  foreign-filer updates
+- exception: BNS best-per-ticker accession `0001193125-26-258920` lacked a
+  substantive evidence body and was logged as skipped; replacement accession
+  `0001193125-26-240503` is a valid BNS 6-K and is the ready summary row
+
+Next Data Spine work should therefore focus on the residual quote/treasury
+mirror productization path, not another feno-value adapter cleanup pass.
+
 Product judgment:
 
 - ETF coverage is product-ready: 5,347 candidates, 5,265 detail files, 98.47%
