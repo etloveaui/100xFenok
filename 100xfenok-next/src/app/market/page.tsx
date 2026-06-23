@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import {
   getSingleSearchParam,
@@ -18,6 +19,11 @@ type PageProps = {
 export default async function MarketPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
   const rawPath = getSingleSearchParam(params.path);
+
+  if (!rawPath) {
+    redirect('/market-valuation');
+  }
+
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['100x/'] });
   const iframeSrc = safePath ? `/${safePath}` : '/100x/100x-main.html';
   const hasSafePath = safePath ? await legacyPublicFileExists(safePath) : false;

@@ -223,7 +223,7 @@ const dockOptions = [
     id: "D1",
     title: "공개 페이지 전역 + 버그 수정만",
     summary: "지금 문제였던 trailing slash 버그만 잡고, 공개 페이지 전역에서 동일하게 보이게 합니다.",
-    routes: ["/", "/market/", "/posts/", "/sectors", "/ib", "/vr"],
+    routes: ["/", "/market-valuation", "/posts/", "/sectors", "/ib", "/vr"],
     recommended: true,
   },
   {

@@ -178,7 +178,7 @@ redirect/archive policy, and explicit approval.
 
 | Candidate | Current evidence | Product action |
 |---|---|---|
-| `/market` | `src/app/market/page.tsx` embeds `/100x/100x-main.html` through `RouteEmbedFrame` | keep as compatibility until `/market-valuation` + `/market/events` fully replace it |
+| `/market` | `src/app/market/page.tsx` previously embedded `/100x/100x-main.html` through `RouteEmbedFrame` by default | default `/market` now redirects to `/market-valuation`; `?path=100x/...` remains a compatibility bridge until legacy Market Wrap retirement is approved |
 | Static asset sync | `100xfenok-next/package.json` `sync-static` copies `../100x`, `../alpha-scout`, `../tools`, `../ib`, `../admin`, and `../data` into `public/` | audit which copied folders still have public owners before removing |
 | Legacy bridge | `src/lib/server/legacy-bridge.ts` sanitizes public file paths for embedded legacy pages | keep while wrapper pages exist; remove only with wrapper retirement |
 | GitHub Pages/static SPA traces | root `README.md` and `_legacy/onesignal` document old static hosting/notification paths | archive documentation after live Cloudflare route policy is final |
