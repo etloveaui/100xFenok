@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
+import { makeDataState, type DataState } from "@/lib/data-state";
 import {
   usePortfolios,
   savePortfolios,
@@ -150,6 +151,36 @@ export default function PortfolioClient() {
   }, [active, prices]);
 
   const grandTotal = totalValue + (active?.cash ?? 0);
+  const priceState = useMemo(() => {
+    if (!active) {
+      return makeDataState({
+        status: "unavailable",
+        label: "포트폴리오 없음",
+        detail: "보유 종목을 만들면 로컬 데이터 캐시 기준으로 평가액을 계산합니다.",
+      });
+    }
+    if (active.holdings.length === 0) {
+      return makeDataState({
+        status: "ready",
+        label: "입력 대기",
+        detail: "보유 종목을 추가하면 가격 확인을 시작합니다.",
+      });
+    }
+    if (missingCount === 0) {
+      return makeDataState({
+        status: "ready",
+        label: "가격 확인 완료",
+        detail: `${active.holdings.length}개 보유 종목이 모두 평가액에 반영됐습니다.`,
+      });
+    }
+    const priced = Math.max(active.holdings.length - missingCount, 0);
+    return makeDataState({
+      status: priced > 0 ? "partial" : "unavailable",
+      label: priced > 0 ? "일부 가격 확인" : "가격 확인 불가",
+      detail: `${priced}/${active.holdings.length}개 보유 종목만 평가액에 반영됐습니다. 확인 불가 종목은 합계에서 제외합니다.`,
+      reason: "로컬 데이터 캐시에 현재가가 없거나 읽지 못했습니다.",
+    });
+  }, [active, missingCount]);
 
   function handleCreateEmpty() {
     const doc: Portfolio = {
@@ -287,6 +318,15 @@ export default function PortfolioClient() {
           <div className="mt-3 -mx-1 overflow-x-auto px-1">
             <HoldingsTable rows={buildSampleRows()} />
           </div>
+          <div className="mt-3">
+            <PortfolioDataStateNotice
+              state={makeDataState({
+                status: "unavailable",
+                label: "샘플 가격 없음",
+                detail: "예시 포트폴리오는 보유 구조만 보여주며, 현재가와 평가액을 임의로 만들지 않습니다.",
+              })}
+            />
+          </div>
           <button
             type="button"
             onClick={handleCreateEmpty}
@@ -342,6 +382,8 @@ export default function PortfolioClient() {
           </span>
         </div>
       )}
+
+      <PortfolioDataStateNotice state={priceState} />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -614,35 +656,39 @@ function HoldingsTable({
 function Disclaimer() {
   return (
     <p className="text-[10px] font-semibold text-slate-600">
-      이 브라우저에만 저장 · 서버 전송 없음 · 시세는 주간 데이터 기준으로 지연될 수 있음
+      이 브라우저에만 저장 · 서버 전송 없음 · 시세를 확인하지 못한 종목은 평가액에서 제외
     </p>
   );
 }
 
-/* ─── Sample data helpers (no fetch) ─── */
-
-const SAMPLE_PRICES: Record<string, number> = { AAPL: 307.34, NVDA: 138.35, KORU: 30.22, SCHD: 28.51 };
+/* ─── Sample data helpers (no fabricated prices) ─── */
 
 function buildSampleRows(): HoldingRow[] {
-  const totalMv = SAMPLE_PORTFOLIO.holdings.reduce((s, h) => {
-    const p = SAMPLE_PRICES[h.ticker];
-    return p != null ? s + h.shares * p : s;
-  }, 0);
-  const grand = totalMv + SAMPLE_PORTFOLIO.cash;
   return SAMPLE_PORTFOLIO.holdings.map((h) => {
-    const price = SAMPLE_PRICES[h.ticker] ?? null;
-    const mv = price != null ? h.shares * price : null;
     const cost = h.shares * h.avg_cost;
-    const gain = mv != null ? mv - cost : null;
-    const pct = cost > 0 && gain != null ? gain / cost : null;
     return {
       ...h,
-      price,
-      marketValue: mv,
+      price: null,
+      marketValue: null,
       costBasis: cost,
-      gain,
-      gainPct: pct,
-      weight: grand > 0 && mv != null ? mv / grand : null,
+      gain: null,
+      gainPct: null,
+      weight: null,
     };
   });
+}
+
+function PortfolioDataStateNotice({ state }: { state: DataState }) {
+  const tone =
+    state.status === "ready"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : state.status === "error"
+        ? "border-rose-200 bg-rose-50 text-rose-800"
+        : "border-amber-200 bg-amber-50 text-amber-800";
+  return (
+    <div className={`rounded-[1.25rem] border px-4 py-3 text-xs font-semibold leading-5 ${tone}`}>
+      <span className="font-black">{state.label}</span>
+      <span className="ml-2">{state.detail}</span>
+    </div>
+  );
 }

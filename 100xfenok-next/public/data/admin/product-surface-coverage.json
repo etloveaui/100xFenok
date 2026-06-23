@@ -1,0 +1,335 @@
+{
+  "schema_version": "product-surface-coverage/v1",
+  "generated_at": "2026-06-23T08:36:56.227Z",
+  "source": "local DataPack coverage files",
+  "source_files": [
+    "computed/market_facts/index.json",
+    "computed/market_data_audit.json",
+    "computed/market_source_parity.json",
+    "stockanalysis/index.json",
+    "stockanalysis/coverage/etf_detail.json",
+    "stockanalysis/surfaces/index.json",
+    "stockanalysis/surface_consumers.json",
+    "admin/data-usage-manifest.json",
+    "admin/stock-field-usage-manifest.json"
+  ],
+  "totals": {
+    "surfaces": 7,
+    "ready": 4,
+    "partial": 3,
+    "pending": 0,
+    "unavailable": 0,
+    "error": 0
+  },
+  "counts": {
+    "marketFactsTickers": 6445,
+    "marketFactsEtfs": 5267,
+    "marketFactsStocks": 1178,
+    "yfFinance": 1820,
+    "globalScouterDetails": 1066,
+    "stockanalysisEtfs": 5265,
+    "stockanalysisStocks": 40,
+    "stockanalysisFinancials": 40,
+    "sec13fJson": 77,
+    "edgarByTicker": 202,
+    "slickchartsJson": 568,
+    "dataUsageRootJson": 17273,
+    "dataUsagePublicJson": 17325
+  },
+  "surfaces": [
+    {
+      "id": "stock_detail",
+      "route": "/stock/[ticker]",
+      "label": "종목 상세",
+      "owner": "Stock detail",
+      "status": "partial",
+      "status_label": "부분 준비",
+      "coverage_score": 71.43,
+      "summary": "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
+      "checks": [
+        {
+          "label": "통합 시세",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "6,445개 티커",
+          "count": 6445
+        },
+        {
+          "label": "기본 분석",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "1,066개 상세",
+          "count": 1066
+        },
+        {
+          "label": "가격·재무 캐시",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "1,820개 캐시",
+          "count": 1820
+        },
+        {
+          "label": "보조 재무 검산",
+          "status": "partial",
+          "status_label": "부분 준비",
+          "detail": "40개 후보",
+          "count": 40,
+          "reason": "검산 후보이며 가치평가 SSOT가 아님"
+        },
+        {
+          "label": "기관 공시",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "77개 13F JSON",
+          "count": 77
+        },
+        {
+          "label": "한글 공시",
+          "status": "partial",
+          "status_label": "부분 준비",
+          "detail": "202개 by-ticker",
+          "count": 202,
+          "reason": "요약 보유 티커만 표시"
+        },
+        {
+          "label": "이벤트 보강",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "23개 화면 연결",
+          "count": 23
+        }
+      ]
+    },
+    {
+      "id": "market_valuation",
+      "route": "/market-valuation",
+      "label": "시장 밸류에이션",
+      "owner": "Market valuation",
+      "status": "partial",
+      "status_label": "부분 준비",
+      "coverage_score": 75,
+      "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
+      "checks": [
+        {
+          "label": "밸류에이션 시계열",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "벤치마크 요약"
+        },
+        {
+          "label": "거시·심리",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "17,273개 루트 JSON",
+          "count": 17273
+        },
+        {
+          "label": "시장 구조",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "시장 구조 인덱스"
+        },
+        {
+          "label": "소스 일치성",
+          "status": "partial",
+          "status_label": "부분 준비",
+          "detail": "26,629개 복수 후보",
+          "count": 26629,
+          "reason": "차이·오래됨·부호 차이를 Data Lab에서 계속 노출"
+        }
+      ]
+    },
+    {
+      "id": "market_events",
+      "route": "/market/events",
+      "label": "시장 이벤트",
+      "owner": "Market events",
+      "status": "ready",
+      "status_label": "준비됨",
+      "coverage_score": 100,
+      "summary": "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
+      "checks": [
+        {
+          "label": "이벤트 수집 표면",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "16개 항목 · 7,107행",
+          "count": 16,
+          "rows": 7107
+        },
+        {
+          "label": "어닝 일정",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "어닝 캘린더"
+        },
+        {
+          "label": "기업 이벤트",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "액션/분할"
+        },
+        {
+          "label": "IPO",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "IPO 표면"
+        },
+        {
+          "label": "급등락",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "무버 표면"
+        }
+      ]
+    },
+    {
+      "id": "sectors",
+      "route": "/sectors",
+      "label": "섹터",
+      "owner": "Sectors",
+      "status": "ready",
+      "status_label": "준비됨",
+      "coverage_score": 100,
+      "summary": "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
+      "checks": [
+        {
+          "label": "섹터 흐름",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "섹터 모멘텀"
+        },
+        {
+          "label": "산업 세분화",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "3개 항목 · 714행",
+          "count": 3,
+          "rows": 714
+        },
+        {
+          "label": "기관 보유",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "77개 13F JSON",
+          "count": 77
+        }
+      ]
+    },
+    {
+      "id": "etf_center",
+      "route": "/etfs",
+      "label": "ETF 센터",
+      "owner": "ETF center",
+      "status": "partial",
+      "status_label": "부분 준비",
+      "coverage_score": 75,
+      "summary": "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
+      "checks": [
+        {
+          "label": "ETF 전체 목록",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "5,280개 ETF",
+          "count": 5280
+        },
+        {
+          "label": "ETF 상세",
+          "status": "partial",
+          "status_label": "부분 준비",
+          "detail": "5,265 / 5,347개",
+          "count": 5265,
+          "total": 5347,
+          "missing": 82,
+          "coverage_pct": 98.47
+        },
+        {
+          "label": "기간 수익률",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "1Y 4,332개",
+          "count": 4332
+        },
+        {
+          "label": "신규·전략 ETF",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "5개 항목 · 6,177행",
+          "count": 5,
+          "rows": 6177
+        }
+      ]
+    },
+    {
+      "id": "screener",
+      "route": "/screener",
+      "label": "스크리너",
+      "owner": "Screener",
+      "status": "ready",
+      "status_label": "준비됨",
+      "coverage_score": 100,
+      "summary": "스크리너는 종목 발견 화면이며 필드 사용 감사와 함께 미사용 데이터를 줄여간다.",
+      "checks": [
+        {
+          "label": "기본 종목 테이블",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "stocks_analyzer"
+        },
+        {
+          "label": "필드 사용 감사",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "901개 필드",
+          "count": 901
+        },
+        {
+          "label": "상세 패널",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "1,066개 상세",
+          "count": 1066
+        }
+      ]
+    },
+    {
+      "id": "admin_data_lab",
+      "route": "/admin/data-lab",
+      "label": "Admin Data Lab",
+      "owner": "Admin data lab",
+      "status": "ready",
+      "status_label": "준비됨",
+      "coverage_score": 100,
+      "summary": "Data Lab은 파일 기준 감사에서 제품 화면 기준 감사까지 이어지는 운영 화면이다.",
+      "checks": [
+        {
+          "label": "미러/사용 현황",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "17,273 / 17,325 JSON",
+          "root": 17273,
+          "public": 17325
+        },
+        {
+          "label": "시장 데이터 감사",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "market_data_audit"
+        },
+        {
+          "label": "화면 연결 지도",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "25개 표면",
+          "count": 25
+        },
+        {
+          "label": "제품 화면 준비도",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "product-surface-coverage"
+        }
+      ]
+    }
+  ]
+}

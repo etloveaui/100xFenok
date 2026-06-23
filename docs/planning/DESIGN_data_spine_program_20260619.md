@@ -290,6 +290,37 @@ Peer/subagent recheck expanded the scan beyond the original P0 pattern to
   scheduled `data/macro/tga.json` DataPack mirror first, with live FiscalData as
   fallback only when the mirror is unavailable.
 
+### 2026-06-23 product-state slice
+
+P1 productization is bounded to a status layer, not a full live-quote snapshot
+pipeline. The quote gateway keeps its sanctioned live provider internals, but
+the contract now exposes freshness/status fields so consumers can say whether
+the value is live/transitional, stale, unavailable, or error.
+
+Implemented product state primitives:
+
+- `100xfenok-next/src/lib/data-state.ts` defines the shared screen state union:
+  `ready`, `partial`, `stale`, `pending`, `unavailable`, `error`.
+- `100xfenok-next/src/lib/quote-contract.ts` adds `lastUpdated`,
+  `staleAfter`, and `state` to quote success/error payloads.
+- `100xfenok-next/src/app/portfolio/PortfolioClient.tsx` no longer fabricates
+  sample prices. Missing quotes render as unavailable/partial and are excluded
+  from valuation totals instead of using hard-coded values.
+- `scripts/generate-product-surface-coverage.mjs` builds
+  `data/admin/product-surface-coverage.json` from existing local DataPack
+  coverage/freshness files. This is an observability aid, not a substitute for
+  screen-level state handling.
+- `/market-valuation`, `/sectors`, `/etfs`, and Admin Data Lab now read the
+  product-surface coverage artifact to expose screen-level readiness.
+
+Verification gate:
+
+- `npm run qa:quote-contract`
+- `npm run qa:market-audit`
+- scoped ESLint on touched Next files and QA scripts
+- `npx tsc --noEmit --pretty false`
+- `git diff --check`
+
 ## Consumer Inventory
 
 Known consumers from the current contract note, grep, the inventory script, and
@@ -469,7 +500,8 @@ contract and the disagreement policy.
 2. Live quote route policy:
    - RATIFIED: `quote.v1` is the shared `/api/ticker` contract. `ticker.ts`
      remains a sanctioned internal provider exception until a Data Spine
-     live-quote service exists.
+     live-quote service exists. P1 exposes freshness/status metadata only; a
+     full cached quote snapshot service remains deferred.
 3. Data catalog refresh:
    - DRAFT/UNVERIFIED: reconcile `data/README.md` counts with measured current
      data counts.

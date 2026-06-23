@@ -302,7 +302,8 @@ const Renderer = (function() {
     stockanalysisIncrementalPlan,
     stockanalysisHistoryGapReport,
     stockanalysisPendingLedger,
-    marketFactsIndex
+    marketFactsIndex,
+    productSurfaceCoverage
   ) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
@@ -407,6 +408,7 @@ const Renderer = (function() {
       ${renderEtfClassificationAudit(etfClassification)}
       ${renderEtfUniverseSnapshot(stockanalysisEtfUniverse, stockanalysisEtfUniverseApi, stockanalysisNewEtfs, detailCoverage)}
       ${renderEtfCoverageGapAudit(detailCoverage)}
+      ${renderProductSurfaceCoverage(productSurfaceCoverage)}
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
       ${renderIncrementalBackfillAudit(stockanalysisIndex, stockanalysisIncremental, stockanalysisIncrementalPlan, marketFactsIndex, audit?.incremental_etf)}
@@ -623,6 +625,55 @@ const Renderer = (function() {
       }
     }
     return [];
+  }
+
+  function renderProductSurfaceCoverage(payload) {
+    const surfaces = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
+    if (!payload || surfaces.length === 0) return '';
+    const totals = payload.totals || {};
+    const rows = surfaces.map((surface) => {
+      const checks = Array.isArray(surface?.checks) ? surface.checks : [];
+      const weak = checks
+        .filter((item) => item?.status && item.status !== 'ready')
+        .slice(0, 2)
+        .map((item) => `${item.label}: ${item.status_label || item.status}`)
+        .join(' / ');
+      return [
+        surface?.label || surface?.id || '-',
+        surface?.route || '-',
+        surface?.status_label || surface?.status || '-',
+        typeof surface?.coverage_score === 'number' ? `${Formatters.formatNumber(surface.coverage_score, 0)}%` : '점검',
+        weak || '주요 데이터 준비'
+      ];
+    });
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">제품 화면 준비도</h3>
+            <p class="text-xs text-gray-500 mt-1">data/admin/product-surface-coverage.json</p>
+          </div>
+          <span class="px-2 py-1 rounded-full border text-xs font-bold ${Number(totals.unavailable || 0) || Number(totals.error || 0) ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-green-100 text-green-700 border-green-200'}">
+            ${Formatters.formatNumber(totals.ready || 0, 0)} / ${Formatters.formatNumber(totals.surfaces || surfaces.length, 0)}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+          ${renderAuditMetric('화면', Formatters.formatNumber(totals.surfaces || surfaces.length, 0))}
+          ${renderAuditMetric('준비됨', Formatters.formatNumber(totals.ready || 0, 0))}
+          ${renderAuditMetric('부분 준비', Formatters.formatNumber(totals.partial || 0, 0))}
+          ${renderAuditMetric('대기', Formatters.formatNumber(totals.pending || 0, 0))}
+          ${renderAuditMetric('미수집/오류', Formatters.formatNumber(Number(totals.unavailable || 0) + Number(totals.error || 0), 0))}
+        </div>
+        ${renderParityTable(
+          ['화면', '경로', '상태', '점수', '추가 확인'],
+          rows.map((row) => row.map((cell) => escapeHtml(cell)))
+        )}
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          이 표는 파일 개수가 아니라 실제 제품 화면이 사용자에게 설명할 수 있는 데이터 상태를 기준으로 봅니다.
+        </p>
+      </section>
+    `;
   }
 
   function renderStockanalysisSurfaceCatalog(index, consumers) {

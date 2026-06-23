@@ -224,7 +224,7 @@ const DataLabUI = (function() {
         throw new Error(`market_data_audit returned ${response.status}`);
       }
       const audit = await response.json();
-      const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers, stockanalysisEtfUniverse, stockanalysisEtfUniverseApi, stockanalysisNewEtfs] = await Promise.all([
+      const [sourceParity, stockanalysisIndex, stockanalysisCoverage, etfClassification, stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers, stockanalysisEtfUniverse, stockanalysisEtfUniverseApi, stockanalysisNewEtfs, productSurfaceCoverage] = await Promise.all([
         fetchOptionalJson(`${basePath}/data/computed/market_source_parity.json`, '소스 일치성 진단'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/index.json`, 'StockAnalysis 수집 인덱스'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/coverage/etf_detail.json`, 'ETF 상세 커버리지'),
@@ -233,7 +233,8 @@ const DataLabUI = (function() {
         fetchOptionalJson(`${basePath}/data/stockanalysis/surface_consumers.json`, '시장 데이터 화면 연결'),
         fetchOptionalJson(`${basePath}/data/stockanalysis/etf_universe.json`, 'ETF 전체 목록'),
         fetchOptionalJson(`${basePath}/api/data/stockanalysis/etf-universe`, 'ETF 목록 API'),
-        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/new_etfs.json`, '신규 ETF 목록')
+        fetchOptionalJson(`${basePath}/data/stockanalysis/surfaces/new_etfs.json`, '신규 ETF 목록'),
+        fetchOptionalJson(`${basePath}/data/admin/product-surface-coverage.json`, '제품 화면 준비도')
       ]);
       const shouldFetchIncremental = audit?.incremental_etf?.proof_file_exists === true;
       const shouldFetchIncrementalPlan = audit?.incremental_etf?.plan_file_exists === true;
@@ -265,7 +266,8 @@ const DataLabUI = (function() {
         stockanalysisIncrementalPlan,
         stockanalysisHistoryGapReport,
         stockanalysisPendingLedger,
-        marketFactsIndex
+        marketFactsIndex,
+        productSurfaceCoverage
       );
     } catch (error) {
       console.warn('[DataLab] Market data audit unavailable:', error);

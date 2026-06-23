@@ -2,7 +2,7 @@
 
 > **Purpose**: Data Health Monitoring Dashboard
 > **Location**: `admin/data-lab/`
-> **Version**: 2.2.36 (StockAnalysis workflow push retry)
+> **Version**: 2.2.37 (Product surface coverage)
 > **Redesign**: #168 (2026-01-20)
 
 ---
@@ -71,6 +71,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 | **StockAnalysis audit** | Reads `data/stockanalysis/index.json`, `coverage/etf_detail.json`, and `classification/latest.json` for ETF detail coverage, backfill, and leverage/inverse/single-stock classification visibility |
 | **ETF universe snapshot** | Reads the ETF list API, `etf_universe.json`, `surfaces/new_etfs.json`, and `coverage/etf_detail.json` together so operators can see total ETF count, price/volume/holdings/expense/performance coverage, newest launches, and new-ETF detail gaps from live data |
 | **ETF coverage gap drilldown** | Shows new-ETF/universe/screener missing counts and sample tickers from `coverage/etf_detail.json` |
+| **Product surface coverage** | Reads `data/admin/product-surface-coverage.json` so operators can see readiness by product screen, not only by source file |
 
 ---
 
@@ -155,6 +156,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 - **ETF history-gap workflow refresh**: live `history_gaps_only=true` workflow chunks regenerate the no-network plan after fetching so Data Lab and `qa:history-gap` describe the remaining gap, not the pre-run gap.
 - **StockAnalysis workflow push retry**: the generated-data commit step rebases and retries push up to 5 times so concurrent `main` updates do not discard a successful fetch run.
 - **ETF history-gap visibility**: The incremental backfill and queue cards render `history_gap` as `다년 히스토리 보강`, and label candidate sources such as `new_etfs` / `etf_screener` in Korean.
+- **Product surface readiness**: `data/admin/product-surface-coverage.json` is rebuilt during `npm run sync-static` from current local DataPack files. Data Lab renders this as screen-level readiness (`종목 상세`, `시장 밸류에이션`, `ETF 센터`, etc.) so file coverage and user-facing product coverage stay connected.
 
 ---
 
@@ -170,6 +172,7 @@ manifest.json → ManifestLoader → FreshnessChecker → StateManager → Rende
 ## Changelog
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.37 | 2026-06-23 | Added product-surface coverage so Data Lab can monitor readiness by product screen instead of source files only |
 | 2.2.36 | 2026-06-19 | Added StockAnalysis workflow push retry so successful generated-data runs survive concurrent main updates |
 | 2.2.35 | 2026-06-19 | Added required-period matching to ETF history-gap QA/Data Lab so staged 3Y/5Y backfills cannot pass on count equality alone |
 | 2.2.34 | 2026-06-19 | Added a durable ETF history-gap report JSON and Data Lab preflight card so direct-scan coverage updates with generated data |

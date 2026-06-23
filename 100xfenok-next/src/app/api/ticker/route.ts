@@ -4,6 +4,7 @@ import {
   QUOTE_CONTRACT_VERSION,
   isValidQuoteSymbol,
   normalizeQuoteSymbol,
+  quoteErrorState,
 } from "@/lib/quote-contract";
 import { withResponseCache } from "@/lib/server/response-cache";
 import { getTickerQuote } from "@/lib/server/ticker";
@@ -24,6 +25,7 @@ export async function GET(request: Request) {
         schemaVersion: QUOTE_CONTRACT_VERSION,
         error: "SYMBOL_REQUIRED",
         usage: "/api/ticker?symbol=AAPL 또는 /api/ticker/AAPL",
+        state: quoteErrorState("티커가 없어 시세를 확인하지 못했습니다."),
       },
       {
         status: 400,
@@ -39,6 +41,7 @@ export async function GET(request: Request) {
         error: "INVALID_SYMBOL",
         symbol,
         message: "Symbol must match the quote contract symbol pattern.",
+        state: quoteErrorState("지원하지 않는 티커 형식입니다."),
       },
       {
         status: 400,
@@ -60,6 +63,7 @@ export async function GET(request: Request) {
           error: "TICKER_FETCH_FAILED",
           symbol: normalizedSymbol,
           message,
+          state: quoteErrorState("시세 조회 경로가 응답하지 않았습니다."),
         },
         {
           status: 502,

@@ -26,6 +26,7 @@ const JSON_PAIRS = [
   ["Market data audit", "../data/computed/market_data_audit.json", "public/data/computed/market_data_audit.json"],
   ["Market source parity", "../data/computed/market_source_parity.json", "public/data/computed/market_source_parity.json"],
   ["Market facts index", "../data/computed/market_facts/index.json", "public/data/computed/market_facts/index.json"],
+  ["Product surface coverage", "../data/admin/product-surface-coverage.json", "public/data/admin/product-surface-coverage.json"],
 ];
 
 const ACTIVE_ROUTE_PREFIXES = [
@@ -68,6 +69,9 @@ const REQUIRED_RENDERED_SECTIONS = [
   "가장 빠른 재시도일",
   "반복 미확인",
   "소스 일치성 진단 상세",
+  "제품 화면 준비도",
+  "종목 상세",
+  "ETF 센터",
   "10년 CAGR",
   "상장 이후 CAGR",
 ];
@@ -370,6 +374,7 @@ function renderMarketAuditHtml(payloads) {
     payloads.historyGapReport,
     payloads.pendingLedger,
     payloads.marketFactsIndex,
+    payloads.productSurfaceCoverage,
   );
   return context.marketAuditContainer.innerHTML;
 }
@@ -382,6 +387,31 @@ function assertRenderedMarketAudit(payloads, errors) {
   }
   for (const label of REJECTED_RENDERED_COPY) {
     assert(!html.includes(label), `Rendered Data Lab market audit exposes rejected copy '${label}'`, errors);
+  }
+}
+
+function assertProductSurfaceCoverageContract(payload, errors) {
+  const requiredIds = new Set([
+    "stock_detail",
+    "market_valuation",
+    "market_events",
+    "sectors",
+    "etf_center",
+    "screener",
+    "admin_data_lab",
+  ]);
+  const surfaces = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
+  assert(payload?.schema_version === "product-surface-coverage/v1", "Product surface coverage: schema_version is required", errors);
+  assert(typeof payload?.generated_at === "string" && payload.generated_at.length >= 10, "Product surface coverage: generated_at is required", errors);
+  assert(surfaces.length >= requiredIds.size, "Product surface coverage: expected core product surfaces", errors);
+  const ids = new Set(surfaces.map((surface) => surface?.id));
+  for (const id of requiredIds) {
+    assert(ids.has(id), `Product surface coverage: missing surface ${id}`, errors);
+  }
+  for (const surface of surfaces) {
+    assert(typeof surface?.route === "string" && surface.route.startsWith("/"), `Product surface coverage: ${surface?.id || "(unknown)"} route must start with /`, errors);
+    assert(typeof surface?.status === "string" && surface.status.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} status is required`, errors);
+    assert(Array.isArray(surface?.checks) && surface.checks.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} checks are required`, errors);
   }
 }
 
@@ -411,6 +441,7 @@ const payloads = {
   historyGapReport: readJson("public/data/stockanalysis/backfill/history_gap_report_latest.json"),
   pendingLedger: readJson("public/data/stockanalysis/backfill/pending_ledger.json"),
   marketFactsIndex: readJson("public/data/computed/market_facts/index.json"),
+  productSurfaceCoverage: readJson("public/data/admin/product-surface-coverage.json"),
 };
 payloads.etfUniverseApi = buildEtfUniverseApiPayload(payloads.etfUniverse, payloads.etfScreener);
 
@@ -420,6 +451,7 @@ assertIncrementalPlanContract(payloads.audit, payloads.incrementalPlan, errors);
 assertHistoryGapReportContract(payloads.historyGapReport, payloads.incrementalPlan, payloads.audit, errors);
 assertReturnCoverageContract(payloads.audit, errors);
 assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors);
+assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors);
 assertRenderedMarketAudit(payloads, errors);
 
 if (errors.length > 0) {

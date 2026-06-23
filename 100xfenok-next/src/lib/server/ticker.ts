@@ -1,10 +1,12 @@
 import {
   QUOTE_CONTRACT_VERSION,
+  QUOTE_STALE_AFTER_MINUTES,
   isValidQuoteSymbol,
   normalizeQuoteSymbol,
   type QuoteMarketState,
   type QuotePayload,
 } from "@/lib/quote-contract";
+import { addMinutesIso } from "@/lib/data-state";
 
 const YAHOO_BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/";
 const WORKER_TICKER_BASE = "https://ticker-api.etloveaui.workers.dev/api/ticker";
@@ -165,6 +167,21 @@ function pickPrice(
   return regular;
 }
 
+function quoteState(fetchedAt: string): Pick<TickerQuote, "lastUpdated" | "staleAfter" | "state"> {
+  const staleAfter = addMinutesIso(fetchedAt, QUOTE_STALE_AFTER_MINUTES);
+  return {
+    lastUpdated: fetchedAt,
+    staleAfter,
+    state: {
+      status: "partial",
+      label: "전환 중",
+      detail: "시세는 즉시 조회 경로로 확인합니다. 캐시 스냅샷 전환 전까지 갱신 시각을 함께 표시합니다.",
+      asOf: fetchedAt,
+      staleAfter,
+    },
+  };
+}
+
 async function fetchJsonWithTimeout(url: string) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -216,6 +233,7 @@ async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
   const change = price - previousClose;
   const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
+  const fetchedAt = new Date().toISOString();
   return {
     schemaVersion: QUOTE_CONTRACT_VERSION,
     symbol,
@@ -227,7 +245,8 @@ async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
     postMarket,
     marketState,
     source: "yahoo",
-    fetchedAt: new Date().toISOString(),
+    fetchedAt,
+    ...quoteState(fetchedAt),
   };
 }
 
@@ -263,6 +282,7 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
     regularMarketTime: candidate.regularMarketTime,
   });
 
+  const fetchedAt = new Date().toISOString();
   return {
     schemaVersion: QUOTE_CONTRACT_VERSION,
     symbol,
@@ -274,7 +294,8 @@ async function fetchWorkerQuote(symbol: string): Promise<TickerQuote> {
     postMarket,
     marketState,
     source: "worker",
-    fetchedAt: new Date().toISOString(),
+    fetchedAt,
+    ...quoteState(fetchedAt),
   };
 }
 

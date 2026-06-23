@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import ProductSurfaceCoverageCard from "@/components/data/ProductSurfaceCoverageCard";
 import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
@@ -441,6 +442,8 @@ export default function SectorsClient() {
       {isMuted ? (
         <LoadingSkeleton />
       ) : null}
+
+      <ProductSurfaceCoverageCard surfaceId="sectors" />
 
       <MobileViewSwitch value={mobileView} onChange={setMobileView} />
 

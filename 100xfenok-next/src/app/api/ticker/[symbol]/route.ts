@@ -4,6 +4,7 @@ import {
   QUOTE_CONTRACT_VERSION,
   isValidQuoteSymbol,
   normalizeQuoteSymbol,
+  quoteErrorState,
 } from "@/lib/quote-contract";
 import { withResponseCache } from "@/lib/server/response-cache";
 import { getTickerQuote } from "@/lib/server/ticker";
@@ -29,6 +30,7 @@ export async function GET(
         error: "INVALID_SYMBOL",
         symbol: normalizedSymbol,
         message: "Symbol must match the quote contract symbol pattern.",
+        state: quoteErrorState("지원하지 않는 티커 형식입니다."),
       },
       {
         status: 400,
@@ -49,6 +51,7 @@ export async function GET(
           error: "TICKER_FETCH_FAILED",
           symbol: normalizedSymbol,
           message,
+          state: quoteErrorState("시세 조회 경로가 응답하지 않았습니다."),
         },
         {
           status: 502,
