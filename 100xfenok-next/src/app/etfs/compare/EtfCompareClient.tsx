@@ -3,83 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { formatSignedPercent } from "@/lib/format";
-
-interface EtfHolding {
-  rank?: number | null;
-  symbol?: string | null;
-  name?: string | null;
-  weight_pct?: number | null;
-}
-
-interface EtfPayload {
-  ticker?: string;
-  fetched_at?: string | null;
-  detail_status?: string | null;
-  normalized?: {
-    holdings?: EtfHolding[];
-    holding_count?: number | null;
-    holdings_updated?: string | null;
-    overview?: Record<string, unknown> | null;
-    performance?: {
-      tr1m?: number | null;
-      trYTD?: number | null;
-      tr1y?: number | null;
-      cagr5y?: number | null;
-      cagr10y?: number | null;
-    } | null;
-  } | null;
-}
-
-interface EtfCompareRow {
-  ticker: string;
-  data: EtfPayload | null;
-  failed: boolean;
-}
-
-interface HoldingEntry {
-  key: string;
-  symbol: string;
-  name: string;
-  weight: number;
-}
-
-interface PairOverlap {
-  left: EtfCompareRow;
-  right: EtfCompareRow;
-  common: Array<{
-    key: string;
-    symbol: string;
-    name: string;
-    leftWeight: number;
-    rightWeight: number;
-    minWeight: number;
-  }>;
-  overlapWeight: number;
-}
-
-const MAX_COMPARE_TICKERS = 4;
-
-function cleanSymbol(value: string): string {
-  return value.replace(/^\$/, "").trim().toUpperCase();
-}
-
-function parseTickers(value: string): string[] {
-  const seen = new Set<string>();
-  return value
-    .split(/[\s,]+/)
-    .map(cleanSymbol)
-    .filter((symbol) => /^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol))
-    .filter((symbol) => {
-      if (seen.has(symbol)) return false;
-      seen.add(symbol);
-      return true;
-    })
-    .slice(0, MAX_COMPARE_TICKERS);
-}
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
+import { MAX_COMPARE_TICKERS, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
+import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
 
 function rawText(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -108,69 +33,6 @@ function fmtSigned(value: number | null | undefined): string {
   return isFiniteNumber(value) ? formatSignedPercent(value, { digits: 2, fraction: false }) : "—";
 }
 
-function holdingKey(holding: EtfHolding): string | null {
-  const symbol = typeof holding.symbol === "string" ? cleanSymbol(holding.symbol) : "";
-  if (/^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol)) return `S:${symbol}`;
-  const name = typeof holding.name === "string" ? holding.name.trim().toUpperCase() : "";
-  if (!name || name === "—" || name.includes("CASH") || name.includes("TREASURY")) return null;
-  return `N:${name.replace(/\s+/g, " ").slice(0, 80)}`;
-}
-
-function holdingEntries(row: EtfCompareRow): HoldingEntry[] {
-  const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
-  return holdings.slice(0, 25).flatMap((holding) => {
-    const key = holdingKey(holding);
-    const weight = isFiniteNumber(holding.weight_pct) ? holding.weight_pct : null;
-    if (!key || weight === null) return [];
-    const symbol = typeof holding.symbol === "string" && holding.symbol.trim() ? cleanSymbol(holding.symbol) : "—";
-    return [{
-      key,
-      symbol,
-      name: typeof holding.name === "string" && holding.name.trim() ? holding.name.trim() : symbol,
-      weight,
-    }];
-  });
-}
-
-function overlapFor(left: EtfCompareRow, right: EtfCompareRow): PairOverlap {
-  const leftMap = new Map(holdingEntries(left).map((entry) => [entry.key, entry]));
-  const rightEntries = holdingEntries(right);
-  const common = rightEntries
-    .flatMap((rightEntry) => {
-      const leftEntry = leftMap.get(rightEntry.key);
-      if (!leftEntry) return [];
-      const minWeight = Math.min(Math.max(leftEntry.weight, 0), Math.max(rightEntry.weight, 0));
-      return [{
-        key: rightEntry.key,
-        symbol: leftEntry.symbol !== "—" ? leftEntry.symbol : rightEntry.symbol,
-        name: leftEntry.name !== "—" ? leftEntry.name : rightEntry.name,
-        leftWeight: leftEntry.weight,
-        rightWeight: rightEntry.weight,
-        minWeight,
-      }];
-    })
-    .sort((a, b) => b.minWeight - a.minWeight);
-
-  return {
-    left,
-    right,
-    common,
-    overlapWeight: common.reduce((sum, item) => sum + item.minWeight, 0),
-  };
-}
-
-function pairOverlaps(rows: EtfCompareRow[]): PairOverlap[] {
-  const pairs: PairOverlap[] = [];
-  for (let i = 0; i < rows.length; i += 1) {
-    for (let j = i + 1; j < rows.length; j += 1) {
-      const left = rows[i];
-      const right = rows[j];
-      if (left && right) pairs.push(overlapFor(left, right));
-    }
-  }
-  return pairs;
-}
-
 async function loadEtf(ticker: string): Promise<EtfCompareRow> {
   try {
     const response = await fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(ticker)}/`, { cache: "no-store" });
@@ -187,6 +49,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
   const performance = row.data?.normalized?.performance ?? {};
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
   const holdingCount = row.data?.normalized?.holding_count ?? holdings.length;
+  const holdingsDate = fmtDateish(row.data?.normalized?.holdings_updated ?? row.data?.fetched_at);
   const expenseRatio = parsePercentPoints(overview.expenseRatio);
   const dividendYield = parsePercentPoints(overview.dividendYield);
   const aum = rawText(overview.aum);
@@ -200,6 +63,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
             {row.ticker}
           </TransitionLink>
           <p className="mt-1 min-w-0 break-words text-xs font-bold leading-snug text-[var(--c-ink)]">{name}</p>
+          <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">기준 {holdingsDate}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {fmtSigned(performance.tr1y)}
@@ -287,7 +151,14 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   const loading = loadState.key !== tickersKey;
   const rows = useMemo(() => (loading ? [] : loadState.rows), [loading, loadState.rows]);
   const overlaps = useMemo(() => pairOverlaps(rows), [rows]);
-  const asOf = rows.map((row) => row.data?.normalized?.holdings_updated ?? row.data?.fetched_at).find(Boolean);
+  const asOfDates = useMemo(() => {
+    const dates = rows
+      .map((row) => fmtDateish(row.data?.normalized?.holdings_updated ?? row.data?.fetched_at))
+      .filter((date) => date !== "—");
+    return [...new Set(dates)];
+  }, [rows]);
+  const asOfLabel = asOfDates.length === 0 ? "—" : asOfDates.length === 1 ? asOfDates[0] : "기준일 혼합";
+  const hasMixedAsOf = asOfDates.length > 1;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -302,7 +173,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
     <section className="panel">
       <div className="panel-h">
         <h2>비교 세트</h2>
-        <span className="desc">최대 {MAX_COMPARE_TICKERS}개 · 기준일 {fmtDateish(asOf)}</span>
+        <span className="desc">최대 {MAX_COMPARE_TICKERS}개 · 기준일 {asOfLabel}</span>
       </div>
       <div className="panel-b space-y-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
@@ -325,6 +196,12 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
         <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--c-ink-3)]">
           보유 구성 겹침은 각 ETF 상세 화면에 연결된 상위 25개 표시 항목 기준입니다. 전체 원장 겹침으로 해석하지 않습니다.
         </div>
+
+        {hasMixedAsOf ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+            비교 ETF의 보유 기준일이 서로 달라 각 카드의 기준일을 함께 확인하세요.
+          </div>
+        ) : null}
 
         {loading ? (
           <p className="text-sm font-semibold text-[var(--c-ink-3)]">ETF 비교 데이터를 불러오는 중</p>

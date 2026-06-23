@@ -519,16 +519,31 @@ function sortByAum(rows: DetailEtfUniverseRecord[]) {
   });
 }
 
-function topHoldingSymbols(holdings: EtfHolding[]): string[] {
-  const symbols = new Set<string>();
-  for (const holding of holdings.slice(0, 25)) {
-    const symbol = typeof holding.symbol === "string" ? cleanSymbol(holding.symbol) : "";
-    if (/^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol)) symbols.add(symbol);
-  }
-  return [...symbols];
+function normalizeHoldingAlias(value: string): string {
+  return value
+    .toUpperCase()
+    .replace(/&/g, " AND ")
+    .replace(/[^A-Z0-9.-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function holdingAliases(symbol: string): string[] {
+function topHoldingAliases(holdings: EtfHolding[]): string[] {
+  const aliases = new Set<string>();
+  for (const holding of holdings.slice(0, 25)) {
+    const symbol = typeof holding.symbol === "string" ? cleanSymbol(holding.symbol) : "";
+    if (/^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol)) {
+      aliases.add(normalizeHoldingAlias(symbol));
+      aliases.add(normalizeHoldingAlias(symbol.replace(".", "-")));
+      aliases.add(normalizeHoldingAlias(symbol.replace("-", ".")));
+    }
+    const name = typeof holding.name === "string" ? normalizeHoldingAlias(holding.name) : "";
+    if (name && !name.includes("CASH") && !name.includes("TREASURY")) aliases.add(name);
+  }
+  return [...aliases].filter((alias) => alias.length >= 2);
+}
+
+function holdingAliases(alias: string): string[] {
   const aliases: Record<string, string[]> = {
     AAPL: ["APPLE"],
     AMD: ["ADVANCED MICRO DEVICES"],
@@ -541,22 +556,21 @@ function holdingAliases(symbol: string): string[] {
     NVDA: ["NVIDIA"],
     TSLA: ["TESLA"],
   };
-  return [symbol, ...(aliases[symbol] ?? [])];
+  return [alias, ...(aliases[alias] ?? [])].map(normalizeHoldingAlias);
 }
 
-function holdingPeerMatch(row: DetailEtfUniverseRecord, holdingSymbols: string[]): boolean {
+function holdingPeerMatch(row: DetailEtfUniverseRecord, holdingAliasesForTopHoldings: string[]): boolean {
   if (!isSingleStockLeveragedEtf(row)) return false;
   const classification = row.classification && typeof row.classification === "object" ? row.classification : null;
-  const text = [
+  const text = normalizeHoldingAlias([
     row.ticker,
     row.name,
     row.underlying,
     classification?.underlying,
   ]
     .filter(Boolean)
-    .join(" ")
-    .toUpperCase();
-  return holdingSymbols.some((symbol) => holdingAliases(symbol).some((alias) => text.includes(alias)));
+    .join(" "));
+  return holdingAliasesForTopHoldings.some((alias) => holdingAliases(alias).some((candidate) => text.includes(candidate)));
 }
 
 function buildEtfPeerCollections({
@@ -581,7 +595,7 @@ function buildEtfPeerCollections({
   const currentIssuerKey = peerIssuerKey(currentIssuer);
   const currentCategory = cleanCategory(current?.category ?? current?.assetClass ?? (category !== "—" ? category : null));
   const otherRows = records.filter((row) => rowTicker(row) && rowTicker(row) !== symbol);
-  const holdingSymbols = topHoldingSymbols(holdings);
+  const holdingAliasesForTopHoldings = topHoldingAliases(holdings);
 
   return {
     issuerLabel: currentIssuer,
@@ -590,7 +604,7 @@ function buildEtfPeerCollections({
     generatedAt: universe?.generated_at ?? null,
     issuerPeers: sortByAum(otherRows.filter((row) => peerIssuerKey(issuerLabelForUniverseRow(row)) === currentIssuerKey)).slice(0, 6),
     categoryPeers: sortByAum(otherRows.filter((row) => cleanCategory(row.category ?? row.assetClass) === currentCategory)).slice(0, 6),
-    holdingPeers: sortByAum(otherRows.filter((row) => holdingPeerMatch(row, holdingSymbols))).slice(0, 6),
+    holdingPeers: sortByAum(otherRows.filter((row) => holdingPeerMatch(row, holdingAliasesForTopHoldings))).slice(0, 6),
   };
 }
 
@@ -741,14 +755,14 @@ function EtfPeerCollectionsSection({
           currentSymbol={currentSymbol}
         />
         <PeerLane
-          title="상위 보유종목 연결"
-          desc="현재 표시된 상위 보유 항목과 단일종목·레버리지 ETF 이름/기초자산을 맞춰 찾습니다."
+          title="단일종목·레버리지 연결"
+          desc="상위 25개 보유 항목의 티커/회사명과 단일종목·레버리지 ETF의 이름/기초자산을 맞춰 찾습니다."
           rows={data.holdingPeers}
           currentSymbol={currentSymbol}
         />
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
-        <span>보유종목 연결과 겹침 비교는 상위 25개 표시 항목 기준입니다.</span>
+        <span>단일종목·레버리지 연결과 겹침 비교는 상위 25개 표시 항목 기준입니다.</span>
         <span>업데이트 {fmtDateish(data.generatedAt)}</span>
       </div>
     </SectionCard>

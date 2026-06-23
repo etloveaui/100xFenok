@@ -101,6 +101,7 @@ Follow-up accepted on 2026-06-24:
 - P3 ETF center snapshot now uses API-provided `issuerCollections` for issuer tabs instead of component-hardcoded BlackRock/ProShares tab keys. Legacy `blackrock`/`proshares` fields remain in the API response for compatibility.
 - Kimi follow-up anchor: `fh-20260624-009-km-f0c0c98f`.
 - Kimi post-closeout audit anchor `fh-20260624-011-km-0e6e8858` found a real remaining SEO blocker: the Cloudflare build profile still applied `X-Robots-Tag: noindex, nofollow, noarchive` to every route. P5 hotfix removes the global `next.config.ts` header and keeps noindex only on admin/API-admin/travel/error-control responses through middleware/admin metadata/robots.
+- The same post-closeout audit flagged P3 ETF wording/math risks. Follow-up keeps the ETF detail lane honest as a single-stock/leveraged connection lane, expands matching from ticker-only aliases to ticker plus top-holding company names, shows compare holdings dates per ETF, labels mixed compare dates, and moves overlap math into a tested helper.
 
 Quality gate:
 
@@ -119,6 +120,7 @@ Quality gate:
 - P3 ETF focused Playwright pass on desktop/mobile for `/etfs`, `/etfs/SPY`, `/etfs/compare?tickers=SPY,VOO`: status 200, no console issues, no horizontal page overflow, dynamic issuer labels visible, old `대형 운용사` label absent, ETF connection map visible, and compare overlap route visible. Mobile date-format recheck passed for full `Jun 17, 2026` display.
 - P3 static gates passed: `npx tsc --noEmit --pretty false`, targeted `npx eslint`, `npm run qa:etf-universe`, `npm run qa:surface-consumers`, `npm run qa:seo-surface`, `npm run qa:copy`, `git diff --check`, and `npm run build`.
 - P5 SEO hotfix gate adds `qa:seo-surface` protection against global public noindex headers. Local/live header checks must show public product routes without `X-Robots-Tag` while `/admin/*` and `/travel/*` stay noindex.
+- P3 post-closeout gate adds `npm run qa:etf-compare` for top-25 overlap math and keeps compare 기준일 behavior explicit when the selected ETF set has mixed holdings dates.
 
 ### Phase 5 - Closeout
 
