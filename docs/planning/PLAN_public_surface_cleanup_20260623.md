@@ -100,6 +100,7 @@ Follow-up accepted on 2026-06-24:
 - P3 ETF depth owns an ETF connection map on `/etfs/[ticker]`: same issuer, same category, and top-holding-linked single-stock/leveraged ETF peers from the lightweight ETF universe response. The comparison route `/etfs/compare?tickers=SPY,VOO` is public and explicitly warns that holdings overlap is based on the top 25 displayed holdings, not the full ledger.
 - P3 ETF center snapshot now uses API-provided `issuerCollections` for issuer tabs instead of component-hardcoded BlackRock/ProShares tab keys. Legacy `blackrock`/`proshares` fields remain in the API response for compatibility.
 - Kimi follow-up anchor: `fh-20260624-009-km-f0c0c98f`.
+- Kimi post-closeout audit anchor `fh-20260624-011-km-0e6e8858` found a real remaining SEO blocker: the Cloudflare build profile still applied `X-Robots-Tag: noindex, nofollow, noarchive` to every route. P5 hotfix removes the global `next.config.ts` header and keeps noindex only on admin/API-admin/travel/error-control responses through middleware/admin metadata/robots.
 
 Quality gate:
 
@@ -117,6 +118,7 @@ Quality gate:
 - `/etfs/new` focused recheck pass on desktop/mobile/narrow: availability copy uses `기본 정보`/`가격 중심`/`상세 가능` or empty-state copy; old `요약 제공`/`상세 상태` not visible.
 - P3 ETF focused Playwright pass on desktop/mobile for `/etfs`, `/etfs/SPY`, `/etfs/compare?tickers=SPY,VOO`: status 200, no console issues, no horizontal page overflow, dynamic issuer labels visible, old `대형 운용사` label absent, ETF connection map visible, and compare overlap route visible. Mobile date-format recheck passed for full `Jun 17, 2026` display.
 - P3 static gates passed: `npx tsc --noEmit --pretty false`, targeted `npx eslint`, `npm run qa:etf-universe`, `npm run qa:surface-consumers`, `npm run qa:seo-surface`, `npm run qa:copy`, `git diff --check`, and `npm run build`.
+- P5 SEO hotfix gate adds `qa:seo-surface` protection against global public noindex headers. Local/live header checks must show public product routes without `X-Robots-Tag` while `/admin/*` and `/travel/*` stay noindex.
 
 ### Phase 5 - Closeout
 

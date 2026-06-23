@@ -43,18 +43,6 @@ const nextConfig: NextConfig = {
       },
     ];
 
-    if (isCloudflareProfile) {
-      headers.push({
-        source: "/:path*",
-        headers: [
-          {
-            key: "X-Robots-Tag",
-            value: "noindex, nofollow, noarchive",
-          },
-        ],
-      });
-    }
-
     return headers;
   },
 

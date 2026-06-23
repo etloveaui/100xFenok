@@ -27,8 +27,14 @@ assert(
   errors,
 );
 assert(
+  !nextConfig.includes('"X-Robots-Tag"') && !nextConfig.includes("X-Robots-Tag"),
+  "next.config.ts must not set a global Cloudflare noindex header for public product routes",
+  errors,
+);
+assert(
   middleware.includes('pathname !== "/travel"') &&
-    middleware.includes('"X-Robots-Tag", "noindex, nofollow, noarchive"'),
+    middleware.includes("NOINDEX_HEADER_VALUE") &&
+    middleware.includes("withNoindexHeader"),
   "middleware must treat /travel as a noindex legacy admin alias",
   errors,
 );

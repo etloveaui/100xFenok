@@ -65,6 +65,7 @@ type LocalRateLimitEntry = {
 const STATIC_ASSET_PATH_PATTERN =
   /\.(?:avif|css|csv|gif|ico|jpe?g|js|json|map|mjs|png|svg|txt|webmanifest|webp|woff2?)$/i;
 const ONE_MINUTE_MS = 60_000;
+const NOINDEX_HEADER_VALUE = "noindex, nofollow, noarchive";
 const localRateLimitStore = new Map<string, LocalRateLimitEntry>();
 
 function isBlockedAiBot(userAgent: string | null): boolean {
@@ -121,6 +122,11 @@ function isAdminPath(pathname: string): boolean {
 
 function isAdminApiPath(pathname: string): boolean {
   return pathname === "/api/admin" || pathname.startsWith("/api/admin/");
+}
+
+function withNoindexHeader(response: NextResponse): NextResponse {
+  response.headers.set("X-Robots-Tag", NOINDEX_HEADER_VALUE);
+  return response;
 }
 
 function getRateLimitTier(request: NextRequest): RateLimitTier {
@@ -219,7 +225,7 @@ function rateLimitResponse(): NextResponse {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Retry-After": "60",
-      "X-Robots-Tag": "noindex, nofollow, noarchive",
+      "X-Robots-Tag": NOINDEX_HEADER_VALUE,
     },
   });
 }
@@ -275,7 +281,7 @@ export async function middleware(request: NextRequest) {
       status: 403,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "X-Robots-Tag": "noindex, nofollow, noarchive",
+        "X-Robots-Tag": NOINDEX_HEADER_VALUE,
       },
     });
   }
@@ -286,14 +292,15 @@ export async function middleware(request: NextRequest) {
 
   const adminTrailingSlashRedirect = getAdminTrailingSlashRedirect(request);
   if (adminTrailingSlashRedirect) {
-    return adminTrailingSlashRedirect;
+    return withNoindexHeader(adminTrailingSlashRedirect);
   }
 
   const normalizedAdminPath = normalizeAdminLegacyPath(pathname);
   const normalizedTravelPath = normalizeLegacyTravelPath(pathname);
 
   if (!normalizedAdminPath && !normalizedTravelPath) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return isAdminPath(pathname) || isAdminApiPath(pathname) ? withNoindexHeader(response) : response;
   }
 
   const redirectTarget = normalizedAdminPath ?? normalizedTravelPath;
@@ -317,16 +324,14 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.searchParams.get("embed") === "1" &&
     authenticated
   ) {
-    return NextResponse.next();
+    return withNoindexHeader(NextResponse.next());
   }
 
   if (normalizedTravelPath) {
-    const response = NextResponse.redirect(targetUrl);
-    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-    return response;
+    return withNoindexHeader(NextResponse.redirect(targetUrl));
   }
 
-  return NextResponse.redirect(targetUrl);
+  return withNoindexHeader(NextResponse.redirect(targetUrl));
 }
 
 export const config = {
