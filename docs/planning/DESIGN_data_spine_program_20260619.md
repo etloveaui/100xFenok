@@ -1,6 +1,7 @@
 # Data Spine Program
 
 Date/status: 2026-06-19; P0 inventory measured, P1 passed, v0 ratification RATIFIED.
+Updated: 2026-06-23; productization bridge added after feno-value provider-boundary closure.
 
 ## Purpose
 
@@ -65,6 +66,124 @@ Measured from `data/stockanalysis/index.json` and
 | Backfill hard errors | 0 | MEASURED |
 | Backfill expected 404 rows | 723 | MEASURED |
 | Backfill ready for finalize | true | MEASURED |
+
+## 2026-06-23 Productization Bridge
+
+This section converts the Data Spine from "data contract cleanup" to product
+work. The feno-value provider-boundary phase is closed in CCH as of
+2026-06-23, so the next work is not more adapter cleanup by default. The next
+load-bearing question is which 100x screens expose the contract, freshness, and
+unavailable states clearly.
+
+Measured current baseline:
+
+```sh
+python3 scripts/audit-data-spine-inventory.py --json
+```
+
+- `generated_at`: `2026-06-23T07:52:05Z`
+- root JSON files: 17,273
+- public JSON files: 17,326
+- tracked dataset groups: 28
+- `computed/market_facts/tickers`: 6,445 ticker payloads
+- `yf/finance`: 1,820 cached finance payloads
+- `global-scouter/stocks/detail`: 1,066 stock detail payloads
+- `stockanalysis/etfs`: 5,265 ETF detail payloads
+- `stockanalysis/stocks`: 40 stock overview payloads
+- `stockanalysis/financials`: 40 financial candidate payloads
+- `edgar-korean-summaries`: 1,821 JSON files, 202 by-ticker manifests
+- `sec-13f`: 78 JSON files
+- `slickcharts`: 569 JSON files
+
+Product judgment:
+
+- ETF coverage is product-ready: 5,347 candidates, 5,265 detail files, 98.47%
+  detail coverage, 686 auxiliary price/detail fallbacks, 82 missing details.
+- Stock detail is usable for covered names, but not yet a universal financial
+  statement product: StockAnalysis stock/financial candidate coverage is 40
+  files, while Global Scouter stock detail is 1,066 and cached finance is 1,820.
+- Filing summaries are a valuable stock-detail layer, but not a standalone URL
+  family. The pilot route redirects to `/stock/NVDA?tab=filings`; keep stock
+  detail as the public owner.
+- Market/event/sector surfaces are substantial enough to productize:
+  `earnings_calendar` has 3,690 records, `actions_recent` has 1,958 records,
+  `new_etfs` has 100 records, `industries` has 11 tables / 145 rows, and
+  `ipos_statistics` is available as a table surface.
+- Market source parity remains action-bearing: 26,629 multi-candidate rows,
+  22,309 agreements, 1,841 value drifts, 1,953 stale rows, 418 sign
+  divergences, and 108 percent-scale warnings. Product surfaces must show
+  coverage/freshness state instead of silently treating all values as equal.
+
+### Surface Responsibility Map
+
+| Public surface | Product responsibility | Data Spine owner |
+|---|---|---|
+| `/explore` | 30-second routing/summary surface only | show compact signals and links, not raw catalogs |
+| `/market-valuation` | market valuation and regime reads | benchmarks, Damodaran/Yardeni, macro, sentiment, market structure |
+| `/market/events` | earnings, actions, IPO, movers event workspace | StockAnalysis surfaces and event-specific DataPack files |
+| `/sectors` | sector/industry taxonomy and constituents | benchmarks, StockAnalysis industries, 13F sector overlays |
+| `/etfs` and `/etfs/new` | ETF universe, new launches, segments, detail routing | StockAnalysis ETF universe/screener/details/coverage + market facts |
+| `/stock/[ticker]` | ticker-level unified analysis | market facts, Global Scouter, cached finance, StockAnalysis candidates, 13F, filings |
+| `/screener` | stock discovery and sortable table | static analyzer provider + computed action indexes |
+| `/superinvestors` | 13F investor intelligence | SEC 13F converted DataPack and enrichment audit |
+| `/admin/data-lab` | operator audit, coverage, freshness, QA | market audit, parity, ETF coverage, surface consumers, freshness guards |
+
+### Strict Unavailable Matrix for Product Surfaces
+
+feno-value strict mode already has a required-field registry in
+`claude-code-hub/docs/products/skills/feno-value/references/DATA_SPINE_PROVIDER_CLEANUP.md`
+and a test guard at
+`docs/products/skills/feno-value/scripts/tests/unit/test_data_spine_required_fields.py`.
+100x should surface those unavailable states as product state, not hide them.
+
+| Domain | Current DataPack coverage | Product rule |
+|---|---|---|
+| Price / market cap / beta | `market_facts` canonical, 6,445 payloads | show as connected when market facts exist; otherwise no valuation claim |
+| Cached finance / estimates | 1,820 cached finance payloads | financial/statistics tabs are available only when cache exists |
+| Global Scouter detail | 1,066 detail payloads | keep as stock-detail/screener base, not universal stock coverage |
+| StockAnalysis stock/financial candidates | 40 + 40 payloads | display as cross-check/auxiliary only; do not claim SSOT valuation input |
+| ETF details | 5,265 detail payloads | product-ready; missing 82 should render fallback/pending states |
+| 13F / superinvestors | 78 SEC 13F JSON files | show reporting-delay disclaimers and enrichment coverage |
+| Korean filings | 1,821 JSON files / 202 by-ticker manifests | stock `공시` tab owner; source links and AI-summary disclaimer required |
+| Market parity | 26,629 multi-candidate checks | Data Lab and product footnotes must keep drift/stale/sign warnings visible |
+
+### 1-5 Productization Goal
+
+1. Data Coverage Matrix: keep regenerated inventory and strict unavailable
+   matrix visible in this program doc and Data Lab.
+2. Site map / screen responsibility: keep the surface map above as the
+   routing rule; Explore is a guide, dedicated pages own detail.
+3. Initial implementation: stock detail now shows a data-driven "데이터 연결
+   상태" card from the loaded DataPack mirrors, without exposing provider brand
+   names in public copy.
+4. Interpretation engine v1: deterministic first, LLM later. Start with
+   coverage-aware copy generated from data states, then promote to report
+   snippets only when source/freshness/provenance are attached.
+5. Legacy cleanup: treat `/market` iframe, old static report HTML, macro-monitor
+   live fallbacks, and non-quote GAS/admin HTML endpoints as audit candidates.
+   Do not delete until an owner, replacement route, and redirect/archival policy
+   are decided.
+
+### Legacy / Cleanup Audit Baseline
+
+Read-only route inventory on 2026-06-23:
+
+- Next app `page.tsx`: 40
+- API `route.ts`: 25
+- public HTML files: 185
+- `RouteEmbedFrame` wrapper pages: 16
+
+Cleanup candidates are candidates only; deletion requires a replacement route,
+redirect/archive policy, and explicit approval.
+
+| Candidate | Current evidence | Product action |
+|---|---|---|
+| `/market` | `src/app/market/page.tsx` embeds `/100x/100x-main.html` through `RouteEmbedFrame` | keep as compatibility until `/market-valuation` + `/market/events` fully replace it |
+| Static asset sync | `100xfenok-next/package.json` `sync-static` copies `../100x`, `../alpha-scout`, `../tools`, `../ib`, `../admin`, and `../data` into `public/` | audit which copied folders still have public owners before removing |
+| Legacy bridge | `src/lib/server/legacy-bridge.ts` sanitizes public file paths for embedded legacy pages | keep while wrapper pages exist; remove only with wrapper retirement |
+| GitHub Pages/static SPA traces | root `README.md` and `_legacy/onesignal` document old static hosting/notification paths | archive documentation after live Cloudflare route policy is final |
+| Superinvestors duplicate load | `portfolio_views.json` is read by both `SuperinvestorsClient` and `PortfolioCharts` | candidate for shared hook/cache, not user-visible priority |
+| Admin/GAS quote helpers | routed exceptions still keep legacy fallbacks | keep under quote.v1 policy until live quote service exists |
 
 ## Current Parity / Disagreement Baseline
 
