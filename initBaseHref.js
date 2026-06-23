@@ -1,8 +1,10 @@
 (() => {
-  // Treat local hosts, LAN addresses, file:// protocol, and Cloudflare Pages as local (base: /)
+  // Treat local hosts, LAN addresses, file:// protocol, and Cloudflare root hosts as local (base: /)
   const isLocalHost = /^(127\.0\.0\.1|localhost|192\.168\.\d+\.\d+)$/.test(location.hostname);
   const isLocalProtocol = location.protocol === 'file:';
-  const isCloudflare = location.hostname.endsWith('pages.dev');
+  const isCloudflare =
+    location.hostname.endsWith('pages.dev') ||
+    location.hostname.endsWith('workers.dev');
   const isLocal = isLocalHost || isLocalProtocol || isCloudflare;
 
   const baseHref = isLocal ? '/' : '/100xFenok/';

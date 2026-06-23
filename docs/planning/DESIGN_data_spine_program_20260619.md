@@ -181,7 +181,8 @@ redirect/archive policy, and explicit approval.
 | `/market` | `src/app/market/page.tsx` previously embedded `/100x/100x-main.html` through `RouteEmbedFrame` by default | default `/market` now redirects to `/market-valuation`; `?path=100x/...` remains a compatibility bridge until legacy Market Wrap retirement is approved |
 | Static asset sync | `100xfenok-next/package.json` `sync-static` copies `../100x`, `../alpha-scout`, `../tools`, `../ib`, `../admin`, and `../data` into `public/` | audit which copied folders still have public owners before removing |
 | Legacy bridge | `src/lib/server/legacy-bridge.ts` sanitizes public file paths for embedded legacy pages | keep while wrapper pages exist; remove only with wrapper retirement |
-| GitHub Pages/static SPA traces | root `README.md` and `_legacy/onesignal` document old static hosting/notification paths | archive documentation after live Cloudflare route policy is final |
+| GitHub Pages/static SPA traces | root `README.md`, `_legacy/onesignal`, and root `initBaseHref.js` document old static hosting/notification paths | `initBaseHref.js` now treats both `pages.dev` and `workers.dev` as root-base Cloudflare hosts; archive static-host docs only after live Cloudflare route policy is final |
+| Legacy indexing policy | root `robots.txt` allows standard crawlers while root `index.html` carries `noindex, nofollow` | decision pending; do not change indexing/robots until owner chooses public-indexing SSOT for the legacy mirror |
 | Superinvestors duplicate load | `portfolio_views.json` is read by both `SuperinvestorsClient` and `PortfolioCharts` | candidate for shared hook/cache, not user-visible priority |
 | Admin/GAS quote helpers | routed exceptions still keep legacy fallbacks | keep under quote.v1 policy until live quote service exists |
 
