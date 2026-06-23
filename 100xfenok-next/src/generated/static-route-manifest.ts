@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 9711,
-      "updatedAt": "2026-06-23T11:10:43.498Z"
+      "updatedAt": "2026-06-23T11:21:42.982Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -47009,23 +47009,23 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "fred-banking-daily.json",
-      "sizeBytes": 525906,
-      "updatedAt": "2026-06-22T13:37:32.618Z"
+      "sizeBytes": 525769,
+      "updatedAt": "2026-06-23T11:18:02.335Z"
     },
     {
       "name": "fred-banking-quarterly.json",
       "sizeBytes": 80045,
-      "updatedAt": "2026-06-22T13:37:32.618Z"
+      "updatedAt": "2026-06-23T11:18:02.341Z"
     },
     {
       "name": "fred-banking-weekly.json",
       "sizeBytes": 233125,
-      "updatedAt": "2026-06-22T13:37:32.619Z"
+      "updatedAt": "2026-06-23T11:18:02.341Z"
     },
     {
       "name": "fred-macro.json",
-      "sizeBytes": 525453,
-      "updatedAt": "2026-06-22T13:37:32.620Z"
+      "sizeBytes": 525521,
+      "updatedAt": "2026-06-23T11:18:02.341Z"
     },
     {
       "name": "schema.json",
