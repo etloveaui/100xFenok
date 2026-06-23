@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 9711,
-      "updatedAt": "2026-06-23T11:26:33.243Z"
+      "updatedAt": "2026-06-23T11:52:51.766Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
