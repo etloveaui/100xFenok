@@ -18,6 +18,7 @@ import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock
 const PAGE_SIZE = 50;
 
 type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
+type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership";
 
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
@@ -50,6 +51,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "momentum12m", label: "12M", align: "right" },
   { key: "rank", label: "순위", align: "right" },
   { key: "guruHolders", label: "대가 보유", align: "right" },
+  { key: "connectionCount", label: "연결", align: "left" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
@@ -80,11 +82,12 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "ret5y", label: "5Y", align: "right" },
 ];
 
-type ColumnPreset = "basic" | "action" | "value" | "estimate" | "momentum" | "dividend" | "guru";
+type ColumnPreset = "basic" | "action" | "connected" | "value" | "estimate" | "momentum" | "dividend" | "guru";
 
 const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
   action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
+  connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
   estimate: [
     "ticker",
@@ -123,6 +126,7 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
 const PRESET_LABEL: Record<ColumnPreset, string> = {
   basic: "기본",
   action: "투자 신호",
+  connected: "연결 데이터",
   value: "가치",
   estimate: "추정치",
   momentum: "모멘텀",
@@ -233,6 +237,48 @@ function actionTone(bucket: string | null | undefined, confidenceLabel?: string 
   if (bucket === "income") return "border-amber-200 bg-amber-50 text-amber-700";
   if (bucket === "momentum") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+const CONNECTION_BADGES = [
+  { key: "marketFacts", label: "시세", className: "border-sky-200 bg-sky-50 text-sky-700" },
+  { key: "filings", label: "공시", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  { key: "smartMoney", label: "13F", className: "border-violet-200 bg-violet-50 text-violet-700" },
+  { key: "indexMembership", label: "지수", className: "border-amber-200 bg-amber-50 text-amber-700" },
+] as const;
+
+function connectionTitle(stock: ScreenerStock): string {
+  const connection = stock.connection;
+  if (!connection) return "연결 인덱스 없음";
+  const asOf = [
+    connection.asOf?.marketFacts ? `시세 ${connection.asOf.marketFacts}` : null,
+    connection.asOf?.filings ? `공시 ${connection.asOf.filings}` : null,
+    connection.asOf?.sec13f ? `13F ${connection.asOf.sec13f}` : null,
+    connection.asOf?.actionIndex ? `신호 ${connection.asOf.actionIndex}` : null,
+  ].filter(Boolean);
+  return asOf.length ? asOf.join(" · ") : "연결 인덱스 확인됨";
+}
+
+function ConnectionPills({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
+  const connection = stock.connection;
+  if (!connection) return <span className="text-slate-300">—</span>;
+  const active = CONNECTION_BADGES.filter((badge) => connection.flags[badge.key]);
+  return (
+    <span className="flex min-w-0 flex-wrap items-center gap-1" title={connectionTitle(stock)}>
+      <span className="orbitron rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
+        {connection.count}
+      </span>
+      {active.slice(0, compact ? 2 : 4).map((badge) => (
+        <span key={badge.key} className={cx("rounded-full border px-1.5 py-0.5 text-[9px] font-black", badge.className)}>
+          {badge.label}
+        </span>
+      ))}
+      {compact && active.length > 2 ? (
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-600">
+          +{active.length - 2}
+        </span>
+      ) : null}
+    </span>
+  );
 }
 
 function getMomentumClass(value: number | null): string {
@@ -396,6 +442,8 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
       ) : (
         <span className="text-slate-300">—</span>
       );
+    case "connectionCount":
+      return <ConnectionPills stock={stock} />;
     case "rank":
       return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
     case "perBandCurrent":
@@ -435,6 +483,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
 const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["marketCap", "per", "dividendYield", "return12m"],
   action: ["marketCap", "guruHolders", "return12m", "dividendYield"],
+  connected: ["connectionCount", "guruHolders", "forwardPeFy1", "return12m"],
   value: ["per", "peForward", "pbr", "perBandCurrent", "roe", "opm"],
   estimate: [
     "forwardPeFy1",
@@ -668,6 +717,7 @@ function MobileStockCard({
             >
               {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
             </span>
+            {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700">{stock.name}</span>
           <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
@@ -709,7 +759,16 @@ function MobileStockCard({
 }
 
 export default function ScreenerClient({ initialSearch = "" }: { initialSearch?: string }) {
-  const { stocks: rawStocks, dataReady, failed, sourceDate, sectors, countries } = useScreenerData();
+  const {
+    stocks: rawStocks,
+    dataReady,
+    failed,
+    sourceDate,
+    connectionIndexDate,
+    connectionIndexReady,
+    sectors,
+    countries,
+  } = useScreenerData();
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
   const [actionMap, setActionMap] = useState<Record<string, ActionSummaryRecord> | null>(null);
 
@@ -789,6 +848,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>("");
+  const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -861,6 +921,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       if (country && stock.country !== country) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (actionFilter && stock.actionBucket !== actionFilter) return false;
+      if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       if (forwardPerMaxValid && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > (forwardPerMaxValue as number))) return false;
       if (revenueGrowthMinValid && ((stock.revenueGrowthFy1 ?? null) === null || (stock.revenueGrowthFy1 as number) < (revenueGrowthMinValue as number))) return false;
@@ -880,7 +941,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
       }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, profitableOnly, bandFilter, actionFilter]);
+  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -894,7 +955,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -942,10 +1003,12 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     return makeDataState({
       status: "ready",
       label: "종목 데이터 준비됨",
-      detail: `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시할 수 있습니다.`,
-      asOf: sourceDate,
+      detail: connectionIndexReady
+        ? `${stocks.length.toLocaleString("ko-KR")}개 종목과 연결 인덱스를 표시할 수 있습니다.`
+        : `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시할 수 있습니다. 연결 인덱스는 준비 전입니다.`,
+      asOf: connectionIndexDate ?? sourceDate,
     });
-  }, [dataReady, failed, sourceDate, stocks]);
+  }, [connectionIndexDate, connectionIndexReady, dataReady, failed, sourceDate, stocks]);
 
   function toggleSort(key: ScreenerSortKey) {
     if (key === sortKey) {
@@ -972,10 +1035,11 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
     setProfitableOnly(false);
     setBandFilter("");
     setActionFilter("");
+    setConnectionFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || profitableOnly || bandFilter || actionFilter);
-  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || bandFilter || actionFilter);
+  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
+  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || bandFilter || actionFilter || connectionFilter);
 
   return (
     <div className="data-shell-page">
@@ -1159,6 +1223,20 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                 <option value="income">배당 점검</option>
                 <option value="momentum">모멘텀 리더</option>
                 <option value="watch">관찰</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
+              <select
+                value={connectionFilter}
+                onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
+                disabled={!connectionIndexReady}
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="">전체 연결</option>
+                <option value="filings">공시 요약 연결</option>
+                <option value="smartMoney">13F 보유 연결</option>
+                <option value="indexMembership">지수 편입 연결</option>
               </select>
             </label>
           </div>

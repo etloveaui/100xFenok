@@ -9,6 +9,27 @@
  * displaying as percentages.
  */
 
+export interface ScreenerConnectionFlags {
+  marketFacts: boolean;
+  filings: boolean;
+  smartMoney: boolean;
+  indexMembership: boolean;
+}
+
+export interface ScreenerConnectionMeta {
+  flags: ScreenerConnectionFlags;
+  count: number;
+  confidenceLabel?: string | null;
+  coverageRatio?: number | null;
+  asOf?: {
+    profile?: string | null;
+    actionIndex?: string | null;
+    marketFacts?: string | null;
+    filings?: string | null;
+    sec13f?: string | null;
+  };
+}
+
 export interface ScreenerStock {
   guruHolders?: number | null;
   actionScore?: number | null;
@@ -68,6 +89,8 @@ export interface ScreenerStock {
   operatingMarginFy3?: number | null;
   roeFy3?: number | null;
   grossMarginFy3?: number | null;
+  connection?: ScreenerConnectionMeta | null;
+  connectionCount?: number | null;
 }
 
 export type ScreenerSortKey =
@@ -119,7 +142,8 @@ export type ScreenerSortKey =
   | "grossMarginFy2"
   | "operatingMarginFy3"
   | "roeFy3"
-  | "grossMarginFy3";
+  | "grossMarginFy3"
+  | "connectionCount";
 
 export type SortDir = "asc" | "desc";
 
@@ -129,6 +153,9 @@ export interface ScreenerDataResult {
   failed: boolean;
   /** stocks_analyzer source_date (data freshness), or null. */
   sourceDate: string | null;
+  /** entity_graph_stock_index generated_at, or null when unavailable. */
+  connectionIndexDate: string | null;
+  connectionIndexReady: boolean;
   /** Distinct sector labels for the filter dropdown (sorted). */
   sectors: string[];
   /** Distinct country codes for the filter (sorted). */

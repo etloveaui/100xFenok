@@ -281,5 +281,45 @@ const payload = {
   },
 };
 
+const stockIndexEntries = Object.fromEntries(stockEntities.map((entity) => {
+  const flags = {
+    market_facts: Boolean(entity.source_links.market_facts),
+    filings: Boolean(entity.source_links.edgar_summary),
+    sec_13f: Boolean(entity.source_links.sec_13f),
+    index_membership: entity.service_flags.includes("index_membership"),
+  };
+  const connectionCount = Object.values(flags).filter(Boolean).length;
+  return [entity.ticker, {
+    ticker: entity.ticker,
+    label: entity.label,
+    route: entity.route,
+    canonical_sector: entity.canonical_sector,
+    confidence: entity.confidence,
+    flags,
+    connection_count: connectionCount,
+    as_of: entity.as_of,
+    relations: entity.relations.map((relation) => ({
+      type: relation.type,
+      target: relation.target,
+    })),
+  }];
+}));
+
+const stockIndexPayload = {
+  schema_version: "data-entity-graph-stock-index/v1",
+  generated_at: generatedAt,
+  source_as_of: sourceAsOf,
+  totals: {
+    stocks: stockEntities.length,
+    with_market_facts: stockEntities.filter((entity) => entity.source_links.market_facts).length,
+    with_filings: stockEntities.filter((entity) => entity.source_links.edgar_summary).length,
+    with_sec_13f: stockEntities.filter((entity) => entity.source_links.sec_13f).length,
+    with_index_membership: stockEntities.filter((entity) => entity.service_flags.includes("index_membership")).length,
+  },
+  stocks: stockIndexEntries,
+};
+
 writeJson("computed/entity_graph.json", payload);
+writeJson("computed/entity_graph_stock_index.json", stockIndexPayload);
 console.log(`entity graph written: ${payload.totals.stocks} stocks, ${payload.totals.etfs} ETFs`);
+console.log(`entity graph stock index written: ${stockIndexPayload.totals.stocks} stocks`);

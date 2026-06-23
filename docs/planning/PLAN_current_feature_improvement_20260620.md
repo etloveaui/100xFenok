@@ -108,8 +108,9 @@
 
 **Next slices**:
 - G1 (landed) — build graph artifact + QA + deploy/data workflow hooks.
+- G1b (landed 2026-06-24) — generate lightweight `entity_graph_stock_index.json` root/public mirror and expose it in product surfaces instead of fetching the 6.5 MB full graph client-side. `/screener` now has a `연결 데이터` view plus 공시/13F/지수 filters; `/stock/[ticker]` shows a public data-connection card with market facts, filings, 13F, index flags and source dates.
 - G2 — add alias resolution for ETF single-stock underlyings (`NVIDIA` → `NVDA`, `TESLA` → `TSLA`, etc.) with confidence/source and no silent ticker invention.
-- G3 — expose graph-backed compare/export affordances in screener/stock/ETF surfaces.
+- G3 — expose additional graph-backed compare/export affordances in screener/stock/ETF surfaces.
 - G4 — add workflow observability: source freshness warn/error thresholds, failed-source fallback UI, and notification hooks.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources.
 

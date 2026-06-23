@@ -7,6 +7,8 @@ const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
 const ROOT_GRAPH_PATH = path.join(REPO_ROOT, "data", "computed", "entity_graph.json");
 const PUBLIC_GRAPH_PATH = path.join(APP_ROOT, "public", "data", "computed", "entity_graph.json");
+const ROOT_STOCK_INDEX_PATH = path.join(REPO_ROOT, "data", "computed", "entity_graph_stock_index.json");
+const PUBLIC_STOCK_INDEX_PATH = path.join(APP_ROOT, "public", "data", "computed", "entity_graph_stock_index.json");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -28,6 +30,8 @@ function comparableGraph(payload) {
 
 const graph = readJson(ROOT_GRAPH_PATH);
 const publicGraph = readJson(PUBLIC_GRAPH_PATH);
+const stockIndex = readJson(ROOT_STOCK_INDEX_PATH);
+const publicStockIndex = readJson(PUBLIC_STOCK_INDEX_PATH);
 const errors = [];
 
 assert(graph.schema_version === "data-entity-graph/v1", "schema_version must be data-entity-graph/v1", errors);
@@ -36,6 +40,17 @@ assert(typeof graph.source_as_of?.stocks_analyzer === "string", "stocks_analyzer
 assert(typeof graph.source_as_of?.stock_action_index === "string", "stock_action_index source_as_of is required", errors);
 assert(typeof graph.source_as_of?.edgar_summaries === "string", "edgar_summaries source_as_of is required", errors);
 assert(comparableGraph(graph) === comparableGraph(publicGraph), "public entity graph mirror must match root graph", errors);
+
+assert(stockIndex.schema_version === "data-entity-graph-stock-index/v1", "stock index schema_version must be data-entity-graph-stock-index/v1", errors);
+assert(typeof stockIndex.generated_at === "string", "stock index generated_at is required", errors);
+assert(JSON.stringify(stockIndex) === JSON.stringify(publicStockIndex), "public stock index mirror must match root stock index", errors);
+assert((stockIndex.totals?.stocks || 0) === (graph.totals?.stocks || 0), "stock index total must match graph stock total", errors);
+assert((stockIndex.totals?.with_market_facts || 0) === (graph.totals?.stocks_with_market_facts || 0), "stock index market_facts total must match graph", errors);
+assert((stockIndex.totals?.with_filings || 0) === (graph.totals?.stocks_with_filings || 0), "stock index filings total must match graph", errors);
+assert((stockIndex.totals?.with_sec_13f || 0) === (graph.totals?.stocks_with_13f || 0), "stock index 13F total must match graph", errors);
+assert(stockIndex.stocks?.NVDA?.flags?.market_facts === true, "stock index NVDA must link market_facts", errors);
+assert(stockIndex.stocks?.NVDA?.flags?.filings === true, "stock index NVDA must link filings", errors);
+assert(stockIndex.stocks?.NVDA?.flags?.sec_13f === true, "stock index NVDA must link 13F", errors);
 
 const nodeGroups = graph.nodes || {};
 const allNodes = [

@@ -36,7 +36,7 @@
 - `/market/events` shows a source status board with 16 individual surface health chips; this is observability, not public product content.
 - `/market/events` panel header shows the raw surface count (`Object.keys(SURFACES).length`) instead of a user-facing event count.
 - `EdgarSummaryClient` renders raw summary fetch errors in a public filing surface.
-- `/stock/[ticker]` renders a "data connection status" card with cache/auxiliary/internal connection wording in the public summary column.
+- `/stock/[ticker]` formerly rendered a "data connection status" card with cache/auxiliary/internal connection wording in the public summary column.
 - Kimi peer audit also found public wording risks in stock/ETF detail status lines, field-count labels, ETF new-list availability labels, hidden filing-tab discovery, market subnav consistency, ETF digital segment ambiguity, and small-screen tabbar density.
 
 ## Phases
@@ -60,7 +60,7 @@ Quality gate:
 - [x] Remove public source-status board from `/market/events`.
 - [x] Replace raw market surface count with user-facing event count.
 - [x] Remove raw filing error text from `EdgarSummaryClient`.
-- [x] Remove the public stock data-connection card while keeping normal data-state badges.
+- [x] Remove the internal-wording stock data-connection card while keeping normal data-state badges.
 
 Quality gates:
 
@@ -90,6 +90,12 @@ Deferred Kimi findings:
 - `/etfs` reuses `explore/EtfUniverseCard` as a component implementation, but the route already owns ETF header, snapshot, filters, URL sync, and detail links. Full component split is a future maintainability refactor, not required for this product cleanup.
 - `NavbarV3` is used by home design variants, not the current AppShell public product surfaces. Path-synced V3 menu/dropdown behavior is left for a chrome-specific pass.
 - Industry map click-to-route and DataNav scroll indicators are lower-risk affordance improvements; no evidence of broken routing or overflow in this pass.
+
+Follow-up accepted on 2026-06-24:
+
+- Public product connection cards are allowed when backed by the lightweight entity graph stock index and expressed as user-facing service coverage. This is distinct from the removed internal/cache diagnostic card.
+- `/screener` owns a `연결 데이터` view and 공시/13F/지수 filters; `/stock/[ticker]` owns a compact `데이터 연결` card with source dates.
+- Kimi follow-up anchor: `fh-20260624-009-km-f0c0c98f`.
 
 Quality gate:
 

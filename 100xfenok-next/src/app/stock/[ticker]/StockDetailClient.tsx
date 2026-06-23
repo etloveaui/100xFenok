@@ -32,6 +32,7 @@ import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
+import { getStockConnection, loadStockConnectionIndex, type StockConnectionEntry } from "@/lib/data-entity-graph/stock-index";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -775,6 +776,85 @@ function KV({ label, value }: { label: string; value: string }) {
   );
 }
 
+function StockConnectionCard({
+  ticker,
+  entry,
+  compact = false,
+}: {
+  ticker: string;
+  entry: StockConnectionEntry | null | undefined;
+  compact?: boolean;
+}) {
+  if (entry === undefined) {
+    return (
+      <section className="panel stock-section">
+        <div className="panel-h"><h2>데이터 연결</h2></div>
+        <div className="panel-b">
+          <p className="text-xs font-semibold text-slate-500">연결 인덱스를 확인하고 있습니다.</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (!entry) return null;
+
+  const flags = entry.flags ?? {};
+  const connected = [
+    flags.market_facts ? { label: "시장팩트", tone: "border-sky-200 bg-sky-50 text-sky-700", href: null } : null,
+    flags.filings ? { label: "공시", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", href: `/stock/${encodeURIComponent(ticker)}?tab=filings` } : null,
+    flags.sec_13f ? { label: "13F", tone: "border-violet-200 bg-violet-50 text-violet-700", href: `/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(ticker)}` } : null,
+    flags.index_membership ? { label: "지수", tone: "border-amber-200 bg-amber-50 text-amber-700", href: null } : null,
+  ].filter(Boolean) as Array<{ label: string; tone: string; href: string | null }>;
+  const asOfRows = [
+    ["프로필", entry.as_of?.profile],
+    ["시장팩트", entry.as_of?.market_facts],
+    ["공시", entry.as_of?.filings],
+    ["13F", entry.as_of?.sec_13f],
+  ].filter(([, value]) => typeof value === "string" && value.length > 0);
+
+  return (
+    <section className="panel stock-section">
+      <div className="panel-h">
+        <h2>데이터 연결</h2>
+        <span className="desc">{entry.connection_count ?? connected.length}개</span>
+      </div>
+      <div className="panel-b space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {connected.map((item) => item.href ? (
+            <TransitionLink
+              key={item.label}
+              href={item.href}
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${item.tone}`}
+            >
+              {item.label}
+            </TransitionLink>
+          ) : (
+            <span key={item.label} className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${item.tone}`}>
+              {item.label}
+            </span>
+          ))}
+        </div>
+        {asOfRows.length > 0 ? (
+          <div className={compact ? "grid gap-1 text-[10px]" : "grid gap-1 text-xs"}>
+            {asOfRows.map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-2 font-semibold text-slate-500">
+                <span>{label}</span>
+                <span className="orbitron tabular-nums text-slate-700">{fmtDateish(value)}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {entry.confidence?.label ? (
+          <p className="text-[10px] font-semibold text-slate-500">
+            신호 신뢰도 {entry.confidence.label}
+            {isFiniteNumber(entry.confidence.coverage_ratio) ? ` · 커버리지 ${(entry.confidence.coverage_ratio * 100).toFixed(0)}%` : ""}
+          </p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // StockDetailClient main
 // ---------------------------------------------------------------------------
@@ -819,7 +899,21 @@ export default function StockDetailClient({
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
+  const [connectionEntry, setConnectionEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
+
+  useEffect(() => {
+    let cancelled = false;
+    setConnectionEntry(undefined);
+    loadStockConnectionIndex()
+      .then((index) => {
+        if (!cancelled) setConnectionEntry(getStockConnection(index, symbol));
+      })
+      .catch(() => {
+        if (!cancelled) setConnectionEntry(null);
+      });
+    return () => { cancelled = true; };
+  }, [symbol]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1333,6 +1427,7 @@ export default function StockDetailClient({
           ) : null}
           {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
           <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
+          {!isEtfAsset ? <StockConnectionCard ticker={symbol} entry={connectionEntry} compact /> : null}
       </div>
 
       {activeStockTab !== "overview" ? renderStockDataTab() : (

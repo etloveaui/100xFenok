@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
+import { getStockConnection, loadStockConnectionIndex, stockConnectionCount } from "@/lib/data-entity-graph/stock-index";
 import type { ScreenerStock, ScreenerDataResult } from "@/lib/screener/types";
 import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
 
@@ -25,11 +26,25 @@ async function loadRecords(timeoutMs = FETCH_TIMEOUT_MS): Promise<StockAnalyzerR
   }
 }
 
+async function loadConnectionIndex(timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await loadStockConnectionIndex(controller.signal);
+  } catch {
+    return null;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 const EMPTY: ScreenerDataResult = {
   stocks: [],
   dataReady: false,
   failed: false,
   sourceDate: null,
+  connectionIndexDate: null,
+  connectionIndexReady: false,
   sectors: [],
   countries: [],
 };
@@ -42,7 +57,10 @@ export function useScreenerData(): ScreenerDataResult {
     isMountedRef.current = true;
 
     void (async () => {
-      const records = await loadRecords();
+      const [records, connectionIndex] = await Promise.all([
+        loadRecords(),
+        loadConnectionIndex(),
+      ]);
       if (!isMountedRef.current) return;
 
       if (!records) {
@@ -50,66 +68,90 @@ export function useScreenerData(): ScreenerDataResult {
         return;
       }
 
-      const stocks: ScreenerStock[] = records.map((item) => ({
-        ticker: item.symbol ?? "",
-        name: item.companyName ?? item.symbol ?? "",
-        exchange: item.industry ?? "",
-        sector: item.sector ?? "",
-        country: item.country ?? "",
-        price: num(item.price),
-        marketCap: num(item.marketCap),
-        per: num(item.per),
-        pbr: num(item.pbr),
-        dividendYield: num(item.dividendYield),
-        return12m: num(item.return12m),
-        roe: num(item.roe),
-        opm: num(item.opm),
-        eps: num(item.eps),
-        growthRate: num(item.growthRate),
-        momentum1m: num(item.momentum1m),
-        momentum3m: num(item.momentum3m),
-        momentum6m: num(item.momentum6m),
-        momentum12m: num(item.momentum12m),
-        rank: num(item.rank),
-        perBandCurrent: num(item.perBandCurrent),
-        perBandMin: num(item.perBandMin),
-        perBandAvg: num(item.perBandAvg),
-        perBandMax: num(item.perBandMax),
-        peForward: num(item.peForward),
-        epsForward: num(item.epsForward),
-        dividendTtm: num(item.dividendTtm),
-        ret1y: num(item.ret1y),
-        ret3y: num(item.ret3y),
-        ret5y: num(item.ret5y),
-        guruHolders: num(item.guruHolders),
-        actionScore: num(item.actionScore),
-        confidenceLabel: typeof item.confidenceLabel === "string" ? item.confidenceLabel : null,
-        actionLabel: typeof item.actionLabel === "string" ? item.actionLabel : null,
-        actionBucket: typeof item.actionBucket === "string" ? item.actionBucket : null,
-        actionReasons: Array.isArray(item.actionReasons) ? item.actionReasons : [],
-        lowEvidence: typeof item.lowEvidence === "boolean" ? item.lowEvidence : null,
-        forwardPeFy1: num(item.forwardPeFy1),
-        forwardEpsFy1: num(item.forwardEpsFy1),
-        revenueGrowthFy1: num(item.revenueGrowthFy1),
-        epsGrowthFy1: num(item.epsGrowthFy1),
-        forwardPeFy2: num(item.forwardPeFy2),
-        forwardEpsFy2: num(item.forwardEpsFy2),
-        revenueGrowthFy2: num(item.revenueGrowthFy2),
-        epsGrowthFy2: num(item.epsGrowthFy2),
-        forwardPeFy3: num(item.forwardPeFy3),
-        forwardEpsFy3: num(item.forwardEpsFy3),
-        revenueGrowthFy3: num(item.revenueGrowthFy3),
-        epsGrowthFy3: num(item.epsGrowthFy3),
-        operatingMarginFy1: num(item.operatingMarginFy1),
-        roeFy1: num(item.roeFy1),
-        grossMarginFy1: num(item.grossMarginFy1),
-        operatingMarginFy2: num(item.operatingMarginFy2),
-        roeFy2: num(item.roeFy2),
-        grossMarginFy2: num(item.grossMarginFy2),
-        operatingMarginFy3: num(item.operatingMarginFy3),
-        roeFy3: num(item.roeFy3),
-        grossMarginFy3: num(item.grossMarginFy3),
-      }));
+      const stocks: ScreenerStock[] = records.map((item) => {
+        const connectionEntry = getStockConnection(connectionIndex, item.symbol ?? "");
+        const connectionCount = stockConnectionCount(connectionEntry);
+        const connection = connectionEntry ? {
+          flags: {
+            marketFacts: connectionEntry.flags?.market_facts === true,
+            filings: connectionEntry.flags?.filings === true,
+            smartMoney: connectionEntry.flags?.sec_13f === true,
+            indexMembership: connectionEntry.flags?.index_membership === true,
+          },
+          count: connectionCount ?? 0,
+          confidenceLabel: connectionEntry.confidence?.label ?? null,
+          coverageRatio: num(connectionEntry.confidence?.coverage_ratio),
+          asOf: {
+            profile: connectionEntry.as_of?.profile ?? null,
+            actionIndex: connectionEntry.as_of?.action_index ?? null,
+            marketFacts: connectionEntry.as_of?.market_facts ?? null,
+            filings: connectionEntry.as_of?.filings ?? null,
+            sec13f: connectionEntry.as_of?.sec_13f ?? null,
+          },
+        } : null;
+        return {
+          ticker: item.symbol ?? "",
+          name: item.companyName ?? item.symbol ?? "",
+          exchange: item.industry ?? "",
+          sector: item.sector ?? "",
+          country: item.country ?? "",
+          price: num(item.price),
+          marketCap: num(item.marketCap),
+          per: num(item.per),
+          pbr: num(item.pbr),
+          dividendYield: num(item.dividendYield),
+          return12m: num(item.return12m),
+          roe: num(item.roe),
+          opm: num(item.opm),
+          eps: num(item.eps),
+          growthRate: num(item.growthRate),
+          momentum1m: num(item.momentum1m),
+          momentum3m: num(item.momentum3m),
+          momentum6m: num(item.momentum6m),
+          momentum12m: num(item.momentum12m),
+          rank: num(item.rank),
+          perBandCurrent: num(item.perBandCurrent),
+          perBandMin: num(item.perBandMin),
+          perBandAvg: num(item.perBandAvg),
+          perBandMax: num(item.perBandMax),
+          peForward: num(item.peForward),
+          epsForward: num(item.epsForward),
+          dividendTtm: num(item.dividendTtm),
+          ret1y: num(item.ret1y),
+          ret3y: num(item.ret3y),
+          ret5y: num(item.ret5y),
+          guruHolders: num(item.guruHolders),
+          actionScore: num(item.actionScore),
+          confidenceLabel: typeof item.confidenceLabel === "string" ? item.confidenceLabel : null,
+          actionLabel: typeof item.actionLabel === "string" ? item.actionLabel : null,
+          actionBucket: typeof item.actionBucket === "string" ? item.actionBucket : null,
+          actionReasons: Array.isArray(item.actionReasons) ? item.actionReasons : [],
+          lowEvidence: typeof item.lowEvidence === "boolean" ? item.lowEvidence : null,
+          forwardPeFy1: num(item.forwardPeFy1),
+          forwardEpsFy1: num(item.forwardEpsFy1),
+          revenueGrowthFy1: num(item.revenueGrowthFy1),
+          epsGrowthFy1: num(item.epsGrowthFy1),
+          forwardPeFy2: num(item.forwardPeFy2),
+          forwardEpsFy2: num(item.forwardEpsFy2),
+          revenueGrowthFy2: num(item.revenueGrowthFy2),
+          epsGrowthFy2: num(item.epsGrowthFy2),
+          forwardPeFy3: num(item.forwardPeFy3),
+          forwardEpsFy3: num(item.forwardEpsFy3),
+          revenueGrowthFy3: num(item.revenueGrowthFy3),
+          epsGrowthFy3: num(item.epsGrowthFy3),
+          operatingMarginFy1: num(item.operatingMarginFy1),
+          roeFy1: num(item.roeFy1),
+          grossMarginFy1: num(item.grossMarginFy1),
+          operatingMarginFy2: num(item.operatingMarginFy2),
+          roeFy2: num(item.roeFy2),
+          grossMarginFy2: num(item.grossMarginFy2),
+          operatingMarginFy3: num(item.operatingMarginFy3),
+          roeFy3: num(item.roeFy3),
+          grossMarginFy3: num(item.grossMarginFy3),
+          connection,
+          connectionCount,
+        };
+      });
 
       const sectors = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean))).sort();
       const countries = Array.from(new Set(stocks.map((s) => s.country).filter(Boolean))).sort();
@@ -119,6 +161,8 @@ export function useScreenerData(): ScreenerDataResult {
         dataReady: true,
         failed: false,
         sourceDate: provider.getSourceDate(),
+        connectionIndexDate: connectionIndex?.generated_at ?? null,
+        connectionIndexReady: Boolean(connectionIndex),
         sectors,
         countries,
       });
