@@ -93,6 +93,21 @@ function getClientIp(request: NextRequest): string {
   );
 }
 
+function isLocalHostRequest(request: NextRequest): boolean {
+  const hostname = request.nextUrl.hostname.toLowerCase();
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]"
+  );
+}
+
+function getFallbackLimit(request: NextRequest, fallbackLimit: number): number {
+  // Local prod QA can exercise dozens of routes in one minute; deployed Workers still use CF bindings.
+  return isLocalHostRequest(request) ? Math.max(fallbackLimit, 5000) : fallbackLimit;
+}
+
 function isAdminPath(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
@@ -114,7 +129,7 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
     return {
       bindingName: "RL_ADMIN",
       key: `admin:${ip}`,
-      fallbackLimit: 120,
+      fallbackLimit: getFallbackLimit(request, 120),
       periodMs: ONE_MINUTE_MS,
     };
   }
@@ -129,7 +144,7 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
     return {
       bindingName: "RL_API",
       key: `api:${apiClass}:${ip}`,
-      fallbackLimit: 120,
+      fallbackLimit: getFallbackLimit(request, 120),
       periodMs: ONE_MINUTE_MS,
     };
   }
@@ -138,7 +153,7 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
     return {
       bindingName: "RL_API",
       key: `suspect:${ip}`,
-      fallbackLimit: 120,
+      fallbackLimit: getFallbackLimit(request, 120),
       periodMs: ONE_MINUTE_MS,
     };
   }
@@ -146,7 +161,7 @@ function getRateLimitTier(request: NextRequest): RateLimitTier {
   return {
     bindingName: "RL_GLOBAL",
     key: `global:${ip}`,
-    fallbackLimit: 600,
+    fallbackLimit: getFallbackLimit(request, 600),
     periodMs: ONE_MINUTE_MS,
   };
 }
