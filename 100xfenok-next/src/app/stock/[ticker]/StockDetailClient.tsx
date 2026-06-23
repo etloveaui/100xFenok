@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import { DataStateBadge } from "@/components/DataStateNotice";
+import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import { bandPct, bandClass } from "@/lib/screener/bands";
@@ -1198,10 +1198,13 @@ export default function StockDetailClient({
       return (
         <div className="stock-shell">
           <div className="panel stock-empty">
-            <p className="text-lg font-black text-slate-700">ETF 상세 데이터 준비 중</p>
-            <p className="mt-2 text-sm font-semibold text-slate-500">
-              {symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.
-            </p>
+            <DataStateNotice
+              state={makeDataState({
+                status: "unavailable",
+                label: "ETF 상세 데이터 준비 중",
+                detail: `${symbol} — 목록에는 잡혔지만 보유 구성과 가격 정보가 아직 충분히 연결되지 않았습니다.`,
+              })}
+            />
             <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="내부 ETF 상세 미연결" className="mt-4" />
             <TransitionLink href="/etfs" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
@@ -1211,8 +1214,13 @@ export default function StockDetailClient({
     return (
       <div className="stock-shell">
         <div className="panel stock-empty">
-          <p className="text-lg font-black text-slate-700">해당 티커를 찾을 수 없습니다</p>
-          <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} — 아직 데이터에 등록되지 않았거나 갱신 전인 티커입니다.</p>
+          <DataStateNotice
+            state={makeDataState({
+              status: "unavailable",
+              label: "해당 티커를 찾을 수 없습니다",
+              detail: `${symbol} — 아직 데이터에 등록되지 않았거나 갱신 전인 티커입니다.`,
+            })}
+          />
           <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="내부 종목 데이터 미등록" className="mt-4" />
           <TransitionLink href="/screener" className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
@@ -1399,8 +1407,13 @@ export default function StockDetailClient({
         ) : (
           <SectionCard>
             <div className="py-8 text-center">
-              <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">상세 데이터를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
+              <DataStateNotice
+                state={makeDataState({
+                  status: "unavailable",
+                  label: "상세 데이터 준비 중",
+                  detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                })}
+              />
               <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="내부 종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
           </SectionCard>
@@ -1593,8 +1606,13 @@ export default function StockDetailClient({
           ) : (
             <SectionCard>
               <div className="py-8 text-center">
-                <p className="text-sm font-black text-slate-700">상세 데이터를 불러올 수 없습니다</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">상세 데이터를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
+                <DataStateNotice
+                  state={makeDataState({
+                    status: "unavailable",
+                    label: "상세 데이터 준비 중",
+                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                  })}
+                />
                 <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="내부 종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
               </div>
             </SectionCard>
@@ -1937,8 +1955,13 @@ function EtfDataPanel({
     return (
       <SectionCard title="ETF 상세">
         <div className="py-8 text-center">
-          <p className="text-sm font-black text-slate-700">ETF 상세 데이터는 아직 없습니다</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">신규 ETF는 상세 데이터가 열리기 전에도 목록과 가격 정보를 먼저 확인할 수 있습니다.</p>
+          <DataStateNotice
+            state={makeDataState({
+              status: "unavailable",
+              label: "ETF 상세 데이터 미수집",
+              detail: "신규 ETF는 상세 데이터가 열리기 전에도 목록과 가격 정보를 먼저 확인할 수 있습니다.",
+            })}
+          />
           <ExternalSourceLinks ticker={ticker} kind="etf" statusLine="ETF 상세 데이터 미수집" className="mx-auto mt-4 max-w-xl" />
         </div>
       </SectionCard>
@@ -2013,7 +2036,15 @@ function EtfDataPanel({
 
 function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHolding[]; currency: string }) {
   if (!holdings.length) {
-    return <p className="text-sm font-semibold text-slate-500">보유 데이터 없음</p>;
+    return (
+      <DataStateNotice
+        state={makeDataState({
+          status: "unavailable",
+          label: "보유 구성 없음",
+          detail: "이 ETF의 보유 종목·스왑 구성이 아직 수집되지 않았습니다.",
+        })}
+      />
+    );
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1">
@@ -2061,7 +2092,17 @@ function weightedRowValue(row: StockanalysisWeightedRow): number | null {
 
 function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | null | undefined; empty: string }) {
   const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
-  if (!items.length) return <p className="text-sm font-semibold text-slate-500">{empty}</p>;
+  if (!items.length) {
+    return (
+      <DataStateNotice
+        state={makeDataState({
+          status: "unavailable",
+          label: empty,
+          detail: "분해 항목은 데이터 갱신 후 표시됩니다.",
+        })}
+      />
+    );
+  }
   return (
     <div className="space-y-2">
       {items.map((row, index) => {
@@ -2085,7 +2126,17 @@ function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | n
 
 function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPoint[]; currency: string }) {
   const rows = history.filter((point) => isFiniteNumber(point.c));
-  if (!rows.length) return <p className="text-sm font-semibold text-slate-500">가격 히스토리 없음</p>;
+  if (!rows.length) {
+    return (
+      <DataStateNotice
+        state={makeDataState({
+          status: "unavailable",
+          label: "가격 히스토리 없음",
+          detail: "이 ETF의 월간 가격 이력은 아직 수집되지 않았습니다.",
+        })}
+      />
+    );
+  }
   const chronological = [...rows].reverse();
   const closes = chronological.map((point) => point.c).filter(isFiniteNumber);
   const min = Math.min(...closes);

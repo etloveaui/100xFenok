@@ -30,7 +30,8 @@
     "lint": "eslint",
     "qa:browser": "node .qa-playwright.js",
     "qa:browser:lite": "QA_VIEWPORTS=desktop QA_ROUTES=/,/tools/stock-analyzer/native node .qa-playwright.js",
-    "qa:browser:mobile": "QA_VIEWPORTS=mobile,tablet,fold QA_ROUTES=/,/?tab=sectors,/?tab=liquidity,/?tab=sentiment,/market,/alpha-scout,/alpha-scout?report=2025-08-24_100x-alpha-scout.html,/ib,/vr,/vr/?path=vr/vr-complete-system.html,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer,/tools/stock-analyzer/native,/100x/daily-wrap node .qa-playwright.js",
+    "qa:browser:p2": "QA_BROWSER_STRICT=1 QA_VIEWPORTS=desktop,mobile,fold QA_ROUTES=/explore,/screener,/stock/NVDA,/stock/ZZZZ,/market-valuation,/sectors QA_SCREENSHOT_DIR=.qa-artifacts/p2-browser QA_OUTPUT_JSON=.qa-artifacts/p2-browser/results.json node .qa-playwright.js",
+    "qa:browser:mobile": "QA_VIEWPORTS=mobile,tablet,fold QA_ROUTES=/,/?tab=sectors,/?tab=liquidity,/?tab=sentiment,/market,/explore,/screener,/stock/NVDA,/stock/ZZZZ,/market-valuation,/sectors,/alpha-scout,/alpha-scout?report=2025-08-24_100x-alpha-scout.html,/ib,/vr,/vr/?path=vr/vr-complete-system.html,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer,/tools/stock-analyzer/native,/100x/daily-wrap node .qa-playwright.js",
     "qa:browser:webkit": "timeout 25s env QA_WEBKIT_ROUTE=/ QA_WEBKIT_TIMEOUT_MS=10000 node .qa-webkit-smoke.js",
     "qa:browser:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_DEV=1 node .qa-playwright.js",
     "qa:browser:dist": "QA_BASE_URL=http://127.0.0.1:4173 node .qa-playwright.js",
@@ -41,6 +42,7 @@
     "qa:etf-classification": "tsx scripts/check-etf-classification-confidence.ts",
     "qa:surface-consumers": "node scripts/check-stockanalysis-surface-consumers.mjs",
     "qa:market-audit": "node scripts/check-stockanalysis-market-audit.mjs",
+    "qa:data-state": "tsx scripts/check-data-state-render-contract.tsx",
     "qa:market-charts": "node scripts/check-market-chart-regression.mjs",
     "qa:history-gap": "node scripts/report-stockanalysis-history-gap.mjs",
     "qa:edgar-summaries": "node scripts/check-edgar-summary-evidence.mjs",
@@ -50,7 +52,8 @@
     "qa:lighthouse:lite": "QA_LIGHTHOUSE_RUNS=1 QA_LIGHTHOUSE_PRESETS=desktop QA_LIGHTHOUSE_ROUTES=/tools/stock-analyzer/native/ node .qa-lighthouse.js",
     "qa:lighthouse:dev": "QA_BASE_URL=http://127.0.0.1:3000 QA_LIGHTHOUSE_RUNS=3 node .qa-lighthouse.js",
     "qa:a11y": "node .qa-a11y.js",
-    "qa:a11y:mobile": "QA_A11Y_VIEWPORTS=mobile,fold QA_A11Y_ROUTES=/,/posts,/vr,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer/native,/etfs,/etfs/new,/etfs/SPY,/etfs/ADIU node .qa-a11y.js",
+    "qa:a11y:p2": "QA_A11Y_VIEWPORTS=desktop,mobile,fold QA_A11Y_ROUTES=/explore,/screener,/stock/NVDA,/stock/ZZZZ,/market-valuation,/sectors node .qa-a11y.js",
+    "qa:a11y:mobile": "QA_A11Y_VIEWPORTS=mobile,fold QA_A11Y_ROUTES=/,/posts,/vr,/explore,/screener,/stock/NVDA,/stock/ZZZZ,/market-valuation,/sectors,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer/native,/etfs,/etfs/new,/etfs/SPY,/etfs/ADIU node .qa-a11y.js",
     "qa:a11y:strict": "QA_A11Y_STRICT=1 node .qa-a11y.js"
   },
   "dependencies": {

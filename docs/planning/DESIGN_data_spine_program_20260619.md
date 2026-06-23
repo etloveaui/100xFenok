@@ -333,12 +333,29 @@ Implemented product state primitives:
   screen-level readiness diagnostics. Public `/market-valuation`, `/sectors`,
   and `/etfs` must keep this as compact freshness/trust copy, not a diagnostic
   card.
+- 2026-06-23 P2 reliability hardening extends the state contract to the browser
+  gate itself: `/explore`, `/screener`, `/stock/NVDA`, `/stock/ZZZZ`,
+  `/market-valuation`, and `/sectors` must expose at least one public
+  `DataStateNotice` or `DataStateBadge` on desktop/mobile/fold checks.
+- `/explore` keeps the compact product surface: the signal strip shows a
+  readiness/as-of badge, not an admin-style coverage card. Admin diagnostics
+  stay in Data Lab.
+- Stock detail and screener detail empty states should prefer the shared
+  DataState primitive over silent empty grids or standalone "no data" strings.
+- `npm run build` intentionally runs `sync-static`; when root DataPack/static
+  sources are newer than the mirrored `100xfenok-next/public/...` files, the
+  build-clean action is a separate static mirror refresh commit rather than
+  mixing large generated diffs into product-code commits.
 
 Verification gate:
 
 - `npm run qa:quote-contract`
 - `npm run qa:copy`
 - `npm run qa:market-audit`
+- `npm run qa:data-state`
+- `QA_BASE_URL=http://127.0.0.1:3105 QA_DEV=1 npm run qa:browser:p2`
+- `QA_BASE_URL=http://127.0.0.1:3105 QA_DEV=1 npm run qa:a11y:p2`
+- `npm run build`
 - scoped ESLint on touched Next files and QA scripts
 - `npx tsc --noEmit --pretty false`
 - `git diff --check`

@@ -934,6 +934,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
     .map(([source]) => source);
   const topHoldings = (data.etf?.top_holdings ?? []).slice(0, compact ? 5 : 10);
   const breakdownLimit = compact ? 4 : 8;
+  const availablePrimaryFields = primaryFields.filter(([, field]) => facts[field]);
 
   return (
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
@@ -948,11 +949,22 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
           {data.generated_at?.slice(0, 10) ?? "—"}
         </span>
       </div>
-      <div className="grid min-w-0 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-        {primaryFields.map(([label, field]) => (
-          <MarketFactCard key={field} label={label} field={field} fact={facts[field]} currency={currency} />
-        ))}
-      </div>
+      {availablePrimaryFields.length > 0 ? (
+        <div className="grid min-w-0 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          {availablePrimaryFields.map(([label, field]) => (
+            <MarketFactCard key={field} label={label} field={field} fact={facts[field]} currency={currency} />
+          ))}
+        </div>
+      ) : (
+        <DataStateNotice
+          state={makeDataState({
+            status: "unavailable",
+            label: "통합 데이터 항목 없음",
+            detail: "데이터 파일은 열렸지만 표시할 핵심 가격·밸류 항목이 없습니다.",
+            asOf: data.generated_at ?? null,
+          })}
+        />
+      )}
 
       {data.asset_type === "etf" ? (
         <div className="mt-3 grid min-w-0 gap-2 md:grid-cols-3">

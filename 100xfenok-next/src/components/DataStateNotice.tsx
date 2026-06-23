@@ -38,6 +38,8 @@ export function DataStateBadge({
   const text = asOf ? `${prefix ? `${prefix} ` : ""}${asOf}${state.status === "stale" ? " · 오래됨" : ""}` : state.label;
   return (
     <span
+      data-testid="data-state-badge"
+      data-data-state={state.status}
       className={cx(
         "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums",
         badgeToneClass(state.status),
@@ -62,7 +64,11 @@ export default function DataStateNotice({
 }) {
   const asOf = showAsOf ? formatAsOf(state.asOf) : null;
   return (
-    <div className={cx("rounded-[1.25rem] border px-4 py-3 text-xs font-semibold leading-5", noticeToneClass(state.status), className)}>
+    <div
+      data-testid="data-state-notice"
+      data-data-state={state.status}
+      className={cx("rounded-[1.25rem] border px-4 py-3 text-xs font-semibold leading-5", noticeToneClass(state.status), className)}
+    >
       <span className="font-black">{state.label}</span>
       <span className="ml-2">{state.detail}</span>
       {asOf ? <span className="ml-2 whitespace-nowrap font-black tabular-nums">기준 {asOf}</span> : null}

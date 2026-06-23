@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import DataStateNotice from "@/components/DataStateNotice";
+import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import { makeDataState } from "@/lib/data-state";
 import {
   loadSummaries,
@@ -145,7 +145,15 @@ export default function SignalStrip() {
         ) : null}
       </div>
       <div className="sb-cap">
-        기준 <span className="num">{doc.as_of ?? "—"}</span> · 유동성·뱅킹·센티먼트 종합 신호
+        <DataStateBadge
+          state={makeDataState({
+            status: doc.as_of ? "ready" : "unavailable",
+            label: doc.as_of ? "시장 신호 준비됨" : "기준일 없음",
+            detail: "유동성·뱅킹·센티먼트 종합 신호",
+            asOf: doc.as_of ?? null,
+          })}
+        />
+        <span>유동성·뱅킹·센티먼트 종합 신호</span>
       </div>
     </section>
   );

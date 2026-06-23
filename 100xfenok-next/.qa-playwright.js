@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { chromium } = require("playwright");
+const fs = require("fs");
+const path = require("path");
 
 const base = process.env.QA_BASE_URL || "http://127.0.0.1:4173";
 const baseOrigin = new URL(base).origin;
 const adminPassword = process.env.QA_ADMIN_PASSWORD || "";
+const screenshotDir = process.env.QA_SCREENSHOT_DIR || "";
+const outputJsonPath = process.env.QA_OUTPUT_JSON || "";
+const strictMode = process.env.QA_BROWSER_STRICT === "1";
 
 function parseCsvEnv(value) {
   if (!value) return [];
@@ -108,6 +113,14 @@ const designLabNativeRoute = "/admin/design-lab?mode=native";
 const tabSectorsRoute = "/?tab=sectors";
 const tabLiquidityRoute = "/?tab=liquidity";
 const tabSentimentRoute = "/?tab=sentiment";
+const p2DataStateRoutes = [
+  "/explore",
+  "/screener",
+  "/stock/NVDA",
+  "/stock/ZZZZ",
+  "/market-valuation",
+  "/sectors",
+];
 
 const defaultRoutes = [
   "/",
@@ -125,6 +138,10 @@ const defaultRoutes = [
   vrDeepLinkRoute,
   "/posts",
   postsDeepLinkRoute,
+  "/explore",
+  "/screener",
+  "/stock/NVDA",
+  "/market-valuation",
   "/sectors",
   "/etfs",
   "/etfs?type=single-stock",
@@ -212,6 +229,7 @@ const viewports =
     : viewportCatalog.filter((viewport) => defaultViewportNames.has(viewport.name));
 
 const isDevServer = base.includes(":3000") || process.env.QA_DEV === "1";
+const p2DataStateRouteSet = new Set(p2DataStateRoutes);
 
 if (routes.length === 0) {
   throw new Error("No routes configured. Set QA_ROUTES or use default routes.");
@@ -221,6 +239,26 @@ if (viewports.length === 0) {
   throw new Error(
     "No viewports configured. Set QA_VIEWPORTS with desktop,mobile,tablet,fold or use defaults.",
   );
+}
+
+if (screenshotDir) {
+  fs.mkdirSync(screenshotDir, { recursive: true });
+}
+
+if (outputJsonPath) {
+  fs.mkdirSync(path.dirname(outputJsonPath), { recursive: true });
+}
+
+function screenshotName(viewport, route) {
+  const safeRoute = route.replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "root";
+  return `${viewport}-${safeRoute}.png`;
+}
+
+async function maybeCaptureScreenshot(page, viewport, route) {
+  if (!screenshotDir) return null;
+  const file = path.join(screenshotDir, screenshotName(viewport, route));
+  await page.screenshot({ path: file, fullPage: true });
+  return file;
 }
 
 async function prewarmRoutes() {
@@ -441,6 +479,31 @@ async function runEtfChecks(page, route) {
   return checks;
 }
 
+async function runDataStateSurfaceChecks(page, route) {
+  if (!p2DataStateRouteSet.has(route)) return [];
+  const stateLocator = page.locator('[data-testid="data-state-notice"], [data-testid="data-state-badge"]');
+  await stateLocator.first().waitFor({ state: "attached", timeout: 3500 }).catch(() => {});
+  const states = await page
+    .locator('[data-testid="data-state-notice"], [data-testid="data-state-badge"]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        status: node.getAttribute("data-data-state") || "",
+        text: (node.textContent || "").replace(/\s+/g, " ").trim().slice(0, 160),
+      })),
+    )
+    .catch(() => []);
+  const bodyText = await page.locator("body").innerText().catch(() => "");
+  return [
+    {
+      check: "p2DataStateVisible",
+      pass: states.length > 0 && !/예상치 못한 오류|일시적인 내부 오류|Cannot read|TypeError/i.test(bodyText),
+      stateCount: states.length,
+      statuses: Array.from(new Set(states.map((state) => state.status).filter(Boolean))),
+      samples: states.slice(0, 3),
+    },
+  ];
+}
+
 (async () => {
   await prewarmRoutes();
   const browser = await chromium.launch({ headless: true });
@@ -482,6 +545,7 @@ async function runEtfChecks(page, route) {
         criticalSameOriginDataFailureCount: 0,
         blockingConsoleErrors: [],
         consoleErrors: [],
+        screenshot: null,
       };
 
       const consoleErrors = [];
@@ -572,6 +636,7 @@ async function runEtfChecks(page, route) {
             };
           });
           Object.assign(item, snapshot);
+          item.screenshot = await maybeCaptureScreenshot(page, vp.name, route);
           const expectedIframeSrc = expectedIframeSrcByRoute[route];
           if (expectedIframeSrc) {
             item.expectedIframeSrcMatched = stripEmbedParam(snapshot.iframeSrc) === expectedIframeSrc;
@@ -799,6 +864,23 @@ async function runEtfChecks(page, route) {
           });
         }
       }
+
+      if (p2DataStateRouteSet.has(route) && !item.navigationError) {
+        try {
+          const dataStateChecks = await runDataStateSurfaceChecks(page, route);
+          dataStateChecks.forEach((check) => {
+            results.push({ viewport: vp.name, route, ...check });
+          });
+        } catch (err) {
+          results.push({
+            viewport: vp.name,
+            route,
+            check: "p2DataStateVisible",
+            pass: false,
+            error: String(err),
+          });
+        }
+      }
     }
 
     await context.close();
@@ -830,6 +912,7 @@ async function runEtfChecks(page, route) {
       return true;
     }
     if (r.route === "/tools/stock-analyzer" && r.expectedIframeSrcMatched === false) return true;
+    if (r.check === "p2DataStateVisible") return r.pass === false;
     if (r.linkedChecks && r.linkedChecks.some((c) => c.status >= 400)) return true;
     if ((r.criticalSameOriginDataFailureCount || 0) > 0) return true;
     // 404 test route: console errors from the 404 page itself are expected
@@ -837,5 +920,12 @@ async function runEtfChecks(page, route) {
     return false;
   });
 
-  console.log(JSON.stringify({ total: results.length, failures: failures.length, failuresDetail: failures.slice(0, 60), results }, null, 2));
+  const summary = { total: results.length, failures: failures.length, failuresDetail: failures.slice(0, 60), results };
+  if (outputJsonPath) {
+    fs.writeFileSync(outputJsonPath, JSON.stringify(summary, null, 2));
+  }
+  console.log(JSON.stringify(summary, null, 2));
+  if (strictMode && failures.length > 0) {
+    process.exit(1);
+  }
 })();

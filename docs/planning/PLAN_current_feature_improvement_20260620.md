@@ -114,6 +114,13 @@
 
 **Owner decisions embedded**: (a) M3 nav-IA resolved as A+B and shipped; (b) F2 summary auto-gen stays free-first/provider-agnostic, paid still gated; (c) next start point is foreign-filer form support because it closes a measured top-200 coverage ceiling, not because it is a new side project.
 
+**P2 reliability gate added 2026-06-23**: product-state QA now covers
+`/explore`, `/screener`, `/stock/NVDA`, `/stock/ZZZZ`, `/market-valuation`, and
+`/sectors` on desktop/mobile/fold. Gate requires no blocking console/data
+failure, no horizontal overflow, at least one public DataState marker per route,
+and zero serious/critical a11y findings. `/explore` uses a compact as-of badge;
+diagnostic coverage cards stay out of public routes.
+
 **Current remaining work after the autonomous wave**: (1) run the now-gated foreign-filer summary batch for the 20 uncovered top-200 names; (2) continue Data Spine cleanup on remaining non-quote admin/GAS HTML paths and feno-value direct provider paths, while the static stock-analyzer product consumers are now routed through `StaticStockAnalyzerDataProvider`; (3) translation generation and top-300/top-400 breadth only after the foreign-filer data run is measured clean; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
