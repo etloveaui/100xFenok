@@ -32,6 +32,7 @@
 ## Measured Risks
 
 - `/live-bench` renders `AdminLiveBench` directly on a public route while `/admin/live` already exists behind `AdminLayout`.
+- 2026-06-24 follow-up: `/live-bench` had been redirected, but middleware still rewrote `/admin/live` back to `/live-bench/`, bypassing `AdminLayout`. Remove that rewrite and keep `/live-bench` as the only redirecting alias.
 - `/market/events` shows a source status board with 16 individual surface health chips; this is observability, not public product content.
 - `/market/events` panel header shows the raw surface count (`Object.keys(SURFACES).length`) instead of a user-facing event count.
 - `EdgarSummaryClient` renders raw summary fetch errors in a public filing surface.
@@ -55,6 +56,7 @@ Quality gate:
 ### Phase 2 - Public Diagnostic Cleanup
 
 - [x] Move `/live-bench` to the authenticated Admin surface by redirecting it to `/admin/live`.
+- [x] Remove the `/admin/live` middleware rewrite to `/live-bench/` so Voice Lab always goes through `AdminLayout`.
 - [x] Remove public source-status board from `/market/events`.
 - [x] Replace raw market surface count with user-facing event count.
 - [x] Remove raw filing error text from `EdgarSummaryClient`.
@@ -66,6 +68,7 @@ Quality gates:
 - `npx tsc --noEmit --pretty false` - pass.
 - `npx eslint scripts/lint-public-copy.mjs src/app/live-bench/page.tsx src/app/market/events/MarketEventsClient.tsx src/components/filings/EdgarSummaryClient.tsx 'src/app/stock/[ticker]/StockDetailClient.tsx' src/app/screener/ScreenerClient.tsx` - pass.
 - `git diff --check` - pass.
+- `node scripts/ops/test-admin-auth-guards.mjs` now blocks any `/admin/live` middleware rewrite to `/live-bench/`.
 
 ### Phase 3 - Peer Integration
 

@@ -123,10 +123,6 @@ function isAdminApiPath(pathname: string): boolean {
   return pathname === "/api/admin" || pathname.startsWith("/api/admin/");
 }
 
-function isPublicLiveBenchPath(pathname: string): boolean {
-  return pathname === "/admin/live" || pathname.startsWith("/admin/live/");
-}
-
 function getRateLimitTier(request: NextRequest): RateLimitTier {
   const { pathname } = request.nextUrl;
   const ip = getClientIp(request);
@@ -282,12 +278,6 @@ export async function middleware(request: NextRequest) {
         "X-Robots-Tag": "noindex, nofollow, noarchive",
       },
     });
-  }
-
-  if (isPublicLiveBenchPath(pathname)) {
-    const targetUrl = request.nextUrl.clone();
-    targetUrl.pathname = "/live-bench/";
-    return NextResponse.rewrite(targetUrl);
   }
 
   if (!(await passesRateLimit(request))) {

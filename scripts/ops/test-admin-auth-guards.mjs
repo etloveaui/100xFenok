@@ -10,6 +10,8 @@ const requireFromApp = createRequire(path.join(appRoot, "package.json"));
 const ts = requireFromApp("typescript");
 const adminAuthPath = path.join(appRoot, "src/lib/client/admin-auth.ts");
 const footerPath = path.join(appRoot, "src/components/Footer.tsx");
+const middlewarePath = path.join(appRoot, "middleware.ts");
+const liveBenchPagePath = path.join(appRoot, "src/app/live-bench/page.tsx");
 
 class TestCustomEvent {
   constructor(type, init = {}) {
@@ -190,7 +192,30 @@ function assertFooterDoesNotAutoRefreshAdminSession() {
   );
 }
 
+function assertAdminLiveIsNotPublicRewrite() {
+  const middleware = fs.readFileSync(middlewarePath, "utf8");
+  const liveBenchPage = fs.readFileSync(liveBenchPagePath, "utf8");
+
+  assert(
+    !middleware.includes('pathname = "/live-bench/"'),
+    "/admin/live must not rewrite to /live-bench and bypass admin layout auth",
+  );
+  assert(
+    !middleware.includes("isPublicLiveBenchPath"),
+    "/admin/live must be treated as a normal admin path",
+  );
+  assert(
+    liveBenchPage.includes('redirect("/admin/live")'),
+    "/live-bench must redirect into the authenticated /admin/live route",
+  );
+  assert(
+    !liveBenchPage.includes("AdminLiveBench"),
+    "/live-bench must not mount the admin voice bench directly",
+  );
+}
+
 assertAdminAuthChangeEvents();
 assertFooterDoesNotAutoRefreshAdminSession();
+assertAdminLiveIsNotPublicRewrite();
 
 console.log("admin auth guards passed");
