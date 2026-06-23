@@ -128,6 +128,26 @@ Quality gate:
 - [x] Prepare commit/push/deploy after explicit owner correction on 2026-06-24.
 - [x] Use the existing Cloudflare deploy workflow triggered by `main` push; do not create a separate manual deploy path unless the workflow fails.
 
+### Phase 6 - Data Connection Spine
+
+- [x] Extend the lightweight entity graph into a service connection spine rather than a separate product DB.
+- [x] Preserve `entity_graph_stock_index.connection_count` semantics: it still counts the original four core links only (`market_facts`, filings, 13F, index membership).
+- [x] Add `single_stock_etfs` as a lightweight stock-index flag plus `service_count`; put the actual ETF list in `entity_graph_stock_services.json` root/public mirrors.
+- [x] Add reverse stock -> single-stock ETF graph relations so ETF `tracks_underlying` can be reused by stock surfaces.
+- [x] Add `/screener` connection filtering and badge support for `단일종목 ETF 연결`.
+- [x] Add `/stock/[ticker]` service-list support so the connection card can link to related single-stock ETF detail/compare surfaces.
+
+Measured P6 output:
+
+- Stock service mirror schema: `data-entity-graph-stock-services/v1`.
+- Service coverage: 67 stock underlyings and 122 single-stock ETF links.
+- Examples after alias-aware underlying resolution: NVDA 7 ETF links, AAPL 3 ETF links, TSLA 10 ETF links.
+- Kimi P6 critique anchor: `fh-20260624-016-km-f9d31e32`; accepted recommendation was to keep heavy ETF lists out of the client-fetched stock index.
+
+Quality gate:
+
+- `npm run qa:data-graph` - pass after graph/service mirror regeneration.
+
 ## Notes
 
 - Current nested app status at goal start: `source/100xFenok` clean on `main...origin/main`.

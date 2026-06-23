@@ -18,7 +18,7 @@ import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock
 const PAGE_SIZE = 50;
 
 type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
-type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership";
+type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership" | "singleStockEtfs";
 
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
@@ -244,6 +244,7 @@ const CONNECTION_BADGES = [
   { key: "filings", label: "공시", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   { key: "smartMoney", label: "13F", className: "border-violet-200 bg-violet-50 text-violet-700" },
   { key: "indexMembership", label: "지수", className: "border-amber-200 bg-amber-50 text-amber-700" },
+  { key: "singleStockEtfs", label: "ETF", className: "border-cyan-200 bg-cyan-50 text-cyan-700" },
 ] as const;
 
 function connectionTitle(stock: ScreenerStock): string {
@@ -254,6 +255,7 @@ function connectionTitle(stock: ScreenerStock): string {
     connection.asOf?.filings ? `공시 ${connection.asOf.filings}` : null,
     connection.asOf?.sec13f ? `13F ${connection.asOf.sec13f}` : null,
     connection.asOf?.actionIndex ? `신호 ${connection.asOf.actionIndex}` : null,
+    connection.serviceCount ? `단일종목 ETF ${connection.serviceCount}개` : null,
   ].filter(Boolean);
   return asOf.length ? asOf.join(" · ") : "연결 인덱스 확인됨";
 }
@@ -1237,6 +1239,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
                 <option value="filings">공시 요약 연결</option>
                 <option value="smartMoney">13F 보유 연결</option>
                 <option value="indexMembership">지수 편입 연결</option>
+                <option value="singleStockEtfs">단일종목 ETF 연결</option>
               </select>
             </label>
           </div>

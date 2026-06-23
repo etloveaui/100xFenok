@@ -32,7 +32,15 @@ import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
-import { getStockConnection, loadStockConnectionIndex, type StockConnectionEntry } from "@/lib/data-entity-graph/stock-index";
+import {
+  getStockConnection,
+  getStockServices,
+  loadStockConnectionIndex,
+  loadStockServicesIndex,
+  type StockConnectionEntry,
+  type StockServiceEtfLink,
+  type StockServicesEntry,
+} from "@/lib/data-entity-graph/stock-index";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -781,10 +789,12 @@ function KV({ label, value }: { label: string; value: string }) {
 function StockConnectionCard({
   ticker,
   entry,
+  services,
   compact = false,
 }: {
   ticker: string;
   entry: StockConnectionEntry | null | undefined;
+  services?: StockServicesEntry | null;
   compact?: boolean;
 }) {
   if (entry === undefined) {
@@ -801,17 +811,22 @@ function StockConnectionCard({
   if (!entry) return null;
 
   const flags = entry.flags ?? {};
+  const singleStockEtfs = services?.single_stock_etfs ?? [];
+  const etfCount = singleStockEtfs.length || entry.service_count || 0;
+  const etfCompareHref = buildSingleStockEtfHref(singleStockEtfs);
   const connected = [
     flags.market_facts ? { label: "시장팩트", tone: "border-sky-200 bg-sky-50 text-sky-700", href: null } : null,
     flags.filings ? { label: "공시", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", href: `/stock/${encodeURIComponent(ticker)}?tab=filings` } : null,
     flags.sec_13f ? { label: "13F", tone: "border-violet-200 bg-violet-50 text-violet-700", href: `/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(ticker)}` } : null,
     flags.index_membership ? { label: "지수", tone: "border-amber-200 bg-amber-50 text-amber-700", href: null } : null,
+    flags.single_stock_etfs ? { label: `ETF${etfCount ? ` ${etfCount}` : ""}`, tone: "border-cyan-200 bg-cyan-50 text-cyan-700", href: etfCompareHref } : null,
   ].filter(Boolean) as Array<{ label: string; tone: string; href: string | null }>;
   const asOfRows = [
     ["프로필", entry.as_of?.profile],
     ["시장팩트", entry.as_of?.market_facts],
     ["공시", entry.as_of?.filings],
     ["13F", entry.as_of?.sec_13f],
+    ["ETF", services?.as_of?.etf_universe],
   ].filter(([, value]) => typeof value === "string" && value.length > 0);
 
   return (
@@ -846,6 +861,25 @@ function StockConnectionCard({
             ))}
           </div>
         ) : null}
+        {singleStockEtfs.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {singleStockEtfs.slice(0, compact ? 3 : 6).map((etf) => (
+              <TransitionLink
+                key={etf.ticker}
+                href={etf.route || `/etfs/${encodeURIComponent(etf.ticker)}`}
+                className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                title={etf.label ?? etf.ticker}
+              >
+                {etf.ticker}
+              </TransitionLink>
+            ))}
+            {singleStockEtfs.length > (compact ? 3 : 6) ? (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500">
+                +{singleStockEtfs.length - (compact ? 3 : 6)}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         {entry.confidence?.label ? (
           <p className="text-[10px] font-semibold text-slate-500">
             신호 신뢰도 {entry.confidence.label}
@@ -855,6 +889,13 @@ function StockConnectionCard({
       </div>
     </section>
   );
+}
+
+function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string | null {
+  const tickers = links.map((link) => link.ticker).filter(Boolean);
+  if (tickers.length >= 2) return `/etfs/compare?tickers=${encodeURIComponent(tickers.slice(0, 4).join(","))}`;
+  if (tickers.length === 1) return links[0]?.route || `/etfs/${encodeURIComponent(tickers[0])}`;
+  return "/etfs";
 }
 
 // ---------------------------------------------------------------------------
@@ -902,6 +943,7 @@ export default function StockDetailClient({
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
   const [connectionEntry, setConnectionEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
+  const [stockServicesEntry, setStockServicesEntry] = useState<StockServicesEntry | null | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
 
   useEffect(() => {
@@ -915,6 +957,21 @@ export default function StockDetailClient({
       })
       .catch(() => {
         if (!cancelled) setConnectionEntry(null);
+      });
+    return () => { cancelled = true; };
+  }, [symbol]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setStockServicesEntry(undefined);
+    });
+    loadStockServicesIndex()
+      .then((index) => {
+        if (!cancelled) setStockServicesEntry(getStockServices(index, symbol));
+      })
+      .catch(() => {
+        if (!cancelled) setStockServicesEntry(null);
       });
     return () => { cancelled = true; };
   }, [symbol]);
@@ -1433,7 +1490,7 @@ export default function StockDetailClient({
           ) : null}
           {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
           <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
-          {!isEtfAsset ? <StockConnectionCard ticker={symbol} entry={connectionEntry} compact /> : null}
+          {!isEtfAsset ? <StockConnectionCard ticker={symbol} entry={connectionEntry} services={stockServicesEntry} compact /> : null}
       </div>
 
       {activeStockTab !== "overview" ? renderStockDataTab() : (

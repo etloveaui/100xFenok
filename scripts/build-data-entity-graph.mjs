@@ -40,6 +40,15 @@ function normalizeTicker(value) {
   return String(value || "").trim().toUpperCase();
 }
 
+function normalizeAlias(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function fileExists(relPath) {
   return fs.existsSync(path.join(DATA_ROOT, relPath));
 }
@@ -72,6 +81,27 @@ const edgarTickers = new Set((Array.isArray(edgarIndex.tickers) ? edgarIndex.tic
 const sec13fTickers = new Set(Object.keys(sec13fByTicker).map(normalizeTicker));
 const actionByTicker = new Map(actionRows.map((row) => [normalizeTicker(row.symbol), row]));
 const analyzerByTicker = new Map(analyzerRows.map((row) => [normalizeTicker(row.symbol), row]));
+const stockAliasMap = new Map();
+
+function addStockAlias(alias, ticker) {
+  const normalized = normalizeAlias(alias);
+  if (!normalized || stockAliasMap.has(normalized)) return;
+  stockAliasMap.set(normalized, ticker);
+}
+
+for (const row of analyzerRows) {
+  const ticker = normalizeTicker(row.symbol);
+  if (!ticker) continue;
+  addStockAlias(ticker, ticker);
+  addStockAlias(row.companyName, ticker);
+}
+
+for (const row of actionRows) {
+  const ticker = normalizeTicker(row.symbol);
+  if (!ticker) continue;
+  addStockAlias(ticker, ticker);
+  addStockAlias(row.company, ticker);
+}
 
 const generatedAt = new Date().toISOString();
 const sourceAsOf = {
@@ -181,6 +211,24 @@ const stockEntities = analyzerRows.map((row) => {
 });
 
 const stockNodeIds = new Set(stockEntities.map((entity) => entity.id));
+const stockEntityByTicker = new Map(stockEntities.map((entity) => [entity.ticker, entity]));
+
+function resolveUnderlyingTicker(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  const direct = normalizeTicker(raw);
+  if (stockNodeIds.has(`ticker:${direct}`)) return direct;
+
+  const symbolMatches = raw.toUpperCase().match(/\b[A-Z]{1,5}(?:\.[A-Z])?\b/g) || [];
+  for (const symbol of symbolMatches) {
+    const ticker = normalizeTicker(symbol);
+    if (stockNodeIds.has(`ticker:${ticker}`)) return ticker;
+  }
+
+  const aliasTicker = stockAliasMap.get(normalizeAlias(raw));
+  return aliasTicker && stockNodeIds.has(`ticker:${aliasTicker}`) ? aliasTicker : null;
+}
 
 const etfEntities = etfRows.map((row) => {
   const ticker = normalizeTicker(row.ticker);
@@ -221,14 +269,49 @@ const etfEntities = etfRows.map((row) => {
   };
 
   addRelation(entity, "belongs_to_etf_category", categoryId, { source: "stockanalysis/etf_universe" });
-  const underlyingTarget = `ticker:${normalizeTicker(row.classification?.underlying)}`;
-  if (stockNodeIds.has(underlyingTarget)) {
+  const underlyingTicker = resolveUnderlyingTicker(row.classification?.underlying);
+  const underlyingTarget = underlyingTicker ? `ticker:${underlyingTicker}` : null;
+  if (underlyingTarget) {
     addRelation(entity, "tracks_underlying", underlyingTarget, {
       source: row.classification.source || "classification",
+      raw_underlying: row.classification?.underlying || null,
     });
   }
   return entity;
 });
+
+const etfsByUnderlying = new Map();
+for (const etf of etfEntities) {
+  const relation = etf.relations.find((item) => item.type === "tracks_underlying" && item.target);
+  if (!relation) continue;
+  const ticker = relation.target.replace(/^ticker:/, "");
+  const links = etfsByUnderlying.get(ticker) || [];
+  links.push({
+    ticker: etf.ticker,
+    label: etf.label,
+    route: etf.route,
+    category: etf.category,
+    confidence: etf.confidence?.label || null,
+    market_facts: Boolean(etf.source_links?.market_facts),
+    service_flags: etf.service_flags,
+    as_of: {
+      etf_universe: etf.as_of?.etf_universe || null,
+      market_facts: etf.as_of?.market_facts || null,
+    },
+  });
+  etfsByUnderlying.set(ticker, links);
+
+  const stockEntity = stockEntityByTicker.get(ticker);
+  if (stockEntity) {
+    addRelation(stockEntity, "referenced_by_single_stock_etf", etf.id, {
+      source: relation.source || "classification",
+    });
+  }
+}
+
+for (const links of etfsByUnderlying.values()) {
+  links.sort((a, b) => a.ticker.localeCompare(b.ticker));
+}
 
 const sec13fNodes = [...sec13fTickers].map((ticker) => ({
   id: `sec13f:${ticker}`,
@@ -269,6 +352,7 @@ const payload = {
     stocks_with_market_facts: stockEntities.filter((entity) => entity.source_links.market_facts).length,
     stocks_with_filings: stockEntities.filter((entity) => entity.source_links.edgar_summary).length,
     stocks_with_13f: stockEntities.filter((entity) => entity.source_links.sec_13f).length,
+    stocks_with_single_stock_etfs: stockEntities.filter((entity) => etfsByUnderlying.has(entity.ticker)).length,
     etfs_with_market_facts: etfEntities.filter((entity) => entity.source_links.market_facts).length,
   },
   nodes: {
@@ -282,13 +366,20 @@ const payload = {
 };
 
 const stockIndexEntries = Object.fromEntries(stockEntities.map((entity) => {
+  const relatedEtfs = etfsByUnderlying.get(entity.ticker) || [];
   const flags = {
     market_facts: Boolean(entity.source_links.market_facts),
     filings: Boolean(entity.source_links.edgar_summary),
     sec_13f: Boolean(entity.source_links.sec_13f),
     index_membership: entity.service_flags.includes("index_membership"),
+    single_stock_etfs: relatedEtfs.length > 0,
   };
-  const connectionCount = Object.values(flags).filter(Boolean).length;
+  const connectionCount = [
+    flags.market_facts,
+    flags.filings,
+    flags.sec_13f,
+    flags.index_membership,
+  ].filter(Boolean).length;
   return [entity.ticker, {
     ticker: entity.ticker,
     label: entity.label,
@@ -297,6 +388,7 @@ const stockIndexEntries = Object.fromEntries(stockEntities.map((entity) => {
     confidence: entity.confidence,
     flags,
     connection_count: connectionCount,
+    service_count: relatedEtfs.length,
     as_of: entity.as_of,
     relations: entity.relations.map((relation) => ({
       type: relation.type,
@@ -315,11 +407,36 @@ const stockIndexPayload = {
     with_filings: stockEntities.filter((entity) => entity.source_links.edgar_summary).length,
     with_sec_13f: stockEntities.filter((entity) => entity.source_links.sec_13f).length,
     with_index_membership: stockEntities.filter((entity) => entity.service_flags.includes("index_membership")).length,
+    with_single_stock_etfs: stockEntities.filter((entity) => etfsByUnderlying.has(entity.ticker)).length,
   },
   stocks: stockIndexEntries,
 };
 
+const stockServiceEntries = Object.fromEntries([...etfsByUnderlying.entries()].map(([ticker, links]) => [ticker, {
+  ticker,
+  route: `/stock/${ticker}`,
+  single_stock_etfs: links,
+  as_of: {
+    etf_universe: sourceAsOf.etf_universe,
+    market_facts: sourceAsOf.market_facts,
+  },
+}]));
+
+const stockServicesPayload = {
+  schema_version: "data-entity-graph-stock-services/v1",
+  generated_at: generatedAt,
+  source_as_of: sourceAsOf,
+  totals: {
+    stocks: stockEntities.length,
+    with_single_stock_etfs: Object.keys(stockServiceEntries).length,
+    single_stock_etfs: [...etfsByUnderlying.values()].reduce((sum, links) => sum + links.length, 0),
+  },
+  stocks: stockServiceEntries,
+};
+
 writeJson("computed/entity_graph.json", payload);
 writeJson("computed/entity_graph_stock_index.json", stockIndexPayload);
+writeJson("computed/entity_graph_stock_services.json", stockServicesPayload);
 console.log(`entity graph written: ${payload.totals.stocks} stocks, ${payload.totals.etfs} ETFs`);
 console.log(`entity graph stock index written: ${stockIndexPayload.totals.stocks} stocks`);
+console.log(`entity graph stock services written: ${stockServicesPayload.totals.with_single_stock_etfs} stocks with single-stock ETFs`);

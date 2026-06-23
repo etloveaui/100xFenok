@@ -9,6 +9,8 @@ const ROOT_GRAPH_PATH = path.join(REPO_ROOT, "data", "computed", "entity_graph.j
 const PUBLIC_GRAPH_PATH = path.join(APP_ROOT, "public", "data", "computed", "entity_graph.json");
 const ROOT_STOCK_INDEX_PATH = path.join(REPO_ROOT, "data", "computed", "entity_graph_stock_index.json");
 const PUBLIC_STOCK_INDEX_PATH = path.join(APP_ROOT, "public", "data", "computed", "entity_graph_stock_index.json");
+const ROOT_STOCK_SERVICES_PATH = path.join(REPO_ROOT, "data", "computed", "entity_graph_stock_services.json");
+const PUBLIC_STOCK_SERVICES_PATH = path.join(APP_ROOT, "public", "data", "computed", "entity_graph_stock_services.json");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -32,6 +34,8 @@ const graph = readJson(ROOT_GRAPH_PATH);
 const publicGraph = readJson(PUBLIC_GRAPH_PATH);
 const stockIndex = readJson(ROOT_STOCK_INDEX_PATH);
 const publicStockIndex = readJson(PUBLIC_STOCK_INDEX_PATH);
+const stockServices = readJson(ROOT_STOCK_SERVICES_PATH);
+const publicStockServices = readJson(PUBLIC_STOCK_SERVICES_PATH);
 const errors = [];
 
 assert(graph.schema_version === "data-entity-graph/v1", "schema_version must be data-entity-graph/v1", errors);
@@ -51,6 +55,16 @@ assert((stockIndex.totals?.with_sec_13f || 0) === (graph.totals?.stocks_with_13f
 assert(stockIndex.stocks?.NVDA?.flags?.market_facts === true, "stock index NVDA must link market_facts", errors);
 assert(stockIndex.stocks?.NVDA?.flags?.filings === true, "stock index NVDA must link filings", errors);
 assert(stockIndex.stocks?.NVDA?.flags?.sec_13f === true, "stock index NVDA must link 13F", errors);
+
+assert(stockServices.schema_version === "data-entity-graph-stock-services/v1", "stock services schema_version must be data-entity-graph-stock-services/v1", errors);
+assert(typeof stockServices.generated_at === "string", "stock services generated_at is required", errors);
+assert(JSON.stringify(stockServices) === JSON.stringify(publicStockServices), "public stock services mirror must match root stock services", errors);
+assert((stockServices.totals?.stocks || 0) === (graph.totals?.stocks || 0), "stock services stock total must match graph stock total", errors);
+assert((stockServices.totals?.with_single_stock_etfs || 0) === (graph.totals?.stocks_with_single_stock_etfs || 0), "stock services single-stock ETF total must match graph", errors);
+assert((stockIndex.totals?.with_single_stock_etfs || 0) === (stockServices.totals?.with_single_stock_etfs || 0), "stock index single-stock ETF total must match services", errors);
+assert((stockServices.totals?.single_stock_etfs || 0) >= 100, "single-stock ETF service links should cover at least 100 ETFs", errors);
+assert(stockIndex.stocks?.NVDA?.flags?.single_stock_etfs === true, "stock index NVDA must link single-stock ETFs", errors);
+assert((stockServices.stocks?.NVDA?.single_stock_etfs || []).length >= 4, "stock services NVDA must list single-stock ETFs", errors);
 
 const nodeGroups = graph.nodes || {};
 const allNodes = [
@@ -73,6 +87,7 @@ assert((graph.totals?.etfs || 0) >= 5000, "ETF graph should cover at least 5000 
 assert((graph.totals?.stocks_with_market_facts || 0) >= 1000, "stock market_facts links should cover at least 1000 stocks", errors);
 assert((graph.totals?.stocks_with_filings || 0) >= 150, "filing links should cover at least 150 stocks", errors);
 assert((graph.totals?.stocks_with_13f || 0) >= 450, "13F links should cover at least 450 stocks", errors);
+assert((graph.totals?.stocks_with_single_stock_etfs || 0) >= 50, "single-stock ETF reverse links should cover at least 50 stocks", errors);
 assert((graph.totals?.sectors || 0) >= 10, "sector graph should contain canonical sectors", errors);
 
 for (const stock of nodeGroups.stocks || []) {
@@ -92,6 +107,13 @@ for (const etf of nodeGroups.etfs || []) {
 for (const node of [...(nodeGroups.stocks || []), ...(nodeGroups.etfs || [])]) {
   for (const relation of node.relations || []) {
     assert(nodeIds.has(relation.target), `${node.id}: broken relation target ${relation.target}`, errors);
+  }
+}
+
+for (const [ticker, row] of Object.entries(stockServices.stocks || {})) {
+  assert(Boolean(stockIndex.stocks?.[ticker]?.flags?.single_stock_etfs), `${ticker}: services entry needs stock index single_stock_etfs flag`, errors);
+  for (const etf of row.single_stock_etfs || []) {
+    assert(nodeIds.has(`etf:${etf.ticker}`), `${ticker}: services ETF target not in graph: ${etf.ticker}`, errors);
   }
 }
 

@@ -14,11 +14,13 @@ export interface ScreenerConnectionFlags {
   filings: boolean;
   smartMoney: boolean;
   indexMembership: boolean;
+  singleStockEtfs: boolean;
 }
 
 export interface ScreenerConnectionMeta {
   flags: ScreenerConnectionFlags;
   count: number;
+  serviceCount?: number | null;
   confidenceLabel?: string | null;
   coverageRatio?: number | null;
   asOf?: {

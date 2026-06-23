@@ -77,8 +77,10 @@ export function useScreenerData(): ScreenerDataResult {
             filings: connectionEntry.flags?.filings === true,
             smartMoney: connectionEntry.flags?.sec_13f === true,
             indexMembership: connectionEntry.flags?.index_membership === true,
+            singleStockEtfs: connectionEntry.flags?.single_stock_etfs === true,
           },
           count: connectionCount ?? 0,
+          serviceCount: num(connectionEntry.service_count),
           confidenceLabel: connectionEntry.confidence?.label ?? null,
           coverageRatio: num(connectionEntry.confidence?.coverage_ratio),
           asOf: {
