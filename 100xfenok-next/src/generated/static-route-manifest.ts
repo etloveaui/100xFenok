@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 27935,
-      "updatedAt": "2026-06-23T09:04:37.861Z"
+      "updatedAt": "2026-06-23T12:50:12.920Z"
     },
     {
       "name": "reports-index.json",
@@ -34,18 +34,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 41428,
-      "updatedAt": "2026-06-23T09:04:37.859Z"
+      "sizeBytes": 41167,
+      "updatedAt": "2026-06-23T12:35:24.314Z"
     },
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-23T08:47:36.586Z"
+      "updatedAt": "2026-06-23T15:38:44.140Z"
     },
     {
       "name": "product-surface-coverage.json",
-      "sizeBytes": 9711,
-      "updatedAt": "2026-06-23T11:52:51.766Z"
+      "sizeBytes": 12402,
+      "updatedAt": "2026-06-23T15:41:17.113Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -125,13 +125,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "market_structure_index.json",
-      "sizeBytes": 42441,
-      "updatedAt": "2026-06-23T07:57:29.233Z"
+      "sizeBytes": 42440,
+      "updatedAt": "2026-06-23T12:50:12.920Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12738,
-      "updatedAt": "2026-06-23T07:57:29.234Z"
+      "sizeBytes": 12734,
+      "updatedAt": "2026-06-23T12:04:24.689Z"
     },
     {
       "name": "stock_action_index.json",
@@ -32527,13 +32527,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "arm.json",
-      "sizeBytes": 8073,
-      "updatedAt": "2026-06-22T06:25:32.448Z"
+      "sizeBytes": 8665,
+      "updatedAt": "2026-06-23T12:23:52.908Z"
     },
     {
       "name": "asml.json",
-      "sizeBytes": 8155,
-      "updatedAt": "2026-06-22T06:25:32.448Z"
+      "sizeBytes": 8772,
+      "updatedAt": "2026-06-23T12:23:52.908Z"
     },
     {
       "name": "avgo.json",
@@ -32547,8 +32547,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "azn.json",
-      "sizeBytes": 7778,
-      "updatedAt": "2026-06-22T06:25:32.450Z"
+      "sizeBytes": 8435,
+      "updatedAt": "2026-06-23T12:35:24.381Z"
     },
     {
       "name": "ba.json",
@@ -32567,8 +32567,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "bhp.json",
-      "sizeBytes": 7816,
-      "updatedAt": "2026-06-21T12:54:48.711Z"
+      "sizeBytes": 8476,
+      "updatedAt": "2026-06-23T12:35:24.381Z"
     },
     {
       "name": "bkng.json",
@@ -32582,8 +32582,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "bmo.json",
-      "sizeBytes": 8075,
-      "updatedAt": "2026-06-21T13:41:48.610Z"
+      "sizeBytes": 8728,
+      "updatedAt": "2026-06-23T12:35:24.381Z"
     },
     {
       "name": "bmy.json",
@@ -32592,8 +32592,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "bns.json",
-      "sizeBytes": 7930,
-      "updatedAt": "2026-06-21T13:41:52.379Z"
+      "sizeBytes": 8613,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "bny.json",
@@ -32652,8 +32652,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "cm.json",
-      "sizeBytes": 8486,
-      "updatedAt": "2026-06-21T13:41:58.706Z"
+      "sizeBytes": 9126,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "cmcsa.json",
@@ -32672,13 +32672,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "cni.json",
-      "sizeBytes": 8253,
-      "updatedAt": "2026-06-21T15:05:48.982Z"
+      "sizeBytes": 8909,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "cnq.json",
-      "sizeBytes": 8553,
-      "updatedAt": "2026-06-21T13:42:20.683Z"
+      "sizeBytes": 9175,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "cof.json",
@@ -33032,8 +33032,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "mfc.json",
-      "sizeBytes": 8282,
-      "updatedAt": "2026-06-21T15:05:05.582Z"
+      "sizeBytes": 8923,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "mmm.json",
@@ -33122,8 +33122,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "nvo.json",
-      "sizeBytes": 7895,
-      "updatedAt": "2026-06-21T12:55:15.540Z"
+      "sizeBytes": 8561,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "nxpi.json",
@@ -33207,8 +33207,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "rio.json",
-      "sizeBytes": 7942,
-      "updatedAt": "2026-06-21T12:55:06.294Z"
+      "sizeBytes": 8557,
+      "updatedAt": "2026-06-23T12:23:52.909Z"
     },
     {
       "name": "rklb.json",
@@ -33227,8 +33227,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "ry.json",
-      "sizeBytes": 7990,
-      "updatedAt": "2026-06-22T06:25:32.456Z"
+      "sizeBytes": 8652,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "sbux.json",
@@ -33287,8 +33287,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "spot.json",
-      "sizeBytes": 8225,
-      "updatedAt": "2026-06-21T13:42:19.787Z"
+      "sizeBytes": 8841,
+      "updatedAt": "2026-06-23T12:23:52.909Z"
     },
     {
       "name": "stx.json",
@@ -33297,8 +33297,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "su.json",
-      "sizeBytes": 7997,
-      "updatedAt": "2026-06-21T15:05:17.165Z"
+      "sizeBytes": 8648,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "syk.json",
@@ -33312,8 +33312,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "td.json",
-      "sizeBytes": 7989,
-      "updatedAt": "2026-06-21T12:54:49.608Z"
+      "sizeBytes": 8637,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "tjx.json",
@@ -33332,13 +33332,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "tri.json",
-      "sizeBytes": 8193,
-      "updatedAt": "2026-06-21T15:05:25.674Z"
+      "sizeBytes": 8839,
+      "updatedAt": "2026-06-23T12:35:24.382Z"
     },
     {
       "name": "trp.json",
-      "sizeBytes": 8211,
-      "updatedAt": "2026-06-21T15:05:23.769Z"
+      "sizeBytes": 8872,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "tsla.json",
@@ -33347,8 +33347,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "tsm.json",
-      "sizeBytes": 8836,
-      "updatedAt": "2026-06-22T06:25:32.456Z"
+      "sizeBytes": 9504,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "tt.json",
@@ -33437,8 +33437,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "wpm.json",
-      "sizeBytes": 8232,
-      "updatedAt": "2026-06-21T15:05:13.562Z"
+      "sizeBytes": 8885,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "xom.json",
@@ -33835,6 +33835,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T14:16:47.960Z"
     },
     {
+      "name": "arm-20-f-0001973239-26-000097.json",
+      "sizeBytes": 6939,
+      "updatedAt": "2026-06-23T12:23:52.910Z"
+    },
+    {
+      "name": "asml-20-f-0001628280-26-011378.json",
+      "sizeBytes": 5693,
+      "updatedAt": "2026-06-23T12:23:52.910Z"
+    },
+    {
       "name": "avgo-10-k-0001730168-25-000121.json",
       "sizeBytes": 13633,
       "updatedAt": "2026-06-21T05:17:45.853Z"
@@ -33863,6 +33873,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "axp-8-k-0000004962-26-000188.json",
       "sizeBytes": 11193,
       "updatedAt": "2026-06-21T16:14:02.183Z"
+    },
+    {
+      "name": "azn-6-k-0001654954-26-005964.json",
+      "sizeBytes": 4532,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "ba-8-k-0000012927-25-000058.json",
@@ -33935,6 +33950,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T13:33:37.773Z"
     },
     {
+      "name": "bhp-6-k-0001193125-26-275167.json",
+      "sizeBytes": 6937,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
+    },
+    {
       "name": "bkng-8-k-0001075531-26-000008.json",
       "sizeBytes": 10894,
       "updatedAt": "2026-06-21T14:56:50.020Z"
@@ -33963,6 +33983,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "blk-8-k-0001193125-26-153768.json",
       "sizeBytes": 9834,
       "updatedAt": "2026-06-21T13:39:13.090Z"
+    },
+    {
+      "name": "bmo-6-k-0000927971-26-000088.json",
+      "sizeBytes": 6323,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "bmy-10-k-0000014272-26-000004.json",
@@ -33998,6 +34023,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "bmy-8-k-0000014272-26-000008.json",
       "sizeBytes": 8317,
       "updatedAt": "2026-06-21T14:19:26.892Z"
+    },
+    {
+      "name": "bns-6-k-0001193125-26-240503.json",
+      "sizeBytes": 5060,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "bny-10-k-0001390777-26-000033.json",
@@ -34270,6 +34300,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T15:57:10.603Z"
     },
     {
+      "name": "cm-6-k-0001213900-26-069187.json",
+      "sizeBytes": 7159,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
+    },
+    {
       "name": "cmcsa-8-k-0001628280-26-003964.json",
       "sizeBytes": 11335,
       "updatedAt": "2026-06-21T16:21:01.135Z"
@@ -34348,6 +34383,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "cmi-8-k-0000026172-26-000013.json",
       "sizeBytes": 9732,
       "updatedAt": "2026-06-21T14:23:25.931Z"
+    },
+    {
+      "name": "cni-6-k-0000016868-26-000026.json",
+      "sizeBytes": 4895,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
+    },
+    {
+      "name": "cnq-6-k-0001017413-26-000033.json",
+      "sizeBytes": 5848,
+      "updatedAt": "2026-06-23T12:35:24.383Z"
     },
     {
       "name": "cof-10-k-0000927628-26-000024.json",
@@ -35820,6 +35865,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T09:46:51.818Z"
     },
     {
+      "name": "mfc-6-k-0001086888-26-000060.json",
+      "sizeBytes": 6065,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
+    },
+    {
       "name": "mmm-8-k-0000066740-25-000086.json",
       "sizeBytes": 11186,
       "updatedAt": "2026-06-21T16:26:58.630Z"
@@ -36270,6 +36320,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T09:23:08.255Z"
     },
     {
+      "name": "nvo-6-k-0000353278-26-000018.json",
+      "sizeBytes": 5809,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
+    },
+    {
       "name": "nxpi-8-k-0001413447-25-000118.json",
       "sizeBytes": 10100,
       "updatedAt": "2026-06-21T16:27:00.102Z"
@@ -36675,6 +36730,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T15:56:06.620Z"
     },
     {
+      "name": "rio-20-f-0001628280-26-009531.json",
+      "sizeBytes": 5717,
+      "updatedAt": "2026-06-23T12:23:52.911Z"
+    },
+    {
       "name": "rklb-10-k-0001819994-26-000013.json",
       "sizeBytes": 15897,
       "updatedAt": "2026-06-21T13:35:14.653Z"
@@ -36733,6 +36793,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "rtx-8-k-0000101829-26-000009.json",
       "sizeBytes": 9056,
       "updatedAt": "2026-06-21T14:16:00.040Z"
+    },
+    {
+      "name": "ry-6-k-0001193125-26-265318.json",
+      "sizeBytes": 6014,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
     },
     {
       "name": "sbux-10-k-0000829224-25-000114.json",
@@ -36965,6 +37030,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T14:16:12.134Z"
     },
     {
+      "name": "spot-20-f-0001628280-26-006874.json",
+      "sizeBytes": 5816,
+      "updatedAt": "2026-06-23T12:23:52.911Z"
+    },
+    {
       "name": "stx-8-k-0001137789-26-000016.json",
       "sizeBytes": 9130,
       "updatedAt": "2026-06-21T14:31:27.941Z"
@@ -36973,6 +37043,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "stx-8-k-0001137789-26-000084.json",
       "sizeBytes": 10467,
       "updatedAt": "2026-06-21T15:39:04.683Z"
+    },
+    {
+      "name": "su-6-k-0001104659-26-061087.json",
+      "sizeBytes": 4718,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
     },
     {
       "name": "syk-10-k-0000310764-26-000010.json",
@@ -37013,6 +37088,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "t-8-k-0000732717-26-000203.json",
       "sizeBytes": 9664,
       "updatedAt": "2026-06-21T14:28:02.866Z"
+    },
+    {
+      "name": "td-6-k-0001279569-26-000513.json",
+      "sizeBytes": 6109,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
     },
     {
       "name": "tjx-8-k-0000109198-25-000051.json",
@@ -37060,6 +37140,16 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "updatedAt": "2026-06-21T15:00:30.084Z"
     },
     {
+      "name": "tri-6-k-0001193125-26-209082.json",
+      "sizeBytes": 6111,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
+    },
+    {
+      "name": "trp-6-k-0001232384-26-000029.json",
+      "sizeBytes": 4839,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
+    },
+    {
       "name": "tsla-10-k-0001628280-26-003952.json",
       "sizeBytes": 13023,
       "updatedAt": "2026-06-20T16:51:36.915Z"
@@ -37103,6 +37193,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "tsla-8-k-0001628280-26-026551.json",
       "sizeBytes": 7431,
       "updatedAt": "2026-06-21T09:58:20.065Z"
+    },
+    {
+      "name": "tsm-6-k-0001046179-26-000367.json",
+      "sizeBytes": 5966,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
     },
     {
       "name": "tt-10-k-0001628280-26-005731.json",
@@ -37493,6 +37588,11 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
       "name": "wmt-8-k-0000104169-26-000095.json",
       "sizeBytes": 9832,
       "updatedAt": "2026-06-21T09:23:03.459Z"
+    },
+    {
+      "name": "wpm-6-k-0001279569-26-000516.json",
+      "sizeBytes": 5981,
+      "updatedAt": "2026-06-23T12:35:24.384Z"
     },
     {
       "name": "xom-10-k-0000034088-26-000045.json",
@@ -47035,17 +47135,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "stablecoins.json",
       "sizeBytes": 1034901,
-      "updatedAt": "2026-06-23T10:00:03.601Z"
+      "updatedAt": "2026-06-23T15:13:48.620Z"
     },
     {
       "name": "tga.json",
       "sizeBytes": 775042,
-      "updatedAt": "2026-06-23T09:04:37.860Z"
+      "updatedAt": "2026-06-23T15:15:04.802Z"
     },
     {
       "name": "yahoo-ticker.json",
       "sizeBytes": 731,
-      "updatedAt": "2026-06-23T08:47:36.587Z"
+      "updatedAt": "2026-06-23T15:13:48.620Z"
     }
   ],
   "metadata": [
