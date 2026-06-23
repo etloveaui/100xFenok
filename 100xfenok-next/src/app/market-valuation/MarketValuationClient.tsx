@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import ProductSurfaceCoverageCard from "@/components/data/ProductSurfaceCoverageCard";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
@@ -558,8 +557,6 @@ export default function MarketValuationClient() {
           지수 밸류에이션 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
-
-      <ProductSurfaceCoverageCard surfaceId="market_valuation" />
 
       <MarketSection index="01 개요" title="개요" summary="시장 체온과 주요 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
         <MarketThermometer />

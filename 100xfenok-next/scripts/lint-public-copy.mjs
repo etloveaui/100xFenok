@@ -21,6 +21,17 @@ const TARGETS = [
 
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html"]);
 const BLOCKED_COPY = [
+  { pattern: "데이터 준비도", message: "Public pages should show compact trust/freshness copy; detailed readiness belongs in Admin/Data Lab.", publicOnly: true },
+  { pattern: "루트 JSON", message: "Raw JSON/file diagnostics belong in Admin/Data Lab.", publicOnly: true },
+  { pattern: "복수 후보", message: "Source/parity diagnostics belong in Admin/Data Lab.", publicOnly: true },
+  { pattern: "ProductSurfaceCoverageCard", message: "Coverage cards are Admin-only and must not be imported by public routes.", publicOnly: true },
+  { pattern: "DataCoverageCard", message: "Coverage cards are Admin-only and must not be imported by public routes.", publicOnly: true },
+  { pattern: "SurfaceCatalogCard", message: "Surface/catalog diagnostics are Admin-only.", publicOnly: true },
+  { pattern: "ActionCandidatesCard", message: "Diagnostic candidate coverage cards must not be re-mounted in public Explore.", publicOnly: true },
+  { pattern: "enrichment_coverage", message: "Do not render enrichment coverage percentages on public pages.", publicOnly: true },
+  { pattern: "indexed_stock_count", message: "Raw coverage counters belong in Admin/Data Lab.", publicOnly: true },
+  { pattern: "conviction_matched_count", message: "Raw coverage counters belong in Admin/Data Lab.", publicOnly: true },
+  { pattern: "quarter_close_ticker_count", message: "Raw coverage counters belong in Admin/Data Lab.", publicOnly: true },
   { pattern: "표면데이터", message: "Use '수집 데이터' or a concrete dataset name." },
   { pattern: "표면 데이터", message: "Use '수집 데이터' or a concrete dataset name." },
   { pattern: "운용사 표면", message: "Use '운용사 ETF 목록'." },
@@ -51,6 +62,12 @@ const BLOCKED_COPY = [
   { pattern: 'note: "52W Low"', message: "Use '최근 52주 저점'." },
   { pattern: "stocks_analyzer.json에 존재하지 않는 티커", message: "Do not expose internal file names to users." },
 ];
+const BLOCKED_PUBLIC_IMPORTS = [
+  "@/components/data/ProductSurfaceCoverageCard",
+  "./DataCoverageCard",
+  "./SurfaceCatalogCard",
+  "./ActionCandidatesCard",
+];
 
 function hasAllowedExtension(path) {
   const dot = path.lastIndexOf(".");
@@ -74,19 +91,36 @@ const files = TARGETS.flatMap(walk);
 const failures = [];
 
 for (const file of files) {
+  const relFile = relative(ROOT, file);
+  const adminOnlyFile = relFile.startsWith("src/app/admin/") || relFile.startsWith("public/admin/");
   const text = readFileSync(file, "utf8");
   const lines = text.split(/\r?\n/);
   for (const rule of BLOCKED_COPY) {
+    if (rule.publicOnly && adminOnlyFile) continue;
     lines.forEach((line, index) => {
       if (line.includes(rule.pattern)) {
         failures.push({
-          file: relative(ROOT, file),
+          file: relFile,
           line: index + 1,
           pattern: rule.pattern,
           message: rule.message,
         });
       }
     });
+  }
+  if (!adminOnlyFile) {
+    for (const pattern of BLOCKED_PUBLIC_IMPORTS) {
+      lines.forEach((line, index) => {
+        if (line.includes(pattern)) {
+          failures.push({
+            file: relFile,
+            line: index + 1,
+            pattern,
+            message: "Diagnostic card imports are admin-only by construction.",
+          });
+        }
+      });
+    }
   }
 }
 

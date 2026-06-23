@@ -722,8 +722,6 @@ export default function SuperinvestorsClient({
     return Object.entries(bySector).filter(([sector, entry]) => sector !== "_meta" && isSectorEntry(entry)).length;
   }, [bySector]);
 
-  const coverage = summary?.metadata?.enrichment_coverage ?? null;
-
   const pageCount = Math.max(1, Math.ceil(consensusRows.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = consensusRows.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
@@ -965,11 +963,9 @@ export default function SuperinvestorsClient({
                     최신 공시 보유를 섹터별로 묶어 어느 영역에 거장 자금이 모이는지 봅니다.
                   </p>
                 </div>
-                {coverage ? (
-                  <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-black text-slate-500">
-                    섹터 정보 {fmtPct(coverage.sector, 0)} · 공시 당시 가격 {fmtPct(coverage.price_at_filing, 0)}
-                  </span>
-                ) : null}
+                <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-black text-slate-500">
+                  보강 지표 반영
+                </span>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {sectorRows.map((row) => {

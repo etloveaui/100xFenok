@@ -661,7 +661,7 @@ function Disclaimer() {
   );
 }
 
-/* ─── Sample data helpers (no fabricated prices) ─── */
+/* ─── Sample data helpers (prices intentionally absent) ─── */
 
 function buildSampleRows(): HoldingRow[] {
   return SAMPLE_PORTFOLIO.holdings.map((h) => {

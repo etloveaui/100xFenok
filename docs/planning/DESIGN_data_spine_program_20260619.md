@@ -143,9 +143,9 @@ and a test guard at
 | Global Scouter detail | 1,066 detail payloads | keep as stock-detail/screener base, not universal stock coverage |
 | StockAnalysis stock/financial candidates | 40 + 40 payloads | display as cross-check/auxiliary only; do not claim SSOT valuation input |
 | ETF details | 5,265 detail payloads | product-ready; missing 82 should render fallback/pending states |
-| 13F / superinvestors | 78 SEC 13F JSON files | show reporting-delay disclaimers and enrichment coverage |
+| 13F / superinvestors | 78 SEC 13F JSON files | show reporting-delay disclaimers; enrichment coverage percentages stay Admin-only |
 | Korean filings | 1,821 JSON files / 202 by-ticker manifests | stock `공시` tab owner; source links and AI-summary disclaimer required |
-| Market parity | 26,629 multi-candidate checks | Data Lab and product footnotes must keep drift/stale/sign warnings visible |
+| Market parity | 26,629 multi-candidate checks | Data Lab keeps drift/stale/sign diagnostics; public product copy stays compact |
 
 ### 1-5 Productization Goal
 
@@ -311,8 +311,10 @@ Implemented product state primitives:
   `data/admin/product-surface-coverage.json` from existing local DataPack
   coverage/freshness files. This is an observability aid, not a substitute for
   screen-level state handling.
-- `/market-valuation`, `/sectors`, `/etfs`, and Admin Data Lab now read the
-  product-surface coverage artifact to expose screen-level readiness.
+- Admin/Data Lab reads the product-surface coverage artifact to expose
+  screen-level readiness diagnostics. Public `/market-valuation`, `/sectors`,
+  and `/etfs` must keep this as compact freshness/trust copy, not a diagnostic
+  card.
 
 Verification gate:
 

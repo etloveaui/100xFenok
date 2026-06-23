@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import ProductSurfaceCoverageCard from "@/components/data/ProductSurfaceCoverageCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import AppShell from "@/components/shell/AppShell";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
@@ -63,10 +62,6 @@ export default async function EtfsPage({ searchParams }: Props) {
             </div>
           </div>
         </section>
-
-        <div className="mt-[var(--s4)]">
-          <ProductSurfaceCoverageCard surfaceId="etf_center" />
-        </div>
 
         <div className="mt-[var(--s4)]">
           <EtfSurfaceSnapshotCard />

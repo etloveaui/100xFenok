@@ -91,3 +91,21 @@ The public forbidden-term grep now leaves only internal identifiers such as
 - Replaced remaining public `보조 데이터` / `수집 전` / `데이터 묶음` phrasing in
   touched stock, market-event, and ETF summary surfaces with user-facing
   readiness or item-count language.
+
+## 2026-06-23 Public Trust Hygiene Regression Gate
+
+- Public pages must not mount coverage or diagnostic cards. Compact
+  trust/freshness/unavailable copy is allowed; readiness scores, coverage
+  percentages, raw JSON counts, parity candidate counts, and Data Lab links are
+  Admin/Data Lab material.
+- Removed the public `ProductSurfaceCoverageCard` mounts from market
+  valuation, sectors, and ETF pages. The generated
+  `product-surface-coverage.json` remains an admin observability artifact, not
+  a public product card.
+- Removed orphaned public Explore diagnostic cards (`DataCoverageCard`,
+  `SurfaceCatalogCard`, `ActionCandidatesCard`) so they cannot be re-mounted
+  accidentally.
+- Superinvestors no longer displays enrichment coverage percentages publicly;
+  it uses plain product copy for the enriched sector view.
+- `npm run qa:copy` now blocks coverage-card imports and raw coverage counter
+  identifiers on public routes.

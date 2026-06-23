@@ -162,6 +162,9 @@ Dedicated route or drawer surfaces:
      `data/stockanalysis/surfaces/index.json`.
    - Public `/explore` stopped rendering `SurfaceCatalogCard` and
      `DataCoverageCard`.
+   - 2026-06-23 P0 trust hygiene removed the orphaned public Explore diagnostic
+     card files as well, so coverage/catalog/action-count cards cannot be
+     re-mounted from the public `app/explore` tree.
 3. **ETF hub promotion**: keep `/etfs` as canonical. Public Explore must not
    host the ETF working surface or a dense ETF gateway until `/etfs` itself has
    the full owner-facing hierarchy: universe, leverage/single-stock/inverse
