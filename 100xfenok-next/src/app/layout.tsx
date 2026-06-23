@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AppEnhancements from "@/components/AppEnhancements";
 import DesignVersionToggle from "@/components/design/DesignVersionToggle";
+import { siteOrigin } from "@/lib/site-url";
 import { Suspense } from "react";
 
 const notoSansKr = Noto_Sans_KR({
@@ -30,17 +31,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
   variable: "--font-jetbrains-mono",
 });
-
-const siteOrigin = (() => {
-  const rawOrigin =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-    process.env.VERCEL_URL ||
-    "100x-fenok.vercel.app";
-
-  return rawOrigin.startsWith("http") ? rawOrigin : `https://${rawOrigin}`;
-})();
 
 const enableVercelRUM = Boolean(
   process.env.VERCEL === "1" || process.env.VERCEL_ENV,

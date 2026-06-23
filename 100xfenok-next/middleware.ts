@@ -253,11 +253,11 @@ function normalizeAdminLegacyPath(pathname: string): string | null {
 }
 
 function normalizeLegacyTravelPath(pathname: string): string | null {
-  if (!pathname.startsWith("/travel/")) {
+  if (pathname !== "/travel" && !pathname.startsWith("/travel/")) {
     return null;
   }
 
-  const tail = pathname.replace(/^\/travel\//, "");
+  const tail = pathname === "/travel" ? "" : pathname.replace(/^\/travel\//, "");
   if (!tail) {
     return "/admin/personal/travel";
   }
@@ -320,8 +320,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (normalizedTravelPath && !authenticated) {
-    return NextResponse.redirect(targetUrl);
+  if (normalizedTravelPath) {
+    const response = NextResponse.redirect(targetUrl);
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    return response;
   }
 
   return NextResponse.redirect(targetUrl);

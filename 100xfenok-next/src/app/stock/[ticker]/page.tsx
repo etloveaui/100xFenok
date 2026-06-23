@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
+import { canonicalPath } from "@/lib/site-url";
 import StockDetailClient from "./StockDetailClient";
 
 interface Props {
@@ -9,9 +10,13 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
+  const symbol = ticker.toUpperCase();
   return {
-    title: `${ticker.toUpperCase()} 종목 상세 | 100xFenok`,
-    description: `${ticker.toUpperCase()} 종목 상세 분석 — PER 밴드, 매출/EPS 추이, 13F 투자자 보유 현황`,
+    title: `${symbol} 종목 상세 | 100xFenok`,
+    description: `${symbol} 종목 상세 분석 — PER 밴드, 매출/EPS 추이, 13F 투자자 보유 현황`,
+    alternates: {
+      canonical: canonicalPath(`/stock/${symbol}`),
+    },
   };
 }
 

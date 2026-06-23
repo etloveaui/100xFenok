@@ -6,8 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/admin/", "/live-bench/"],
+        disallow: ["/admin/", "/api/admin/", "/live-bench/", "/travel/"],
       },
     ],
+    sitemap: "https://100xfenok.pages.dev/sitemap.xml",
   };
 }

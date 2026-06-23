@@ -95,6 +95,7 @@ Follow-up accepted on 2026-06-24:
 
 - Public product connection cards are allowed when backed by the lightweight entity graph stock index and expressed as user-facing service coverage. This is distinct from the removed internal/cache diagnostic card.
 - `/screener` owns a `연결 데이터` view and 공시/13F/지수 filters; `/stock/[ticker]` owns a compact `데이터 연결` card with source dates.
+- P5 SEO cleanup owns a public sitemap, Pages-origin metadata base, stock/ETF/post canonical URLs, robots disallow for admin/live/travel aliases, and removal of the permanent `/travel/*` admin redirect.
 - Kimi follow-up anchor: `fh-20260624-009-km-f0c0c98f`.
 
 Quality gate:

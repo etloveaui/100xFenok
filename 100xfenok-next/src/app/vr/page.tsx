@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: 'VR 전략 가이드',
   description: 'VR 전략 가이드와 계산기 모음입니다.',
   alternates: {
-    canonical: '/vr',
+    canonical: '/vr/',
   },
   openGraph: {
     title: 'VR 전략 가이드 - El Fenomeno',

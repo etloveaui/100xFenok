@@ -75,6 +75,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:data-state
 
+      - name: Verify public SEO surface
+        working-directory: 100xfenok-next
+        run: npm run qa:seo-surface
+
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build

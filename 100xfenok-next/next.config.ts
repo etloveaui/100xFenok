@@ -90,11 +90,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: "/travel/:path*",
-        destination: "/admin/personal/travel?path=admin/personal/travel/:path*",
-        permanent: true,
-      },
     ];
   },
 

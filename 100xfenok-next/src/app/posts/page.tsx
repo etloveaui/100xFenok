@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: '분석 아카이브',
   description: '시장 분석 자료를 모아 둔 아카이브 페이지입니다.',
   alternates: {
-    canonical: '/posts',
+    canonical: '/posts/',
   },
   openGraph: {
     title: '분석 아카이브 - El Fenomeno',

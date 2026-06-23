@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { canonicalPath } from "@/lib/site-url";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
 import { readPostMetadataBySlug, readPostStaticParams } from "@/lib/server/posts";
 
@@ -34,6 +35,9 @@ export async function generateMetadata({
       title: post.title,
       description: post.description,
       type: "article",
+    },
+    alternates: {
+      canonical: canonicalPath(`/posts/${slug.join("/")}`),
     },
   };
 }
