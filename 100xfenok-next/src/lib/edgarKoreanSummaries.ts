@@ -42,6 +42,11 @@ export interface EdgarKoreanTickerSummaryManifest {
   filings: EdgarKoreanSummaryFilingEntry[];
 }
 
+export interface EdgarKoreanSummaryCoverage {
+  tickerCount: number;
+  updated: string;
+}
+
 const tickerManifestCache: Record<string, EdgarKoreanTickerSummaryManifest | null> = {};
 const tickerManifestPending: Record<string, Promise<EdgarKoreanTickerSummaryManifest | null>> = {};
 let indexCache: EdgarKoreanSummaryIndex | null = null;
@@ -84,6 +89,16 @@ export function edgarFilingsForTicker(manifest: EdgarKoreanTickerSummaryManifest
   return (manifest?.filings ?? [])
     .filter((filing) => normalizeEdgarTicker(filing.ticker) === symbol)
     .sort((a, b) => b.filingDate.localeCompare(a.filingDate));
+}
+
+export function loadEdgarKoreanSummaryCoverage(): Promise<EdgarKoreanSummaryCoverage | null> {
+  return loadEdgarKoreanSummaryIndex().then((index) => {
+    if (!index) return null;
+    return {
+      tickerCount: index.tickers.length,
+      updated: index.updated,
+    };
+  });
 }
 
 export function loadEdgarKoreanSummariesForTicker(ticker: string): Promise<EdgarKoreanTickerSummaryManifest | null> {

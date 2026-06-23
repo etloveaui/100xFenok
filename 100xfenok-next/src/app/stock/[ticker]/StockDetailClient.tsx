@@ -285,6 +285,8 @@ function loadTradesRanking(): Promise<TradesCache | null> {
 type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
 type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates" | "filings";
+type StockTabItem = { id: StockTab; label: string; badge?: string };
+const FILINGS_TAB_BADGE = "AI 요약 · 200종목+";
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
 
 function isFiniteNumber(value: unknown): value is number {
@@ -904,7 +906,9 @@ export default function StockDetailClient({
 
   useEffect(() => {
     let cancelled = false;
-    setConnectionEntry(undefined);
+    Promise.resolve().then(() => {
+      if (!cancelled) setConnectionEntry(undefined);
+    });
     loadStockConnectionIndex()
       .then((index) => {
         if (!cancelled) setConnectionEntry(getStockConnection(index, symbol));
@@ -1015,10 +1019,10 @@ export default function StockDetailClient({
       : isEtfOnlyAsset && stockTab === "overview"
         ? "etf"
         : stockTab;
-  const stockTabs: Array<{ id: StockTab; label: string }> = [
+  const stockTabs: StockTabItem[] = [
     ...(!isEtfOnlyAsset ? [{ id: "overview" as const, label: "요약" }] : []),
     ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
-    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
+    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시", badge: FILINGS_TAB_BADGE }] : []),
     ...(yfAvailable
       ? [
           { id: "financials" as const, label: "재무" },
@@ -1097,7 +1101,8 @@ export default function StockDetailClient({
                   onClick={() => setStockTab(t.id)}
                   className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
                 >
-                  {t.label}
+                  <span className="block">{t.label}</span>
+                  {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
                 </button>
               ))}
               {etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : null}
@@ -1400,7 +1405,8 @@ export default function StockDetailClient({
               onClick={() => setStockTab(t.id)}
               className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
             >
-              {t.label}
+              <span className="block">{t.label}</span>
+              {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
             </button>
           ))}
           {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">추가 지표 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">추가 지표 준비 중</span> : null}

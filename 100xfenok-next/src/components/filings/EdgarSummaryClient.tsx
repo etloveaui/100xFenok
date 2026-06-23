@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   edgarFilingsForTicker,
+  loadEdgarKoreanSummaryCoverage,
   loadEdgarKoreanSummariesForTicker,
   normalizeEdgarTicker,
+  type EdgarKoreanSummaryCoverage,
   type EdgarKoreanSummaryFilingEntry,
 } from "@/lib/edgarKoreanSummaries";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -159,6 +161,38 @@ function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
   return `${formLabel(filing.form)} (${filing.form}) · ${formatDate(filing.filingDate)}`;
 }
 
+function FilingCoverageBanner({
+  coverage,
+  filings,
+  symbol,
+}: {
+  coverage: EdgarKoreanSummaryCoverage | null;
+  filings: EdgarKoreanSummaryFilingEntry[];
+  symbol: string;
+}) {
+  const readyCount = filings.filter((filing) => Boolean(filing.summaryPath)).length;
+  const tickerCount = coverage?.tickerCount ?? null;
+  const updated = coverage?.updated ? formatDate(coverage.updated) : null;
+
+  return (
+    <section className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-950">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="font-black">AI 공시 요약 범위</p>
+          <p className="mt-1 text-blue-900">
+            현재 {tickerCount ? `${tickerCount.toLocaleString("ko-KR")}종목` : "200종목+"}의 주요 SEC 공시를 한글 요약으로 연결합니다.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs font-black">
+          <span className="rounded-full border border-blue-200 bg-white px-3 py-1">{symbol} 요약 {readyCount.toLocaleString("ko-KR")}건</span>
+          <span className="rounded-full border border-blue-200 bg-white px-3 py-1">원문 {filings.length.toLocaleString("ko-KR")}건</span>
+          {updated ? <span className="rounded-full border border-blue-200 bg-white px-3 py-1">갱신 {updated}</span> : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Plain-Korean labels for SEC section codes so the UI never leaks raw codes
 // (item_1a, exhibit_99_1, companyfacts) or English section names to readers.
 const SECTION_LABELS_KO: Record<string, string> = {
@@ -296,9 +330,20 @@ export default function EdgarSummaryClient({
 }) {
   const symbol = normalizeEdgarTicker(ticker);
   const [filings, setFilings] = useState<EdgarKoreanSummaryFilingEntry[] | null>(null);
+  const [coverage, setCoverage] = useState<EdgarKoreanSummaryCoverage | null>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [artifact, setArtifact] = useState<EdgarKoreanSummaryArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadEdgarKoreanSummaryCoverage().then((nextCoverage) => {
+      if (!cancelled) setCoverage(nextCoverage);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -371,15 +416,18 @@ export default function EdgarSummaryClient({
 
   if (filings && filings.length === 0) {
     return (
-      <section className="panel">
-        <div className="panel-b">
-          <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
-          <p className="mt-2 text-sm text-slate-500">
-            {symbol}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.
-          </p>
-          <ExternalSourceLinks ticker={symbol} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
-        </div>
-      </section>
+      <div className={embedded ? "stock-main-stack" : "data-shell-page"}>
+        <FilingCoverageBanner coverage={coverage} filings={filings} symbol={symbol} />
+        <section className="panel">
+          <div className="panel-b">
+            <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
+            <p className="mt-2 text-sm text-slate-500">
+              {symbol}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.
+            </p>
+            <ExternalSourceLinks ticker={symbol} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
+          </div>
+        </section>
+      </div>
     );
   }
 
@@ -412,6 +460,8 @@ export default function EdgarSummaryClient({
           </div>
         </div>
       </section>
+
+      <FilingCoverageBanner coverage={coverage} filings={filings} symbol={symbol} />
 
       <section className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
         <p className="font-bold">자동 생성 요약(AI)입니다. 공식 자료가 아니며, 공시 원문 확인이 필수입니다. 투자권유가 아닙니다.</p>
