@@ -412,6 +412,13 @@ function assertProductSurfaceCoverageContract(payload, errors) {
     assert(typeof surface?.route === "string" && surface.route.startsWith("/"), `Product surface coverage: ${surface?.id || "(unknown)"} route must start with /`, errors);
     assert(typeof surface?.status === "string" && surface.status.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} status is required`, errors);
     assert(Array.isArray(surface?.checks) && surface.checks.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} checks are required`, errors);
+    assert(typeof surface?.as_of === "string" && surface.as_of.length >= 10, `Product surface coverage: ${surface?.id || "(unknown)"} as_of is required`, errors);
+    const freshnessChecks = surface.checks.filter((check) => typeof check?.as_of === "string");
+    assert(freshnessChecks.length > 0, `Product surface coverage: ${surface?.id || "(unknown)"} needs a freshness check`, errors);
+    for (const check of freshnessChecks) {
+      assert(typeof check.age_days === "number", `Product surface coverage: ${surface?.id || "(unknown)"} freshness check age_days is required`, errors);
+      assert(typeof check.max_age_days === "number", `Product surface coverage: ${surface?.id || "(unknown)"} freshness check max_age_days is required`, errors);
+    }
   }
 }
 

@@ -55,6 +55,18 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:edgar-summaries
 
+      - name: Build product surface coverage
+        working-directory: 100xfenok-next
+        run: npm run build:product-surface-coverage
+
+      - name: Verify product data freshness
+        working-directory: 100xfenok-next
+        run: npm run qa:data-freshness
+
+      - name: Verify product data-state rendering contract
+        working-directory: 100xfenok-next
+        run: npm run qa:data-state
+
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build

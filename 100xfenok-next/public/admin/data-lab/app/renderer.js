@@ -643,7 +643,7 @@ const Renderer = (function() {
         surface?.route || '-',
         surface?.status_label || surface?.status || '-',
         typeof surface?.coverage_score === 'number' ? `${Formatters.formatNumber(surface.coverage_score, 0)}%` : '점검',
-        weak || '주요 데이터 준비'
+        surface?.as_of ? `기준 ${String(surface.as_of).slice(0, 10)}${weak ? ` · ${weak}` : ''}` : weak || '주요 데이터 준비'
       ];
     });
 
@@ -658,10 +658,11 @@ const Renderer = (function() {
             ${Formatters.formatNumber(totals.ready || 0, 0)} / ${Formatters.formatNumber(totals.surfaces || surfaces.length, 0)}
           </span>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
           ${renderAuditMetric('화면', Formatters.formatNumber(totals.surfaces || surfaces.length, 0))}
           ${renderAuditMetric('준비됨', Formatters.formatNumber(totals.ready || 0, 0))}
           ${renderAuditMetric('부분 준비', Formatters.formatNumber(totals.partial || 0, 0))}
+          ${renderAuditMetric('오래됨', Formatters.formatNumber(totals.stale || 0, 0))}
           ${renderAuditMetric('대기', Formatters.formatNumber(totals.pending || 0, 0))}
           ${renderAuditMetric('미수집/오류', Formatters.formatNumber(Number(totals.unavailable || 0) + Number(totals.error || 0), 0))}
         </div>
