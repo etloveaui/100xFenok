@@ -97,6 +97,8 @@ Follow-up accepted on 2026-06-24:
 - `/screener` owns a `연결 데이터` view and 공시/13F/지수 filters; `/stock/[ticker]` owns a compact `데이터 연결` card with source dates.
 - P5 SEO cleanup owns a public sitemap, live Worker-origin metadata base, stock/ETF/post canonical URLs, robots disallow for admin/live/travel aliases, and removal of the permanent `/travel/*` admin redirect. Live check showed `100xfenok.pages.dev` still serves the static legacy surface and 404s the Next sitemap/dynamic stock routes, so it must not be used as the canonical app origin until that host is moved.
 - P4 filings UX owns the embedded `/stock/[ticker]?tab=filings` route, not a standalone `/filings/[ticker]` route yet. The stock tab now carries `AI 요약 · 200종목+`, and the filings panel shows the measured EDGAR summary range from the live index: 202 tickers, 2,424 filings, 834 summary artifacts at implementation time.
+- P3 ETF depth owns an ETF connection map on `/etfs/[ticker]`: same issuer, same category, and top-holding-linked single-stock/leveraged ETF peers from the lightweight ETF universe response. The comparison route `/etfs/compare?tickers=SPY,VOO` is public and explicitly warns that holdings overlap is based on the top 25 displayed holdings, not the full ledger.
+- P3 ETF center snapshot now uses API-provided `issuerCollections` for issuer tabs instead of component-hardcoded BlackRock/ProShares tab keys. Legacy `blackrock`/`proshares` fields remain in the API response for compatibility.
 - Kimi follow-up anchor: `fh-20260624-009-km-f0c0c98f`.
 
 Quality gate:
@@ -106,13 +108,15 @@ Quality gate:
 ### Phase 4 - Focused Browser Verification
 
 - [x] Run one local dev server only if static gates pass.
-- [x] Check core routes on desktop/mobile/narrow: `/market/events`, `/market-valuation/structure`, `/stock/NVDA?tab=filings`, `/stock/MSFT?tab=filings`, `/stock/ZZZZ`, `/etfs?digital=1`, `/etfs/new`, `/etfs/SPY`, `/explore`, `/live-bench`, `/admin/live`.
+- [x] Check core routes on desktop/mobile/narrow: `/market/events`, `/market-valuation/structure`, `/stock/NVDA?tab=filings`, `/stock/MSFT?tab=filings`, `/stock/ZZZZ`, `/etfs?digital=1`, `/etfs/new`, `/etfs/SPY`, `/etfs/compare?tickers=SPY,VOO`, `/explore`, `/live-bench`, `/admin/live`.
 
 Quality gate:
 
 - Playwright desktop/mobile/narrow pass for `/market/events`, `/market-valuation/structure`, `/stock/NVDA?tab=filings`, `/stock/MSFT?tab=filings`, `/etfs?digital=1`, `/etfs/SPY`, `/explore`, `/live-bench`, `/admin/live`: status 200, no forbidden public diagnostic copy, no horizontal overflow; `/live-bench` final URL `/admin/live/`.
 - `/stock/ZZZZ` focused recheck pass on desktop/mobile/narrow: status 200, missing-ticker fallback and `종목 데이터 준비 전` shown, no horizontal overflow.
 - `/etfs/new` focused recheck pass on desktop/mobile/narrow: availability copy uses `기본 정보`/`가격 중심`/`상세 가능` or empty-state copy; old `요약 제공`/`상세 상태` not visible.
+- P3 ETF focused Playwright pass on desktop/mobile for `/etfs`, `/etfs/SPY`, `/etfs/compare?tickers=SPY,VOO`: status 200, no console issues, no horizontal page overflow, dynamic issuer labels visible, old `대형 운용사` label absent, ETF connection map visible, and compare overlap route visible. Mobile date-format recheck passed for full `Jun 17, 2026` display.
+- P3 static gates passed: `npx tsc --noEmit --pretty false`, targeted `npx eslint`, `npm run qa:etf-universe`, `npm run qa:surface-consumers`, `npm run qa:seo-surface`, `npm run qa:copy`, `git diff --check`, and `npm run build`.
 
 ### Phase 5 - Closeout
 

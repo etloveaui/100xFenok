@@ -7,6 +7,13 @@ import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
+import {
+  cleanCategory,
+  formatAum,
+  issuerNameFromEtfName,
+  isSingleStockLeveragedEtf,
+  type EtfUniverseRecord,
+} from "@/app/explore/etfUniverseUtils";
 
 type MaybeNumber = number | null | undefined;
 
@@ -122,6 +129,29 @@ interface MarketFactsPayload {
   } | null;
 }
 
+type DetailEtfUniverseRecord = EtfUniverseRecord & {
+  provider_page?: string | null;
+  source_page?: number | null;
+};
+
+interface EtfUniversePayload {
+  generated_at?: string | null;
+  counts?: {
+    records?: number | null;
+  } | null;
+  records?: DetailEtfUniverseRecord[];
+}
+
+interface EtfPeerCollectionsData {
+  issuerLabel: string;
+  categoryLabel: string;
+  universeCount: number | null;
+  generatedAt: string | null;
+  issuerPeers: DetailEtfUniverseRecord[];
+  categoryPeers: DetailEtfUniverseRecord[];
+  holdingPeers: DetailEtfUniverseRecord[];
+}
+
 type EtfClassification = NonNullable<NonNullable<MarketFactsPayload["etf"]>["classification"]>;
 type LoadResult<T> =
   | { kind: "load_result"; status: "ok"; data: T }
@@ -130,6 +160,27 @@ type LoadResult<T> =
 
 const etfCache: Record<string, Promise<LoadResult<EtfPayload>> | EtfPayload | undefined> = {};
 const factsCache: Record<string, Promise<LoadResult<MarketFactsPayload>> | MarketFactsPayload | undefined> = {};
+let etfUniverseCache: EtfUniversePayload | undefined;
+let etfUniversePending: Promise<LoadResult<EtfUniversePayload>> | null = null;
+
+const ISSUER_SLUG_LABELS: Record<string, string> = {
+  "blackrock": "iShares",
+  "ishares": "iShares",
+  "state-street": "State Street",
+  "state street": "State Street",
+  "vanguard": "Vanguard",
+  "invesco": "Invesco",
+  "proshares": "ProShares",
+  "direxion": "Direxion",
+  "global-x": "Global X",
+  "global x": "Global X",
+  "jpmorgan": "JPMorgan",
+  "fidelity": "Fidelity",
+  "schwab": "Schwab",
+  "graniteshares": "GraniteShares",
+  "rex-shares": "REX Shares",
+  "tuttle-capital": "Tuttle Capital",
+};
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -234,6 +285,37 @@ function loadMarketFacts(ticker: string): Promise<LoadResult<MarketFactsPayload>
     });
   factsCache[symbol] = request;
   return request;
+}
+
+function loadEtfUniversePayload(): Promise<LoadResult<EtfUniversePayload>> {
+  if (etfUniverseCache) return Promise.resolve(okResult(etfUniverseCache));
+  if (etfUniversePending) return etfUniversePending;
+
+  etfUniversePending = fetch("/api/data/stockanalysis/etf-universe", { cache: "no-store" })
+    .then((res) => {
+      if (res.ok) return res.json();
+      return res.status === 404 ? missingResult<EtfUniversePayload>() : failedResult<EtfUniversePayload>();
+    })
+    .then((payload) => {
+      if (isLoadResult<EtfUniversePayload>(payload)) {
+        etfUniversePending = null;
+        return payload;
+      }
+      const parsed = asRecord(payload) ? payload as EtfUniversePayload : null;
+      if (!parsed) {
+        etfUniversePending = null;
+        return missingResult<EtfUniversePayload>();
+      }
+      etfUniverseCache = parsed;
+      etfUniversePending = null;
+      return okResult(parsed);
+    })
+    .catch(() => {
+      etfUniverseCache = undefined;
+      etfUniversePending = null;
+      return failedResult<EtfUniversePayload>();
+    });
+  return etfUniversePending;
 }
 
 function factNumber(facts: MarketFactsPayload | null | undefined, key: string): number | null {
@@ -384,6 +466,134 @@ function classificationLabels(classification: EtfClassification | null | undefin
   return labels;
 }
 
+function parsePercentPoints(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = Number(value.replace(/[$,%\s,]/g, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function peerExpenseRatioLabel(row: DetailEtfUniverseRecord): string {
+  const value = parsePercentPoints(row.expenseRatio) ?? parsePercentPoints(row.expense_ratio);
+  return value === null ? "보수 미표시" : `보수 ${value.toFixed(value >= 10 ? 1 : 2)}%`;
+}
+
+function titleCaseSlug(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((part) => part ? `${part.slice(0, 1).toUpperCase()}${part.slice(1).toLowerCase()}` : part)
+    .join(" ");
+}
+
+function cleanIssuerLabel(value: string | null | undefined): string | null {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text || text === "—" || text === "-") return null;
+  const normalized = text.toLowerCase();
+  return ISSUER_SLUG_LABELS[normalized] ?? titleCaseSlug(text);
+}
+
+function issuerLabelForUniverseRow(row: DetailEtfUniverseRecord | null | undefined, fallback?: string | null): string {
+  const explicitIssuer = cleanIssuerLabel(row?.issuer);
+  if (explicitIssuer) return issuerNameFromEtfName(explicitIssuer);
+  const provider = cleanIssuerLabel(row?.provider_page);
+  if (provider) return issuerNameFromEtfName(provider);
+  const fromName = issuerNameFromEtfName(row?.name ?? fallback);
+  return fromName && fromName !== "미분류" ? fromName : "운용사 미분류";
+}
+
+function peerIssuerKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function rowTicker(row: DetailEtfUniverseRecord): string {
+  return cleanSymbol(String(row.ticker ?? ""));
+}
+
+function sortByAum(rows: DetailEtfUniverseRecord[]) {
+  return [...rows].sort((a, b) => {
+    const aumA = isFiniteNumber(a.aum) ? a.aum : -1;
+    const aumB = isFiniteNumber(b.aum) ? b.aum : -1;
+    return aumB - aumA || rowTicker(a).localeCompare(rowTicker(b));
+  });
+}
+
+function topHoldingSymbols(holdings: EtfHolding[]): string[] {
+  const symbols = new Set<string>();
+  for (const holding of holdings.slice(0, 25)) {
+    const symbol = typeof holding.symbol === "string" ? cleanSymbol(holding.symbol) : "";
+    if (/^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol)) symbols.add(symbol);
+  }
+  return [...symbols];
+}
+
+function holdingAliases(symbol: string): string[] {
+  const aliases: Record<string, string[]> = {
+    AAPL: ["APPLE"],
+    AMD: ["ADVANCED MICRO DEVICES"],
+    AMZN: ["AMAZON"],
+    AVGO: ["BROADCOM"],
+    GOOGL: ["ALPHABET", "GOOGLE"],
+    GOOG: ["ALPHABET", "GOOGLE"],
+    META: ["META"],
+    MSFT: ["MICROSOFT"],
+    NVDA: ["NVIDIA"],
+    TSLA: ["TESLA"],
+  };
+  return [symbol, ...(aliases[symbol] ?? [])];
+}
+
+function holdingPeerMatch(row: DetailEtfUniverseRecord, holdingSymbols: string[]): boolean {
+  if (!isSingleStockLeveragedEtf(row)) return false;
+  const classification = row.classification && typeof row.classification === "object" ? row.classification : null;
+  const text = [
+    row.ticker,
+    row.name,
+    row.underlying,
+    classification?.underlying,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toUpperCase();
+  return holdingSymbols.some((symbol) => holdingAliases(symbol).some((alias) => text.includes(alias)));
+}
+
+function buildEtfPeerCollections({
+  symbol,
+  provider,
+  category,
+  displayName,
+  holdings,
+  universe,
+}: {
+  symbol: string;
+  provider: string;
+  category: string;
+  displayName: string;
+  holdings: EtfHolding[];
+  universe: EtfUniversePayload | null;
+}): EtfPeerCollectionsData | null {
+  const records = Array.isArray(universe?.records) ? universe.records : [];
+  if (!records.length) return null;
+  const current = records.find((row) => rowTicker(row) === symbol) ?? null;
+  const currentIssuer = issuerLabelForUniverseRow(current, provider !== "—" ? provider : displayName);
+  const currentIssuerKey = peerIssuerKey(currentIssuer);
+  const currentCategory = cleanCategory(current?.category ?? current?.assetClass ?? (category !== "—" ? category : null));
+  const otherRows = records.filter((row) => rowTicker(row) && rowTicker(row) !== symbol);
+  const holdingSymbols = topHoldingSymbols(holdings);
+
+  return {
+    issuerLabel: currentIssuer,
+    categoryLabel: currentCategory,
+    universeCount: universe?.counts?.records ?? records.length,
+    generatedAt: universe?.generated_at ?? null,
+    issuerPeers: sortByAum(otherRows.filter((row) => peerIssuerKey(issuerLabelForUniverseRow(row)) === currentIssuerKey)).slice(0, 6),
+    categoryPeers: sortByAum(otherRows.filter((row) => cleanCategory(row.category ?? row.assetClass) === currentCategory)).slice(0, 6),
+    holdingPeers: sortByAum(otherRows.filter((row) => holdingPeerMatch(row, holdingSymbols))).slice(0, 6),
+  };
+}
+
 function SectionCard({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
     <section className="panel stock-section">
@@ -414,6 +624,134 @@ function MetricCard({ label, value, note }: { label: string; value: string; note
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
       {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-[var(--c-ink-3)]">{note}</p> : null}
     </div>
+  );
+}
+
+function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; currentSymbol: string }) {
+  const ticker = rowTicker(row);
+  const oneYear = row.performance && isFiniteNumber(row.performance.tr1y) ? fmtCompactSignedPercent(row.performance.tr1y) : null;
+  const classification = row.classification && typeof row.classification === "object" ? row.classification : null;
+  const typeLabels = [
+    classification?.is_leveraged ? (isFiniteNumber(classification.leverage_factor) ? `${classification.leverage_factor}x` : "레버리지") : null,
+    classification?.is_inverse ? "인버스" : null,
+    classification?.is_single_stock ? "단일종목" : null,
+  ].filter((label): label is string => Boolean(label));
+  const compareHref = `/etfs/compare?tickers=${encodeURIComponent(`${currentSymbol},${ticker}`)}`;
+
+  return (
+    <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="orbitron text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
+            {ticker}
+          </TransitionLink>
+          <p className="mt-1 min-w-0 break-words text-xs font-bold leading-snug text-[var(--c-ink)]">{row.name ?? ticker}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+          {formatAum(row)}
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-black text-[var(--c-ink-3)]">
+        <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-1">{cleanCategory(row.category ?? row.assetClass)}</span>
+        <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-1">{peerExpenseRatioLabel(row)}</span>
+        {oneYear ? <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-1">1년 {oneYear}</span> : null}
+        {typeLabels.map((label) => (
+          <span key={label} className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-1">{label}</span>
+        ))}
+      </div>
+      <TransitionLink href={compareHref} className="mt-3 inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive">
+        겹침 비교
+      </TransitionLink>
+    </div>
+  );
+}
+
+function PeerLane({
+  title,
+  desc,
+  rows,
+  currentSymbol,
+}: {
+  title: string;
+  desc: string;
+  rows: DetailEtfUniverseRecord[];
+  currentSymbol: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-2 min-w-0">
+        <p className="text-xs font-black text-[var(--c-ink)]">{title}</p>
+        <p className="mt-1 text-[10px] font-semibold leading-relaxed text-[var(--c-ink-3)]">{desc}</p>
+      </div>
+      {rows.length ? (
+        <div className="grid gap-2">
+          {rows.map((row) => (
+            <PeerEtfCard key={`${title}-${rowTicker(row)}`} row={row} currentSymbol={currentSymbol} />
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+          현재 연결 후보 없음
+        </p>
+      )}
+    </div>
+  );
+}
+
+function EtfPeerCollectionsSection({
+  data,
+  loading,
+  failed,
+  currentSymbol,
+}: {
+  data: EtfPeerCollectionsData | null;
+  loading: boolean;
+  failed: boolean;
+  currentSymbol: string;
+}) {
+  if (loading) {
+    return (
+      <SectionCard title="ETF 연결 지도" desc="운용사·카테고리·보유종목 기준">
+        <p className="text-sm font-semibold text-[var(--c-ink-3)]">연결 후보 확인 중</p>
+      </SectionCard>
+    );
+  }
+
+  if (failed || !data) {
+    return (
+      <SectionCard title="ETF 연결 지도" desc="운용사·카테고리·보유종목 기준">
+        <p className="text-sm font-semibold text-[var(--c-ink-3)]">ETF 전체 범위 연결을 확인하지 못했습니다.</p>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <SectionCard title="ETF 연결 지도" desc={`${data.universeCount?.toLocaleString("ko-KR") ?? "전체"}개 ETF 범위`}>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <PeerLane
+          title={`같은 운용사 · ${data.issuerLabel}`}
+          desc="운용사 식별명과 운용자산을 기준으로 가까운 ETF를 먼저 보여줍니다."
+          rows={data.issuerPeers}
+          currentSymbol={currentSymbol}
+        />
+        <PeerLane
+          title={`같은 카테고리 · ${data.categoryLabel}`}
+          desc="카테고리와 운용자산 기준으로 대체 후보를 묶었습니다."
+          rows={data.categoryPeers}
+          currentSymbol={currentSymbol}
+        />
+        <PeerLane
+          title="상위 보유종목 연결"
+          desc="현재 표시된 상위 보유 항목과 단일종목·레버리지 ETF 이름/기초자산을 맞춰 찾습니다."
+          rows={data.holdingPeers}
+          currentSymbol={currentSymbol}
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
+        <span>보유종목 연결과 겹침 비교는 상위 25개 표시 항목 기준입니다.</span>
+        <span>업데이트 {fmtDateish(data.generatedAt)}</span>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -807,6 +1145,11 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     etfResult: LoadResult<EtfPayload> | undefined;
     factsResult: LoadResult<MarketFactsPayload> | undefined;
   }>({ symbol, reloadKey: 0, etfResult: undefined, factsResult: undefined });
+  const [universeState, setUniverseState] = useState<{
+    loaded: boolean;
+    failed: boolean;
+    data: EtfUniversePayload | null;
+  }>({ loaded: false, failed: false, data: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -819,6 +1162,21 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
       cancelled = true;
     };
   }, [symbol, reloadKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadEtfUniversePayload().then((result) => {
+      if (cancelled) return;
+      setUniverseState({
+        loaded: true,
+        failed: result.status === "failed",
+        data: result.status === "ok" ? result.data : null,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const currentState = state.symbol === symbol && state.reloadKey === reloadKey;
   const etfResult = currentState ? state.etfResult : undefined;
@@ -919,6 +1277,14 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((metric) => metric.value !== "—");
+  const peerCollections = buildEtfPeerCollections({
+    symbol,
+    provider,
+    category,
+    displayName,
+    holdings,
+    universe: universeState.data,
+  });
 
   if (loading) {
     return (
@@ -1046,6 +1412,13 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               </a>
             ) : null}
           </SectionCard>
+
+          <EtfPeerCollectionsSection
+            data={peerCollections}
+            loading={!universeState.loaded}
+            failed={universeState.failed}
+            currentSymbol={symbol}
+          />
 
           <SectionCard title="기간 수익률" desc="총수익률·연환산 수익률">
             <PerformanceView performance={performance} />

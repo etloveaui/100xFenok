@@ -8,6 +8,20 @@ const ETF_SNAPSHOT_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
 } as const;
 const DIGITAL_ASSET_ETF_SNAPSHOT_LIMIT = 100;
+const ISSUER_NAME_PATTERNS = [
+  ["ishares", "iShares"],
+  ["blackrock", "iShares"],
+  ["proshares", "ProShares"],
+  ["vanguard", "Vanguard"],
+  ["state street", "State Street"],
+  ["spdr", "State Street"],
+  ["invesco", "Invesco"],
+  ["direxion", "Direxion"],
+  ["global x", "Global X"],
+  ["jpmorgan", "JPMorgan"],
+  ["fidelity", "Fidelity"],
+  ["schwab", "Schwab"],
+] as const;
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -85,6 +99,34 @@ async function summarizeSurface(surface: string, fields: string[], limit: number
   };
 }
 
+function titleCaseSlug(value: string): string {
+  return value
+    .replace(/^etf_provider_/, "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((part) => part ? `${part.slice(0, 1).toUpperCase()}${part.slice(1).toLowerCase()}` : part)
+    .join(" ");
+}
+
+function issuerLabelFromRows(surface: string, rows: JsonRecord[]): string {
+  const sample = rows
+    .map((row) => String(row.fund_name ?? row.name ?? "").trim())
+    .find(Boolean) ?? surface;
+  const lower = sample.toLowerCase();
+  const known = ISSUER_NAME_PATTERNS.find(([needle]) => lower.includes(needle));
+  return known?.[1] ?? titleCaseSlug(surface);
+}
+
+async function summarizeIssuerSurface(surface: string, fields: string[], limit: number) {
+  const summary = await summarizeSurface(surface, fields, limit);
+  return {
+    id: surface.replace(/^etf_provider_/, ""),
+    label: issuerLabelFromRows(surface, summary.records),
+    ...summary,
+  };
+}
+
 async function summarizeEtfScreener(limit: number) {
   const fields = ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings", "expenseRatio", "expense_ratio", "dividendYield", "dividend_yield", "performance"];
   const payload = asRecord(await getStockanalysisSurface("etf_screener"));
@@ -140,10 +182,11 @@ export async function GET() {
       const [newEtfs, screener, blackrock, proshares, bitcoin] = await Promise.all([
         summarizeNewEtfs(100),
         summarizeEtfScreener(5),
-        summarizeSurface("etf_provider_blackrock", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
-        summarizeSurface("etf_provider_proshares", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
+        summarizeIssuerSurface("etf_provider_blackrock", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
+        summarizeIssuerSurface("etf_provider_proshares", ["symbol", "fund_name", "assets", "div_yield", "exp_ratio", "change_1y"], 20),
         summarizeSurface("list_bitcoin_etfs", ["symbol", "fund_name", "assets", "stock_price", "pct_change"], DIGITAL_ASSET_ETF_SNAPSHOT_LIMIT),
       ]);
+      const issuerCollections = [blackrock, proshares];
 
       return NextResponse.json(
         {
@@ -152,6 +195,7 @@ export async function GET() {
           source: "local ETF data snapshot",
           newEtfs,
           screener,
+          issuerCollections,
           blackrock,
           proshares,
           bitcoin,

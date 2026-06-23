@@ -14,6 +14,7 @@ const PUBLIC_ROUTES: Array<{
   { path: "/market/events", changeFrequency: "daily", priority: 0.8 },
   { path: "/sectors", changeFrequency: "daily", priority: 0.8 },
   { path: "/etfs", changeFrequency: "daily", priority: 0.9 },
+  { path: "/etfs/compare", changeFrequency: "daily", priority: 0.75 },
   { path: "/etfs/new", changeFrequency: "daily", priority: 0.7 },
   { path: "/screener", changeFrequency: "daily", priority: 0.9 },
   { path: "/superinvestors", changeFrequency: "weekly", priority: 0.8 },
