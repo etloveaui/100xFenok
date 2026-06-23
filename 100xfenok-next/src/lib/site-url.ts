@@ -1,4 +1,4 @@
-const DEFAULT_SITE_ORIGIN = "https://100xfenok.pages.dev";
+const DEFAULT_SITE_ORIGIN = "https://100xfenok.etloveaui.workers.dev";
 
 function normalizeOrigin(origin: string): string {
   const trimmed = origin.trim().replace(/\/+$/, "");

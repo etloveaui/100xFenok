@@ -33,8 +33,8 @@ assert(
   errors,
 );
 assert(
-  siteUrl.includes("https://100xfenok.pages.dev"),
-  "site URL fallback must use the public Pages origin",
+  siteUrl.includes("https://100xfenok.etloveaui.workers.dev"),
+  "site URL fallback must use the live Worker product origin",
   errors,
 );
 for (const required of [
@@ -42,7 +42,7 @@ for (const required of [
   "Disallow: /api/admin/",
   "Disallow: /live-bench/",
   "Disallow: /travel/",
-  "Sitemap: https://100xfenok.pages.dev/sitemap.xml",
+  "Sitemap: https://100xfenok.etloveaui.workers.dev/sitemap.xml",
 ]) {
   assert(publicRobots.includes(required), `public robots.txt missing ${required}`, errors);
 }

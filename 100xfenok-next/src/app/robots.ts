@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/api/admin/", "/live-bench/", "/travel/"],
       },
     ],
-    sitemap: "https://100xfenok.pages.dev/sitemap.xml",
+    sitemap: "https://100xfenok.etloveaui.workers.dev/sitemap.xml",
   };
 }
