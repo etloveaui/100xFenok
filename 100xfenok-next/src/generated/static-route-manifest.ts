@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-24T07:32:23.841Z"
+      "updatedAt": "2026-06-24T08:15:08.766Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -123,17 +123,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 984625,
-      "updatedAt": "2026-06-24T07:32:23.701Z"
+      "updatedAt": "2026-06-24T08:15:08.624Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 145879,
-      "updatedAt": "2026-06-24T07:32:23.704Z"
+      "updatedAt": "2026-06-24T08:15:08.627Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7845620,
-      "updatedAt": "2026-06-24T07:32:23.679Z"
+      "updatedAt": "2026-06-24T08:15:08.602Z"
     },
     {
       "name": "market_data_audit.json",
