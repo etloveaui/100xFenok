@@ -617,7 +617,8 @@ contract and the disagreement policy.
    using the measured 28-dataset inventory and `market_source_parity`.
 3. P1/P2: residual legacy direct-provider surfaces were closed on 2026-06-24:
    `tools/asset` public chart config was stripped of live proxy/key values,
-   `multichart.html` fails closed until a first-party chart boundary exists,
+   `multichart.html` is reopened only under the P15-0 owner-owned Stooq Worker
+   proxy exception with no repo accumulation and 24h browser localStorage cache,
    `admin/design-lab` chart variants v1-v6 are retired from live data, and
    `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs` are
    deprecated backups behind an explicit opt-in guard. Quote and Treasury are

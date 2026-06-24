@@ -181,11 +181,13 @@ Order is risk-first, not table-order:
 Quote and Treasury are contracted/routed. The next residual rows are separate
 legacy/runtime cleanup items, not part of the quote/Treasury slice:
 
-- `tools/asset/multichart.html` + `tools/asset/config.js`: CLOSED 2026-06-24
-  as a public live-data exposure. The public config no longer carries proxy/key
-  values, Alpha fallback keys were removed, and the legacy live fetch path now
-  fails closed. Rebuild on a DataPack or first-party chart API before this tool
-  is promoted.
+- `tools/asset/multichart.html` + `tools/asset/config.js`: P15-0 exception
+  supersedes the 2026-06-24 closed-live-provider status for this one route.
+  `/multichart` may use the owner-owned Stooq Worker proxy as an allowed data
+  path, with no repo accumulation and only a 24h browser localStorage cache.
+  Public config still carries no API keys; Alpha/Yahoo/direct-Stooq browser
+  calls remain closed. See
+  `docs/planning/DEC_multichart_stooq_worker_20260624.md`.
 - `admin/design-lab/charts/v*.html`: CLOSED 2026-06-24 for live data. `v1-v6`
   are retired live-data prototypes with Stooq proxy fetch disabled; `v7` is an
   explicit design-only exception because it has no data/API fetch.

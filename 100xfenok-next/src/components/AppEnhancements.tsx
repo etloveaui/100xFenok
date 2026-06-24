@@ -29,20 +29,19 @@ const dockItems = [
     isActive: (pathname: string) =>
       pathname === '/market' ||
       pathname === '/market-valuation' ||
-      pathname === '/alpha-scout' ||
-      pathname === '/sectors',
+      pathname === '/alpha-scout',
   },
   {
-    href: '/etfs',
-    label: 'ETF',
-    icon: '▤',
-    isActive: (pathname: string) => pathname === '/etfs' || pathname.startsWith('/etfs/'),
-  },
-  {
-    href: '/macro-chart',
-    label: 'ANALYTICS',
-    icon: '▦',
+    href: '/explore',
+    label: 'EXPLORE',
+    icon: '◇',
     isActive: (pathname: string) =>
+      pathname === '/explore' ||
+      pathname === '/sectors' ||
+      pathname === '/etfs' ||
+      pathname.startsWith('/etfs/') ||
+      pathname === '/screener' ||
+      pathname === '/superinvestors' ||
       pathname === '/posts' ||
       pathname.startsWith('/posts/') ||
       pathname === '/macro-chart' ||

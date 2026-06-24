@@ -5,14 +5,22 @@
 
 ## Intent
 
-Replace the legacy `/multichart` iframe/prototype with a first-party
-Data Spine-native `/macro-chart` route that can become a durable public service
-surface.
+Restore the chart stack as two separate surfaces: `/macro-chart` remains the
+Data Spine-native macro workbench, while `/multichart` is the owner-approved
+Stooq Worker-proxy stock/ETF/index comparison tool.
 
 ## Boundary
 
 - Use static public Data Spine JSON only. No browser-side external provider calls.
-- Keep `/multichart` as a redirect to `/macro-chart`.
+- Keep `/macro-chart` as the "chart above charts"; keep `/multichart` as a
+  separate compare route, not a redirect.
+- DEC-20260624-P15-0: the owner-owned Stooq Worker proxy is an allowed
+  `/multichart` data path. The browser calls the Worker, not Stooq directly; the
+  Worker stores nothing, and the client keeps only a 24h per-symbol localStorage
+  cache.
+- Product entry should collapse chart/tool discovery under Explore. Header/shell
+  navigation should not expose separate Multichart, ETF, Sector, Screener, or
+  Investor entries.
 - Do not add paid providers, credentials, or runtime installs for the first slice.
 - Keep Chart.js category/ISO labels for the current service. The TimeScale adapter decision is closed as "defer unless an opt-in engine mode is designed and regression-covered."
 
@@ -36,6 +44,10 @@ surface.
   product-surface links, analysis summary cards, mobile formula/status chips,
   explicit full-CSV copy, macro catalog `analysis_lenses`/`connection_surfaces`,
   and expanded `qa:macro-chart` static/browser/mobile coverage.
+- P15-0/P9-G: restore `/multichart` as the existing stock compare surface by
+  removing the `/macro-chart` redirect and restoring Stooq daily CSV fetches via
+  the owner-owned Worker proxy plus 24h browser localStorage cache. No repo data
+  accumulation or new credential path is introduced.
 
 ## Deferred
 

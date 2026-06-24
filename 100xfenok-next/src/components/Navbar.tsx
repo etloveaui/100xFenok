@@ -34,6 +34,7 @@ export default function Navbar() {
     pathname === '/alpha-scout';
   const isAnalytics =
     pathname === '/multichart' ||
+    pathname === '/macro-chart' ||
     pathname === '/radar' ||
     pathname === '/posts' ||
     pathname === '/explore' ||
@@ -364,75 +365,17 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* ANALYTICS Dropdown */}
-              <div
-                ref={analyticsDropdownRef}
-                className="relative dropdown-wrapper h-full flex items-center"
-                onMouseEnter={() => {
-                  if (hasFinePointer()) openDesktopMenu('analytics');
-                }}
-                onMouseLeave={() => handleDesktopMenuMouseLeave('analytics')}
-                onBlur={(event) => handleDesktopMenuBlur(event, 'analytics')}
+              <Link
+                href="/explore"
+                aria-current={isAnalytics ? 'page' : undefined}
+                className={`nav-pill h-10 flex items-center px-4 text-xs font-[800] rounded-t-lg orbitron tracking-wide ${
+                  isAnalytics
+                    ? 'text-brand-navy border-b-2 border-brand-navy bg-blue-50/50'
+                    : 'text-slate-500 border-b-2 border-transparent hover:text-slate-900 hover:bg-slate-100'
+                }`}
               >
-                <button type="button" className={`nav-pill px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                    isAnalytics
-                      ? 'text-brand-navy bg-blue-50/50'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                  } ${desktopMenuOpen === 'analytics' ? 'bg-white shadow-sm text-brand-navy' : ''}`}
-                  aria-haspopup="menu"
-                  aria-expanded={desktopMenuOpen === 'analytics'}
-                  aria-controls="desktop-analytics-menu"
-                  onClick={() => toggleDesktopMenu('analytics')}
-                  onKeyDown={(event) => handleDesktopMenuKeyDown(event, 'analytics')}
-                >
-                  ANALYTICS
-                  <i className={`fas fa-chevron-down text-[8px] transition-all ${desktopMenuOpen === 'analytics' ? 'text-brand-gold rotate-180' : 'opacity-30'}`} />
-                </button>
-                <div
-                  ref={analyticsMenuPanelRef}
-                  id="desktop-analytics-menu"
-                  role="menu"
-                  aria-label="분석 메뉴"
-                  className={`dropdown-menu absolute top-full right-0 mt-1 w-[min(90vw,360px)] bg-white border border-gray-200 shadow-xl rounded-xl p-4 transition-all transform z-50 ${desktopMenuOpen === 'analytics' ? '!visible !opacity-100 !translate-y-0 !pointer-events-auto' : '!invisible !opacity-0 !translate-y-[-10px] !pointer-events-none'}`}
-                >
-                  <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">도구와 차트</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Link href="/multichart" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-chart-line text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">Multichart</span>
-                    </Link>
-                    <Link href="/radar" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-satellite-dish text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">Radar</span>
-                    </Link>
-                    <Link href="/posts" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="relative flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
-                      <i className="fas fa-lightbulb text-xl text-amber-500 mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">Insights</span>
-                    </Link>
-                    <Link href="/explore" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">탐색</span>
-                    </Link>
-                    <Link href="/etfs" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-layer-group text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">ETF</span>
-                    </Link>
-                    <Link href="/sectors" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-table-cells-large text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">섹터</span>
-                    </Link>
-                    <Link href="/screener" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-filter text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">스크리너</span>
-                    </Link>
-                    <Link href="/superinvestors" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
-                      <i className="fas fa-user-tie text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">투자자</span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                EXPLORE
+              </Link>
 
               {/* STRATEGIES Dropdown */}
               <div
@@ -495,8 +438,8 @@ export default function Navbar() {
               <Link href="/market-valuation" className={`nav-icon ${isMarket ? 'active' : ''}`} title="시장" aria-label="시장">
                 <i className="fas fa-chart-bar" />
               </Link>
-              <Link href="/multichart" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="분석" aria-label="분석">
-                <i className="fas fa-chart-line" />
+              <Link href="/explore" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="탐색" aria-label="탐색">
+                <i className="fas fa-compass" />
               </Link>
               <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="전략" aria-label="전략">
                 <i className="fas fa-lightbulb" />
@@ -568,24 +511,17 @@ export default function Navbar() {
               </div>
             </details>
 
-            <details className="group">
-              <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${
-                  isAnalytics ? 'text-brand-navy bg-blue-50/30' : 'text-slate-700'
-                }`}>
-                <span><i className="fas fa-chart-line mr-2" /> 분석</span>
-                <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
-              </summary>
-              <div className="ml-4 mt-1 space-y-1">
-                <Link href="/multichart" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Multichart</Link>
-                <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
-                <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
-                <Link href="/explore" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">탐색</Link>
-                <Link href="/etfs" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">ETF</Link>
-                <Link href="/sectors" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">섹터</Link>
-                <Link href="/screener" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">스크리너</Link>
-                <Link href="/superinvestors" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">투자자</Link>
-              </div>
-            </details>
+            <Link
+              href="/explore"
+              onClick={closeMobileMenu}
+              className={`block min-h-12 px-4 py-3 rounded-lg font-bold text-sm ${
+                isAnalytics
+                  ? 'bg-blue-50 border-l-4 border-brand-navy text-brand-navy'
+                  : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <i className="fas fa-compass mr-2" /> 탐색
+            </Link>
 
             <details className="group">
               <summary className={`min-h-12 px-4 py-3 rounded-lg hover:bg-slate-50 cursor-pointer font-bold text-sm list-none flex items-center justify-between ${

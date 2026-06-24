@@ -114,7 +114,7 @@
 - G4 (thin slice landed 2026-06-24) — add Admin/Data Lab service-layer status from existing generated artifacts. Public surfaces keep only short `DataState` status; diagnostics and coverage language stay Admin-only. Notification hooks remain deferred/approval-gated.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources. No new paid provider, credential path, or live quota probe was added in the 2026-06-24 service-layer wave; refresh external quota references before relying on them.
 - G6 (landed 2026-06-24) — promote canonical key policy into a shared registry, add link-level single-stock ETF provenance (`etf_key`, `target_key`, `classification_source`, `raw_underlying`), and strengthen `qa:data-graph` so graph/service links fail closed when keys or provenance drift.
-- Macro-chart candidate (P1 + P1a.5 + P2 + P3a + P14 landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, presets, CSV export, searchable picker, and `/multichart` redirect. P11 closes the first service contract: mobile-first chart height/picker layout, share URL state for `series`/`transform`/`range`/hidden-series visibility, explicit 8-series cap copy, search debounce, picker loading/error affordances, CSV smoke, and `qa:macro-chart` share-URL round-trip QA. P12 adds browser-local saved analysis presets, keyed axis URL state, auto/left/right axis controls, storage/corruption guards, and Explore macro playbook entry points. P13/P3a adds dependency-free 3M/6M/3Y windows, zoom range stepping, PNG export, formula-derived spread/ratio series with URL/localStorage/CSV coverage, and shared Chart.js hover crosshair rendering. P14 adds curated analysis lenses, analysis summary, connected product-surface links, mobile formula/status chips, public catalog lens/surface fields, and the current TimeScale decision: keep CategoryScale + ISO labels unless a future opt-in engine mode is designed and regression-covered. True brush/wheel/pinch zoom remains deferred.
+- Macro-chart candidate (P1 + P1a.5 + P2 + P3a + P14 + P15-0 landed 2026-06-24) — do not extend direct browser provider calls. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, presets, CSV export, searchable picker, and macro workbench affordances. `/multichart` is restored as the existing stock/ETF/index compare route through the owner-owned Stooq Worker proxy, with 24h browser localStorage cache and no repo data accumulation. P11 closes the first service contract: mobile-first chart height/picker layout, share URL state for `series`/`transform`/`range`/hidden-series visibility, explicit 8-series cap copy, search debounce, picker loading/error affordances, CSV smoke, and `qa:macro-chart` share-URL round-trip QA. P12 adds browser-local saved analysis presets, keyed axis URL state, auto/left/right axis controls, storage/corruption guards, and Explore macro playbook entry points. P13/P3a adds dependency-free 3M/6M/3Y windows, zoom range stepping, PNG export, formula-derived spread/ratio series with URL/localStorage/CSV coverage, and shared Chart.js hover crosshair rendering. P14 adds curated analysis lenses, analysis summary, connected product-surface links, mobile formula/status chips, public catalog lens/surface fields, and the current TimeScale decision: keep CategoryScale + ISO labels unless a future opt-in engine mode is designed and regression-covered. Product navigation now keeps Multichart/ETF/Sector/Screener/Investor discovery under Explore instead of separate header entries. True brush/wheel/pinch zoom remains deferred.
 
 ---
 
@@ -149,10 +149,10 @@ collapsed-card density, portfolio edit/delete action target size, stock tab
 scroll affordance, and superinvestor Insights scroll-region affordance.
 
 **P11 macro-chart service contract added 2026-06-24**: `qa:macro-chart`
-locks `/macro-chart` and `/multichart` as a first-party Data Spine chart route:
+locks `/macro-chart` as a first-party Data Spine chart route:
 desktop/mobile chart visibility, no horizontal overflow, `range` + hidden-series
 URL round-trip, visible 8-series cap behavior, mobile picker open/closed state,
-CSV export, and legacy redirect. This keeps the chart work service-grade instead
+CSV export, and service route continuity. This keeps the chart work service-grade instead
 of another prototype iframe.
 
 **P12 macro-chart workbench contract added 2026-06-24**: `qa:macro-chart`
@@ -172,6 +172,13 @@ analysis lens deep links, connected surface links, analysis summary visibility,
 mobile formula/status chips, full-CSV copy, and the controlled
 `MarketChartFrame` range contract. TimeScale is intentionally deferred; the
 current service keeps dependency-free ISO label month windows.
+
+**P15-0/P9-G multichart restoration contract added 2026-06-24**:
+`qa:macro-chart` now inverts the old `/multichart` redirect assertion. The route
+must render the restored stock-compare frame, allow only the owner-owned Stooq
+Worker proxy as the external data path, block direct Stooq/Alpha/Yahoo browser
+requests, show the legacy compare controls/results, and keep Explore as the
+single header/shell entry for chart/tool discovery.
 
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in

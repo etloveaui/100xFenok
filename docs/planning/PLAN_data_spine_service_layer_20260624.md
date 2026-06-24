@@ -9,12 +9,12 @@
 - Keep `connection_count` semantics as core four sources only: market facts, filings, 13F, index membership. Service expansion uses `service_count` and sidecars.
 - Use source-specific freshness rules. 13F is quarterly and must not be judged by a seven-day rule.
 - No bulk external fetch/backfill, notification hook, paid provider, or new production credential path in this slice.
-- Keep the native macro multi-chart as a separate P9-D/P10/P11 service route program, not mixed into the P9-C export/provenance patch. Direction accepted from the platform-level `docs/superpowers/specs/2026-06-24-macro-multichart-vision.md`: replace the legacy `/multichart` iframe with a Data Spine-native `/macro-chart` route.
+- Keep the macro/multichart program as a separate P9-D/P10/P11/P15 service route program, not mixed into the P9-C export/provenance patch. Direction accepted from the platform-level `docs/superpowers/specs/2026-06-24-macro-multichart-vision.md`: `/macro-chart` is the Data Spine-native macro workbench, while `/multichart` is the owner-approved Stooq Worker-proxy stock/ETF/index compare route.
 
 ## Phase P9-A — Residual Data Spine Cleanup
 
 - [x] Remove macro-monitor FDIC browser external fallback. It now reads same-origin `/data/macro/fdic-tier1.json` only and fails visibly when the DataPack is unavailable.
-- [x] Classify remaining browser chart prototypes: `tools/asset/multichart.html` + `tools/asset/config.js` are migrate candidates with public live-data config disabled; `admin/design-lab/charts/v1-v6.html` are retired live-data prototypes; `v7-singularity.html` is an explicit no-fetch design exception.
+- [x] Classify remaining browser chart prototypes: `tools/asset/multichart.html` is restored only through the owner-owned Stooq Worker proxy; `tools/asset/config.js` remains non-secret config; `admin/design-lab/charts/v1-v6.html` are retired live-data prototypes; `v7-singularity.html` is an explicit no-fetch design exception.
 - [x] Classify non-quote GAS sentiment writers: `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs` are deprecated backups. Runtime ownership moved to `scripts/fetch-sentiment.mjs` + `.github/workflows/fetch-sentiment.yml`, with GAS execution guarded by `ALLOW_DEPRECATED_GAS_SENTIMENT=true`.
 - [ ] Keep quote.v1 and Treasury TGA closed unless building the deferred cached live-quote snapshot service.
 
@@ -46,12 +46,13 @@
 
 - [x] Review and accept the Kimi-authored final vision as a separate service-layer candidate, not a G2/G3 scope addition.
 - [x] P0: add an initial 30-series macro catalog plus pure alignment/transform helpers for raw, rebase100, YoY, and period-change transforms.
-- [x] P1: add native `/macro-chart` route with three default presets, searchable picker, URL state, CSV export, and legacy `/multichart` redirect.
+- [x] P1: add native `/macro-chart` route with three default presets, searchable picker, URL state, CSV export, and the initial `/multichart` compatibility redirect.
 - [x] P1a.5: harden `/macro-chart` as a public service route with mobile-first chart/picker layout, URL state for `range` + hidden series, explicit 8-series cap copy, search debounce, loading/error/retry affordances, CSV smoke, and `qa:macro-chart` contract coverage.
 - [x] P2: add localStorage user presets, explicit auto/left/right axis controls, keyed axis URL round-trip, storage/corruption guards, saved preset QA, and Explore macro playbook entry points.
 - [x] P3a: add dependency-free chart depth controls: 3M/6M/3Y ranges, zoom in/out range stepping, browser PNG export, spread/ratio derived formula series with URL/localStorage/CSV coverage, and shared Chart.js hover crosshair rendering.
 - [x] P14/P3a.5: add macro intelligence workbench affordances without new provider calls: curated analysis lenses, analysis summary, mobile formula/status chips, connected surface links, full-CSV copy, macro catalog `analysis_lenses`/`connection_surfaces`, and expanded `qa:macro-chart` static/browser contract coverage.
 - [x] P1b: TimeScale decision closed for the current service. Keep Chart.js `CategoryScale` + ISO labels + dependency-free month windows; only revisit TimeScale as an opt-in chart-engine mode with adapter, mixed-frequency, URL, and market-valuation regression coverage.
+- [x] P15-0/P9-G: restore `/multichart` as the existing stock compare route. It removes the `/macro-chart` redirect, embeds `/tools/asset/multichart.html`, restores Stooq daily CSV through the owner-owned Worker proxy, keeps only a 24h browser localStorage cache, leaves `/macro-chart` untouched, and keeps header/shell discovery collapsed into Explore.
 - [ ] P3b: evaluate true brush/wheel/pinch zoom and multi-chart crosshair sync only if the dependency/runtime tradeoff beats the current range-window controls.
 
 ## Phase P9-E — Product Affordance Deepening
@@ -78,7 +79,7 @@
 - Scoped lint for touched product/data files
 - `npm run build`
 - Browser smoke: `/portfolio?ticker=NVDA`, `/screener?sector=반도체`, `/stock/NVDA`, `/etfs/SPY`
-- Macro smoke: `/macro-chart`, `/multichart` redirect, full CSV export, PNG export, mobile picker, mobile formula/status chips, share URL `range` + hidden-series + keyed axis + formula round trip, saved user preset apply, corrupted saved hidden-state handling, range zoom controls, analysis lenses, analysis summary, connection links, static macro catalog lenses/surfaces, and Explore playbook links.
+- Macro smoke: `/macro-chart`, restored `/multichart` stock compare frame, full CSV export, PNG export, mobile picker, mobile formula/status chips, share URL `range` + hidden-series + keyed axis + formula round trip, saved user preset apply, corrupted saved hidden-state handling, range zoom controls, analysis lenses, analysis summary, connection links, static macro catalog lenses/surfaces, Explore playbook/ETF entry links, single Explore header entry, and Stooq Worker proxy smoke.
 - Mobile/a11y smoke: at least `/portfolio`, `/screener`, `/stock/NVDA`
 
 ## Notes

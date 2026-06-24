@@ -24,7 +24,7 @@ function addFailure(failures, check, detail) {
 function watchHydrationErrors(page, failures) {
   const seen = new Set();
   const record = (source, text) => {
-    if (!/Hydration failed|hydration mismatch/i.test(text)) return;
+    if (!/Hydration failed|hydration mismatch|server rendered HTML didn't match/i.test(text)) return;
     const key = `${source}:${text.slice(0, 160)}`;
     if (seen.has(key)) return;
     seen.add(key);
@@ -35,6 +35,17 @@ function watchHydrationErrors(page, failures) {
   });
   page.on("pageerror", (error) => {
     record("pageerror", error.message);
+  });
+}
+
+function watchExternalProviderRequests(page, failures) {
+  const localOrigin = new URL(baseUrl).origin;
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.origin === localOrigin) return;
+    if (url.hostname === "stooq-proxy.etloveaui.workers.dev") return;
+    if (!/stooq|alphavantage|query\d+\.finance\.yahoo|stockanalysis\.com/i.test(url.hostname)) return;
+    addFailure(failures, "external-provider-request", url.href);
   });
 }
 
@@ -54,11 +65,26 @@ async function hasVisibleText(page, text) {
 
 async function inspectStaticContracts() {
   const failures = [];
-  const [macroSource, macroPageSource, quickLinksSource, catalogSource] = await Promise.all([
+  const [
+    macroSource,
+    macroPageSource,
+    quickLinksSource,
+    catalogSource,
+    multichartPageSource,
+    multichartHtmlSource,
+    navbarSource,
+    shellSource,
+    appEnhancementsSource,
+  ] = await Promise.all([
     readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/market/MarketQuickLinks.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/data/catalog/macro-series.json", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/multichart/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/Navbar.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/AppEnhancements.tsx", import.meta.url), "utf8"),
   ]);
   const catalog = JSON.parse(catalogSource);
 
@@ -88,6 +114,22 @@ async function inspectStaticContracts() {
   }
   if (!Array.isArray(catalog.connection_surfaces) || !catalog.connection_surfaces.some((item) => item.surface === "screener")) {
     addFailure(failures, "catalog-connection-surfaces", "screener connection missing");
+  }
+  if (multichartPageSource.includes("redirect(") || !multichartPageSource.includes("RouteEmbedFrame")) {
+    addFailure(failures, "multichart-route", "multichart must render the restored stock compare frame instead of redirecting");
+  }
+  if (!multichartHtmlSource.includes("stooq-proxy.etloveaui.workers.dev") || !multichartHtmlSource.includes("stooq_cache_")) {
+    addFailure(failures, "multichart-stooq-worker", "Stooq Worker proxy + 24h cache contract missing");
+  }
+  for (const href of ['href="/multichart"', 'href="/etfs"', 'href="/sectors"', 'href="/screener"', 'href="/superinvestors"']) {
+    if (navbarSource.includes(href) || shellSource.includes(href) || appEnhancementsSource.includes(href)) {
+      addFailure(failures, "single-explore-entry", `${href} still appears in top-level navigation`);
+    }
+  }
+  for (const href of ["'/multichart'", "'/etfs'", "'/sectors'", "'/screener'", "'/superinvestors'"]) {
+    if (appEnhancementsSource.includes(`href: ${href}`) || shellSource.includes(`href: ${href.replace(/'/g, '"')}`)) {
+      addFailure(failures, "single-explore-entry", `${href} still appears as a top-level navigation href`);
+    }
   }
 
   return { route: "static:macro-chart", viewport: "static", status: null, failures };
@@ -380,6 +422,9 @@ async function inspectExplorePlaybooks(page) {
   if (!hrefs.some((href) => href.includes("preset=activity"))) {
     addFailure(failures, "explore-activity-playbook-link", hrefs.join(" | "));
   }
+  if (!(await page.getByRole("heading", { name: "ETF 목록" }).isVisible())) {
+    addFailure(failures, "explore-etf-entry", "ETF card missing from Explore hub");
+  }
 
   return { route: "/explore", viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
@@ -491,16 +536,36 @@ async function inspectMobile(page) {
   return { route: sharedRoute, viewport: "mobile", status: response?.status() ?? null, layout, failures };
 }
 
-async function inspectRedirect(page) {
+async function inspectMultichartRoute(page) {
   const failures = [];
   watchHydrationErrors(page, failures);
-  const response = await page.goto(routeUrl("/multichart"), { waitUntil: "networkidle", timeout: 60_000 });
-  await waitForMacroChart(page);
+  watchExternalProviderRequests(page, failures);
+  const route = "/multichart";
+  const response = await page.goto(routeUrl(route), { waitUntil: "networkidle", timeout: 60_000 });
+  const frame = page.frameLocator('iframe[title="100x 멀티차트"]');
+  await frame.getByRole("heading", { name: /100x\s*멀티차트/ }).waitFor({ timeout: 45_000 });
   const pathname = await page.evaluate(() => window.location.pathname);
-  if (pathname.replace(/\/$/, "") !== "/macro-chart") {
-    addFailure(failures, "multichart-redirect", `pathname=${pathname}`);
+  if (response?.status() !== 200) {
+    addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
   }
-  return { route: "/multichart", viewport: "desktop", status: response?.status() ?? null, failures };
+  if (pathname.replace(/\/$/, "") !== "/multichart") {
+    addFailure(failures, "multichart-route", `pathname=${pathname}`);
+  }
+  const layout = await collectPageOverflow(page);
+  if (layout.scrollWidth > layout.viewportWidth + 1) {
+    addFailure(failures, "multichart-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
+  }
+  for (const label of ["+ 티커 추가", "수익률 비교", "실제 가격", "벤치마크 대비"]) {
+    if (!(await frame.getByText(label, { exact: true }).isVisible())) {
+      addFailure(failures, "multichart-control-visible", `${label} missing`);
+    }
+  }
+  await frame.getByRole("button", { name: "분석 실행" }).click();
+  await frame.getByRole("cell", { name: "SPY", exact: true }).waitFor({ timeout: 45_000 });
+  if (!(await frame.getByRole("cell", { name: "QQQ", exact: true }).isVisible())) {
+    addFailure(failures, "multichart-result-row", "QQQ result row missing");
+  }
+  return { route, viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
 
 const results = [await inspectStaticContracts()];
@@ -514,7 +579,7 @@ try {
   const desktopPage = await desktopContext.newPage();
   results.push(await inspectSharedDesktop(desktopPage));
   results.push(await inspectPresetRoute(desktopPage));
-  results.push(await inspectRedirect(desktopPage));
+  results.push(await inspectMultichartRoute(desktopPage));
   results.push(await inspectExplorePlaybooks(desktopPage));
   await desktopContext.close();
 

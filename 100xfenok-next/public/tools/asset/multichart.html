@@ -37,9 +37,9 @@
     /* ------------------------------------------------------------------
      * 100x 멀티차트 앱 (v10 Stable)
      * ------------------------------------------------------------------
-     * P9-A: legacy live-data providers are retired for the public prototype.
-     * Rebuild this tool on a first-party Data Spine chart boundary before
-     * promoting it as a product surface.
+     * P15-0: Stooq daily history is restored through the owner-owned Worker
+     * proxy. The browser never calls Stooq directly, and results stay in the
+     * user's 24h localStorage cache only.
      * ------------------------------------------------------------------
      */
     const { useState, useRef, useEffect, useCallback } = React;
@@ -63,7 +63,7 @@
     /* ===== 2. 스타일 팔레트 ===== */
     const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
     const getColor = i => PALETTE[i % PALETTE.length];
-    const STOOQ_PROXY = '';
+    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
     const POLYGON_KEY = '';
     const USE_ALPHA = false;
 
@@ -84,7 +84,27 @@
     }
 
     async function fetchStooq(symbol) {
-      throw new Error('Legacy multichart live-data fetch is retired. Use a Data Spine-backed chart surface.');
+      const stoSym = toStooqSymbol(symbol);
+      const cacheKey = `stooq_cache_${stoSym}`;
+      const c = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+      if (c.ts && Date.now() - c.ts < 86400000) return c.data;          // 24h cache
+
+      const upstream = `https://stooq.com/q/d/l/?s=${stoSym}&i=d`;
+      const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
+      const url = proxyBase + encodeURIComponent(upstream);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Stooq proxy ${res.status}`);
+
+      const txt = await res.text();
+      if (!txt.startsWith('Date')) throw new Error('CSV format');
+
+      const data = txt.trim().split('\n').slice(1).map(l => {
+        const f = l.split(',');
+        return { date: f[0], price: +f[4] };
+      }).sort((a, b) => a.date.localeCompare(b.date));
+
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+      return data;
     }
 
     async function fetchPriceDataAlpha(symbol) {

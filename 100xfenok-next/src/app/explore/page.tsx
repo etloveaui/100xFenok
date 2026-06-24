@@ -7,6 +7,7 @@ import SignalStrip from "./SignalStrip";
 import MyWatchlistStrip from "./MyWatchlistStrip";
 import StockWorkbenchCard from "./StockWorkbenchCard";
 import MacroPlaybookCard from "./MacroPlaybookCard";
+import EtfUniverseCard from "./EtfUniverseCard";
 
 export const metadata: Metadata = {
   title: "탐색 | 100xFenok",
@@ -31,6 +32,7 @@ export default function ExplorePage() {
           <div className="col-b">
             <MyWatchlistStrip />
             <StockWorkbenchCard />
+            <EtfUniverseCard limit={8} />
           </div>
         </div>
 
