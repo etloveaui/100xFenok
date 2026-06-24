@@ -56,8 +56,14 @@ export interface MarketChartFrameProps {
   footnote?: string;
   /** Drop the outer card chrome when embedded in a parent shell (e.g. SlotShell). */
   bare?: boolean;
+  /** Controlled range id for URL-synced chart surfaces. */
+  rangeId?: string;
+  /** Controlled hidden series ids for shareable chart visibility state. */
+  hiddenSeriesIds?: readonly string[];
   /** Fired on range change — lets a panel lazy-load raw depth when MAX is selected. */
   onRangeChange?: (rangeId: string) => void;
+  /** Fired when a series visibility toggle changes. */
+  onHiddenSeriesChange?: (hiddenIds: string[]) => void;
   /**
    * Sort the x-axis chronologically/lexically. Needed for date/year charts whose
    * series have different coverage (e.g. ERP FCFE 2001+ vs DDM 1961+), where the
@@ -152,13 +158,16 @@ export function MarketChartFrame({
   y1AxisTitle,
   footnote,
   bare = false,
+  rangeId: controlledRangeId,
+  hiddenSeriesIds: controlledHiddenSeriesIds,
   onRangeChange,
+  onHiddenSeriesChange,
   sortLabels = false,
 }: MarketChartFrameProps) {
-  const [rangeId, setRangeId] = useState<string>(
+  const [internalRangeId, setInternalRangeId] = useState<string>(
     defaultRangeId ?? ranges[ranges.length - 1]?.id ?? "MAX",
   );
-  const [hiddenIds, setHiddenIds] = useState<ReadonlySet<string>>(() =>
+  const [internalHiddenIds, setInternalHiddenIds] = useState<ReadonlySet<string>>(() =>
     defaultHiddenIds(series),
   );
   const [hover, setHover] = useState<MarketChartHoverPoint | null>(null);
@@ -166,13 +175,24 @@ export function MarketChartFrame({
   const theme = useMarketChartTheme();
 
   useEffect(() => {
-    setHiddenIds(defaultHiddenIds(series));
-  }, [series]);
+    if (controlledHiddenSeriesIds !== undefined) return;
+    const timer = window.setTimeout(() => setInternalHiddenIds(defaultHiddenIds(series)), 0);
+    return () => window.clearTimeout(timer);
+  }, [controlledHiddenSeriesIds, series]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setAnnouncedHover(hover), 200);
     return () => window.clearTimeout(timer);
   }, [hover]);
+
+  const rangeId = controlledRangeId ?? internalRangeId;
+  const hiddenIds = useMemo(
+    () =>
+      controlledHiddenSeriesIds === undefined
+        ? internalHiddenIds
+        : new Set(controlledHiddenSeriesIds),
+    [controlledHiddenSeriesIds, internalHiddenIds],
+  );
 
   const activeRange = useMemo(
     () => ranges.find((range) => range.id === rangeId) ?? ranges[ranges.length - 1],
@@ -189,13 +209,14 @@ export function MarketChartFrame({
   );
 
   const toggleSeries = useCallback((id: string) => {
-    setHiddenIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
+    const next = new Set(hiddenIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    if (controlledHiddenSeriesIds === undefined) {
+      setInternalHiddenIds(next);
+    }
+    onHiddenSeriesChange?.([...next]);
+  }, [controlledHiddenSeriesIds, hiddenIds, onHiddenSeriesChange]);
 
   const fmt = useMemo<MarketChartValueFormatter>(
     () => formatValue ?? ((value) => (value === null ? "—" : String(value))),
@@ -234,7 +255,9 @@ export function MarketChartFrame({
                     key={range.id}
                     type="button"
                     onClick={() => {
-                      setRangeId(range.id);
+                      if (controlledRangeId === undefined) {
+                        setInternalRangeId(range.id);
+                      }
                       onRangeChange?.(range.id);
                     }}
                     aria-pressed={active}
