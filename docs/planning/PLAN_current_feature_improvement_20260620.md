@@ -114,7 +114,7 @@
 - G4 (thin slice landed 2026-06-24) — add Admin/Data Lab service-layer status from existing generated artifacts. Public surfaces keep only short `DataState` status; diagnostics and coverage language stay Admin-only. Notification hooks remain deferred/approval-gated.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources. No new paid provider, credential path, or live quota probe was added in the 2026-06-24 service-layer wave; refresh external quota references before relying on them.
 - G6 (landed 2026-06-24) — promote canonical key policy into a shared registry, add link-level single-stock ETF provenance (`etf_key`, `target_key`, `classification_source`, `raw_underlying`), and strengthen `qa:data-graph` so graph/service links fail closed when keys or provenance drift.
-- Macro-chart candidate (P1 + P1a.5 + P2 + P3a landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, presets, CSV export, searchable picker, and `/multichart` redirect. P11 closes the first service contract: mobile-first chart height/picker layout, share URL state for `series`/`transform`/`range`/hidden-series visibility, explicit 8-series cap copy, search debounce, picker loading/error affordances, CSV smoke, and `qa:macro-chart` share-URL round-trip QA. P12 adds browser-local saved analysis presets, keyed axis URL state, auto/left/right axis controls, storage/corruption guards, and Explore macro playbook entry points. P13/P3a adds dependency-free 3M/6M/3Y windows, zoom range stepping, PNG export, formula-derived spread/ratio series with URL/localStorage/CSV coverage, and shared Chart.js hover crosshair rendering. TimeScale/adapter plus true brush/wheel/pinch zoom remain deferred.
+- Macro-chart candidate (P1 + P1a.5 + P2 + P3a + P14 landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, presets, CSV export, searchable picker, and `/multichart` redirect. P11 closes the first service contract: mobile-first chart height/picker layout, share URL state for `series`/`transform`/`range`/hidden-series visibility, explicit 8-series cap copy, search debounce, picker loading/error affordances, CSV smoke, and `qa:macro-chart` share-URL round-trip QA. P12 adds browser-local saved analysis presets, keyed axis URL state, auto/left/right axis controls, storage/corruption guards, and Explore macro playbook entry points. P13/P3a adds dependency-free 3M/6M/3Y windows, zoom range stepping, PNG export, formula-derived spread/ratio series with URL/localStorage/CSV coverage, and shared Chart.js hover crosshair rendering. P14 adds curated analysis lenses, analysis summary, connected product-surface links, mobile formula/status chips, public catalog lens/surface fields, and the current TimeScale decision: keep CategoryScale + ISO labels unless a future opt-in engine mode is designed and regression-covered. True brush/wheel/pinch zoom remains deferred.
 
 ---
 
@@ -166,6 +166,13 @@ headers, and PNG download signature/size. Targeted mobile UX QA covers
 `/explore` and `/macro-chart`; `qa:market-charts` covers shared chart-engine
 crosshair regression risk.
 
+**P14 macro intelligence workbench contract added 2026-06-24**:
+`qa:macro-chart` now also locks static macro catalog lenses/connection surfaces,
+analysis lens deep links, connected surface links, analysis summary visibility,
+mobile formula/status chips, full-CSV copy, and the controlled
+`MarketChartFrame` range contract. TimeScale is intentionally deferred; the
+current service keeps dependency-free ISO label month windows.
+
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
 addition to the localhost check. Public copy guard now blocks accidental
@@ -173,7 +180,7 @@ addition to the localhost check. Public copy guard now blocks accidental
 language in Admin. Turbopack dynamic `public/data` filesystem warnings are
 tracked as a P3 infrastructure cleanup unless they turn into a build failure.
 
-**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice, macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, legacy chart prototype live provider paths, and the native `/macro-chart` P13 depth contract; continue with feno-value direct-provider exception handling outside this repo plus the macro-chart TimeScale/adapter decision and true brush/wheel/pinch zoom only if the dependency/runtime tradeoff is explicit; (2) keep expanding P9 graph-backed service affordances only where existing DataPack payloads support them; (3) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
+**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice, macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, legacy chart prototype live provider paths, and the native `/macro-chart` P14 workbench contract; continue with feno-value direct-provider exception handling outside this repo plus true brush/wheel/pinch zoom only if the dependency/runtime tradeoff is explicit; (2) keep expanding P9 graph-backed service affordances only where existing DataPack payloads support them; (3) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
 

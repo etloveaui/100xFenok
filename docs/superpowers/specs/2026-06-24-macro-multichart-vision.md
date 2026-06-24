@@ -14,7 +14,7 @@ surface.
 - Use static public Data Spine JSON only. No browser-side external provider calls.
 - Keep `/multichart` as a redirect to `/macro-chart`.
 - Do not add paid providers, credentials, or runtime installs for the first slice.
-- Keep Chart.js category/ISO labels until the TimeScale adapter decision is made.
+- Keep Chart.js category/ISO labels for the current service. The TimeScale adapter decision is closed as "defer unless an opt-in engine mode is designed and regression-covered."
 
 ## Landed Contract
 
@@ -32,10 +32,16 @@ surface.
   stepping, browser PNG export, spread/ratio formula series from transformed
   chart values, formula URL/localStorage/CSV coverage, and shared Chart.js hover
   crosshair rendering.
+- P14/P3a.5: service-grade workbench layer: curated analysis lenses, connected
+  product-surface links, analysis summary cards, mobile formula/status chips,
+  explicit full-CSV copy, macro catalog `analysis_lenses`/`connection_surfaces`,
+  and expanded `qa:macro-chart` static/browser/mobile coverage.
 
 ## Deferred
 
-- P1b: decide whether Chart.js `TimeScale` + adapter is worth the dependency.
+- TimeScale opt-in engine mode: only revisit with adapter choice, `x` value
+  contract, mixed-frequency fill-forward checks, URL state, and existing
+  market-valuation chart regression coverage.
 - P3b: true brush/wheel/pinch zoom and multi-chart crosshair sync. The current
-  public service keeps dependency-free range-window controls until the install
-  and runtime tradeoff is explicit.
+  public service keeps dependency-free range-window controls until the install,
+  gesture, mobile, and URL-sync tradeoff is explicit.
