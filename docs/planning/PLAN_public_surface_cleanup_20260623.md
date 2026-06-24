@@ -148,9 +148,32 @@ Quality gate:
 
 - `npm run qa:data-graph` - pass after graph/service mirror regeneration.
 
+### Phase 7 - Connection Trust + Canonical Keys
+
+- [x] Promote graph keys from inline strings to a canonical registry helper used by the builder and QA gate.
+- [x] Add `etf_category` to the documented key policy and mirror the same `key_policy` into graph, stock-index, and stock-services artifacts.
+- [x] Persist single-stock ETF link provenance in `entity_graph_stock_services.json`: `etf_key`, `target_key`, `classification_source`, `raw_underlying`, and `canonical_underlying_ticker`.
+- [x] Add link-level QA so every stock-service ETF link must exist in the graph, carry the `single_stock` service flag, point back through `tracks_underlying`, and keep provenance fields.
+- [x] Add public trust notes on `/stock/[ticker]` and `/etfs/[ticker]` so classification-derived single-stock ETF links are shown as data connections, not recommendations.
+- [x] Add conservative alias suffix normalization for underlying matching, with collision diagnostics and non-US alias skip diagnostics rather than silent overwrites.
+
+Measured P7 output:
+
+- Service coverage after safe alias normalization and non-US alias guard: 72 stock underlyings and 138 single-stock ETF links.
+- NVDA single-stock ETF links include `NVDL` with `raw_underlying: NVIDIA Corporation` mapped to `target_key: ticker:NVDA`.
+- Ambiguous `Alibaba Group Holding Limited -> 9988.HK` alias mapping is skipped and recorded in `diagnostics.stock_alias_non_us_skip_examples`.
+- Canonical key policy now covers `stock`, `etf`, `sector`, `etf_category`, `filing`, and `sec13f`.
+- Kimi P7 critique request anchor: `fh-20260624-027-cx-90d65445`.
+- Kimi P7 review anchor: `fh-20260624-029-km-585866ee`; no blockers, minor UI/validator hardening reflected.
+
+Quality gate:
+
+- `npm run build:data-entity-graph` - pass.
+- `npm run qa:data-graph` - pass with strengthened key/link validation.
+
 ## Notes
 
-- Current nested app status at goal start: `source/100xFenok` clean on `main...origin/main`.
+- Current P7 nested app status at goal start: `source/100xFenok` clean on `main...origin/main`, except pre-existing untracked `docs/superpowers/` from Kimi's P8 mobile UX research package.
 - Parent project has pre-existing `.sec_cache/` untracked; leave it untouched.
 - Kimi handoff anchor: `fh-20260623-294-cx-4c7b7f73`.
 - Kimi final audit reply anchor: `fh-20260623-295-km-a2c1b0cb`.

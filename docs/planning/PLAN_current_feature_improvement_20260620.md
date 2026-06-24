@@ -113,6 +113,7 @@
 - G3 — expose additional graph-backed compare/export affordances in screener/stock/ETF surfaces.
 - G4 — add workflow observability: source freshness warn/error thresholds, failed-source fallback UI, and notification hooks.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources.
+- G6 (landed 2026-06-24) — promote canonical key policy into a shared registry, add link-level single-stock ETF provenance (`etf_key`, `target_key`, `classification_source`, `raw_underlying`), and strengthen `qa:data-graph` so graph/service links fail closed when keys or provenance drift.
 
 ---
 
