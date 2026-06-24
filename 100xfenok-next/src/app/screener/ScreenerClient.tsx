@@ -774,13 +774,17 @@ function MobileStockCard({
   expanded,
   detailId,
   preset,
+  selected,
   onToggle,
+  onSelectedChange,
 }: {
   stock: ScreenerStock;
   expanded: boolean;
   detailId: string;
   preset: ColumnPreset;
+  selected: boolean;
   onToggle: () => void;
+  onSelectedChange: () => void;
 }) {
   const lowEvidence = stock.lowEvidence === true;
   const confidence = confidenceText(stock.confidenceLabel);
@@ -790,6 +794,20 @@ function MobileStockCard({
   const metrics = mobileMetricKeys(preset);
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
+        <label className="inline-flex min-h-8 items-center gap-2 rounded-md px-1 text-[11px] font-black text-slate-600">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onSelectedChange}
+            className="h-4 w-4 accent-slate-900"
+          />
+          선택
+        </label>
+        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+          {stock.connection?.singleStockEtfs?.length ? "ETF 연결" : "단일 종목"}
+        </span>
+      </div>
       <button
         type="button"
         aria-expanded={expanded}
@@ -956,6 +974,7 @@ export default function ScreenerClient({
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
+  const [selectedTickers, setSelectedTickers] = useState<ReadonlySet<string>>(() => new Set());
   const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
   const [prevInitialSector, setPrevInitialSector] = useState(initialSector);
 
@@ -1073,6 +1092,14 @@ export default function ScreenerClient({
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   const singleStockEtfCompareHref = useMemo(() => buildSingleStockEtfCompareHref(sorted), [sorted]);
+  const selectedRows = useMemo(
+    () => sorted.filter((stock) => selectedTickers.has(stock.ticker)),
+    [selectedTickers, sorted],
+  );
+  const selectedSingleStockEtfCount = useMemo(() => singleStockEtfTickers(selectedRows).length, [selectedRows]);
+  const selectedSingleStockEtfCompareHref = useMemo(() => buildSingleStockEtfCompareHref(selectedRows), [selectedRows]);
+  const pageSelectedCount = pageRows.filter((stock) => selectedTickers.has(stock.ticker)).length;
+  const allPageSelected = pageRows.length > 0 && pageSelectedCount === pageRows.length;
 
   const screenerDataState = useMemo(() => {
     if (failed) {
@@ -1128,6 +1155,39 @@ export default function ScreenerClient({
     }
   }
 
+  function toggleSelectedTicker(ticker: string) {
+    setSelectedTickers((prev) => {
+      const next = new Set(prev);
+      if (next.has(ticker)) next.delete(ticker);
+      else next.add(ticker);
+      return next;
+    });
+  }
+
+  function selectPageRows() {
+    setSelectedTickers((prev) => {
+      const next = new Set(prev);
+      for (const stock of pageRows) next.add(stock.ticker);
+      return next;
+    });
+  }
+
+  function deselectPageRows() {
+    setSelectedTickers((prev) => {
+      const next = new Set(prev);
+      for (const stock of pageRows) next.delete(stock.ticker);
+      return next;
+    });
+  }
+
+  function selectFilteredRows() {
+    setSelectedTickers(new Set(sorted.map((stock) => stock.ticker)));
+  }
+
+  function clearSelectedRows() {
+    setSelectedTickers(new Set());
+  }
+
   function resetFilters() {
     setSearch("");
     setSector("");
@@ -1167,11 +1227,11 @@ export default function ScreenerClient({
             disabled={!connectionIndexReady || sorted.length === 0}
             className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
           >
-            연결 CSV
+            필터 CSV
           </button>
           {singleStockEtfCompareHref ? (
             <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
-              ETF 비교
+              필터 ETF 비교
             </TransitionLink>
           ) : null}
           <TransitionLink href="/sectors" className="data-shell-link">
@@ -1184,6 +1244,61 @@ export default function ScreenerClient({
       {screenerDataState.status !== "ready" ? (
         <DataStateNotice state={screenerDataState} />
       ) : null}
+
+      <section className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
+            <p className="mt-1 text-sm font-bold text-slate-700">
+              현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+              {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={allPageSelected ? deselectPageRows : selectPageRows}
+              disabled={pageRows.length === 0}
+              className="min-h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {allPageSelected ? "페이지 해제" : "페이지 선택"}
+            </button>
+            <button
+              type="button"
+              onClick={selectFilteredRows}
+              disabled={sorted.length === 0}
+              className="min-h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              필터 전체 선택
+            </button>
+            <button
+              type="button"
+              onClick={clearSelectedRows}
+              disabled={selectedTickers.size === 0}
+              className="min-h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-500 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              선택 해제
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadConnectionCsv(selectedRows)}
+              disabled={!connectionIndexReady || selectedRows.length === 0}
+              className="min-h-9 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              선택 CSV
+            </button>
+            {selectedSingleStockEtfCompareHref ? (
+              <TransitionLink href={selectedSingleStockEtfCompareHref} className="inline-flex min-h-9 items-center rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive">
+                선택 ETF 비교
+              </TransitionLink>
+            ) : (
+              <span className="inline-flex min-h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600">
+                선택 ETF 부족
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* Filter bar */}
       <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
@@ -1433,7 +1548,9 @@ export default function ScreenerClient({
                 expanded={expanded}
                 detailId={detailId}
                 preset={preset}
+                selected={selectedTickers.has(stock.ticker)}
                 onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
+                onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
               />
             );
           })}
@@ -1449,6 +1566,15 @@ export default function ScreenerClient({
             <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+                  <th className="w-12 px-2 py-2 text-left">
+                    <input
+                      type="checkbox"
+                      checked={allPageSelected}
+                      onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
+                      aria-label="현재 페이지 종목 선택"
+                      className="h-4 w-4 accent-slate-900"
+                    />
+                  </th>
                   {activeColumns.map((column) => {
                     const active = column.key === sortKey;
                     return (
@@ -1490,6 +1616,16 @@ export default function ScreenerClient({
                       }
                       className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
                     >
+                      <td className="px-2 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedTickers.has(stock.ticker)}
+                          onChange={() => toggleSelectedTicker(stock.ticker)}
+                          onClick={(event) => event.stopPropagation()}
+                          aria-label={`${stock.ticker} 선택`}
+                          className="h-4 w-4 accent-slate-900"
+                        />
+                      </td>
                       {activeColumns.map((column) => (
                         <td
                           key={column.key}
@@ -1516,7 +1652,7 @@ export default function ScreenerClient({
                     </tr>
                     {expanded ? (
                       <tr id={detailId}>
-                        <td colSpan={activeColumns.length} className="p-0">
+                        <td colSpan={activeColumns.length + 1} className="p-0">
                           <StockDetailPanel ticker={stock.ticker} stock={stock} />
                         </td>
                       </tr>
@@ -1526,7 +1662,7 @@ export default function ScreenerClient({
                 })}
                 {dataReady && pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={activeColumns.length} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
+                    <td colSpan={activeColumns.length + 1} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
                       조건에 맞는 종목이 없습니다.
                     </td>
                   </tr>

@@ -1,18 +1,11 @@
 import type { Metadata } from 'next';
-import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: '멀티차트',
-  description: '여러 자산을 비교하는 멀티차트 도구',
+  description: '매크로 차트로 이동합니다.',
 };
 
 export default function MultichartPage() {
-  return (
-    <RouteEmbedFrame
-      src="/tools/asset/multichart.html"
-      title="100x 멀티차트"
-      loading="eager"
-      timeoutMs={20000}
-    />
-  );
+  redirect('/macro-chart');
 }

@@ -39,12 +39,13 @@ const dockItems = [
     isActive: (pathname: string) => pathname === '/etfs' || pathname.startsWith('/etfs/'),
   },
   {
-    href: '/multichart',
+    href: '/macro-chart',
     label: 'ANALYTICS',
     icon: '▦',
     isActive: (pathname: string) =>
       pathname === '/posts' ||
       pathname.startsWith('/posts/') ||
+      pathname === '/macro-chart' ||
       pathname === '/multichart' ||
       pathname === '/radar' ||
       pathname === '/tools/stock-analyzer' ||
@@ -81,6 +82,7 @@ function isDockRoute(pathname: string) {
     normalized === '/portfolio' ||
     normalized === '/posts' ||
     normalized.startsWith('/posts/') ||
+    normalized === '/macro-chart' ||
     normalized === '/multichart' ||
     normalized === '/radar' ||
     normalized === '/tools/stock-analyzer' ||

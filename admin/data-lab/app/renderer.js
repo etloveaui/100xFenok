@@ -303,7 +303,9 @@ const Renderer = (function() {
     stockanalysisHistoryGapReport,
     stockanalysisPendingLedger,
     marketFactsIndex,
-    productSurfaceCoverage
+    productSurfaceCoverage,
+    entityGraph,
+    macroSeriesCatalog
   ) {
     if (!elements?.marketAuditContainer) return;
     const stockanalysis = audit?.stockanalysis || {};
@@ -408,6 +410,7 @@ const Renderer = (function() {
       ${renderEtfClassificationAudit(etfClassification)}
       ${renderEtfUniverseSnapshot(stockanalysisEtfUniverse, stockanalysisEtfUniverseApi, stockanalysisNewEtfs, detailCoverage)}
       ${renderEtfCoverageGapAudit(detailCoverage)}
+      ${renderServiceLayerStatus(productSurfaceCoverage, entityGraph, macroSeriesCatalog)}
       ${renderProductSurfaceCoverage(productSurfaceCoverage)}
       ${renderStockanalysisSurfaceCatalog(stockanalysisSurfaceIndex, stockanalysisSurfaceConsumers)}
       ${renderStockanalysisFetchAudit(stockanalysisIndex)}
@@ -415,6 +418,55 @@ const Renderer = (function() {
       ${renderHistoryGapPreflightAudit(stockanalysisHistoryGapReport)}
       ${renderEtfBackfillDrilldown(stockanalysisIndex, stockanalysisIncremental, stockanalysisIncrementalPlan, stockanalysisPendingLedger)}
       ${renderSourceParityDetail(sourceParity)}
+    `;
+  }
+
+  function renderServiceLayerStatus(productSurfaceCoverage, entityGraph, macroSeriesCatalog) {
+    const surfaceTotals = productSurfaceCoverage?.totals || {};
+    const graphSummary = entityGraph?.summary || {};
+    const diagnostics = entityGraph?.diagnostics || {};
+    const macroSeries = Array.isArray(macroSeriesCatalog?.series) ? macroSeriesCatalog.series : [];
+    const readySurfaces = Number(surfaceTotals.ready || 0);
+    const totalSurfaces = Number(surfaceTotals.surfaces || productSurfaceCoverage?.surfaces?.length || 0);
+    const followUpCount =
+      Number(surfaceTotals.partial || 0) +
+      Number(surfaceTotals.stale || 0) +
+      Number(surfaceTotals.pending || 0) +
+      Number(surfaceTotals.unavailable || 0) +
+      Number(surfaceTotals.error || 0);
+    const unresolved = Number(diagnostics.single_stock_etfs_unresolved || 0);
+    const generatedAt = [
+      productSurfaceCoverage?.generated_at,
+      entityGraph?.generated_at,
+      macroSeriesCatalog?.curated_at
+    ].filter(Boolean).sort().slice(-1)[0] || '-';
+    const rows = [
+      ['화면 준비', totalSurfaces ? `${Formatters.formatNumber(readySurfaces, 0)} / ${Formatters.formatNumber(totalSurfaces, 0)}` : '-'],
+      ['연결 그래프', `${Formatters.formatNumber(graphSummary.stocks || 0, 0)}개 종목 · ${Formatters.formatNumber(graphSummary.etfs || 0, 0)}개 ETF`],
+      ['서비스 연결', `${Formatters.formatNumber(graphSummary.stocks_with_single_stock_etfs || 0, 0)}개 종목`],
+      ['매크로 카탈로그', `${Formatters.formatNumber(macroSeries.length, 0)}개 시리즈`],
+      ['추가 확인', `${Formatters.formatNumber(followUpCount, 0)}개 화면 · ${Formatters.formatNumber(unresolved, 0)}개 ETF`],
+      ['기준일', escapeHtml(String(generatedAt)).slice(0, 10)]
+    ];
+
+    return `
+      <section class="xl:col-span-4 bg-white rounded-xl p-5 shadow border border-gray-100 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-800">서비스 레이어 상태</h3>
+            <p class="text-xs text-gray-500 mt-1">제품 화면 · 연결 그래프 · 매크로 카탈로그</p>
+          </div>
+          <span class="px-2 py-1 rounded-full border text-xs font-bold ${followUpCount || unresolved ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-green-100 text-green-700 border-green-200'}">
+            ${followUpCount || unresolved ? '추가 확인' : '정상'}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+          ${rows.map(([label, value]) => renderAuditMetric(label, value)).join('')}
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          이 패널은 운영자용입니다. 공개 화면은 짧은 한국어 상태만 보여주고, 상세 진단은 Data Lab에서만 확인합니다.
+        </p>
+      </section>
     `;
   }
 
