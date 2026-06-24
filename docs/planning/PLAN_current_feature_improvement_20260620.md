@@ -1,6 +1,6 @@
 # PLAN: Current-Feature Improvement Wave (measured survey → priority)
 
-> **Status**: ✅ owner-independent UI/ETF/screener wave shipped; F2 top-200 filing coverage is now 202/202. The foreign-filer 6-K / 20-F / 40-F extractor + best-per-ticker path has generated the 20 previously uncovered summary artifacts with source/public mirror parity, then enriched the 16 6-K artifacts with grounded headline figures. Data Spine residual cleanup has contracted quote.v1 and Treasury TGA; P9 has wired graph-backed portfolio/screener/stock actions. The macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, and legacy chart prototype live provider paths are closed; remaining direct-provider work is feno-value exceptions outside this repo plus future first-party chart boundary design if multichart is promoted again.
+> **Status**: ✅ owner-independent UI/ETF/screener wave shipped; F2 top-200 filing coverage is now 202/202. The foreign-filer 6-K / 20-F / 40-F extractor + best-per-ticker path has generated the 20 previously uncovered summary artifacts with source/public mirror parity, then enriched the 16 6-K artifacts with grounded headline figures. Data Spine residual cleanup has contracted quote.v1 and Treasury TGA; P9 has wired graph-backed portfolio/screener/stock actions. The macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, legacy chart prototype live provider paths, and native `/macro-chart` first-party route contract are closed through P11. Remaining direct-provider work is feno-value exceptions outside this repo plus later macro-chart depth slices.
 > **Owner mandate**: do ALL candidates, but survey + measure first, then plan. No new pages (/portfolio deprioritized), no route-contract meta-doc pass — improve EXISTING live surfaces.
 > **Method**: dual independent read-only survey — Claude (4 parallel subagents) + Codex (cx-80) — integrated here. Divergence = signal.
 > **Decision anchor**: this plan → owner approval → per-slice CONTRACT → Codex impl → Claude reproduction gate → push. 완료 선언 = owner.
@@ -61,7 +61,7 @@
 - S1 (S, $0) — `<MetricHelp>` + METRIC_GLOSSARY (FY+1/2/3, OPM/GPM/ROE/EV-EBITDA/PEG defined once) wired into screener headers + mobile labels + detail card labels. **Directly kills the owner complaint.**
 - S2 (S, $0) — ✅ landed `d27daa263`: surface estimate completeness from already-loaded FY+1~3 null-count. Complete `3/3` stays quiet; only gaps (`2/3`, `1/3`, `0/3`) show in screener FY cells, stock statistics metrics, compact financial table, and screener detail charts. Local gate: eslint/tsc/a11y PASS; screener density 2100 full badges -> 54 gap badges, `3/3` badges 0. Live verification pending deploy.
 - S3 (M, $0) — ✅ landed: deterministic FY+1~3 interpretation snippets. `interpretStockMetrics` now emits compact estimate summary + read lines for PE trend fy1→fy3, 3yr growth consistency, EPS weekly revision direction, PER band position, and confidence from existing global-scouter/action fields (no fetch, no LLM). Screener estimate preset shows compact summary; screener drill panel shows read lines. Gate: eslint/tsc/a11y PASS; peer raw recompute PASS on NVDA (`PER 23.02→13.26`, growth 3/3 positive).
-- S4 (M, $0) — bring ThreeSecondSummary-style verdict into screener drill (yfAvailable 100%).
+- S4 (M, $0) — ✅ landed 2026-06-24: screener drill now carries a ThreeSecondSummary-style deterministic verdict card (`ScreenerThreeSecondVerdictCard`) built from already-loaded global-scouter/YF detail fields.
 - S5 (L, $0) — grouped FY+1→+3 mobile mini-trend sections.
 
 ---
@@ -92,8 +92,8 @@
 **Gaps**: same sentence for stock-missing / etf-partial / filing-no-summary; no local-data status/as-of line; filing without secUrl shows Yahoo/StockAnalysis but no SEC 원문; links carry no "what you'll find" hint.
 
 **Slices** (both sides agree, all S, $0):
-- X1 (S) — kind-aware copy (filing→"한글 요약 아직 없음", etf→"보유 구성·상세 연결 전", stock→generic).
-- X2 (S) — per-link hint (Yahoo=시세·차트, StockAnalysis=재무·밸류, SEC원문=원공시).
+- X1 (S) — ✅ landed 2026-06-24: kind-aware fallback copy for stock / ETF / filing states.
+- X2 (S) — ✅ landed 2026-06-24: per-link hints distinguish Yahoo 시세·차트, StockAnalysis 재무·밸류/보유·비용, SEC 원공시, and internal detail routes.
 - X3 (M) — optional statusLine/asOf prop reusing values call sites already compute.
 
 ---
@@ -114,7 +114,7 @@
 - G4 (thin slice landed 2026-06-24) — add Admin/Data Lab service-layer status from existing generated artifacts. Public surfaces keep only short `DataState` status; diagnostics and coverage language stay Admin-only. Notification hooks remain deferred/approval-gated.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources. No new paid provider, credential path, or live quota probe was added in the 2026-06-24 service-layer wave; refresh external quota references before relying on them.
 - G6 (landed 2026-06-24) — promote canonical key policy into a shared registry, add link-level single-stock ETF provenance (`etf_key`, `target_key`, `classification_source`, `raw_underlying`), and strengthen `qa:data-graph` so graph/service links fail closed when keys or provenance drift.
-- Macro-chart candidate (first slice landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, URL state, presets, CSV export, searchable picker, and `/multichart` redirect. TimeScale/adapter and user-saved presets remain deferred. **Next high-value slice after P10**: P1a.5 mobile-first chart layout plus completed share URL state (`range` and hidden-series visibility), explicit 8-series cap copy, search debounce, picker loading/error affordances, and share-URL round-trip QA.
+- Macro-chart candidate (P1 + P1a.5 landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, presets, CSV export, searchable picker, and `/multichart` redirect. P11 closes the first service contract: mobile-first chart height/picker layout, share URL state for `series`/`transform`/`range`/hidden-series visibility, explicit 8-series cap copy, search debounce, picker loading/error affordances, CSV smoke, and `qa:macro-chart` share-URL round-trip QA. TimeScale/adapter and user-saved presets remain deferred.
 
 ---
 
@@ -128,8 +128,8 @@
 | **P1** | S2 landed; S3 estimate interpretation next | turns dense numbers into reads; fixes YF +1y-only mismatch | S+M | $0 |
 | **P1** | E2/E3 honest detail copy + label fix | correctness/clarity | S | $0 |
 | **P2** | M1 + M2 nav contrast + bidirectional cue | high UX leverage, tiny | S | $0 |
-| **P2** | X1 + X2 kind-aware fallback copy + hints | cleanup | S | $0 |
-| **P3** | E4/M3/M4/S4 (badges, nav-IA decision, surface chips, drill verdict) | depends on owner IA call | M | $0 |
+| **P2** | ✅ X1 + X2 kind-aware fallback copy + hints | cleanup closed | S | $0 |
+| **P3** | E4/M4 plus future surface chips; ✅ S4 drill verdict landed | owner IA/nav work mostly closed; only residual surface polish remains | M | $0 |
 | **P4** | Data Spine/feno-value provider cleanup | same integration program, but contract-layer follow-up after the current filings coverage hole | M–L | mostly $0 |
 
 **Owner decisions embedded**: (a) M3 nav-IA resolved as A+B and shipped; (b) F2 summary auto-gen stays free-first/provider-agnostic, paid still gated; (c) foreign-filer form support closed the measured top-200 coverage ceiling and is no longer the current blocker.
@@ -148,6 +148,13 @@ page-level horizontal overflow, screener checkbox/expand touch targets plus
 collapsed-card density, portfolio edit/delete action target size, stock tab
 scroll affordance, and superinvestor Insights scroll-region affordance.
 
+**P11 macro-chart service contract added 2026-06-24**: `qa:macro-chart`
+locks `/macro-chart` and `/multichart` as a first-party Data Spine chart route:
+desktop/mobile chart visibility, no horizontal overflow, `range` + hidden-series
+URL round-trip, visible 8-series cap behavior, mobile picker open/closed state,
+CSV export, and legacy redirect. This keeps the chart work service-grade instead
+of another prototype iframe.
+
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
 addition to the localhost check. Public copy guard now blocks accidental
@@ -155,7 +162,7 @@ addition to the localhost check. Public copy guard now blocks accidental
 language in Admin. Turbopack dynamic `public/data` filesystem warnings are
 tracked as a P3 infrastructure cleanup unless they turn into a build failure.
 
-**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice, macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, and legacy chart prototype live provider paths; continue with feno-value direct-provider exception handling outside this repo and the native `/macro-chart` Data Spine candidate as a separate route program; (2) keep expanding P9 graph-backed service affordances only where existing DataPack payloads support them; (3) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
+**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice, macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, legacy chart prototype live provider paths, and the native `/macro-chart` P1a.5 service contract; continue with feno-value direct-provider exception handling outside this repo plus later macro-chart depth slices (`TimeScale` decision, saved presets, richer axis/brush/PNG); (2) keep expanding P9 graph-backed service affordances only where existing DataPack payloads support them; (3) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
 

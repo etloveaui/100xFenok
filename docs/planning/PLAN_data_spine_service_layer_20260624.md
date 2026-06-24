@@ -9,7 +9,7 @@
 - Keep `connection_count` semantics as core four sources only: market facts, filings, 13F, index membership. Service expansion uses `service_count` and sidecars.
 - Use source-specific freshness rules. 13F is quarterly and must not be judged by a seven-day rule.
 - No bulk external fetch/backfill, notification hook, paid provider, or new production credential path in this slice.
-- Keep the native macro multi-chart as a separate P9-D/P10 service route program, not mixed into the P9-C export/provenance patch. Direction accepted from the platform-level `docs/superpowers/specs/2026-06-24-macro-multichart-vision.md`: replace the legacy `/multichart` iframe with a Data Spine-native `/macro-chart` route.
+- Keep the native macro multi-chart as a separate P9-D/P10/P11 service route program, not mixed into the P9-C export/provenance patch. Direction accepted from the platform-level `docs/superpowers/specs/2026-06-24-macro-multichart-vision.md`: replace the legacy `/multichart` iframe with a Data Spine-native `/macro-chart` route.
 
 ## Phase P9-A — Residual Data Spine Cleanup
 
@@ -47,6 +47,7 @@
 - [x] Review and accept the Kimi-authored final vision as a separate service-layer candidate, not a G2/G3 scope addition.
 - [x] P0: add an initial 30-series macro catalog plus pure alignment/transform helpers for raw, rebase100, YoY, and period-change transforms.
 - [x] P1: add native `/macro-chart` route with three default presets, searchable picker, URL state, CSV export, and legacy `/multichart` redirect.
+- [x] P1a.5: harden `/macro-chart` as a public service route with mobile-first chart/picker layout, URL state for `range` + hidden series, explicit 8-series cap copy, search debounce, loading/error/retry affordances, CSV smoke, and `qa:macro-chart` contract coverage.
 - [ ] P1b: decide whether Chart.js `TimeScale` + adapter is worth adding. Current implementation intentionally keeps ISO category labels to avoid a new dependency/install boundary.
 - [ ] P2: add localStorage user presets and richer axis controls.
 - [ ] P3: add brush/zoom, crosshair sync, formula series, and PNG export.
@@ -69,11 +70,12 @@
 - `npm run qa:data-graph`
 - `npm run qa:etf-compare`
 - `npm run qa:copy`
+- `npm run qa:macro-chart`
 - `npx tsc --noEmit --pretty false`
 - Scoped lint for touched product/data files
 - `npm run build`
 - Browser smoke: `/portfolio?ticker=NVDA`, `/screener?sector=반도체`, `/stock/NVDA`, `/etfs/SPY`
-- Macro smoke: `/macro-chart`, `/multichart` redirect, CSV export, mobile picker.
+- Macro smoke: `/macro-chart`, `/multichart` redirect, CSV export, mobile picker, share URL `range` + hidden-series round trip.
 - Mobile/a11y smoke: at least `/portfolio`, `/screener`, `/stock/NVDA`
 
 ## Notes
