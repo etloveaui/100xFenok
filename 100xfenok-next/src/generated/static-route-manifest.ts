@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 27935,
-      "updatedAt": "2026-06-23T23:45:27.284Z"
+      "updatedAt": "2026-06-24T01:10:35.180Z"
     },
     {
       "name": "reports-index.json",
@@ -40,12 +40,12 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-23T23:39:10.503Z"
+      "updatedAt": "2026-06-24T01:10:35.171Z"
     },
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-24T01:04:58.985Z"
+      "updatedAt": "2026-06-24T01:11:36.757Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -116,17 +116,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 984728,
-      "updatedAt": "2026-06-24T01:04:58.850Z"
+      "updatedAt": "2026-06-24T01:11:36.621Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 125677,
-      "updatedAt": "2026-06-24T01:04:58.852Z"
+      "updatedAt": "2026-06-24T01:11:36.624Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7212729,
-      "updatedAt": "2026-06-24T01:04:58.831Z"
+      "updatedAt": "2026-06-24T01:11:36.601Z"
     },
     {
       "name": "market_data_audit.json",
@@ -141,7 +141,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "market_structure_index.json",
       "sizeBytes": 42441,
-      "updatedAt": "2026-06-23T22:26:10.514Z"
+      "updatedAt": "2026-06-24T01:10:35.176Z"
     },
     {
       "name": "signals.json",
@@ -47097,8 +47097,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "indices": [
     {
       "name": "nasdaq.json",
-      "sizeBytes": 439516,
-      "updatedAt": "2026-06-23T03:00:03.845Z"
+      "sizeBytes": 439555,
+      "updatedAt": "2026-06-24T01:10:35.178Z"
     },
     {
       "name": "schema.json",
@@ -47149,8 +47149,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1035891,
-      "updatedAt": "2026-06-23T22:26:10.515Z"
+      "sizeBytes": 1035927,
+      "updatedAt": "2026-06-24T01:10:35.179Z"
     },
     {
       "name": "tga.json",
