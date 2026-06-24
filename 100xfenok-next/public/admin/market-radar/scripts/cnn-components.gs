@@ -14,11 +14,22 @@
  * 패턴: merge (누적식)
  *
  * 참고: DEC-077, DEC-078
+ *
+ * Deprecated backup: 2026-06-24부터 운영 갱신은
+ * scripts/fetch-sentiment.mjs + .github/workflows/fetch-sentiment.yml이 담당.
+ * 이 GAS 백업은 명시 opt-in 없이는 GitHub에 쓰지 않는다.
  */
 
 const GITHUB_OWNER = 'etloveaui';
 const GITHUB_REPO = '100xFenok';
 const DATA_PATH = 'data/sentiment';
+
+function assertDeprecatedSentimentOptIn_(name) {
+  const allow = PropertiesService.getScriptProperties().getProperty('ALLOW_DEPRECATED_GAS_SENTIMENT');
+  if (allow !== 'true') {
+    throw new Error(name + ' is deprecated. Use scripts/fetch-sentiment.mjs; set ALLOW_DEPRECATED_GAS_SENTIMENT=true only for manual historical recovery.');
+  }
+}
 
 // 구성요소 매핑 (API key → 파일명)
 const COMPONENTS = {
@@ -34,6 +45,7 @@ const COMPONENTS = {
  * 메인 업데이트 함수
  */
 function updateCNNComponents() {
+  assertDeprecatedSentimentOptIn_('updateCNNComponents');
   const proxyUrl = 'https://fed-proxy.etloveaui.workers.dev/cnn';
 
   try {
@@ -120,6 +132,7 @@ function updateJsonFile(fileName, newEntry) {
  * 매일 07:25 KST (cnn.gs 07:20 이후)
  */
 function createCNNComponentsTrigger() {
+  assertDeprecatedSentimentOptIn_('createCNNComponentsTrigger');
   ScriptApp.newTrigger('updateCNNComponents')
     .timeBased()
     .everyDays(1)

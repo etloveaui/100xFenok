@@ -13,11 +13,18 @@
  *   - cnn-fear-greed.json   {date, score}                (CNN proxy)
  *   - cnn-components.json    {date, market_momentum,...}  (CNN proxy, 7 components)
  *   - cnn-put-call.json      {date, value, rating}        (CNN proxy put/call data tail)
+ *   - cnn-momentum.json      {date, value, rating}        (CNN proxy component tail)
+ *   - cnn-strength.json      {date, value, rating}        (CNN proxy component tail)
+ *   - cnn-breadth.json       {date, value, rating}        (CNN proxy component tail)
+ *   - cnn-junk-bond.json     {date, value, rating}        (CNN proxy component tail)
+ *   - cnn-safe-haven.json    {date, value, rating}        (CNN proxy component tail)
  *   - vix.json               {date, value}                (Yahoo ^VIX close)
+ *   - move.json              {date, value}                (Yahoo ^MOVE close)
+ *   - cftc-sp500.json        {date, long, short, net, openInterest} (CFTC COT)
  *   - crypto-fear-greed.json {date, value, classification}(alternative.me)
  *
- * Deferred (no clear free source — intentionally untouched):
- *   move.json, cftc-sp500.json, aaii.json
+ * Deferred:
+ *   aaii.json (still spreadsheet/import based; no robust free JSON source)
  *
  * Resilience: each source is independent. A 429 / network failure / shape
  * change for one source logs an error and is skipped; other sources still
@@ -48,6 +55,16 @@ const OUTPUT_DIRS = [
 const CNN_PROXY_URL = 'https://fed-proxy.etloveaui.workers.dev/cnn';
 const CRYPTO_FNG_URL = 'https://api.alternative.me/fng/?limit=1';
 const YAHOO_VIX_SYMBOL = '^VIX';
+const YAHOO_MOVE_SYMBOL = '^MOVE';
+const CFTC_COT_URL = 'https://publicreporting.cftc.gov/resource/jun7-fc8e.json?market_and_exchange_names=S%26P%20500%20Consolidated%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$limit=1&$order=report_date_as_yyyy_mm_dd%20DESC';
+
+const CNN_COMPONENT_TAIL_FILES = [
+  ['market_momentum_sp500', 'cnn-momentum.json'],
+  ['stock_price_strength', 'cnn-strength.json'],
+  ['stock_price_breadth', 'cnn-breadth.json'],
+  ['junk_bond_demand', 'cnn-junk-bond.json'],
+  ['safe_haven_demand', 'cnn-safe-haven.json'],
+];
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -196,17 +213,36 @@ async function runCnn() {
     results.push({ file: 'cnn-put-call.json', ...r, sample: entry });
   }
 
+  // 4) Individual CNN component files consumed by the legacy macro-monitor
+  // detail charts. These used to depend on cnn-components.gs.
+  for (const [componentKey, fileName] of CNN_COMPONENT_TAIL_FILES) {
+    const component = data[componentKey];
+    const series = Array.isArray(component?.data) ? component.data : [];
+    const last = series.length ? series[series.length - 1] : null;
+    if (!last || typeof last.y !== 'number') {
+      throw new Error(`CNN proxy missing ${componentKey}.data tail`);
+    }
+    const entry = {
+      date: today,
+      value: Math.round(last.y * 100) / 100,
+      rating: String(last.rating ?? component.rating ?? '').toLowerCase(),
+    };
+    const r = mergeByDate(readExisting(fileName), entry);
+    writeAll(fileName, r.array);
+    results.push({ file: fileName, ...r, sample: entry });
+  }
+
   return results;
 }
 
-async function runVix() {
+async function runYahooCloseSeries({ symbol, fileName, label }) {
   const now = Math.floor(Date.now() / 1000);
-  const start = now - 15 * 24 * 60 * 60; // 15-day window, like vix.gs
-  const symbol = encodeURIComponent(YAHOO_VIX_SYMBOL);
+  const start = now - 15 * 24 * 60 * 60; // 15-day window, like vix.gs / move.gs
+  const encodedSymbol = encodeURIComponent(symbol);
   const qs = `period1=${start}&period2=${now}&interval=1d`;
   const hosts = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?${qs}`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?${qs}`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?${qs}`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?${qs}`,
   ];
 
   let json = null;
@@ -219,13 +255,13 @@ async function runVix() {
       lastErr = e;
     }
   }
-  if (!json) throw lastErr ?? new Error('Yahoo VIX: all hosts failed');
+  if (!json) throw lastErr ?? new Error(`${label}: all hosts failed`);
 
   const result = json?.chart?.result?.[0];
   const timestamps = result?.timestamp;
   const closes = result?.indicators?.quote?.[0]?.close;
   if (!Array.isArray(timestamps) || !Array.isArray(closes) || timestamps.length === 0) {
-    throw new Error('Yahoo VIX: empty chart payload');
+    throw new Error(`${label}: empty chart payload`);
   }
 
   // Build the new points, then merge each into the existing series. Yahoo's
@@ -236,9 +272,9 @@ async function runVix() {
     const d = new Date(timestamps[i] * 1000).toISOString().slice(0, 10);
     newPoints.push({ date: d, value: Math.round(closes[i] * 100) / 100 });
   }
-  if (newPoints.length === 0) throw new Error('Yahoo VIX: no non-null closes');
+  if (newPoints.length === 0) throw new Error(`${label}: no non-null closes`);
 
-  let arr = readExisting('vix.json');
+  let arr = readExisting(fileName);
   let appended = 0;
   let updated = 0;
   let lastSample = null;
@@ -248,9 +284,9 @@ async function runVix() {
     if (r.action === 'appended') appended++; else updated++;
     lastSample = p;
   }
-  writeAll('vix.json', arr);
+  writeAll(fileName, arr);
   return [{
-    file: 'vix.json',
+    file: fileName,
     action: appended ? 'appended' : 'updated',
     before: arr.length - appended,
     after: arr.length,
@@ -258,6 +294,44 @@ async function runVix() {
     updated,
     sample: lastSample,
   }];
+}
+
+async function runVix() {
+  return runYahooCloseSeries({ symbol: YAHOO_VIX_SYMBOL, fileName: 'vix.json', label: 'Yahoo VIX' });
+}
+
+async function runMove() {
+  return runYahooCloseSeries({ symbol: YAHOO_MOVE_SYMBOL, fileName: 'move.json', label: 'Yahoo MOVE' });
+}
+
+async function runCftc() {
+  const data = await fetchJson(CFTC_COT_URL);
+  const latest = Array.isArray(data) ? data[0] : null;
+  if (!latest) {
+    throw new Error('CFTC COT: empty payload');
+  }
+  const date = String(latest.report_date_as_yyyy_mm_dd ?? '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error('CFTC COT: missing report_date_as_yyyy_mm_dd');
+  }
+
+  const long = Number.parseInt(latest.noncomm_positions_long_all ?? '0', 10);
+  const short = Number.parseInt(latest.noncomm_positions_short_all ?? '0', 10);
+  const openInterest = Number.parseInt(latest.open_interest_all ?? '0', 10);
+  if (![long, short, openInterest].every(Number.isFinite)) {
+    throw new Error('CFTC COT: invalid numeric fields');
+  }
+
+  const entry = {
+    date,
+    long,
+    short,
+    net: long - short,
+    openInterest,
+  };
+  const r = mergeByDate(readExisting('cftc-sp500.json'), entry);
+  writeAll('cftc-sp500.json', r.array);
+  return [{ file: 'cftc-sp500.json', ...r, sample: entry }];
 }
 
 async function runCrypto() {
@@ -294,6 +368,8 @@ async function main() {
   const sources = [
     ['CNN (proxy)', runCnn],
     ['VIX (Yahoo)', runVix],
+    ['MOVE (Yahoo)', runMove],
+    ['CFTC COT', runCftc],
     ['Crypto (alternative.me)', runCrypto],
   ];
 

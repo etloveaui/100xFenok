@@ -2,7 +2,8 @@
 
 > Google Apps Script 코드 백업 및 참조용
 > **실제 실행**: Google Apps Script 콘솔에서 수행
-> **VIX 주의**: `vix.gs`는 2026-06-22 기준 deprecated backup입니다. VIX 운영 갱신은
+> **Sentiment 주의**: `vix.gs`, `cnn.gs`, `cnn-components.gs`, `move.gs`,
+> `cftc.gs`는 deprecated backup입니다. 운영 갱신은
 > `scripts/fetch-sentiment.mjs` + `.github/workflows/fetch-sentiment.yml`이 담당합니다.
 
 ---
@@ -29,10 +30,10 @@
 |----|------|------|
 | AAII | `=IMPORTHTML("https://www.aaii.com/sentimentsurvey/sent_results", "table", 1)` | ⚠️ 오래되면 #N/A → 수식 갱신 로직 |
 | VIX | deprecated | `fetch-sentiment.mjs` scheduled collector |
-| MOVE | 수동 | Yahoo Finance Proxy |
-| CNN | 수동 | CNN API 직접 호출 |
+| MOVE | deprecated | `fetch-sentiment.mjs` scheduled collector |
+| CNN | deprecated | `fetch-sentiment.mjs` scheduled collector |
 | Crypto | 수동 | Alternative.me API |
-| CFTC | 없음 | CFTC API 직접 호출 (개별 시트 없음) |
+| CFTC | deprecated | `fetch-sentiment.mjs` scheduled collector |
 
 ---
 
@@ -42,11 +43,11 @@
 |--------|------|--------|
 | SP500/NASDAQ | `updateAllIndices()` | 매일 06:00, 09:00 |
 | VIX | `updateVIX()` | deprecated; 트리거 생성 금지 |
-| MOVE | `updateMOVE()` | 매일 07:29 |
+| MOVE | `updateMOVE()` | deprecated; 트리거 생성 금지 |
 | **AAII** | `updateAAII()` | **금요일 00:00, 06:00** |
-| **CFTC** | `updateCFTC()` | **토요일 06:00, 12:00** |
-| CNN F&G | `updateCNN()` | 매일 07:20 |
-| **CNN Components** | `updateCNNComponents()` | **매일 07:25** |
+| **CFTC** | `updateCFTC()` | deprecated; 트리거 생성 금지 |
+| CNN F&G | `updateCNN()` | deprecated; 트리거 생성 금지 |
+| **CNN Components** | `updateCNNComponents()` | deprecated; 트리거 생성 금지 |
 | Crypto F&G | `updateCryptoFG()` | 매일 07:52 |
 
 ---
@@ -58,11 +59,11 @@
 | **`yahoo-quotes.gs`** | **100x quote.v1→Yahoo OHLC→Stooq→GOOGLEFINANCE** | **범용 실시간 주가 조회 (IB Helper 등)** |
 | `indices.gs` | GOOGLEFINANCE | `data/indices/sp500.json`, `nasdaq.json` |
 | `vix.gs` | deprecated Yahoo backup | `data/sentiment/vix.json` (runtime owner: `fetch-sentiment.mjs`) |
-| `move.gs` | Yahoo Proxy | `data/sentiment/move.json` |
+| `move.gs` | deprecated Yahoo backup | `data/sentiment/move.json` (runtime owner: `fetch-sentiment.mjs`) |
 | `aaii.gs` | IMPORTHTML (AAII 웹사이트) | `data/sentiment/aaii.json` |
-| `cftc.gs` | CFTC API | `data/sentiment/cftc-sp500.json` |
-| `cnn.gs` | Cloudflare Proxy → CNN API | `data/sentiment/cnn-fear-greed.json`, `cnn-components.json` |
-| `cnn-components.gs` | Cloudflare Proxy → CNN API | `cnn-momentum/strength/breadth/put-call/junk-bond/safe-haven.json` |
+| `cftc.gs` | deprecated CFTC backup | `data/sentiment/cftc-sp500.json` (runtime owner: `fetch-sentiment.mjs`) |
+| `cnn.gs` | deprecated CNN backup | `data/sentiment/cnn-fear-greed.json`, `cnn-components.json` (runtime owner: `fetch-sentiment.mjs`) |
+| `cnn-components.gs` | deprecated CNN component backup | `cnn-momentum/strength/breadth/put-call/junk-bond/safe-haven.json` (runtime owner: `fetch-sentiment.mjs`) |
 | `crypto.gs` | Alternative.me API | `data/sentiment/crypto-fear-greed.json` |
 
 ---
@@ -75,6 +76,9 @@ getExistingData() → mergeData() → pushToGitHub()
 ```
 
 **⚠️ 직접 덮어쓰기 금지** - 기존 히스토리 데이터 보호
+
+Deprecated sentiment GAS backups now fail closed unless the Apps Script property
+`ALLOW_DEPRECATED_GAS_SENTIMENT=true` is set for a one-off historical recovery.
 
 ---
 

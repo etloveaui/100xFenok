@@ -7,11 +7,22 @@
  *
  * 트리거: 토요일 06:00, 12:00 KST (CFTC 금요일 발표 후)
  * 방식: 누적식 (기존 데이터 보존 + 신규 추가)
+ *
+ * Deprecated backup: 2026-06-24부터 운영 갱신은
+ * scripts/fetch-sentiment.mjs + .github/workflows/fetch-sentiment.yml이 담당.
+ * 이 GAS 백업은 명시 opt-in 없이는 GitHub에 쓰지 않는다.
  */
 
 // ============================================================
 // 메인 함수
 // ============================================================
+
+function assertDeprecatedSentimentOptIn_(name) {
+  const allow = PropertiesService.getScriptProperties().getProperty('ALLOW_DEPRECATED_GAS_SENTIMENT');
+  if (allow !== 'true') {
+    throw new Error(name + ' is deprecated. Use scripts/fetch-sentiment.mjs; set ALLOW_DEPRECATED_GAS_SENTIMENT=true only for manual historical recovery.');
+  }
+}
 
 /**
  * CFTC COT 데이터 업데이트
@@ -19,6 +30,7 @@
  * - 중복 체크 후 GitHub에 추가 (누적식)
  */
 function updateCFTC() {
+  assertDeprecatedSentimentOptIn_('updateCFTC');
   const token = PropertiesService.getScriptProperties().getProperty('GITHUB_TOKEN');
   const owner = 'etloveaui';
   const repo = '100xFenok';
@@ -96,6 +108,7 @@ function updateCFTC() {
  * - 토요일 12:00 KST (백업)
  */
 function createCFTCTrigger() {
+  assertDeprecatedSentimentOptIn_('createCFTCTrigger');
   // 기존 CFTC 트리거 삭제
   ScriptApp.getProjectTriggers()
     .filter(t => t.getHandlerFunction() === 'updateCFTC')

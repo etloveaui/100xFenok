@@ -17,7 +17,18 @@
  *   - volatility: VIX 변동성
  *   - safe_haven: 안전자산 수요
  *   - junk_bond: 정크본드 수요
+ *
+ * Deprecated backup: 2026-06-24부터 운영 갱신은
+ * scripts/fetch-sentiment.mjs + .github/workflows/fetch-sentiment.yml이 담당.
+ * 이 GAS 백업은 명시 opt-in 없이는 GitHub에 쓰지 않는다.
  */
+
+function assertDeprecatedSentimentOptIn_(name) {
+  const allow = PropertiesService.getScriptProperties().getProperty('ALLOW_DEPRECATED_GAS_SENTIMENT');
+  if (allow !== 'true') {
+    throw new Error(name + ' is deprecated. Use scripts/fetch-sentiment.mjs; set ALLOW_DEPRECATED_GAS_SENTIMENT=true only for manual historical recovery.');
+  }
+}
 
 /**
  * 메인 업데이트 함수
@@ -25,6 +36,7 @@
  * - 종합 점수 + 7개 구성요소 분리 저장
  */
 function updateCNN() {
+  assertDeprecatedSentimentOptIn_('updateCNN');
   const proxyUrl = 'https://fed-proxy.etloveaui.workers.dev/cnn';
 
   try {
@@ -170,6 +182,7 @@ function updateComponents(date, components) {
  * 매일 07:20 KST (미국장 마감 후)
  */
 function createCNNTrigger() {
+  assertDeprecatedSentimentOptIn_('createCNNTrigger');
   ScriptApp.newTrigger('updateCNN')
     .timeBased()
     .everyDays(1)

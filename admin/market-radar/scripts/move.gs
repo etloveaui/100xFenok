@@ -4,6 +4,10 @@
  * Schedule: Daily 07:29
  * Field: value (NOT close!)
  * Last Updated: 2025-01-01
+ *
+ * Deprecated backup: 2026-06-24부터 운영 갱신은
+ * scripts/fetch-sentiment.mjs + .github/workflows/fetch-sentiment.yml이 담당.
+ * 이 GAS 백업은 명시 opt-in 없이는 GitHub에 쓰지 않는다.
  */
 
 const MOVE_CONFIG = {
@@ -14,11 +18,19 @@ const MOVE_CONFIG = {
   YAHOO_PROXY: 'https://fed-proxy.etloveaui.workers.dev/yahoo/%5EMOVE?range=5d&interval=1d'
 };
 
+function assertDeprecatedSentimentOptIn_(name) {
+  const allow = PropertiesService.getScriptProperties().getProperty('ALLOW_DEPRECATED_GAS_SENTIMENT');
+  if (allow !== 'true') {
+    throw new Error(name + ' is deprecated. Use scripts/fetch-sentiment.mjs; set ALLOW_DEPRECATED_GAS_SENTIMENT=true only for manual historical recovery.');
+  }
+}
+
 function getGitHubToken() {
   return PropertiesService.getScriptProperties().getProperty('GITHUB_TOKEN');
 }
 
 function updateMOVE() {
+  assertDeprecatedSentimentOptIn_('updateMOVE');
   // 1. Yahoo에서 최근 데이터 가져오기
   try {
     const response = UrlFetchApp.fetch(MOVE_CONFIG.YAHOO_PROXY, {
