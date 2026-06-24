@@ -88,9 +88,12 @@ resolution-note pattern).
 - `/multichart` disposition per D2: the URL remains live, renders the fused
   Macro Chart stock-compare mode, and does not lose stock compare affordances.
 - Navigation reachability: header Analytics is intentionally narrow
-  (`/radar`, `/posts`, `/explore`), while the AppShell rail/mobile tabs must
-  expose `/explore`, `/market-valuation`, `/sectors`, `/etfs`, `/screener`,
-  `/superinvestors`, and `/portfolio`. Header absence alone is not a QA pass.
+  (`/radar`, `/posts`, `/explore`) and labels `/explore` as `워크벤치`.
+  The AppShell rail/mobile tabs must expose `/explore`, `/market-valuation`,
+  `/macro-chart`, `/sectors`, `/etfs`, `/screener`, `/superinvestors`, and
+  `/portfolio`. `/macro-chart` is the official `차트` tab, and `/multichart`
+  remains live under the same chart tab contract. Header absence alone is not
+  a QA pass.
 - CSV honesty: exports include source/frequency metadata rows for local macro,
   Stooq market symbol, and computed formula series.
 - existing macro contract stays green (no regression).

@@ -35,9 +35,11 @@ path for this restored stock/ETF/index comparison surface.
 - `/multichart` remains a URL-compatible entry point, but now renders the fused
   Macro Chart stock-compare mode instead of a separate iframe engine.
 - Header product navigation should keep Analytics narrow: Radar, Insights, and
-  Explore only. `/multichart`, ETF, Sector, Screener, and Investor stay out of
-  the header, while AppShell rail/mobile tabs must still expose Sector, ETF,
-  Screener, and Investor for in-product reachability.
+  `워크벤치` (`/explore`) only. `/multichart`, ETF, Sector, Screener, and
+  Investor stay out of the header. AppShell rail/mobile tabs must expose the
+  official `차트` tab (`/macro-chart`) plus Sector, ETF, Screener, Investor,
+  and Portfolio for in-product reachability; `/multichart` remains a live
+  stock-compare entry under the same chart tab.
 
 ## QA Contract
 
