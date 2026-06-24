@@ -37,23 +37,15 @@
     /* ------------------------------------------------------------------
      * 100x 멀티차트 앱 (v10 Stable)
      * ------------------------------------------------------------------
-     * 1. API 키: 7개 순환, demo key 제거.
-     * 2. 레이트리밋: Alpha Vantage 5 req/min/key ⇒ 동적 지연 계산.
-     * 3. UI·기능(디자인, SMA, Benchmark 등) 완전 동일.
+     * P9-A: legacy live-data providers are retired for the public prototype.
+     * Rebuild this tool on a first-party Data Spine chart boundary before
+     * promoting it as a product surface.
      * ------------------------------------------------------------------
      */
     const { useState, useRef, useEffect, useCallback } = React;
     
-    /* ===== 1. API Key 관리 ===== */
-    const API_KEYS = [
-      'QQHTQMTRUSFFD4UB',
-      'ZHWYM2BSS73UH9YI',
-      'SE3NG2WW0BDJY42J',
-      'QXJT87SAUPW50BM8',
-      'T6D38694XL3V6CGA',
-      '1GJ75NRCELNNYBPU',
-      '5Y3HTLFEA4WMKBNI'
-    ]; // demo 제거 → 실제 7개만 사용
+    /* ===== 1. Deprecated provider guard ===== */
+    const API_KEYS = [];
 
     // Key 순환 클로저 (thread‑safe 단일 호출 환경 가정)
     const rotateKey = (() => {
@@ -66,14 +58,14 @@
 
     // Alpha Vantage 정식 제한: 5 req/min/키
     const API_LIMIT_PER_MIN = 5;
-    const DELAY_MS = Math.ceil(60000 / (API_LIMIT_PER_MIN * API_KEYS.length)); // 5*7 ⇒ 1715ms
+    const DELAY_MS = 0;
 
     /* ===== 2. 스타일 팔레트 ===== */
     const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
     const getColor = i => PALETTE[i % PALETTE.length];
-    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
-    const POLYGON_KEY = window.POLYGON_KEY || '';
-    const USE_ALPHA = window.USE_ALPHA ?? false;
+    const STOOQ_PROXY = '';
+    const POLYGON_KEY = '';
+    const USE_ALPHA = false;
 
     function showToast(msg, type = 'info') {
       const color = { info: 'bg-blue-600', warn: 'bg-amber-600', error: 'bg-red-600' }[type] || 'bg-gray-800';
@@ -92,54 +84,11 @@
     }
 
     async function fetchStooq(symbol) {
-      const stoSym = toStooqSymbol(symbol);
-      const cacheKey = `stooq_cache_${stoSym}`;
-      const c = JSON.parse(localStorage.getItem(cacheKey) || '{}');
-      if (c.ts && Date.now() - c.ts < 86400000) return c.data;          // 24h cache
-
-      const upstream = `https://stooq.com/q/d/l/?s=${stoSym}&i=d`;
-      const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
-      const url = proxyBase + encodeURIComponent(upstream);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Stooq proxy ${res.status}`);
-
-      const txt = await res.text();
-      if (!txt.startsWith('Date')) throw new Error('CSV format');
-
-      const data = txt.trim().split('\n').slice(1).map(l => {
-        const f = l.split(',');
-        return { date: f[0], price: +f[4] };
-      }).sort((a, b) => a.date.localeCompare(b.date));
-
-      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
-      return data;
+      throw new Error('Legacy multichart live-data fetch is retired. Use a Data Spine-backed chart surface.');
     }
 
     async function fetchPriceDataAlpha(symbol) {
-      let lastError = null;
-      for (let i = 0; i < API_KEYS.length; i++) {
-        const apiKey = rotateKey();
-        const cacheKey = `100x_v10_price_${symbol}`;
-        const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
-        if (cache.ts && Date.now() - cache.ts < 43200000) return cache.data; // 12h 캐시
-
-        await new Promise(r => setTimeout(r, DELAY_MS)); // 동적 대기
-        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=full&apikey=${apiKey}`;
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const j = await res.json();
-          if (j.Note || j['Error Message']) throw new Error(j.Note || j['Error Message']);
-          const ts = j['Time Series (Daily)'];
-          if (!ts) throw new Error(`'${symbol}' 가격 데이터 없음`);
-          const arr = Object.entries(ts).map(([d, o]) => ({ date: d, price: +o['4. close'] })).sort((a, b) => a.date.localeCompare(b.date));
-          localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: arr }));
-          return arr;
-        } catch (e) {
-          lastError = e; // 다음 key로 재시도
-        }
-      }
-      throw lastError;
+      throw new Error('Legacy Alpha Vantage fallback is retired for this public prototype.');
     }
 
     async function fetchPriceData(symbol) {

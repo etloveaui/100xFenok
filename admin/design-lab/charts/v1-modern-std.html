@@ -66,15 +66,15 @@
   <script type="text/babel">
     const { useState, useRef, useEffect, useCallback } = React;
     
-    // --- Logic from Original multichart.html (Preserved 100%) ---
-    const API_KEYS = ['QQHTQMTRUSFFD4UB','ZHWYM2BSS73UH9YI','SE3NG2WW0BDJY42J','QXJT87SAUPW50BM8','T6D38694XL3V6CGA','1GJ75NRCELNNYBPU','5Y3HTLFEA4WMKBNI'];
-    const rotateKey = (() => { let idx = -1; return () => { idx = (idx + 1) % API_KEYS.length; return API_KEYS[idx]; }; })();
-    const DELAY_MS = Math.ceil(60000 / (5 * API_KEYS.length));
+    // P9-A: retired live-data prototype. Rebuild on a first-party Data Spine chart boundary before promotion.
+    const API_KEYS = [];
+    const rotateKey = () => '';
+    const DELAY_MS = 0;
     const PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
     const getColor = i => PALETTE[i % PALETTE.length];
-    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
-    const POLYGON_KEY = window.POLYGON_KEY || '';
-    const USE_ALPHA = window.USE_ALPHA ?? false;
+    const STOOQ_PROXY = '';
+    const POLYGON_KEY = '';
+    const USE_ALPHA = false;
 
     function toStooqProxyUrl(upstream) {
         const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
@@ -88,6 +88,8 @@
     }
 
     async function fetchStooq(symbol) {
+        console.warn('Retired chart prototype: live Stooq proxy fetch disabled.');
+        return [];
         const stoSym = toStooqSymbol(symbol);
         const cacheKey = `stooq_cache_${stoSym}`;
         const c = JSON.parse(localStorage.getItem(cacheKey)||'{}');

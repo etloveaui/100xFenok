@@ -89,9 +89,10 @@
 
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
-    const STOOQ_PROXY = window.STOOQ_PROXY || 'https://stooq-proxy.etloveaui.workers.dev';
-    const POLYGON_KEY = window.POLYGON_KEY || '';
-    const USE_ALPHA = window.USE_ALPHA ?? false;
+    // P9-A: retired live-data prototype. Rebuild on a first-party Data Spine chart boundary before promotion.
+    const STOOQ_PROXY = '';
+    const POLYGON_KEY = '';
+    const USE_ALPHA = false;
 
     function toStooqProxyUrl(upstream) {
         const proxyBase = STOOQ_PROXY.endsWith('/') ? STOOQ_PROXY : `${STOOQ_PROXY}/`;
@@ -105,6 +106,8 @@
     }
     async function fetchStooq(symbol) {
         try {
+            console.warn('Retired chart prototype: live Stooq proxy fetch disabled.');
+            return [];
             const stoSym = toStooqSymbol(symbol);
             const res = await fetch(toStooqProxyUrl(`https://stooq.com/q/d/l/?s=${stoSym}&i=d`));
             if(!res.ok) return [];
