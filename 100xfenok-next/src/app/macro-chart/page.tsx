@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function MacroChartPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="market" title="매크로 차트" backHref="/market-valuation">
+      <AppShell active="explore" title="매크로 차트" backHref="/explore">
         <MacroChartClient />
       </AppShell>
     </div>

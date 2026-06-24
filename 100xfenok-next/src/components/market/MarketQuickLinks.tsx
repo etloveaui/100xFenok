@@ -18,14 +18,19 @@ const BASE_LINKS = [
 
 const MACRO_LENS_LINKS = [
   {
-    href: "/macro-chart?series=sp500,vix,tga,DGS10,HY_spread,M2SL&transform=rebase100,raw,rebase100,raw,raw,yoy&range=10Y&hidden=vix&axis=vix:right,DGS10:right,HY_spread:right&formula=ratio:sp500:DGS10",
+    href: "/macro-chart?macro=risk-liquidity&series=sp500,vix,tga,DGS10,HY_spread,M2SL&transform=rebase100,raw,rebase100,raw,raw,yoy&range=10Y&hidden=vix&axis=vix:right,DGS10:right,HY_spread:right&formula=ratio:sp500:DGS10",
     label: "리스크",
     textLabel: "리스크 렌즈",
   },
   {
-    href: "/macro-chart?preset=activity&range=MAX",
+    href: "/macro-chart?macro=activity&preset=activity&range=MAX",
     label: "경기",
     textLabel: "경기 렌즈",
+  },
+  {
+    href: "/macro-chart?macro=risk-liquidity&series=stq~SPY.US,stq~QQQ.US,stq~IWM.US&transform=rebase100,rebase100,rebase100&range=5Y",
+    label: "비교",
+    textLabel: "시장 비교",
   },
 ] as const;
 

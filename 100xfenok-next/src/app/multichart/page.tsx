@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import AppShell from '@/components/shell/AppShell';
+import MacroChartClient from '../macro-chart/MacroChartClient';
 
 export const metadata: Metadata = {
   title: '멀티차트 | 100xFenok',
@@ -8,11 +9,10 @@ export const metadata: Metadata = {
 
 export default function MultichartPage() {
   return (
-    <RouteEmbedFrame
-      src="/tools/asset/multichart.html"
-      title="100x 멀티차트"
-      loading="eager"
-      timeoutMs={20000}
-    />
+    <div className="fnk-shell">
+      <AppShell active="explore" title="시장 비교" backHref="/explore">
+        <MacroChartClient initialMode="stock-compare" />
+      </AppShell>
+    </div>
   );
 }

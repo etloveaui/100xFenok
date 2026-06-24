@@ -87,6 +87,13 @@ type MacroAnalysisLens = {
   state: Omit<InitialChartState, "macroContextId">;
 };
 
+type MarketCompareLens = {
+  id: string;
+  label: string;
+  detail: string;
+  state: InitialChartState;
+};
+
 type MacroConnectionLink = {
   id: string;
   label: string;
@@ -113,6 +120,10 @@ function cx(...parts: Array<string | false | null | undefined>) {
 
 function cloneSelection(selection: readonly SelectedMacroSeries[]) {
   return selection.map((item) => ({ id: item.id, transform: item.transform }));
+}
+
+function stq(symbol: string) {
+  return `stq~${symbol}`;
 }
 
 function defaultSelection(): SelectedMacroSeries[] {
@@ -235,6 +246,90 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
           operator: "ratio",
         },
       ],
+    },
+  },
+];
+
+const MARKET_COMPARE_LENSES: readonly MarketCompareLens[] = [
+  {
+    id: "returns",
+    label: "수익률 비교",
+    detail: "SPY, QQQ, IWM을 같은 100 기준으로 비교한다.",
+    state: {
+      selected: [
+        { id: stq("SPY.US"), transform: "rebase100" },
+        { id: stq("QQQ.US"), transform: "rebase100" },
+        { id: stq("IWM.US"), transform: "rebase100" },
+      ],
+      rangeId: "5Y",
+      hiddenIds: [],
+      axisById: {},
+      formulas: [],
+      macroContextId: "risk-liquidity",
+    },
+  },
+  {
+    id: "price",
+    label: "실제 가격",
+    detail: "NVDA, AAPL, MSFT의 달러 가격 레벨을 직접 본다.",
+    state: {
+      selected: [
+        { id: stq("NVDA.US"), transform: "raw" },
+        { id: stq("AAPL.US"), transform: "raw" },
+        { id: stq("MSFT.US"), transform: "raw" },
+      ],
+      rangeId: "3Y",
+      hiddenIds: [],
+      axisById: {},
+      formulas: [],
+      macroContextId: "risk-liquidity",
+    },
+  },
+  {
+    id: "benchmark",
+    label: "벤치마크 대비",
+    detail: "QQQ/SPY 상대강도와 M2를 함께 본다.",
+    state: {
+      selected: [
+        { id: stq("SPY.US"), transform: "rebase100" },
+        { id: stq("QQQ.US"), transform: "rebase100" },
+        { id: "M2SL", transform: "yoy" },
+      ],
+      rangeId: "10Y",
+      hiddenIds: [],
+      axisById: { M2SL: "right" },
+      formulas: [
+        {
+          id: formulaId(stq("QQQ.US"), "ratio", stq("SPY.US")),
+          leftId: stq("QQQ.US"),
+          rightId: stq("SPY.US"),
+          operator: "ratio",
+        },
+      ],
+      macroContextId: "risk-liquidity",
+    },
+  },
+  {
+    id: "macro-stock",
+    label: "매크로+종목",
+    detail: "NVDA와 M2를 같은 차트에서 결합한다.",
+    state: {
+      selected: [
+        { id: stq("NVDA.US"), transform: "rebase100" },
+        { id: "M2SL", transform: "yoy" },
+      ],
+      rangeId: "10Y",
+      hiddenIds: [],
+      axisById: { [stq("NVDA.US")]: "right" },
+      formulas: [
+        {
+          id: formulaId(stq("NVDA.US"), "ratio", "M2SL"),
+          leftId: stq("NVDA.US"),
+          rightId: "M2SL",
+          operator: "ratio",
+        },
+      ],
+      macroContextId: "risk-liquidity",
     },
   },
 ];
@@ -399,7 +494,22 @@ function writeUserPresets(presets: readonly UserMacroPreset[]) {
   }
 }
 
-function defaultChartState(): InitialChartState {
+type MacroChartInitialMode = "macro" | "stock-compare";
+
+function stockCompareDefaultState(): InitialChartState {
+  const base = MARKET_COMPARE_LENSES[0]?.state;
+  return {
+    selected: cloneSelection(base?.selected ?? []),
+    rangeId: base?.rangeId ?? DEFAULT_RANGE_ID,
+    hiddenIds: [...(base?.hiddenIds ?? [])],
+    axisById: { ...(base?.axisById ?? {}) },
+    formulas: [...(base?.formulas ?? [])],
+    macroContextId: base?.macroContextId ?? DEFAULT_MACRO_CONTEXT_ID,
+  };
+}
+
+function defaultChartState(initialMode: MacroChartInitialMode = "macro"): InitialChartState {
+  if (initialMode === "stock-compare") return stockCompareDefaultState();
   return {
     selected: defaultSelection(),
     rangeId: DEFAULT_RANGE_ID,
@@ -410,8 +520,7 @@ function defaultChartState(): InitialChartState {
   };
 }
 
-function initialChartStateFromUrl(): InitialChartState {
-  const fallback = defaultChartState();
+function initialChartStateFromUrl(fallback: InitialChartState): InitialChartState {
   if (typeof window === "undefined") return fallback;
   const params = new URLSearchParams(window.location.search);
   const preset = MACRO_CHART_PRESETS.find((item) => item.id === params.get("preset"));
@@ -459,6 +568,24 @@ function selectedTransformMap(selected: readonly SelectedMacroSeries[]) {
   return new Map(selected.map((item) => [item.id, item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw"]));
 }
 
+function sourceKindLabel(definition: MacroSeriesDefinition | undefined) {
+  if (!definition) return "computed";
+  return definition.sourceKind === "stooq" ? "market-symbol" : "data-spine";
+}
+
+function sourceDisplayLabel(definition: MacroSeriesDefinition | undefined) {
+  if (!definition) return "계산";
+  return definition.sourceKind === "stooq" ? "시장 심볼" : "Data Spine";
+}
+
+function frequencyDisplayLabel(definition: MacroSeriesDefinition | undefined) {
+  return definition?.frequency ?? "computed";
+}
+
+function definitionMetaLabel(definition: MacroSeriesDefinition) {
+  return `${sourceDisplayLabel(definition)} · ${MACRO_GROUP_LABELS[definition.group]} · ${unitLabel(definition.unit)} · ${definition.frequency}`;
+}
+
 function formatValue(value: number | null) {
   if (value === null) return "—";
   const abs = Math.abs(value);
@@ -487,6 +614,8 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
       return transform ? `${item.id}_${transform}` : item.id;
     }),
   ];
+  const sourceRow = ["__meta_source", ...series.map((item) => sourceKindLabel(seriesById(item.id)))];
+  const frequencyRow = ["__meta_frequency", ...series.map((item) => frequencyDisplayLabel(seriesById(item.id)))];
   const rows = dates.map((date) => [
     date,
     ...valuesBySeries.map((values) => {
@@ -494,7 +623,7 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
       return typeof value === "number" && Number.isFinite(value) ? String(value) : "";
     }),
   ]);
-  const csv = [header, ...rows]
+  const csv = [header, sourceRow, frequencyRow, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
     .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -655,7 +784,7 @@ function PickerButton({
       <span className="min-w-0">
         <span className="block truncate text-xs font-black">{item.shortLabel}</span>
         <span className={cx("block truncate text-[10px] font-semibold", active ? "text-slate-200" : "text-slate-600")}>
-          {MACRO_GROUP_LABELS[item.group]} · {unitLabel(item.unit)} · {item.frequency}
+          {definitionMetaLabel(item)}
         </span>
       </span>
       <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", active ? "bg-white text-slate-900" : "bg-slate-100 text-slate-700")}>
@@ -665,7 +794,7 @@ function PickerButton({
   );
 }
 
-export default function MacroChartClient() {
+export default function MacroChartClient({ initialMode = "macro" }: { initialMode?: MacroChartInitialMode }) {
   const [{
     selected: initialSelected,
     rangeId: initialRangeId,
@@ -673,7 +802,7 @@ export default function MacroChartClient() {
     axisById: initialAxisById,
     formulas: initialFormulas,
     macroContextId: initialMacroContextId,
-  }] = useState(() => defaultChartState());
+  }] = useState(() => defaultChartState(initialMode));
   const [selected, setSelected] = useState<SelectedMacroSeries[]>(initialSelected);
   const [rangeId, setRangeId] = useState(initialRangeId);
   const [hiddenIds, setHiddenIds] = useState<string[]>(initialHiddenIds);
@@ -729,7 +858,7 @@ export default function MacroChartClient() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const nextState = initialChartStateFromUrl();
+      const nextState = initialChartStateFromUrl(defaultChartState(initialMode));
       setSelected(nextState.selected);
       setRangeId(nextState.rangeId);
       setHiddenIds(nextState.hiddenIds);
@@ -742,7 +871,7 @@ export default function MacroChartClient() {
       setClientStateReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [initialMode]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setQuery(queryInput), 180);
@@ -910,6 +1039,12 @@ export default function MacroChartClient() {
     setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
   }, [applyChartState]);
 
+  const applyMarketCompareLens = useCallback((lens: MarketCompareLens) => {
+    applyChartState(lens.state);
+    setPresetName(`${lens.label} 뷰`);
+    setPickerOpen(true);
+  }, [applyChartState]);
+
   const addFormula = useCallback(() => {
     if (!currentFormulaLeftId || !currentFormulaRightId || currentFormulaLeftId === currentFormulaRightId) {
       setFormulaNotice("서로 다른 시리즈 2개를 선택하세요.");
@@ -1071,7 +1206,7 @@ export default function MacroChartClient() {
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Macro Chart</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">매크로 차트</h1>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              지수, 유동성, 금리, 신용, 심리, 경기지표를 같은 시간축으로 맞춰 비교합니다.
+              지수, 유동성, 금리, 신용, 심리, 경기지표와 시장 심볼을 같은 시간축으로 맞춰 비교합니다.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1266,6 +1401,26 @@ export default function MacroChartClient() {
             </div>
           </section>
 
+          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm" aria-label="시장 비교 프리셋">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-black text-slate-900">시장 비교</h2>
+              <span className="text-[11px] font-bold text-slate-500">통합</span>
+            </div>
+            <div className="mt-3 space-y-2">
+              {MARKET_COMPARE_LENSES.map((lens) => (
+                <button
+                  key={lens.id}
+                  type="button"
+                  onClick={() => applyMarketCompareLens(lens)}
+                  className="block w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                >
+                  <span className="block truncate text-xs font-black text-slate-900">{lens.label}</span>
+                  <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-3 shadow-sm" aria-label="매크로 인사이트 카드">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-black text-slate-900">인사이트 카드</h2>
@@ -1376,7 +1531,7 @@ export default function MacroChartClient() {
                     onClick={addStooqSeries}
                     className="min-h-10 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
                   >
-                    추가
+                    + 티커 추가
                   </button>
                 </div>
                 <p className="mt-2 min-h-4 text-[11px] font-bold text-slate-500" role="status">
@@ -1608,6 +1763,7 @@ export default function MacroChartClient() {
                           <option value="right">우축</option>
                         </select>
                       </div>
+                      <p className="mt-2 truncate text-[10px] font-bold text-slate-500">{definitionMetaLabel(definition)}</p>
                     </div>
                   );
                 })

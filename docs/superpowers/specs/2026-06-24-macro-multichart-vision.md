@@ -1,26 +1,28 @@
 # Macro Multichart Vision
 
-> Status: accepted as the P9-D native macro-chart direction. This note preserves
+> Status: accepted as the P15-Fusion macro-chart direction. This note preserves
 > the service boundary referenced by `docs/planning/PLAN_data_spine_service_layer_20260624.md`.
 
 ## Intent
 
-Restore the chart stack as two separate surfaces: `/macro-chart` remains the
-Data Spine-native macro workbench, while `/multichart` is the owner-approved
-Stooq Worker-proxy stock/ETF/index comparison tool.
+Fuse the chart stack into one service-grade workbench: `/macro-chart` compares
+Data Spine macro series and approved Stooq Worker-proxied market symbols in the
+same pipeline, while `/multichart` remains a URL-compatible stock-compare entry
+into that workbench.
 
 ## Boundary
 
-- Use static public Data Spine JSON only. No browser-side external provider calls.
+- Use static public Data Spine JSON for macro data. Market symbols may only use
+  the owner-owned Stooq Worker proxy; no browser-side direct provider calls.
 - Keep `/macro-chart` as the "chart above charts"; keep `/multichart` as a
-  separate compare route, not a redirect.
-- DEC-20260624-P15-0: the owner-owned Stooq Worker proxy is an allowed
-  `/multichart` data path. The browser calls the Worker, not Stooq directly; the
-  Worker stores nothing, and the client keeps only a 24h per-symbol localStorage
-  cache.
-- Product entry should collapse chart/tool discovery under Explore. Header/shell
-  navigation should not expose separate Multichart, ETF, Sector, Screener, or
-  Investor entries.
+  compatibility route into stock-compare mode, not as a separate chart engine.
+- DEC-20260624-P15-0/P15-Fusion: the owner-owned Stooq Worker proxy is an
+  allowed `/multichart` and `/macro-chart` market-symbol data path. The browser
+  calls the Worker, not Stooq directly; the Worker stores nothing, and the client
+  keeps only a 24h per-symbol localStorage cache.
+- Header Analytics should collapse to Radar, Insights, and Explore. The
+  AppShell rail/mobile tabs remain the in-product workspace navigation and must
+  expose Explore, Market, Sector, ETF, Screener, Investor, and Portfolio.
 - Do not add paid providers, credentials, or runtime installs for the first slice.
 - Keep Chart.js category/ISO labels for the current service. The TimeScale adapter decision is closed as "defer unless an opt-in engine mode is designed and regression-covered."
 
@@ -66,6 +68,12 @@ Stooq Worker-proxy stock/ETF/index comparison tool.
   delimiter-safe Stooq definitions at runtime, preserves them through
   `series`/`axis`/`formula` URL state, and verifies a proxy-only NVDA+M2 fusion
   route in local `qa:macro-chart`.
+- P15-Fusion S3/S4 local workbench fusion: source/frequency tags are visible in
+  the chart UI and CSV metadata, market-compare presets cover return, raw price,
+  benchmark ratio, and macro+stock comparisons, `/multichart` renders Macro
+  Chart in `stock-compare` mode, AppShell rail reachability is restored, and QA
+  now verifies header/rail navigation plus NVDA(daily)/M2(monthly) and QQQ/SPY
+  formula routes.
 
 ## Deferred
 

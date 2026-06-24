@@ -24,6 +24,11 @@ const MACRO_PLAYBOOKS = [
     detail: "Stablecoins · Nasdaq · S&P 500 · Crypto F/G",
     href: MACRO_CONTEXTS["crypto-liquidity"].chartHref,
   },
+  {
+    title: "시장 비교",
+    detail: "SPY · QQQ · IWM · Stooq proxy",
+    href: "/macro-chart?macro=risk-liquidity&series=stq~SPY.US,stq~QQQ.US,stq~IWM.US&transform=rebase100,rebase100,rebase100&range=5Y",
+  },
 ];
 
 export default function MacroPlaybookCard() {

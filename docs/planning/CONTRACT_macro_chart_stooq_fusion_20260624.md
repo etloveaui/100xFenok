@@ -1,6 +1,6 @@
 # CONTRACT — Stock (Stooq) Source Fusion into /macro-chart
 
-> Status: **DRAFT accepted for S1 local implementation**. Architect: Claude. Implementor: Codex.
+> Status: **S1-S4 implemented locally; S5 gates in progress**. Architect: Claude. Implementor: Codex.
 > Decision basis: owner pivot to fusion (2026-06-24). Feasibility confirmed twice —
 > Claude (catalog `source_path` + `{date,value}` abstraction) and Codex (loader audit:
 > `loadMacroSeries` normalizes definitions → rawPoints → transforms/alignment/CSV/PNG).
@@ -14,13 +14,10 @@
   (`28105232537`, success). A live `qa:macro-chart` run against
   `https://100xfenok.etloveaui.workers.dev` passed 8/8 with the strengthened
   P15-A/B/C/D checks.
-- No additional manual `cf:deploy` should run until the owner chooses whether to
-  forward-revert that live exposure or absorb it into Fusion.
-- Right-pane recommendation (not an owner decision): absorb current live P15
-  connect work and keep the `/multichart` URL as a preserved entry point. Owner
-  decision is still pending; S1/S2 may remain local, but production push/deploy
-  remains gated until the owner explicitly decides and the fused chart QA contract
-  is green.
+- Owner decision closed after the pivot: absorb the P15 connect work into Fusion
+  and preserve `/multichart` as a compatibility entry into the fused chart.
+- Production push/deploy is no longer blocked by the earlier decision gate; it is
+  gated by the fused chart QA contract and live verification.
 
 ## Goal
 
@@ -32,14 +29,15 @@ URL-share / CSV / PNG pipeline. The restored multichart stock-compare folds in h
 
 - **D1** — Stooq stocks become a new **source kind** inside the macro-chart series model, not a
   separate route/engine.
-- **D2** — recommended/pending: keep the `/multichart` URL but route it into
-  macro-chart "stock mode" (preserves the owner's known URL). `multichart.html`
-  iframe retires only after fusion is verified. *[OWNER CONFIRM]*
+- **D2** — accepted: keep the `/multichart` URL but route it into macro-chart
+  "stock mode" (preserves the owner's known URL). The legacy
+  `multichart.html` file is kept as rollback/reference, but the route no longer
+  frames it after S4.
 - **D3** — Chart engine stays **Chart.js** for this fusion slice. Engine swap
   (Lightweight Charts / ECharts) is deferred to the design-remodel track (research ③).
-- **D4** — recommended/pending: absorb the P15 connect slice (`0dc75960f`,
-  pushed and deployed by the push workflow). The macro context card +
-  cross-surface links would stay, re-expressed on the fused chart. *[OWNER CONFIRM]*
+- **D4** — accepted: absorb the P15 connect slice (`0dc75960f`, pushed and
+  deployed by the push workflow). The macro context card and cross-surface links
+  stay, re-expressed on the fused chart.
 
 ## Blockers (from Codex loader audit) → contract resolution
 
@@ -80,10 +78,19 @@ resolution-note pattern).
 
 - stooq source loads: select `stq~NVDA.US` → series renders, points > 0, fetch only via the
   owner Worker host (zero direct `stooq.com` / `alphavantage` / `yahoo`).
-- mixed compare: NVDA + M2 under raw / rebase100 → both render, no crash, no overflow.
-- stock-stock formula smoke: SPY + QQQ ratio works on matching daily dates.
+- mixed compare: NVDA (daily) + M2 (monthly) under raw / rebase100 → both render,
+  no crash, no overflow, and source/frequency tags remain visible.
+- stock-stock formula smoke: SPY + QQQ ratio works on matching daily dates and
+  preserves delimiter-safe formula URL state.
 - dynamic id round-trip: `series=stq~NVDA.US,M2SL` restored on reload; preset save/load with a stooq id.
-- `/multichart` disposition per D2.
+- `/multichart` disposition per D2: the URL remains live, renders the fused
+  Macro Chart stock-compare mode, and does not lose stock compare affordances.
+- Navigation reachability: header Analytics is intentionally narrow
+  (`/radar`, `/posts`, `/explore`), while the AppShell rail/mobile tabs must
+  expose `/explore`, `/market-valuation`, `/sectors`, `/etfs`, `/screener`,
+  `/superinvestors`, and `/portfolio`. Header absence alone is not a QA pass.
+- CSV honesty: exports include source/frequency metadata rows for local macro,
+  Stooq market symbol, and computed formula series.
 - existing macro contract stays green (no regression).
 
 ## Slices (Codex implements; Claude gates each; push only after owner OK)
@@ -97,21 +104,25 @@ resolution-note pattern).
   URL, axis/formula params stay delimiter-safe, the picker adds Stooq symbols into
   the existing 8-series selection model, and local `qa:macro-chart` includes a
   proxy-only NVDA+M2 fusion route.
-- **S3** — mixed-resolution alignment + source/frequency honesty tags + QA extension (NVDA vs M2). **Hold until Decision Gate closes.**
+- **S3** — mixed-resolution alignment + source/frequency honesty tags + QA
+  extension (NVDA daily vs M2 monthly plus stock-stock ratio). **Implemented locally.**
 - **S4** — `/multichart` disposition (D2) + P15 connect absorption (D4).
-- **S5** — full `qa:macro-chart` green + LIVE gate + docs (PLAN / DEC / CHANGELOG).
+  **Implemented locally**: `/multichart` now renders `MacroChartClient` in
+  `stock-compare` mode while `/macro-chart` remains the fused workbench.
+- **S5** — full `qa:macro-chart` green + LIVE gate + docs (PLAN / DEC /
+  CHANGELOG). **Local QA green; push/deploy/live gate is the closure step.**
 
 ## Decision Gate
 
-Owner choice remains open: either absorb the current live P15 connect slice into
-Fusion or forward-revert that live exposure; separately confirm D2
-(`/multichart` preserved route vs another disposition). Push/deploy is still
-gated on the explicit owner decision plus the fused chart QA contract.
+Closed by owner direction to proceed with the fused service workbench. Remaining
+gate is empirical: QA must prove mixed data, stock compare, route reachability,
+CSV honesty, deployment, and live production behavior.
 
 ## Rollback
 
-Each slice is a single-commit revert. The stooq source kind sits behind a feature path until S5.
-`multichart.html` is kept until S4 is verified (revert = restore the iframe route).
+Each slice is revertible. The Stooq source kind is isolated as a source kind in
+the Macro Chart pipeline, and `multichart.html` is kept as rollback/reference
+while the live route points at the fused chart.
 
 ## Out of scope
 
