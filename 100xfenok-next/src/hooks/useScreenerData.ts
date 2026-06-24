@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
-import { getStockConnection, loadStockConnectionIndex, stockConnectionCount } from "@/lib/data-entity-graph/stock-index";
+import {
+  getStockConnection,
+  getStockServices,
+  loadStockConnectionIndex,
+  loadStockServicesIndex,
+  stockConnectionCount,
+} from "@/lib/data-entity-graph/stock-index";
 import type { ScreenerStock, ScreenerDataResult } from "@/lib/screener/types";
 import type { StockAnalyzerRecord } from "@/lib/stock-analyzer/types";
 
@@ -38,6 +44,18 @@ async function loadConnectionIndex(timeoutMs = FETCH_TIMEOUT_MS) {
   }
 }
 
+async function loadServicesIndex(timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await loadStockServicesIndex(controller.signal);
+  } catch {
+    return null;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 const EMPTY: ScreenerDataResult = {
   stocks: [],
   dataReady: false,
@@ -57,9 +75,10 @@ export function useScreenerData(): ScreenerDataResult {
     isMountedRef.current = true;
 
     void (async () => {
-      const [records, connectionIndex] = await Promise.all([
+      const [records, connectionIndex, servicesIndex] = await Promise.all([
         loadRecords(),
         loadConnectionIndex(),
+        loadServicesIndex(),
       ]);
       if (!isMountedRef.current) return;
 
@@ -70,7 +89,9 @@ export function useScreenerData(): ScreenerDataResult {
 
       const stocks: ScreenerStock[] = records.map((item) => {
         const connectionEntry = getStockConnection(connectionIndex, item.symbol ?? "");
+        const servicesEntry = getStockServices(servicesIndex, item.symbol ?? "");
         const connectionCount = stockConnectionCount(connectionEntry);
+        const serviceLinks = servicesEntry?.single_stock_etfs ?? [];
         const connection = connectionEntry ? {
           flags: {
             marketFacts: connectionEntry.flags?.market_facts === true,
@@ -80,7 +101,8 @@ export function useScreenerData(): ScreenerDataResult {
             singleStockEtfs: connectionEntry.flags?.single_stock_etfs === true,
           },
           count: connectionCount ?? 0,
-          serviceCount: num(connectionEntry.service_count),
+          serviceCount: serviceLinks.length || num(connectionEntry.service_count),
+          singleStockEtfs: serviceLinks,
           confidenceLabel: connectionEntry.confidence?.label ?? null,
           coverageRatio: num(connectionEntry.confidence?.coverage_ratio),
           asOf: {

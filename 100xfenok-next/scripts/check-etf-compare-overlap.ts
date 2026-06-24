@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { holdingEntries, overlapFor, pairOverlaps, parseTickers } from "../src/app/etfs/compare/etfCompareOverlap";
+import { buildCompareCsv, holdingEntries, overlapFor, pairOverlaps, parseTickers } from "../src/app/etfs/compare/etfCompareOverlap";
 import type { EtfCompareRow } from "../src/app/etfs/compare/etfCompareOverlap";
 
 function row(ticker: string, holdings: NonNullable<NonNullable<EtfCompareRow["data"]>["normalized"]>["holdings"]): EtfCompareRow {
@@ -44,5 +44,10 @@ assert.equal(spyVoo.overlapWeight, 7.2);
 const pairs = pairOverlaps([spy, voo, qqq]);
 assert.equal(pairs.length, 3);
 assert.deepEqual(pairs.map((pair) => `${pair.left.ticker}/${pair.right.ticker}`), ["SPY/VOO", "SPY/QQQ", "VOO/QQQ"]);
+
+const csv = buildCompareCsv([spy, voo], [spyVoo]);
+assert.match(csv, /^section,ticker,left_ticker,right_ticker,/);
+assert.match(csv, /summary,SPY,/);
+assert.match(csv, /overlap,,SPY,VOO,NVDA,NVIDIA Corp,7.8,7.2,7.2,/);
 
 console.log("ETF compare overlap checks passed.");

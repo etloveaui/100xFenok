@@ -137,3 +137,53 @@ export function pairOverlaps(rows: EtfCompareRow[]): PairOverlap[] {
   }
   return pairs;
 }
+
+function csvCell(value: unknown): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+export function buildCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[] = pairOverlaps(rows)): string {
+  const header = [
+    "section",
+    "ticker",
+    "left_ticker",
+    "right_ticker",
+    "symbol",
+    "name",
+    "left_weight_pct",
+    "right_weight_pct",
+    "overlap_weight_pct",
+    "holdings_as_of",
+    "detail_status",
+  ];
+  const summaryRows = rows.map((row) => [
+    "summary",
+    row.ticker,
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    row.data?.normalized?.holdings_updated ?? row.data?.fetched_at ?? "",
+    row.data?.detail_status ?? "",
+  ]);
+  const overlapRows = overlaps.flatMap((pair) => pair.common.map((item) => [
+    "overlap",
+    "",
+    pair.left.ticker,
+    pair.right.ticker,
+    item.symbol,
+    item.name,
+    item.leftWeight,
+    item.rightWeight,
+    item.minWeight,
+    "",
+    "",
+  ]));
+  return [header, ...summaryRows, ...overlapRows]
+    .map((row) => row.map(csvCell).join(","))
+    .join("\n");
+}

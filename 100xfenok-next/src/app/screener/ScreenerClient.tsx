@@ -278,14 +278,19 @@ function buildConnectionCsv(rows: ScreenerStock[]): string {
     "index_membership",
     "single_stock_etfs",
     "service_count",
+    "single_stock_etf_tickers",
+    "single_stock_etf_resolution_methods",
+    "single_stock_etf_resolution_sources",
     "profile_as_of",
     "market_facts_as_of",
     "filings_as_of",
     "sec_13f_as_of",
+    "etf_universe_as_of",
   ];
   const body = rows.map((stock) => {
     const connection = stock.connection;
     const flags = connection?.flags;
+    const serviceLinks = connection?.singleStockEtfs ?? [];
     return [
       stock.ticker,
       stock.name,
@@ -298,10 +303,14 @@ function buildConnectionCsv(rows: ScreenerStock[]): string {
       flags?.indexMembership === true ? "1" : "0",
       flags?.singleStockEtfs === true ? "1" : "0",
       connection?.serviceCount ?? "",
+      serviceLinks.map((link) => link.ticker).join("|"),
+      [...new Set(serviceLinks.map((link) => link.resolution_method).filter(Boolean))].join("|"),
+      [...new Set(serviceLinks.map((link) => link.resolution_source).filter(Boolean))].join("|"),
       connection?.asOf?.profile ?? "",
       connection?.asOf?.marketFacts ?? "",
       connection?.asOf?.filings ?? "",
       connection?.asOf?.sec13f ?? "",
+      serviceLinks.find((link) => typeof link.as_of?.etf_universe === "string")?.as_of?.etf_universe ?? "",
     ].map(csvCell).join(",");
   });
   return [header.join(","), ...body].join("\n");
@@ -318,6 +327,26 @@ function downloadConnectionCsv(rows: ScreenerStock[]) {
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);
+}
+
+function singleStockEtfTickers(rows: ScreenerStock[]): string[] {
+  const seen = new Set<string>();
+  const tickers: string[] = [];
+  for (const stock of rows) {
+    for (const link of stock.connection?.singleStockEtfs ?? []) {
+      const ticker = String(link.ticker || "").trim().toUpperCase();
+      if (!ticker || seen.has(ticker)) continue;
+      seen.add(ticker);
+      tickers.push(ticker);
+    }
+  }
+  return tickers;
+}
+
+function buildSingleStockEtfCompareHref(rows: ScreenerStock[]): string | null {
+  const tickers = singleStockEtfTickers(rows);
+  if (tickers.length < 2) return null;
+  return `/etfs/compare?tickers=${encodeURIComponent(tickers.slice(0, 4).join(","))}`;
 }
 
 function ConnectionPills({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
@@ -1043,6 +1072,7 @@ export default function ScreenerClient({
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const singleStockEtfCompareHref = useMemo(() => buildSingleStockEtfCompareHref(sorted), [sorted]);
 
   const screenerDataState = useMemo(() => {
     if (failed) {
@@ -1139,6 +1169,11 @@ export default function ScreenerClient({
           >
             연결 CSV
           </button>
+          {singleStockEtfCompareHref ? (
+            <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
+              ETF 비교
+            </TransitionLink>
+          ) : null}
           <TransitionLink href="/sectors" className="data-shell-link">
             섹터
           </TransitionLink>

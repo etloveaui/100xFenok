@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { formatSignedPercent } from "@/lib/format";
-import { MAX_COMPARE_TICKERS, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
+import { MAX_COMPARE_TICKERS, buildCompareCsv, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
 import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
 
 function rawText(value: unknown): string {
@@ -126,6 +126,19 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
   );
 }
 
+function downloadCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[]) {
+  if (typeof window === "undefined" || rows.length === 0) return;
+  const blob = new Blob([buildCompareCsv(rows, overlaps)], { type: "text/csv;charset=utf-8" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `100xfenok-etf-compare-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 export default function EtfCompareClient({ initialTickers }: { initialTickers: string }) {
   const initial = parseTickers(initialTickers);
   const [tickers, setTickers] = useState(initial.length >= 2 ? initial : ["SPY", "VOO"]);
@@ -190,6 +203,14 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
             className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
           >
             비교
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadCompareCsv(rows, overlaps)}
+            disabled={loading || rows.length === 0}
+            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+          >
+            CSV 저장
           </button>
         </form>
 

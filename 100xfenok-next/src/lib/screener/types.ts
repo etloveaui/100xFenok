@@ -9,6 +9,8 @@
  * displaying as percentages.
  */
 
+import type { StockServiceEtfLink } from "@/lib/data-entity-graph/stock-index";
+
 export interface ScreenerConnectionFlags {
   marketFacts: boolean;
   filings: boolean;
@@ -21,6 +23,7 @@ export interface ScreenerConnectionMeta {
   flags: ScreenerConnectionFlags;
   count: number;
   serviceCount?: number | null;
+  singleStockEtfs?: StockServiceEtfLink[];
   confidenceLabel?: string | null;
   coverageRatio?: number | null;
   asOf?: {

@@ -15,6 +15,12 @@ import {
   isSingleStockLeveragedEtf,
   type EtfUniverseRecord,
 } from "@/app/explore/etfUniverseUtils";
+import {
+  getEtfPeersForUnderlying,
+  getUnderlyingStockForEtf,
+  loadStockServicesIndex,
+  type StockServicesIndex,
+} from "@/lib/data-entity-graph/stock-index";
 
 type MaybeNumber = number | null | undefined;
 
@@ -333,6 +339,38 @@ function rawText(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (isFiniteNumber(value)) return value.toLocaleString("ko-KR");
   return "—";
+}
+
+function csvCell(value: unknown): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function buildHoldingsCsv(symbol: string, holdings: EtfHolding[], holdingsUpdated: string | null | undefined): string {
+  const header = ["etf", "rank", "symbol", "name", "weight_pct", "shares", "holdings_as_of"];
+  const body = holdings.map((item, index) => [
+    symbol,
+    item.rank ?? index + 1,
+    item.symbol ?? "",
+    item.name ?? "",
+    isFiniteNumber(item.weight_pct) ? item.weight_pct : "",
+    item.shares ?? "",
+    holdingsUpdated ?? "",
+  ]);
+  return [header, ...body].map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function downloadHoldingsCsv(symbol: string, holdings: EtfHolding[], holdingsUpdated: string | null | undefined) {
+  if (typeof window === "undefined" || holdings.length === 0) return;
+  const blob = new Blob([buildHoldingsCsv(symbol, holdings, holdingsUpdated)], { type: "text/csv;charset=utf-8" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `100xfenok-etf-${symbol.toLowerCase()}-holdings-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 function fmtDateish(value: unknown): string {
@@ -1165,6 +1203,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     failed: boolean;
     data: EtfUniversePayload | null;
   }>({ loaded: false, failed: false, data: null });
+  const [stockServicesIndex, setStockServicesIndex] = useState<StockServicesIndex | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -1191,6 +1230,14 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadStockServicesIndex(controller.signal).then((payload) => {
+      if (!controller.signal.aborted) setStockServicesIndex(payload);
+    });
+    return () => controller.abort();
   }, []);
 
   const currentState = state.symbol === symbol && state.reloadKey === reloadKey;
@@ -1236,6 +1283,17 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const performance = performanceFromPayload(etfData, normalized, marketFacts);
   const statusMeta = detailStatusMeta(etfData?.detail_status ?? null);
   const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
+  const underlyingService = useMemo(
+    () => getUnderlyingStockForEtf(stockServicesIndex, symbol),
+    [stockServicesIndex, symbol],
+  );
+  const sameUnderlyingEtfs = useMemo(
+    () => underlyingService ? getEtfPeersForUnderlying(stockServicesIndex, underlyingService.stockTicker, symbol) : [],
+    [stockServicesIndex, underlyingService, symbol],
+  );
+  const sameUnderlyingCompareHref = sameUnderlyingEtfs.length > 0
+    ? `/etfs/compare?tickers=${encodeURIComponent([symbol, ...sameUnderlyingEtfs.slice(0, 3).map((link) => link.ticker)].join(","))}`
+    : null;
   const labels = classificationLabels(classification);
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const inceptionDate = rawText(overview.inception);
@@ -1251,6 +1309,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const singleStockClassificationDetails = classification?.is_single_stock
     ? [
         classification.underlying ? `분류 기초 ${classification.underlying}` : null,
+        underlyingService?.stockTicker ? `기초 종목 ${underlyingService.stockTicker}` : null,
+        underlyingService?.link.resolution_source ? `해결 출처 ${underlyingService.link.resolution_source}` : null,
         fmtDateish(updateDate) !== "—" ? `기준 ${fmtDateish(updateDate)}` : null,
       ]
     : [];
@@ -1381,13 +1441,33 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               </div>
             ) : null}
             {classification?.is_single_stock ? (
-              <DataProvenanceNote
-                title="분류 기반 연결"
-                details={singleStockClassificationDetails}
-                className="mt-3 max-w-2xl border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
-              >
-                단일종목 분류는 ETF 전체 목록의 분류와 기초자산 표기를 기준으로 표시합니다.
-              </DataProvenanceNote>
+              <>
+                <DataProvenanceNote
+                  title="분류 기반 연결"
+                  details={singleStockClassificationDetails}
+                  className="mt-3 max-w-2xl border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
+                >
+                  단일종목 분류는 ETF 전체 목록의 분류와 기초자산 표기를 기준으로 표시합니다.
+                </DataProvenanceNote>
+                {underlyingService ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <TransitionLink
+                      href={underlyingService.stockRoute}
+                      className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive hover:text-brand-interactive"
+                    >
+                      기초 종목 보기
+                    </TransitionLink>
+                    {sameUnderlyingCompareHref ? (
+                      <TransitionLink
+                        href={sameUnderlyingCompareHref}
+                        className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive hover:text-brand-interactive"
+                      >
+                        같은 기초 ETF 비교
+                      </TransitionLink>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
             ) : null}
           </div>
           <div className="stock-price">
@@ -1458,6 +1538,14 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
               <span>{holdingCount.toLocaleString("ko-KR")}개 원장 중 표시 가능한 항목</span>
               <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
+              <button
+                type="button"
+                onClick={() => downloadHoldingsCsv(symbol, holdings, holdingsUpdated)}
+                disabled={holdings.length === 0}
+                className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+              >
+                CSV 저장
+              </button>
             </div>
             <HoldingsTable holdings={holdings} currency={currency} />
           </SectionCard>

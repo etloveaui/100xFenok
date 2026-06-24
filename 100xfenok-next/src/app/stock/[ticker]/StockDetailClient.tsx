@@ -953,6 +953,25 @@ function StockConnectionCard({
             단일종목 ETF 연결은 ETF 전체 목록의 분류와 기초자산 매칭으로 만든 연결이며 추천이 아닙니다.
           </DataProvenanceNote>
         ) : null}
+        {singleStockEtfs.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {etfCompareHref ? (
+              <TransitionLink
+                href={etfCompareHref}
+                className="inline-flex min-h-8 items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 text-[10px] font-black uppercase tracking-[0.08em] text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+              >
+                ETF 비교
+              </TransitionLink>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => downloadSingleStockEtfCsv(ticker, singleStockEtfs)}
+              className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+            >
+              ETF CSV
+            </button>
+          </div>
+        ) : null}
         {entry.confidence?.label ? (
           <p className="text-[10px] font-semibold text-slate-500">
             신호 신뢰도 {entry.confidence.label}
@@ -969,6 +988,53 @@ function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string | null {
   if (tickers.length >= 2) return `/etfs/compare?tickers=${encodeURIComponent(tickers.slice(0, 4).join(","))}`;
   if (tickers.length === 1) return links[0]?.route || `/etfs/${encodeURIComponent(tickers[0])}`;
   return "/etfs";
+}
+
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function downloadSingleStockEtfCsv(ticker: string, links: StockServiceEtfLink[]) {
+  const rows = [
+    [
+      "stock_ticker",
+      "etf_ticker",
+      "etf_name",
+      "category",
+      "confidence",
+      "classification_source",
+      "raw_underlying",
+      "resolution_method",
+      "resolution_source",
+      "matched_alias",
+      "etf_universe_as_of",
+    ],
+    ...links.map((link) => [
+      ticker,
+      link.ticker,
+      link.label ?? "",
+      link.category ?? "",
+      link.confidence ?? "",
+      link.classification_source ?? "",
+      link.raw_underlying ?? "",
+      link.resolution_method ?? "",
+      link.resolution_source ?? "",
+      link.matched_alias ?? "",
+      link.as_of?.etf_universe ?? "",
+    ]),
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `100xfenok-${ticker.toLowerCase()}-single-stock-etfs-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 // ---------------------------------------------------------------------------

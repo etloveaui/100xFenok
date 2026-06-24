@@ -85,6 +85,24 @@ function fmtPct(v: number): string {
   return formatSignedPercent(v, { digits: 2 });
 }
 
+function csvCell(value: unknown): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function downloadTextFile(filename: string, text: string, type = "text/plain;charset=utf-8") {
+  if (typeof window === "undefined") return;
+  const blob = new Blob([text], { type });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 function gainColor(v: number): string {
   if (v > 0) return "text-emerald-700";
   if (v < 0) return "text-rose-700";
@@ -287,7 +305,51 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
 
   function handleExport() {
     if (!active) return;
-    setExportText(JSON.stringify(active, null, 2));
+    const text = JSON.stringify(active, null, 2);
+    setExportText(text);
+    downloadTextFile(`100xfenok-portfolio-${active.name.replace(/[^a-z0-9가-힣_-]+/gi, "-")}-${new Date().toISOString().slice(0, 10)}.json`, `${text}\n`, "application/json;charset=utf-8");
+  }
+
+  function handleConnectionExport() {
+    if (!active || holdingRows.length === 0) return;
+    const header = [
+      "ticker",
+      "shares",
+      "avg_cost",
+      "price",
+      "market_value",
+      "connection_count",
+      "market_facts",
+      "filings",
+      "sec_13f",
+      "index_membership",
+      "single_stock_etfs",
+      "single_stock_etf_tickers",
+      "single_stock_etf_resolution_methods",
+      "single_stock_etf_resolution_sources",
+    ];
+    const rows = holdingRows.map((row) => {
+      const flags = row.connection?.flags;
+      const etfLinks = row.services?.single_stock_etfs ?? [];
+      return [
+        row.ticker,
+        row.shares,
+        row.avg_cost,
+        row.price ?? "",
+        row.marketValue ?? "",
+        row.connection?.connection_count ?? "",
+        flags?.market_facts ? "1" : "0",
+        flags?.filings ? "1" : "0",
+        flags?.sec_13f ? "1" : "0",
+        flags?.index_membership ? "1" : "0",
+        flags?.single_stock_etfs ? "1" : "0",
+        etfLinks.map((link) => link.ticker).join("|"),
+        [...new Set(etfLinks.map((link) => link.resolution_method).filter(Boolean))].join("|"),
+        [...new Set(etfLinks.map((link) => link.resolution_source).filter(Boolean))].join("|"),
+      ];
+    });
+    const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+    downloadTextFile(`100xfenok-portfolio-connections-${new Date().toISOString().slice(0, 10)}.csv`, `${csv}\n`, "text/csv;charset=utf-8");
   }
 
   function handleImport() {
@@ -427,6 +489,14 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             + 새 포트폴리오
+          </button>
+          <button
+            type="button"
+            onClick={handleConnectionExport}
+            disabled={holdingRows.length === 0}
+            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 sm:min-h-8"
+          >
+            연결 CSV
           </button>
           <MarketQuickLinks />
         </div>
