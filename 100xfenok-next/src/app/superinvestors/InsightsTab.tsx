@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import type {
   BuyingPressureData,
@@ -118,6 +118,14 @@ function classificationLabel(c: string): string {
   return c;
 }
 
+function InsightTableScroll({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label={`${label} 표 가로 스크롤`}>
+      {children}
+    </div>
+  );
+}
+
 function SkeletonCard() {
   return (
     <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5">
@@ -225,7 +233,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
   return (
     <div>
       <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
-      <div className="-mx-1 overflow-x-auto px-1">
+      <InsightTableScroll label={title}>
         <table className="w-full min-w-[380px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -263,7 +271,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
             ))}
           </tbody>
         </table>
-      </div>
+      </InsightTableScroll>
     </div>
   );
 }
@@ -283,7 +291,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
 
   return (
     <div>
-      <div className="-mx-1 overflow-x-auto px-1">
+      <InsightTableScroll label="신규 편입 빅베팅">
         <table className="w-full min-w-[400px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -318,7 +326,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </InsightTableScroll>
       {rows.length === 0 ? <p className="text-xs text-[var(--c-ink-3)]">현재 분기 신규 편입 데이터 없음</p> : null}
       <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} 신규 편입 · 총 {data.metadata.new_positions_count}건 ({data.metadata.unique_tickers}종목)
@@ -344,7 +352,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
 
   return (
     <div>
-      <div className="-mx-1 overflow-x-auto px-1">
+      <InsightTableScroll label="확신 베팅">
         <table className="w-full min-w-[400px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -375,7 +383,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </InsightTableScroll>
       <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · 각 투자자 포트폴리오 TOP5 포지션 (비중 기준 정렬, 상위 12개)
       </p>
@@ -392,7 +400,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
 
   return (
     <div>
-      <div className="-mx-1 overflow-x-auto px-1">
+      <InsightTableScroll label="신규 고확신 편입">
         <table className="w-full min-w-[420px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -427,7 +435,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </InsightTableScroll>
       <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · 새로 편입되면서 바로 큰 비중이 된 포지션 {data.metadata.high_conviction_new_count}건 중 상위 12개
       </p>
@@ -448,7 +456,7 @@ function HhiCard({ data }: { data: HhiData }) {
 
   return (
     <div>
-      <div className="-mx-1 overflow-x-auto px-1">
+      <InsightTableScroll label="집중도">
         <table className="w-full min-w-[400px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
@@ -483,7 +491,7 @@ function HhiCard({ data }: { data: HhiData }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </InsightTableScroll>
       <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · HHI: 0~1, 높을수록 집중 · 집중≥0.25, 보통≥0.15, 분산&lt;0.15
       </p>

@@ -795,12 +795,12 @@ function MobileStockCard({
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
-        <label className="inline-flex min-h-8 items-center gap-2 rounded-md px-1 text-[11px] font-black text-slate-600">
+        <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-slate-600">
           <input
             type="checkbox"
             checked={selected}
             onChange={onSelectedChange}
-            className="h-4 w-4 accent-slate-900"
+            className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
           />
           선택
         </label>
@@ -814,9 +814,9 @@ function MobileStockCard({
         aria-controls={detailId}
         aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
         onClick={onToggle}
-        className="flex w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+        className="flex min-h-14 w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-black text-slate-500" aria-hidden="true">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-black text-slate-500" aria-hidden="true">
           {expanded ? "-" : "+"}
         </span>
         <span className="min-w-0 flex-1">
@@ -854,17 +854,17 @@ function MobileStockCard({
           </span>
         </span>
       </button>
-      {preset === "estimate" ? (
-        <MobileEstimateTrendSections stock={stock} />
-      ) : (
-        <div className="grid grid-cols-2 gap-2 px-3 pb-3 sm:grid-cols-3">
-          {metrics.map((metricKey) => (
-            <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
-          ))}
-        </div>
-      )}
       {expanded ? (
-        <div id={detailId}>
+        <div id={detailId} className="border-t border-slate-100">
+          {preset === "estimate" ? (
+            <MobileEstimateTrendSections stock={stock} />
+          ) : (
+            <div className="grid grid-cols-2 gap-2 px-3 pb-3 pt-3 sm:grid-cols-3">
+              {metrics.map((metricKey) => (
+                <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
+              ))}
+            </div>
+          )}
           <StockDetailPanel ticker={stock.ticker} stock={stock} />
         </div>
       ) : null}
@@ -1572,7 +1572,7 @@ export default function ScreenerClient({
                       checked={allPageSelected}
                       onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
                       aria-label="현재 페이지 종목 선택"
-                      className="h-4 w-4 accent-slate-900"
+                      className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
                     />
                   </th>
                   {activeColumns.map((column) => {
@@ -1623,7 +1623,7 @@ export default function ScreenerClient({
                           onChange={() => toggleSelectedTicker(stock.ticker)}
                           onClick={(event) => event.stopPropagation()}
                           aria-label={`${stock.ticker} 선택`}
-                          className="h-4 w-4 accent-slate-900"
+                          className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
                         />
                       </td>
                       {activeColumns.map((column) => (
@@ -1641,9 +1641,9 @@ export default function ScreenerClient({
                                 event.stopPropagation();
                                 setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
                               }}
-                              className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                              className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
                             >
-                              <span className="w-3 text-center text-[10px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                              <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
                               <span className="truncate">{stock.ticker}</span>
                             </button>
                           ) : renderCell(stock, column.key, preset)}

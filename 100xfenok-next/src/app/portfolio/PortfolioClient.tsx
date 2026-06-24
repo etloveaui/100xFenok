@@ -126,6 +126,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   const [newTicker, setNewTicker] = useState("");
   const [newShares, setNewShares] = useState("");
   const [newCost, setNewCost] = useState("");
+  const [editingTicker, setEditingTicker] = useState<string | null>(null);
   const [cashInput, setCashInput] = useState("");
   const [editingCash, setEditingCash] = useState(false);
   const cashRef = useRef<HTMLInputElement>(null);
@@ -262,23 +263,36 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
 
   function handleDeleteHolding(ticker: string) {
     if (!active) return;
+    const normalized = normalizeTicker(ticker);
     const next = portfolios.map((p) =>
       p.id === active.id
-        ? { ...p, holdings: p.holdings.filter((h) => h.ticker !== ticker) }
+        ? { ...p, holdings: p.holdings.filter((h) => h.ticker !== normalized) }
         : p,
     );
     savePortfolios(next);
+    if (editingTicker === normalized) setEditingTicker(null);
+  }
+
+  function handleEditHolding(row: HoldingRow) {
+    setNewTicker(row.ticker);
+    setNewShares(String(row.shares));
+    setNewCost(String(row.avg_cost));
+    setEditingTicker(row.ticker);
   }
 
   function handleAddHolding() {
     if (!active) return;
-    const t = newTicker.trim().toUpperCase();
+    const t = normalizeTicker(newTicker);
     const s = parseFloat(newShares);
     const c = parseFloat(newCost);
     if (!t || isNaN(s) || s <= 0 || isNaN(c) || c < 0) return;
     const existing = active.holdings.find((h) => h.ticker === t);
     let holdings: Holding[];
-    if (existing) {
+    if (existing && editingTicker === t) {
+      holdings = active.holdings.map((h) =>
+        h.ticker === t ? { ...h, shares: s, avg_cost: c } : h,
+      );
+    } else if (existing) {
       const totalShares = existing.shares + s;
       const avgCost = (existing.shares * existing.avg_cost + s * c) / totalShares;
       holdings = active.holdings.map((h) =>
@@ -292,6 +306,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
     setNewTicker("");
     setNewShares("");
     setNewCost("");
+    setEditingTicker(null);
   }
 
   function handleCashSave() {
@@ -534,7 +549,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             <HoldingsEmptyState />
           ) : (
             holdingRows.map((row) => (
-              <MobileHoldingCard key={row.ticker} row={row} onDelete={handleDeleteHolding} />
+              <MobileHoldingCard key={row.ticker} row={row} onEdit={handleEditHolding} onDelete={handleDeleteHolding} />
             ))
           )}
         </div>
@@ -590,8 +605,22 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             onClick={handleAddHolding}
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 sm:min-h-9"
           >
-            추가
+            {editingTicker && normalizeTicker(newTicker) === editingTicker ? "저장" : "추가"}
           </button>
+          {editingTicker ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingTicker(null);
+                setNewTicker("");
+                setNewShares("");
+                setNewCost("");
+              }}
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 px-3 text-[11px] font-black text-slate-500 transition hover:border-slate-300 hover:text-slate-700 sm:min-h-9"
+            >
+              취소
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -1029,11 +1058,16 @@ function PortfolioConnectionPanel({
 
 function MobileHoldingCard({
   row,
+  onEdit,
   onDelete,
 }: {
   row: HoldingRow;
+  onEdit?: (row: HoldingRow) => void;
   onDelete?: (ticker: string) => void;
 }) {
+  const subtitle = row.connection === undefined
+    ? "연결 확인 중"
+    : row.connection?.label ?? (row.connection === null ? "연결 미확인" : "종목명 미확인");
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -1044,17 +1078,31 @@ function MobileHoldingCard({
           >
             {row.ticker}
           </TransitionLink>
-          <p className="mt-0.5 text-xs font-bold text-slate-500">기기 저장 보유 종목</p>
+          <p className="mt-0.5 max-w-[14rem] truncate text-xs font-bold text-slate-500">{subtitle}</p>
         </div>
-        {onDelete ? (
-          <button
-            type="button"
-            onClick={() => onDelete(row.ticker)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg font-black text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-            aria-label={`${row.ticker} 삭제`}
-          >
-            ×
-          </button>
+        {onEdit || onDelete ? (
+          <div className="flex shrink-0 items-center gap-1">
+            {onEdit ? (
+              <button
+                type="button"
+                onClick={() => onEdit(row)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                aria-label={`${row.ticker} 수정 입력`}
+              >
+                수정
+              </button>
+            ) : null}
+            {onDelete ? (
+              <button
+                type="button"
+                onClick={() => onDelete(row.ticker)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg font-black text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                aria-label={`${row.ticker} 삭제`}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
       <div className="mt-3">

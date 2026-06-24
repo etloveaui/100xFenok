@@ -163,6 +163,8 @@ Apply **Phase 1: mobile surface cleanup** before any design-system rewrite. This
 
 - Implemented as Phase 8 of the public surface cleanup plan.
 - More is mobile-only and intentionally not part of the shared desktop `NAV`.
-- Portfolio mobile cards use the current local holding schema (`ticker`, `shares`, `avg_cost`) without inventing company names.
+- Portfolio mobile cards use the current local holding schema (`ticker`, `shares`, `avg_cost`) and only surface company labels from the existing stock connection index; cards now expose edit/delete actions with 36px targets.
 - Stock tab scroll affordance is conditional on measured overflow and the duplicated tab markup is now centralized in `StockDetailClient`.
+- P10 hardening adds `qa:mobile-ux` to lock the Phase 1 contract: five mobile tabs, no page-level horizontal overflow, screener checkbox/expand touch targets plus collapsed-card density, portfolio edit/delete action target size, stock tab overflow affordance, and superinvestor Insights scroll-region affordance.
+- Kimi P10 challenge anchor `fh-20260624-082-km-6ddf068f` accepted as next-slice routing signal: finish P10 cleanup, then prioritize `/macro-chart` P1a.5 mobile layout + share URL completion.
 - Kimi near-peer audit anchor: `fh-20260624-037-km-7d2e4eec`.

@@ -114,7 +114,7 @@
 - G4 (thin slice landed 2026-06-24) — add Admin/Data Lab service-layer status from existing generated artifacts. Public surfaces keep only short `DataState` status; diagnostics and coverage language stay Admin-only. Notification hooks remain deferred/approval-gated.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources. No new paid provider, credential path, or live quota probe was added in the 2026-06-24 service-layer wave; refresh external quota references before relying on them.
 - G6 (landed 2026-06-24) — promote canonical key policy into a shared registry, add link-level single-stock ETF provenance (`etf_key`, `target_key`, `classification_source`, `raw_underlying`), and strengthen `qa:data-graph` so graph/service links fail closed when keys or provenance drift.
-- Macro-chart candidate (first slice landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, URL state, presets, CSV export, searchable picker, and `/multichart` redirect. TimeScale/adapter and user-saved presets remain deferred.
+- Macro-chart candidate (first slice landed 2026-06-24) — do not extend the legacy `/multichart` iframe. Native Data Spine `/macro-chart` now has a 30-series catalog, transform/alignment engine, URL state, presets, CSV export, searchable picker, and `/multichart` redirect. TimeScale/adapter and user-saved presets remain deferred. **Next high-value slice after P10**: P1a.5 mobile-first chart layout plus completed share URL state (`range` and hidden-series visibility), explicit 8-series cap copy, search debounce, picker loading/error affordances, and share-URL round-trip QA.
 
 ---
 
@@ -140,6 +140,13 @@
 failure, no horizontal overflow, at least one public DataState marker per route,
 and zero serious/critical a11y findings. `/explore` uses a compact as-of badge;
 diagnostic coverage cards stay out of public routes.
+
+**P10 mobile UX contract hardening added 2026-06-24**: `qa:mobile-ux`
+locks the implemented mobile cleanup contract on `/screener`, `/portfolio`,
+`/stock/NVDA`, and `/superinvestors?tab=insights`: five-tab mobile shell, no
+page-level horizontal overflow, screener checkbox/expand touch targets plus
+collapsed-card density, portfolio edit/delete action target size, stock tab
+scroll affordance, and superinvestor Insights scroll-region affordance.
 
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
