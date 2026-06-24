@@ -28,8 +28,14 @@ surface.
   axis controls, localStorage write/corruption guards, dynamic right-axis title,
   Explore macro playbook entry points, and `qa:macro-chart` coverage for preset
   save/apply plus corrupted saved state.
+- P3a: dependency-free depth controls: 3M/6M/3Y date windows, zoom in/out range
+  stepping, browser PNG export, spread/ratio formula series from transformed
+  chart values, formula URL/localStorage/CSV coverage, and shared Chart.js hover
+  crosshair rendering.
 
 ## Deferred
 
 - P1b: decide whether Chart.js `TimeScale` + adapter is worth the dependency.
-- P3: brush/zoom, crosshair sync, formula series, and PNG export.
+- P3b: true brush/wheel/pinch zoom and multi-chart crosshair sync. The current
+  public service keeps dependency-free range-window controls until the install
+  and runtime tradeoff is explicit.
