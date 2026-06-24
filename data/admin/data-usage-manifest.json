@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-23T23:42:32.820Z",
+  "generated_at": "2026-06-24T04:55:56.488Z",
   "totals": {
-    "rootJsonCount": 17297,
-    "publicJsonCount": 17349,
-    "mirroredRootJsonCount": 17296,
+    "rootJsonCount": 17298,
+    "publicJsonCount": 17350,
+    "mirroredRootJsonCount": 17297,
     "missingPublicMirrorCount": 1,
     "publicOnlyJsonCount": 53,
-    "directDataFetchCount": 114,
+    "directDataFetchCount": 117,
     "dynamicPatternCount": 9
   },
   "mirror_sync_status": "partial",
@@ -137,6 +137,16 @@
       "usage": "explore week-ahead and event risk"
     },
     {
+      "category": "catalog",
+      "rootJsonCount": 1,
+      "publicJsonCount": 1,
+      "directFetchCount": 0,
+      "dynamicPatternCount": 0,
+      "generatedSourceCount": 0,
+      "status": "catalog_only",
+      "usage": "manifest/catalog coverage"
+    },
+    {
       "category": "computed",
       "rootJsonCount": 6455,
       "publicJsonCount": 6455,
@@ -200,7 +210,7 @@
       "category": "macro",
       "rootJsonCount": 10,
       "publicJsonCount": 10,
-      "directFetchCount": 6,
+      "directFetchCount": 9,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 2,
       "status": "active",
@@ -561,7 +571,8 @@
       "category": "indices",
       "consumers": [
         "100xfenok-next/public/admin/valuation-lab/expansion/indices-nasdaq.html",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -579,7 +590,8 @@
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/expansion/indices-sp500.html",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -587,14 +599,23 @@
       "category": "macro",
       "consumers": [
         "100xfenok-next/public/admin/data-lab/app/ops-console.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fdic-tier1.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
       "dataPath": "macro/fred-banking-daily.json",
       "category": "macro",
       "consumers": [
-        "100xfenok-next/src/hooks/useDashboardData.ts"
+        "100xfenok-next/src/hooks/useDashboardData.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -609,14 +630,30 @@
       "dataPath": "macro/fred-banking-weekly.json",
       "category": "macro",
       "consumers": [
-        "100xfenok-next/src/hooks/useDashboardData.ts"
+        "100xfenok-next/src/hooks/useDashboardData.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fred-macro.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/stablecoins.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
       "dataPath": "macro/tga.json",
       "category": "macro",
       "consumers": [
-        "100xfenok-next/src/app/api/data/route.ts"
+        "100xfenok-next/src/app/api/data/route.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -787,7 +824,8 @@
       "consumers": [
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -795,7 +833,8 @@
       "category": "sentiment",
       "consumers": [
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -806,7 +845,8 @@
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
         "100xfenok-next/src/hooks/useDashboardData.ts",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -814,7 +854,8 @@
       "category": "sentiment",
       "consumers": [
         "100xfenok-next/src/hooks/useDashboardData.ts",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -823,7 +864,8 @@
       "consumers": [
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useDashboardData.ts"
+        "100xfenok-next/src/hooks/useDashboardData.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -832,7 +874,8 @@
       "consumers": [
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -842,7 +885,8 @@
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
         "100xfenok-next/src/hooks/useDashboardData.ts",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
     {
@@ -1236,7 +1280,7 @@
       },
       {
         "id": "liquidity_flow",
-        "asOf": "2026-06-23",
+        "asOf": "2026-06-24",
         "status": "falling"
       },
       {
