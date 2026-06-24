@@ -52,6 +52,17 @@ async function collectLayout(page) {
   });
 }
 
+async function collectPageOverflow(page) {
+  return page.evaluate(() => {
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    return { viewportWidth, scrollWidth };
+  });
+}
+
 async function inspectSharedDesktop(page) {
   const failures = [];
   const response = await page.goto(routeUrl(sharedRoute), { waitUntil: "networkidle", timeout: 60_000 });
@@ -98,6 +109,79 @@ async function inspectSharedDesktop(page) {
   const rangeAfterClick = await page.evaluate(() => new URL(window.location.href).searchParams.get("range"));
   if (rangeAfterClick !== "1Y") addFailure(failures, "range-url-update", `range=${rangeAfterClick}`);
 
+  await page.getByLabel("TGA 축").selectOption("right");
+  await page.waitForTimeout(200);
+  const axisAfterSelect = splitParam(await page.evaluate(() => new URL(window.location.href).searchParams.get("axis")));
+  if (!axisAfterSelect.includes("tga:right")) {
+    addFailure(failures, "axis-url-update", `axis=${axisAfterSelect.join(",") || "missing"}`);
+  }
+
+  await page.getByLabel("프리셋 이름").fill("QA 저장 프리셋");
+  await page.getByRole("button", { name: "저장", exact: true }).click();
+  await page.waitForTimeout(200);
+  const storedPreset = await page.evaluate(() => {
+    const presets = JSON.parse(window.localStorage.getItem("100xfenok.macroChart.userPresets.v1") || "[]");
+    return presets.find((preset) => preset.name === "QA 저장 프리셋") ?? null;
+  });
+  if (!storedPreset) {
+    addFailure(failures, "user-preset-storage", "saved preset missing from localStorage");
+  } else {
+    if (storedPreset.rangeId !== "1Y") addFailure(failures, "user-preset-range", `range=${storedPreset.rangeId}`);
+    if (storedPreset.axisById?.tga !== "right") {
+      addFailure(failures, "user-preset-axis", `axis=${JSON.stringify(storedPreset.axisById ?? {})}`);
+    }
+    if ((storedPreset.selected ?? []).length !== expectedMaxSeries) {
+      addFailure(failures, "user-preset-series", `selected=${(storedPreset.selected ?? []).length}`);
+    }
+  }
+
+  await page.goto(routeUrl("/macro-chart"), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
+  await page.locator("button", { hasText: "QA 저장 프리셋" }).first().click();
+  await page.waitForFunction(() => new URL(window.location.href).searchParams.get("range") === "1Y", null, { timeout: 10_000 });
+  const paramsAfterUserPreset = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  const userPresetAxis = splitParam(paramsAfterUserPreset.axis);
+  if (splitParam(paramsAfterUserPreset.series).length !== expectedMaxSeries) {
+    addFailure(failures, "user-preset-apply-series", `series=${paramsAfterUserPreset.series ?? "missing"}`);
+  }
+  if (!userPresetAxis.includes("tga:right")) {
+    addFailure(failures, "user-preset-apply-axis", `axis=${paramsAfterUserPreset.axis ?? "missing"}`);
+  }
+
+  await page.getByLabel("TGA 축").selectOption("auto");
+  await page.waitForTimeout(200);
+  const axisAfterAuto = await page.evaluate(() => new URL(window.location.href).searchParams.get("axis"));
+  if (axisAfterAuto?.includes("tga:right")) {
+    addFailure(failures, "axis-auto-url-update", `axis=${axisAfterAuto}`);
+  }
+
+  await page.evaluate(() => {
+    window.localStorage.setItem("100xfenok.macroChart.userPresets.v1", JSON.stringify([
+      {
+        id: "qa-corrupt",
+        name: "QA 손상 프리셋",
+        selected: [{ id: "sp500", transform: "rebase100" }],
+        rangeId: "5Y",
+        hiddenIds: [null, "sp500", 7],
+        axisById: { sp500: "right" },
+        updatedAt: new Date().toISOString(),
+      },
+    ]));
+  });
+  await page.goto(routeUrl("/macro-chart"), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
+  await page.locator("button", { hasText: "QA 손상 프리셋" }).first().click();
+  await page.waitForTimeout(250);
+  const paramsAfterCorruptPreset = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (paramsAfterCorruptPreset.hidden !== "sp500") {
+    addFailure(failures, "user-preset-corrupt-hidden", `hidden=${paramsAfterCorruptPreset.hidden ?? "missing"}`);
+  }
+  if (!splitParam(paramsAfterCorruptPreset.axis).includes("sp500:right")) {
+    addFailure(failures, "user-preset-keyed-axis", `axis=${paramsAfterCorruptPreset.axis ?? "missing"}`);
+  }
+
+  await page.goto(routeUrl(sharedRoute), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
   await page.locator("#macro-series-search").fill("MOVE");
   await page.waitForTimeout(350);
   const moveCandidate = page.locator('button[aria-pressed="false"]').filter({ hasText: "MOVE" }).first();
@@ -127,6 +211,34 @@ async function inspectSharedDesktop(page) {
   }
 
   return { route: sharedRoute, viewport: "desktop", status: response?.status() ?? null, layout, failures };
+}
+
+async function inspectExplorePlaybooks(page) {
+  const failures = [];
+  const response = await page.goto(routeUrl("/explore"), { waitUntil: "networkidle", timeout: 60_000 });
+  await page.getByRole("heading", { name: "매크로 플레이북" }).waitFor({ timeout: 20_000 });
+
+  if (response?.status() !== 200) {
+    addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
+  }
+
+  const layout = await collectPageOverflow(page);
+  if (layout.scrollWidth > layout.viewportWidth + 1) {
+    addFailure(failures, "explore-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
+  }
+
+  const hrefs = await page.locator('a[href*="/macro-chart"]').evaluateAll((links) =>
+    links.map((link) => link.getAttribute("href") ?? ""),
+  );
+  if (hrefs.length < 4) addFailure(failures, "explore-playbook-count", `hrefs=${hrefs.length}`);
+  if (!hrefs.some((href) => href.includes("series=sp500") && href.includes("axis="))) {
+    addFailure(failures, "explore-risk-playbook-link", hrefs.join(" | "));
+  }
+  if (!hrefs.some((href) => href.includes("preset=activity"))) {
+    addFailure(failures, "explore-activity-playbook-link", hrefs.join(" | "));
+  }
+
+  return { route: "/explore", viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
 
 async function inspectPresetRoute(page) {
@@ -244,6 +356,7 @@ try {
   results.push(await inspectSharedDesktop(desktopPage));
   results.push(await inspectPresetRoute(desktopPage));
   results.push(await inspectRedirect(desktopPage));
+  results.push(await inspectExplorePlaybooks(desktopPage));
   await desktopContext.close();
 
   const retryContext = await browser.newContext({

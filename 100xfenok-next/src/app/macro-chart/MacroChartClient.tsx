@@ -19,6 +19,7 @@ import type { MacroSeriesDefinition, MacroValueTransform } from "@/lib/macro-cha
 const DEFAULT_PRESET_ID = "risk-liquidity";
 const DEFAULT_RANGE_ID = "5Y";
 const MAX_SELECTED_SERIES = 8;
+const USER_PRESET_STORAGE_KEY = "100xfenok.macroChart.userPresets.v1";
 const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "1Y", label: "1Y", months: 12 },
   { id: "5Y", label: "5Y", months: 60 },
@@ -27,6 +28,7 @@ const MACRO_RANGES: readonly MarketChartRange[] = [
 ] as const;
 const MACRO_RANGE_IDS = new Set(MACRO_RANGES.map((range) => range.id));
 const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "rebase100", "yoy", "change"]);
+const MACRO_AXIS_IDS = new Set(["auto", "left", "right"]);
 
 type LoadState =
   | { status: "idle" | "loading" }
@@ -34,11 +36,23 @@ type LoadState =
   | { status: "error"; message: string };
 
 type SelectedMacroSeries = { id: string; transform?: MacroValueTransform };
+type MacroAxisId = "auto" | "left" | "right";
 
 type InitialChartState = {
   selected: SelectedMacroSeries[];
   rangeId: string;
   hiddenIds: string[];
+  axisById: Record<string, MacroAxisId>;
+};
+
+type UserMacroPreset = {
+  id: string;
+  name: string;
+  selected: SelectedMacroSeries[];
+  rangeId: string;
+  hiddenIds: string[];
+  axisById: Record<string, MacroAxisId>;
+  updatedAt: string;
 };
 
 function cx(...parts: Array<string | false | null | undefined>) {
@@ -73,11 +87,84 @@ function parseHiddenIds(raw: string | null, selected: readonly SelectedMacroSeri
     });
 }
 
+function parseAxisById(raw: string | null, selected: readonly SelectedMacroSeries[]) {
+  if (!raw) return {};
+  if (raw.includes(":")) {
+    const selectedIds = new Set(selected.map((item) => item.id));
+    return Object.fromEntries(
+      raw
+        .split(",")
+        .map((token) => token.split(":").map((part) => part.trim()))
+        .filter(
+          (entry): entry is [string, MacroAxisId] =>
+            entry.length === 2 &&
+            selectedIds.has(entry[0]) &&
+            MACRO_AXIS_IDS.has(entry[1]) &&
+            entry[1] !== "auto",
+        ),
+    );
+  }
+  const axes = raw.split(",");
+  return Object.fromEntries(
+    selected
+      .map((item, index) => [item.id, axes[index]] as const)
+      .filter((entry): entry is readonly [string, MacroAxisId] => MACRO_AXIS_IDS.has(entry[1] ?? "") && entry[1] !== "auto"),
+  );
+}
+
+function safeReadUserPresets(): UserMacroPreset[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(USER_PRESET_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item): UserMacroPreset | null => {
+        if (!item || typeof item !== "object") return null;
+        const record = item as Partial<UserMacroPreset>;
+        const selected = Array.isArray(record.selected)
+          ? record.selected
+              .filter((entry): entry is SelectedMacroSeries =>
+                Boolean(entry && typeof entry.id === "string" && seriesById(entry.id)),
+              )
+              .slice(0, MAX_SELECTED_SERIES)
+          : [];
+        if (!selected.length || typeof record.name !== "string") return null;
+        return {
+          id: typeof record.id === "string" ? record.id : `preset-${Date.now()}`,
+          name: record.name.slice(0, 32),
+          selected: cloneSelection(selected),
+          rangeId: MACRO_RANGE_IDS.has(record.rangeId ?? "") ? record.rangeId! : DEFAULT_RANGE_ID,
+          hiddenIds: Array.isArray(record.hiddenIds)
+            ? parseHiddenIds(record.hiddenIds.filter((value): value is string => typeof value === "string").join(","), selected)
+            : [],
+          axisById: parseAxisById(selected.map((entry) => record.axisById?.[entry.id] ?? "auto").join(","), selected),
+          updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : new Date().toISOString(),
+        };
+      })
+      .filter((item): item is UserMacroPreset => item !== null)
+      .slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+function writeUserPresets(presets: readonly UserMacroPreset[]) {
+  if (typeof window === "undefined") return false;
+  try {
+    window.localStorage.setItem(USER_PRESET_STORAGE_KEY, JSON.stringify(presets.slice(0, 8)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function initialChartStateFromUrl(): InitialChartState {
   const fallback = {
     selected: defaultSelection(),
     rangeId: DEFAULT_RANGE_ID,
     hiddenIds: [],
+    axisById: {},
   };
   if (typeof window === "undefined") return fallback;
   const params = new URLSearchParams(window.location.search);
@@ -86,7 +173,12 @@ function initialChartStateFromUrl(): InitialChartState {
   const rangeId = MACRO_RANGE_IDS.has(rangeParam) ? rangeParam : DEFAULT_RANGE_ID;
   if (preset) {
     const selected = cloneSelection(preset.series);
-    return { selected, rangeId, hiddenIds: parseHiddenIds(params.get("hidden"), selected) };
+    return {
+      selected,
+      rangeId,
+      hiddenIds: parseHiddenIds(params.get("hidden"), selected),
+      axisById: parseAxisById(params.get("axis"), selected),
+    };
   }
   const ids = params.get("series")?.split(",").map((id) => id.trim()).filter(Boolean) ?? [];
   if (!ids.length) return { ...fallback, rangeId };
@@ -105,6 +197,7 @@ function initialChartStateFromUrl(): InitialChartState {
     selected: selected.length ? selected : fallback.selected,
     rangeId,
     hiddenIds: parseHiddenIds(params.get("hidden"), selected),
+    axisById: parseAxisById(params.get("axis"), selected),
   };
 }
 
@@ -152,6 +245,38 @@ function downloadCsv(loaded: readonly LoadedMacroSeries[]) {
   URL.revokeObjectURL(url);
 }
 
+function applyAxisOverrides(series: readonly MarketChartSeries[], axisById: Record<string, MacroAxisId>) {
+  return series.map((item) => {
+    const axis = axisById[item.id] ?? "auto";
+    if (axis === "left") return { ...item, yAxisId: "y" as const };
+    if (axis === "right") return { ...item, yAxisId: "y1" as const };
+    return item;
+  });
+}
+
+function axisParam(selected: readonly SelectedMacroSeries[], axisById: Record<string, MacroAxisId>) {
+  return selected
+    .map((item) => {
+      const axis = axisById[item.id] ?? "auto";
+      return axis === "auto" ? null : `${item.id}:${axis}`;
+    })
+    .filter((item): item is string => Boolean(item))
+    .join(",");
+}
+
+function explicitRightAxisTitle(definitions: readonly MacroSeriesDefinition[], axisById: Record<string, MacroAxisId>) {
+  const units = [
+    ...new Set(
+      definitions
+        .filter((definition) => axisById[definition.id] === "right")
+        .map((definition) => unitLabel(definition.unit)),
+    ),
+  ];
+  if (units.length === 0) return "% / spread";
+  if (units.length === 1) return units[0];
+  return "보조축";
+}
+
 function PickerButton({
   item,
   active,
@@ -187,12 +312,19 @@ function PickerButton({
 }
 
 export default function MacroChartClient() {
-  const [{ selected: initialSelected, rangeId: initialRangeId, hiddenIds: initialHiddenIds }] = useState(() =>
-    initialChartStateFromUrl(),
-  );
+  const [{
+    selected: initialSelected,
+    rangeId: initialRangeId,
+    hiddenIds: initialHiddenIds,
+    axisById: initialAxisById,
+  }] = useState(() => initialChartStateFromUrl());
   const [selected, setSelected] = useState<SelectedMacroSeries[]>(initialSelected);
   const [rangeId, setRangeId] = useState(initialRangeId);
   const [hiddenIds, setHiddenIds] = useState<string[]>(initialHiddenIds);
+  const [axisById, setAxisById] = useState<Record<string, MacroAxisId>>(initialAxisById);
+  const [userPresets, setUserPresets] = useState<UserMacroPreset[]>(() => safeReadUserPresets());
+  const [presetName, setPresetName] = useState("나의 매크로 뷰");
+  const [presetNotice, setPresetNotice] = useState<string | null>(null);
   const [queryInput, setQueryInput] = useState("");
   const [query, setQuery] = useState("");
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
@@ -209,6 +341,14 @@ export default function MacroChartClient() {
   const visibleHiddenIds = useMemo(
     () => hiddenIds.filter((id) => selectedIds.has(id)),
     [hiddenIds, selectedIds],
+  );
+  const visibleAxisOverrides = useMemo(
+    () => Object.entries(axisById).filter(([id, axis]) => selectedIds.has(id) && axis !== "auto").length,
+    [axisById, selectedIds],
+  );
+  const rightAxisTitle = useMemo(
+    () => explicitRightAxisTitle(selectedDefinitions, axisById),
+    [axisById, selectedDefinitions],
   );
 
   useEffect(() => {
@@ -243,9 +383,11 @@ export default function MacroChartClient() {
     params.set("transform", selected.map((item) => item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw").join(","));
     params.set("range", rangeId);
     if (visibleHiddenIds.length) params.set("hidden", visibleHiddenIds.join(","));
+    const axis = axisParam(selected, axisById);
+    if (axis) params.set("axis", axis);
     const next = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", next);
-  }, [rangeId, selected, visibleHiddenIds]);
+  }, [axisById, rangeId, selected, visibleHiddenIds]);
 
   const filteredCatalog = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -258,10 +400,30 @@ export default function MacroChartClient() {
     );
   }, [query]);
 
+  const applyChartState = useCallback((state: InitialChartState) => {
+    const nextSelected = cloneSelection(state.selected).slice(0, MAX_SELECTED_SERIES);
+    const nextSelectedIds = new Set(nextSelected.map((item) => item.id));
+    setSelected(nextSelected);
+    setRangeId(MACRO_RANGE_IDS.has(state.rangeId) ? state.rangeId : DEFAULT_RANGE_ID);
+    setHiddenIds([...new Set(state.hiddenIds)].filter((id) => nextSelectedIds.has(id)));
+    setAxisById(
+      Object.fromEntries(
+        Object.entries(state.axisById).filter(([id, axis]) => nextSelectedIds.has(id) && axis !== "auto"),
+      ),
+    );
+    setLimitNotice(null);
+    setPresetNotice(null);
+  }, []);
+
   const toggleSeries = useCallback((id: string) => {
     if (selected.some((item) => item.id === id)) {
       setSelected((prev) => prev.filter((item) => item.id !== id));
       setHiddenIds((prev) => prev.filter((hiddenId) => hiddenId !== id));
+      setAxisById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       setLimitNotice(null);
       return;
     }
@@ -279,14 +441,70 @@ export default function MacroChartClient() {
     setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, transform } : item)));
   }, []);
 
+  const setAxis = useCallback((id: string, axis: MacroAxisId) => {
+    setAxisById((prev) => {
+      const next = { ...prev };
+      if (axis === "auto") delete next[id];
+      else next[id] = axis;
+      return next;
+    });
+  }, []);
+
   const applyPreset = useCallback((presetId: string) => {
     const preset = MACRO_CHART_PRESETS.find((item) => item.id === presetId);
     if (preset) {
-      setSelected(cloneSelection(preset.series));
-      setHiddenIds([]);
-      setLimitNotice(null);
+      applyChartState({
+        selected: cloneSelection(preset.series),
+        rangeId,
+        hiddenIds: [],
+        axisById: {},
+      });
     }
-  }, []);
+  }, [applyChartState, rangeId]);
+
+  const applyUserPreset = useCallback((preset: UserMacroPreset) => {
+    applyChartState({
+      selected: cloneSelection(preset.selected),
+      rangeId: preset.rangeId,
+      hiddenIds: preset.hiddenIds,
+      axisById: preset.axisById,
+    });
+  }, [applyChartState]);
+
+  const saveUserPreset = useCallback(() => {
+    if (!selected.length) {
+      setPresetNotice("시리즈를 먼저 선택하세요.");
+      return;
+    }
+    const name = (presetName.trim() || "나의 매크로 뷰").slice(0, 32);
+    const nextSelectedIds = new Set(selected.map((item) => item.id));
+    const nextPreset: UserMacroPreset = {
+      id: `user-${Date.now().toString(36)}`,
+      name,
+      selected: cloneSelection(selected),
+      rangeId,
+      hiddenIds: visibleHiddenIds,
+      axisById: Object.fromEntries(Object.entries(axisById).filter(([id]) => nextSelectedIds.has(id))),
+      updatedAt: new Date().toISOString(),
+    };
+    const next = [nextPreset, ...userPresets.filter((preset) => preset.name !== name)].slice(0, 8);
+    if (writeUserPresets(next)) {
+      setUserPresets(next);
+      setPresetNotice("프리셋 저장됨");
+    } else {
+      setPresetNotice("브라우저 저장소에 저장하지 못했습니다.");
+    }
+  }, [axisById, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
+
+  const deleteUserPreset = useCallback((presetId: string) => {
+    const next = userPresets.filter((preset) => preset.id !== presetId);
+    if (writeUserPresets(next)) {
+      setUserPresets(next);
+      setPresetNotice("프리셋 삭제됨");
+    } else {
+      setPresetNotice("브라우저 저장소를 갱신하지 못했습니다.");
+    }
+  }, [userPresets]);
 
   const handleHiddenSeriesChange = useCallback((nextHiddenIds: string[]) => {
     setHiddenIds([...new Set(nextHiddenIds)].filter((id) => selectedIds.has(id)));
@@ -373,7 +591,7 @@ export default function MacroChartClient() {
           ) : activeLoadState.status === "ready" && activeLoadState.series.length ? (
             <MarketChartFrame
               ariaLabel="매크로 시계열 비교 차트"
-              series={activeLoadState.series}
+              series={applyAxisOverrides(activeLoadState.series, axisById)}
               ranges={MACRO_RANGES}
               defaultRangeId={DEFAULT_RANGE_ID}
               rangeId={rangeId}
@@ -383,7 +601,7 @@ export default function MacroChartClient() {
               sortLabels
               heightClassName="h-[22rem] sm:h-[26rem] lg:h-[30rem]"
               yAxisTitle="기준값 / 지수"
-              y1AxisTitle="% / spread"
+              y1AxisTitle={rightAxisTitle}
               formatValue={formatValue}
               footnote={sourceSummary(selectedDefinitions)}
             />
@@ -399,7 +617,8 @@ export default function MacroChartClient() {
               selectedDefinitions.length ? sourceSummary(selectedDefinitions) : null,
               `기간 ${rangeId}`,
               visibleHiddenIds.length ? `${visibleHiddenIds.length}개 시리즈 숨김` : null,
-              "URL로 선택값·기간·숨김 상태 공유 가능",
+              visibleAxisOverrides ? `${visibleAxisOverrides}개 축 고정` : null,
+              "URL로 선택값·기간·숨김·축 상태 공유 가능",
             ]}
           >
             public data spine의 정적 JSON만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
@@ -460,12 +679,71 @@ export default function MacroChartClient() {
 
           <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
             <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-black text-slate-900">내 프리셋</h2>
+              <span className="text-[11px] font-bold text-slate-500">{userPresets.length}/8</span>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <label className="sr-only" htmlFor="macro-user-preset-name">
+                프리셋 이름
+              </label>
+              <input
+                id="macro-user-preset-name"
+                value={presetName}
+                onChange={(event) => setPresetName(event.target.value)}
+                maxLength={32}
+                className="min-h-10 min-w-0 flex-1 rounded-md border border-slate-200 px-3 text-xs font-bold text-slate-800 outline-none transition focus:border-brand-interactive"
+              />
+              <button
+                type="button"
+                onClick={saveUserPreset}
+                className="min-h-10 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
+              >
+                저장
+              </button>
+            </div>
+            <div className="mt-2 min-h-5 text-[11px] font-bold text-slate-500" role="status">
+              {presetNotice ?? "현재 선택·기간·숨김·축을 저장합니다."}
+            </div>
+            <div className="mt-2 space-y-2">
+              {userPresets.length ? (
+                userPresets.map((preset) => (
+                  <div key={preset.id} className="flex items-center gap-2 rounded-lg border border-slate-200 p-2">
+                    <button
+                      type="button"
+                      onClick={() => applyUserPreset(preset)}
+                      className="min-w-0 flex-1 text-left"
+                      title={preset.name}
+                    >
+                      <span className="block truncate text-xs font-black text-slate-800">{preset.name}</span>
+                      <span className="block truncate text-[11px] font-semibold text-slate-500">
+                        {preset.selected.length}개 · {preset.rangeId}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteUserPreset(preset.id)}
+                      className="min-h-8 shrink-0 rounded-md px-2 text-[11px] font-black text-slate-500 hover:bg-slate-100"
+                      aria-label={`${preset.name} 삭제`}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-lg bg-slate-50 p-3 text-xs font-semibold text-slate-500">저장한 프리셋이 없습니다.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-black text-slate-900">선택 시리즈</h2>
               <button
                 type="button"
                 onClick={() => {
                   setSelected([]);
                   setHiddenIds([]);
+                  setAxisById({});
                   setLimitNotice(null);
                 }}
                 className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-black text-slate-500 hover:border-brand-interactive hover:text-brand-interactive"
@@ -493,18 +771,30 @@ export default function MacroChartClient() {
                           제거
                         </button>
                       </div>
-                      <select
-                        value={current}
-                        onChange={(event) => setTransform(item.id, event.target.value as MacroValueTransform)}
-                        className="mt-2 min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700"
-                        aria-label={`${definition.shortLabel} 변환`}
-                      >
-                        {Object.entries(MACRO_TRANSFORM_LABELS).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                        <select
+                          value={current}
+                          onChange={(event) => setTransform(item.id, event.target.value as MacroValueTransform)}
+                          className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700"
+                          aria-label={`${definition.shortLabel} 변환`}
+                        >
+                          {Object.entries(MACRO_TRANSFORM_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={axisById[item.id] ?? "auto"}
+                          onChange={(event) => setAxis(item.id, event.target.value as MacroAxisId)}
+                          className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700"
+                          aria-label={`${definition.shortLabel} 축`}
+                        >
+                          <option value="auto">축 자동</option>
+                          <option value="left">좌축</option>
+                          <option value="right">우축</option>
+                        </select>
+                      </div>
                     </div>
                   );
                 })
