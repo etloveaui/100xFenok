@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
@@ -297,6 +297,56 @@ type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" |
 type StockTabItem = { id: StockTab; label: string; badge?: string };
 const FILINGS_TAB_BADGE = "AI 요약 · 200종목+";
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
+
+function StockTabsNav({
+  symbol,
+  tabs,
+  activeTab,
+  onSelect,
+  note,
+}: {
+  symbol: string;
+  tabs: StockTabItem[];
+  activeTab: StockTab;
+  onSelect: (tab: StockTab) => void;
+  note?: string | null;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return undefined;
+    const update = () => setCanScroll(node.scrollWidth > node.clientWidth + 1);
+    update();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    observer?.observe(node);
+    window.addEventListener("resize", update);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [tabs.length, note]);
+
+  return (
+    <div ref={ref} className={`stock-tabs ${canScroll ? "can-scroll" : ""}`} role="tablist" aria-label={`${symbol} 상세 탭`}>
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === t.id}
+          onClick={() => onSelect(t.id)}
+          className={`stock-tab ${activeTab === t.id ? "on" : ""}`}
+        >
+          <span className="block">{t.label}</span>
+          {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
+        </button>
+      ))}
+      {note ? <span className="stock-tab-note">{note}</span> : null}
+    </div>
+  );
+}
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -1166,22 +1216,13 @@ export default function StockDetailClient({
               </div>
             </div>
             <MarketQuickLinks className="stock-market-links" />
-            <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
-              {stockTabs.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeStockTab === t.id}
-                  onClick={() => setStockTab(t.id)}
-                  className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
-                >
-                  <span className="block">{t.label}</span>
-                  {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
-                </button>
-              ))}
-              {etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : null}
-            </div>
+            <StockTabsNav
+              symbol={symbol}
+              tabs={stockTabs}
+              activeTab={activeStockTab}
+              onSelect={setStockTab}
+              note={etfData === undefined ? "ETF 상세 로딩 중..." : null}
+            />
           </section>
           <div className="stock-body">
             {activeStockTab === "etf" ? (
@@ -1470,22 +1511,13 @@ export default function StockDetailClient({
           </div>
         </div>
         <MarketQuickLinks className="stock-market-links" />
-        <div className="stock-tabs" role="tablist" aria-label={`${symbol} 상세 탭`}>
-          {stockTabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={activeStockTab === t.id}
-              onClick={() => setStockTab(t.id)}
-              className={`stock-tab ${activeStockTab === t.id ? "on" : ""}`}
-            >
-              <span className="block">{t.label}</span>
-              {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
-            </button>
-          ))}
-          {isEtfAsset && etfData === undefined ? <span className="stock-tab-note">ETF 상세 로딩 중...</span> : !yfLoaded ? <span className="stock-tab-note">추가 지표 로딩 중...</span> : !yfAvailable ? <span className="stock-tab-note">추가 지표 준비 중</span> : null}
-        </div>
+        <StockTabsNav
+          symbol={symbol}
+          tabs={stockTabs}
+          activeTab={activeStockTab}
+          onSelect={setStockTab}
+          note={isEtfAsset && etfData === undefined ? "ETF 상세 로딩 중..." : !yfLoaded ? "추가 지표 로딩 중..." : !yfAvailable ? "추가 지표 준비 중" : null}
+        />
       </section>
 
       <div className="stock-body">

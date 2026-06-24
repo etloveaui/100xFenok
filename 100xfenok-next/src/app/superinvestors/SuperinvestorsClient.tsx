@@ -302,7 +302,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
   }
 
   return (
-    <div className="-mx-1 overflow-x-auto px-1">
+    <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="최신 보유 종목 표 가로 스크롤">
       <table className="w-full min-w-[480px] text-xs">
         <thead>
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -555,7 +555,7 @@ function TradeRankingPanel({
   return (
     <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
       <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-      <div className="mt-3 -mx-1 overflow-x-auto px-1">
+      <div className="scroll-hint-x mt-3 -mx-1 px-1" role="region" tabIndex={0} aria-label={`${title} 표 가로 스크롤`}>
         <table className="w-full min-w-[440px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -1011,7 +1011,7 @@ export default function SuperinvestorsClient({
           </div>
 
           <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
-            <div className="-mx-1 overflow-x-auto px-1" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
+            <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
@@ -1296,7 +1296,7 @@ export default function SuperinvestorsClient({
                     <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
                   </span>
                 </div>
-                <div className="-mx-1 overflow-x-auto px-1" tabIndex={0} aria-label="종목별 보유자 표 가로 스크롤">
+                <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="종목별 보유자 표 가로 스크롤">
                   <table className="w-full min-w-[720px] text-sm">
                     <thead>
                       <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">

@@ -21,7 +21,10 @@ export type ShellPage =
   | "superinvestors"
   | "portfolio";
 
-const NAV: Array<{ id: ShellPage; label: string; href: string; icon: ReactNode }> = [
+type NavItem = { id: ShellPage; label: string; href: string; icon: ReactNode };
+type MobileTabId = ShellPage | "more";
+
+const NAV: NavItem[] = [
   {
     id: "explore",
     label: "탐색",
@@ -107,8 +110,25 @@ const NAV: Array<{ id: ShellPage; label: string; href: string; icon: ReactNode }
   },
 ];
 
-// Mobile slots are real shell pages only (no dead "더보기" sheet yet).
-const TAB_IDS: ShellPage[] = ["explore", "market", "sectors", "etfs", "screener", "superinvestors", "portfolio"];
+const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
+  id: "more",
+  label: "더보기",
+  href: "#more",
+  icon: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+      <circle cx="10" cy="4.5" r="1.5" fill="currentColor" />
+      <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+      <circle cx="10" cy="15.5" r="1.5" fill="currentColor" />
+    </svg>
+  ),
+};
+
+const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
+const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors"];
+
+function navById(id: ShellPage): NavItem {
+  return NAV.find((item) => item.id === id)!;
+}
 
 interface TapeItem {
   label: string;
@@ -223,6 +243,7 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const [searching, setSearching] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [status, setStatus] = useState<{ dot: string; text: string }>(() => marketStatusKST());
 
   useEffect(() => {
@@ -233,6 +254,19 @@ export default function AppShell({
       clearInterval(t);
     };
   }, []);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [active]);
+
+  useEffect(() => {
+    if (!moreOpen) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMoreOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [moreOpen]);
 
   return (
     <>
@@ -325,15 +359,68 @@ export default function AppShell({
 
       {/* mobile bottom tab bar */}
       <nav className="tabbar">
-        {TAB_IDS.map((id) => {
-          const n = NAV.find((x) => x.id === id)!;
+        {PRIMARY_TAB_IDS.map((id) => {
+          const n = id === "more" ? MORE_TAB : navById(id);
+          if (id === "more") {
+            const moreActive = moreOpen || MORE_TAB_IDS.includes(active as ShellPage);
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-expanded={moreOpen}
+                aria-controls="mobile-more-sheet"
+                aria-haspopup="dialog"
+                onClick={() => setMoreOpen((v) => !v)}
+                className={`tab ${moreActive ? "on" : ""}`}
+              >
+                {n.icon} {n.label}
+              </button>
+            );
+          }
           return (
-            <TransitionLink key={id} href={n.href} className={`tab ${active && id === active ? "on" : ""}`}>
+            <TransitionLink
+              key={id}
+              href={n.href}
+              className={`tab ${active && id === active ? "on" : ""}`}
+              aria-current={active && id === active ? "page" : undefined}
+            >
               {n.icon} {n.label}
             </TransitionLink>
           );
         })}
       </nav>
+      {moreOpen ? (
+        <div id="mobile-more-sheet" className="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="더보기 메뉴">
+          <div className="mobile-more-backdrop" onClick={() => setMoreOpen(false)} aria-hidden="true" />
+          <div className="mobile-more-panel">
+            <div className="mobile-more-header">
+              <span>더보기</span>
+              <button type="button" onClick={() => setMoreOpen(false)} className="mobile-more-close" aria-label="닫기">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="mobile-more-list" aria-label="추가 메뉴">
+              {MORE_TAB_IDS.map((id) => {
+                const n = navById(id);
+                return (
+                  <TransitionLink
+                    key={id}
+                    href={n.href}
+                    className={`mobile-more-item ${active && id === active ? "on" : ""}`}
+                    onClick={() => setMoreOpen(false)}
+                    aria-current={active && id === active ? "page" : undefined}
+                  >
+                    <span className="mobile-more-icon">{n.icon}</span>
+                    <span className="mobile-more-label">{n.label}</span>
+                  </TransitionLink>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

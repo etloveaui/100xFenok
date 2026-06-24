@@ -316,7 +316,12 @@ export default function PortfolioClient() {
           <p className="mt-2 text-xs font-semibold text-slate-500">
             아래는 샘플 포트폴리오입니다. 실제 데이터를 입력하려면 포트폴리오를 만드세요.
           </p>
-          <div className="mt-3 -mx-1 overflow-x-auto px-1">
+          <div className="mt-3 grid gap-3 lg:hidden">
+            {buildSampleRows().map((row) => (
+              <MobileHoldingCard key={row.ticker} row={row} />
+            ))}
+          </div>
+          <div className="scroll-hint-x mt-3 -mx-1 hidden px-1 lg:block" role="region" tabIndex={0} aria-label="샘플 보유 종목 표 가로 스크롤">
             <HoldingsTable rows={buildSampleRows()} />
           </div>
           <div className="mt-3">
@@ -397,7 +402,16 @@ export default function PortfolioClient() {
       {/* Holdings table */}
       <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">보유 종목</h2>
-        <div className="mt-3 -mx-1 overflow-x-auto px-1">
+        <div className="mt-3 grid gap-3 lg:hidden">
+          {holdingRows.length === 0 ? (
+            <HoldingsEmptyState />
+          ) : (
+            holdingRows.map((row) => (
+              <MobileHoldingCard key={row.ticker} row={row} onDelete={handleDeleteHolding} />
+            ))
+          )}
+        </div>
+        <div className="scroll-hint-x mt-3 -mx-1 hidden px-1 lg:block" role="region" tabIndex={0} aria-label="보유 종목 표 가로 스크롤">
           <HoldingsTable rows={holdingRows} onDelete={handleDeleteHolding} />
         </div>
         {missingCount > 0 && (
@@ -410,17 +424,17 @@ export default function PortfolioClient() {
       {/* Add ticker form */}
       <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">종목 추가</h2>
-        <div className="mt-2 flex flex-wrap items-end gap-2">
-          <label className="flex flex-col gap-1">
+        <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+          <label className="flex w-full flex-col gap-1 sm:w-auto">
             <span className="text-[10px] font-bold text-slate-500">티커</span>
             <input
               value={newTicker}
               onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
               placeholder="AAPL"
-              className="h-9 w-24 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold uppercase text-slate-900 outline-none focus:border-brand-interactive"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold uppercase text-slate-900 outline-none focus:border-brand-interactive sm:h-9 sm:w-24 sm:px-2"
             />
           </label>
-          <label className="flex flex-col gap-1">
+          <label className="flex w-full flex-col gap-1 sm:w-auto">
             <span className="text-[10px] font-bold text-slate-500">수량</span>
             <input
               value={newShares}
@@ -429,10 +443,10 @@ export default function PortfolioClient() {
               min="0"
               step="any"
               placeholder="10"
-              className="h-9 w-20 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold text-slate-900 outline-none focus:border-brand-interactive"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 outline-none focus:border-brand-interactive sm:h-9 sm:w-20 sm:px-2"
             />
           </label>
-          <label className="flex flex-col gap-1">
+          <label className="flex w-full flex-col gap-1 sm:w-auto">
             <span className="text-[10px] font-bold text-slate-500">평단 ($)</span>
             <input
               value={newCost}
@@ -441,13 +455,13 @@ export default function PortfolioClient() {
               min="0"
               step="any"
               placeholder="150.00"
-              className="h-9 w-24 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold text-slate-900 outline-none focus:border-brand-interactive"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 outline-none focus:border-brand-interactive sm:h-9 sm:w-24 sm:px-2"
             />
           </label>
           <button
             type="button"
             onClick={handleAddHolding}
-            className="inline-flex min-h-9 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 sm:min-h-9"
           >
             추가
           </button>
@@ -574,6 +588,77 @@ interface HoldingRow extends Holding {
   weight: number | null;
 }
 
+function HoldingsEmptyState() {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center">
+      <p className="text-xs font-bold text-slate-500">보유 종목이 없습니다</p>
+    </div>
+  );
+}
+
+function MobileHoldingCard({
+  row,
+  onDelete,
+}: {
+  row: HoldingRow;
+  onDelete?: (ticker: string) => void;
+}) {
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <TransitionLink
+            href={`/stock/${encodeURIComponent(row.ticker)}`}
+            className="text-base font-black text-brand-interactive hover:underline"
+          >
+            {row.ticker}
+          </TransitionLink>
+          <p className="mt-0.5 text-xs font-bold text-slate-500">기기 저장 보유 종목</p>
+        </div>
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={() => onDelete(row.ticker)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg font-black text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+            aria-label={`${row.ticker} 삭제`}
+          >
+            ×
+          </button>
+        ) : null}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <div className="rounded-xl bg-slate-50 p-2">
+          <p className="text-[10px] font-black uppercase text-slate-500">수량</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.shares}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-2">
+          <p className="text-[10px] font-black uppercase text-slate-500">평단</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{fmt$(row.avg_cost)}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-2">
+          <p className="text-[10px] font-black uppercase text-slate-500">현재가</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.price != null ? fmt$(row.price) : "—"}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-2">
+          <p className="text-[10px] font-black uppercase text-slate-500">평가액</p>
+          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? fmt$(row.marketValue) : "—"}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+        <span className={`orbitron font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-400"}`}>
+          {row.gain != null ? fmt$(row.gain) : "—"}
+        </span>
+        <span className={`orbitron font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-400"}`}>
+          {row.gainPct != null ? fmtPct(row.gainPct) : "—"}
+        </span>
+        <span className="orbitron text-xs font-bold text-slate-500">
+          {row.weight != null ? `${(row.weight * 100).toFixed(1)}%` : "—"}
+        </span>
+      </div>
+    </article>
+  );
+}
+
 function HoldingsTable({
   rows,
   onDelete,
@@ -582,11 +667,7 @@ function HoldingsTable({
   onDelete?: (ticker: string) => void;
 }) {
   if (rows.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center">
-        <p className="text-xs font-bold text-slate-500">보유 종목이 없습니다</p>
-      </div>
-    );
+    return <HoldingsEmptyState />;
   }
 
   return (
@@ -641,7 +722,8 @@ function HoldingsTable({
                 <button
                   type="button"
                   onClick={() => onDelete(r.ticker)}
-                  className="text-[10px] font-black text-slate-400 transition hover:text-rose-600"
+                  className="inline-flex min-h-9 items-center rounded-lg px-2 text-[10px] font-black text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  aria-label={`${r.ticker} 삭제`}
                 >
                   삭제
                 </button>

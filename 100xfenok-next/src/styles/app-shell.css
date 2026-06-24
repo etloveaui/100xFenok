@@ -40,13 +40,10 @@
 .fnk-shell button{font-family:var(--font)}
 .fnk-shell svg{display:block}
 
-  /* #2 density — bake the owner's "125% zoom looks right" feel as the desktop default.
-   * Scoped to desktop >=1280px so the zoomed effective width stays >=1024px (the 2-col
-   * breakpoint) and mobile/tablet are untouched. `zoom` scales the whole shell uniformly,
-   * including the many hardcoded px font-sizes that a font-size bump alone cannot reach.
-   * Reversible: delete this block. [verify feel on desktop]. */
+  /* Desktop density compensation after removing non-standard `zoom`. */
 @media (min-width:1280px){
-  .fnk-shell{zoom:1.25}
+  .fnk-shell .content{font-size:17px}
+  .fnk-shell .panel-h h2{font-size:16px}
 }
 
   /* ───────────── LEFT RAIL (desktop) ───────────── */
@@ -75,7 +72,7 @@
 .fnk-shell .topbar .spacer{flex:1}
 .fnk-shell .mstatus{display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--c-ink-2); background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:var(--r-pill); padding:6px 12px; white-space:nowrap}
 .fnk-shell .mstatus .dot{width:7px; height:7px; border-radius:50%; background:var(--c-neutral)}
-.fnk-shell .ic-btn{width:38px; height:38px; border-radius:10px; background:transparent; border:1px solid transparent; color:var(--c-ink-2); display:grid; place-items:center; cursor:pointer; transition:.14s; position:relative}
+.fnk-shell .ic-btn{width:44px; height:44px; border-radius:10px; background:transparent; border:1px solid transparent; color:var(--c-ink-2); display:grid; place-items:center; cursor:pointer; transition:.14s; position:relative}
 .fnk-shell .ic-btn:hover{background:var(--c-surface-2); border-color:var(--c-line)}
 .fnk-shell .ic-btn svg{width:19px; height:19px}
 .fnk-shell .ic-btn .badge{position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%; background:var(--c-down); border:1.5px solid #fff}
@@ -237,7 +234,8 @@
 .fnk-shell .stock-chip.down{background:var(--c-down-soft); color:var(--c-down)}
 .fnk-shell .stock-price .delay{font-size:12px; color:var(--c-ink-4); padding-bottom:3px; white-space:nowrap}
 .fnk-shell .stock-market-links{justify-content:flex-start; border-top:1px solid var(--c-line-2); padding:var(--s3) var(--panel-pad) 0}
-.fnk-shell .stock-tabs{display:flex; align-items:flex-end; gap:var(--s1); padding:var(--s4) var(--panel-pad) 0; overflow-x:auto; scrollbar-width:none}
+.fnk-shell .stock-tabs{position:relative; display:flex; align-items:flex-end; gap:var(--s1); padding:var(--s4) var(--panel-pad) 0; overflow-x:auto; scrollbar-width:none; scroll-padding-right:var(--s6)}
+.fnk-shell .stock-tabs.can-scroll{box-shadow:inset -24px 0 18px -22px rgba(15,23,42,.38)}
 .fnk-shell .stock-tabs::-webkit-scrollbar{display:none}
 .fnk-shell .stock-tab{position:relative; flex:none; background:none; border:0; color:var(--c-ink-3); cursor:pointer; font-size:15px; font-weight:600; padding:10px var(--s3) 13px; white-space:nowrap; transition:.14s}
 .fnk-shell .stock-tab:hover{color:var(--c-ink-2)}
@@ -275,6 +273,9 @@
 .fnk-shell .data-shell-link:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
 .fnk-shell .data-shell-note{font-size:11px; font-weight:600; color:var(--c-ink-3); white-space:nowrap}
 .fnk-shell .data-shell-note.warn{color:var(--c-warn-ink-strong)}
+.fnk-shell .scroll-hint-x{position:relative; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; box-shadow:inset -22px 0 18px -22px rgba(15,23,42,.42)}
+.fnk-shell .scroll-hint-x:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
+.fnk-shell .scroll-hint-x::after{content:""; position:sticky; right:0; top:0; float:right; width:22px; min-height:1px; height:100%; pointer-events:none; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.96))}
 
   /* ───────────── RESPONSIVE: tablet+ ───────────── */
   @media(min-width:1024px){
@@ -322,10 +323,27 @@
   .fnk-shell .msearch .gs2 svg{width:18px; height:18px; color:var(--c-ink-3)}
   .fnk-shell .msearch .gs2 input{flex:1; border:0; outline:0; background:transparent; font-family:var(--font); font-size:15px}
 
-  .fnk-shell .tabbar{display:grid; position:fixed; bottom:0; left:0; right:0; z-index:40; grid-template-columns:repeat(7,minmax(0,1fr)); background:rgba(255,255,255,.94); backdrop-filter:blur(16px) saturate(1.4); border-top:1px solid var(--c-line); padding-bottom:var(--safe-b)}
-  .fnk-shell .tab{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-width:0; height:var(--tabbar-h); background:none; border:0; color:var(--c-ink-3); font-size:10px; font-weight:600; cursor:pointer}
+  .fnk-shell .tabbar{display:grid; position:fixed; bottom:0; left:0; right:0; z-index:40; grid-template-columns:repeat(5,minmax(0,1fr)); background:rgba(255,255,255,.94); backdrop-filter:blur(16px) saturate(1.4); border-top:1px solid var(--c-line); padding-bottom:var(--safe-b)}
+  .fnk-shell .tab{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-width:0; height:var(--tabbar-h); background:none; border:0; color:var(--c-ink-3); font-size:11px; font-weight:600; cursor:pointer; padding:0 2px}
   .fnk-shell .tab svg{width:22px; height:22px}
   .fnk-shell .tab.on{color:var(--c-brand)}
+  .fnk-shell .tab:focus-visible{outline:2px solid var(--c-brand); outline-offset:-4px}
+
+  .fnk-shell .mobile-more-sheet{position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end}
+  .fnk-shell .mobile-more-backdrop{position:absolute; inset:0; background:rgba(15,23,42,.38)}
+  .fnk-shell .mobile-more-panel{position:relative; background:var(--c-panel); border-radius:20px 20px 0 0; padding:var(--s4) var(--s4) calc(var(--s4) + var(--safe-b)); box-shadow:var(--sh-pop)}
+  .fnk-shell .mobile-more-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s3)}
+  .fnk-shell .mobile-more-header span{font-size:15px; font-weight:800; color:var(--c-ink)}
+  .fnk-shell .mobile-more-close{width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:10px; background:transparent; color:var(--c-ink-2)}
+  .fnk-shell .mobile-more-close:hover{background:var(--c-surface-2)}
+  .fnk-shell .mobile-more-close svg{width:20px; height:20px}
+  .fnk-shell .mobile-more-list{display:grid; gap:2px}
+  .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:12px; color:var(--c-ink); font-size:15px; font-weight:700}
+  .fnk-shell .mobile-more-item:hover{background:var(--c-surface-2)}
+  .fnk-shell .mobile-more-item.on{background:var(--c-brand-soft); color:var(--c-brand)}
+  .fnk-shell .mobile-more-icon{width:24px; height:24px; color:var(--c-ink-3)}
+  .fnk-shell .mobile-more-icon svg{width:24px; height:24px}
+  .fnk-shell .mobile-more-item.on .mobile-more-icon{color:var(--c-brand)}
 
   .fnk-shell .panel-h{padding:13px var(--s4)}
   .fnk-shell .data-shell-header{align-items:flex-start; padding:var(--s4)}
@@ -349,13 +367,6 @@
   .fnk-shell .mv-split{grid-template-columns:1fr}
   .fnk-shell .mv-split .mv-col + .mv-col{border-top:1px solid var(--c-line-2)}
   }
-
-@media(max-width:360px){
-  .fnk-shell .tab{font-size:9px}
-  .fnk-shell .tab svg{width:20px; height:20px}
-}
-
-
 
 /* chrome toggle — V1 navbar/footer/dock hidden while shell pages are mounted
    (same mechanism as body.design-v2; rule added in globals.css) */

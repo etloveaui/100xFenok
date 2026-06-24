@@ -319,8 +319,8 @@ function PerBandBar({ current, min, avg, max }: { current: number | null; min: n
   const isClampedLow = pct <= 0;
 
   return (
-    <div className="inline-flex min-w-[176px] flex-col items-start gap-1" title={title} role="img" aria-label={title}>
-      <div className="flex max-w-full items-center gap-1.5">
+    <div className="flex w-full min-w-0 max-w-full flex-col items-start gap-1" title={title} role="img" aria-label={title}>
+      <div className="flex max-w-full min-w-0 flex-wrap items-center gap-1.5">
         <div className="relative h-2 w-20 shrink-0 overflow-hidden rounded-full">
           {/* 3-zone shading */}
           <div className="absolute inset-y-0 left-0 bg-[var(--c-up-soft)]" style={{ width: `${BAND_CHEAP * 100}%` }} />
@@ -665,7 +665,7 @@ function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
 function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metricKey: ScreenerSortKey; preset?: ColumnPreset }) {
   return (
     <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-      <span className="block truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+      <span className="block truncate text-[11px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
         <MetricHelp label={columnLabel(metricKey)} metricKey={metricKey} align="right" />
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
@@ -673,6 +673,11 @@ function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metr
       </span>
     </div>
   );
+}
+
+function mobileMetricKeys(preset: ColumnPreset): ScreenerSortKey[] {
+  const keys = MOBILE_PRESET_KEYS[preset];
+  return preset === "value" ? keys.slice(0, 5) : keys.slice(0, 4);
 }
 
 function MobileStockCard({
@@ -693,7 +698,7 @@ function MobileStockCard({
   const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
   const actionTitle = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
   const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
-  const metrics = MOBILE_PRESET_KEYS[preset];
+  const metrics = mobileMetricKeys(preset);
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
       <button
@@ -702,9 +707,9 @@ function MobileStockCard({
         aria-controls={detailId}
         aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
         onClick={onToggle}
-        className="flex w-full min-w-0 items-start gap-3 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+        className="flex w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
       >
-        <span className="mt-1 w-4 shrink-0 text-center text-xs font-black text-slate-400" aria-hidden="true">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-black text-slate-500" aria-hidden="true">
           {expanded ? "-" : "+"}
         </span>
         <span className="min-w-0 flex-1">
@@ -745,7 +750,7 @@ function MobileStockCard({
       {preset === "estimate" ? (
         <MobileEstimateTrendSections stock={stock} />
       ) : (
-        <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+        <div className="grid grid-cols-2 gap-2 px-3 pb-3 sm:grid-cols-3">
           {metrics.map((metricKey) => (
             <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
           ))}
@@ -1259,7 +1264,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
               type="checkbox"
               checked={profitableOnly}
               onChange={(event) => setProfitableOnly(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-interactive"
+              className="h-5 w-5 min-h-5 min-w-5 rounded border-slate-300 text-brand-interactive"
             />
             흑자 종목만 (PER &gt; 0)
           </label>
