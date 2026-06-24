@@ -1,17 +1,19 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
+import { CHART_NAV_LABEL, CHART_ROUTE, EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from "@/lib/product-nav";
 
-type Page = "explore" | "market" | "sectors" | "etfs" | "screener" | "superinvestors" | "portfolio";
+type Page = "explore" | "market" | "sectors" | "etfs" | "screener" | "superinvestors" | "portfolio" | "chart";
 
 const PAGES: Array<{ id: Page; label: string; href: string }> = [
-  { id: "explore", label: "탐색", href: "/explore" },
+  { id: "explore", label: EXPLORE_NAV_LABEL, href: EXPLORE_ROUTE },
   { id: "market", label: "시장", href: "/market-valuation" },
   { id: "sectors", label: "섹터", href: "/sectors" },
   { id: "etfs", label: "ETF", href: "/etfs" },
   { id: "screener", label: "스크리너", href: "/screener" },
   { id: "superinvestors", label: "투자자", href: "/superinvestors" },
   { id: "portfolio", label: "포트폴리오", href: "/portfolio" },
+  { id: "chart", label: CHART_NAV_LABEL, href: CHART_ROUTE },
 ];
 
 export default function DataNav({ active }: { active: Page }) {

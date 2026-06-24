@@ -8,16 +8,17 @@ import MyWatchlistStrip from "./MyWatchlistStrip";
 import StockWorkbenchCard from "./StockWorkbenchCard";
 import MacroPlaybookCard from "./MacroPlaybookCard";
 import EtfUniverseCard from "./EtfUniverseCard";
+import { EXPLORE_META_TITLE, EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 
 export const metadata: Metadata = {
-  title: "탐색 | 100xFenok",
+  title: EXPLORE_META_TITLE,
   description: "시장 신호·체온계·일정·섹터·종목까지 — 오늘 시장을 30초에 파악하는 대시보드.",
 };
 
 export default function ExplorePage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="explore" title="탐색">
+      <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
         {/* 3-second read: signals + thermometer headline */}
         <SignalStrip />
 

@@ -1,6 +1,7 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
+import { SurfaceActionLink } from "@/components/ui/Surface";
 
 type MarketQuickLinksVariant = "pills" | "text";
 
@@ -64,9 +65,9 @@ export default function MarketQuickLinks({
   return (
     <nav className={["data-shell-section-nav", className].filter(Boolean).join(" ")} aria-label="시장 빠른 이동">
       {links.map((link) => (
-        <TransitionLink key={link.href} href={link.href} className="data-shell-link">
+        <SurfaceActionLink key={link.href} href={link.href}>
           {link.label}
-        </TransitionLink>
+        </SurfaceActionLink>
       ))}
     </nav>
   );

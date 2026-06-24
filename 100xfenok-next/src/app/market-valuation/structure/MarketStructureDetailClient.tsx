@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import TransitionLink from "@/components/TransitionLink";
+import { EXPLORE_NAV_LABEL } from "@/lib/product-nav";
 import {
   loadMarketStructureModel,
   type MarketStructureModel,
@@ -197,7 +198,7 @@ export default function MarketStructureDetailClient({
             시장 밸류에이션
           </TransitionLink>
           <TransitionLink href="/explore" className="data-shell-link">
-            탐색
+            {EXPLORE_NAV_LABEL}
           </TransitionLink>
         </div>
       </section>

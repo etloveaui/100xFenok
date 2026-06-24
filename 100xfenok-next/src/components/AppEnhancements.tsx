@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { EXPLORE_NAV_LABEL } from '@/lib/product-nav';
 
 type NetworkInformationLike = {
   effectiveType?: string;
@@ -33,7 +34,7 @@ const dockItems = [
   },
   {
     href: '/explore',
-    label: 'EXPLORE',
+    label: EXPLORE_NAV_LABEL,
     icon: '◇',
     isActive: (pathname: string) =>
       pathname === '/explore' ||

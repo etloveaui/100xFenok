@@ -4,10 +4,7 @@ import {
   type DataReadinessStatus,
   type DataState,
 } from "@/lib/data-state";
-
-function cx(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+import { SurfaceBadge, cx } from "@/components/ui/Surface";
 
 function noticeToneClass(status: DataReadinessStatus): string {
   const tone = dataStateTone(status);
@@ -17,12 +14,12 @@ function noticeToneClass(status: DataReadinessStatus): string {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
-function badgeToneClass(status: DataReadinessStatus): string {
+function badgeTone(status: DataReadinessStatus): "default" | "success" | "warn" | "danger" {
   const tone = dataStateTone(status);
-  if (tone === "ok") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (tone === "warn") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (tone === "error") return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-slate-200 bg-slate-50 text-slate-600";
+  if (tone === "ok") return "success";
+  if (tone === "warn") return "warn";
+  if (tone === "error") return "danger";
+  return "default";
 }
 
 export function DataStateBadge({
@@ -37,19 +34,16 @@ export function DataStateBadge({
   const asOf = formatAsOf(state.asOf);
   const text = asOf ? `${prefix ? `${prefix} ` : ""}${asOf}${state.status === "stale" ? " · 오래됨" : ""}` : state.label;
   return (
-    <span
+    <SurfaceBadge
+      tone={badgeTone(state.status)}
       data-testid="data-state-badge"
       data-data-state={state.status}
-      className={cx(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums",
-        badgeToneClass(state.status),
-        className,
-      )}
+      className={className}
       title={state.reason ?? state.detail}
     >
       <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
       {text}
-    </span>
+    </SurfaceBadge>
   );
 }
 

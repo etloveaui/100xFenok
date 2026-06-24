@@ -5,6 +5,7 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname } from 'next/navigation';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/client/body-scroll-lock';
+import { EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from '@/lib/product-nav';
 
 type DesktopMenuId = 'market' | 'analytics' | 'strategies';
 
@@ -407,9 +408,9 @@ export default function Navbar() {
                       <i className="fas fa-lightbulb text-xl text-amber-500 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Insights</span>
                     </Link>
-                    <Link href="/explore" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={EXPLORE_ROUTE} role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-700">탐색</span>
+                      <span className="text-xs font-bold text-slate-700">{EXPLORE_NAV_LABEL}</span>
                     </Link>
                   </div>
                 </div>
@@ -476,7 +477,7 @@ export default function Navbar() {
               <Link href="/market-valuation" className={`nav-icon ${isMarket ? 'active' : ''}`} title="시장" aria-label="시장">
                 <i className="fas fa-chart-bar" />
               </Link>
-              <Link href="/explore" className={`nav-icon ${isAnalytics ? 'active' : ''}`} title="탐색" aria-label="탐색">
+              <Link href={EXPLORE_ROUTE} className={`nav-icon ${isAnalytics ? 'active' : ''}`} title={EXPLORE_NAV_LABEL} aria-label={EXPLORE_NAV_LABEL}>
                 <i className="fas fa-compass" />
               </Link>
               <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="전략" aria-label="전략">
@@ -559,7 +560,7 @@ export default function Navbar() {
               <div className="ml-4 mt-1 space-y-1">
                 <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
                 <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
-                <Link href="/explore" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">탐색</Link>
+                <Link href={EXPLORE_ROUTE} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">{EXPLORE_NAV_LABEL}</Link>
               </div>
             </details>
 

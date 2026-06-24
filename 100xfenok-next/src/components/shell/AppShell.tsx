@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import BrandLogo from "@/components/BrandLogo";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
+import { CHART_NAV_LABEL, CHART_ROUTE, EXPLORE_NAV_LABEL } from "@/lib/product-nav";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
@@ -19,7 +20,8 @@ export type ShellPage =
   | "etfs"
   | "screener"
   | "superinvestors"
-  | "portfolio";
+  | "portfolio"
+  | "chart";
 
 type NavItem = { id: ShellPage; label: string; href: string; icon: ReactNode };
 type MobileTabId = ShellPage | "more";
@@ -27,7 +29,7 @@ type MobileTabId = ShellPage | "more";
 const NAV: NavItem[] = [
   {
     id: "explore",
-    label: "탐색",
+    label: EXPLORE_NAV_LABEL,
     href: "/explore",
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -108,6 +110,18 @@ const NAV: NavItem[] = [
       </svg>
     ),
   },
+  {
+    id: "chart",
+    label: CHART_NAV_LABEL,
+    href: CHART_ROUTE,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3.5" width="14" height="13" rx="2" />
+        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 15h8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
@@ -123,8 +137,8 @@ const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
   ),
 };
 
-const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
-const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors"];
+const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
+const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors", "portfolio"];
 
 function navById(id: ShellPage): NavItem {
   return NAV.find((item) => item.id === id)!;

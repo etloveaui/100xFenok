@@ -1,6 +1,6 @@
 "use client";
 
-import TransitionLink from "@/components/TransitionLink";
+import { SurfaceActionLink, SurfaceCallout } from "@/components/ui/Surface";
 import { macroContextFromParam, type MacroContextId } from "@/lib/macro-chart/context";
 
 interface MacroContextCardProps {
@@ -28,13 +28,10 @@ export default function MacroContextCard({ contextId, surface, className = "" }:
   ].filter((item): item is { label: string; href: string } => item !== null);
 
   return (
-    <section
-      className={`rounded-lg border border-sky-200 bg-sky-50/80 p-3 shadow-sm ${className}`}
-      aria-label="매크로 연결 맥락"
-    >
+    <SurfaceCallout tone="info" className={className} aria-label="매크로 연결 맥락">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-sky-700">
+          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--info)]">
             매크로 연결 · {SURFACE_LABEL[surface]}
           </p>
           <h2 className="mt-1 text-sm font-black text-slate-950">{context.label}</h2>
@@ -42,16 +39,12 @@ export default function MacroContextCard({ contextId, surface, className = "" }:
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           {actions.map((action) => (
-            <TransitionLink
-              key={action.href}
-              href={action.href}
-              className="inline-flex min-h-9 items-center rounded-md border border-sky-200 bg-white px-3 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
-            >
+            <SurfaceActionLink key={action.href} href={action.href}>
               {action.label}
-            </TransitionLink>
+            </SurfaceActionLink>
           ))}
         </div>
       </div>
-    </section>
+    </SurfaceCallout>
   );
 }

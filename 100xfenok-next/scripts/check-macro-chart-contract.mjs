@@ -79,6 +79,7 @@ async function inspectStaticContracts() {
     multichartHtmlSource,
     navbarSource,
     shellSource,
+    productNavSource,
   ] = await Promise.all([
     readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
@@ -93,6 +94,7 @@ async function inspectStaticContracts() {
     readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Navbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/product-nav.ts", import.meta.url), "utf8"),
   ]);
   const catalog = JSON.parse(catalogSource);
 
@@ -171,7 +173,7 @@ async function inspectStaticContracts() {
   if (!macroSource.includes("__meta_source") || !macroSource.includes("__meta_frequency") || !macroSource.includes("definitionMetaLabel")) {
     addFailure(failures, "source-frequency-honesty", "source/frequency UI and CSV metadata contract missing");
   }
-  for (const href of ['href="/radar"', 'href="/posts"', 'href="/explore"']) {
+  for (const href of ['href="/radar"', 'href="/posts"', 'href={EXPLORE_ROUTE}', 'EXPLORE_NAV_LABEL']) {
     if (!navbarSource.includes(href)) {
       addFailure(failures, "analytics-header-contract", `${href} missing from header analytics menu`);
     }
@@ -182,13 +184,14 @@ async function inspectStaticContracts() {
     }
   }
   for (const item of [
-    ['id: "explore"', 'href: "/explore"', 'label: "탐색"'],
+    ['id: "explore"', 'href: "/explore"', 'label: EXPLORE_NAV_LABEL'],
     ['id: "market"', 'href: "/market-valuation"', 'label: "시장"'],
     ['id: "sectors"', 'href: "/sectors"', 'label: "섹터"'],
     ['id: "etfs"', 'href: "/etfs"', 'label: "ETF"'],
     ['id: "screener"', 'href: "/screener"', 'label: "스크리너"'],
     ['id: "superinvestors"', 'href: "/superinvestors"', 'label: "투자자"'],
     ['id: "portfolio"', 'href: "/portfolio"', 'label: "포트폴리오"'],
+    ['id: "chart"', 'href: CHART_ROUTE', 'label: CHART_NAV_LABEL'],
   ]) {
     for (const token of item) {
       if (!shellSource.includes(token)) {
@@ -196,11 +199,16 @@ async function inspectStaticContracts() {
       }
     }
   }
+  for (const token of ['EXPLORE_NAV_LABEL = "워크벤치"', 'CHART_NAV_LABEL = "차트"', 'CHART_ROUTE = "/macro-chart"']) {
+    if (!productNavSource.includes(token)) {
+      addFailure(failures, "product-nav-labels", `${token} missing from product-nav constants`);
+    }
+  }
   if (
-    !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"]') ||
-    !shellSource.includes('const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors"]')
+    !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"]') ||
+    !shellSource.includes('const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors", "portfolio"]')
   ) {
-    addFailure(failures, "app-shell-mobile-tabs", "mobile primary/more tab contract must expose screener plus sectors/etfs/superinvestors");
+    addFailure(failures, "app-shell-mobile-tabs", "mobile primary [explore,market,chart,screener,more] + more [sectors,etfs,superinvestors,portfolio]");
   }
 
   return { route: "static:macro-chart", viewport: "static", status: null, failures };
