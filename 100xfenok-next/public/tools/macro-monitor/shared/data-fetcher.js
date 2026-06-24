@@ -39,10 +39,6 @@ class MacroDataFetcher {
     // 타임아웃
     this.timeout = 10000; // 10초
 
-    // 외부 API URLs
-    this.urls = {
-      fdicApi: 'https://api.fdic.gov/banks/financials'
-    };
   }
 
   // =========================================
@@ -643,47 +639,22 @@ class MacroDataFetcher {
   // =========================================
 
   /**
-   * FDIC Tier1 데이터 fetch (JSON 캐시 우선)
+   * FDIC Tier1 데이터 fetch (same-origin JSON only)
    * 경로: /data/macro/fdic-tier1.json
    * @returns {Promise<Array>} - [{ date, val }, ...]
    */
   async fetchFDICTier1() {
-    // 1. JSON 캐시 시도
     try {
       const basePath = this.getBasePath();
       const jsonUrl = window.location.origin + basePath + '/data/macro/fdic-tier1.json';
-      try {
-        const res = await this.fetchWithTimeout(jsonUrl);
-        if (res?.data?.length > 0) {
-          return res.data.map(d => ({ date: d.date, val: d.value }));
-        }
-      } catch (e) {
-        // Fall through to the API if the macro cache is unavailable.
+      const res = await this.fetchWithTimeout(jsonUrl);
+      if (res?.data?.length > 0) {
+        return res.data.map(d => ({ date: d.date, val: d.value }));
       }
+      console.warn('[DataFetcher] FDIC JSON empty');
+      return [];
     } catch (e) {
-      console.log('[DataFetcher] FDIC JSON 없음, API 폴백...');
-    }
-
-    // 2. API 폴백 (최근 20분기)
-    try {
-      const quarters = this.generateQuarters(20);
-      const results = [];
-
-      for (const q of quarters) {
-        try {
-          const url = `${this.urls.fdicApi}?limit=10000&fields=RBC1AAJ,RISDATE&filters=RISDATE:${q}`;
-          const json = await this.fetchWithTimeout(url);
-          const ratios = json?.data?.map(r => r.data?.RBC1AAJ).filter(v => v != null && !isNaN(v)) || [];
-          if (ratios.length > 0) {
-            const avg = ratios.reduce((a, b) => a + b, 0) / ratios.length;
-            results.push({ date: q, val: avg });
-          }
-        } catch (e) { /* 개별 분기 실패 무시 */ }
-      }
-
-      return results.sort((a, b) => a.date.localeCompare(b.date));
-    } catch (e) {
-      console.error('[DataFetcher] FDIC API error:', e);
+      console.error('[DataFetcher] FDIC JSON load failed:', e);
       return [];
     }
   }
@@ -791,26 +762,6 @@ class MacroDataFetcher {
    */
   getWorstStatus(statuses) {
     return getWorstStatus(statuses);
-  }
-
-  /**
-   * 분기 목록 생성 (FDIC용)
-   */
-  generateQuarters(count) {
-    const quarters = [];
-    const now = new Date();
-    let year = now.getFullYear();
-    let quarter = Math.ceil((now.getMonth() + 1) / 3);
-
-    for (let i = 0; i < count; i++) {
-      quarters.push(`${year}-${quarter.toString().padStart(2, '0')}-01`);
-      quarter--;
-      if (quarter < 1) {
-        quarter = 4;
-        year--;
-      }
-    }
-    return quarters;
   }
 
   /**

@@ -260,6 +260,66 @@ function connectionTitle(stock: ScreenerStock): string {
   return asOf.length ? asOf.join(" · ") : "연결 인덱스 확인됨";
 }
 
+function csvCell(value: unknown): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function buildConnectionCsv(rows: ScreenerStock[]): string {
+  const header = [
+    "ticker",
+    "name",
+    "sector",
+    "country",
+    "connection_count",
+    "market_facts",
+    "filings",
+    "sec_13f",
+    "index_membership",
+    "single_stock_etfs",
+    "service_count",
+    "profile_as_of",
+    "market_facts_as_of",
+    "filings_as_of",
+    "sec_13f_as_of",
+  ];
+  const body = rows.map((stock) => {
+    const connection = stock.connection;
+    const flags = connection?.flags;
+    return [
+      stock.ticker,
+      stock.name,
+      stock.sector,
+      stock.country,
+      connection?.count ?? "",
+      flags?.marketFacts === true ? "1" : "0",
+      flags?.filings === true ? "1" : "0",
+      flags?.smartMoney === true ? "1" : "0",
+      flags?.indexMembership === true ? "1" : "0",
+      flags?.singleStockEtfs === true ? "1" : "0",
+      connection?.serviceCount ?? "",
+      connection?.asOf?.profile ?? "",
+      connection?.asOf?.marketFacts ?? "",
+      connection?.asOf?.filings ?? "",
+      connection?.asOf?.sec13f ?? "",
+    ].map(csvCell).join(",");
+  });
+  return [header.join(","), ...body].join("\n");
+}
+
+function downloadConnectionCsv(rows: ScreenerStock[]) {
+  if (typeof window === "undefined" || rows.length === 0) return;
+  const blob = new Blob([buildConnectionCsv(rows)], { type: "text/csv;charset=utf-8" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `100xfenok-screener-connections-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 function ConnectionPills({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
   const connection = stock.connection;
   if (!connection) return <span className="text-slate-300">—</span>;
@@ -765,7 +825,13 @@ function MobileStockCard({
   );
 }
 
-export default function ScreenerClient({ initialSearch = "" }: { initialSearch?: string }) {
+export default function ScreenerClient({
+  initialSearch = "",
+  initialSector = "",
+}: {
+  initialSearch?: string;
+  initialSector?: string;
+}) {
   const {
     stocks: rawStocks,
     dataReady,
@@ -842,7 +908,7 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   }, [rawStocks, guruMap, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
-  const [sector, setSector] = useState("");
+  const [sector, setSector] = useState(initialSector);
   const [country, setCountry] = useState("");
   const [perMax, setPerMax] = useState("");
   const [forwardPerMax, setForwardPerMax] = useState("");
@@ -862,11 +928,16 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
   const [page, setPage] = useState(0);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
   const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
+  const [prevInitialSector, setPrevInitialSector] = useState(initialSector);
 
   if (prevInitialSearch !== initialSearch) {
     setPrevInitialSearch(initialSearch);
     setSearch(initialSearch);
     setExpandedTicker(initialSearch || null);
+  }
+  if (prevInitialSector !== initialSector) {
+    setPrevInitialSector(initialSector);
+    setSector(initialSector);
   }
 
   const [preset, setPreset] = useState<ColumnPreset>("basic");
@@ -1060,6 +1131,14 @@ export default function ScreenerClient({ initialSearch = "" }: { initialSearch?:
         </div>
         <div className="data-shell-head-actions">
           <DataStateBadge state={screenerDataState} />
+          <button
+            type="button"
+            onClick={() => downloadConnectionCsv(sorted)}
+            disabled={!connectionIndexReady || sorted.length === 0}
+            className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
+          >
+            연결 CSV
+          </button>
           <TransitionLink href="/sectors" className="data-shell-link">
             섹터
           </TransitionLink>

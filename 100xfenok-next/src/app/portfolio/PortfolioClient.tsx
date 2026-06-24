@@ -2,10 +2,23 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import DataStateNotice from "@/components/DataStateNotice";
+import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import { makeDataState } from "@/lib/data-state";
+import {
+  getStockConnection,
+  getStockServices,
+  loadStockConnectionIndex,
+  loadStockServicesIndex,
+  stockConnectionCount,
+  type StockConnectionEntry,
+  type StockConnectionIndex,
+  type StockServiceEtfLink,
+  type StockServicesEntry,
+  type StockServicesIndex,
+} from "@/lib/data-entity-graph/stock-index";
+import { stockConnectionFreshnessState } from "@/lib/data-entity-graph/freshness";
 import {
   usePortfolios,
   savePortfolios,
@@ -22,6 +35,10 @@ interface PriceDoc {
 const priceCache = new Map<string, number | null>();
 const pricePending = new Map<string, Promise<number | null>>();
 const analyzerProvider = new StaticStockAnalyzerDataProvider();
+
+function normalizeTicker(value: string | null | undefined): string {
+  return (value ?? "").trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
+}
 
 async function fetchPrice(ticker: string): Promise<number | null> {
   const symbol = ticker.trim().toUpperCase();
@@ -79,10 +96,12 @@ function newId(): string {
   return `p-${Date.now()}-${++idCounter}`;
 }
 
-export default function PortfolioClient() {
+export default function PortfolioClient({ initialTicker = "" }: { initialTicker?: string }) {
   const portfolios = usePortfolios();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [prices, setPrices] = useState<Map<string, number | null>>(new Map());
+  const [connectionIndex, setConnectionIndex] = useState<StockConnectionIndex | null | undefined>(undefined);
+  const [servicesIndex, setServicesIndex] = useState<StockServicesIndex | null | undefined>(undefined);
   const [exportText, setExportText] = useState("");
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -92,6 +111,7 @@ export default function PortfolioClient() {
   const [cashInput, setCashInput] = useState("");
   const [editingCash, setEditingCash] = useState(false);
   const cashRef = useRef<HTMLInputElement>(null);
+  const appliedInitialTickerRef = useRef("");
 
   const active = useMemo(
     () => portfolios.find((p) => p.id === activeId) ?? portfolios[0] ?? null,
@@ -99,6 +119,32 @@ export default function PortfolioClient() {
   );
 
   const isSample = active?.id === "sample";
+
+  useEffect(() => {
+    const normalized = normalizeTicker(initialTicker);
+    if (!normalized || appliedInitialTickerRef.current === normalized) return;
+    appliedInitialTickerRef.current = normalized;
+    setNewTicker(normalized);
+  }, [initialTicker]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    void Promise.all([
+      loadStockConnectionIndex(controller.signal),
+      loadStockServicesIndex(controller.signal),
+    ]).then(([stockIndex, stockServices]) => {
+      if (cancelled) return;
+      setConnectionIndex(stockIndex);
+      setServicesIndex(stockServices);
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (active && !editingCash) setCashInput(String(active.cash));
@@ -283,15 +329,20 @@ export default function PortfolioClient() {
   const holdingRows = useMemo(() => {
     if (!active) return [];
     return active.holdings.map((h) => {
-      const price = prices.get(h.ticker.trim().toUpperCase()) ?? null;
+      const ticker = normalizeTicker(h.ticker);
+      const price = prices.get(ticker) ?? null;
       const marketValue = price != null ? h.shares * price : null;
       const costBasis = h.shares * h.avg_cost;
       const gain = marketValue != null ? marketValue - costBasis : null;
       const gainPct = costBasis > 0 && gain != null ? gain / costBasis : null;
       const weight = grandTotal > 0 && marketValue != null ? marketValue / grandTotal : null;
-      return { ...h, price, marketValue, costBasis, gain, gainPct, weight };
+      const connection = connectionIndex === undefined ? undefined : getStockConnection(connectionIndex, ticker);
+      const services = servicesIndex === undefined ? undefined : getStockServices(servicesIndex, ticker);
+      return { ...h, ticker, price, marketValue, costBasis, gain, gainPct, weight, connection, services };
     });
-  }, [active, prices, grandTotal]);
+  }, [active, prices, grandTotal, connectionIndex, servicesIndex]);
+
+  const connectionSummary = useMemo(() => buildPortfolioConnectionSummary(holdingRows, connectionIndex), [holdingRows, connectionIndex]);
 
   if (portfolios.length === 0) {
     return (
@@ -398,6 +449,12 @@ export default function PortfolioClient() {
         <Kpi label="현금" value={fmt$(active?.cash ?? 0)} />
         <Kpi label="보유 종목" value={`${active?.holdings.length ?? 0}종목`} />
       </div>
+
+      <PortfolioConnectionPanel
+        rows={holdingRows}
+        summary={connectionSummary}
+        loading={connectionIndex === undefined || servicesIndex === undefined}
+      />
 
       {/* Holdings table */}
       <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
@@ -586,6 +643,67 @@ interface HoldingRow extends Holding {
   gain: number | null;
   gainPct: number | null;
   weight: number | null;
+  connection?: StockConnectionEntry | null;
+  services?: StockServicesEntry | null;
+}
+
+interface PortfolioConnectionSummary {
+  totalHoldings: number;
+  connectedHoldings: number;
+  missingHoldings: number;
+  filings: number;
+  smartMoney: number;
+  indexMembership: number;
+  singleStockEtfs: number;
+  serviceLinks: number;
+  sourceAsOf: StockConnectionIndex["source_as_of"] | null;
+}
+
+function countAnyConnection(row: HoldingRow): boolean {
+  const flags = row.connection?.flags;
+  return Boolean(
+    flags?.market_facts
+      || flags?.filings
+      || flags?.sec_13f
+      || flags?.index_membership
+      || flags?.single_stock_etfs,
+  );
+}
+
+function buildPortfolioConnectionSummary(
+  rows: HoldingRow[],
+  connectionIndex: StockConnectionIndex | null | undefined,
+): PortfolioConnectionSummary {
+  let connectedHoldings = 0;
+  let missingHoldings = 0;
+  let filings = 0;
+  let smartMoney = 0;
+  let indexMembership = 0;
+  let singleStockEtfs = 0;
+  let serviceLinks = 0;
+
+  for (const row of rows) {
+    const flags = row.connection?.flags;
+    if (row.connection === null) missingHoldings += 1;
+    if (countAnyConnection(row)) connectedHoldings += 1;
+    if (flags?.filings) filings += 1;
+    if (flags?.sec_13f) smartMoney += 1;
+    if (flags?.index_membership) indexMembership += 1;
+    if (flags?.single_stock_etfs) singleStockEtfs += 1;
+    serviceLinks += row.services?.single_stock_etfs?.length ?? row.connection?.service_count ?? 0;
+  }
+
+  return {
+    totalHoldings: rows.length,
+    connectedHoldings,
+    missingHoldings,
+    filings,
+    smartMoney,
+    indexMembership,
+    singleStockEtfs,
+    serviceLinks,
+    sourceAsOf: connectionIndex?.source_as_of ?? null,
+  };
 }
 
 function HoldingsEmptyState() {
@@ -593,6 +711,249 @@ function HoldingsEmptyState() {
     <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center">
       <p className="text-xs font-bold text-slate-500">보유 종목이 없습니다</p>
     </div>
+  );
+}
+
+function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string {
+  const tickers = links.map((link) => normalizeTicker(link.ticker)).filter(Boolean);
+  if (tickers.length >= 2) return `/etfs/compare?tickers=${encodeURIComponent(tickers.slice(0, 4).join(","))}`;
+  if (tickers.length === 1) return links[0]?.route || `/etfs/${encodeURIComponent(tickers[0])}`;
+  return "/etfs";
+}
+
+function ConnectionActionLink({
+  href,
+  children,
+  tone = "slate",
+}: {
+  href: string;
+  children: React.ReactNode;
+  tone?: "slate" | "emerald" | "violet" | "cyan";
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-white text-slate-700",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    violet: "border-violet-200 bg-violet-50 text-violet-700",
+    cyan: "border-cyan-200 bg-cyan-50 text-cyan-700",
+  }[tone];
+  return (
+    <TransitionLink
+      href={href}
+      className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${toneClass}`}
+    >
+      {children}
+    </TransitionLink>
+  );
+}
+
+function HoldingConnectionActions({ row }: { row: HoldingRow }) {
+  const flags = row.connection?.flags;
+  const etfLinks = row.services?.single_stock_etfs ?? [];
+  const etfHref = buildSingleStockEtfHref(etfLinks);
+
+  if (row.connection === undefined) {
+    return <span className="text-[10px] font-bold text-slate-600">연결 확인 중</span>;
+  }
+  if (!row.connection) {
+    return <span className="text-[10px] font-bold text-slate-600">연결 데이터 없음</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      <ConnectionActionLink href={`/stock/${encodeURIComponent(row.ticker)}`}>상세</ConnectionActionLink>
+      {flags?.filings ? (
+        <ConnectionActionLink href={`/stock/${encodeURIComponent(row.ticker)}?tab=filings`} tone="emerald">
+          공시
+        </ConnectionActionLink>
+      ) : null}
+      {flags?.sec_13f ? (
+        <ConnectionActionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(row.ticker)}`} tone="violet">
+          13F
+        </ConnectionActionLink>
+      ) : null}
+      {flags?.single_stock_etfs ? (
+        <ConnectionActionLink href={etfHref} tone="cyan">
+          ETF{etfLinks.length ? ` ${etfLinks.length}` : ""}
+        </ConnectionActionLink>
+      ) : null}
+      <ConnectionActionLink href={`/screener?ticker=${encodeURIComponent(row.ticker)}`}>스크리너</ConnectionActionLink>
+    </div>
+  );
+}
+
+function HoldingConnectionFreshness({ row }: { row: HoldingRow }) {
+  const entry = row.connection;
+  if (!entry) return null;
+  const etfAsOf = row.services?.as_of?.etf_universe
+    ?? row.services?.single_stock_etfs?.find((link) => typeof link.as_of?.etf_universe === "string")?.as_of?.etf_universe
+    ?? null;
+  const badges = [
+    entry.flags?.market_facts ? { key: "market_facts" as const, asOf: entry.as_of?.market_facts } : null,
+    entry.flags?.filings ? { key: "filings" as const, asOf: entry.as_of?.filings } : null,
+    entry.flags?.sec_13f ? { key: "sec_13f" as const, asOf: entry.as_of?.sec_13f } : null,
+    entry.flags?.single_stock_etfs ? { key: "etf_universe" as const, asOf: etfAsOf } : null,
+  ].filter(Boolean) as Array<{ key: "market_facts" | "filings" | "sec_13f" | "etf_universe"; asOf?: string | null }>;
+
+  if (!badges.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {badges.map((badge) => (
+        <DataStateBadge
+          key={badge.key}
+          state={stockConnectionFreshnessState(badge.key, badge.asOf)}
+          prefix=""
+          className="px-1.5 py-0.5"
+        />
+      ))}
+    </div>
+  );
+}
+
+function HoldingConnectionMini({ row }: { row: HoldingRow }) {
+  const entry = row.connection;
+  if (entry === undefined) return <span className="text-[10px] font-bold text-slate-600">확인 중</span>;
+  if (!entry) return <span className="text-[10px] font-bold text-slate-600">없음</span>;
+  const flags = entry.flags ?? {};
+  const items = [
+    flags.market_facts ? "시세" : null,
+    flags.filings ? "공시" : null,
+    flags.sec_13f ? "13F" : null,
+    flags.index_membership ? "지수" : null,
+    flags.single_stock_etfs ? `ETF${row.services?.single_stock_etfs?.length ? ` ${row.services.single_stock_etfs.length}` : ""}` : null,
+  ].filter((item): item is string => Boolean(item));
+  return (
+    <span className="flex flex-wrap gap-1">
+      <span className="orbitron rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
+        {stockConnectionCount(entry) ?? items.length}
+      </span>
+      {items.slice(0, 3).map((item) => (
+        <span key={item} className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-600">
+          {item}
+        </span>
+      ))}
+      {items.length > 3 ? (
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-600">
+          +{items.length - 3}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function PortfolioConnectionPanel({
+  rows,
+  summary,
+  loading,
+}: {
+  rows: HoldingRow[];
+  summary: PortfolioConnectionSummary;
+  loading: boolean;
+}) {
+  if (rows.length === 0) return null;
+
+  const sourceBadges = [
+    { key: "market_facts" as const, asOf: summary.sourceAsOf?.market_facts },
+    { key: "filings" as const, asOf: summary.sourceAsOf?.edgar_summaries },
+    { key: "sec_13f" as const, asOf: summary.sourceAsOf?.sec_13f },
+    { key: "etf_universe" as const, asOf: summary.sourceAsOf?.etf_universe },
+  ];
+
+  return (
+    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-sm font-black tracking-tight text-slate-900">데이터 연결 서비스</h2>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+            보유 종목에서 공시, 13F, 단일종목 ETF, 스크리너 화면으로 바로 이동합니다.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {loading ? (
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-500">연결 인덱스 확인 중</span>
+          ) : (
+            sourceBadges.map((badge) => (
+              <DataStateBadge
+                key={badge.key}
+                state={stockConnectionFreshnessState(badge.key, badge.asOf)}
+                prefix=""
+                className="px-1.5 py-0.5"
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-5">
+        <Kpi label="연결 보유" value={`${summary.connectedHoldings}/${summary.totalHoldings}`} />
+        <Kpi label="공시" value={`${summary.filings}종목`} />
+        <Kpi label="13F" value={`${summary.smartMoney}종목`} />
+        <Kpi label="단일종목 ETF" value={`${summary.singleStockEtfs}종목`} />
+        <Kpi label="ETF 링크" value={`${summary.serviceLinks}개`} />
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {rows.map((row) => {
+          const etfLinks = row.services?.single_stock_etfs ?? [];
+          const missing = row.connection === null;
+          return (
+            <article key={row.ticker} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <TransitionLink
+                      href={`/stock/${encodeURIComponent(row.ticker)}`}
+                      className="text-sm font-black text-brand-interactive hover:underline"
+                    >
+                      {row.ticker}
+                    </TransitionLink>
+                    {row.connection?.canonical_sector ? (
+                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-500">
+                        {row.connection.canonical_sector}
+                      </span>
+                    ) : null}
+                    {row.connection?.confidence?.label ? (
+                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-500">
+                        신뢰 {row.connection.confidence.label}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+                    {missing ? "연결 인덱스에 없는 ticker입니다. 가격 캐시만 사용합니다." : row.connection?.label ?? "보유 종목 연결 확인"}
+                  </p>
+                </div>
+                <HoldingConnectionActions row={row} />
+              </div>
+              <div className="mt-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <HoldingConnectionFreshness row={row} />
+                {etfLinks.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {etfLinks.slice(0, 4).map((link) => (
+                      <TransitionLink
+                        key={link.ticker}
+                        href={link.route || `/etfs/${encodeURIComponent(link.ticker)}`}
+                        className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[10px] font-black text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                        title={[link.label ?? link.ticker, link.raw_underlying ? `분류 원문 ${link.raw_underlying}` : null].filter(Boolean).join(" · ")}
+                      >
+                        {link.ticker}
+                      </TransitionLink>
+                    ))}
+                    {etfLinks.length > 4 ? (
+                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-500">
+                        +{etfLinks.length - 4}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
+        연결은 관련 데이터 화면으로 이동하는 서비스 링크이며 매수·매도 추천이 아닙니다. 포트폴리오 입력값은 이 브라우저에만 저장됩니다.
+      </p>
+    </section>
   );
 }
 
@@ -625,6 +986,9 @@ function MobileHoldingCard({
             ×
           </button>
         ) : null}
+      </div>
+      <div className="mt-3">
+        <HoldingConnectionMini row={row} />
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-slate-50 p-2">
@@ -671,10 +1035,11 @@ function HoldingsTable({
   }
 
   return (
-    <table className="w-full min-w-[640px] text-xs">
+    <table className="w-full min-w-[760px] text-xs">
       <thead>
         <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
           <th className="px-2 py-2 text-left">티커</th>
+          <th className="px-2 py-2 text-left">연결</th>
           <th className="px-2 py-2 text-right">수량</th>
           <th className="px-2 py-2 text-right">평단</th>
           <th className="px-2 py-2 text-right">현재가</th>
@@ -695,6 +1060,9 @@ function HoldingsTable({
               >
                 {r.ticker}
               </TransitionLink>
+            </td>
+            <td className="px-2 py-2">
+              <HoldingConnectionMini row={r} />
             </td>
             <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-700">
               {r.shares}
@@ -757,6 +1125,8 @@ function buildSampleRows(): HoldingRow[] {
       gain: null,
       gainPct: null,
       weight: null,
+      connection: null,
+      services: null,
     };
   });
 }

@@ -1992,16 +1992,24 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
 
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 p-4">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
           종목 상세
         </span>
-        <TransitionLink
-          href={`/stock/${encodeURIComponent(ticker)}`}
-          className="text-[10px] font-black text-brand-interactive hover:underline"
-        >
-          전체 화면 →
-        </TransitionLink>
+        <div className="flex flex-wrap items-center gap-2">
+          <TransitionLink
+            href={`/portfolio?ticker=${encodeURIComponent(ticker)}`}
+            className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[10px] font-black text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive"
+          >
+            포트폴리오
+          </TransitionLink>
+          <TransitionLink
+            href={`/stock/${encodeURIComponent(ticker)}`}
+            className="inline-flex min-h-8 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[10px] font-black text-brand-interactive transition hover:bg-brand-interactive/10"
+          >
+            전체 화면
+          </TransitionLink>
+        </div>
       </div>
       <StockDetailBoundary ticker={ticker}>
         <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />

@@ -18,10 +18,11 @@ function firstParam(value: string | string[] | undefined): string {
 export default async function ScreenerPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialSearch = firstParam(params.ticker ?? params.q).trim().toUpperCase();
+  const initialSector = firstParam(params.sector).trim();
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title="스크리너">
-        <ScreenerClient initialSearch={initialSearch} />
+        <ScreenerClient initialSearch={initialSearch} initialSector={initialSector} />
       </AppShell>
     </div>
   );

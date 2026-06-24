@@ -47,6 +47,17 @@ const expectedPolicy = expectedEntityKeyPolicy();
 const expectedPolicyJson = JSON.stringify(expectedPolicy);
 const allowedConfidenceLabels = new Set(["high", "medium", "low", "unknown"]);
 const allowedResolutionMethods = new Set(["direct", "alias", "regex"]);
+const allowedServiceFlags = new Set([
+  "screener",
+  "stock_detail",
+  "filings",
+  "smart_money",
+  "index_membership",
+  "etf_center",
+  "leveraged",
+  "inverse",
+  "single_stock",
+]);
 
 assert(graph.schema_version === "data-entity-graph/v1", "schema_version must be data-entity-graph/v1", errors);
 assert(typeof graph.generated_at === "string", "generated_at is required", errors);
@@ -126,6 +137,12 @@ for (const stock of nodeGroups.stocks || []) {
   assert(stock.source_links?.stock_action_index === true, `${stock.id}: stock_action_index link is required`, errors);
   assert(typeof stock.as_of?.profile === "string", `${stock.id}: profile as_of is required`, errors);
   assert(Array.isArray(stock.relations), `${stock.id}: relations are required`, errors);
+  assert(Array.isArray(stock.service_flags), `${stock.id}: service_flags are required`, errors);
+  for (const flag of stock.service_flags || []) {
+    assert(allowedServiceFlags.has(flag), `${stock.id}: unknown service flag ${flag}`, errors);
+  }
+  assert(stock.service_flags?.includes("screener"), `${stock.id}: stock service flags must include screener`, errors);
+  assert(stock.service_flags?.includes("stock_detail"), `${stock.id}: stock service flags must include stock_detail`, errors);
 }
 
 for (const etf of nodeGroups.etfs || []) {
@@ -133,6 +150,11 @@ for (const etf of nodeGroups.etfs || []) {
   assert(etf.source_links?.etf_universe === true, `${etf.id}: etf_universe link is required`, errors);
   assert(typeof etf.as_of?.etf_universe === "string", `${etf.id}: etf_universe as_of is required`, errors);
   assert(allowedConfidenceLabels.has(etf.confidence?.label), `${etf.id}: ETF confidence label must be known`, errors);
+  assert(Array.isArray(etf.service_flags), `${etf.id}: ETF service_flags are required`, errors);
+  for (const flag of etf.service_flags || []) {
+    assert(allowedServiceFlags.has(flag), `${etf.id}: unknown service flag ${flag}`, errors);
+  }
+  assert(etf.service_flags?.includes("etf_center"), `${etf.id}: ETF service flags must include etf_center`, errors);
 }
 
 for (const node of [...(nodeGroups.stocks || []), ...(nodeGroups.etfs || [])]) {
@@ -164,6 +186,20 @@ for (const [ticker, row] of Object.entries(stockServices.stocks || {})) {
       assert(etf.raw_underlying.toUpperCase().includes(etf.canonical_underlying_ticker), `${ticker}: regex-resolved ETF should include ticker token in raw_underlying: ${etf.ticker}`, errors);
     }
   }
+}
+
+for (const [ticker, row] of Object.entries(stockIndex.stocks || {})) {
+  const flags = row.flags || {};
+  const expectedConnectionCount = [
+    flags.market_facts,
+    flags.filings,
+    flags.sec_13f,
+    flags.index_membership,
+  ].filter(Boolean).length;
+  const serviceLinks = stockServices.stocks?.[ticker]?.single_stock_etfs || [];
+  assert(row.connection_count === expectedConnectionCount, `${ticker}: connection_count must count core 4 sources only`, errors);
+  assert((row.service_count || 0) === serviceLinks.length, `${ticker}: service_count must match stock services single_stock_etfs length`, errors);
+  assert(Boolean(flags.single_stock_etfs) === serviceLinks.length > 0, `${ticker}: single_stock_etfs flag must match service sidecar`, errors);
 }
 
 if (errors.length) {

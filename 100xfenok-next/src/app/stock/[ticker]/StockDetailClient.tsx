@@ -28,6 +28,7 @@ import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
 import { formatSignedPercent } from "@/lib/format";
 import { makeDataState } from "@/lib/data-state";
+import { stockConnectionFreshnessState, type StockConnectionFreshnessSource } from "@/lib/data-entity-graph/freshness";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
@@ -881,12 +882,12 @@ function StockConnectionCard({
     flags.single_stock_etfs ? { label: `ETF${etfCount ? ` ${etfCount}` : ""}`, tone: "border-cyan-200 bg-cyan-50 text-cyan-700", href: etfCompareHref } : null,
   ].filter(Boolean) as Array<{ label: string; tone: string; href: string | null }>;
   const asOfRows = [
-    ["프로필", entry.as_of?.profile],
-    ["시장팩트", entry.as_of?.market_facts],
-    ["공시", entry.as_of?.filings],
-    ["13F", entry.as_of?.sec_13f],
-    ["ETF", services?.as_of?.etf_universe],
-  ].filter(([, value]) => typeof value === "string" && value.length > 0);
+    { label: "프로필", value: entry.as_of?.profile, source: "profile" },
+    { label: "시장팩트", value: entry.as_of?.market_facts, source: "market_facts" },
+    { label: "공시", value: entry.as_of?.filings, source: "filings" },
+    { label: "13F", value: entry.as_of?.sec_13f, source: "sec_13f" },
+    { label: "ETF", value: services?.as_of?.etf_universe, source: "etf_universe" },
+  ].filter((row): row is { label: string; value: string; source: StockConnectionFreshnessSource } => typeof row.value === "string" && row.value.length > 0);
 
   return (
     <section className="panel stock-section">
@@ -900,22 +901,26 @@ function StockConnectionCard({
             <TransitionLink
               key={item.label}
               href={item.href}
-              className={`rounded-full border px-2.5 py-1 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${item.tone}`}
+              className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${item.tone}`}
             >
               {item.label}
             </TransitionLink>
           ) : (
-            <span key={item.label} className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${item.tone}`}>
+            <span key={item.label} className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black ${item.tone}`}>
               {item.label}
             </span>
           ))}
         </div>
         {asOfRows.length > 0 ? (
-          <div className={compact ? "grid gap-1 text-[10px]" : "grid gap-1 text-xs"}>
-            {asOfRows.map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between gap-2 font-semibold text-slate-500">
-                <span>{label}</span>
-                <span className="orbitron tabular-nums text-slate-700">{fmtDateish(value)}</span>
+          <div className={compact ? "grid gap-1.5 text-[10px]" : "grid gap-1.5 text-xs"}>
+            {asOfRows.map((row) => (
+              <div key={row.label} className="flex flex-wrap items-center justify-between gap-2 font-semibold text-slate-500">
+                <span>{row.label}</span>
+                <DataStateBadge
+                  state={stockConnectionFreshnessState(row.source, row.value)}
+                  prefix=""
+                  className="px-1.5 py-0.5"
+                />
               </div>
             ))}
           </div>
@@ -926,7 +931,7 @@ function StockConnectionCard({
               <TransitionLink
                 key={etf.ticker}
                 href={etf.route || `/etfs/${encodeURIComponent(etf.ticker)}`}
-                className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-2 text-[10px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
                 title={[
                   etf.label ?? etf.ticker,
                   etf.raw_underlying ? `분류 원문 ${etf.raw_underlying}` : null,
@@ -1314,6 +1319,9 @@ export default function StockDetailClient({
       : "표시할 가격 데이터를 찾지 못했습니다.",
     asOf: typeof marketFacts?.generated_at === "string" ? marketFacts.generated_at : null,
   });
+  const sectorFilterHref = row?.sector
+    ? `/screener?sector=${encodeURIComponent(row.sector)}`
+    : "/screener";
 
   function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
@@ -1473,6 +1481,7 @@ export default function StockDetailClient({
         <footer className="stock-footer">
           <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
           <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
+          <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
         </footer>
       </div>
     );
@@ -1555,10 +1564,10 @@ export default function StockDetailClient({
             </div>
             {canonical ? (
               <div className="mb-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-700">
+                <TransitionLink href={sectorFilterHref} className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: sectorColor(canonical) }} />
                   {sectorLabelKo(canonical)}
-                </span>
+                </TransitionLink>
               </div>
             ) : null}
             {row && !rowLoading ? (
