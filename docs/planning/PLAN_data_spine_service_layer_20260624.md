@@ -48,13 +48,14 @@
 - [x] P0: add an initial 30-series macro catalog plus pure alignment/transform helpers for raw, rebase100, YoY, and period-change transforms.
 - [x] P1: add native `/macro-chart` route with three default presets, searchable picker, URL state, CSV export, and legacy `/multichart` redirect.
 - [x] P1a.5: harden `/macro-chart` as a public service route with mobile-first chart/picker layout, URL state for `range` + hidden series, explicit 8-series cap copy, search debounce, loading/error/retry affordances, CSV smoke, and `qa:macro-chart` contract coverage.
+- [x] P2: add localStorage user presets, explicit auto/left/right axis controls, keyed axis URL round-trip, storage/corruption guards, saved preset QA, and Explore macro playbook entry points.
 - [ ] P1b: decide whether Chart.js `TimeScale` + adapter is worth adding. Current implementation intentionally keeps ISO category labels to avoid a new dependency/install boundary.
-- [ ] P2: add localStorage user presets and richer axis controls.
 - [ ] P3: add brush/zoom, crosshair sync, formula series, and PNG export.
 
 ## Phase P9-E — Product Affordance Deepening
 
 - [x] Add screener row selection with page select, filtered-result select, selected connection CSV, and selected single-stock ETF compare action.
+- [x] Add Explore macro playbook entry points into curated `/macro-chart` routes so the service is reachable from the discovery workflow.
 - [ ] Continue Explore/Stock/ETF polish only where it strengthens existing service navigation. Avoid adding graph generation work unless a product surface needs a smaller artifact.
 
 ## Phase P9-F — Observability and Provider Policy
@@ -75,7 +76,7 @@
 - Scoped lint for touched product/data files
 - `npm run build`
 - Browser smoke: `/portfolio?ticker=NVDA`, `/screener?sector=반도체`, `/stock/NVDA`, `/etfs/SPY`
-- Macro smoke: `/macro-chart`, `/multichart` redirect, CSV export, mobile picker, share URL `range` + hidden-series round trip.
+- Macro smoke: `/macro-chart`, `/multichart` redirect, CSV export, mobile picker, share URL `range` + hidden-series + keyed axis round trip, saved user preset apply, corrupted saved hidden-state handling, Explore playbook links.
 - Mobile/a11y smoke: at least `/portfolio`, `/screener`, `/stock/NVDA`
 
 ## Notes
@@ -83,4 +84,4 @@
 - P9-C is service scope, not recommendation scope. Copy must frame graph links as data navigation and provenance, not buy/sell advice.
 - Missing or typo tickers in a local portfolio must degrade to "connection data unavailable" without breaking price evaluation.
 - The stock index payload is about 1 MB; use the existing cached loader and do not fetch per holding.
-- `/macro-chart` reads only static `/data/...json` files. Time-axis and new dependency work is intentionally deferred until the install/runtime tradeoff is explicit.
+- `/macro-chart` reads only static `/data/...json` files. Time-axis and new dependency work is intentionally deferred until the install/runtime tradeoff is explicit. User-saved chart state remains browser-local and does not introduce a server-side portfolio or account sync path.

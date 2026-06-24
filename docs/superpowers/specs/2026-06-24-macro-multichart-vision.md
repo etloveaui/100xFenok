@@ -24,9 +24,12 @@ surface.
 - P1a.5: mobile-first chart/picker layout, share URL state for `range` and hidden
   series, explicit 8-series cap behavior, search debounce, retry/error copy, CSV
   smoke, and `qa:macro-chart` contract coverage.
+- P2: browser-local saved analysis presets, keyed axis URL state, auto/left/right
+  axis controls, localStorage write/corruption guards, dynamic right-axis title,
+  Explore macro playbook entry points, and `qa:macro-chart` coverage for preset
+  save/apply plus corrupted saved state.
 
 ## Deferred
 
 - P1b: decide whether Chart.js `TimeScale` + adapter is worth the dependency.
-- P2: saved user presets and richer axis controls.
 - P3: brush/zoom, crosshair sync, formula series, and PNG export.
