@@ -1,10 +1,17 @@
 import { chromium } from "playwright";
+import { readFile } from "node:fs/promises";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MACRO_CHART_STRICT !== "0";
+const expectedMaxSeries = 8;
 const sharedRoute =
   process.env.QA_MACRO_CHART_ROUTE ||
   "/macro-chart?series=sp500,vix,tga,DGS10,M2SL,WALCL,WRESBAL,HY_spread&transform=rebase100,raw,rebase100,raw,yoy,rebase100,rebase100,raw&range=10Y&hidden=vix";
+const expectedSharedParams = new URL(sharedRoute, "https://qa.local").searchParams;
+const expectedSharedSeries = expectedSharedParams.get("series")?.split(",").filter(Boolean) ?? [];
+const expectedSharedTransforms = expectedSharedParams.get("transform")?.split(",").filter(Boolean) ?? [];
+const presetRoute = "/macro-chart?preset=activity&range=MAX&hidden=ism_mfg_headline";
+const expectedPresetSeries = ["oecd_cli_us", "pmi_mfg_us_sp", "ism_mfg_headline", "ism_services_headline"];
 
 function routeUrl(route) {
   return new URL(route, baseUrl).toString();
@@ -12,6 +19,10 @@ function routeUrl(route) {
 
 function addFailure(failures, check, detail) {
   failures.push({ check, detail });
+}
+
+function splitParam(value) {
+  return value?.split(",").filter(Boolean) ?? [];
 }
 
 async function waitForMacroChart(page) {
@@ -59,6 +70,12 @@ async function inspectSharedDesktop(page) {
   }
 
   const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (params.series !== expectedSharedSeries.join(",")) {
+    addFailure(failures, "share-series-roundtrip", `series=${params.series ?? "missing"}`);
+  }
+  if (params.transform !== expectedSharedTransforms.join(",")) {
+    addFailure(failures, "share-transform-roundtrip", `transform=${params.transform ?? "missing"}`);
+  }
   if (params.range !== "10Y") addFailure(failures, "share-range-roundtrip", `range=${params.range ?? "missing"}`);
   if (params.hidden !== "vix") addFailure(failures, "share-hidden-roundtrip", `hidden=${params.hidden ?? "missing"}`);
 
@@ -87,6 +104,11 @@ async function inspectSharedDesktop(page) {
   await moveCandidate.click();
   const limitVisible = await page.getByText("비교 시리즈는 최대 8개까지 선택할 수 있습니다.").isVisible();
   if (!limitVisible) addFailure(failures, "series-limit-copy", "limit notice was not visible after ninth selection");
+  const seriesAfterLimit = await page.evaluate(() => new URL(window.location.href).searchParams.get("series"));
+  const parsedSeriesAfterLimit = splitParam(seriesAfterLimit);
+  if (parsedSeriesAfterLimit.length !== expectedMaxSeries || parsedSeriesAfterLimit.includes("move")) {
+    addFailure(failures, "series-limit-enforced", `series=${seriesAfterLimit ?? "missing"}`);
+  }
 
   const downloadPromise = page.waitForEvent("download", { timeout: 15_000 });
   await page.getByRole("button", { name: "CSV 저장" }).click();
@@ -94,8 +116,70 @@ async function inspectSharedDesktop(page) {
   if (!download.suggestedFilename().startsWith("100xfenok-macro-chart-")) {
     addFailure(failures, "csv-download-name", download.suggestedFilename());
   }
+  const downloadPath = await download.path();
+  if (!downloadPath) {
+    addFailure(failures, "csv-download-path", "download path unavailable");
+  } else {
+    const csvHeader = (await readFile(downloadPath, "utf8")).split("\n")[0] ?? "";
+    const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}`);
+    const missingHeaders = ["date", ...expectedHeaders].filter((header) => !csvHeader.includes(`"${header}"`));
+    if (missingHeaders.length) addFailure(failures, "csv-header-content", `missing=${missingHeaders.join(",")}`);
+  }
 
   return { route: sharedRoute, viewport: "desktop", status: response?.status() ?? null, layout, failures };
+}
+
+async function inspectPresetRoute(page) {
+  const failures = [];
+  const response = await page.goto(routeUrl(presetRoute), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
+  const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  const actualSeries = splitParam(params.series);
+
+  if (response?.status() !== 200) {
+    addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
+  }
+  if (params.range !== "MAX") addFailure(failures, "preset-range-roundtrip", `range=${params.range ?? "missing"}`);
+  if (params.hidden !== "ism_mfg_headline") {
+    addFailure(failures, "preset-hidden-roundtrip", `hidden=${params.hidden ?? "missing"}`);
+  }
+  if (expectedPresetSeries.some((id) => !actualSeries.includes(id))) {
+    addFailure(failures, "preset-series-roundtrip", `series=${params.series ?? "missing"}`);
+  }
+
+  return { route: presetRoute, viewport: "desktop", status: response?.status() ?? null, failures };
+}
+
+async function inspectRetry(context) {
+  const failures = [];
+  let blockedOnce = false;
+  await context.route("**/data/indices/sp500.json", async (route) => {
+    if (!blockedOnce) {
+      blockedOnce = true;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  const page = await context.newPage();
+
+  try {
+    const response = await page.goto(routeUrl(sharedRoute), { waitUntil: "domcontentloaded", timeout: 60_000 });
+    if (response?.status() !== 200) {
+      addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
+    }
+    await page.getByText("차트 데이터를 불러오지 못했습니다.").waitFor({ timeout: 20_000 });
+    await page.getByRole("button", { name: "다시 시도" }).click();
+    await waitForMacroChart(page);
+    if (!blockedOnce) addFailure(failures, "retry-forced-error", "intercept did not block first request");
+  } catch (error) {
+    addFailure(failures, "retry-path", String(error));
+  } finally {
+    await page.close();
+    await context.unroute("**/data/indices/sp500.json");
+  }
+
+  return { route: sharedRoute, viewport: "desktop", status: null, failures };
 }
 
 async function inspectMobile(page) {
@@ -113,6 +197,12 @@ async function inspectMobile(page) {
   }
   if (layout.canvasWidth < 260 || layout.canvasHeight < 240) {
     addFailure(failures, "mobile-chart-visible", `canvas=${Math.round(layout.canvasWidth)}x${Math.round(layout.canvasHeight)}`);
+  }
+  const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (params.range !== "10Y") addFailure(failures, "mobile-share-range-roundtrip", `range=${params.range ?? "missing"}`);
+  if (params.hidden !== "vix") addFailure(failures, "mobile-share-hidden-roundtrip", `hidden=${params.hidden ?? "missing"}`);
+  if (params.transform !== expectedSharedTransforms.join(",")) {
+    addFailure(failures, "mobile-share-transform-roundtrip", `transform=${params.transform ?? "missing"}`);
   }
 
   const search = page.locator("#macro-series-search");
@@ -152,8 +242,15 @@ try {
   });
   const desktopPage = await desktopContext.newPage();
   results.push(await inspectSharedDesktop(desktopPage));
+  results.push(await inspectPresetRoute(desktopPage));
   results.push(await inspectRedirect(desktopPage));
   await desktopContext.close();
+
+  const retryContext = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+  });
+  results.push(await inspectRetry(retryContext));
+  await retryContext.close();
 
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
