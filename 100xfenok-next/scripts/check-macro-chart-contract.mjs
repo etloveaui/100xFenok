@@ -21,6 +21,23 @@ function addFailure(failures, check, detail) {
   failures.push({ check, detail });
 }
 
+function watchHydrationErrors(page, failures) {
+  const seen = new Set();
+  const record = (source, text) => {
+    if (!/Hydration failed|hydration mismatch/i.test(text)) return;
+    const key = `${source}:${text.slice(0, 160)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    addFailure(failures, "hydration-error", `${source}: ${text.slice(0, 500)}`);
+  };
+  page.on("console", (message) => {
+    if (message.type() === "error") record("console", message.text());
+  });
+  page.on("pageerror", (error) => {
+    record("pageerror", error.message);
+  });
+}
+
 function splitParam(value) {
   return value?.split(",").filter(Boolean) ?? [];
 }
@@ -47,6 +64,9 @@ async function inspectStaticContracts() {
 
   if (!macroSource.includes("defaultRangeId={DEFAULT_RANGE_ID}") || !macroSource.includes("rangeId={rangeId}")) {
     addFailure(failures, "macro-frame-range-contract", "MacroChartClient must pass controlled range + default range");
+  }
+  if (!macroSource.includes("useState(() => defaultChartState())") || !macroSource.includes("if (!clientStateReady")) {
+    addFailure(failures, "hydration-safe-initial-state", "MacroChartClient must defer URL/localStorage state until after hydration");
   }
   if (!macroPageSource.includes('className="fnk-shell"')) {
     addFailure(failures, "macro-shell-wrapper", "MacroChartPage must use fnk-shell wrapper");
@@ -113,6 +133,7 @@ async function collectPageOverflow(page) {
 
 async function inspectSharedDesktop(page) {
   const failures = [];
+  watchHydrationErrors(page, failures);
   const response = await page.goto(routeUrl(sharedRoute), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
 
@@ -336,6 +357,7 @@ async function inspectSharedDesktop(page) {
 
 async function inspectExplorePlaybooks(page) {
   const failures = [];
+  watchHydrationErrors(page, failures);
   const response = await page.goto(routeUrl("/explore"), { waitUntil: "networkidle", timeout: 60_000 });
   await page.getByRole("heading", { name: "매크로 플레이북" }).waitFor({ timeout: 20_000 });
 
@@ -364,6 +386,7 @@ async function inspectExplorePlaybooks(page) {
 
 async function inspectPresetRoute(page) {
   const failures = [];
+  watchHydrationErrors(page, failures);
   const response = await page.goto(routeUrl(presetRoute), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
   const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
@@ -395,6 +418,7 @@ async function inspectRetry(context) {
     await route.continue();
   });
   const page = await context.newPage();
+  watchHydrationErrors(page, failures);
 
   try {
     const response = await page.goto(routeUrl(sharedRoute), { waitUntil: "domcontentloaded", timeout: 60_000 });
@@ -417,6 +441,7 @@ async function inspectRetry(context) {
 
 async function inspectMobile(page) {
   const failures = [];
+  watchHydrationErrors(page, failures);
   const response = await page.goto(routeUrl(sharedRoute), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
 
@@ -468,6 +493,7 @@ async function inspectMobile(page) {
 
 async function inspectRedirect(page) {
   const failures = [];
+  watchHydrationErrors(page, failures);
   const response = await page.goto(routeUrl("/multichart"), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
   const pathname = await page.evaluate(() => window.location.pathname);

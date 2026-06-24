@@ -387,14 +387,18 @@ function writeUserPresets(presets: readonly UserMacroPreset[]) {
   }
 }
 
-function initialChartStateFromUrl(): InitialChartState {
-  const fallback = {
+function defaultChartState(): InitialChartState {
+  return {
     selected: defaultSelection(),
     rangeId: DEFAULT_RANGE_ID,
     hiddenIds: [],
     axisById: {},
     formulas: [],
   };
+}
+
+function initialChartStateFromUrl(): InitialChartState {
+  const fallback = defaultChartState();
   if (typeof window === "undefined") return fallback;
   const params = new URLSearchParams(window.location.search);
   const preset = MACRO_CHART_PRESETS.find((item) => item.id === params.get("preset"));
@@ -652,7 +656,7 @@ export default function MacroChartClient() {
     hiddenIds: initialHiddenIds,
     axisById: initialAxisById,
     formulas: initialFormulas,
-  }] = useState(() => initialChartStateFromUrl());
+  }] = useState(() => defaultChartState());
   const [selected, setSelected] = useState<SelectedMacroSeries[]>(initialSelected);
   const [rangeId, setRangeId] = useState(initialRangeId);
   const [hiddenIds, setHiddenIds] = useState<string[]>(initialHiddenIds);
@@ -662,7 +666,8 @@ export default function MacroChartClient() {
   const [formulaRightId, setFormulaRightId] = useState(initialSelected[1]?.id ?? "");
   const [formulaOperator, setFormulaOperator] = useState<MacroFormulaOperator>("spread");
   const [formulaNotice, setFormulaNotice] = useState<string | null>(null);
-  const [userPresets, setUserPresets] = useState<UserMacroPreset[]>(() => safeReadUserPresets());
+  const [userPresets, setUserPresets] = useState<UserMacroPreset[]>([]);
+  const [clientStateReady, setClientStateReady] = useState(false);
   const [presetName, setPresetName] = useState("나의 매크로 뷰");
   const [presetNotice, setPresetNotice] = useState<string | null>(null);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
@@ -703,12 +708,28 @@ export default function MacroChartClient() {
       : selected.find((item) => item.id !== currentFormulaLeftId)?.id ?? "";
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const nextState = initialChartStateFromUrl();
+      setSelected(nextState.selected);
+      setRangeId(nextState.rangeId);
+      setHiddenIds(nextState.hiddenIds);
+      setAxisById(nextState.axisById);
+      setFormulas(nextState.formulas);
+      setFormulaLeftId(nextState.selected[0]?.id ?? "");
+      setFormulaRightId(nextState.selected[1]?.id ?? "");
+      setUserPresets(safeReadUserPresets());
+      setClientStateReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => setQuery(queryInput), 180);
     return () => window.clearTimeout(timer);
   }, [queryInput]);
 
   useEffect(() => {
-    if (!selectedDefinitions.length) return;
+    if (!clientStateReady || !selectedDefinitions.length) return;
     let cancelled = false;
     Promise.resolve().then(() => {
       if (!cancelled) setLoadState({ status: "loading" });
@@ -725,10 +746,10 @@ export default function MacroChartClient() {
     return () => {
       cancelled = true;
     };
-  }, [loadRetryKey, selectedDefinitions, transformMap]);
+  }, [clientStateReady, loadRetryKey, selectedDefinitions, transformMap]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!clientStateReady || typeof window === "undefined") return;
     const params = new URLSearchParams();
     params.set("series", selected.map((item) => item.id).join(","));
     params.set("transform", selected.map((item) => item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw").join(","));
@@ -740,7 +761,7 @@ export default function MacroChartClient() {
     if (formula) params.set("formula", formula);
     const next = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", next);
-  }, [axisById, formulas, rangeId, selected, visibleHiddenIds]);
+  }, [axisById, clientStateReady, formulas, rangeId, selected, visibleHiddenIds]);
 
   const filteredCatalog = useMemo(() => {
     const needle = query.trim().toLowerCase();
