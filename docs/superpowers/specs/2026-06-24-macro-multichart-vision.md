@@ -48,6 +48,12 @@ Stooq Worker-proxy stock/ETF/index comparison tool.
   removing the `/macro-chart` redirect and restoring Stooq daily CSV fetches via
   the owner-owned Worker proxy plus 24h browser localStorage cache. No repo data
   accumulation or new credential path is introduced.
+- P15-A/B/C/D: add a shared macro context key across `/macro-chart`, Explore,
+  `/screener`, `/etfs`, and `/stock/[ticker]`. The native macro workbench now
+  persists `macro={context}` in shared URLs and saved presets, shows a macro
+  insight card, and deep-links each lens into screener presets, ETF filters, and
+  representative stock detail routes. `qa:macro-chart` now verifies those
+  connected surfaces, not just the chart page.
 
 ## Deferred
 

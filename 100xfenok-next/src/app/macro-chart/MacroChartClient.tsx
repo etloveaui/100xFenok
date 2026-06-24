@@ -13,6 +13,14 @@ import {
   MACRO_TRANSFORM_LABELS,
   seriesById,
 } from "@/lib/macro-chart/catalog";
+import {
+  DEFAULT_MACRO_CONTEXT_ID,
+  MACRO_CONTEXTS,
+  macroContextFromParam,
+  macroContextIdForPreset,
+  type MacroContextId,
+  type MacroWorkbenchContext,
+} from "@/lib/macro-chart/context";
 import { buildMarketSeries, loadMacroSeries, unitLabel } from "@/lib/macro-chart/loader";
 import type { LoadedMacroSeries } from "@/lib/macro-chart/loader";
 import type { MacroSeriesDefinition, MacroValueTransform } from "@/lib/macro-chart/types";
@@ -68,20 +76,21 @@ type InitialChartState = {
   hiddenIds: string[];
   axisById: Record<string, MacroAxisId>;
   formulas: MacroFormulaSeries[];
+  macroContextId: MacroContextId;
 };
 
 type MacroAnalysisLens = {
   id: string;
   label: string;
   detail: string;
-  state: InitialChartState;
+  state: Omit<InitialChartState, "macroContextId">;
 };
 
 type MacroConnectionLink = {
   id: string;
   label: string;
   detail: string;
-  href: string;
+  href: (context: MacroWorkbenchContext) => string;
   groups: readonly MacroSeriesDefinition["group"][];
 };
 
@@ -93,6 +102,7 @@ type UserMacroPreset = {
   hiddenIds: string[];
   axisById: Record<string, MacroAxisId>;
   formulas: MacroFormulaSeries[];
+  macroContextId?: MacroContextId;
   updatedAt: string;
 };
 
@@ -233,35 +243,35 @@ const MACRO_CONNECTION_LINKS: readonly MacroConnectionLink[] = [
     id: "screener",
     label: "스크리너",
     detail: "매크로 렌즈를 종목 조건으로 이어서 좁힌다.",
-    href: "/screener",
+    href: (context) => context.screenerHref,
     groups: ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"],
   },
   {
     id: "etfs",
     label: "ETF 센터",
     detail: "국면을 ETF 자산군, 레버리지, 단일종목 ETF로 연결한다.",
-    href: "/etfs",
+    href: (context) => context.etfHref,
     groups: ["equity", "rates", "credit", "liquidity", "activity", "sentiment"],
   },
   {
     id: "market-structure",
     label: "시장 구조",
     detail: "밸류에이션·리스크 구조 차트와 비교한다.",
-    href: "/market-valuation/structure",
+    href: (context) => `/market-valuation/structure?macro=${context.id}`,
     groups: ["equity", "rates", "credit", "liquidity"],
   },
   {
     id: "events",
     label: "이벤트",
     detail: "실적, 분할, 장전·시간외 움직임으로 이어 본다.",
-    href: "/market/events",
+    href: (context) => `/market/events?macro=${context.id}`,
     groups: ["equity", "sentiment", "activity"],
   },
   {
     id: "portfolio",
     label: "포트폴리오",
     detail: "내 보유 종목의 연결 데이터와 대조한다.",
-    href: "/portfolio",
+    href: (context) => `/portfolio?macro=${context.id}`,
     groups: ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"],
   },
 ] as const;
@@ -367,6 +377,7 @@ function safeReadUserPresets(): UserMacroPreset[] {
             : [],
           axisById: parseAxisById(selected.map((entry) => record.axisById?.[entry.id] ?? "auto").join(","), selected),
           formulas,
+          macroContextId: macroContextFromParam(record.macroContextId)?.id,
           updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : new Date().toISOString(),
         };
       })
@@ -394,6 +405,7 @@ function defaultChartState(): InitialChartState {
     hiddenIds: [],
     axisById: {},
     formulas: [],
+    macroContextId: DEFAULT_MACRO_CONTEXT_ID,
   };
 }
 
@@ -402,6 +414,7 @@ function initialChartStateFromUrl(): InitialChartState {
   if (typeof window === "undefined") return fallback;
   const params = new URLSearchParams(window.location.search);
   const preset = MACRO_CHART_PRESETS.find((item) => item.id === params.get("preset"));
+  const macroContextId = macroContextFromParam(params.get("macro"))?.id ?? macroContextIdForPreset(preset?.id);
   const rangeParam = params.get("range") ?? "";
   const rangeId = MACRO_RANGE_IDS.has(rangeParam) ? rangeParam : DEFAULT_RANGE_ID;
   if (preset) {
@@ -413,10 +426,11 @@ function initialChartStateFromUrl(): InitialChartState {
       hiddenIds: parseKnownHiddenIds(params.get("hidden"), [...selected.map((item) => item.id), ...formulas.map((item) => item.id)]),
       axisById: parseAxisById(params.get("axis"), selected),
       formulas,
+      macroContextId,
     };
   }
   const ids = params.get("series")?.split(",").map((id) => id.trim()).filter(Boolean) ?? [];
-  if (!ids.length) return { ...fallback, rangeId };
+  if (!ids.length) return { ...fallback, rangeId, macroContextId };
   const transforms = params.get("transform")?.split(",") ?? [];
   const selected = ids
     .filter((id) => seriesById(id))
@@ -436,6 +450,7 @@ function initialChartStateFromUrl(): InitialChartState {
     hiddenIds: parseKnownHiddenIds(params.get("hidden"), [...finalSelected.map((item) => item.id), ...formulas.map((item) => item.id)]),
     axisById: parseAxisById(params.get("axis"), finalSelected),
     formulas,
+    macroContextId,
   };
 }
 
@@ -656,12 +671,14 @@ export default function MacroChartClient() {
     hiddenIds: initialHiddenIds,
     axisById: initialAxisById,
     formulas: initialFormulas,
+    macroContextId: initialMacroContextId,
   }] = useState(() => defaultChartState());
   const [selected, setSelected] = useState<SelectedMacroSeries[]>(initialSelected);
   const [rangeId, setRangeId] = useState(initialRangeId);
   const [hiddenIds, setHiddenIds] = useState<string[]>(initialHiddenIds);
   const [axisById, setAxisById] = useState<Record<string, MacroAxisId>>(initialAxisById);
   const [formulas, setFormulas] = useState<MacroFormulaSeries[]>(initialFormulas);
+  const [macroContextId, setMacroContextId] = useState<MacroContextId>(initialMacroContextId);
   const [formulaLeftId, setFormulaLeftId] = useState(initialSelected[0]?.id ?? "");
   const [formulaRightId, setFormulaRightId] = useState(initialSelected[1]?.id ?? "");
   const [formulaOperator, setFormulaOperator] = useState<MacroFormulaOperator>("spread");
@@ -715,6 +732,7 @@ export default function MacroChartClient() {
       setHiddenIds(nextState.hiddenIds);
       setAxisById(nextState.axisById);
       setFormulas(nextState.formulas);
+      setMacroContextId(nextState.macroContextId);
       setFormulaLeftId(nextState.selected[0]?.id ?? "");
       setFormulaRightId(nextState.selected[1]?.id ?? "");
       setUserPresets(safeReadUserPresets());
@@ -751,6 +769,7 @@ export default function MacroChartClient() {
   useEffect(() => {
     if (!clientStateReady || typeof window === "undefined") return;
     const params = new URLSearchParams();
+    params.set("macro", macroContextId);
     params.set("series", selected.map((item) => item.id).join(","));
     params.set("transform", selected.map((item) => item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw").join(","));
     params.set("range", rangeId);
@@ -761,7 +780,7 @@ export default function MacroChartClient() {
     if (formula) params.set("formula", formula);
     const next = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", next);
-  }, [axisById, clientStateReady, formulas, rangeId, selected, visibleHiddenIds]);
+  }, [axisById, clientStateReady, formulas, macroContextId, rangeId, selected, visibleHiddenIds]);
 
   const filteredCatalog = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -788,6 +807,7 @@ export default function MacroChartClient() {
       ),
     );
     setFormulas(nextFormulas);
+    setMacroContextId(state.macroContextId);
     setLimitNotice(null);
     setPresetNotice(null);
     setFormulaNotice(null);
@@ -839,6 +859,7 @@ export default function MacroChartClient() {
         hiddenIds: [],
         axisById: {},
         formulas: [],
+        macroContextId: macroContextIdForPreset(preset.id),
       });
     }
   }, [applyChartState, rangeId]);
@@ -850,11 +871,12 @@ export default function MacroChartClient() {
       hiddenIds: preset.hiddenIds,
       axisById: preset.axisById,
       formulas: preset.formulas,
+      macroContextId: preset.macroContextId ?? macroContextId,
     });
-  }, [applyChartState]);
+  }, [applyChartState, macroContextId]);
 
   const applyAnalysisLens = useCallback((lens: MacroAnalysisLens) => {
-    applyChartState(lens.state);
+    applyChartState({ ...lens.state, macroContextId: macroContextFromParam(lens.id)?.id ?? DEFAULT_MACRO_CONTEXT_ID });
     setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
   }, [applyChartState]);
 
@@ -902,6 +924,7 @@ export default function MacroChartClient() {
       hiddenIds: visibleHiddenIds,
       axisById: Object.fromEntries(Object.entries(axisById).filter(([id]) => nextSelectedIds.has(id))),
       formulas,
+      macroContextId,
       updatedAt: new Date().toISOString(),
     };
     const next = [nextPreset, ...userPresets.filter((preset) => preset.name !== name)].slice(0, 8);
@@ -911,7 +934,7 @@ export default function MacroChartClient() {
     } else {
       setPresetNotice("브라우저 저장소에 저장하지 못했습니다.");
     }
-  }, [axisById, formulas, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
+  }, [axisById, formulas, macroContextId, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
 
   const deleteUserPreset = useCallback((presetId: string) => {
     const next = userPresets.filter((preset) => preset.id !== presetId);
@@ -958,8 +981,21 @@ export default function MacroChartClient() {
   const visibleChartSeriesCount = Math.max(chartSeries.length - visibleHiddenIds.length, 0);
   const connectionLinks = useMemo(() => {
     const groups = new Set(selectedGroupKeys);
-    return MACRO_CONNECTION_LINKS.filter((link) => link.groups.some((group) => groups.has(group)));
-  }, [selectedGroupKeys]);
+    const context = MACRO_CONTEXTS[macroContextId];
+    const links = MACRO_CONNECTION_LINKS
+      .filter((link) => link.groups.some((group) => groups.has(group)))
+      .map((link) => ({ ...link, href: link.href(context) }));
+    return [
+      ...links,
+      {
+        id: "stock",
+        label: `대표 종목 ${context.stockSymbol}`,
+        detail: `${context.label} 렌즈를 ${context.stockLabel} 상세로 이어 본다.`,
+        href: context.stockHref,
+      },
+    ];
+  }, [macroContextId, selectedGroupKeys]);
+  const activeMacroContext = MACRO_CONTEXTS[macroContextId];
   const analysisCards = useMemo(
     () => [
       {
@@ -1192,6 +1228,43 @@ export default function MacroChartClient() {
                   <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
                 </button>
               ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-3 shadow-sm" aria-label="매크로 인사이트 카드">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-black text-slate-900">인사이트 카드</h2>
+              <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-sky-800">
+                {activeMacroContext.label}
+              </span>
+            </div>
+            <p className="mt-2 text-xs font-bold leading-5 text-slate-700">{activeMacroContext.detail}</p>
+            <ul className="mt-3 space-y-2">
+              {activeMacroContext.insightBullets.map((bullet) => (
+                <li key={bullet} className="rounded-md bg-white px-3 py-2 text-[11px] font-semibold leading-5 text-slate-700">
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <TransitionLink
+                href={activeMacroContext.screenerHref}
+                className="inline-flex min-h-9 items-center justify-center rounded-md bg-slate-900 px-2 text-[11px] font-black text-white transition hover:bg-brand-interactive"
+              >
+                스크리너
+              </TransitionLink>
+              <TransitionLink
+                href={activeMacroContext.etfHref}
+                className="inline-flex min-h-9 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
+              >
+                ETF
+              </TransitionLink>
+              <TransitionLink
+                href={activeMacroContext.stockHref}
+                className="inline-flex min-h-9 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
+              >
+                {activeMacroContext.stockSymbol}
+              </TransitionLink>
             </div>
           </section>
 

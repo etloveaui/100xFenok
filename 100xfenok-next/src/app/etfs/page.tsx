@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import MacroContextCard from "@/components/macro/MacroContextCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import AppShell from "@/components/shell/AppShell";
+import { macroContextFromParam } from "@/lib/macro-chart/context";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
 import type { EtfTypeFilter } from "../explore/etfUniverseUtils";
 import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
@@ -44,6 +46,7 @@ export default async function EtfsPage({ searchParams }: Props) {
   const initialTypeFilter = typeFilterFromParams(params);
   const initialDigitalOnly = digitalOnlyFromParams(params);
   const initialNewOnly = initialDigitalOnly ? false : newOnlyFromParams(params);
+  const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
 
   return (
     <div className="fnk-shell">
@@ -62,6 +65,12 @@ export default async function EtfsPage({ searchParams }: Props) {
             </div>
           </div>
         </section>
+
+        {initialMacroContextId ? (
+          <div className="mt-[var(--s4)]">
+            <MacroContextCard contextId={initialMacroContextId} surface="etfs" />
+          </div>
+        ) : null}
 
         <div className="mt-[var(--s4)]">
           <EtfSurfaceSnapshotCard />

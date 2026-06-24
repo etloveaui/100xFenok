@@ -6,11 +6,11 @@ const strictMode = process.env.QA_MACRO_CHART_STRICT !== "0";
 const expectedMaxSeries = 8;
 const sharedRoute =
   process.env.QA_MACRO_CHART_ROUTE ||
-  "/macro-chart?series=sp500,vix,tga,DGS10,M2SL,WALCL,WRESBAL,HY_spread&transform=rebase100,raw,rebase100,raw,yoy,rebase100,rebase100,raw&range=10Y&hidden=vix";
+  "/macro-chart?macro=risk-liquidity&series=sp500,vix,tga,DGS10,M2SL,WALCL,WRESBAL,HY_spread&transform=rebase100,raw,rebase100,raw,yoy,rebase100,rebase100,raw&range=10Y&hidden=vix";
 const expectedSharedParams = new URL(sharedRoute, "https://qa.local").searchParams;
 const expectedSharedSeries = expectedSharedParams.get("series")?.split(",").filter(Boolean) ?? [];
 const expectedSharedTransforms = expectedSharedParams.get("transform")?.split(",").filter(Boolean) ?? [];
-const presetRoute = "/macro-chart?preset=activity&range=MAX&hidden=ism_mfg_headline";
+const presetRoute = "/macro-chart?macro=activity&preset=activity&range=MAX&hidden=ism_mfg_headline";
 const expectedPresetSeries = ["oecd_cli_us", "pmi_mfg_us_sp", "ism_mfg_headline", "ism_services_headline"];
 
 function routeUrl(route) {
@@ -68,8 +68,13 @@ async function inspectStaticContracts() {
   const [
     macroSource,
     macroPageSource,
+    macroContextSource,
     quickLinksSource,
     catalogSource,
+    screenerPageSource,
+    screenerClientSource,
+    etfsPageSource,
+    stockPageSource,
     multichartPageSource,
     multichartHtmlSource,
     navbarSource,
@@ -78,8 +83,13 @@ async function inspectStaticContracts() {
   ] = await Promise.all([
     readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/macro-chart/context.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/components/market/MarketQuickLinks.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/data/catalog/macro-series.json", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/screener/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/screener/ScreenerClient.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/etfs/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/stock/[ticker]/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/multichart/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Navbar.tsx", import.meta.url), "utf8"),
@@ -100,6 +110,14 @@ async function inspectStaticContracts() {
   if (!macroSource.includes("전체 CSV 저장") || !macroSource.includes("전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준")) {
     addFailure(failures, "csv-full-export-copy", "full CSV export copy missing");
   }
+  if (!macroSource.includes("macroContextId") || !macroSource.includes("매크로 인사이트 카드")) {
+    addFailure(failures, "macro-context-state", "MacroChartClient must carry macro context state and render the insight card");
+  }
+  for (const id of ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity"]) {
+    if (!macroContextSource.includes(`id: "${id}"`) || !macroContextSource.includes(`macro=${id}`)) {
+      addFailure(failures, "macro-context-registry", `${id} context href contract missing`);
+    }
+  }
   if (!quickLinksSource.includes("formula=ratio:sp500:DGS10") || !quickLinksSource.includes("리스크")) {
     addFailure(failures, "quick-link-macro-lenses", "MarketQuickLinks macro lens links missing");
   }
@@ -112,8 +130,30 @@ async function inspectStaticContracts() {
   if (!Array.isArray(catalog.analysis_lenses) || catalog.analysis_lenses.length < 4) {
     addFailure(failures, "catalog-analysis-lenses", `count=${catalog.analysis_lenses?.length ?? "missing"}`);
   }
+  const lensWithoutMacro = (catalog.analysis_lenses ?? []).filter((item) => !String(item.href ?? "").includes("macro="));
+  if (lensWithoutMacro.length) {
+    addFailure(failures, "catalog-analysis-lens-macro", lensWithoutMacro.map((item) => item.id).join(","));
+  }
   if (!Array.isArray(catalog.connection_surfaces) || !catalog.connection_surfaces.some((item) => item.surface === "screener")) {
     addFailure(failures, "catalog-connection-surfaces", "screener connection missing");
+  }
+  const bareConnectionSurfaces = (catalog.connection_surfaces ?? []).filter((item) => !String(item.href ?? "").includes("macro="));
+  if (bareConnectionSurfaces.length) {
+    addFailure(failures, "catalog-connection-macro", bareConnectionSurfaces.map((item) => item.surface).join(","));
+  }
+  if (
+    !screenerPageSource.includes("initialMacroContextId") ||
+    !screenerPageSource.includes("initialPreset") ||
+    !screenerClientSource.includes("MacroContextCard") ||
+    !screenerClientSource.includes("initialConnectionFilter")
+  ) {
+    addFailure(failures, "screener-macro-deeplink", "Screener must accept macro/preset/connection deep-link context");
+  }
+  if (!etfsPageSource.includes("MacroContextCard") || !etfsPageSource.includes("macroContextFromParam")) {
+    addFailure(failures, "etf-macro-deeplink", "ETF page must accept macro context");
+  }
+  if (!stockPageSource.includes("MacroContextCard") || !stockPageSource.includes("macroContextFromParam")) {
+    addFailure(failures, "stock-macro-deeplink", "Stock page must accept macro context");
   }
   if (multichartPageSource.includes("redirect(") || !multichartPageSource.includes("RouteEmbedFrame")) {
     addFailure(failures, "multichart-route", "multichart must render the restored stock compare frame instead of redirecting");
@@ -198,6 +238,7 @@ async function inspectSharedDesktop(page) {
   if (params.transform !== expectedSharedTransforms.join(",")) {
     addFailure(failures, "share-transform-roundtrip", `transform=${params.transform ?? "missing"}`);
   }
+  if (params.macro !== "risk-liquidity") addFailure(failures, "share-macro-roundtrip", `macro=${params.macro ?? "missing"}`);
   if (params.range !== "10Y") addFailure(failures, "share-range-roundtrip", `range=${params.range ?? "missing"}`);
   if (params.hidden !== "vix") addFailure(failures, "share-hidden-roundtrip", `hidden=${params.hidden ?? "missing"}`);
 
@@ -257,9 +298,34 @@ async function inspectSharedDesktop(page) {
   if (!(await page.locator('[aria-label="매크로 분석 요약"]').getByText("연결 데이터").isVisible())) {
     addFailure(failures, "analysis-summary-visible", "analysis summary missing");
   }
+  const insightCard = page.locator('[aria-label="매크로 인사이트 카드"]');
+  if (!(await insightCard.getByText("리스크·유동성").isVisible())) {
+    addFailure(failures, "macro-insight-context", "risk-liquidity insight card missing");
+  }
+  if (!(await insightCard.getByRole("link", { name: "스크리너" }).isVisible())) {
+    addFailure(failures, "macro-insight-screener-link", "insight screener link missing");
+  }
+  const insightStockHref = await insightCard.getByRole("link", { name: "NVDA" }).getAttribute("href");
+  if (!insightStockHref?.includes("/stock/NVDA") || !insightStockHref.includes("macro=risk-liquidity")) {
+    addFailure(failures, "macro-insight-stock-link", `href=${insightStockHref ?? "missing"}`);
+  }
   const screenerConnection = page.getByRole("link", { name: /스크리너/ }).first();
   if (!(await screenerConnection.isVisible())) {
     addFailure(failures, "connection-link-visible", "screener connection link missing");
+  }
+  const screenerHref = await screenerConnection.getAttribute("href");
+  if (!screenerHref?.includes("/screener") || !screenerHref.includes("macro=risk-liquidity") || !screenerHref.includes("preset=connected")) {
+    addFailure(failures, "connection-screener-href", `href=${screenerHref ?? "missing"}`);
+  }
+  const etfConnection = page.getByRole("link", { name: /ETF 센터/ }).first();
+  const etfHref = await etfConnection.getAttribute("href");
+  if (!etfHref?.includes("/etfs") || !etfHref.includes("macro=risk-liquidity")) {
+    addFailure(failures, "connection-etf-href", `href=${etfHref ?? "missing"}`);
+  }
+  const stockConnection = page.getByRole("link", { name: /대표 종목 NVDA/ }).first();
+  const stockHref = await stockConnection.getAttribute("href");
+  if (!stockHref?.includes("/stock/NVDA") || !stockHref.includes("macro=risk-liquidity")) {
+    addFailure(failures, "connection-stock-href", `href=${stockHref ?? "missing"}`);
   }
 
   await page.getByLabel("프리셋 이름").fill("QA 저장 프리셋");
@@ -282,6 +348,9 @@ async function inspectSharedDesktop(page) {
     if ((storedPreset.selected ?? []).length !== expectedMaxSeries) {
       addFailure(failures, "user-preset-series", `selected=${(storedPreset.selected ?? []).length}`);
     }
+    if (storedPreset.macroContextId !== "risk-liquidity") {
+      addFailure(failures, "user-preset-macro", `macroContextId=${storedPreset.macroContextId ?? "missing"}`);
+    }
   }
 
   await page.goto(routeUrl("/macro-chart"), { waitUntil: "networkidle", timeout: 60_000 });
@@ -298,6 +367,9 @@ async function inspectSharedDesktop(page) {
   }
   if (paramsAfterUserPreset.formula !== "ratio:sp500:DGS10") {
     addFailure(failures, "user-preset-apply-formula", `formula=${paramsAfterUserPreset.formula ?? "missing"}`);
+  }
+  if (paramsAfterUserPreset.macro !== "risk-liquidity") {
+    addFailure(failures, "user-preset-apply-macro", `macro=${paramsAfterUserPreset.macro ?? "missing"}`);
   }
 
   await page.getByLabel("TGA 축").selectOption("auto");
@@ -393,6 +465,9 @@ async function inspectSharedDesktop(page) {
   if (paramsAfterLens.formula !== "spread:bank_credit:deposits") {
     addFailure(failures, "analysis-lens-formula", `formula=${paramsAfterLens.formula ?? "missing"}`);
   }
+  if (paramsAfterLens.macro !== "bank-credit") {
+    addFailure(failures, "analysis-lens-macro", `macro=${paramsAfterLens.macro ?? "missing"}`);
+  }
 
   return { route: sharedRoute, viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
@@ -422,11 +497,88 @@ async function inspectExplorePlaybooks(page) {
   if (!hrefs.some((href) => href.includes("preset=activity"))) {
     addFailure(failures, "explore-activity-playbook-link", hrefs.join(" | "));
   }
+  for (const id of ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity"]) {
+    if (!hrefs.some((href) => href.includes(`macro=${id}`))) {
+      addFailure(failures, "explore-macro-context-link", `${id} missing in ${hrefs.join(" | ")}`);
+    }
+  }
   if (!(await page.getByRole("heading", { name: "ETF 목록" }).isVisible())) {
     addFailure(failures, "explore-etf-entry", "ETF card missing from Explore hub");
   }
 
   return { route: "/explore", viewport: "desktop", status: response?.status() ?? null, layout, failures };
+}
+
+async function inspectConnectedSurfaces(page) {
+  const failures = [];
+  watchHydrationErrors(page, failures);
+
+  let response = await page.goto(routeUrl("/screener?macro=risk-liquidity&preset=connected&connection=indexMembership"), {
+    waitUntil: "networkidle",
+    timeout: 60_000,
+  });
+  await page.getByRole("heading", { name: "종목 스크리너" }).waitFor({ timeout: 30_000 });
+  if (response?.status() !== 200) {
+    addFailure(failures, "screener-http-status", `status=${response?.status() ?? "unknown"}`);
+  }
+  let layout = await collectPageOverflow(page);
+  if (layout.scrollWidth > layout.viewportWidth + 1) {
+    addFailure(failures, "screener-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
+  }
+  let macroCard = page.locator('[aria-label="매크로 연결 맥락"]');
+  if (!(await macroCard.getByText("리스크·유동성").isVisible())) {
+    addFailure(failures, "screener-macro-card", "risk-liquidity context missing");
+  }
+  const connectedPreset = page.getByRole("button", { name: "연결 데이터", exact: true });
+  const presetPressed = await connectedPreset.getAttribute("aria-pressed");
+  if (presetPressed !== "true") {
+    addFailure(failures, "screener-preset-state", `aria-pressed=${presetPressed}`);
+  }
+  const connectionValue = await page.getByLabel("연결 범위").inputValue();
+  if (connectionValue !== "indexMembership") {
+    addFailure(failures, "screener-connection-state", `value=${connectionValue}`);
+  }
+
+  response = await page.goto(routeUrl("/etfs?macro=crypto-liquidity&digital=1"), {
+    waitUntil: "networkidle",
+    timeout: 60_000,
+  });
+  await page.getByRole("heading", { name: "ETF 센터" }).waitFor({ timeout: 30_000 });
+  if (response?.status() !== 200) {
+    addFailure(failures, "etf-http-status", `status=${response?.status() ?? "unknown"}`);
+  }
+  layout = await collectPageOverflow(page);
+  if (layout.scrollWidth > layout.viewportWidth + 1) {
+    addFailure(failures, "etf-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
+  }
+  macroCard = page.locator('[aria-label="매크로 연결 맥락"]');
+  if (!(await macroCard.getByText("크립토 유동성").isVisible())) {
+    addFailure(failures, "etf-macro-card", "crypto-liquidity context missing");
+  }
+  const digitalSegment = page.getByRole("group", { name: "ETF 세그먼트" }).getByRole("button", { name: /디지털자산/ });
+  const digitalPressed = await digitalSegment.getAttribute("aria-pressed");
+  if (digitalPressed !== "true") {
+    addFailure(failures, "etf-digital-state", `aria-pressed=${digitalPressed}`);
+  }
+
+  response = await page.goto(routeUrl("/stock/NVDA?macro=risk-liquidity"), {
+    waitUntil: "networkidle",
+    timeout: 60_000,
+  });
+  await page.locator('[aria-label="매크로 연결 맥락"]').waitFor({ timeout: 30_000 });
+  if (response?.status() !== 200) {
+    addFailure(failures, "stock-http-status", `status=${response?.status() ?? "unknown"}`);
+  }
+  layout = await collectPageOverflow(page);
+  if (layout.scrollWidth > layout.viewportWidth + 1) {
+    addFailure(failures, "stock-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
+  }
+  macroCard = page.locator('[aria-label="매크로 연결 맥락"]');
+  if (!(await macroCard.getByText("리스크·유동성").isVisible())) {
+    addFailure(failures, "stock-macro-card", "risk-liquidity context missing");
+  }
+
+  return { route: "/screener + /etfs + /stock macro-context", viewport: "desktop", status: null, failures };
 }
 
 async function inspectPresetRoute(page) {
@@ -440,6 +592,7 @@ async function inspectPresetRoute(page) {
   if (response?.status() !== 200) {
     addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
   }
+  if (params.macro !== "activity") addFailure(failures, "preset-macro-roundtrip", `macro=${params.macro ?? "missing"}`);
   if (params.range !== "MAX") addFailure(failures, "preset-range-roundtrip", `range=${params.range ?? "missing"}`);
   if (params.hidden !== "ism_mfg_headline") {
     addFailure(failures, "preset-hidden-roundtrip", `hidden=${params.hidden ?? "missing"}`);
@@ -502,6 +655,7 @@ async function inspectMobile(page) {
     addFailure(failures, "mobile-chart-visible", `canvas=${Math.round(layout.canvasWidth)}x${Math.round(layout.canvasHeight)}`);
   }
   const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (params.macro !== "risk-liquidity") addFailure(failures, "mobile-share-macro-roundtrip", `macro=${params.macro ?? "missing"}`);
   if (params.range !== "10Y") addFailure(failures, "mobile-share-range-roundtrip", `range=${params.range ?? "missing"}`);
   if (params.hidden !== "vix") addFailure(failures, "mobile-share-hidden-roundtrip", `hidden=${params.hidden ?? "missing"}`);
   if (params.transform !== expectedSharedTransforms.join(",")) {
@@ -581,6 +735,7 @@ try {
   results.push(await inspectPresetRoute(desktopPage));
   results.push(await inspectMultichartRoute(desktopPage));
   results.push(await inspectExplorePlaybooks(desktopPage));
+  results.push(await inspectConnectedSurfaces(desktopPage));
   await desktopContext.close();
 
   const retryContext = await browser.newContext({

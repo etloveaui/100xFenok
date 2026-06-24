@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
+import { macroContextFromParam } from "@/lib/macro-chart/context";
 import ScreenerClient from "./ScreenerClient";
 
 interface Props {
@@ -19,10 +20,18 @@ export default async function ScreenerPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialSearch = firstParam(params.ticker ?? params.q).trim().toUpperCase();
   const initialSector = firstParam(params.sector).trim();
+  const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title="스크리너">
-        <ScreenerClient initialSearch={initialSearch} initialSector={initialSector} />
+        <ScreenerClient
+          initialSearch={initialSearch}
+          initialSector={initialSector}
+          initialMacroContextId={initialMacroContextId}
+          initialPreset={firstParam(params.preset)}
+          initialActionFilter={firstParam(params.action)}
+          initialConnectionFilter={firstParam(params.connection)}
+        />
       </AppShell>
     </div>
   );

@@ -3,6 +3,7 @@
 import { Fragment, useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
+import MacroContextCard from "@/components/macro/MacroContextCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { useScreenerData } from "@/hooks/useScreenerData";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
@@ -14,6 +15,7 @@ import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
 import StockDetailPanel from "./StockDetailPanel";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
+import type { MacroContextId } from "@/lib/macro-chart/context";
 
 const PAGE_SIZE = 50;
 
@@ -133,6 +135,31 @@ const PRESET_LABEL: Record<ColumnPreset, string> = {
   dividend: "배당",
   guru: "대가 관심",
 };
+
+function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {
+  return value && value in PRESET_KEYS ? (value as ColumnPreset) : null;
+}
+
+function coerceActionFilter(value: string | null | undefined): ActionFilter {
+  if (
+    value === "smart_money" ||
+    value === "value_momentum" ||
+    value === "index_core" ||
+    value === "income" ||
+    value === "momentum" ||
+    value === "watch"
+  ) {
+    return value;
+  }
+  return "";
+}
+
+function coerceConnectionFilter(value: string | null | undefined): ConnectionFilter {
+  if (value === "filings" || value === "smartMoney" || value === "indexMembership" || value === "singleStockEtfs") {
+    return value;
+  }
+  return "";
+}
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -875,9 +902,17 @@ function MobileStockCard({
 export default function ScreenerClient({
   initialSearch = "",
   initialSector = "",
+  initialMacroContextId,
+  initialPreset,
+  initialActionFilter,
+  initialConnectionFilter,
 }: {
   initialSearch?: string;
   initialSector?: string;
+  initialMacroContextId?: MacroContextId;
+  initialPreset?: string;
+  initialActionFilter?: string;
+  initialConnectionFilter?: string;
 }) {
   const {
     stocks: rawStocks,
@@ -967,8 +1002,8 @@ export default function ScreenerClient({
   const [ret5yMin, setRet5yMin] = useState("");
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
-  const [actionFilter, setActionFilter] = useState<ActionFilter>("");
-  const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>("");
+  const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter));
+  const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter));
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -988,9 +1023,11 @@ export default function ScreenerClient({
     setSector(initialSector);
   }
 
-  const [preset, setPreset] = useState<ColumnPreset>("basic");
+  const initialColumnPreset = coerceColumnPreset(initialPreset);
+  const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? "basic");
 
   useEffect(() => {
+    if (initialColumnPreset) return;
     const saved = localStorage.getItem("screener-preset") as ColumnPreset | null;
     if (!saved || !PRESET_KEYS[saved]) return;
     const frame = window.requestAnimationFrame(() => {
@@ -1002,7 +1039,7 @@ export default function ScreenerClient({
       });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, []);
+  }, [initialColumnPreset]);
 
   const activeColumns = useMemo(() => {
     const keys = new Set(PRESET_KEYS[preset]);
@@ -1243,6 +1280,10 @@ export default function ScreenerClient({
 
       {screenerDataState.status !== "ready" ? (
         <DataStateNotice state={screenerDataState} />
+      ) : null}
+
+      {initialMacroContextId ? (
+        <MacroContextCard contextId={initialMacroContextId} surface="screener" />
       ) : null}
 
       <section className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm">

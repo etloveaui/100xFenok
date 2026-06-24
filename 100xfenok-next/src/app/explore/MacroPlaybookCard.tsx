@@ -1,27 +1,28 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
+import { MACRO_CONTEXTS } from "@/lib/macro-chart/context";
 
 const MACRO_PLAYBOOKS = [
   {
     title: "리스크와 유동성",
     detail: "S&P 500 · VIX · TGA · 10Y · HY",
-    href: "/macro-chart?series=sp500,vix,tga,DGS10,HY_spread,M2SL&transform=rebase100,raw,rebase100,raw,raw,yoy&range=10Y&hidden=vix&axis=vix:right,DGS10:right,HY_spread:right&formula=ratio:sp500:DGS10",
+    href: MACRO_CONTEXTS["risk-liquidity"].chartHref,
   },
   {
     title: "경기활동",
     detail: "OECD CLI · PMI · ISM 제조/서비스",
-    href: "/macro-chart?preset=activity&range=MAX",
+    href: MACRO_CONTEXTS.activity.chartHref,
   },
   {
     title: "은행·신용",
     detail: "은행신용 · 예금 · Tier 1 · HY · 10Y",
-    href: "/macro-chart?series=bank_credit,deposits,fdic_tier1,HY_spread,DGS10&transform=yoy,yoy,raw,raw,raw&range=10Y&axis=fdic_tier1:right,HY_spread:right,DGS10:right&formula=spread:bank_credit:deposits",
+    href: MACRO_CONTEXTS["bank-credit"].chartHref,
   },
   {
     title: "크립토 유동성",
     detail: "Stablecoins · Nasdaq · S&P 500 · Crypto F/G",
-    href: "/macro-chart?series=stablecoins,nasdaq,sp500,crypto_fear_greed,vix&transform=rebase100,rebase100,rebase100,raw,raw&range=5Y&hidden=vix&axis=crypto_fear_greed:right,vix:right&formula=ratio:nasdaq:stablecoins",
+    href: MACRO_CONTEXTS["crypto-liquidity"].chartHref,
   },
 ];
 
