@@ -16,6 +16,19 @@ const BASE_LINKS = [
   { href: "/market/events", label: "이벤트", textLabel: "이벤트 보기" },
 ] as const;
 
+const MACRO_LENS_LINKS = [
+  {
+    href: "/macro-chart?series=sp500,vix,tga,DGS10,HY_spread,M2SL&transform=rebase100,raw,rebase100,raw,raw,yoy&range=10Y&hidden=vix&axis=vix:right,DGS10:right,HY_spread:right&formula=ratio:sp500:DGS10",
+    label: "리스크",
+    textLabel: "리스크 렌즈",
+  },
+  {
+    href: "/macro-chart?preset=activity&range=MAX",
+    label: "경기",
+    textLabel: "경기 렌즈",
+  },
+] as const;
+
 const STRUCTURE_LINK = {
   href: "/market-valuation/structure",
   label: "구조",
@@ -29,7 +42,7 @@ export default function MarketQuickLinks({
   includeStructure = false,
   variant = "pills",
 }: MarketQuickLinksProps) {
-  const links = includeStructure ? [...BASE_LINKS, STRUCTURE_LINK] : BASE_LINKS;
+  const links = includeStructure ? [...BASE_LINKS, ...MACRO_LENS_LINKS, STRUCTURE_LINK] : [...BASE_LINKS, ...MACRO_LENS_LINKS];
 
   if (variant === "text") {
     return (

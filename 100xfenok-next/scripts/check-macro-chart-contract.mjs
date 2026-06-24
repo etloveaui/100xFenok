@@ -25,6 +25,54 @@ function splitParam(value) {
   return value?.split(",").filter(Boolean) ?? [];
 }
 
+async function hasVisibleText(page, text) {
+  return page.evaluate((needle) => {
+    return [...document.querySelectorAll("body *")].some((node) => {
+      if (!node.textContent?.includes(needle)) return false;
+      const element = node;
+      return Boolean(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+    });
+  }, text);
+}
+
+async function inspectStaticContracts() {
+  const failures = [];
+  const [macroSource, macroPageSource, quickLinksSource, catalogSource] = await Promise.all([
+    readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/market/MarketQuickLinks.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/data/catalog/macro-series.json", import.meta.url), "utf8"),
+  ]);
+  const catalog = JSON.parse(catalogSource);
+
+  if (!macroSource.includes("defaultRangeId={DEFAULT_RANGE_ID}") || !macroSource.includes("rangeId={rangeId}")) {
+    addFailure(failures, "macro-frame-range-contract", "MacroChartClient must pass controlled range + default range");
+  }
+  if (!macroPageSource.includes('className="fnk-shell"')) {
+    addFailure(failures, "macro-shell-wrapper", "MacroChartPage must use fnk-shell wrapper");
+  }
+  if (!macroSource.includes("전체 CSV 저장") || !macroSource.includes("전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준")) {
+    addFailure(failures, "csv-full-export-copy", "full CSV export copy missing");
+  }
+  if (!quickLinksSource.includes("formula=ratio:sp500:DGS10") || !quickLinksSource.includes("리스크")) {
+    addFailure(failures, "quick-link-macro-lenses", "MarketQuickLinks macro lens links missing");
+  }
+  if (catalog.schema_version !== "macro-series-catalog/v1") {
+    addFailure(failures, "catalog-schema-version", `schema=${catalog.schema_version ?? "missing"}`);
+  }
+  if (!Array.isArray(catalog.series) || catalog.series.length !== 30) {
+    addFailure(failures, "catalog-series-count", `count=${catalog.series?.length ?? "missing"}`);
+  }
+  if (!Array.isArray(catalog.analysis_lenses) || catalog.analysis_lenses.length < 4) {
+    addFailure(failures, "catalog-analysis-lenses", `count=${catalog.analysis_lenses?.length ?? "missing"}`);
+  }
+  if (!Array.isArray(catalog.connection_surfaces) || !catalog.connection_surfaces.some((item) => item.surface === "screener")) {
+    addFailure(failures, "catalog-connection-surfaces", "screener connection missing");
+  }
+
+  return { route: "static:macro-chart", viewport: "static", status: null, failures };
+}
+
 async function waitForMacroChart(page) {
   await page.waitForSelector('[role="group"][aria-label*="매크로 시계열 비교 차트"] canvas', {
     timeout: 45_000,
@@ -134,8 +182,22 @@ async function inspectSharedDesktop(page) {
   if (formulaAfterAdd !== "ratio:sp500:DGS10") {
     addFailure(failures, "formula-url-update", `formula=${formulaAfterAdd ?? "missing"}`);
   }
-  const formulaVisible = await page.getByText("S&P 500/10Y ×100").first().isVisible();
-  if (!formulaVisible) addFailure(failures, "formula-series-visible", "S&P 500/10Y ×100 not visible");
+  if (!(await hasVisibleText(page, "S&P 500/10Y ×100"))) {
+    addFailure(failures, "formula-series-visible", "S&P 500/10Y ×100 not visible");
+  }
+  if (!(await page.getByText("카탈로그 2026-06-24 · 30개 시리즈").isVisible())) {
+    addFailure(failures, "catalog-provenance-copy", "catalog provenance copy missing");
+  }
+  if (!(await page.getByText("전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준").isVisible())) {
+    addFailure(failures, "csv-provenance-copy", "full CSV provenance copy missing");
+  }
+  if (!(await page.locator('[aria-label="매크로 분석 요약"]').getByText("연결 데이터").isVisible())) {
+    addFailure(failures, "analysis-summary-visible", "analysis summary missing");
+  }
+  const screenerConnection = page.getByRole("link", { name: /스크리너/ }).first();
+  if (!(await screenerConnection.isVisible())) {
+    addFailure(failures, "connection-link-visible", "screener connection link missing");
+  }
 
   await page.getByLabel("프리셋 이름").fill("QA 저장 프리셋");
   await page.getByRole("button", { name: "저장", exact: true }).click();
@@ -244,7 +306,7 @@ async function inspectSharedDesktop(page) {
   }
 
   const downloadPromise = page.waitForEvent("download", { timeout: 15_000 });
-  await page.getByRole("button", { name: "CSV 저장" }).click();
+  await page.getByRole("button", { name: "전체 CSV 저장" }).click();
   const download = await downloadPromise;
   if (!download.suggestedFilename().startsWith("100xfenok-macro-chart-")) {
     addFailure(failures, "csv-download-name", download.suggestedFilename());
@@ -257,6 +319,16 @@ async function inspectSharedDesktop(page) {
     const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}`);
     const missingHeaders = ["date", ...expectedHeaders, "formula-ratio-sp500-DGS10"].filter((header) => !csvHeader.includes(`"${header}"`));
     if (missingHeaders.length) addFailure(failures, "csv-header-content", `missing=${missingHeaders.join(",")}`);
+  }
+
+  await page.getByRole("button", { name: "은행·신용 렌즈" }).click();
+  await page.waitForFunction(() => new URL(window.location.href).searchParams.get("formula") === "spread:bank_credit:deposits", null, { timeout: 10_000 });
+  const paramsAfterLens = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (!splitParam(paramsAfterLens.series).includes("bank_credit")) {
+    addFailure(failures, "analysis-lens-series", `series=${paramsAfterLens.series ?? "missing"}`);
+  }
+  if (paramsAfterLens.formula !== "spread:bank_credit:deposits") {
+    addFailure(failures, "analysis-lens-formula", `formula=${paramsAfterLens.formula ?? "missing"}`);
   }
 
   return { route: sharedRoute, viewport: "desktop", status: response?.status() ?? null, layout, failures };
@@ -378,6 +450,18 @@ async function inspectMobile(page) {
   if (!(await page.getByText("8/8 선택").isVisible())) {
     addFailure(failures, "mobile-selection-count", "8/8 count not visible");
   }
+  await page.getByLabel("합성 왼쪽 시리즈").selectOption("sp500");
+  await page.getByLabel("합성 계산식").selectOption("ratio");
+  await page.getByLabel("합성 오른쪽 시리즈").selectOption("DGS10");
+  await page.getByRole("button", { name: "합성 추가" }).click();
+  await page.waitForTimeout(300);
+  const mobileStatus = page.locator('[aria-label="모바일 매크로 상태"]');
+  if (!(await mobileStatus.getByText("합성 1개").isVisible())) {
+    addFailure(failures, "mobile-formula-count-chip", "formula count chip missing");
+  }
+  if (!(await mobileStatus.getByRole("button", { name: /S&P 500\/10Y ×100 삭제/ }).isVisible())) {
+    addFailure(failures, "mobile-formula-chip", "formula chip missing");
+  }
 
   return { route: sharedRoute, viewport: "mobile", status: response?.status() ?? null, layout, failures };
 }
@@ -393,8 +477,8 @@ async function inspectRedirect(page) {
   return { route: "/multichart", viewport: "desktop", status: response?.status() ?? null, failures };
 }
 
+const results = [await inspectStaticContracts()];
 const browser = await chromium.launch({ headless: true });
-const results = [];
 
 try {
   const desktopContext = await browser.newContext({

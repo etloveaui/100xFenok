@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import DataProvenanceNote from "@/components/DataProvenanceNote";
+import TransitionLink from "@/components/TransitionLink";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
@@ -21,6 +22,8 @@ const DEFAULT_RANGE_ID = "5Y";
 const MAX_SELECTED_SERIES = 8;
 const MAX_FORMULA_SERIES = 3;
 const USER_PRESET_STORAGE_KEY = "100xfenok.macroChart.userPresets.v1";
+const MACRO_CATALOG_CURATED_AT = "2026-06-24";
+const MACRO_CATALOG_SERIES_COUNT = 30;
 const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "3M", label: "3M", months: 3 },
   { id: "6M", label: "6M", months: 6 },
@@ -29,7 +32,7 @@ const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "5Y", label: "5Y", months: 60 },
   { id: "10Y", label: "10Y", months: 120 },
   { id: "MAX", label: "전체" },
-] as const;
+];
 const MACRO_RANGE_IDS = new Set(MACRO_RANGES.map((range) => range.id));
 const MACRO_RANGE_ORDER = MACRO_RANGES.map((range) => range.id);
 const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "rebase100", "yoy", "change"]);
@@ -65,6 +68,21 @@ type InitialChartState = {
   hiddenIds: string[];
   axisById: Record<string, MacroAxisId>;
   formulas: MacroFormulaSeries[];
+};
+
+type MacroAnalysisLens = {
+  id: string;
+  label: string;
+  detail: string;
+  state: InitialChartState;
+};
+
+type MacroConnectionLink = {
+  id: string;
+  label: string;
+  detail: string;
+  href: string;
+  groups: readonly MacroSeriesDefinition["group"][];
 };
 
 type UserMacroPreset = {
@@ -113,6 +131,140 @@ function parseKnownHiddenIds(raw: string | null, knownIds: readonly string[]) {
 function formulaId(leftId: string, operator: MacroFormulaOperator, rightId: string) {
   return `formula-${operator}-${leftId}-${rightId}`;
 }
+
+const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
+  {
+    id: "risk-liquidity",
+    label: "리스크·유동성 렌즈",
+    detail: "주식, 변동성, 재정 유동성, 금리, 신용을 한 번에 본다.",
+    state: {
+      selected: [
+        { id: "sp500", transform: "rebase100" },
+        { id: "vix", transform: "raw" },
+        { id: "tga", transform: "rebase100" },
+        { id: "DGS10", transform: "raw" },
+        { id: "HY_spread", transform: "raw" },
+        { id: "M2SL", transform: "yoy" },
+      ],
+      rangeId: "10Y",
+      hiddenIds: ["vix"],
+      axisById: { vix: "right", DGS10: "right", HY_spread: "right" },
+      formulas: [
+        {
+          id: formulaId("sp500", "ratio", "DGS10"),
+          leftId: "sp500",
+          rightId: "DGS10",
+          operator: "ratio",
+        },
+      ],
+    },
+  },
+  {
+    id: "bank-credit",
+    label: "은행·신용 렌즈",
+    detail: "은행 신용, 예금, 자본비율, HY 스프레드, 장기금리를 묶는다.",
+    state: {
+      selected: [
+        { id: "bank_credit", transform: "yoy" },
+        { id: "deposits", transform: "yoy" },
+        { id: "fdic_tier1", transform: "raw" },
+        { id: "HY_spread", transform: "raw" },
+        { id: "DGS10", transform: "raw" },
+      ],
+      rangeId: "10Y",
+      hiddenIds: [],
+      axisById: { fdic_tier1: "right", HY_spread: "right", DGS10: "right" },
+      formulas: [
+        {
+          id: formulaId("bank_credit", "spread", "deposits"),
+          leftId: "bank_credit",
+          rightId: "deposits",
+          operator: "spread",
+        },
+      ],
+    },
+  },
+  {
+    id: "activity",
+    label: "경기활동 렌즈",
+    detail: "OECD CLI와 PMI/ISM 제조·서비스를 같은 축에서 본다.",
+    state: {
+      selected: [
+        { id: "oecd_cli_us", transform: "raw" },
+        { id: "pmi_mfg_us_sp", transform: "raw" },
+        { id: "ism_mfg_headline", transform: "raw" },
+        { id: "ism_services_headline", transform: "raw" },
+      ],
+      rangeId: "MAX",
+      hiddenIds: [],
+      axisById: {},
+      formulas: [],
+    },
+  },
+  {
+    id: "crypto-liquidity",
+    label: "크립토 유동성 렌즈",
+    detail: "스테이블코인 공급, 나스닥, S&P 500, 크립토 심리를 비교한다.",
+    state: {
+      selected: [
+        { id: "stablecoins", transform: "rebase100" },
+        { id: "nasdaq", transform: "rebase100" },
+        { id: "sp500", transform: "rebase100" },
+        { id: "crypto_fear_greed", transform: "raw" },
+        { id: "vix", transform: "raw" },
+      ],
+      rangeId: "5Y",
+      hiddenIds: ["vix"],
+      axisById: { crypto_fear_greed: "right", vix: "right" },
+      formulas: [
+        {
+          id: formulaId("nasdaq", "ratio", "stablecoins"),
+          leftId: "nasdaq",
+          rightId: "stablecoins",
+          operator: "ratio",
+        },
+      ],
+    },
+  },
+];
+
+const MACRO_CONNECTION_LINKS: readonly MacroConnectionLink[] = [
+  {
+    id: "screener",
+    label: "스크리너",
+    detail: "매크로 렌즈를 종목 조건으로 이어서 좁힌다.",
+    href: "/screener",
+    groups: ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"],
+  },
+  {
+    id: "etfs",
+    label: "ETF 센터",
+    detail: "국면을 ETF 자산군, 레버리지, 단일종목 ETF로 연결한다.",
+    href: "/etfs",
+    groups: ["equity", "rates", "credit", "liquidity", "activity", "sentiment"],
+  },
+  {
+    id: "market-structure",
+    label: "시장 구조",
+    detail: "밸류에이션·리스크 구조 차트와 비교한다.",
+    href: "/market-valuation/structure",
+    groups: ["equity", "rates", "credit", "liquidity"],
+  },
+  {
+    id: "events",
+    label: "이벤트",
+    detail: "실적, 분할, 장전·시간외 움직임으로 이어 본다.",
+    href: "/market/events",
+    groups: ["equity", "sentiment", "activity"],
+  },
+  {
+    id: "portfolio",
+    label: "포트폴리오",
+    detail: "내 보유 종목의 연결 데이터와 대조한다.",
+    href: "/portfolio",
+    groups: ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"],
+  },
+] as const;
 
 function parseFormulaSeries(raw: string | null, selected: readonly SelectedMacroSeries[]) {
   if (!raw) return [];
@@ -334,7 +486,16 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
   URL.revokeObjectURL(url);
 }
 
-function downloadChartPng() {
+function waitForPaint() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+async function downloadChartPng() {
+  await waitForPaint();
   const canvas = document.querySelector<HTMLCanvasElement>('[role="group"][aria-label*="매크로 시계열 비교 차트"] canvas');
   if (!canvas) return false;
   const exportCanvas = document.createElement("canvas");
@@ -431,6 +592,23 @@ function nextRangeId(current: string, delta: -1 | 1) {
   const index = MACRO_RANGE_ORDER.indexOf(current);
   const safeIndex = index >= 0 ? index : MACRO_RANGE_ORDER.indexOf(DEFAULT_RANGE_ID);
   return MACRO_RANGE_ORDER[Math.min(Math.max(safeIndex + delta, 0), MACRO_RANGE_ORDER.length - 1)] ?? DEFAULT_RANGE_ID;
+}
+
+function rangeLabel(rangeId: string) {
+  return MACRO_RANGES.find((range) => range.id === rangeId)?.label ?? rangeId;
+}
+
+function latestFiniteLabel(series: readonly MarketChartSeries[], hiddenIds: readonly string[]) {
+  const hidden = new Set(hiddenIds);
+  let latest: string | null = null;
+  for (const item of series) {
+    if (hidden.has(item.id)) continue;
+    for (const point of item.points) {
+      if (typeof point.value !== "number" || !Number.isFinite(point.value)) continue;
+      if (latest === null || point.label > latest) latest = point.label;
+    }
+  }
+  return latest;
 }
 
 function PickerButton({
@@ -654,6 +832,11 @@ export default function MacroChartClient() {
     });
   }, [applyChartState]);
 
+  const applyAnalysisLens = useCallback((lens: MacroAnalysisLens) => {
+    applyChartState(lens.state);
+    setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
+  }, [applyChartState]);
+
   const addFormula = useCallback(() => {
     if (!currentFormulaLeftId || !currentFormulaRightId || currentFormulaLeftId === currentFormulaRightId) {
       setFormulaNotice("서로 다른 시리즈 2개를 선택하세요.");
@@ -735,6 +918,59 @@ export default function MacroChartClient() {
   }, [activeLoadState, axisById, formulas]);
   const canZoomIn = MACRO_RANGE_ORDER.indexOf(rangeId) > 0;
   const canZoomOut = MACRO_RANGE_ORDER.indexOf(rangeId) >= 0 && MACRO_RANGE_ORDER.indexOf(rangeId) < MACRO_RANGE_ORDER.length - 1;
+  const selectedSourceCount = useMemo(
+    () => new Set(selectedDefinitions.map((definition) => definition.sourcePath)).size,
+    [selectedDefinitions],
+  );
+  const selectedGroupKeys = useMemo(
+    () => [...new Set(selectedDefinitions.map((definition) => definition.group))],
+    [selectedDefinitions],
+  );
+  const selectedGroupLabels = useMemo(
+    () => selectedGroupKeys.map((group) => MACRO_GROUP_LABELS[group]).join(" · "),
+    [selectedGroupKeys],
+  );
+  const latestVisibleDate = useMemo(
+    () => latestFiniteLabel(chartSeries, visibleHiddenIds),
+    [chartSeries, visibleHiddenIds],
+  );
+  const visibleChartSeriesCount = Math.max(chartSeries.length - visibleHiddenIds.length, 0);
+  const connectionLinks = useMemo(() => {
+    const groups = new Set(selectedGroupKeys);
+    return MACRO_CONNECTION_LINKS.filter((link) => link.groups.some((group) => groups.has(group)));
+  }, [selectedGroupKeys]);
+  const analysisCards = useMemo(
+    () => [
+      {
+        label: "최근 기준일",
+        value: latestVisibleDate ?? "—",
+        detail: `${visibleChartSeriesCount}개 표시 · 기간 ${rangeLabel(rangeId)}`,
+      },
+      {
+        label: "연결 데이터",
+        value: `${selectedDefinitions.length}/${MACRO_CATALOG_SERIES_COUNT}`,
+        detail: `${selectedSourceCount}개 파일 · ${selectedGroupLabels || "그룹 없음"}`,
+      },
+      {
+        label: "워크벤치",
+        value: `합성 ${formulas.length}개`,
+        detail: visibleHiddenIds.length
+          ? `숨김 ${visibleHiddenIds.length}개 · 축 고정 ${visibleAxisOverrides}개`
+          : `축 고정 ${visibleAxisOverrides}개`,
+      },
+    ],
+    [
+      formulas.length,
+      latestVisibleDate,
+      rangeId,
+      selectedDefinitions.length,
+      selectedGroupLabels,
+      selectedSourceCount,
+      visibleAxisOverrides,
+      visibleChartSeriesCount,
+      visibleHiddenIds.length,
+    ],
+  );
 
   return (
     <div className="space-y-5">
@@ -777,7 +1013,7 @@ export default function MacroChartClient() {
             </button>
             <button
               type="button"
-              onClick={() => setExportNotice(downloadChartPng() ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
+              onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
               disabled={!ready || chartSeries.length === 0}
               className="min-h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
             >
@@ -785,11 +1021,15 @@ export default function MacroChartClient() {
             </button>
             <button
               type="button"
-              onClick={() => ready && downloadCsv(chartSeries, selected)}
+              onClick={() => {
+                if (!ready) return;
+                downloadCsv(chartSeries, selected);
+                setExportNotice("전체 CSV 저장됨");
+              }}
               disabled={!ready || chartSeries.length === 0}
               className="min-h-9 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
             >
-              CSV 저장
+              전체 CSV 저장
             </button>
           </div>
           {exportNotice ? (
@@ -803,7 +1043,21 @@ export default function MacroChartClient() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           {selectedDefinitions.length ? (
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 xl:hidden" aria-label="선택된 매크로 시리즈">
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 xl:hidden" aria-label="모바일 매크로 상태">
+              <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-900 px-3 text-xs font-black text-white">
+                기간 {rangeLabel(rangeId)}
+              </span>
+              <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-black text-slate-700">
+                선택 {selected.length}개
+              </span>
+              <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-black text-slate-700">
+                합성 {formulas.length}개
+              </span>
+              {visibleHiddenIds.length ? (
+                <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-black text-slate-700">
+                  숨김 {visibleHiddenIds.length}개
+                </span>
+              ) : null}
               {selected.map((item) => {
                 const definition = seriesById(item.id);
                 if (!definition) return null;
@@ -820,6 +1074,18 @@ export default function MacroChartClient() {
                   </button>
                 );
               })}
+              {formulas.map((formula) => (
+                <button
+                  key={formula.id}
+                  type="button"
+                  onClick={() => removeFormula(formula.id)}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-black text-amber-800"
+                  aria-label={`${formulaLabel(formula)} 삭제`}
+                >
+                  {formulaLabel(formula)}
+                  <span aria-hidden className="text-amber-500">×</span>
+                </button>
+              ))}
             </div>
           ) : null}
           {activeLoadState.status === "error" ? (
@@ -869,14 +1135,66 @@ export default function MacroChartClient() {
               visibleHiddenIds.length ? `${visibleHiddenIds.length}개 시리즈 숨김` : null,
               visibleAxisOverrides ? `${visibleAxisOverrides}개 축 고정` : null,
               formulas.length ? `${formulas.length}개 합성 시리즈` : null,
+              `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
+              "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
               "URL로 선택값·기간·숨김·축 상태 공유 가능",
             ]}
           >
             public data spine의 정적 JSON만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
           </DataProvenanceNote>
+          <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3 md:grid-cols-3" aria-label="매크로 분석 요약">
+            {analysisCards.map((card) => (
+              <div key={card.label} className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">{card.label}</p>
+                <p className="mt-1 truncate text-sm font-black text-slate-900">{card.value}</p>
+                <p className="mt-0.5 truncate text-[11px] font-bold text-slate-500">{card.detail}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <aside className="space-y-4">
+          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-black text-slate-900">분석 렌즈</h2>
+              <span className="text-[11px] font-bold text-slate-500">{MACRO_ANALYSIS_LENSES.length}개</span>
+            </div>
+            <div className="mt-3 space-y-2">
+              {MACRO_ANALYSIS_LENSES.map((lens) => (
+                <button
+                  key={lens.id}
+                  type="button"
+                  onClick={() => applyAnalysisLens(lens)}
+                  className="block w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                >
+                  <span className="block truncate text-xs font-black text-slate-900">{lens.label}</span>
+                  <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {connectionLinks.length ? (
+            <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-black text-slate-900">연결 탐색</h2>
+                <span className="text-[11px] font-bold text-slate-500">{connectionLinks.length}개</span>
+              </div>
+              <div className="mt-3 space-y-2">
+                {connectionLinks.map((link) => (
+                  <TransitionLink
+                    key={link.id}
+                    href={link.href}
+                    className="block rounded-lg bg-slate-50 px-3 py-2 transition hover:bg-slate-100"
+                  >
+                    <span className="block truncate text-xs font-black text-slate-900">{link.label}</span>
+                    <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{link.detail}</span>
+                  </TransitionLink>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
