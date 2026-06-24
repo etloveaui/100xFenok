@@ -54,6 +54,10 @@ Stooq Worker-proxy stock/ETF/index comparison tool.
   insight card, and deep-links each lens into screener presets, ETF filters, and
   representative stock detail routes. `qa:macro-chart` now verifies those
   connected surfaces, not just the chart page.
+- P15-Fusion pivot: next direction is not a separate cross-link layer, but one
+  `/macro-chart` where Stooq Worker-proxied market symbols and Data Spine macro
+  series share the same chart pipeline. Draft contract:
+  `docs/planning/CONTRACT_macro_chart_stooq_fusion_20260624.md`.
 
 ## Deferred
 
