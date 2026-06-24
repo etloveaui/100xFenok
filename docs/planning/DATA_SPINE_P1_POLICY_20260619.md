@@ -181,18 +181,22 @@ Order is risk-first, not table-order:
 Quote and Treasury are contracted/routed. The next residual rows are separate
 legacy/runtime cleanup items, not part of the quote/Treasury slice:
 
-- `tools/asset/multichart.html` + `tools/asset/config.js`: browser Stooq /
-  Alpha Vantage fallback and public config key exposure. Migrate to a DataPack or
-  first-party chart API before this tool is promoted.
-- `admin/design-lab/charts/v*.html`: prototype chart pages with direct Stooq
-  proxy fetches. Retire if unused; otherwise route through a first-party data
-  boundary.
+- `tools/asset/multichart.html` + `tools/asset/config.js`: CLOSED 2026-06-24
+  as a public live-data exposure. The public config no longer carries proxy/key
+  values, Alpha fallback keys were removed, and the legacy live fetch path now
+  fails closed. Rebuild on a DataPack or first-party chart API before this tool
+  is promoted.
+- `admin/design-lab/charts/v*.html`: CLOSED 2026-06-24 for live data. `v1-v6`
+  are retired live-data prototypes with Stooq proxy fetch disabled; `v7` is an
+  explicit design-only exception because it has no data/API fetch.
 - `tools/macro-monitor/shared/data-fetcher.js`: CLOSED 2026-06-24 for FDIC;
   the browser external fallback was removed and the module now consumes the
   same-origin `/data/macro/fdic-tier1.json` DataPack only.
-- `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`: legacy
-  sentiment writers with direct provider calls. Either absorb into scheduled
-  collectors or mark sunset like `vix.gs`.
+- `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`: CLOSED
+  2026-06-24. CNN aggregate, CNN individual component files, MOVE, and CFTC are
+  now owned by `scripts/fetch-sentiment.mjs` and
+  `.github/workflows/fetch-sentiment.yml`; the GAS backups fail closed unless
+  `ALLOW_DEPRECATED_GAS_SENTIMENT=true` is set for one-off historical recovery.
 - feno-value direct valuation-engine providers remain tracked outside this repo;
   no direct feno-value provider call was found in the 100x Next runtime.
 

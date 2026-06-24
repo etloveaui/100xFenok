@@ -290,8 +290,9 @@ Peer/subagent recheck expanded the scan beyond the original P0 pattern to
   module, not part of the Next product Data Spine surface. Current code reads
   FRED macro files, Treasury TGA, stablecoins, and FDIC Tier1 from same-origin
   JSON DataPacks. The FDIC `api.fdic.gov` browser fallback was removed on
-  2026-06-24; remaining residual direct-provider work is now the asset chart
-  prototypes and non-quote admin/GAS sentiment writers.
+  2026-06-24. Later on 2026-06-24, the asset chart prototype live providers
+  were retired from public browser execution and non-quote admin/GAS sentiment
+  writers were absorbed into the scheduled sentiment collector.
 - GAS endpoints are legacy/admin routed exceptions, not primary Next Data Spine
   consumers. As of 2026-06-22, the three live quote helpers route through
   quote.v1 where safe while preserving legacy fallbacks:
@@ -599,8 +600,8 @@ contract and the disagreement policy.
    - `DS-P1-003/004/006` GAS quote helpers are now routed exceptions: quote.v1
      is used as the shared price boundary, but legacy fallbacks remain for OHLC
      and CNBC pre/post-market quality.
-   - `macro-monitor` FDIC fallback and non-quote GAS/admin HTML endpoints are
-     classified, but not yet migrated.
+   - `macro-monitor` FDIC fallback, non-quote GAS sentiment writers, and legacy
+     chart prototype live provider paths were closed on 2026-06-24.
    - `/api/data?dataset=treasury-tga` is routed through the scheduled TGA mirror
      first; live Treasury FiscalData remains fallback-only and now emits
      `treasury-tga.v1` state/freshness metadata when used.
@@ -614,13 +615,14 @@ contract and the disagreement policy.
 1. Keep Daily Wrap report metadata; defer revival until report automation exists.
 2. P1: freeze the per-field authority/fallback/tolerance/disagreement matrix
    using the measured 28-dataset inventory and `market_source_parity`.
-3. P1/P2: handle residual legacy direct-provider surfaces:
-   `tools/asset/multichart.html`, `admin/design-lab/charts/v*.html`, and
-   `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`. The
-   `tools/macro-monitor/shared/data-fetcher.js` FDIC fallback was removed on
-   2026-06-24. Quote and
-   Treasury are contracted/routed; do not reopen them unless building the
-   deferred cached live-quote snapshot service.
+3. P1/P2: residual legacy direct-provider surfaces were closed on 2026-06-24:
+   `tools/asset` public chart config was stripped of live proxy/key values,
+   `multichart.html` fails closed until a first-party chart boundary exists,
+   `admin/design-lab` chart variants v1-v6 are retired from live data, and
+   `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs` are
+   deprecated backups behind an explicit opt-in guard. Quote and Treasury are
+   contracted/routed; do not reopen them unless building the deferred cached
+   live-quote snapshot service.
 4. Filings: prioritize the foreign-filer 6-K / 20-F / 40-F path before any
    top-300/top-400 EDGAR expansion.
 5. Revisit low-sample `total_assets` and `forward_pe` authority-only candidates.

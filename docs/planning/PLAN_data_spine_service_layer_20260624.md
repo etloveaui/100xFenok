@@ -13,8 +13,8 @@
 ## Phase P9-A — Residual Data Spine Cleanup
 
 - [x] Remove macro-monitor FDIC browser external fallback. It now reads same-origin `/data/macro/fdic-tier1.json` only and fails visibly when the DataPack is unavailable.
-- [ ] Classify remaining browser chart prototypes: `tools/asset/multichart.html`, `tools/asset/config.js`, and `admin/design-lab/charts/v*.html`.
-- [ ] Classify non-quote GAS sentiment writers: `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`.
+- [x] Classify remaining browser chart prototypes: `tools/asset/multichart.html` + `tools/asset/config.js` are migrate candidates with public live-data config disabled; `admin/design-lab/charts/v1-v6.html` are retired live-data prototypes; `v7-singularity.html` is an explicit no-fetch design exception.
+- [x] Classify non-quote GAS sentiment writers: `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs` are deprecated backups. Runtime ownership moved to `scripts/fetch-sentiment.mjs` + `.github/workflows/fetch-sentiment.yml`, with GAS execution guarded by `ALLOW_DEPRECATED_GAS_SENTIMENT=true`.
 - [ ] Keep quote.v1 and Treasury TGA closed unless building the deferred cached live-quote snapshot service.
 
 ## Phase P9-B — Graph Contract Hardening
