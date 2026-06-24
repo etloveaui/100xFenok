@@ -1,0 +1,43 @@
+{
+  "schema_version": "macro-series-catalog/v1",
+  "curated_at": "2026-06-24",
+  "surface": "macro-chart",
+  "description": "Initial service-layer catalog for native macro chart series. It maps user-facing series ids to local public data files and JSON path shapes.",
+  "series": [
+    { "id": "sp500", "label": "S&P 500", "group": "equity", "unit": "index", "frequency": "daily", "source_path": "/data/indices/sp500.json", "path_shape": "$[] {date,value}" },
+    { "id": "nasdaq", "label": "Nasdaq", "group": "equity", "unit": "index", "frequency": "daily", "source_path": "/data/indices/nasdaq.json", "path_shape": "$[] {date,value}" },
+    { "id": "vix", "label": "VIX", "group": "sentiment", "unit": "index", "frequency": "daily", "source_path": "/data/sentiment/vix.json", "path_shape": "$[] {date,value}" },
+    { "id": "move", "label": "MOVE", "group": "sentiment", "unit": "index", "frequency": "daily", "source_path": "/data/sentiment/move.json", "path_shape": "$[] {date,value}" },
+    { "id": "cnn_fear_greed", "label": "CNN Fear & Greed", "group": "sentiment", "unit": "score", "frequency": "daily", "source_path": "/data/sentiment/cnn-fear-greed.json", "path_shape": "$[] {date,score}" },
+    { "id": "cnn_put_call", "label": "Put/Call", "group": "sentiment", "unit": "score", "frequency": "daily", "source_path": "/data/sentiment/cnn-put-call.json", "path_shape": "$[] {date,value,rating}" },
+    { "id": "aaii_spread", "label": "AAII Bull-Bear", "group": "sentiment", "unit": "spread", "frequency": "weekly", "source_path": "/data/sentiment/aaii.json", "path_shape": "$[] {date,bullish,bearish} -> bullish-bearish" },
+    { "id": "cftc_sp500_net", "label": "CFTC S&P Net", "group": "sentiment", "unit": "contracts", "frequency": "weekly", "source_path": "/data/sentiment/cftc-sp500.json", "path_shape": "$[] {date,net}" },
+    { "id": "crypto_fear_greed", "label": "Crypto Fear & Greed", "group": "sentiment", "unit": "score", "frequency": "daily", "source_path": "/data/sentiment/crypto-fear-greed.json", "path_shape": "$[] {date,value,classification}" },
+    { "id": "tga", "label": "Treasury General Account", "group": "liquidity", "unit": "usd_million", "frequency": "daily", "source_path": "/data/macro/tga.json", "path_shape": "$.series[] {date,val}" },
+    { "id": "stablecoins", "label": "Stablecoin Supply", "group": "liquidity", "unit": "usd", "frequency": "daily", "source_path": "/data/macro/stablecoins.json", "path_shape": "$.series[] {date,val}" },
+    { "id": "M2SL", "label": "M2 Money Stock", "group": "liquidity", "unit": "usd_billion", "frequency": "monthly", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.M2SL[] {date,value}" },
+    { "id": "WALCL", "label": "Fed Balance Sheet", "group": "liquidity", "unit": "usd_billion", "frequency": "weekly", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.WALCL[] {date,value}" },
+    { "id": "WRESBAL", "label": "Reserve Balances", "group": "liquidity", "unit": "usd_billion", "frequency": "weekly", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.WRESBAL[] {date,value}" },
+    { "id": "RRPONTSYD", "label": "Reverse Repo", "group": "liquidity", "unit": "usd_billion", "frequency": "daily", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.RRPONTSYD[] {date,value}" },
+    { "id": "SOFR", "label": "SOFR", "group": "rates", "unit": "percent", "frequency": "daily", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.SOFR[] {date,value}" },
+    { "id": "IORB", "label": "IORB", "group": "rates", "unit": "percent", "frequency": "daily", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.IORB[] {date,value}" },
+    { "id": "GDP", "label": "US GDP", "group": "activity", "unit": "usd_billion", "frequency": "quarterly", "source_path": "/data/macro/fred-macro.json", "path_shape": "$.series.GDP[] {date,value}" },
+    { "id": "DGS10", "label": "10Y Treasury Yield", "group": "rates", "unit": "percent", "frequency": "daily", "source_path": "/data/macro/fred-banking-daily.json", "path_shape": "$.series.DGS10[] {date,value}" },
+    { "id": "HY_spread", "label": "High Yield Spread", "group": "credit", "unit": "spread", "frequency": "daily", "source_path": "/data/macro/fred-banking-daily.json", "path_shape": "$.series.BAMLH0A0HYM2[] {date,value}" },
+    { "id": "bank_credit", "label": "Commercial Bank Credit", "group": "banking", "unit": "usd_billion", "frequency": "weekly", "source_path": "/data/macro/fred-banking-weekly.json", "path_shape": "$.series.TOTLL[] {date,value}" },
+    { "id": "deposits", "label": "Bank Deposits", "group": "banking", "unit": "usd_billion", "frequency": "weekly", "source_path": "/data/macro/fred-banking-weekly.json", "path_shape": "$.series.DPSACBW027SBOG[] {date,value}" },
+    { "id": "fdic_tier1", "label": "FDIC Tier 1 Ratio", "group": "banking", "unit": "percent", "frequency": "quarterly", "source_path": "/data/macro/fdic-tier1.json", "path_shape": "$.data[] {date,value,banks}" },
+    { "id": "oecd_cli_us", "label": "OECD CLI US", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.oecd_cli.records[].values.united_states" },
+    { "id": "oecd_cli_g7", "label": "OECD CLI G7", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.oecd_cli.records[].values.g7" },
+    { "id": "pmi_mfg_global", "label": "Global Manufacturing PMI", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.pmi_manufacturing.records[].values.global" },
+    { "id": "pmi_mfg_us_sp", "label": "US S&P Manufacturing PMI", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.pmi_manufacturing.records[].values.us_sp_global" },
+    { "id": "ism_mfg_headline", "label": "ISM Manufacturing", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.ism_manufacturing.records[].values.headline" },
+    { "id": "pmi_services_global", "label": "Global Services PMI", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.pmi_services.records[].values.global" },
+    { "id": "ism_services_headline", "label": "ISM Services", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.ism_services.records[].values.headline" }
+  ],
+  "presets": [
+    { "id": "risk-liquidity", "label": "리스크와 유동성", "series": ["sp500:rebase100", "DGS10:raw", "HY_spread:raw", "M2SL:yoy"] },
+    { "id": "liquidity", "label": "유동성", "series": ["WALCL:rebase100", "WRESBAL:rebase100", "RRPONTSYD:rebase100", "tga:rebase100", "stablecoins:rebase100"] },
+    { "id": "activity", "label": "경기활동", "series": ["oecd_cli_us:raw", "pmi_mfg_us_sp:raw", "ism_mfg_headline:raw", "ism_services_headline:raw"] }
+  ]
+}
