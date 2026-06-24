@@ -42,13 +42,27 @@
 - [x] Add ETF detail underlying-stock and same-underlying ETF compare actions for graph-resolved single-stock ETFs.
 - [x] Add portfolio JSON backup download and graph connection CSV export.
 
-## Phase P9-D — Native Macro Chart Candidate
+## Phase P9-D — Native Macro Chart
 
 - [x] Review and accept the Kimi-authored final vision as a separate service-layer candidate, not a G2/G3 scope addition.
-- [ ] P0: generate an initial 30-series macro catalog plus pure alignment/transform helpers for rebase100, YoY, MoM, and spread.
-- [ ] P1: add native `/macro-chart` route with three default presets and opt-in time-axis charting, then retire or redirect the legacy `/multichart` iframe.
-- [ ] P2: add interactive series picker, URL state, and localStorage user presets.
+- [x] P0: add an initial 30-series macro catalog plus pure alignment/transform helpers for raw, rebase100, YoY, and period-change transforms.
+- [x] P1: add native `/macro-chart` route with three default presets, searchable picker, URL state, CSV export, and legacy `/multichart` redirect.
+- [ ] P1b: decide whether Chart.js `TimeScale` + adapter is worth adding. Current implementation intentionally keeps ISO category labels to avoid a new dependency/install boundary.
+- [ ] P2: add localStorage user presets and richer axis controls.
 - [ ] P3: add brush/zoom, crosshair sync, formula series, and PNG export.
+
+## Phase P9-E — Product Affordance Deepening
+
+- [x] Add screener row selection with page select, filtered-result select, selected connection CSV, and selected single-stock ETF compare action.
+- [ ] Continue Explore/Stock/ETF polish only where it strengthens existing service navigation. Avoid adding graph generation work unless a product surface needs a smaller artifact.
+
+## Phase P9-F — Observability and Provider Policy
+
+- [x] Add Admin/Data Lab service-layer status from existing generated artifacts: product surface readiness, entity graph, and macro-series catalog.
+- [x] Keep workflow diagnostics Admin-only. Public pages keep the short `DataState` Korean status contract and do not expose coverage/provider/internal diagnostic copy.
+- [ ] Notification hooks and active failed-source alerts remain deferred and approval-gated.
+- [ ] Provider/quota policy remains contract-first: no new external fetch, paid provider, production credential, or live quota probe in this slice.
+- [ ] Refresh external quota docs before relying on Gemini/Search-grounding limits. Current local reference was fetched 2026-06-05 and may be stale.
 
 ## Quality Gates
 
@@ -59,6 +73,7 @@
 - Scoped lint for touched product/data files
 - `npm run build`
 - Browser smoke: `/portfolio?ticker=NVDA`, `/screener?sector=반도체`, `/stock/NVDA`, `/etfs/SPY`
+- Macro smoke: `/macro-chart`, `/multichart` redirect, CSV export, mobile picker.
 - Mobile/a11y smoke: at least `/portfolio`, `/screener`, `/stock/NVDA`
 
 ## Notes
@@ -66,3 +81,4 @@
 - P9-C is service scope, not recommendation scope. Copy must frame graph links as data navigation and provenance, not buy/sell advice.
 - Missing or typo tickers in a local portfolio must degrade to "connection data unavailable" without breaking price evaluation.
 - The stock index payload is about 1 MB; use the existing cached loader and do not fetch per holding.
+- `/macro-chart` reads only static `/data/...json` files. Time-axis and new dependency work is intentionally deferred until the install/runtime tradeoff is explicit.
