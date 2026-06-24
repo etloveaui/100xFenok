@@ -23,6 +23,8 @@ export type MacroSeriesFrequency = "daily" | "weekly" | "monthly" | "quarterly";
 
 export type MacroValueTransform = "raw" | "rebase100" | "yoy" | "change";
 
+export type MacroSeriesSourceKind = "local-json" | "stooq";
+
 export type MacroSeriesAccessor =
   | {
       kind: "array";
@@ -64,7 +66,9 @@ export interface MacroSeriesDefinition {
   group: MacroSeriesGroup;
   unit: MacroSeriesUnitKind;
   frequency: MacroSeriesFrequency;
+  sourceKind?: MacroSeriesSourceKind;
   sourcePath: string;
+  stooqSymbol?: string;
   accessor: MacroSeriesAccessor;
   description: string;
   defaultTransform?: MacroValueTransform;

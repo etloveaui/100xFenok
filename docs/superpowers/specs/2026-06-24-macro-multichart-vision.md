@@ -58,6 +58,10 @@ Stooq Worker-proxy stock/ETF/index comparison tool.
   `/macro-chart` where Stooq Worker-proxied market symbols and Data Spine macro
   series share the same chart pipeline. Draft contract:
   `docs/planning/CONTRACT_macro_chart_stooq_fusion_20260624.md`.
+- P15-Fusion S1 local foundation: `loadMacroSeries` now supports a no-UI
+  `sourceKind: "stooq"` path through the owner Worker proxy, using delimiter-safe
+  IDs such as `stq~NVDA.US`, Close-price CSV parsing, 24h browser cache, and the
+  existing transform/alignment pipeline.
 
 ## Deferred
 

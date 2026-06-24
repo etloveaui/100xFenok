@@ -1,6 +1,6 @@
 # CONTRACT — Stock (Stooq) Source Fusion into /macro-chart
 
-> Status: **DRAFT for owner review**. Architect: Claude. Implementor: Codex.
+> Status: **DRAFT accepted for S1 local implementation**. Architect: Claude. Implementor: Codex.
 > Decision basis: owner pivot to fusion (2026-06-24). Feasibility confirmed twice —
 > Claude (catalog `source_path` + `{date,value}` abstraction) and Codex (loader audit:
 > `loadMacroSeries` normalizes definitions → rawPoints → transforms/alignment/CSV/PNG).
@@ -16,6 +16,10 @@
   P15-A/B/C/D checks.
 - No additional manual `cf:deploy` should run until the owner chooses whether to
   forward-revert that live exposure or absorb it into Fusion.
+- Owner decision observed via right-pane collaboration: absorb current live P15
+  connect work and keep the `/multichart` URL as a preserved entry point. S1 may
+  proceed locally, but production push/deploy remains gated until the fused chart
+  QA contract is green.
 
 ## Goal
 
@@ -32,9 +36,8 @@ URL-share / CSV / PNG pipeline. The restored multichart stock-compare folds in h
 - **D3** — Chart engine stays **Chart.js** for this fusion slice. Engine swap
   (Lightweight Charts / ECharts) is deferred to the design-remodel track (research ③).
 - **D4** — The P15 connect slice (`0dc75960f`, pushed and deployed by the push workflow) is
-  **absorbed or forward-reverted by explicit owner decision**. If absorbed, the macro context
-  card + cross-surface links stay, re-expressed on the fused chart. If forward-reverted,
-  Fusion starts from the P15-0 restored `/multichart` base.
+  **absorbed**. The macro context card + cross-surface links stay, re-expressed
+  on the fused chart.
 
 ## Blockers (from Codex loader audit) → contract resolution
 
@@ -57,11 +60,12 @@ URL-share / CSV / PNG pipeline. The restored multichart stock-compare folds in h
   owner-Worker-proxied fetch — extend `DEC_multichart_stooq_worker_20260624` to cover macro-chart
   (the same-origin exception is already granted to the owner Worker proxy).
 - **B4 — mixed resolution.** Daily stock vs monthly/weekly macro.
-  → Align via the existing label/alignment layer (date labels); coarser series leave gaps as
-  `null` (no fake interpolation). QA must cover NVDA (daily) vs M2 (monthly) as an
-  overlay under raw / rebase100. Formula ratios between daily and monthly series are
-  sparse under the current exact-date formula rule unless a future `formulaFill=previous`
-  mode is designed, visibly labeled, and QA-covered.
+  → Align via the existing label/alignment layer (date labels). Current
+  `alignMacroPoints` behavior carries the latest known value forward after a
+  series starts, so mixed daily/monthly overlays and formulas are possible but
+  must be labeled as aligned chart values, not raw same-day observations. QA must
+  cover NVDA (daily) vs M2 (monthly) under raw / rebase100 and one formula smoke
+  that exercises the same aligned-value behavior.
 
 ## Picker
 
@@ -82,7 +86,10 @@ resolution-note pattern).
 
 ## Slices (Codex implements; Claude gates each; push only after owner OK)
 
-- **S1** — source-kind model + stooq loader branch + CSV parser port (no UI) + loader/unit test.
+- **S1** — source-kind model + stooq loader branch + CSV parser port (no UI) +
+  loader/unit test. **Local implementation landed in worktree**: `sourceKind:
+  "stooq"`, delimiter-safe `stq~...`-compatible definitions, owner Worker proxy,
+  24h browser cache, and `qa:macro-chart:stooq-loader`.
 - **S2** — dynamic id support (URL parser, `seriesById`, formula/axis/preset) + ticker picker UI.
 - **S3** — mixed-resolution alignment + source/frequency honesty tags + QA extension (NVDA vs M2).
 - **S4** — `/multichart` disposition (D2) + P15 connect absorption (D4).
@@ -90,11 +97,9 @@ resolution-note pattern).
 
 ## Decision Gate
 
-Before implementation proceeds, the owner must choose one:
-
-1. Forward-revert the already-deployed P15 connect slice, then implement Fusion
-   from the P15-0 restored `/multichart` base.
-2. Absorb the current live P15 connect slice directly into Fusion.
+Owner choice is now: absorb the current live P15 connect slice directly into
+Fusion and preserve `/multichart` as a known address until S4 disposition is
+verified. Push/deploy is still gated on the fused chart QA contract.
 
 ## Rollback
 

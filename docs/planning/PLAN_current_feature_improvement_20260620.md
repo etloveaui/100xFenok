@@ -193,6 +193,13 @@ series inside `/macro-chart`, preserving the existing transform/alignment/URL/
 preset/CSV/PNG pipeline and keeping `/multichart` live until parity/disposition
 is approved.
 
+**P15-Fusion S1 local foundation added 2026-06-24**:
+`/macro-chart` loader now has a no-UI Stooq source-kind foundation: delimiter-safe
+definitions can load daily close CSV through the owner Worker proxy, parse Close
+values, and reuse the existing transform/alignment pipeline with 24h browser
+cache. `qa:macro-chart:stooq-loader` covers symbol normalization, CSV parsing,
+proxy-only fetch, and cache behavior. UI picker/dynamic URL support remains S2.
+
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
 addition to the localhost check. Public copy guard now blocks accidental
