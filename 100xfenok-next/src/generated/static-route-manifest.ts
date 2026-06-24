@@ -40,12 +40,12 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "notification-folders.json",
       "sizeBytes": 2757,
-      "updatedAt": "2026-06-24T01:10:35.171Z"
+      "updatedAt": "2026-06-24T04:54:25.243Z"
     },
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-24T04:50:01.802Z"
+      "updatedAt": "2026-06-24T04:58:09.846Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -116,24 +116,24 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "macro-series.json",
       "sizeBytes": 7229,
-      "updatedAt": "2026-06-24T04:41:07.070Z"
+      "updatedAt": "2026-06-24T04:54:25.378Z"
     }
   ],
   "computed": [
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 984625,
-      "updatedAt": "2026-06-24T04:50:01.658Z"
+      "updatedAt": "2026-06-24T04:58:09.712Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 145879,
-      "updatedAt": "2026-06-24T04:50:01.661Z"
+      "updatedAt": "2026-06-24T04:58:09.715Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7845620,
-      "updatedAt": "2026-06-24T04:50:01.637Z"
+      "updatedAt": "2026-06-24T04:58:09.692Z"
     },
     {
       "name": "market_data_audit.json",
@@ -47156,8 +47156,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "stablecoins.json",
-      "sizeBytes": 1035927,
-      "updatedAt": "2026-06-24T01:10:35.179Z"
+      "sizeBytes": 1036536,
+      "updatedAt": "2026-06-24T04:54:25.250Z"
     },
     {
       "name": "tga.json",
@@ -47166,8 +47166,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "yahoo-ticker.json",
-      "sizeBytes": 706,
-      "updatedAt": "2026-06-23T23:39:10.506Z"
+      "sizeBytes": 710,
+      "updatedAt": "2026-06-24T04:54:25.251Z"
     }
   ],
   "metadata": [
