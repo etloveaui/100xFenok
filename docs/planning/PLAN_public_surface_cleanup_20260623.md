@@ -171,6 +171,29 @@ Quality gate:
 - `npm run build:data-entity-graph` - pass.
 - `npm run qa:data-graph` - pass with strengthened key/link validation.
 
+### Phase 8 - Mobile UX Cleanup
+
+- [x] Collapse the AppShell mobile tab bar from seven items to five: Explore, Market, Screener, Portfolio, More.
+- [x] Keep desktop rail navigation clean by rendering More as a mobile-only tab, not a shared `NAV` item.
+- [x] Move Sectors, ETF, and Superinvestors into the mobile More sheet with active-state and `aria-current` support.
+- [x] Remove desktop `zoom:1.25` and replace it with conservative desktop text compensation.
+- [x] Improve screener mobile card density, visible expand affordance, PER band wrapping, and checkbox touch target.
+- [x] Add mobile holding cards and stacked add-holding controls to `/portfolio`; keep the full table on desktop.
+- [x] Add conditional stock-tab scroll affordance and de-duplicate the repeated tab markup inside `StockDetailClient`.
+- [x] Add focusable scroll regions and shared scroll-hint styling to Superinvestors tables.
+- [x] Expand mobile browser/a11y QA route defaults to cover `/portfolio`, `/superinvestors`, and `/etfs/SPY`.
+
+Implementation notes:
+
+- Kimi near-peer audit anchor: `fh-20260624-037-km-7d2e4eec`.
+- Accepted Kimi corrections: do not add `more` to shared `NAV`; do not use the plan's non-existent `row.name`; do not extract stock tabs into the existing content module `StockTabs.tsx`; treat `PerBandBar` overflow as a desktop table issue, not the mobile-card path.
+- `src/hooks/useMediaQuery.ts` was not added because the implemented mobile/desktop branches are handled with CSS breakpoints and existing responsive classes; adding a hook would be unused in this slice.
+
+Quality gate:
+
+- `npx tsc --noEmit --pretty false` - pass during implementation.
+- Remaining closeout gates before deploy: `npm run build`, `npm run qa:copy`, `npm run qa:seo-surface`, `npm run qa:data-graph`, targeted P8 Playwright mobile smoke, and a11y mobile smoke.
+
 ## Notes
 
 - Current P7 nested app status at goal start: `source/100xFenok` clean on `main...origin/main`, except pre-existing untracked `docs/superpowers/` from Kimi's P8 mobile UX research package.
