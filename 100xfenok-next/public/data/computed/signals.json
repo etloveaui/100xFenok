@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-06-24T10:03:04.085Z",
+  "generated_at": "2026-06-24T12:05:10.484Z",
   "as_of": "2026-06-24",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -97,22 +97,22 @@
       "status": "falling",
       "overallStatus": "falling",
       "overallLabel": "FALLING",
-      "m2YoY": 5.33,
-      "m2Total": 22804.5,
-      "netLiquidity": 5817.4,
+      "m2YoY": 6.11,
+      "m2Total": 23052.3,
+      "netLiquidity": 5814.9,
       "netLiquidityDelta": -145.8,
       "weeklyNetFlow": -145.8,
       "stablecoinMcap": 313.02409196882,
-      "scM2Ratio": 1.37,
+      "scM2Ratio": 1.36,
       "walcl": 6736.4,
       "tga": 915.1,
-      "rrp": 3.9,
+      "rrp": 6.5,
       "netFlow": -145.8,
       "components": {
         "m2_yoy": {
-          "value": 5.33,
+          "value": 6.11,
           "unit": "%",
-          "status": "stable"
+          "status": "rising"
         },
         "net_liquidity_wow": {
           "value": -145.8,
@@ -120,18 +120,18 @@
           "status": "falling"
         },
         "stablecoin_m2_ratio": {
-          "value": 1.37,
+          "value": 1.36,
           "unit": "%",
           "status": "stable"
         }
       },
       "metrics": {
-        "m2_yoy_pct": 5.33,
-        "m2_total_b": 22804.5,
-        "net_liquidity_b": 5817.4,
+        "m2_yoy_pct": 6.11,
+        "m2_total_b": 23052.3,
+        "net_liquidity_b": 5814.9,
         "weekly_net_flow_b": -145.8,
         "stablecoin_mcap_b": 313,
-        "sc_m2_ratio_pct": 1.37
+        "sc_m2_ratio_pct": 1.36
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
       "as_of": "2026-06-24",
@@ -147,7 +147,7 @@
       "overallLabel": "Caution",
       "tier1": {
         "status": "normal",
-        "value": -3,
+        "value": -4,
         "unit": "bp"
       },
       "tier2": {
@@ -156,11 +156,11 @@
         "unit": "%"
       },
       "metrics": {
-        "sofr_iorb_spread_bp": -3,
+        "sofr_iorb_spread_bp": -4,
         "reserves_gdp_pct": 9.5
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-06-23",
+      "as_of": "2026-06-24",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
