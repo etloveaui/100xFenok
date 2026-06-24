@@ -62,6 +62,10 @@ Stooq Worker-proxy stock/ETF/index comparison tool.
   `sourceKind: "stooq"` path through the owner Worker proxy, using delimiter-safe
   IDs such as `stq~NVDA.US`, Close-price CSV parsing, 24h browser cache, and the
   existing transform/alignment pipeline.
+- P15-Fusion S2 local picker/URL support: `/macro-chart` now synthesizes
+  delimiter-safe Stooq definitions at runtime, preserves them through
+  `series`/`axis`/`formula` URL state, and verifies a proxy-only NVDA+M2 fusion
+  route in local `qa:macro-chart`.
 
 ## Deferred
 

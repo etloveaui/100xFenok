@@ -1,4 +1,5 @@
 import type { MacroChartPreset, MacroSeriesDefinition } from "./types";
+import { stooqSeriesDefinitionFromId } from "./stooq";
 
 export const MACRO_SERIES_CATALOG: readonly MacroSeriesDefinition[] = [
   {
@@ -429,5 +430,5 @@ export const MACRO_TRANSFORM_LABELS = {
 } as const;
 
 export function seriesById(id: string): MacroSeriesDefinition | undefined {
-  return MACRO_SERIES_CATALOG.find((item) => item.id === id);
+  return MACRO_SERIES_CATALOG.find((item) => item.id === id) ?? stooqSeriesDefinitionFromId(id);
 }

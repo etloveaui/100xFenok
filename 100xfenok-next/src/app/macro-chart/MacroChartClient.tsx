@@ -22,6 +22,7 @@ import {
   type MacroWorkbenchContext,
 } from "@/lib/macro-chart/context";
 import { buildMarketSeries, loadMacroSeries, unitLabel } from "@/lib/macro-chart/loader";
+import { stooqSeriesIdFromInput } from "@/lib/macro-chart/stooq";
 import type { LoadedMacroSeries } from "@/lib/macro-chart/loader";
 import type { MacroSeriesDefinition, MacroValueTransform } from "@/lib/macro-chart/types";
 
@@ -690,6 +691,8 @@ export default function MacroChartClient() {
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const [queryInput, setQueryInput] = useState("");
   const [query, setQuery] = useState("");
+  const [stooqTickerInput, setStooqTickerInput] = useState("");
+  const [stooqTickerNotice, setStooqTickerNotice] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [loadRetryKey, setLoadRetryKey] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -812,6 +815,7 @@ export default function MacroChartClient() {
     setPresetNotice(null);
     setFormulaNotice(null);
     setExportNotice(null);
+    setStooqTickerNotice(null);
   }, []);
 
   const toggleSeries = useCallback((id: string) => {
@@ -836,6 +840,32 @@ export default function MacroChartClient() {
     setSelected((prev) => [...prev, { id, transform: definition.defaultTransform ?? "raw" }]);
     setLimitNotice(null);
   }, [selected]);
+
+  const addStooqSeries = useCallback(() => {
+    const id = stooqSeriesIdFromInput(stooqTickerInput);
+    if (!id) {
+      setStooqTickerNotice("심볼 형식을 확인하세요. 예: NVDA, SPY.US, 005930.KS");
+      return;
+    }
+    if (selected.some((item) => item.id === id)) {
+      setStooqTickerNotice("이미 선택한 시장 심볼입니다.");
+      return;
+    }
+    const definition = seriesById(id);
+    if (!definition) {
+      setStooqTickerNotice("시장 심볼을 만들지 못했습니다.");
+      return;
+    }
+    if (selected.length >= MAX_SELECTED_SERIES) {
+      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지 선택할 수 있습니다.`);
+      setStooqTickerNotice(null);
+      return;
+    }
+    setSelected((prev) => [...prev, { id, transform: definition.defaultTransform ?? "raw" }]);
+    setStooqTickerInput("");
+    setStooqTickerNotice(`${definition.shortLabel} 추가됨`);
+    setLimitNotice(null);
+  }, [selected, stooqTickerInput]);
 
   const setTransform = useCallback((id: string, transform: MacroValueTransform) => {
     setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, transform } : item)));
@@ -964,6 +994,10 @@ export default function MacroChartClient() {
   const canZoomOut = MACRO_RANGE_ORDER.indexOf(rangeId) >= 0 && MACRO_RANGE_ORDER.indexOf(rangeId) < MACRO_RANGE_ORDER.length - 1;
   const selectedSourceCount = useMemo(
     () => new Set(selectedDefinitions.map((definition) => definition.sourcePath)).size,
+    [selectedDefinitions],
+  );
+  const hasStooqSelection = useMemo(
+    () => selectedDefinitions.some((definition) => definition.sourceKind === "stooq"),
     [selectedDefinitions],
   );
   const selectedGroupKeys = useMemo(
@@ -1192,12 +1226,13 @@ export default function MacroChartClient() {
               visibleHiddenIds.length ? `${visibleHiddenIds.length}개 시리즈 숨김` : null,
               visibleAxisOverrides ? `${visibleAxisOverrides}개 축 고정` : null,
               formulas.length ? `${formulas.length}개 합성 시리즈` : null,
+              hasStooqSelection ? "시장 심볼은 owner Worker proxy 경유" : null,
               `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
               "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
               "URL로 선택값·기간·숨김·축 상태 공유 가능",
             ]}
           >
-            public data spine의 정적 JSON만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
+            public data spine의 정적 JSON과 승인된 시장 심볼 proxy만 읽고, 브라우저에서 선택한 시리즈를 정렬·변환합니다.
           </DataProvenanceNote>
           <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3 md:grid-cols-3" aria-label="매크로 분석 요약">
             {analysisCards.map((card) => (
@@ -1318,6 +1353,36 @@ export default function MacroChartClient() {
                 placeholder="M2, VIX, PMI..."
                 className="min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
               />
+              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                <label className="sr-only" htmlFor="macro-stooq-ticker">
+                  시장 심볼 추가
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="macro-stooq-ticker"
+                    value={stooqTickerInput}
+                    onChange={(event) => setStooqTickerInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addStooqSeries();
+                      }
+                    }}
+                    placeholder="NVDA, SPY.US..."
+                    className="min-h-10 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                  />
+                  <button
+                    type="button"
+                    onClick={addStooqSeries}
+                    className="min-h-10 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
+                  >
+                    추가
+                  </button>
+                </div>
+                <p className="mt-2 min-h-4 text-[11px] font-bold text-slate-500" role="status">
+                  {stooqTickerNotice ?? "주식·ETF·지수 심볼을 같은 차트에 추가합니다."}
+                </p>
+              </div>
               <div className="mt-2 min-h-5 text-[11px] font-bold text-slate-500" role="status">
                 {limitNotice ??
                   (activeLoadState.status === "loading"
@@ -1492,6 +1557,7 @@ export default function MacroChartClient() {
                   setFormulas([]);
                   setLimitNotice(null);
                   setFormulaNotice(null);
+                  setStooqTickerNotice(null);
                 }}
                 className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-black text-slate-500 hover:border-brand-interactive hover:text-brand-interactive"
               >

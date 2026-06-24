@@ -2,6 +2,13 @@
 
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import { alignMacroPoints, buildAlignedLabels, downsampleMacroPoints } from "./align";
+import {
+  STOOQ_CACHE_TTL_MS,
+  isResolvedStooqSymbol,
+  parseStooqDailyCsv,
+  stooqProxyUrl,
+  toStooqSymbol,
+} from "./stooq";
 import { applyMacroTransform, transformUnitLabel } from "./transforms";
 import type {
   MacroRawPoint,
@@ -13,11 +20,7 @@ import type {
 
 type JsonRecord = Record<string, unknown>;
 type StooqCacheRecord = { ts?: number; data?: MacroRawPoint[] };
-
-const STOOQ_PROXY_BASE = "https://stooq-proxy.etloveaui.workers.dev";
-const STOOQ_CACHE_TTL_MS = 86_400_000;
-const STOOQ_INPUT_SYMBOL_PATTERN = /^[A-Za-z0-9.^-]{1,16}(?:\.[A-Za-z]{1,4})?$/;
-const STOOQ_RESOLVED_SYMBOL_PATTERN = /^[a-z0-9.^-]{1,16}(?:\.[a-z]{1,4})?$/;
+export { parseStooqDailyCsv, toStooqSymbol } from "./stooq";
 
 export interface LoadedMacroSeries {
   definition: MacroSeriesDefinition;
@@ -47,37 +50,6 @@ function browserStorage(): Storage | null {
   return typeof window === "undefined" ? null : window.localStorage;
 }
 
-export function toStooqSymbol(symbol: string): string | null {
-  const raw = symbol.trim();
-  if (!STOOQ_INPUT_SYMBOL_PATTERN.test(raw)) return null;
-  if (raw.startsWith("^")) return raw.toLowerCase();
-  if (/^[0-9]{6}\.KS$/i.test(raw)) return `${raw.slice(0, 6).toLowerCase()}.kr`;
-  if (/\.[A-Za-z]{1,4}$/.test(raw)) return raw.toLowerCase();
-  return `${raw.toLowerCase()}.us`;
-}
-
-function stooqProxyUrl(stooqSymbol: string) {
-  const proxyBase = STOOQ_PROXY_BASE.endsWith("/") ? STOOQ_PROXY_BASE : `${STOOQ_PROXY_BASE}/`;
-  const upstream = `https://stooq.com/q/d/l/?s=${stooqSymbol}&i=d`;
-  return `${proxyBase}${encodeURIComponent(upstream)}`;
-}
-
-export function parseStooqDailyCsv(csv: string): MacroRawPoint[] {
-  const lines = csv.trim().split(/\r?\n/);
-  const [header, ...rows] = lines;
-  if (!header || !header.toLowerCase().startsWith("date,")) throw new Error("Stooq CSV format");
-  return rows
-    .map((line) => {
-      const fields = line.split(",");
-      const date = fields[0]?.trim();
-      const close = asNumber(fields[4]);
-      if (!date || close === null) return null;
-      return { date, value: close };
-    })
-    .filter((point): point is MacroRawPoint => point !== null)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
 function readCachedStooqPoints(cacheKey: string): MacroRawPoint[] | null {
   const storage = browserStorage();
   if (!storage) return null;
@@ -105,7 +77,7 @@ function writeCachedStooqPoints(cacheKey: string, data: readonly MacroRawPoint[]
 async function loadStooqRawPoints(definition: MacroSeriesDefinition): Promise<MacroRawPoint[]> {
   const symbol = definition.stooqSymbol ?? definition.sourcePath.replace(/^stooq:/, "") ?? definition.id;
   const stooqSymbol = toStooqSymbol(symbol);
-  if (!stooqSymbol || !STOOQ_RESOLVED_SYMBOL_PATTERN.test(stooqSymbol)) throw new Error(`Invalid Stooq symbol: ${symbol}`);
+  if (!stooqSymbol || !isResolvedStooqSymbol(stooqSymbol)) throw new Error(`Invalid Stooq symbol: ${symbol}`);
   const cacheKey = `stooq_cache_${stooqSymbol}`;
   const cached = readCachedStooqPoints(cacheKey);
   if (cached) return cached;

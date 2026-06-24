@@ -90,7 +90,11 @@ resolution-note pattern).
   loader/unit test. **Local implementation landed in worktree**: `sourceKind:
   "stooq"`, delimiter-safe `stq~...`-compatible definitions, owner Worker proxy,
   24h browser cache, and `qa:macro-chart:stooq-loader`.
-- **S2** — dynamic id support (URL parser, `seriesById`, formula/axis/preset) + ticker picker UI.
+- **S2** — dynamic id support (URL parser, `seriesById`, formula/axis/preset) +
+  ticker picker UI. **Local implementation verified**: `stq~NVDA.US` restores from
+  URL, axis/formula params stay delimiter-safe, the picker adds Stooq symbols into
+  the existing 8-series selection model, and local `qa:macro-chart` includes a
+  proxy-only NVDA+M2 fusion route.
 - **S3** — mixed-resolution alignment + source/frequency honesty tags + QA extension (NVDA vs M2).
 - **S4** — `/multichart` disposition (D2) + P15 connect absorption (D4).
 - **S5** — full `qa:macro-chart` green + LIVE gate + docs (PLAN / DEC / CHANGELOG).

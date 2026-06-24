@@ -200,6 +200,13 @@ values, and reuse the existing transform/alignment pipeline with 24h browser
 cache. `qa:macro-chart:stooq-loader` covers symbol normalization, CSV parsing,
 proxy-only fetch, and cache behavior. UI picker/dynamic URL support remains S2.
 
+**P15-Fusion S2 local picker/URL support added 2026-06-24**:
+`/macro-chart` can now synthesize delimiter-safe Stooq definitions at runtime
+(`stq~NVDA.US`), preserve them through URL `series`/`axis`/`formula` params,
+add market symbols from the picker, and verify a proxy-only NVDA+M2 fusion route
+inside local `qa:macro-chart`. Push/deploy remains gated on the fused-chart QA
+contract and the remaining S3/S4/S5 slices.
+
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
 addition to the localhost check. Public copy guard now blocks accidental

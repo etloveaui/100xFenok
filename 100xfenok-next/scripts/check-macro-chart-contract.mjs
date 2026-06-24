@@ -472,6 +472,48 @@ async function inspectSharedDesktop(page) {
   return { route: sharedRoute, viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
 
+async function inspectStooqFusionRoute(page) {
+  const route =
+    "/macro-chart?macro=risk-liquidity&series=stq~NVDA.US,M2SL&transform=rebase100,yoy&range=10Y&axis=stq~NVDA.US:right&formula=ratio:stq~NVDA.US:M2SL";
+  const failures = [];
+  let proxyRequests = 0;
+  watchHydrationErrors(page, failures);
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.hostname === "stooq-proxy.etloveaui.workers.dev") {
+      proxyRequests += 1;
+      return;
+    }
+    if (/stooq|alphavantage|query\d+\.finance\.yahoo|stockanalysis\.com/i.test(url.hostname)) {
+      addFailure(failures, "external-provider-request", url.href);
+    }
+  });
+  const response = await page.goto(routeUrl(route), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
+
+  if (response?.status() !== 200) {
+    addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
+  }
+  if (proxyRequests < 1) {
+    addFailure(failures, "stooq-proxy-request", `count=${proxyRequests}`);
+  }
+  const layout = await collectLayout(page);
+  if (layout.chartGroups === 0 || layout.canvasWidth < 240 || layout.canvasHeight < 180) {
+    addFailure(failures, "stooq-chart-visible", `canvas=${Math.round(layout.canvasWidth)}x${Math.round(layout.canvasHeight)}`);
+  }
+  const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (params.series !== "stq~NVDA.US,M2SL") addFailure(failures, "stooq-series-roundtrip", `series=${params.series ?? "missing"}`);
+  if (params.axis !== "stq~NVDA.US:right") addFailure(failures, "stooq-axis-roundtrip", `axis=${params.axis ?? "missing"}`);
+  if (params.formula !== "ratio:stq~NVDA.US:M2SL") addFailure(failures, "stooq-formula-roundtrip", `formula=${params.formula ?? "missing"}`);
+  if (!(await hasVisibleText(page, "NVDA"))) addFailure(failures, "stooq-label-visible", "NVDA label missing");
+  if (!(await hasVisibleText(page, "시장 심볼은 owner Worker proxy 경유"))) {
+    addFailure(failures, "stooq-provenance-copy", "Stooq provenance copy missing");
+  }
+  if (!(await hasVisibleText(page, "NVDA/M2 ×100"))) addFailure(failures, "stooq-formula-visible", "NVDA/M2 formula missing");
+
+  return { route, viewport: "desktop", status: response?.status() ?? null, layout, failures };
+}
+
 async function inspectExplorePlaybooks(page) {
   const failures = [];
   watchHydrationErrors(page, failures);
@@ -732,6 +774,7 @@ try {
   });
   const desktopPage = await desktopContext.newPage();
   results.push(await inspectSharedDesktop(desktopPage));
+  results.push(await inspectStooqFusionRoute(desktopPage));
   results.push(await inspectPresetRoute(desktopPage));
   results.push(await inspectMultichartRoute(desktopPage));
   results.push(await inspectExplorePlaybooks(desktopPage));

@@ -53,7 +53,7 @@
 - [x] P14/P3a.5: add macro intelligence workbench affordances without new provider calls: curated analysis lenses, analysis summary, mobile formula/status chips, connected surface links, full-CSV copy, macro catalog `analysis_lenses`/`connection_surfaces`, and expanded `qa:macro-chart` static/browser contract coverage.
 - [x] P1b: TimeScale decision closed for the current service. Keep Chart.js `CategoryScale` + ISO labels + dependency-free month windows; only revisit TimeScale as an opt-in chart-engine mode with adapter, mixed-frequency, URL, and market-valuation regression coverage.
 - [x] P15-0/P9-G: restore `/multichart` as the existing stock compare route. It removes the `/macro-chart` redirect, embeds `/tools/asset/multichart.html`, restores Stooq daily CSV through the owner-owned Worker proxy, keeps only a 24h browser localStorage cache, leaves `/macro-chart` untouched, and keeps header/shell discovery collapsed into Explore.
-- [ ] P15-Fusion: owner pivot after P15-A/B/C/D. Stooq stock/ETF/index series should become a source type inside `/macro-chart`, so market symbols and macro series compare in one chart. Draft contract: `CONTRACT_macro_chart_stooq_fusion_20260624.md`. Owner direction is absorb the deployed P15 context-link slice and preserve `/multichart` as a known address. S1 local loader foundation is in progress/verified locally; further push/deploy stays gated on fused-chart QA.
+- [ ] P15-Fusion: owner pivot after P15-A/B/C/D. Stooq stock/ETF/index series should become a source type inside `/macro-chart`, so market symbols and macro series compare in one chart. Draft contract: `CONTRACT_macro_chart_stooq_fusion_20260624.md`. Owner direction is absorb the deployed P15 context-link slice and preserve `/multichart` as a known address. S1 loader foundation and S2 dynamic picker/URL support are verified locally; further push/deploy stays gated on fused-chart QA and remaining S3/S4/S5 closure.
 - [ ] P3b: evaluate true brush/wheel/pinch zoom and multi-chart crosshair sync only if the dependency/runtime tradeoff beats the current range-window controls.
 
 ## Phase P9-E — Product Affordance Deepening
@@ -80,7 +80,7 @@
 - Scoped lint for touched product/data files
 - `npm run build`
 - Browser smoke: `/portfolio?ticker=NVDA`, `/screener?sector=반도체`, `/stock/NVDA`, `/etfs/SPY`
-- Macro smoke: `/macro-chart`, restored `/multichart` stock compare frame, full CSV export, PNG export, mobile picker, mobile formula/status chips, share URL `range` + hidden-series + keyed axis + formula round trip, saved user preset apply, corrupted saved hidden-state handling, range zoom controls, analysis lenses, analysis summary, connection links, static macro catalog lenses/surfaces, Explore playbook/ETF entry links, single Explore header entry, and Stooq Worker proxy smoke.
+- Macro smoke: `/macro-chart`, restored `/multichart` stock compare frame, full CSV export, PNG export, mobile picker, mobile formula/status chips, share URL `range` + hidden-series + keyed axis + formula round trip, saved user preset apply, corrupted saved hidden-state handling, range zoom controls, analysis lenses, analysis summary, connection links, static macro catalog lenses/surfaces, Explore playbook/ETF entry links, single Explore header entry, Stooq Worker proxy smoke, and Stooq+macro fusion route smoke (`stq~NVDA.US` + `M2SL`).
 - Mobile/a11y smoke: at least `/portfolio`, `/screener`, `/stock/NVDA`
 
 ## Notes

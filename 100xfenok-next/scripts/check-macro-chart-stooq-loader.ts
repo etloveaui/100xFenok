@@ -1,4 +1,5 @@
 import { loadMacroSeries, parseStooqDailyCsv, toStooqSymbol } from "../src/lib/macro-chart/loader";
+import { stooqSeriesDefinitionFromId, stooqSeriesIdFromInput } from "../src/lib/macro-chart/stooq";
 import type { MacroSeriesDefinition } from "../src/lib/macro-chart/types";
 
 type LocalStorageMock = Pick<Storage, "getItem" | "setItem">;
@@ -32,6 +33,9 @@ async function main() {
   assert(toStooqSymbol("005930.KS") === "005930.kr", "KS suffix should map to Stooq KR");
   assert(toStooqSymbol("BRK-B") === "brk-b.us", "US default suffix should be added");
   assert(toStooqSymbol("NVDA:US") === null, "colon-delimited ids must stay invalid for Stooq symbols");
+  assert(stooqSeriesIdFromInput("NVDA") === "stq~NVDA.US", "plain ticker should become delimiter-safe Stooq id");
+  assert(stooqSeriesIdFromInput("NVDA:US") === null, "colon-delimited input must not become a series id");
+  assert(stooqSeriesDefinitionFromId("stq~NVDA.US")?.stooqSymbol === "NVDA.US", "Stooq id should synthesize a loadable definition");
 
   const parsed = parseStooqDailyCsv(sampleCsv);
   assert(parsed.length === 2, "sample CSV should yield two points");
@@ -50,7 +54,7 @@ async function main() {
   };
 
   try {
-    const definition: MacroSeriesDefinition = {
+    const definition: MacroSeriesDefinition = stooqSeriesDefinitionFromId("stq~NVDA.US") ?? {
       id: "stq~NVDA.US",
       label: "NVDA",
       shortLabel: "NVDA",
