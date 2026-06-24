@@ -3,6 +3,10 @@
 Date: 2026-06-24
 Status: accepted for P15-0/P9-G and extended for P15-Fusion
 
+Deployment: P15-Fusion nested commits `a5a00147b` + `53df5b095` +
+`e6b57fba5` deployed via Deploy Worker run `28112072108`; live
+`qa:macro-chart` passed 9/9 against `https://100xfenok.etloveaui.workers.dev`.
+
 ## Decision
 
 `/multichart` and the fused `/macro-chart` market-symbol source may use the

@@ -1,6 +1,6 @@
 # CONTRACT — Stock (Stooq) Source Fusion into /macro-chart
 
-> Status: **S1-S4 implemented locally; S5 gates in progress**. Architect: Claude. Implementor: Codex.
+> Status: **S1-S5 pushed, deployed, and live-verified**. Architect: Claude. Implementor: Codex.
 > Decision basis: owner pivot to fusion (2026-06-24). Feasibility confirmed twice —
 > Claude (catalog `source_path` + `{date,value}` abstraction) and Codex (loader audit:
 > `loadMacroSeries` normalizes definitions → rawPoints → transforms/alignment/CSV/PNG).
@@ -16,8 +16,10 @@
   P15-A/B/C/D checks.
 - Owner decision closed after the pivot: absorb the P15 connect work into Fusion
   and preserve `/multichart` as a compatibility entry into the fused chart.
-- Production push/deploy is no longer blocked by the earlier decision gate; it is
-  gated by the fused chart QA contract and live verification.
+- Production push/deploy is complete for this slice: nested commits
+  `a5a00147b` + `53df5b095` + `e6b57fba5`, Deploy Worker run
+  `28112072108` success, and live `qa:macro-chart` passed 9/9 against
+  `https://100xfenok.etloveaui.workers.dev`.
 
 ## Goal
 
@@ -110,13 +112,14 @@ resolution-note pattern).
   **Implemented locally**: `/multichart` now renders `MacroChartClient` in
   `stock-compare` mode while `/macro-chart` remains the fused workbench.
 - **S5** — full `qa:macro-chart` green + LIVE gate + docs (PLAN / DEC /
-  CHANGELOG). **Local QA green; push/deploy/live gate is the closure step.**
+  CHANGELOG). **Complete**: local and live `qa:macro-chart` passed 9/9, and
+  Deploy Worker run `28112072108` completed successfully.
 
 ## Decision Gate
 
-Closed by owner direction to proceed with the fused service workbench. Remaining
-gate is empirical: QA must prove mixed data, stock compare, route reachability,
-CSV honesty, deployment, and live production behavior.
+Closed by owner direction to proceed with the fused service workbench. Empirical
+gate passed: QA proved mixed data, stock compare, route reachability, CSV
+honesty, deployment, and live production behavior.
 
 ## Rollback
 

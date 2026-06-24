@@ -2,6 +2,8 @@
 
 > Status: accepted as the P15-Fusion macro-chart direction. This note preserves
 > the service boundary referenced by `docs/planning/PLAN_data_spine_service_layer_20260624.md`.
+> Deployment: nested commits `a5a00147b` + `53df5b095` + `e6b57fba5`, Deploy
+> Worker run `28112072108`, live `qa:macro-chart` 9/9.
 
 ## Intent
 
@@ -74,6 +76,9 @@ into that workbench.
   Chart in `stock-compare` mode, AppShell rail reachability is restored, and QA
   now verifies header/rail navigation plus NVDA(daily)/M2(monthly) and QQQ/SPY
   formula routes.
+- P15-Fusion S5 deployed: nested commits `a5a00147b`/`53df5b095`/`e6b57fba5`
+  shipped through Deploy Worker run `28112072108`; local and live
+  `qa:macro-chart` both passed 9/9.
 
 ## Deferred
 
