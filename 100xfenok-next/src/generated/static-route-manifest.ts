@@ -22,8 +22,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   ".": [
     {
       "name": "manifest.json",
-      "sizeBytes": 27935,
-      "updatedAt": "2026-06-24T04:10:24.194Z"
+      "sizeBytes": 28331,
+      "updatedAt": "2026-06-24T05:00:56.934Z"
     },
     {
       "name": "reports-index.json",
@@ -34,8 +34,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 41566,
-      "updatedAt": "2026-06-23T23:45:27.284Z"
+      "sizeBytes": 43077,
+      "updatedAt": "2026-06-24T05:00:56.930Z"
     },
     {
       "name": "notification-folders.json",
@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-24T04:58:09.846Z"
+      "updatedAt": "2026-06-24T05:01:36.974Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -123,17 +123,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 984625,
-      "updatedAt": "2026-06-24T04:58:09.712Z"
+      "updatedAt": "2026-06-24T05:01:36.839Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 145879,
-      "updatedAt": "2026-06-24T04:58:09.715Z"
+      "updatedAt": "2026-06-24T05:01:36.842Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7845620,
-      "updatedAt": "2026-06-24T04:58:09.692Z"
+      "updatedAt": "2026-06-24T05:01:36.782Z"
     },
     {
       "name": "market_data_audit.json",
@@ -147,13 +147,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "market_structure_index.json",
-      "sizeBytes": 42441,
-      "updatedAt": "2026-06-24T01:10:35.176Z"
+      "sizeBytes": 42438,
+      "updatedAt": "2026-06-24T05:00:56.933Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12729,
-      "updatedAt": "2026-06-23T23:39:10.506Z"
+      "sizeBytes": 12727,
+      "updatedAt": "2026-06-24T05:00:56.934Z"
     },
     {
       "name": "stock_action_index.json",
