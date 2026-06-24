@@ -22,8 +22,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   ".": [
     {
       "name": "manifest.json",
-      "sizeBytes": 28592,
-      "updatedAt": "2026-06-24T09:59:05.270Z"
+      "sizeBytes": 28629,
+      "updatedAt": "2026-06-24T10:08:16.709Z"
     },
     {
       "name": "reports-index.json",
@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-24T09:59:26.451Z"
+      "updatedAt": "2026-06-24T10:20:44.084Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -123,17 +123,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 984625,
-      "updatedAt": "2026-06-24T09:59:26.192Z"
+      "updatedAt": "2026-06-24T10:20:43.865Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 145879,
-      "updatedAt": "2026-06-24T09:59:26.195Z"
+      "updatedAt": "2026-06-24T10:20:43.868Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7845620,
-      "updatedAt": "2026-06-24T09:59:26.171Z"
+      "updatedAt": "2026-06-24T10:20:43.842Z"
     },
     {
       "name": "market_data_audit.json",
@@ -147,13 +147,13 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "market_structure_index.json",
-      "sizeBytes": 42438,
-      "updatedAt": "2026-06-24T08:26:51.758Z"
+      "sizeBytes": 42430,
+      "updatedAt": "2026-06-24T10:08:16.708Z"
     },
     {
       "name": "signals.json",
-      "sizeBytes": 12727,
-      "updatedAt": "2026-06-24T05:00:56.934Z"
+      "sizeBytes": 12731,
+      "updatedAt": "2026-06-24T10:08:16.708Z"
     },
     {
       "name": "stock_action_index.json",
@@ -47131,18 +47131,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "fred-banking-daily.json",
-      "sizeBytes": 525769,
-      "updatedAt": "2026-06-23T11:18:02.335Z"
+      "sizeBytes": 525839,
+      "updatedAt": "2026-06-24T10:20:36.887Z"
     },
     {
       "name": "fred-banking-quarterly.json",
       "sizeBytes": 80045,
-      "updatedAt": "2026-06-23T11:18:02.341Z"
+      "updatedAt": "2026-06-24T10:20:36.888Z"
     },
     {
       "name": "fred-banking-weekly.json",
       "sizeBytes": 233125,
-      "updatedAt": "2026-06-23T11:18:02.341Z"
+      "updatedAt": "2026-06-24T10:20:36.888Z"
     },
     {
       "name": "fred-macro.json",
