@@ -79,7 +79,6 @@ async function inspectStaticContracts() {
     multichartHtmlSource,
     navbarSource,
     shellSource,
-    appEnhancementsSource,
   ] = await Promise.all([
     readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
@@ -94,14 +93,13 @@ async function inspectStaticContracts() {
     readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Navbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/AppEnhancements.tsx", import.meta.url), "utf8"),
   ]);
   const catalog = JSON.parse(catalogSource);
 
   if (!macroSource.includes("defaultRangeId={DEFAULT_RANGE_ID}") || !macroSource.includes("rangeId={rangeId}")) {
     addFailure(failures, "macro-frame-range-contract", "MacroChartClient must pass controlled range + default range");
   }
-  if (!macroSource.includes("useState(() => defaultChartState())") || !macroSource.includes("if (!clientStateReady")) {
+  if (!macroSource.includes("useState(() => defaultChartState(initialMode))") || !macroSource.includes("if (!clientStateReady")) {
     addFailure(failures, "hydration-safe-initial-state", "MacroChartClient must defer URL/localStorage state until after hydration");
   }
   if (!macroPageSource.includes('className="fnk-shell"')) {
@@ -155,21 +153,54 @@ async function inspectStaticContracts() {
   if (!stockPageSource.includes("MacroContextCard") || !stockPageSource.includes("macroContextFromParam")) {
     addFailure(failures, "stock-macro-deeplink", "Stock page must accept macro context");
   }
-  if (multichartPageSource.includes("redirect(") || !multichartPageSource.includes("RouteEmbedFrame")) {
-    addFailure(failures, "multichart-route", "multichart must render the restored stock compare frame instead of redirecting");
+  if (
+    multichartPageSource.includes("redirect(") ||
+    !multichartPageSource.includes("MacroChartClient") ||
+    !multichartPageSource.includes('initialMode="stock-compare"')
+  ) {
+    addFailure(failures, "multichart-route", "multichart must render the fused stock-compare Macro Chart mode instead of redirecting or iframe-only legacy");
   }
-  if (!multichartHtmlSource.includes("stooq-proxy.etloveaui.workers.dev") || !multichartHtmlSource.includes("stooq_cache_")) {
+  if (!multichartHtmlSource.includes("stooq-proxy.etloveaui.workers.dev") || !multichartHtmlSource.includes("stooq_cache_") || !macroSource.includes("MARKET_COMPARE_LENSES")) {
     addFailure(failures, "multichart-stooq-worker", "Stooq Worker proxy + 24h cache contract missing");
   }
-  for (const href of ['href="/multichart"', 'href="/etfs"', 'href="/sectors"', 'href="/screener"', 'href="/superinvestors"']) {
-    if (navbarSource.includes(href) || shellSource.includes(href) || appEnhancementsSource.includes(href)) {
-      addFailure(failures, "single-explore-entry", `${href} still appears in top-level navigation`);
+  for (const label of ["시장 비교", "수익률 비교", "실제 가격", "벤치마크 대비", "+ 티커 추가"]) {
+    if (!macroSource.includes(label)) {
+      addFailure(failures, "market-compare-workbench", `${label} missing from MacroChartClient`);
     }
   }
-  for (const href of ["'/multichart'", "'/etfs'", "'/sectors'", "'/screener'", "'/superinvestors'"]) {
-    if (appEnhancementsSource.includes(`href: ${href}`) || shellSource.includes(`href: ${href.replace(/'/g, '"')}`)) {
-      addFailure(failures, "single-explore-entry", `${href} still appears as a top-level navigation href`);
+  if (!macroSource.includes("__meta_source") || !macroSource.includes("__meta_frequency") || !macroSource.includes("definitionMetaLabel")) {
+    addFailure(failures, "source-frequency-honesty", "source/frequency UI and CSV metadata contract missing");
+  }
+  for (const href of ['href="/radar"', 'href="/posts"', 'href="/explore"']) {
+    if (!navbarSource.includes(href)) {
+      addFailure(failures, "analytics-header-contract", `${href} missing from header analytics menu`);
     }
+  }
+  for (const href of ['href="/multichart"', 'href="/etfs"', 'href="/sectors"', 'href="/screener"', 'href="/superinvestors"']) {
+    if (navbarSource.includes(href)) {
+      addFailure(failures, "analytics-header-contract", `${href} must not appear in the header analytics menu`);
+    }
+  }
+  for (const item of [
+    ['id: "explore"', 'href: "/explore"', 'label: "탐색"'],
+    ['id: "market"', 'href: "/market-valuation"', 'label: "시장"'],
+    ['id: "sectors"', 'href: "/sectors"', 'label: "섹터"'],
+    ['id: "etfs"', 'href: "/etfs"', 'label: "ETF"'],
+    ['id: "screener"', 'href: "/screener"', 'label: "스크리너"'],
+    ['id: "superinvestors"', 'href: "/superinvestors"', 'label: "투자자"'],
+    ['id: "portfolio"', 'href: "/portfolio"', 'label: "포트폴리오"'],
+  ]) {
+    for (const token of item) {
+      if (!shellSource.includes(token)) {
+        addFailure(failures, "app-shell-rail-reachability", `${token} missing from AppShell rail`);
+      }
+    }
+  }
+  if (
+    !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"]') ||
+    !shellSource.includes('const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors"]')
+  ) {
+    addFailure(failures, "app-shell-mobile-tabs", "mobile primary/more tab contract must expose screener plus sectors/etfs/superinvestors");
   }
 
   return { route: "static:macro-chart", viewport: "static", status: null, failures };
@@ -309,7 +340,7 @@ async function inspectSharedDesktop(page) {
   if (!insightStockHref?.includes("/stock/NVDA") || !insightStockHref.includes("macro=risk-liquidity")) {
     addFailure(failures, "macro-insight-stock-link", `href=${insightStockHref ?? "missing"}`);
   }
-  const screenerConnection = page.getByRole("link", { name: /스크리너/ }).first();
+  const screenerConnection = insightCard.getByRole("link", { name: "스크리너" });
   if (!(await screenerConnection.isVisible())) {
     addFailure(failures, "connection-link-visible", "screener connection link missing");
   }
@@ -475,6 +506,8 @@ async function inspectSharedDesktop(page) {
 async function inspectStooqFusionRoute(page) {
   const route =
     "/macro-chart?macro=risk-liquidity&series=stq~NVDA.US,M2SL&transform=rebase100,yoy&range=10Y&axis=stq~NVDA.US:right&formula=ratio:stq~NVDA.US:M2SL";
+  const stockRatioRoute =
+    "/macro-chart?macro=risk-liquidity&series=stq~SPY.US,stq~QQQ.US&transform=rebase100,rebase100&range=5Y&formula=ratio:stq~QQQ.US:stq~SPY.US";
   const failures = [];
   let proxyRequests = 0;
   watchHydrationErrors(page, failures);
@@ -509,7 +542,39 @@ async function inspectStooqFusionRoute(page) {
   if (!(await hasVisibleText(page, "시장 심볼은 owner Worker proxy 경유"))) {
     addFailure(failures, "stooq-provenance-copy", "Stooq provenance copy missing");
   }
+  if (!(await hasVisibleText(page, "시장 심볼 · 주식 · $ · daily"))) {
+    addFailure(failures, "stooq-source-frequency-copy", "Stooq source/frequency tag missing");
+  }
   if (!(await hasVisibleText(page, "NVDA/M2 ×100"))) addFailure(failures, "stooq-formula-visible", "NVDA/M2 formula missing");
+
+  const csvPromise = page.waitForEvent("download", { timeout: 15_000 });
+  await page.getByRole("button", { name: "전체 CSV 저장" }).click();
+  const csvDownload = await csvPromise;
+  const csvPath = await csvDownload.path();
+  if (!csvPath) {
+    addFailure(failures, "stooq-csv-download-path", "download path unavailable");
+  } else {
+    const csv = await readFile(csvPath, "utf8");
+    if (!csv.includes('"__meta_source","market-symbol","data-spine","computed"')) {
+      addFailure(failures, "stooq-csv-source-meta", "source metadata row missing market-symbol/data-spine/computed");
+    }
+    if (!csv.includes('"__meta_frequency","daily","monthly","computed"')) {
+      addFailure(failures, "stooq-csv-frequency-meta", "frequency metadata row missing daily/monthly/computed");
+    }
+  }
+
+  const ratioResponse = await page.goto(routeUrl(stockRatioRoute), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
+  if (ratioResponse?.status() !== 200) {
+    addFailure(failures, "stock-ratio-http-status", `status=${ratioResponse?.status() ?? "unknown"}`);
+  }
+  const ratioParams = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (ratioParams.formula !== "ratio:stq~QQQ.US:stq~SPY.US") {
+    addFailure(failures, "stock-ratio-roundtrip", `formula=${ratioParams.formula ?? "missing"}`);
+  }
+  if (!(await hasVisibleText(page, "QQQ/SPY ×100"))) {
+    addFailure(failures, "stock-ratio-visible", "QQQ/SPY formula missing");
+  }
 
   return { route, viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
@@ -532,16 +597,32 @@ async function inspectExplorePlaybooks(page) {
   const hrefs = await page.locator('a[href*="/macro-chart"]').evaluateAll((links) =>
     links.map((link) => link.getAttribute("href") ?? ""),
   );
-  if (hrefs.length < 4) addFailure(failures, "explore-playbook-count", `hrefs=${hrefs.length}`);
+  if (hrefs.length < 5) addFailure(failures, "explore-playbook-count", `hrefs=${hrefs.length}`);
   if (!hrefs.some((href) => href.includes("series=sp500") && href.includes("axis="))) {
     addFailure(failures, "explore-risk-playbook-link", hrefs.join(" | "));
   }
   if (!hrefs.some((href) => href.includes("preset=activity"))) {
     addFailure(failures, "explore-activity-playbook-link", hrefs.join(" | "));
   }
+  if (!hrefs.some((href) => href.includes("stq~SPY.US") && href.includes("stq~QQQ.US"))) {
+    addFailure(failures, "explore-market-compare-link", hrefs.join(" | "));
+  }
   for (const id of ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity"]) {
     if (!hrefs.some((href) => href.includes(`macro=${id}`))) {
       addFailure(failures, "explore-macro-context-link", `${id} missing in ${hrefs.join(" | ")}`);
+    }
+  }
+  const allHrefs = await page.locator("a[href]").evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+  const reachableRoutes = [
+    { route: "/macro-chart", label: "Macro Chart" },
+    { route: "/sectors", label: "Sectors" },
+    { route: "/etfs", label: "ETF" },
+    { route: "/screener", label: "Screener" },
+    { route: "/superinvestors", label: "Superinvestors" },
+  ];
+  for (const item of reachableRoutes) {
+    if (!allHrefs.some((href) => href === item.route || href.startsWith(`${item.route}?`) || href.startsWith(`${item.route}/`))) {
+      addFailure(failures, "explore-reachability", `${item.label} ${item.route} missing from Explore`);
     }
   }
   if (!(await page.getByRole("heading", { name: "ETF 목록" }).isVisible())) {
@@ -738,8 +819,7 @@ async function inspectMultichartRoute(page) {
   watchExternalProviderRequests(page, failures);
   const route = "/multichart";
   const response = await page.goto(routeUrl(route), { waitUntil: "networkidle", timeout: 60_000 });
-  const frame = page.frameLocator('iframe[title="100x 멀티차트"]');
-  await frame.getByRole("heading", { name: /100x\s*멀티차트/ }).waitFor({ timeout: 45_000 });
+  await waitForMacroChart(page);
   const pathname = await page.evaluate(() => window.location.pathname);
   if (response?.status() !== 200) {
     addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
@@ -752,14 +832,19 @@ async function inspectMultichartRoute(page) {
     addFailure(failures, "multichart-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
   }
   for (const label of ["+ 티커 추가", "수익률 비교", "실제 가격", "벤치마크 대비"]) {
-    if (!(await frame.getByText(label, { exact: true }).isVisible())) {
+    if (!(await page.getByText(label, { exact: true }).first().isVisible())) {
       addFailure(failures, "multichart-control-visible", `${label} missing`);
     }
   }
-  await frame.getByRole("button", { name: "분석 실행" }).click();
-  await frame.getByRole("cell", { name: "SPY", exact: true }).waitFor({ timeout: 45_000 });
-  if (!(await frame.getByRole("cell", { name: "QQQ", exact: true }).isVisible())) {
-    addFailure(failures, "multichart-result-row", "QQQ result row missing");
+  const params = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
+  if (!splitParam(params.series).includes("stq~SPY.US") || !splitParam(params.series).includes("stq~QQQ.US")) {
+    addFailure(failures, "multichart-stock-default", `series=${params.series ?? "missing"}`);
+  }
+  await page.getByRole("button", { name: "벤치마크 대비" }).click();
+  await page.waitForFunction(() => new URL(window.location.href).searchParams.get("formula") === "ratio:stq~QQQ.US:stq~SPY.US", null, { timeout: 20_000 });
+  await page.waitForFunction(() => document.body.textContent?.includes("QQQ/SPY ×100"), null, { timeout: 20_000 });
+  if (!(await hasVisibleText(page, "QQQ/SPY ×100"))) {
+    addFailure(failures, "multichart-benchmark-formula", "QQQ/SPY formula missing");
   }
   return { route, viewport: "desktop", status: response?.status() ?? null, layout, failures };
 }
