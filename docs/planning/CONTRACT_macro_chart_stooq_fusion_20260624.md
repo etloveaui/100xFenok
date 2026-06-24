@@ -16,10 +16,11 @@
   P15-A/B/C/D checks.
 - No additional manual `cf:deploy` should run until the owner chooses whether to
   forward-revert that live exposure or absorb it into Fusion.
-- Owner decision observed via right-pane collaboration: absorb current live P15
-  connect work and keep the `/multichart` URL as a preserved entry point. S1 may
-  proceed locally, but production push/deploy remains gated until the fused chart
-  QA contract is green.
+- Right-pane recommendation (not an owner decision): absorb current live P15
+  connect work and keep the `/multichart` URL as a preserved entry point. Owner
+  decision is still pending; S1/S2 may remain local, but production push/deploy
+  remains gated until the owner explicitly decides and the fused chart QA contract
+  is green.
 
 ## Goal
 
@@ -31,13 +32,14 @@ URL-share / CSV / PNG pipeline. The restored multichart stock-compare folds in h
 
 - **D1** — Stooq stocks become a new **source kind** inside the macro-chart series model, not a
   separate route/engine.
-- **D2** — `/multichart` URL is kept but routes into macro-chart "stock mode" (preserves the
-  owner's known URL). `multichart.html` iframe retired only after fusion is verified. *[CONFIRM]*
+- **D2** — recommended/pending: keep the `/multichart` URL but route it into
+  macro-chart "stock mode" (preserves the owner's known URL). `multichart.html`
+  iframe retires only after fusion is verified. *[OWNER CONFIRM]*
 - **D3** — Chart engine stays **Chart.js** for this fusion slice. Engine swap
   (Lightweight Charts / ECharts) is deferred to the design-remodel track (research ③).
-- **D4** — The P15 connect slice (`0dc75960f`, pushed and deployed by the push workflow) is
-  **absorbed**. The macro context card + cross-surface links stay, re-expressed
-  on the fused chart.
+- **D4** — recommended/pending: absorb the P15 connect slice (`0dc75960f`,
+  pushed and deployed by the push workflow). The macro context card +
+  cross-surface links would stay, re-expressed on the fused chart. *[OWNER CONFIRM]*
 
 ## Blockers (from Codex loader audit) → contract resolution
 
@@ -95,15 +97,16 @@ resolution-note pattern).
   URL, axis/formula params stay delimiter-safe, the picker adds Stooq symbols into
   the existing 8-series selection model, and local `qa:macro-chart` includes a
   proxy-only NVDA+M2 fusion route.
-- **S3** — mixed-resolution alignment + source/frequency honesty tags + QA extension (NVDA vs M2).
+- **S3** — mixed-resolution alignment + source/frequency honesty tags + QA extension (NVDA vs M2). **Hold until Decision Gate closes.**
 - **S4** — `/multichart` disposition (D2) + P15 connect absorption (D4).
 - **S5** — full `qa:macro-chart` green + LIVE gate + docs (PLAN / DEC / CHANGELOG).
 
 ## Decision Gate
 
-Owner choice is now: absorb the current live P15 connect slice directly into
-Fusion and preserve `/multichart` as a known address until S4 disposition is
-verified. Push/deploy is still gated on the fused chart QA contract.
+Owner choice remains open: either absorb the current live P15 connect slice into
+Fusion or forward-revert that live exposure; separately confirm D2
+(`/multichart` preserved route vs another disposition). Push/deploy is still
+gated on the explicit owner decision plus the fused chart QA contract.
 
 ## Rollback
 

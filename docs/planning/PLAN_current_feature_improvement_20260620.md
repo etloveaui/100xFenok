@@ -205,7 +205,7 @@ proxy-only fetch, and cache behavior. UI picker/dynamic URL support remains S2.
 (`stq~NVDA.US`), preserve them through URL `series`/`axis`/`formula` params,
 add market symbols from the picker, and verify a proxy-only NVDA+M2 fusion route
 inside local `qa:macro-chart`. Push/deploy remains gated on the fused-chart QA
-contract and the remaining S3/S4/S5 slices.
+contract, explicit owner decision, and the remaining S3/S4/S5 slices.
 
 **P2 closeout tightening added 2026-06-23**: local production QA now uses
 `npm run start:qa -- -p 3106`, which sets a dedicated QA-only rate-limit env in
