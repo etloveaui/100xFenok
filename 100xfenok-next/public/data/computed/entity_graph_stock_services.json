@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-06-23T23:39:20.498Z",
+  "generated_at": "2026-06-24T01:04:58.784Z",
   "source_as_of": {
     "stocks_analyzer": "2026-06-19",
     "stock_action_index": "2026-06-19",
@@ -9,22 +9,37 @@
     "sec_13f": "2026-Q1",
     "etf_universe": "2026-06-17T05:51:24Z"
   },
+  "key_policy": {
+    "stock": "ticker:<UPPERCASE_SYMBOL>",
+    "etf": "etf:<UPPERCASE_SYMBOL>",
+    "sector": "sector:<CANONICAL_GICS_LABEL>",
+    "etf_category": "etf_category:<CATEGORY_LABEL>",
+    "filing": "filing:<UPPERCASE_SYMBOL>",
+    "sec13f": "sec13f:<UPPERCASE_SYMBOL>"
+  },
   "totals": {
     "stocks": 1066,
-    "with_single_stock_etfs": 67,
-    "single_stock_etfs": 122
+    "with_single_stock_etfs": 72,
+    "single_stock_etfs": 138
   },
   "stocks": {
     "AAL": {
+      "target_key": "ticker:AAL",
       "ticker": "AAL",
       "route": "/stock/AAL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:AALG",
+          "target_key": "ticker:AAL",
           "ticker": "AALG",
           "label": "Leverage Shares 2X Long AAL Daily ETF",
           "route": "/etfs/AALG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AAL",
+          "canonical_underlying_ticker": "AAL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -43,15 +58,22 @@
       }
     },
     "AAPL": {
+      "target_key": "ticker:AAPL",
       "ticker": "AAPL",
       "route": "/stock/AAPL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:AAPB",
+          "target_key": "ticker:AAPL",
           "ticker": "AAPB",
           "label": "GraniteShares 2x Long AAPL Daily ETF",
           "route": "/etfs/AAPB",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AAPL",
+          "canonical_underlying_ticker": "AAPL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -64,11 +86,17 @@
           }
         },
         {
+          "etf_key": "etf:AAPU",
+          "target_key": "ticker:AAPL",
           "ticker": "AAPU",
           "label": "Direxion Daily AAPL Bull 2X ETF",
           "route": "/etfs/AAPU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Apple",
+          "canonical_underlying_ticker": "AAPL",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -81,11 +109,17 @@
           }
         },
         {
+          "etf_key": "etf:AAPX",
+          "target_key": "ticker:AAPL",
           "ticker": "AAPX",
           "label": "T-Rex 2X Long Apple Daily Target ETF",
           "route": "/etfs/AAPX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AAPL",
+          "canonical_underlying_ticker": "AAPL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -104,15 +138,22 @@
       }
     },
     "ABNB": {
+      "target_key": "ticker:ABNB",
       "ticker": "ABNB",
       "route": "/stock/ABNB",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ABNG",
+          "target_key": "ticker:ABNB",
           "ticker": "ABNG",
           "label": "Leverage Shares 2x Long ABNB Daily ETF",
           "route": "/etfs/ABNG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ABNB",
+          "canonical_underlying_ticker": "ABNB",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -131,15 +172,22 @@
       }
     },
     "ADBE": {
+      "target_key": "ticker:ADBE",
       "ticker": "ADBE",
       "route": "/stock/ADBE",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ADBG",
+          "target_key": "ticker:ADBE",
           "ticker": "ADBG",
           "label": "Leverage Shares 2X Long ADBE Daily ETF",
           "route": "/etfs/ADBG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ADBE",
+          "canonical_underlying_ticker": "ADBE",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -152,11 +200,17 @@
           }
         },
         {
+          "etf_key": "etf:ADBU",
+          "target_key": "ticker:ADBE",
           "ticker": "ADBU",
           "label": "Direxion Daily ADBE Bull 2X ETF",
           "route": "/etfs/ADBU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ADBE",
+          "canonical_underlying_ticker": "ADBE",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -175,15 +229,22 @@
       }
     },
     "ALB": {
+      "target_key": "ticker:ALB",
       "ticker": "ALB",
       "route": "/stock/ALB",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ALBG",
+          "target_key": "ticker:ALB",
           "ticker": "ALBG",
           "label": "Leverage Shares 2X Long ALB Daily ETF",
           "route": "/etfs/ALBG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ALB",
+          "canonical_underlying_ticker": "ALB",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -202,15 +263,22 @@
       }
     },
     "AMD": {
+      "target_key": "ticker:AMD",
       "ticker": "AMD",
       "route": "/stock/AMD",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:AMDG",
+          "target_key": "ticker:AMD",
           "ticker": "AMDG",
           "label": "Leverage Shares 2X Long AMD Daily ETF",
           "route": "/etfs/AMDG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -223,11 +291,17 @@
           }
         },
         {
+          "etf_key": "etf:AMDL",
+          "target_key": "ticker:AMD",
           "ticker": "AMDL",
           "label": "GraniteShares 2x Long AMD Daily ETF",
           "route": "/etfs/AMDL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Advanced Micro Devices",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -240,11 +314,17 @@
           }
         },
         {
+          "etf_key": "etf:AMUU",
+          "target_key": "ticker:AMD",
           "ticker": "AMUU",
           "label": "Direxion Daily AMD Bull 2X ETF",
           "route": "/etfs/AMUU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -257,11 +337,17 @@
           }
         },
         {
+          "etf_key": "etf:AMYY",
+          "target_key": "ticker:AMD",
           "ticker": "AMYY",
           "label": "GraniteShares YieldBOOST AMD ETF",
           "route": "/etfs/AMYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -274,11 +360,17 @@
           }
         },
         {
+          "etf_key": "etf:DAMD",
+          "target_key": "ticker:AMD",
           "ticker": "DAMD",
           "label": "Defiance Daily Target 2X Short AMD ETF",
           "route": "/etfs/DAMD",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -298,15 +390,22 @@
       }
     },
     "AMZN": {
+      "target_key": "ticker:AMZN",
       "ticker": "AMZN",
       "route": "/stock/AMZN",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:AMZO",
+          "target_key": "ticker:AMZN",
           "ticker": "AMZO",
           "label": "Tradr 2X Short AMZN Daily ETF",
           "route": "/etfs/AMZO",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMZN",
+          "canonical_underlying_ticker": "AMZN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -320,11 +419,63 @@
           }
         },
         {
+          "etf_key": "etf:AMZU",
+          "target_key": "ticker:AMZN",
+          "ticker": "AMZU",
+          "label": "Direxion Daily AMZN Bull 2X ETF",
+          "route": "/etfs/AMZU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Amazon",
+          "canonical_underlying_ticker": "AMZN",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:AMZZ",
+          "target_key": "ticker:AMZN",
+          "ticker": "AMZZ",
+          "label": "GraniteShares 2x Long AMZN Daily ETF",
+          "route": "/etfs/AMZZ",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Amazon",
+          "canonical_underlying_ticker": "AMZN",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:AZYY",
+          "target_key": "ticker:AMZN",
           "ticker": "AZYY",
           "label": "GraniteShares YieldBoost AMZN ETF",
           "route": "/etfs/AZYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMZN",
+          "canonical_underlying_ticker": "AMZN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -343,15 +494,22 @@
       }
     },
     "ANET": {
+      "target_key": "ticker:ANET",
       "ticker": "ANET",
       "route": "/stock/ANET",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ANEL",
+          "target_key": "ticker:ANET",
           "ticker": "ANEL",
           "label": "Defiance Daily Target 2x Long ANET ETF",
           "route": "/etfs/ANEL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ANET",
+          "canonical_underlying_ticker": "ANET",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -370,15 +528,22 @@
       }
     },
     "APH": {
+      "target_key": "ticker:APH",
       "ticker": "APH",
       "route": "/stock/APH",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:APHU",
+          "target_key": "ticker:APH",
           "ticker": "APHU",
           "label": "T-REX 2X Long APH Daily Target ETF",
           "route": "/etfs/APHU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "APH",
+          "canonical_underlying_ticker": "APH",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -397,15 +562,22 @@
       }
     },
     "APP": {
+      "target_key": "ticker:APP",
       "ticker": "APP",
       "route": "/stock/APP",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:APPX",
+          "target_key": "ticker:APP",
           "ticker": "APPX",
           "label": "Tradr 2X Long APP Daily ETF",
           "route": "/etfs/APPX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "APP",
+          "canonical_underlying_ticker": "APP",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -424,15 +596,22 @@
       }
     },
     "ARM": {
+      "target_key": "ticker:ARM",
       "ticker": "ARM",
       "route": "/stock/ARM",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ARMG",
+          "target_key": "ticker:ARM",
           "ticker": "ARMG",
           "label": "Leverage Shares 2X Long ARM Daily ETF",
           "route": "/etfs/ARMG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ARM",
+          "canonical_underlying_ticker": "ARM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -451,15 +630,22 @@
       }
     },
     "ASML": {
+      "target_key": "ticker:ASML",
       "ticker": "ASML",
       "route": "/stock/ASML",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ASMG",
+          "target_key": "ticker:ASML",
           "ticker": "ASMG",
           "label": "Leverage Shares 2X Long ASML Daily ETF",
           "route": "/etfs/ASMG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ASML",
+          "canonical_underlying_ticker": "ASML",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -478,15 +664,22 @@
       }
     },
     "AVGO": {
+      "target_key": "ticker:AVGO",
       "ticker": "AVGO",
       "route": "/stock/AVGO",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:AVGG",
+          "target_key": "ticker:AVGO",
           "ticker": "AVGG",
           "label": "Leverage Shares 2X Long AVGO Daily ETF",
           "route": "/etfs/AVGG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AVGO",
+          "canonical_underlying_ticker": "AVGO",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -499,11 +692,63 @@
           }
         },
         {
+          "etf_key": "etf:AVGU",
+          "target_key": "ticker:AVGO",
+          "ticker": "AVGU",
+          "label": "GraniteShares 2x Long AVGO Daily ETF",
+          "route": "/etfs/AVGU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Broadcom Inc",
+          "canonical_underlying_ticker": "AVGO",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:AVGX",
+          "target_key": "ticker:AVGO",
           "ticker": "AVGX",
           "label": "Defiance Daily Target 2X Long AVGO ETF",
           "route": "/etfs/AVGX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AVGO",
+          "canonical_underlying_ticker": "AVGO",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:AVL",
+          "target_key": "ticker:AVGO",
+          "ticker": "AVL",
+          "label": "Direxion Daily AVGO Bull 2X ETF",
+          "route": "/etfs/AVL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Broadcom Inc",
+          "canonical_underlying_ticker": "AVGO",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -522,15 +767,56 @@
       }
     },
     "BA": {
+      "target_key": "ticker:BA",
       "ticker": "BA",
       "route": "/stock/BA",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:BOEG",
+          "target_key": "ticker:BA",
           "ticker": "BOEG",
           "label": "Leverage Shares 2X Long BA Daily ETF",
           "route": "/etfs/BOEG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "BA",
+          "canonical_underlying_ticker": "BA",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": "2026-06-17T05:51:24Z",
+        "market_facts": "2026-06-21T00:42:40Z"
+      }
+    },
+    "BRK.B": {
+      "target_key": "ticker:BRK.B",
+      "ticker": "BRK.B",
+      "route": "/stock/BRK.B",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:BRKU",
+          "target_key": "ticker:BRK.B",
+          "ticker": "BRKU",
+          "label": "Direxion Daily BRKB Bull 2X ETF",
+          "route": "/etfs/BRKU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Berkshire Hathaway",
+          "canonical_underlying_ticker": "BRK.B",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -549,15 +835,22 @@
       }
     },
     "CAT": {
+      "target_key": "ticker:CAT",
       "ticker": "CAT",
       "route": "/stock/CAT",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CATG",
+          "target_key": "ticker:CAT",
           "ticker": "CATG",
           "label": "Leverage Shares 2X Long CAT Daily ETF",
           "route": "/etfs/CATG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CAT",
+          "canonical_underlying_ticker": "CAT",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -576,15 +869,22 @@
       }
     },
     "CIEN": {
+      "target_key": "ticker:CIEN",
       "ticker": "CIEN",
       "route": "/stock/CIEN",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CIEG",
+          "target_key": "ticker:CIEN",
           "ticker": "CIEG",
           "label": "Leverage Shares 2X Long CIEN Daily ETF",
           "route": "/etfs/CIEG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CIEN",
+          "canonical_underlying_ticker": "CIEN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -603,15 +903,22 @@
       }
     },
     "CNC": {
+      "target_key": "ticker:CNC",
       "ticker": "CNC",
       "route": "/stock/CNC",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CNCG",
+          "target_key": "ticker:CNC",
           "ticker": "CNCG",
           "label": "Leverage Shares 2X Long CNC Daily ETF",
           "route": "/etfs/CNCG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CNC",
+          "canonical_underlying_ticker": "CNC",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -630,15 +937,22 @@
       }
     },
     "COHR": {
+      "target_key": "ticker:COHR",
       "ticker": "COHR",
       "route": "/stock/COHR",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:COHH",
+          "target_key": "ticker:COHR",
           "ticker": "COHH",
           "label": "Leverage Shares 2X Long COHR Daily ETF",
           "route": "/etfs/COHH",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COHR",
+          "canonical_underlying_ticker": "COHR",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -657,15 +971,22 @@
       }
     },
     "COIN": {
+      "target_key": "ticker:COIN",
       "ticker": "COIN",
       "route": "/stock/COIN",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:COIA",
+          "target_key": "ticker:COIN",
           "ticker": "COIA",
           "label": "ProShares Ultra COIN",
           "route": "/etfs/COIA",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -678,11 +999,17 @@
           }
         },
         {
+          "etf_key": "etf:COIG",
+          "target_key": "ticker:COIN",
           "ticker": "COIG",
           "label": "Leverage Shares 2X Long COIN Daily ETF",
           "route": "/etfs/COIG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -695,11 +1022,17 @@
           }
         },
         {
+          "etf_key": "etf:COIO",
+          "target_key": "ticker:COIN",
           "ticker": "COIO",
           "label": "Leverage Shares 2x Capped Accelerated COIN Monthly ETF",
           "route": "/etfs/COIO",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -712,11 +1045,41 @@
           }
         },
         {
+          "etf_key": "etf:CONI",
+          "target_key": "ticker:COIN",
+          "ticker": "CONI",
+          "label": "GraniteShares 2x Short COIN Daily ETF",
+          "route": "/etfs/CONI",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Coinbase Global, Inc",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "inverse",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:CONX",
+          "target_key": "ticker:COIN",
           "ticker": "CONX",
           "label": "Direxion Daily COIN Bull 2X ETF",
           "route": "/etfs/CONX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -729,11 +1092,17 @@
           }
         },
         {
+          "etf_key": "etf:COYY",
+          "target_key": "ticker:COIN",
           "ticker": "COYY",
           "label": "GraniteShares YieldBOOST COIN ETF",
           "route": "/etfs/COYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -752,15 +1121,22 @@
       }
     },
     "CRDO": {
+      "target_key": "ticker:CRDO",
       "ticker": "CRDO",
       "route": "/stock/CRDO",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CRDU",
+          "target_key": "ticker:CRDO",
           "ticker": "CRDU",
           "label": "Tradr 2X Long CRDO Daily ETF",
           "route": "/etfs/CRDU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CRDO",
+          "canonical_underlying_ticker": "CRDO",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -779,15 +1155,22 @@
       }
     },
     "CRM": {
+      "target_key": "ticker:CRM",
       "ticker": "CRM",
       "route": "/stock/CRM",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CRMG",
+          "target_key": "ticker:CRM",
           "ticker": "CRMG",
           "label": "Leverage Shares 2X Long CRM Daily ETF",
           "route": "/etfs/CRMG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CRM",
+          "canonical_underlying_ticker": "CRM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -806,15 +1189,22 @@
       }
     },
     "CRWD": {
+      "target_key": "ticker:CRWD",
       "ticker": "CRWD",
       "route": "/stock/CRWD",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CRWL",
+          "target_key": "ticker:CRWD",
           "ticker": "CRWL",
           "label": "GraniteShares 2x Long CRWD Daily ETF",
           "route": "/etfs/CRWL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CRWD",
+          "canonical_underlying_ticker": "CRWD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -833,15 +1223,22 @@
       }
     },
     "CSCO": {
+      "target_key": "ticker:CSCO",
       "ticker": "CSCO",
       "route": "/stock/CSCO",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CSCL",
+          "target_key": "ticker:CSCO",
           "ticker": "CSCL",
           "label": "Direxion Daily CSCO Bull 2X ETF",
           "route": "/etfs/CSCL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CSCO",
+          "canonical_underlying_ticker": "CSCO",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -860,15 +1257,22 @@
       }
     },
     "CLS": {
+      "target_key": "ticker:CLS",
       "ticker": "CLS",
       "route": "/stock/CLS",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:CSEX",
+          "target_key": "ticker:CLS",
           "ticker": "CSEX",
           "label": "Tradr 2X Long CLS Daily ETF",
           "route": "/etfs/CSEX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "CLS. This may include CLS",
+          "canonical_underlying_ticker": "CLS",
+          "resolution_method": "regex",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -887,15 +1291,22 @@
       }
     },
     "DELL": {
+      "target_key": "ticker:DELL",
       "ticker": "DELL",
       "route": "/stock/DELL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:DLLL",
+          "target_key": "ticker:DELL",
           "ticker": "DLLL",
           "label": "GraniteShares 2x Long DELL Daily ETF",
           "route": "/etfs/DLLL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Dell Technologies Inc",
+          "canonical_underlying_ticker": "DELL",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -914,15 +1325,22 @@
       }
     },
     "ETN": {
+      "target_key": "ticker:ETN",
       "ticker": "ETN",
       "route": "/stock/ETN",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ETNG",
+          "target_key": "ticker:ETN",
           "ticker": "ETNG",
           "label": "Leverage Shares 2X Long ETN Daily ETF",
           "route": "/etfs/ETNG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ETN",
+          "canonical_underlying_ticker": "ETN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -941,15 +1359,22 @@
       }
     },
     "META": {
+      "target_key": "ticker:META",
       "ticker": "META",
       "route": "/stock/META",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:FBYY",
+          "target_key": "ticker:META",
           "ticker": "FBYY",
           "label": "GraniteShares YieldBOOST META ETF",
           "route": "/etfs/FBYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "META",
+          "canonical_underlying_ticker": "META",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -968,15 +1393,22 @@
       }
     },
     "FCX": {
+      "target_key": "ticker:FCX",
       "ticker": "FCX",
       "route": "/stock/FCX",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:FCXG",
+          "target_key": "ticker:FCX",
           "ticker": "FCXG",
           "label": "Leverage Shares 2x Long FCX Daily ETF",
           "route": "/etfs/FCXG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "FCX",
+          "canonical_underlying_ticker": "FCX",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -995,15 +1427,22 @@
       }
     },
     "GEV": {
+      "target_key": "ticker:GEV",
       "ticker": "GEV",
       "route": "/stock/GEV",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:GEVG",
+          "target_key": "ticker:GEV",
           "ticker": "GEVG",
           "label": "Leverage Shares 2X Long GEV Daily ETF",
           "route": "/etfs/GEVG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "GEV",
+          "canonical_underlying_ticker": "GEV",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1022,15 +1461,22 @@
       }
     },
     "GOOG": {
+      "target_key": "ticker:GOOG",
       "ticker": "GOOG",
       "route": "/stock/GOOG",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:GOOX",
+          "target_key": "ticker:GOOG",
           "ticker": "GOOX",
           "label": "T-Rex 2X Long Alphabet Daily Target ETF",
           "route": "/etfs/GOOX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "GOOG",
+          "canonical_underlying_ticker": "GOOG",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1049,15 +1495,22 @@
       }
     },
     "GOOGL": {
+      "target_key": "ticker:GOOGL",
       "ticker": "GOOGL",
       "route": "/stock/GOOGL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:GOU",
+          "target_key": "ticker:GOOGL",
           "ticker": "GOU",
           "label": "GraniteShares 2x Long GOOGL Daily ETF",
           "route": "/etfs/GOU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "GOOGL",
+          "canonical_underlying_ticker": "GOOGL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1076,15 +1529,22 @@
       }
     },
     "HOOD": {
+      "target_key": "ticker:HOOD",
       "ticker": "HOOD",
       "route": "/stock/HOOD",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:HODU",
+          "target_key": "ticker:HOOD",
           "ticker": "HODU",
           "label": "Direxion Daily HOOD Bull 2X ETF",
           "route": "/etfs/HODU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1097,11 +1557,17 @@
           }
         },
         {
+          "etf_key": "etf:HOOG",
+          "target_key": "ticker:HOOD",
           "ticker": "HOOG",
           "label": "Leverage Shares 2X Long HOOD Daily ETF",
           "route": "/etfs/HOOG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1114,11 +1580,17 @@
           }
         },
         {
+          "etf_key": "etf:HOOX",
+          "target_key": "ticker:HOOD",
           "ticker": "HOOX",
           "label": "Defiance Daily Target 2X Long HOOD ETF",
           "route": "/etfs/HOOX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1131,11 +1603,17 @@
           }
         },
         {
+          "etf_key": "etf:HOOZ",
+          "target_key": "ticker:HOOD",
           "ticker": "HOOZ",
           "label": "Defiance Daily Target 2X Short HOOD ETF",
           "route": "/etfs/HOOZ",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1149,11 +1627,17 @@
           }
         },
         {
+          "etf_key": "etf:HOYY",
+          "target_key": "ticker:HOOD",
           "ticker": "HOYY",
           "label": "GraniteShares YieldBOOST HOOD ETF",
           "route": "/etfs/HOYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1166,11 +1650,17 @@
           }
         },
         {
+          "etf_key": "etf:ROBN",
+          "target_key": "ticker:HOOD",
           "ticker": "ROBN",
           "label": "T-Rex 2X Long HOOD Daily Target ETF",
           "route": "/etfs/ROBN",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1189,15 +1679,22 @@
       }
     },
     "IBM": {
+      "target_key": "ticker:IBM",
       "ticker": "IBM",
       "route": "/stock/IBM",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:IBX",
+          "target_key": "ticker:IBM",
           "ticker": "IBX",
           "label": "Tradr 2X Long IBM Daily ETF",
           "route": "/etfs/IBX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "IBM. This may include IBM",
+          "canonical_underlying_ticker": "IBM",
+          "resolution_method": "regex",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1216,15 +1713,22 @@
       }
     },
     "INTC": {
+      "target_key": "ticker:INTC",
       "ticker": "INTC",
       "route": "/stock/INTC",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:INTW",
+          "target_key": "ticker:INTC",
           "ticker": "INTW",
           "label": "GraniteShares 2x Long INTC Daily ETF",
           "route": "/etfs/INTW",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "INTC",
+          "canonical_underlying_ticker": "INTC",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1237,11 +1741,51 @@
           }
         },
         {
+          "etf_key": "etf:LINT",
+          "target_key": "ticker:INTC",
           "ticker": "LINT",
           "label": "Direxion Daily INTC Bull 2X ETF",
           "route": "/etfs/LINT",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "INTC",
+          "canonical_underlying_ticker": "INTC",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": "2026-06-17T05:51:24Z",
+        "market_facts": "2026-06-21T00:42:40Z"
+      }
+    },
+    "ISRG": {
+      "target_key": "ticker:ISRG",
+      "ticker": "ISRG",
+      "route": "/stock/ISRG",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:ISUL",
+          "target_key": "ticker:ISRG",
+          "ticker": "ISUL",
+          "label": "GraniteShares 2x Long ISRG Daily ETF",
+          "route": "/etfs/ISUL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Intuitive Surgical, Inc",
+          "canonical_underlying_ticker": "ISRG",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1260,15 +1804,22 @@
       }
     },
     "LITE": {
+      "target_key": "ticker:LITE",
       "ticker": "LITE",
       "route": "/stock/LITE",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:LITX",
+          "target_key": "ticker:LITE",
           "ticker": "LITX",
           "label": "Tradr 2X Long LITE Daily ETF",
           "route": "/etfs/LITX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "LITE. This may include LITE",
+          "canonical_underlying_ticker": "LITE",
+          "resolution_method": "regex",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1281,11 +1832,17 @@
           }
         },
         {
+          "etf_key": "etf:LITZ",
+          "target_key": "ticker:LITE",
           "ticker": "LITZ",
           "label": "Tradr 2X Short LITE Daily ETF",
           "route": "/etfs/LITZ",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Lumentum Holdings",
+          "canonical_underlying_ticker": "LITE",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1305,15 +1862,22 @@
       }
     },
     "LLY": {
+      "target_key": "ticker:LLY",
       "ticker": "LLY",
       "route": "/stock/LLY",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:LLYX",
+          "target_key": "ticker:LLY",
           "ticker": "LLYX",
           "label": "Defiance Daily Target 2X Long LLY ETF",
           "route": "/etfs/LLYX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "LLY",
+          "canonical_underlying_ticker": "LLY",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1332,15 +1896,22 @@
       }
     },
     "LMT": {
+      "target_key": "ticker:LMT",
       "ticker": "LMT",
       "route": "/stock/LMT",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:LMTL",
+          "target_key": "ticker:LMT",
           "ticker": "LMTL",
           "label": "Direxion Daily LMT Bull 2X ETF",
           "route": "/etfs/LMTL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "LMT",
+          "canonical_underlying_ticker": "LMT",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1359,15 +1930,22 @@
       }
     },
     "MRVL": {
+      "target_key": "ticker:MRVL",
       "ticker": "MRVL",
       "route": "/stock/MRVL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:MRVU",
+          "target_key": "ticker:MRVL",
           "ticker": "MRVU",
           "label": "Direxion Daily MRVL Bull 2X ETF",
           "route": "/etfs/MRVU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MRVL",
+          "canonical_underlying_ticker": "MRVL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1380,11 +1958,17 @@
           }
         },
         {
+          "etf_key": "etf:MVLL",
+          "target_key": "ticker:MRVL",
           "ticker": "MVLL",
           "label": "GraniteShares 2x Long MRVL Daily ETF",
           "route": "/etfs/MVLL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MRVL",
+          "canonical_underlying_ticker": "MRVL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1403,15 +1987,22 @@
       }
     },
     "MSFT": {
+      "target_key": "ticker:MSFT",
       "ticker": "MSFT",
       "route": "/stock/MSFT",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:MSFL",
+          "target_key": "ticker:MSFT",
           "ticker": "MSFL",
           "label": "GraniteShares 2x Long MSFT Daily ETF",
           "route": "/etfs/MSFL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Microsoft",
+          "canonical_underlying_ticker": "MSFT",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1424,11 +2015,17 @@
           }
         },
         {
+          "etf_key": "etf:MSFU",
+          "target_key": "ticker:MSFT",
           "ticker": "MSFU",
           "label": "Direxion Daily MSFT Bull 2X ETF",
           "route": "/etfs/MSFU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Microsoft",
+          "canonical_underlying_ticker": "MSFT",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1441,11 +2038,17 @@
           }
         },
         {
+          "etf_key": "etf:MSFX",
+          "target_key": "ticker:MSFT",
           "ticker": "MSFX",
           "label": "T-Rex 2X Long Microsoft Daily Target ETF",
           "route": "/etfs/MSFX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MSFT",
+          "canonical_underlying_ticker": "MSFT",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1464,15 +2067,22 @@
       }
     },
     "MU": {
+      "target_key": "ticker:MU",
       "ticker": "MU",
       "route": "/stock/MU",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:MULL",
+          "target_key": "ticker:MU",
           "ticker": "MULL",
           "label": "GraniteShares 2x Long MU Daily ETF",
           "route": "/etfs/MULL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1485,11 +2095,40 @@
           }
         },
         {
+          "etf_key": "etf:MUU",
+          "target_key": "ticker:MU",
+          "ticker": "MUU",
+          "label": "Direxion Daily MU Bull 2X ETF",
+          "route": "/etfs/MUU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Micron Technology, Inc",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:MUYY",
+          "target_key": "ticker:MU",
           "ticker": "MUYY",
           "label": "GraniteShares YieldBOOST MU ETF",
           "route": "/etfs/MUYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1502,11 +2141,17 @@
           }
         },
         {
+          "etf_key": "etf:MUZ",
+          "target_key": "ticker:MU",
           "ticker": "MUZ",
           "label": "Defiance Daily Target 2X Short MU ETF",
           "route": "/etfs/MUZ",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1526,15 +2171,22 @@
       }
     },
     "NEM": {
+      "target_key": "ticker:NEM",
       "ticker": "NEM",
       "route": "/stock/NEM",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:NEMG",
+          "target_key": "ticker:NEM",
           "ticker": "NEMG",
           "label": "Leverage Shares 2x Long NEM Daily ETF",
           "route": "/etfs/NEMG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NEM",
+          "canonical_underlying_ticker": "NEM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1553,15 +2205,22 @@
       }
     },
     "NET": {
+      "target_key": "ticker:NET",
       "ticker": "NET",
       "route": "/stock/NET",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:NETG",
+          "target_key": "ticker:NET",
           "ticker": "NETG",
           "label": "Leverage Shares 2X Long NET Daily ETF",
           "route": "/etfs/NETG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NET",
+          "canonical_underlying_ticker": "NET",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1580,15 +2239,22 @@
       }
     },
     "NFLX": {
+      "target_key": "ticker:NFLX",
       "ticker": "NFLX",
       "route": "/stock/NFLX",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:NFLU",
+          "target_key": "ticker:NFLX",
           "ticker": "NFLU",
           "label": "T-Rex 2X Long NFLX Daily Target ETF",
           "route": "/etfs/NFLU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NFLX",
+          "canonical_underlying_ticker": "NFLX",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1601,11 +2267,51 @@
           }
         },
         {
+          "etf_key": "etf:NFXL",
+          "target_key": "ticker:NFLX",
           "ticker": "NFXL",
           "label": "Direxion Daily NFLX Bull 2X ETF",
           "route": "/etfs/NFXL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Netflix",
+          "canonical_underlying_ticker": "NFLX",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": "2026-06-17T05:51:24Z",
+        "market_facts": "2026-06-21T00:42:40Z"
+      }
+    },
+    "NOW": {
+      "target_key": "ticker:NOW",
+      "ticker": "NOW",
+      "route": "/stock/NOW",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:NOWL",
+          "target_key": "ticker:NOW",
+          "ticker": "NOWL",
+          "label": "GraniteShares 2x Long NOW Daily ETF",
+          "route": "/etfs/NOWL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ServiceNow, Inc",
+          "canonical_underlying_ticker": "NOW",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1624,66 +2330,22 @@
       }
     },
     "NVDA": {
+      "target_key": "ticker:NVDA",
       "ticker": "NVDA",
       "route": "/stock/NVDA",
       "single_stock_etfs": [
         {
-          "ticker": "NVDB",
-          "label": "ProShares Ultra NVDA",
-          "route": "/etfs/NVDB",
+          "etf_key": "etf:NVD",
+          "target_key": "ticker:NVDA",
+          "ticker": "NVD",
+          "label": "GraniteShares 2x Short NVDA Daily ETF",
+          "route": "/etfs/NVD",
           "category": "Equity",
           "confidence": "high",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": "2026-06-17T05:51:24Z",
-            "market_facts": "2026-06-21T00:42:40Z"
-          }
-        },
-        {
-          "ticker": "NVDG",
-          "label": "Leverage Shares 2X Long NVDA Daily ETF",
-          "route": "/etfs/NVDG",
-          "category": "Equity",
-          "confidence": "high",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": "2026-06-17T05:51:24Z",
-            "market_facts": "2026-06-21T00:42:40Z"
-          }
-        },
-        {
-          "ticker": "NVDO",
-          "label": "Leverage Shares 2x Capped Accelerated NVDA Monthly ETF",
-          "route": "/etfs/NVDO",
-          "category": "Equity",
-          "confidence": "high",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": "2026-06-17T05:51:24Z",
-            "market_facts": "2026-06-21T00:42:40Z"
-          }
-        },
-        {
-          "ticker": "NVDS",
-          "label": "Tradr 1.5X Short NVDA Daily ETF",
-          "route": "/etfs/NVDS",
-          "category": "Equity",
-          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVIDIA Corporation",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1697,11 +2359,133 @@
           }
         },
         {
+          "etf_key": "etf:NVDB",
+          "target_key": "ticker:NVDA",
+          "ticker": "NVDB",
+          "label": "ProShares Ultra NVDA",
+          "route": "/etfs/NVDB",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVDA",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:NVDG",
+          "target_key": "ticker:NVDA",
+          "ticker": "NVDG",
+          "label": "Leverage Shares 2X Long NVDA Daily ETF",
+          "route": "/etfs/NVDG",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVDA",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:NVDL",
+          "target_key": "ticker:NVDA",
+          "ticker": "NVDL",
+          "label": "GraniteShares 2x Long NVDA Daily ETF",
+          "route": "/etfs/NVDL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVIDIA Corporation",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:NVDO",
+          "target_key": "ticker:NVDA",
+          "ticker": "NVDO",
+          "label": "Leverage Shares 2x Capped Accelerated NVDA Monthly ETF",
+          "route": "/etfs/NVDO",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVDA",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:NVDS",
+          "target_key": "ticker:NVDA",
+          "ticker": "NVDS",
+          "label": "Tradr 1.5X Short NVDA Daily ETF",
+          "route": "/etfs/NVDS",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Nvidia",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "inverse",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:NVDU",
+          "target_key": "ticker:NVDA",
           "ticker": "NVDU",
           "label": "Direxion Daily NVDA Bull 2X ETF",
           "route": "/etfs/NVDU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVIDIA",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1714,11 +2498,17 @@
           }
         },
         {
+          "etf_key": "etf:NVDX",
+          "target_key": "ticker:NVDA",
           "ticker": "NVDX",
           "label": "T-Rex 2X Long NVIDIA Daily Target ETF",
           "route": "/etfs/NVDX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVIDIA",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1731,11 +2521,17 @@
           }
         },
         {
+          "etf_key": "etf:NVYY",
+          "target_key": "ticker:NVDA",
           "ticker": "NVYY",
           "label": "GraniteShares YieldBOOST NVDA ETF",
           "route": "/etfs/NVYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVDA",
+          "canonical_underlying_ticker": "NVDA",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1754,15 +2550,22 @@
       }
     },
     "NVO": {
+      "target_key": "ticker:NVO",
       "ticker": "NVO",
       "route": "/stock/NVO",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:NVOX",
+          "target_key": "ticker:NVO",
           "ticker": "NVOX",
           "label": "Defiance Daily Target 2X Long NVO ETF",
           "route": "/etfs/NVOX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "NVO",
+          "canonical_underlying_ticker": "NVO",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1781,15 +2584,22 @@
       }
     },
     "ORCL": {
+      "target_key": "ticker:ORCL",
       "ticker": "ORCL",
       "route": "/stock/ORCL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:ORCU",
+          "target_key": "ticker:ORCL",
           "ticker": "ORCU",
           "label": "Direxion Daily ORCL Bull 2X ETF",
           "route": "/etfs/ORCU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ORCL",
+          "canonical_underlying_ticker": "ORCL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1802,11 +2612,17 @@
           }
         },
         {
+          "etf_key": "etf:ORCX",
+          "target_key": "ticker:ORCL",
           "ticker": "ORCX",
           "label": "Defiance Daily Target 2X Long ORCL ETF",
           "route": "/etfs/ORCX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "ORCL",
+          "canonical_underlying_ticker": "ORCL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1825,15 +2641,45 @@
       }
     },
     "PANW": {
+      "target_key": "ticker:PANW",
       "ticker": "PANW",
       "route": "/stock/PANW",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:PALU",
+          "target_key": "ticker:PANW",
+          "ticker": "PALU",
+          "label": "Direxion Daily PANW Bull 2X ETF",
+          "route": "/etfs/PALU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Palo Alto Networks, Inc",
+          "canonical_underlying_ticker": "PANW",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:PANG",
+          "target_key": "ticker:PANW",
           "ticker": "PANG",
           "label": "Leverage Shares 2X Long PANW Daily ETF",
           "route": "/etfs/PANG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PANW",
+          "canonical_underlying_ticker": "PANW",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1852,15 +2698,22 @@
       }
     },
     "PATH": {
+      "target_key": "ticker:PATH",
       "ticker": "PATH",
       "route": "/stock/PATH",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:PATX",
+          "target_key": "ticker:PATH",
           "ticker": "PATX",
           "label": "Tradr 2X Long PATH Daily ETF",
           "route": "/etfs/PATX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PATH. This may include PATH",
+          "canonical_underlying_ticker": "PATH",
+          "resolution_method": "regex",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1879,15 +2732,22 @@
       }
     },
     "PLTR": {
+      "target_key": "ticker:PLTR",
       "ticker": "PLTR",
       "route": "/stock/PLTR",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:PLOO",
+          "target_key": "ticker:PLTR",
           "ticker": "PLOO",
           "label": "Leverage Shares 2x Capped Accelerated PLTR Monthly ETF",
           "route": "/etfs/PLOO",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1900,11 +2760,17 @@
           }
         },
         {
+          "etf_key": "etf:PLTA",
+          "target_key": "ticker:PLTR",
           "ticker": "PLTA",
           "label": "ProShares Ultra PLTR",
           "route": "/etfs/PLTA",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1917,11 +2783,17 @@
           }
         },
         {
+          "etf_key": "etf:PLTG",
+          "target_key": "ticker:PLTR",
           "ticker": "PLTG",
           "label": "Leverage Shares 2X Long PLTR Daily ETF",
           "route": "/etfs/PLTG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1934,11 +2806,40 @@
           }
         },
         {
+          "etf_key": "etf:PLTU",
+          "target_key": "ticker:PLTR",
+          "ticker": "PLTU",
+          "label": "Direxion Daily PLTR Bull 2X ETF",
+          "route": "/etfs/PLTU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Palantir Technologies",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "alias",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:PLTZ",
+          "target_key": "ticker:PLTR",
           "ticker": "PLTZ",
           "label": "Defiance Daily Target 2x Short PLTR ETF",
           "route": "/etfs/PLTZ",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1952,11 +2853,40 @@
           }
         },
         {
+          "etf_key": "etf:PLYY",
+          "target_key": "ticker:PLTR",
           "ticker": "PLYY",
           "label": "GraniteShares YieldBOOST PLTR ETF",
           "route": "/etfs/PLYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        },
+        {
+          "etf_key": "etf:PTIR",
+          "target_key": "ticker:PLTR",
+          "ticker": "PTIR",
+          "label": "GraniteShares 2x Long PLTR Daily ETF",
+          "route": "/etfs/PTIR",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Palantir Technologies Inc",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1975,15 +2905,22 @@
       }
     },
     "PYPL": {
+      "target_key": "ticker:PYPL",
       "ticker": "PYPL",
       "route": "/stock/PYPL",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:PYPG",
+          "target_key": "ticker:PYPL",
           "ticker": "PYPG",
           "label": "Leverage Shares 2X Long PYPL Daily ETF",
           "route": "/etfs/PYPG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PYPL",
+          "canonical_underlying_ticker": "PYPL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1996,11 +2933,17 @@
           }
         },
         {
+          "etf_key": "etf:PYPU",
+          "target_key": "ticker:PYPL",
           "ticker": "PYPU",
           "label": "Direxion Daily PYPL Bull 2X ETF",
           "route": "/etfs/PYPU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PYPL",
+          "canonical_underlying_ticker": "PYPL",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2019,15 +2962,22 @@
       }
     },
     "QCOM": {
+      "target_key": "ticker:QCOM",
       "ticker": "QCOM",
       "route": "/stock/QCOM",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:QCML",
+          "target_key": "ticker:QCOM",
           "ticker": "QCML",
           "label": "GraniteShares 2x Long QCOM Daily ETF",
           "route": "/etfs/QCML",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "QCOM",
+          "canonical_underlying_ticker": "QCOM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2046,15 +2996,22 @@
       }
     },
     "RDDT": {
+      "target_key": "ticker:RDDT",
       "ticker": "RDDT",
       "route": "/stock/RDDT",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:RDTL",
+          "target_key": "ticker:RDDT",
           "ticker": "RDTL",
           "label": "GraniteShares 2x Long RDDT Daily ETF",
           "route": "/etfs/RDTL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "RDDT",
+          "canonical_underlying_ticker": "RDDT",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2073,15 +3030,22 @@
       }
     },
     "RKT": {
+      "target_key": "ticker:RKT",
       "ticker": "RKT",
       "route": "/stock/RKT",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:RKTL",
+          "target_key": "ticker:RKT",
           "ticker": "RKTL",
           "label": "Defiance Daily Target 2X Long RKT ETF",
           "route": "/etfs/RKTL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "RKT",
+          "canonical_underlying_ticker": "RKT",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2100,15 +3064,56 @@
       }
     },
     "RTX": {
+      "target_key": "ticker:RTX",
       "ticker": "RTX",
       "route": "/stock/RTX",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:RTXG",
+          "target_key": "ticker:RTX",
           "ticker": "RTXG",
           "label": "Leverage Shares 2X Long RTX Daily ETF",
           "route": "/etfs/RTXG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "RTX",
+          "canonical_underlying_ticker": "RTX",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": "2026-06-17T05:51:24Z",
+        "market_facts": "2026-06-21T00:42:40Z"
+      }
+    },
+    "RIVN": {
+      "target_key": "ticker:RIVN",
+      "ticker": "RIVN",
+      "route": "/stock/RIVN",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:RVNL",
+          "target_key": "ticker:RIVN",
+          "ticker": "RVNL",
+          "label": "GraniteShares 2x Long RIVN Daily ETF",
+          "route": "/etfs/RVNL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Rivian Automotive",
+          "canonical_underlying_ticker": "RIVN",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2127,15 +3132,22 @@
       }
     },
     "SHOP": {
+      "target_key": "ticker:SHOP",
       "ticker": "SHOP",
       "route": "/stock/SHOP",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:SHPU",
+          "target_key": "ticker:SHOP",
           "ticker": "SHPU",
           "label": "Direxion Daily SHOP Bull 2X ETF",
           "route": "/etfs/SHPU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SHOP",
+          "canonical_underlying_ticker": "SHOP",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2154,15 +3166,22 @@
       }
     },
     "SMCI": {
+      "target_key": "ticker:SMCI",
       "ticker": "SMCI",
       "route": "/stock/SMCI",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:SMCL",
+          "target_key": "ticker:SMCI",
           "ticker": "SMCL",
           "label": "GraniteShares 2x Long SMCI Daily ETF",
           "route": "/etfs/SMCL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SMCI",
+          "canonical_underlying_ticker": "SMCI",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2175,11 +3194,17 @@
           }
         },
         {
+          "etf_key": "etf:SMCX",
+          "target_key": "ticker:SMCI",
           "ticker": "SMCX",
           "label": "Defiance Daily Target 2X Long SMCI ETF",
           "route": "/etfs/SMCX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SMCI",
+          "canonical_underlying_ticker": "SMCI",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2192,11 +3217,17 @@
           }
         },
         {
+          "etf_key": "etf:SMCZ",
+          "target_key": "ticker:SMCI",
           "ticker": "SMCZ",
           "label": "Defiance Daily Target 2X Short SMCI ETF",
           "route": "/etfs/SMCZ",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SMCI",
+          "canonical_underlying_ticker": "SMCI",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2210,11 +3241,17 @@
           }
         },
         {
+          "etf_key": "etf:SMYY",
+          "target_key": "ticker:SMCI",
           "ticker": "SMYY",
           "label": "GraniteShares YieldBOOST SMCI ETF",
           "route": "/etfs/SMYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SMCI",
+          "canonical_underlying_ticker": "SMCI",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2233,15 +3270,22 @@
       }
     },
     "SNDK": {
+      "target_key": "ticker:SNDK",
       "ticker": "SNDK",
       "route": "/stock/SNDK",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:SNDU",
+          "target_key": "ticker:SNDK",
           "ticker": "SNDU",
           "label": "T-REX 2X Long SNDK Daily Target ETF",
           "route": "/etfs/SNDU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SNDK",
+          "canonical_underlying_ticker": "SNDK",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2254,11 +3298,17 @@
           }
         },
         {
+          "etf_key": "etf:SNXX",
+          "target_key": "ticker:SNDK",
           "ticker": "SNXX",
           "label": "Tradr 2X Long SNDK Daily ETF",
           "route": "/etfs/SNXX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SNDK. This may include SNDK",
+          "canonical_underlying_ticker": "SNDK",
+          "resolution_method": "regex",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2277,15 +3327,22 @@
       }
     },
     "SNOW": {
+      "target_key": "ticker:SNOW",
       "ticker": "SNOW",
       "route": "/stock/SNOW",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:SNOU",
+          "target_key": "ticker:SNOW",
           "ticker": "SNOU",
           "label": "T-REX 2X Long SNOW Daily Target ETF",
           "route": "/etfs/SNOU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SNOW",
+          "canonical_underlying_ticker": "SNOW",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2304,15 +3361,22 @@
       }
     },
     "SPOT": {
+      "target_key": "ticker:SPOT",
       "ticker": "SPOT",
       "route": "/stock/SPOT",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:SPOG",
+          "target_key": "ticker:SPOT",
           "ticker": "SPOG",
           "label": "Leverage Shares 2X Long SPOT Daily ETF",
           "route": "/etfs/SPOG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SPOT",
+          "canonical_underlying_ticker": "SPOT",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2331,15 +3395,22 @@
       }
     },
     "TSM": {
+      "target_key": "ticker:TSM",
       "ticker": "TSM",
       "route": "/stock/TSM",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:STSM",
+          "target_key": "ticker:TSM",
           "ticker": "STSM",
           "label": "Defiance Daily Target 2X Short TSM ETF",
           "route": "/etfs/STSM",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSM",
+          "canonical_underlying_ticker": "TSM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2353,11 +3424,17 @@
           }
         },
         {
+          "etf_key": "etf:TMYY",
+          "target_key": "ticker:TSM",
           "ticker": "TMYY",
           "label": "GraniteShares YieldBOOST TSM ETF",
           "route": "/etfs/TMYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSM",
+          "canonical_underlying_ticker": "TSM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2370,11 +3447,17 @@
           }
         },
         {
+          "etf_key": "etf:TSMG",
+          "target_key": "ticker:TSM",
           "ticker": "TSMG",
           "label": "Leverage Shares 2X Long TSM Daily ETF",
           "route": "/etfs/TSMG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSM",
+          "canonical_underlying_ticker": "TSM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2387,11 +3470,17 @@
           }
         },
         {
+          "etf_key": "etf:TSMU",
+          "target_key": "ticker:TSM",
           "ticker": "TSMU",
           "label": "GraniteShares 2x Long TSM Daily ETF",
           "route": "/etfs/TSMU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSM",
+          "canonical_underlying_ticker": "TSM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2404,11 +3493,17 @@
           }
         },
         {
+          "etf_key": "etf:TSMX",
+          "target_key": "ticker:TSM",
           "ticker": "TSMX",
           "label": "Direxion Daily TSM Bull 2X ETF",
           "route": "/etfs/TSMX",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSM",
+          "canonical_underlying_ticker": "TSM",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2427,15 +3522,22 @@
       }
     },
     "TSLA": {
+      "target_key": "ticker:TSLA",
       "ticker": "TSLA",
       "route": "/stock/TSLA",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:TSDD",
+          "target_key": "ticker:TSLA",
           "ticker": "TSDD",
           "label": "GraniteShares 2x Short TSLA Daily ETF",
           "route": "/etfs/TSDD",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Tesla",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2449,11 +3551,17 @@
           }
         },
         {
+          "etf_key": "etf:TSL",
+          "target_key": "ticker:TSLA",
           "ticker": "TSL",
           "label": "GraniteShares 1.25x Long Tesla Daily ETF",
           "route": "/etfs/TSL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2466,11 +3574,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLG",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLG",
           "label": "Leverage Shares 2X Long TSLA Daily ETF",
           "route": "/etfs/TSLG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2483,11 +3597,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLI",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLI",
           "label": "ProShares Ultra TSLA ETF",
           "route": "/etfs/TSLI",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2500,11 +3620,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLL",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLL",
           "label": "Direxion Daily TSLA Bull 2X ETF",
           "route": "/etfs/TSLL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Tesla",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2517,11 +3643,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLO",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLO",
           "label": "Leverage Shares 2x Capped Accelerated TSLA Monthly ETF",
           "route": "/etfs/TSLO",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2534,11 +3666,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLQ",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLQ",
           "label": "Tradr 2X Short TSLA Daily ETF New Oct 2025",
           "route": "/etfs/TSLQ",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Tesla",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2552,11 +3690,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLR",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLR",
           "label": "GraniteShares 2x Long TSLA Daily ETF",
           "route": "/etfs/TSLR",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Tesla",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2569,11 +3713,17 @@
           }
         },
         {
+          "etf_key": "etf:TSLT",
+          "target_key": "ticker:TSLA",
           "ticker": "TSLT",
           "label": "T-REX 2X Long Tesla Daily Target ETF",
           "route": "/etfs/TSLT",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TESLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2586,11 +3736,17 @@
           }
         },
         {
+          "etf_key": "etf:TSYY",
+          "target_key": "ticker:TSLA",
           "ticker": "TSYY",
           "label": "GraniteShares YieldBOOST TSLA ETF",
           "route": "/etfs/TSYY",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2609,15 +3765,22 @@
       }
     },
     "TXN": {
+      "target_key": "ticker:TXN",
       "ticker": "TXN",
       "route": "/stock/TXN",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:TXNU",
+          "target_key": "ticker:TXN",
           "ticker": "TXNU",
           "label": "Direxion Daily TXN Bull 2X ETF",
           "route": "/etfs/TXNU",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TXN",
+          "canonical_underlying_ticker": "TXN",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2636,15 +3799,22 @@
       }
     },
     "UBER": {
+      "target_key": "ticker:UBER",
       "ticker": "UBER",
       "route": "/stock/UBER",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:UBRL",
+          "target_key": "ticker:UBER",
           "ticker": "UBRL",
           "label": "GraniteShares 2x Long UBER Daily ETF",
           "route": "/etfs/UBRL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Uber Technologies, Inc",
+          "canonical_underlying_ticker": "UBER",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2663,15 +3833,22 @@
       }
     },
     "UNH": {
+      "target_key": "ticker:UNH",
       "ticker": "UNH",
       "route": "/stock/UNH",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:UNHG",
+          "target_key": "ticker:UNH",
           "ticker": "UNHG",
           "label": "Leverage Shares 2X Long UNH Daily ETF",
           "route": "/etfs/UNHG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "UNH",
+          "canonical_underlying_ticker": "UNH",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2690,15 +3867,22 @@
       }
     },
     "UPS": {
+      "target_key": "ticker:UPS",
       "ticker": "UPS",
       "route": "/stock/UPS",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:UPSG",
+          "target_key": "ticker:UPS",
           "ticker": "UPSG",
           "label": "Leverage Shares 2X Long UPS Daily ETF",
           "route": "/etfs/UPSG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "UPS",
+          "canonical_underlying_ticker": "UPS",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2717,15 +3901,56 @@
       }
     },
     "VST": {
+      "target_key": "ticker:VST",
       "ticker": "VST",
       "route": "/stock/VST",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:VSTL",
+          "target_key": "ticker:VST",
           "ticker": "VSTL",
           "label": "Defiance Daily Target 2X Long VST ETF",
           "route": "/etfs/VSTL",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "VST",
+          "canonical_underlying_ticker": "VST",
+          "resolution_method": "direct",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": "2026-06-17T05:51:24Z",
+            "market_facts": "2026-06-21T00:42:40Z"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": "2026-06-17T05:51:24Z",
+        "market_facts": "2026-06-21T00:42:40Z"
+      }
+    },
+    "XOM": {
+      "target_key": "ticker:XOM",
+      "ticker": "XOM",
+      "route": "/stock/XOM",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:XOMX",
+          "target_key": "ticker:XOM",
+          "ticker": "XOMX",
+          "label": "Direxion Daily XOM Bull 2X ETF",
+          "route": "/etfs/XOMX",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Exxon Mobil Corporation",
+          "canonical_underlying_ticker": "XOM",
+          "resolution_method": "alias",
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2744,15 +3969,22 @@
       }
     },
     "XYZ": {
+      "target_key": "ticker:XYZ",
       "ticker": "XYZ",
       "route": "/stock/XYZ",
       "single_stock_etfs": [
         {
+          "etf_key": "etf:XYZG",
+          "target_key": "ticker:XYZ",
           "ticker": "XYZG",
           "label": "Leverage Shares 2X Long XYZ Daily ETF",
           "route": "/etfs/XYZG",
           "category": "Equity",
           "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "XYZ",
+          "canonical_underlying_ticker": "XYZ",
+          "resolution_method": "direct",
           "market_facts": true,
           "service_flags": [
             "etf_center",

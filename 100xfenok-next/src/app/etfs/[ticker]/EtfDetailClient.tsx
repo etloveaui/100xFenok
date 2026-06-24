@@ -7,6 +7,7 @@ import { formatSignedPercent } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
+import DataProvenanceNote from "@/components/DataProvenanceNote";
 import {
   cleanCategory,
   formatAum,
@@ -1247,6 +1248,12 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     ?? null;
   const holdingsDate = fmtDateish(holdingsUpdated);
   const externalSourceAsOf = holdingsDate !== "—" ? holdingsDate : fmtDateish(updateDate);
+  const singleStockClassificationDetails = classification?.is_single_stock
+    ? [
+        classification.underlying ? `분류 기초 ${classification.underlying}` : null,
+        fmtDateish(updateDate) !== "—" ? `기준 ${fmtDateish(updateDate)}` : null,
+      ]
+    : [];
 
   const totalAssets = factNumber(marketFacts, "total_assets");
   const expenseRatio = factNumber(marketFacts, "expense_ratio");
@@ -1372,6 +1379,15 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                   <span key={label} className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2.5 py-1 text-[10px] font-black text-[var(--c-ink-3)]">{label}</span>
                 ))}
               </div>
+            ) : null}
+            {classification?.is_single_stock ? (
+              <DataProvenanceNote
+                title="분류 기반 연결"
+                details={singleStockClassificationDetails}
+                className="mt-3 max-w-2xl border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
+              >
+                단일종목 분류는 ETF 전체 목록의 분류와 기초자산 표기를 기준으로 표시합니다.
+              </DataProvenanceNote>
             ) : null}
           </div>
           <div className="stock-price">

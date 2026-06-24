@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 27935,
-      "updatedAt": "2026-06-23T22:33:56.178Z"
+      "updatedAt": "2026-06-23T23:45:27.284Z"
     },
     {
       "name": "reports-index.json",
@@ -34,8 +34,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "admin": [
     {
       "name": "data-usage-manifest.json",
-      "sizeBytes": 41365,
-      "updatedAt": "2026-06-23T22:26:10.512Z"
+      "sizeBytes": 41566,
+      "updatedAt": "2026-06-23T23:45:27.284Z"
     },
     {
       "name": "notification-folders.json",
@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-23T23:39:20.697Z"
+      "updatedAt": "2026-06-24T01:04:58.985Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -115,18 +115,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "computed": [
     {
       "name": "entity_graph_stock_index.json",
-      "sizeBytes": 951189,
-      "updatedAt": "2026-06-23T23:39:20.562Z"
+      "sizeBytes": 984728,
+      "updatedAt": "2026-06-24T01:04:58.850Z"
     },
     {
       "name": "entity_graph_stock_services.json",
-      "sizeBytes": 76211,
-      "updatedAt": "2026-06-23T23:39:20.564Z"
+      "sizeBytes": 125677,
+      "updatedAt": "2026-06-24T01:04:58.852Z"
     },
     {
       "name": "entity_graph.json",
-      "sizeBytes": 6496018,
-      "updatedAt": "2026-06-23T23:39:20.543Z"
+      "sizeBytes": 7212729,
+      "updatedAt": "2026-06-24T01:04:58.831Z"
     },
     {
       "name": "market_data_audit.json",

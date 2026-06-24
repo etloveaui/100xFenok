@@ -7,6 +7,7 @@ export type StockConnectionFlags = {
 };
 
 export type StockConnectionEntry = {
+  key?: string | null;
   ticker: string;
   label?: string | null;
   route?: string | null;
@@ -36,22 +37,30 @@ export type StockConnectionIndex = {
   schema_version: "data-entity-graph-stock-index/v1";
   generated_at?: string | null;
   source_as_of?: Record<string, string | null | undefined>;
+  key_policy?: Record<string, string | null | undefined>;
   totals?: {
     stocks?: number | null;
     with_market_facts?: number | null;
     with_filings?: number | null;
     with_sec_13f?: number | null;
     with_index_membership?: number | null;
+    with_single_stock_etfs?: number | null;
   };
   stocks?: Record<string, StockConnectionEntry | undefined>;
 };
 
 export type StockServiceEtfLink = {
+  etf_key?: string | null;
+  target_key?: string | null;
   ticker: string;
   label?: string | null;
   route?: string | null;
   category?: string | null;
   confidence?: string | null;
+  classification_source?: string | null;
+  raw_underlying?: string | null;
+  canonical_underlying_ticker?: string | null;
+  resolution_method?: string | null;
   market_facts?: boolean;
   service_flags?: string[];
   as_of?: {
@@ -61,6 +70,7 @@ export type StockServiceEtfLink = {
 };
 
 export type StockServicesEntry = {
+  target_key?: string | null;
   ticker: string;
   route?: string | null;
   single_stock_etfs?: StockServiceEtfLink[];
@@ -74,6 +84,7 @@ export type StockServicesIndex = {
   schema_version: "data-entity-graph-stock-services/v1";
   generated_at?: string | null;
   source_as_of?: Record<string, string | null | undefined>;
+  key_policy?: Record<string, string | null | undefined>;
   totals?: {
     stocks?: number | null;
     with_single_stock_etfs?: number | null;

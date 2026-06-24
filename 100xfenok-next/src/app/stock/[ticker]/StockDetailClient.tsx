@@ -21,6 +21,7 @@ import {
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
 import EdgarSummaryClient from "@/components/filings/EdgarSummaryClient";
+import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { renderYfTab, FiftyTwoWeekBar, SummaryScoreCard, ThreeSecondSummary, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
@@ -814,6 +815,14 @@ function StockConnectionCard({
   const singleStockEtfs = services?.single_stock_etfs ?? [];
   const etfCount = singleStockEtfs.length || entry.service_count || 0;
   const etfCompareHref = buildSingleStockEtfHref(singleStockEtfs);
+  const highConfidenceEtfs = singleStockEtfs.filter((etf) => etf.confidence === "high").length;
+  const etfAsOf = services?.as_of?.etf_universe
+    ?? singleStockEtfs.find((etf) => typeof etf.as_of?.etf_universe === "string")?.as_of?.etf_universe
+    ?? null;
+  const etfProvenanceDetails = [
+    etfAsOf ? `기준 ${fmtDateish(etfAsOf)}` : null,
+    singleStockEtfs.length ? `분류 신뢰도 high ${highConfidenceEtfs}/${singleStockEtfs.length}` : null,
+  ];
   const connected = [
     flags.market_facts ? { label: "시장팩트", tone: "border-sky-200 bg-sky-50 text-sky-700", href: null } : null,
     flags.filings ? { label: "공시", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", href: `/stock/${encodeURIComponent(ticker)}?tab=filings` } : null,
@@ -868,7 +877,11 @@ function StockConnectionCard({
                 key={etf.ticker}
                 href={etf.route || `/etfs/${encodeURIComponent(etf.ticker)}`}
                 className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
-                title={etf.label ?? etf.ticker}
+                title={[
+                  etf.label ?? etf.ticker,
+                  etf.raw_underlying ? `분류 원문 ${etf.raw_underlying}` : null,
+                  etf.classification_source ? `분류 출처 ${etf.classification_source}` : null,
+                ].filter(Boolean).join(" · ")}
               >
                 {etf.ticker}
               </TransitionLink>
@@ -879,6 +892,11 @@ function StockConnectionCard({
               </span>
             ) : null}
           </div>
+        ) : null}
+        {singleStockEtfs.length > 0 ? (
+          <DataProvenanceNote title="분류 기반 연결" details={etfProvenanceDetails}>
+            단일종목 ETF 연결은 ETF 전체 목록의 분류와 기초자산 매칭으로 만든 연결이며 추천이 아닙니다.
+          </DataProvenanceNote>
         ) : null}
         {entry.confidence?.label ? (
           <p className="text-[10px] font-semibold text-slate-500">
