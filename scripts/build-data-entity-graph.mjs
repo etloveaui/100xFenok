@@ -41,6 +41,15 @@ function normalizeTicker(value) {
   return normalizeEntitySymbol(value);
 }
 
+function tickerVariants(value) {
+  const normalized = normalizeTicker(value);
+  if (!normalized) return [];
+  const variants = new Set([normalized]);
+  if (normalized.includes("-")) variants.add(normalized.replace(/-/g, "."));
+  if (normalized.includes(".")) variants.add(normalized.replace(/\./g, "-"));
+  return [...variants].filter(Boolean);
+}
+
 function normalizeAlias(value) {
   return String(value || "")
     .toLowerCase()
@@ -99,30 +108,48 @@ const analyzerByTicker = new Map(analyzerRows.map((row) => [normalizeTicker(row.
 const stockAliasMap = new Map();
 const stockAliasCollisions = [];
 const stockAliasNonUsSkips = [];
+const singleStockEtfUnresolved = [];
 
-function addStockAlias(alias, ticker) {
+function addStockAlias(alias, ticker, source) {
+  const rawAlias = String(alias || "").trim();
+  if (!rawAlias) return;
   for (const normalized of aliasCandidates(alias)) {
     const existing = stockAliasMap.get(normalized);
-    if (existing && existing !== ticker) {
-      stockAliasCollisions.push({ alias: normalized, existing, skipped: ticker });
+    if (existing && existing.ticker !== ticker) {
+      const candidates = new Set([...(existing.candidates || []), existing.ticker, ticker].filter(Boolean));
+      stockAliasCollisions.push({
+        alias: normalized,
+        existing: existing.ticker || null,
+        existing_source: existing.source,
+        skipped: ticker,
+        skipped_source: source,
+      });
+      stockAliasMap.set(normalized, {
+        ticker: null,
+        source: "ambiguous",
+        raw_alias: normalized,
+        matched_alias: normalized,
+        ambiguous: true,
+        candidates: [...candidates].sort(),
+      });
       continue;
     }
-    if (!existing) stockAliasMap.set(normalized, ticker);
+    if (!existing) stockAliasMap.set(normalized, { ticker, source, raw_alias: rawAlias, matched_alias: normalized });
   }
 }
 
 for (const row of analyzerRows) {
   const ticker = normalizeTicker(row.symbol);
   if (!ticker) continue;
-  addStockAlias(ticker, ticker);
-  addStockAlias(row.companyName, ticker);
+  addStockAlias(ticker, ticker, "stocks_analyzer.symbol");
+  addStockAlias(row.companyName, ticker, "stocks_analyzer.companyName");
 }
 
 for (const row of actionRows) {
   const ticker = normalizeTicker(row.symbol);
   if (!ticker) continue;
-  addStockAlias(ticker, ticker);
-  addStockAlias(row.company, ticker);
+  addStockAlias(ticker, ticker, "stock_action_index.symbol");
+  addStockAlias(row.company, ticker, "stock_action_index.company");
 }
 
 const generatedAt = new Date().toISOString();
@@ -247,21 +274,41 @@ function resolveUnderlyingTicker(value) {
   const raw = String(value || "").trim();
   if (!raw) return null;
 
-  const direct = normalizeTicker(raw);
-  if (stockNodeIds.has(makeEntityKey("stock", direct))) return { ticker: direct, method: "direct" };
+  for (const symbol of tickerVariants(raw)) {
+    if (stockNodeIds.has(makeEntityKey("stock", symbol))) {
+      const direct = normalizeTicker(raw);
+      return {
+        ticker: symbol,
+        method: symbol === direct ? "direct" : "symbol_variant",
+        source: symbol === direct ? "raw_underlying.symbol" : "raw_underlying.symbol_variant",
+        matched_alias: symbol,
+      };
+    }
+  }
 
   for (const candidate of aliasCandidates(raw)) {
-    const aliasTicker = stockAliasMap.get(candidate);
+    const aliasRecord = stockAliasMap.get(candidate);
+    const aliasTicker = aliasRecord?.ticker;
     if (aliasTicker && stockNodeIds.has(makeEntityKey("stock", aliasTicker))) {
-      if (isUsScopedStock(aliasTicker)) return { ticker: aliasTicker, method: "alias" };
-      stockAliasNonUsSkips.push({ raw, alias: candidate, skipped: aliasTicker });
+      if (isUsScopedStock(aliasTicker)) {
+        return {
+          ticker: aliasTicker,
+          method: "alias",
+          source: aliasRecord.source,
+          matched_alias: aliasRecord.matched_alias,
+        };
+      }
+      stockAliasNonUsSkips.push({ raw, alias: candidate, skipped: aliasTicker, skipped_source: aliasRecord.source });
     }
   }
 
   const symbolMatches = raw.toUpperCase().match(/\b[A-Z]{1,5}(?:\.[A-Z])?\b/g) || [];
   for (const symbol of symbolMatches) {
-    const ticker = normalizeTicker(symbol);
-    if (stockNodeIds.has(makeEntityKey("stock", ticker))) return { ticker, method: "regex" };
+    for (const ticker of tickerVariants(symbol)) {
+      if (stockNodeIds.has(makeEntityKey("stock", ticker))) {
+        return { ticker, method: "regex", source: "raw_underlying.symbol_token", matched_alias: ticker };
+      }
+    }
   }
 
   return null;
@@ -277,6 +324,23 @@ const etfEntities = etfRows.map((row) => {
   const underlyingMatch = resolveUnderlyingTicker(rawUnderlying);
   const underlyingTicker = underlyingMatch?.ticker || null;
   const underlyingTarget = underlyingTicker ? makeEntityKey("stock", underlyingTicker) : null;
+  if (row.classification?.is_single_stock && !underlyingTarget) {
+    singleStockEtfUnresolved.push({
+      ticker,
+      label: row.name || ticker,
+      raw_underlying: rawUnderlying,
+      classification_source: row.classification?.source || null,
+      confidence: row.classification?.confidence || null,
+      reason: rawUnderlying ? "no_canonical_us_stock_match" : "missing_underlying",
+    });
+  }
+  const resolutionNote = underlyingMatch && (row.classification?.confidence !== "high" || underlyingMatch.method !== "direct")
+    ? [
+        row.classification?.confidence ? `classification_confidence=${row.classification.confidence}` : null,
+        `resolution_method=${underlyingMatch.method}`,
+        underlyingMatch.source ? `resolution_source=${underlyingMatch.source}` : null,
+      ].filter(Boolean).join("; ")
+    : null;
 
   const entity = {
     id: makeEntityKey("etf", ticker),
@@ -293,6 +357,9 @@ const etfEntities = etfRows.map((row) => {
       canonical_underlying_ticker: underlyingTicker,
       canonical_underlying_key: underlyingTarget,
       resolution_method: underlyingMatch?.method || null,
+      resolution_source: underlyingMatch?.source || null,
+      matched_alias: underlyingMatch?.matched_alias || null,
+      resolution_note: resolutionNote,
     },
     as_of: {
       etf_universe: sourceAsOf.etf_universe,
@@ -319,6 +386,9 @@ const etfEntities = etfRows.map((row) => {
       raw_underlying: rawUnderlying,
       canonical_underlying_ticker: underlyingTicker,
       resolution_method: underlyingMatch.method,
+      resolution_source: underlyingMatch.source,
+      matched_alias: underlyingMatch.matched_alias,
+      resolution_note: resolutionNote,
     });
   }
   return entity;
@@ -342,6 +412,9 @@ for (const etf of etfEntities) {
     raw_underlying: relation.raw_underlying || etf.confidence?.underlying_raw || null,
     canonical_underlying_ticker: relation.canonical_underlying_ticker || ticker,
     resolution_method: relation.resolution_method || etf.confidence?.resolution_method || null,
+    resolution_source: relation.resolution_source || etf.confidence?.resolution_source || null,
+    matched_alias: relation.matched_alias || etf.confidence?.matched_alias || null,
+    resolution_note: relation.resolution_note || etf.confidence?.resolution_note || null,
     market_facts: Boolean(etf.source_links?.market_facts),
     service_flags: etf.service_flags,
     as_of: {
@@ -358,6 +431,9 @@ for (const etf of etfEntities) {
       raw_underlying: relation.raw_underlying || null,
       canonical_underlying_ticker: relation.canonical_underlying_ticker || ticker,
       resolution_method: relation.resolution_method || null,
+      resolution_source: relation.resolution_source || null,
+      matched_alias: relation.matched_alias || null,
+      resolution_note: relation.resolution_note || null,
     });
   }
 }
@@ -407,6 +483,8 @@ const payload = {
     stock_alias_collision_examples: stockAliasCollisions.slice(0, 10),
     stock_alias_non_us_skips: stockAliasNonUsSkips.length,
     stock_alias_non_us_skip_examples: stockAliasNonUsSkips.slice(0, 10),
+    single_stock_etfs_unresolved: singleStockEtfUnresolved.length,
+    single_stock_etfs_unresolved_list: singleStockEtfUnresolved.sort((a, b) => a.ticker.localeCompare(b.ticker)),
   },
   nodes: {
     stocks: stockEntities,

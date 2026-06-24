@@ -46,7 +46,7 @@ const errors = [];
 const expectedPolicy = expectedEntityKeyPolicy();
 const expectedPolicyJson = JSON.stringify(expectedPolicy);
 const allowedConfidenceLabels = new Set(["high", "medium", "low", "unknown"]);
-const allowedResolutionMethods = new Set(["direct", "alias", "regex"]);
+const allowedResolutionMethods = new Set(["direct", "symbol_variant", "alias", "regex"]);
 const allowedServiceFlags = new Set([
   "screener",
   "stock_detail",
@@ -130,6 +130,13 @@ assert((graph.totals?.stocks_with_13f || 0) >= 450, "13F links should cover at l
 assert((graph.totals?.stocks_with_single_stock_etfs || 0) >= 50, "single-stock ETF reverse links should cover at least 50 stocks", errors);
 assert((graph.totals?.sectors || 0) >= 10, "sector graph should contain canonical sectors", errors);
 assert((graph.diagnostics?.stock_alias_collisions || 0) < 200, "stock alias collision diagnostics should stay below 200", errors);
+assert(typeof graph.diagnostics?.single_stock_etfs_unresolved === "number", "single-stock ETF unresolved diagnostic count is required", errors);
+assert(Array.isArray(graph.diagnostics?.single_stock_etfs_unresolved_list), "single-stock ETF unresolved diagnostic list is required", errors);
+assert(
+  graph.diagnostics?.single_stock_etfs_unresolved === graph.diagnostics?.single_stock_etfs_unresolved_list?.length,
+  "single-stock ETF unresolved diagnostic count must match list length",
+  errors,
+);
 
 for (const stock of nodeGroups.stocks || []) {
   assert(stock.id === makeEntityKey("stock", stock.ticker), `${stock.id}: stock id must match ticker key`, errors);
@@ -182,6 +189,11 @@ for (const [ticker, row] of Object.entries(stockServices.stocks || {})) {
     assert((stockNode?.relations || []).some((relation) => relation.type === "referenced_by_single_stock_etf" && relation.target === etfKey), `${ticker}: stock node must carry reverse single-stock ETF relation: ${etf.ticker}`, errors);
     assert(typeof etf.classification_source === "string" && etf.classification_source.length > 0, `${ticker}: services ETF needs classification_source: ${etf.ticker}`, errors);
     assert(typeof etf.raw_underlying === "string" && etf.raw_underlying.length > 0, `${ticker}: services ETF needs raw_underlying: ${etf.ticker}`, errors);
+    assert(typeof etf.resolution_source === "string" && etf.resolution_source.length > 0, `${ticker}: services ETF needs resolution_source: ${etf.ticker}`, errors);
+    assert(typeof etf.matched_alias === "string" && etf.matched_alias.length > 0, `${ticker}: services ETF needs matched_alias: ${etf.ticker}`, errors);
+    if (etf.confidence !== "high" || etf.resolution_method !== "direct") {
+      assert(typeof etf.resolution_note === "string" && etf.resolution_note.length > 0, `${ticker}: non-direct or non-high services ETF needs resolution_note: ${etf.ticker}`, errors);
+    }
     if (etf.resolution_method === "regex") {
       assert(etf.raw_underlying.toUpperCase().includes(etf.canonical_underlying_ticker), `${ticker}: regex-resolved ETF should include ticker token in raw_underlying: ${etf.ticker}`, errors);
     }

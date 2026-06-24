@@ -115,18 +115,18 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
   "computed": [
     {
       "name": "entity_graph_stock_index.json",
-      "sizeBytes": 984728,
-      "updatedAt": "2026-06-24T03:12:40.637Z"
+      "sizeBytes": 984625,
+      "updatedAt": "2026-06-24T04:04:23.722Z"
     },
     {
       "name": "entity_graph_stock_services.json",
-      "sizeBytes": 125677,
-      "updatedAt": "2026-06-24T03:12:40.640Z"
+      "sizeBytes": 145879,
+      "updatedAt": "2026-06-24T04:04:23.724Z"
     },
     {
       "name": "entity_graph.json",
-      "sizeBytes": 7212729,
-      "updatedAt": "2026-06-24T03:12:40.616Z"
+      "sizeBytes": 7845620,
+      "updatedAt": "2026-06-24T04:04:23.699Z"
     },
     {
       "name": "market_data_audit.json",

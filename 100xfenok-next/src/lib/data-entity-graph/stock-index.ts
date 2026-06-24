@@ -61,6 +61,9 @@ export type StockServiceEtfLink = {
   raw_underlying?: string | null;
   canonical_underlying_ticker?: string | null;
   resolution_method?: string | null;
+  resolution_source?: string | null;
+  matched_alias?: string | null;
+  resolution_note?: string | null;
   market_facts?: boolean;
   service_flags?: string[];
   as_of?: {
@@ -148,6 +151,38 @@ export function getStockConnection(index: StockConnectionIndex | null | undefine
 export function getStockServices(index: StockServicesIndex | null | undefined, ticker: string): StockServicesEntry | null {
   const symbol = normalizeStockConnectionTicker(ticker);
   return index?.stocks?.[symbol] ?? null;
+}
+
+export function getSingleStockEtfsForStock(index: StockServicesIndex | null | undefined, ticker: string): StockServiceEtfLink[] {
+  return getStockServices(index, ticker)?.single_stock_etfs ?? [];
+}
+
+export function getUnderlyingStockForEtf(
+  index: StockServicesIndex | null | undefined,
+  etfTicker: string,
+): { stockTicker: string; stockRoute: string; entry: StockServicesEntry; link: StockServiceEtfLink } | null {
+  const symbol = normalizeStockConnectionTicker(etfTicker);
+  for (const [stockTicker, entry] of Object.entries(index?.stocks ?? {})) {
+    const link = entry?.single_stock_etfs?.find((item) => normalizeStockConnectionTicker(item.ticker) === symbol);
+    if (entry && link) {
+      return {
+        stockTicker,
+        stockRoute: entry.route || `/stock/${encodeURIComponent(stockTicker)}`,
+        entry,
+        link,
+      };
+    }
+  }
+  return null;
+}
+
+export function getEtfPeersForUnderlying(
+  index: StockServicesIndex | null | undefined,
+  stockTicker: string,
+  excludeEtfTicker?: string,
+): StockServiceEtfLink[] {
+  const exclude = excludeEtfTicker ? normalizeStockConnectionTicker(excludeEtfTicker) : null;
+  return getSingleStockEtfsForStock(index, stockTicker).filter((link) => normalizeStockConnectionTicker(link.ticker) !== exclude);
 }
 
 export function stockConnectionCount(entry: StockConnectionEntry | null | undefined): number | null {
