@@ -9,6 +9,7 @@
 - Keep `connection_count` semantics as core four sources only: market facts, filings, 13F, index membership. Service expansion uses `service_count` and sidecars.
 - Use source-specific freshness rules. 13F is quarterly and must not be judged by a seven-day rule.
 - No bulk external fetch/backfill, notification hook, paid provider, or new production credential path in this slice.
+- Keep the native macro multi-chart as a separate P9-D/P10 service route program, not mixed into the P9-C export/provenance patch. Direction accepted from the platform-level `docs/superpowers/specs/2026-06-24-macro-multichart-vision.md`: replace the legacy `/multichart` iframe with a Data Spine-native `/macro-chart` route.
 
 ## Phase P9-A — Residual Data Spine Cleanup
 
@@ -21,6 +22,7 @@
 
 - [x] Tighten `qa:data-graph` around service flags, `connection_count`, `service_count`, and stock-services sidecar parity.
 - [x] Add source-specific freshness helper for graph consumers.
+- [x] Add alias-backed single-stock ETF underlying resolution with no silent ticker invention. Service links now expose `resolution_source`, `matched_alias`, and non-direct `resolution_note`; ambiguous alias collisions no longer resolve through first-wins fallback; unresolved single-stock ETFs are emitted as diagnostics; `qa:data-graph` enforces the fields and diagnostics shape.
 - [ ] Add future ETF lightweight index only if ETF service affordances need graph source_as_of without loading the full graph.
 
 ## Phase P9-C — User-Facing Service Layer
@@ -31,14 +33,30 @@
 - [x] Add source freshness badges with 13F quarter-safe handling.
 - [x] Surface compact connection state in portfolio mobile cards and desktop holdings table.
 - [x] Add screener connection CSV export for filtered result sets.
+- [x] Add screener single-stock ETF sidecar fields to connection CSV and a compare shortcut for filtered rows with multiple service-linked ETFs.
+- [x] Add stock-detail single-stock ETF CSV export plus explicit compare action.
 - [x] Add screener detail-panel portfolio CTA and stock-detail footer portfolio CTA.
 - [x] Add stock-detail sector deep link into `/screener?sector=...` using the actual screener sector value.
+- [x] Add ETF compare CSV export from `/etfs/compare`.
+- [x] Add ETF holdings CSV export from `/etfs/[ticker]`.
+- [x] Add ETF detail underlying-stock and same-underlying ETF compare actions for graph-resolved single-stock ETFs.
+- [x] Add portfolio JSON backup download and graph connection CSV export.
+
+## Phase P9-D — Native Macro Chart Candidate
+
+- [x] Review and accept the Kimi-authored final vision as a separate service-layer candidate, not a G2/G3 scope addition.
+- [ ] P0: generate an initial 30-series macro catalog plus pure alignment/transform helpers for rebase100, YoY, MoM, and spread.
+- [ ] P1: add native `/macro-chart` route with three default presets and opt-in time-axis charting, then retire or redirect the legacy `/multichart` iframe.
+- [ ] P2: add interactive series picker, URL state, and localStorage user presets.
+- [ ] P3: add brush/zoom, crosshair sync, formula series, and PNG export.
 
 ## Quality Gates
 
 - `npm run qa:data-graph`
+- `npm run qa:etf-compare`
 - `npm run qa:copy`
 - `npx tsc --noEmit --pretty false`
+- Scoped lint for touched product/data files
 - `npm run build`
 - Browser smoke: `/portfolio?ticker=NVDA`, `/screener?sector=반도체`, `/stock/NVDA`, `/etfs/SPY`
 - Mobile/a11y smoke: at least `/portfolio`, `/screener`, `/stock/NVDA`

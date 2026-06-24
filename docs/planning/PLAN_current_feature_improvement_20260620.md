@@ -109,11 +109,12 @@
 **Next slices**:
 - G1 (landed) — build graph artifact + QA + deploy/data workflow hooks.
 - G1b (landed 2026-06-24) — generate lightweight `entity_graph_stock_index.json` root/public mirror and expose it in product surfaces instead of fetching the 6.5 MB full graph client-side. `/screener` now has a `연결 데이터` view plus 공시/13F/지수 filters; `/stock/[ticker]` shows a public data-connection card with market facts, filings, 13F, index flags and source dates.
-- G2 — add alias resolution for ETF single-stock underlyings (`NVIDIA` → `NVDA`, `TESLA` → `TSLA`, etc.) with confidence/source and no silent ticker invention.
-- G3 — expose additional graph-backed compare/export affordances in screener/stock/ETF surfaces.
+- G2 (landed 2026-06-24) — add alias resolution for ETF single-stock underlyings (`NVIDIA` → `NVDA`, `TESLA` → `TSLA`, etc.) with confidence/source and no silent ticker invention. The stock-services sidecar now carries `resolution_source`, `matched_alias`, and non-direct `resolution_note`; ambiguous alias collisions stop resolving through first-wins fallback; unresolved single-stock ETFs are emitted as diagnostics; `qa:data-graph` fails closed if link-level provenance drifts.
+- G3 (landed 2026-06-24) — expose additional graph-backed compare/export affordances in screener/stock/ETF/portfolio surfaces. Shipped: screener single-stock ETF sidecar columns + compare shortcut, stock-detail ETF CSV + compare action, ETF detail underlying-stock/same-underlying compare links, `/etfs/compare` CSV export, ETF holdings CSV export, portfolio JSON backup download, and portfolio connection CSV export.
 - G4 — add workflow observability: source freshness warn/error thresholds, failed-source fallback UI, and notification hooks.
 - G5 — quota/cost policy for external enrichers: Yahoo/yfinance as unofficial fallback, EDGAR canonical for 13F, official ETF holdings preferred over scraper-only sources.
 - G6 (landed 2026-06-24) — promote canonical key policy into a shared registry, add link-level single-stock ETF provenance (`etf_key`, `target_key`, `classification_source`, `raw_underlying`), and strengthen `qa:data-graph` so graph/service links fail closed when keys or provenance drift.
+- Macro-chart candidate (accepted design backlog 2026-06-24) — do not extend the legacy `/multichart` iframe. Build a native Data Spine `/macro-chart` route with a central macro-series catalog, transform/alignment engine, URL state, presets, and eventual export/share actions. Keep this out of G2/G3 implementation scope.
 
 ---
 
@@ -147,7 +148,7 @@ addition to the localhost check. Public copy guard now blocks accidental
 language in Admin. Turbopack dynamic `public/data` filesystem warnings are
 tracked as a P3 infrastructure cleanup unless they turn into a build failure.
 
-**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice, macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, and legacy chart prototype live provider paths; continue with feno-value direct-provider exception handling outside this repo and future first-party chart boundary design if needed; (2) keep expanding P9 graph-backed service affordances only where existing DataPack payloads support them; (3) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
+**Current remaining work after the autonomous wave**: (1) Data Spine residual has closed the quote/Treasury contract slice, macro-monitor FDIC browser fallback, non-quote GAS sentiment writers, and legacy chart prototype live provider paths; continue with feno-value direct-provider exception handling outside this repo and the native `/macro-chart` Data Spine candidate as a separate route program; (2) keep expanding P9 graph-backed service affordances only where existing DataPack payloads support them; (3) translation generation and top-300/top-400 breadth are now unblocked by F2 but should remain separately scoped; (4) ETF history dispatch only when future reports show fetchable gaps, since current required gaps are inception-limited recent launches.
 
 ---
 
