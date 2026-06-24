@@ -6,6 +6,7 @@ import type {
   ChartData,
   ChartEvent,
   ChartOptions,
+  Plugin,
   TooltipItem,
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
@@ -306,6 +307,29 @@ export function MarketChartEngineClient({
       theme,
     ],
   );
+  const crosshairPlugin = useMemo<Plugin<MarketChartType>>(
+    () => ({
+      id: "market-chart-crosshair",
+      afterDraw(chart) {
+        const active = chart.tooltip?.getActiveElements?.() ?? [];
+        const first = active[0];
+        if (!first) return;
+        const { bottom, top } = chart.chartArea;
+        const x = first.element.x;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = theme.token("ink4");
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+        ctx.restore();
+      },
+    }),
+    [theme],
+  );
 
   useEffect(() => {
     if (keyboardIndex !== null && keyboardIndex >= labels.length) {
@@ -386,7 +410,7 @@ export function MarketChartEngineClient({
       role="group"
       tabIndex={onHoverPoint ? 0 : undefined}
     >
-      <Chart type={type} data={data} options={options} aria-label={ariaLabel} role="img" />
+      <Chart type={type} data={data} options={options} plugins={[crosshairPlugin]} aria-label={ariaLabel} role="img" />
     </div>
   );
 }

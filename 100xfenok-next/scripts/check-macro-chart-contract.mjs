@@ -109,12 +109,33 @@ async function inspectSharedDesktop(page) {
   const rangeAfterClick = await page.evaluate(() => new URL(window.location.href).searchParams.get("range"));
   if (rangeAfterClick !== "1Y") addFailure(failures, "range-url-update", `range=${rangeAfterClick}`);
 
+  await page.getByRole("button", { name: "확대" }).click();
+  await page.waitForTimeout(200);
+  const rangeAfterZoomIn = await page.evaluate(() => new URL(window.location.href).searchParams.get("range"));
+  if (rangeAfterZoomIn !== "6M") addFailure(failures, "zoom-in-url-update", `range=${rangeAfterZoomIn}`);
+  await page.getByRole("button", { name: "축소" }).click();
+  await page.waitForTimeout(200);
+  const rangeAfterZoomOut = await page.evaluate(() => new URL(window.location.href).searchParams.get("range"));
+  if (rangeAfterZoomOut !== "1Y") addFailure(failures, "zoom-out-url-update", `range=${rangeAfterZoomOut}`);
+
   await page.getByLabel("TGA 축").selectOption("right");
   await page.waitForTimeout(200);
   const axisAfterSelect = splitParam(await page.evaluate(() => new URL(window.location.href).searchParams.get("axis")));
   if (!axisAfterSelect.includes("tga:right")) {
     addFailure(failures, "axis-url-update", `axis=${axisAfterSelect.join(",") || "missing"}`);
   }
+
+  await page.getByLabel("합성 왼쪽 시리즈").selectOption("sp500");
+  await page.getByLabel("합성 계산식").selectOption("ratio");
+  await page.getByLabel("합성 오른쪽 시리즈").selectOption("DGS10");
+  await page.getByRole("button", { name: "합성 추가" }).click();
+  await page.waitForTimeout(300);
+  const formulaAfterAdd = await page.evaluate(() => new URL(window.location.href).searchParams.get("formula"));
+  if (formulaAfterAdd !== "ratio:sp500:DGS10") {
+    addFailure(failures, "formula-url-update", `formula=${formulaAfterAdd ?? "missing"}`);
+  }
+  const formulaVisible = await page.getByText("S&P 500/10Y ×100").first().isVisible();
+  if (!formulaVisible) addFailure(failures, "formula-series-visible", "S&P 500/10Y ×100 not visible");
 
   await page.getByLabel("프리셋 이름").fill("QA 저장 프리셋");
   await page.getByRole("button", { name: "저장", exact: true }).click();
@@ -129,6 +150,9 @@ async function inspectSharedDesktop(page) {
     if (storedPreset.rangeId !== "1Y") addFailure(failures, "user-preset-range", `range=${storedPreset.rangeId}`);
     if (storedPreset.axisById?.tga !== "right") {
       addFailure(failures, "user-preset-axis", `axis=${JSON.stringify(storedPreset.axisById ?? {})}`);
+    }
+    if ((storedPreset.formulas ?? []).length !== 1 || storedPreset.formulas?.[0]?.id !== "formula-ratio-sp500-DGS10") {
+      addFailure(failures, "user-preset-formula", `formulas=${JSON.stringify(storedPreset.formulas ?? [])}`);
     }
     if ((storedPreset.selected ?? []).length !== expectedMaxSeries) {
       addFailure(failures, "user-preset-series", `selected=${(storedPreset.selected ?? []).length}`);
@@ -146,6 +170,9 @@ async function inspectSharedDesktop(page) {
   }
   if (!userPresetAxis.includes("tga:right")) {
     addFailure(failures, "user-preset-apply-axis", `axis=${paramsAfterUserPreset.axis ?? "missing"}`);
+  }
+  if (paramsAfterUserPreset.formula !== "ratio:sp500:DGS10") {
+    addFailure(failures, "user-preset-apply-formula", `formula=${paramsAfterUserPreset.formula ?? "missing"}`);
   }
 
   await page.getByLabel("TGA 축").selectOption("auto");
@@ -194,6 +221,28 @@ async function inspectSharedDesktop(page) {
     addFailure(failures, "series-limit-enforced", `series=${seriesAfterLimit ?? "missing"}`);
   }
 
+  await page.getByLabel("합성 왼쪽 시리즈").selectOption("sp500");
+  await page.getByLabel("합성 계산식").selectOption("ratio");
+  await page.getByLabel("합성 오른쪽 시리즈").selectOption("DGS10");
+  await page.getByRole("button", { name: "합성 추가" }).click();
+  await page.waitForTimeout(300);
+
+  const pngPromise = page.waitForEvent("download", { timeout: 15_000 });
+  await page.getByRole("button", { name: "PNG 저장" }).click();
+  const pngDownload = await pngPromise;
+  if (!pngDownload.suggestedFilename().endsWith(".png")) {
+    addFailure(failures, "png-download-name", pngDownload.suggestedFilename());
+  }
+  const pngPath = await pngDownload.path();
+  if (!pngPath) {
+    addFailure(failures, "png-download-path", "download path unavailable");
+  } else {
+    const signature = await readFile(pngPath);
+    const pngMagic = signature.subarray(0, 8).toString("hex");
+    if (pngMagic !== "89504e470d0a1a0a") addFailure(failures, "png-download-signature", pngMagic);
+    if (signature.byteLength < 1024) addFailure(failures, "png-download-size", `bytes=${signature.byteLength}`);
+  }
+
   const downloadPromise = page.waitForEvent("download", { timeout: 15_000 });
   await page.getByRole("button", { name: "CSV 저장" }).click();
   const download = await downloadPromise;
@@ -206,7 +255,7 @@ async function inspectSharedDesktop(page) {
   } else {
     const csvHeader = (await readFile(downloadPath, "utf8")).split("\n")[0] ?? "";
     const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}`);
-    const missingHeaders = ["date", ...expectedHeaders].filter((header) => !csvHeader.includes(`"${header}"`));
+    const missingHeaders = ["date", ...expectedHeaders, "formula-ratio-sp500-DGS10"].filter((header) => !csvHeader.includes(`"${header}"`));
     if (missingHeaders.length) addFailure(failures, "csv-header-content", `missing=${missingHeaders.join(",")}`);
   }
 
