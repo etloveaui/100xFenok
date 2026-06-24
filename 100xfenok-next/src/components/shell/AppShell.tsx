@@ -48,6 +48,55 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "sectors",
+    label: "섹터",
+    href: "/sectors",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3" width="6" height="6" rx="1.5" />
+        <rect x="11" y="3" width="6" height="6" rx="1.5" />
+        <rect x="3" y="11" width="6" height="6" rx="1.5" />
+        <rect x="11" y="11" width="6" height="6" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    id: "etfs",
+    label: "ETF",
+    href: "/etfs",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
+        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
+        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "screener",
+    label: "스크리너",
+    href: "/screener",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+        <path d="M3 6h9M15 6h2M3 14h2M9 14h8" />
+        <circle cx="13.5" cy="6" r="2" fill="#fff" />
+        <circle cx="6.5" cy="14" r="2" fill="#fff" />
+      </svg>
+    ),
+  },
+  {
+    id: "superinvestors",
+    label: "투자자",
+    href: "/superinvestors",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="7.2" cy="7.5" r="2.6" />
+        <path d="M2.6 16c0-2.6 2-4.2 4.6-4.2s4.6 1.6 4.6 4.2" strokeLinecap="round" />
+        <path d="M13.5 7.2a2.3 2.3 0 100-.2M14 11.9c2 .3 3.5 1.7 3.5 4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     id: "portfolio",
     label: "포트폴리오",
     href: "/portfolio",
@@ -74,8 +123,8 @@ const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
   ),
 };
 
-const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "portfolio"];
-const MORE_TAB_IDS: ShellPage[] = [];
+const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
+const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors"];
 
 function navById(id: ShellPage): NavItem {
   return NAV.find((item) => item.id === id)!;
