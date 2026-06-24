@@ -187,9 +187,9 @@ legacy/runtime cleanup items, not part of the quote/Treasury slice:
 - `admin/design-lab/charts/v*.html`: prototype chart pages with direct Stooq
   proxy fetches. Retire if unused; otherwise route through a first-party data
   boundary.
-- `tools/macro-monitor/shared/data-fetcher.js`: local JSON first, but FDIC still
-  has a browser external fallback. Remove the fallback or server-route it before
-  promotion back into product runtime.
+- `tools/macro-monitor/shared/data-fetcher.js`: CLOSED 2026-06-24 for FDIC;
+  the browser external fallback was removed and the module now consumes the
+  same-origin `/data/macro/fdic-tier1.json` DataPack only.
 - `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`: legacy
   sentiment writers with direct provider calls. Either absorb into scheduled
   collectors or mark sunset like `vix.gs`.

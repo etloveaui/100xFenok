@@ -288,11 +288,10 @@ Peer/subagent recheck expanded the scan beyond the original P0 pattern to
   provider gateway behind that contract; consumers use the route boundary.
 - `tools/macro-monitor/shared/data-fetcher.js` is a partial legacy live-data
   module, not part of the Next product Data Spine surface. Current code reads
-  FRED macro files, Treasury TGA, and stablecoins from same-origin JSON first
-  (`:534-594`, `:612-639`, `:699-717`), while FDIC still keeps an external
-  `api.fdic.gov` fallback after the local JSON attempt (`:650-675`). Classify as
-  migration debt: remove or proxy the FDIC fallback when this tool is promoted
-  back into product runtime.
+  FRED macro files, Treasury TGA, stablecoins, and FDIC Tier1 from same-origin
+  JSON DataPacks. The FDIC `api.fdic.gov` browser fallback was removed on
+  2026-06-24; remaining residual direct-provider work is now the asset chart
+  prototypes and non-quote admin/GAS sentiment writers.
 - GAS endpoints are legacy/admin routed exceptions, not primary Next Data Spine
   consumers. As of 2026-06-22, the three live quote helpers route through
   quote.v1 where safe while preserving legacy fallbacks:
@@ -616,9 +615,10 @@ contract and the disagreement policy.
 2. P1: freeze the per-field authority/fallback/tolerance/disagreement matrix
    using the measured 28-dataset inventory and `market_source_parity`.
 3. P1/P2: handle residual legacy direct-provider surfaces:
-   `tools/asset/multichart.html`, `admin/design-lab/charts/v*.html`,
-   `tools/macro-monitor/shared/data-fetcher.js` FDIC fallback, and
-   `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`. Quote and
+   `tools/asset/multichart.html`, `admin/design-lab/charts/v*.html`, and
+   `admin/market-radar/scripts/{cnn,cnn-components,cftc,move}.gs`. The
+   `tools/macro-monitor/shared/data-fetcher.js` FDIC fallback was removed on
+   2026-06-24. Quote and
    Treasury are contracted/routed; do not reopen them unless building the
    deferred cached live-quote snapshot service.
 4. Filings: prioritize the foreign-filer 6-K / 20-F / 40-F path before any

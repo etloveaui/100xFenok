@@ -192,7 +192,8 @@ Implementation notes:
 Quality gate:
 
 - `npx tsc --noEmit --pretty false` - pass during implementation.
-- Remaining closeout gates before deploy: `npm run build`, `npm run qa:copy`, `npm run qa:seo-surface`, `npm run qa:data-graph`, targeted P8 Playwright mobile smoke, and a11y mobile smoke.
+- Closeout completed 2026-06-24: `npm run build`, `npm run qa:copy`, `npm run qa:seo-surface`, `npm run qa:data-graph`, targeted mobile/fold Playwright smoke, and mobile/fold a11y smoke passed before deploy.
+- Next product/data continuation: P9 Data Spine Service Layer (`PLAN_data_spine_service_layer_20260624.md`).
 
 ## Notes
 
