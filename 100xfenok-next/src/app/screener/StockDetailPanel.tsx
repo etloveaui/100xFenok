@@ -283,10 +283,10 @@ function optionalString(value: unknown): string | undefined {
 }
 
 function readToneClass(tone: InterpretationReadTone): string {
-  if (tone === "positive") return "border-emerald-100 bg-emerald-50 text-emerald-700";
-  if (tone === "risk") return "border-rose-100 bg-rose-50 text-rose-700";
-  if (tone === "watch") return "border-amber-100 bg-amber-50 text-amber-700";
-  return "border-slate-100 bg-slate-50 text-slate-700";
+  if (tone === "positive") return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
+  if (tone === "risk") return "border-[var(--down-border)] bg-[var(--c-down-soft)] text-[var(--c-down)]";
+  if (tone === "watch") return "border-[var(--warn-border)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-2)]";
 }
 
 type ScreenerVerdictSignal = {
@@ -504,10 +504,10 @@ function buildScreenerThreeSecondVerdict({
         : "강점·확인 포인트 공존";
   const badgeClass =
     score >= 2 && riskCount === 0
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      ? "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]"
       : riskCount >= 2 || score <= -1
-        ? "border-rose-200 bg-rose-50 text-rose-700"
-        : "border-amber-200 bg-amber-50 text-amber-700";
+        ? "border-[var(--down-border)] bg-[var(--c-down-soft)] text-[var(--c-down)]"
+        : "border-[var(--warn-border)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
   const text = [`Feno 분류는 ${interpretation.badge}입니다.`, ...signals.slice(0, 3).map((signal) => signal.text)].join(" ");
   return { badge, badgeClass, text, signals };
 }
@@ -1106,7 +1106,7 @@ export function Sparkline({
             cx={x}
             cy={y}
             r={point.estimate ? 3.5 : 3}
-            fill={point.estimate ? "white" : color}
+            fill={point.estimate ? "var(--c-panel)" : color}
             stroke={color}
             strokeWidth={point.estimate ? 2 : 1}
           >
@@ -1122,9 +1122,9 @@ export function Sparkline({
             x={placement.x}
             y={placement.y}
             textAnchor={placement.anchor}
-            className="text-[8px] font-black fill-slate-500"
+            className="text-[8px] font-black fill-[var(--c-ink-3)]"
             paintOrder="stroke"
-            stroke="white"
+            stroke="var(--c-panel)"
             strokeWidth={3}
             strokeLinejoin="round"
           >
@@ -1133,7 +1133,7 @@ export function Sparkline({
         );
       })}
       {labels.map((label, index) => (
-        <text key={label} x={toX(index)} y={height - 3} textAnchor="middle" className="text-[8px] font-black fill-slate-400">
+        <text key={label} x={toX(index)} y={height - 3} textAnchor="middle" className="text-[8px] font-black fill-[var(--c-ink-4)]">
           {label}
         </text>
       ))}
@@ -1269,9 +1269,9 @@ export function PerBandChart({
               x={padL + 4}
               y={Math.max(9, toY(bands.avg_8y) - 5)}
               textAnchor="start"
-              className="text-[8px] font-black fill-slate-500"
+              className="text-[8px] font-black fill-[var(--c-ink-3)]"
               paintOrder="stroke"
-              stroke="white"
+              stroke="var(--c-panel)"
               strokeWidth={3}
               strokeLinejoin="round"
             >
@@ -1301,7 +1301,7 @@ export function PerBandChart({
         <polyline
           points={points}
           fill="none"
-          stroke="#1B73D3"
+          stroke="var(--brand-interactive)"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -1315,7 +1315,7 @@ export function PerBandChart({
               y1={currentY}
               x2={forwardX}
               y2={forwardY}
-              stroke="#1B73D3"
+              stroke="var(--brand-interactive)"
               strokeWidth={2}
               strokeDasharray="4,2"
             />
@@ -1323,7 +1323,7 @@ export function PerBandChart({
               <polyline
                 points={forwardPoints.map((point) => `${toX(point.index)},${toY(point.value)}`).join(" ")}
                 fill="none"
-                stroke="#1B73D3"
+                stroke="var(--brand-interactive)"
                 strokeWidth={2}
                 strokeDasharray="4,2"
                 strokeLinecap="round"
@@ -1344,8 +1344,8 @@ export function PerBandChart({
                 cx={x}
                 cy={y}
                 r={isCurrent ? 5 : point.estimate ? 3.5 : 3}
-                fill={point.estimate ? "white" : isCurrent ? currentColor : "#1B73D3"}
-                stroke={point.estimate ? "#1B73D3" : "white"}
+                fill={point.estimate ? "var(--c-panel)" : isCurrent ? currentColor : "var(--brand-interactive)"}
+                stroke={point.estimate ? "var(--brand-interactive)" : "var(--c-panel)"}
                 strokeWidth={2}
               >
                 <title>{`${point.label} PER ${point.value.toFixed(1)}x`}</title>
@@ -1361,9 +1361,9 @@ export function PerBandChart({
               x={placement.x}
               y={placement.y}
               textAnchor={placement.anchor}
-              className="text-[9px] font-black fill-slate-600"
+              className="text-[9px] font-black fill-[var(--c-ink-2)]"
               paintOrder="stroke"
-              stroke="white"
+              stroke="var(--c-panel)"
               strokeWidth={3}
               strokeLinejoin="round"
             >
@@ -1374,7 +1374,7 @@ export function PerBandChart({
 
         {/* X-axis labels */}
         {periodLabels.map((label, index) => (
-          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[9px] font-black fill-slate-400">
+          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[9px] font-black fill-[var(--c-ink-4)]">
             {label}
           </text>
         ))}
@@ -1386,7 +1386,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.max_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-slate-400 orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-4)] orbitron tabular-nums"
             >
               {bands.max_8y.toFixed(0)}
             </text>
@@ -1394,7 +1394,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.avg_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-slate-500 orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
             >
               {bands.avg_8y.toFixed(1)}
             </text>
@@ -1402,7 +1402,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.min_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-slate-400 orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-4)] orbitron tabular-nums"
             >
               {bands.min_8y.toFixed(0)}
             </text>
@@ -1782,10 +1782,10 @@ export function PriceDividendHistoryDepth({
 
 function ScreenerThreeSecondVerdictCard({ verdict }: { verdict: ScreenerThreeSecondVerdict }) {
   return (
-    <div className="mb-4 rounded-2xl border border-brand-interactive/20 bg-brand-interactive/[0.035] p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]">
+    <div className="mb-4 rounded-2xl border border-[color:color-mix(in_srgb,var(--brand-interactive)_20%,transparent)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_3.5%,transparent)] p-3.5 shadow-[var(--sh-sm)]">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-interactive">3초 판정</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--brand-interactive)]">3초 판정</p>
           <p className="mt-0.5 text-[10px] font-bold text-[var(--c-ink-4)]">스크리너 상세 데이터를 핵심 신호로 압축</p>
         </div>
         <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black leading-none ${verdict.badgeClass}`}>
@@ -1793,7 +1793,7 @@ function ScreenerThreeSecondVerdictCard({ verdict }: { verdict: ScreenerThreeSec
         </span>
       </div>
       <p className="text-[13px] font-bold leading-6 text-[var(--c-ink)]">{verdict.text}</p>
-      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-brand-interactive/10 pt-2.5">
+      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[color:color-mix(in_srgb,var(--brand-interactive)_10%,transparent)] pt-2.5">
         {verdict.signals.map((signal) => (
           <span key={signal.id} className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black ${readToneClass(signal.tone)}`}>
             <span>{signal.label}</span>
@@ -1838,7 +1838,7 @@ export function StockDetailBody({
     <>
       {threeSecondVerdict ? <ScreenerThreeSecondVerdictCard verdict={threeSecondVerdict} /> : null}
       {interpretation ? (
-        <div className="mb-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+        <div className="mb-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3.5 shadow-[var(--sh-sm)]">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--c-ink-4)]">
               Feno 자동 해석
@@ -1916,7 +1916,7 @@ export function StockDetailBody({
             <>
               <Sparkline
                 data={eps}
-                color="#8b5cf6"
+                color="var(--c-chart-eps)"
                 years={detail.years}
                 estimates={detail.per_share_estimates?.eps}
                 formatValue={(value) => `$${value.toFixed(2)}`}
@@ -1996,13 +1996,13 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
         <div className="flex flex-wrap items-center gap-2">
           <TransitionLink
             href={`/portfolio?ticker=${encodeURIComponent(ticker)}`}
-            className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[10px] font-black text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive"
+            className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[10px] font-black text-[var(--c-ink-3)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
           >
             포트폴리오
           </TransitionLink>
           <TransitionLink
             href={`/stock/${encodeURIComponent(ticker)}`}
-            className="inline-flex min-h-8 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[10px] font-black text-brand-interactive transition hover:bg-brand-interactive/10"
+            className="inline-flex min-h-8 items-center rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_5%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_10%,transparent)]"
           >
             전체 화면
           </TransitionLink>

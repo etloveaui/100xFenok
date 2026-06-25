@@ -112,17 +112,17 @@ function fmtSigned(value: number | null, digits = 1): string {
 
 function yardeniVerdict(premiumPct: number | null): { label: string; tone: string } {
   if (premiumPct === null) return { label: "데이터 부족", tone: "text-[var(--c-ink-2)]" };
-  if (premiumPct > 15) return { label: "고평가 프리미엄", tone: "text-rose-600" };
-  if (premiumPct > 5) return { label: "다소 프리미엄", tone: "text-amber-600" };
-  if (premiumPct >= -5) return { label: "적정 범위", tone: "text-slate-600" };
-  return { label: "할인 구간", tone: "text-emerald-600" };
+  if (premiumPct > 15) return { label: "고평가 프리미엄", tone: "text-[var(--c-down)]" };
+  if (premiumPct > 5) return { label: "다소 프리미엄", tone: "text-[var(--c-warn)]" };
+  if (premiumPct >= -5) return { label: "적정 범위", tone: "text-[var(--c-ink-2)]" };
+  return { label: "할인 구간", tone: "text-[var(--c-up)]" };
 }
 
 function toneDot(tone: string): string {
-  if (tone === "emerald") return "bg-emerald-500";
-  if (tone === "amber") return "bg-amber-500";
-  if (tone === "rose") return "bg-rose-500";
-  return "bg-slate-400";
+  if (tone === "emerald") return "bg-[var(--c-up)]";
+  if (tone === "amber") return "bg-[var(--c-warn)]";
+  if (tone === "rose") return "bg-[var(--c-down)]";
+  return "bg-[var(--c-neutral)]";
 }
 
 export function ErpHistoryPanel() {
@@ -250,13 +250,13 @@ export function YardeniOverlayChartPanel() {
   const verdict = yardeniVerdict(model?.latest.premiumPct ?? null);
 
   return (
-    <section className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
       <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-black tracking-tight text-slate-950">
+          <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
             Yardeni Bond PER
           </h2>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">
+          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
             S&P 500과 회사채 금리 기반 적정가를 같은 축에서 비교합니다.
           </p>
         </div>
@@ -289,18 +289,18 @@ export function YardeniOverlayChartPanel() {
           ["Bond PER", fmtMetric(model?.latest.bondPer ?? null, 1, "x")],
           ["Spread avg", fmtMetric(model?.latest.spreadAvg ?? null, 2, "%")],
         ].map(([label, value]) => (
-          <div key={label} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+          <div key={label} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
             <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
             </p>
-            <p className="orbitron mt-1 truncate text-xs font-black tabular-nums text-slate-800">
+            <p className="orbitron mt-1 truncate text-xs font-black tabular-nums text-[var(--c-ink)]">
               {value}
             </p>
           </div>
         ))}
       </div>
       {typeof model?.latest.premiumPercentile === "number" ? (
-        <p className="mt-3 text-[11px] font-bold text-slate-500">
+        <p className="mt-3 text-[11px] font-bold text-[var(--c-ink-3)]">
           1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
         </p>
       ) : null}
@@ -336,21 +336,21 @@ export function PmiActivityChartPanel() {
   }, [model]);
 
   return (
-    <section className="min-w-0 rounded-[1.2rem] border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
       <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-black tracking-tight text-slate-950">
+          <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
             PMI · ISM 활동 시계열
           </h2>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">
+          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
             PMI/ISM은 좌축, OECD CLI 미국은 우축으로 비교합니다.
           </p>
         </div>
         <div className="flex shrink-0 gap-1">
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700">
+          <span className="rounded-full border border-[var(--up-border)] bg-[var(--c-up-soft)] px-2 py-1 text-[10px] font-black text-[var(--c-up)]">
             확장 {model?.latest.expansionCount ?? 0}
           </span>
-          <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-black text-rose-700">
+          <span className="rounded-full border border-[var(--down-border)] bg-[var(--c-down-soft)] px-2 py-1 text-[10px] font-black text-[var(--c-down)]">
             위축 {model?.latest.contractionCount ?? 0}
           </span>
         </div>
@@ -374,31 +374,31 @@ export function PmiActivityChartPanel() {
 
       <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">
         {(model?.internals ?? []).map((group) => (
-          <div key={group.id} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div key={group.id} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] p-3">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
+                <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
                   {group.label}
                 </p>
                 <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
                   {group.period ?? group.releaseDate ?? "—"}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-black text-slate-600">
+              <span className="shrink-0 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-2)]">
                 확장 {group.expansionCount} / 위축 {group.contractionCount}
               </span>
             </div>
             <div className="mt-3 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
               {group.components.map((component) => (
-                <div key={component.id} className="min-w-0 rounded-lg bg-white px-2.5 py-2">
+                <div key={component.id} className="min-w-0 rounded-lg bg-[var(--c-panel)] px-2.5 py-2">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <span className="truncate text-[10px] font-black text-slate-500">
+                    <span className="truncate text-[10px] font-black text-[var(--c-ink-3)]">
                       {component.label}
                     </span>
                     <span className={cx("h-1.5 w-1.5 shrink-0 rounded-full", toneDot(component.tone))} />
                   </div>
                   <div className="mt-1 flex min-w-0 items-baseline justify-between gap-2">
-                    <span className="orbitron text-sm font-black tabular-nums text-slate-950">
+                    <span className="orbitron text-sm font-black tabular-nums text-[var(--c-ink)]">
                       {fmtMetric(component.value, 1)}
                     </span>
                     <span

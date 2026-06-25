@@ -725,7 +725,7 @@ function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
   if (sections.length === 0) {
     return (
       <div className="px-3 pb-3">
-        <div className="border-t border-slate-100 pt-3 text-xs font-bold text-slate-400">추정치 없음</div>
+        <div className="border-t border-[var(--c-line-2)] pt-3 text-xs font-bold text-[var(--c-ink-3)]">추정치 없음</div>
       </div>
     );
   }
@@ -733,10 +733,10 @@ function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
   return (
     <div className="space-y-3 px-3 pb-3">
       {sections.map((section) => (
-        <div key={section.title} className="border-t border-slate-100 pt-3">
+        <div key={section.title} className="border-t border-[var(--c-line-2)] pt-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
-            <span className="grid min-w-[132px] grid-cols-3 gap-1 text-center text-[9px] font-black text-slate-400">
+            <span className="grid min-w-[132px] grid-cols-3 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)]">
               {ESTIMATE_PERIOD_LABELS.map((label) => <span key={`${section.title}-${label}`}>{label}</span>)}
             </span>
           </div>
@@ -780,11 +780,11 @@ function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
 
 function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metricKey: ScreenerSortKey; preset?: ColumnPreset }) {
   return (
-    <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+    <div className="min-w-0 rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
       <span className="block truncate text-[11px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
         <MetricHelp label={columnLabel(metricKey)} metricKey={metricKey} align="right" />
       </span>
-      <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-slate-900">
+      <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-[var(--c-ink)]">
         {renderMobileCell(stock, metricKey, preset)}
       </span>
     </div>
@@ -821,17 +821,17 @@ function MobileStockCard({
   const metrics = mobileMetricKeys(preset);
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
-        <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-slate-600">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
+        <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
             onChange={onSelectedChange}
-            className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+            className="h-5 min-h-5 w-5 min-w-5 accent-[var(--c-ink)]"
           />
           선택
         </label>
-        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
           {stock.connection?.singleStockEtfs?.length ? "ETF 연결" : "단일 종목"}
         </span>
       </div>
@@ -841,9 +841,9 @@ function MobileStockCard({
         aria-controls={detailId}
         aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
         onClick={onToggle}
-        className="flex min-h-14 w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+        className="flex min-h-14 w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
       >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-black text-slate-500" aria-hidden="true">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--c-surface-2)] text-sm font-black text-[var(--c-ink-2)]" aria-hidden="true">
           {expanded ? "-" : "+"}
         </span>
         <span className="min-w-0 flex-1">
@@ -882,7 +882,7 @@ function MobileStockCard({
         </span>
       </button>
       {expanded ? (
-        <div id={detailId} className="border-t border-slate-100">
+        <div id={detailId} className="border-t border-[var(--c-line-2)]">
           {preset === "estimate" ? (
             <MobileEstimateTrendSections stock={stock} />
           ) : (
@@ -1300,7 +1300,7 @@ export default function ScreenerClient({
               type="button"
               onClick={allPageSelected ? deselectPageRows : selectPageRows}
               disabled={pageRows.length === 0}
-              className="min-h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
             >
               {allPageSelected ? "페이지 해제" : "페이지 선택"}
             </button>
@@ -1308,7 +1308,7 @@ export default function ScreenerClient({
               type="button"
               onClick={selectFilteredRows}
               disabled={sorted.length === 0}
-              className="min-h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
             >
               필터 전체 선택
             </button>
@@ -1316,7 +1316,7 @@ export default function ScreenerClient({
               type="button"
               onClick={clearSelectedRows}
               disabled={selectedTickers.size === 0}
-              className="min-h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-500 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
             >
               선택 해제
             </button>
@@ -1324,16 +1324,16 @@ export default function ScreenerClient({
               type="button"
               onClick={() => downloadConnectionCsv(selectedRows)}
               disabled={!connectionIndexReady || selectedRows.length === 0}
-              className="min-h-9 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"
             >
               선택 CSV
             </button>
             {selectedSingleStockEtfCompareHref ? (
-              <TransitionLink href={selectedSingleStockEtfCompareHref} className="inline-flex min-h-9 items-center rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive">
+              <TransitionLink href={selectedSingleStockEtfCompareHref} className="inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]">
                 선택 ETF 비교
               </TransitionLink>
             ) : (
-              <span className="inline-flex min-h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600">
+              <span className="inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]">
                 선택 ETF 부족
               </span>
             )}
@@ -1508,7 +1508,7 @@ export default function ScreenerClient({
                 value={connectionFilter}
                 onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
                 disabled={!connectionIndexReady}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive disabled:bg-slate-50 disabled:text-slate-400"
+                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition focus:border-brand-interactive disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
               >
                 <option value="">전체 연결</option>
                 <option value="filings">공시 요약 연결</option>
@@ -1720,7 +1720,7 @@ export default function ScreenerClient({
               type="button"
               onClick={() => setPage((value) => Math.max(0, value - 1))}
               disabled={safePage === 0}
-              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-brand-interactive disabled:opacity-40"
+              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"
             >
               이전
             </button>
@@ -1731,7 +1731,7 @@ export default function ScreenerClient({
               type="button"
               onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
               disabled={safePage >= pageCount - 1}
-              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-brand-interactive disabled:opacity-40"
+              className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"
             >
               다음
             </button>

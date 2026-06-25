@@ -16,6 +16,13 @@ const W1_CSS_TARGETS = [
   "src/styles/overview-widgets.css",
   "src/styles/market-wrap-v2.css",
 ];
+const W2_COMPONENT_TARGETS = [
+  "src/lib/market-valuation/charts/ledgerChartPanels.tsx",
+  "src/lib/market-valuation/charts/marketStructurePanelComponents.tsx",
+  "src/app/screener/StockDetailPanel.tsx",
+  "src/lib/screener/deterministicRules.ts",
+  "src/lib/estimate-completeness.ts",
+];
 const SCAN_EXTENSIONS = new Set([".css", ".ts", ".tsx"]);
 const REQUIRED_THEME_ALIASES = [
   "background",
@@ -93,6 +100,9 @@ const spacingDeclaration = new RegExp(
   `(^|[;{]\\s*)(${SPACING_PROPERTY_PATTERN})\\s*:\\s*([^;{}]+)`,
   "gm",
 );
+const rawColorPattern = /#[0-9A-Fa-f]{3,8}|rgba?\(|(?<!-)\b(?:white|black)\b(?!-)/g;
+const namedTailwindColorPattern =
+  /(?:text|bg|border|fill|stroke|hover:bg|hover:border)-(?:slate|emerald|rose|amber|purple|sky|violet|brand)-/g;
 
 function walk(path) {
   const stats = statSync(path);
@@ -240,10 +250,7 @@ for (const [token, files] of referencedTokens) {
 for (const target of W1_CSS_TARGETS) {
   const text = readFileSync(join(ROOT, target), "utf8");
   const colorMatches = [];
-  for (const match of text.matchAll(/#[0-9A-Fa-f]{3,8}|rgba?\(/g)) {
-    colorMatches.push(`${target}:${text.slice(0, match.index).split("\n").length}`);
-  }
-  for (const match of text.matchAll(/(?<!-)\b(?:white|black)\b(?!-)/g)) {
+  for (const match of text.matchAll(rawColorPattern)) {
     colorMatches.push(`${target}:${text.slice(0, match.index).split("\n").length}`);
   }
   if (colorMatches.length > 0) {
@@ -257,6 +264,25 @@ for (const target of W1_CSS_TARGETS) {
       const line = text.slice(0, match.index).split("\n").length;
       failures.push(`W1 raw spacing px ${target}:${line} ${property}: ${value.trim()}`);
     }
+  }
+}
+
+for (const target of W2_COMPONENT_TARGETS) {
+  const text = readFileSync(join(ROOT, target), "utf8");
+  const rawColorMatches = [];
+  for (const match of text.matchAll(rawColorPattern)) {
+    rawColorMatches.push(`${target}:${text.slice(0, match.index).split("\n").length}`);
+  }
+  if (rawColorMatches.length > 0) {
+    failures.push(`W2 raw color literals remain: ${rawColorMatches.slice(0, 8).join(", ")}`);
+  }
+
+  const namedColorMatches = [];
+  for (const match of text.matchAll(namedTailwindColorPattern)) {
+    namedColorMatches.push(`${target}:${text.slice(0, match.index).split("\n").length}`);
+  }
+  if (namedColorMatches.length > 0) {
+    failures.push(`W2 named Tailwind colors remain: ${namedColorMatches.slice(0, 8).join(", ")}`);
   }
 }
 

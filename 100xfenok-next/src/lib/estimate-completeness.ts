@@ -29,9 +29,9 @@ export function estimateCompletenessFromSeries(series: EstimateSeriesLike | null
 }
 
 export function estimateCompletenessTone(completeness: EstimateCompleteness): string {
-  if (completeness.available === completeness.total) return "bg-emerald-50 text-emerald-700";
-  if (completeness.available > 0) return "bg-amber-50 text-amber-700";
-  return "bg-slate-100 text-slate-500";
+  if (completeness.available === completeness.total) return "bg-[var(--c-up-soft)] text-[var(--c-up)]";
+  if (completeness.available > 0) return "bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+  return "bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
 export function hasEstimateGap(completeness: EstimateCompleteness): boolean {

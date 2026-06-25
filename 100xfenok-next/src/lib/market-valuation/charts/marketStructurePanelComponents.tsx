@@ -232,14 +232,14 @@ const CREDIT_LABELS: Record<string, string> = {
 function fracPct(value: number | null): { text: string; cls: string } {
   if (value === null) return { text: "—", cls: "text-[var(--c-ink-3)]" };
   const pct = value * 100;
-  const cls = pct > 0 ? "text-emerald-600" : pct < 0 ? "text-rose-600" : "text-slate-500";
+  const cls = pct > 0 ? "text-[var(--c-up)]" : pct < 0 ? "text-[var(--c-down)]" : "text-[var(--c-neutral)]";
   return { text: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`, cls };
 }
 
 /** Already-percent value (e.g. -6.2) -> signed colored percent. */
 function signedPct(value: number | null): { text: string; cls: string } {
   if (value === null) return { text: "—", cls: "text-[var(--c-ink-3)]" };
-  const cls = value > 0 ? "text-emerald-600" : value < 0 ? "text-rose-600" : "text-slate-500";
+  const cls = value > 0 ? "text-[var(--c-up)]" : value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-neutral)]";
   return { text: `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`, cls };
 }
 
@@ -257,8 +257,8 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
             aria-pressed={p.id === period}
             className={
               p.id === period
-                ? "rounded-md bg-slate-800 px-2 py-1 text-[11px] font-bold text-white"
-                : "rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-200"
+                ? "rounded-md bg-[var(--c-ink)] px-2 py-1 text-[11px] font-bold text-[var(--c-panel)]"
+                : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-3)] hover:bg-[var(--c-line-2)]"
             }
           >
             {p.label}
@@ -268,7 +268,7 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
       <div className="min-w-0 overflow-x-auto">
         <table className="w-full min-w-[390px] border-collapse text-[12px]">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
+            <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
               <th scope="col" className="py-2 pr-2 text-left">지수</th>
               {BENCH_METRICS.map((m) => (
                 <th key={m.key} scope="col" className="px-2 py-2 text-right">{m.label}</th>
@@ -277,8 +277,8 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b border-slate-100">
-                <th scope="row" className="py-2 pr-2 text-left font-bold text-slate-700">{row.label}</th>
+              <tr key={row.id} className="border-b border-[var(--c-line-2)]">
+                <th scope="row" className="py-2 pr-2 text-left font-bold text-[var(--c-ink-2)]">{row.label}</th>
                 {BENCH_METRICS.map((m) => {
                   const cell = fracPct(numberOrNull(row[m.key]?.[period]));
                   return (
@@ -305,7 +305,7 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
     <div className="min-w-0 overflow-x-auto">
       <table className="w-full min-w-[360px] border-collapse text-[12px]">
         <thead>
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
+          <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
             <th scope="col" className="py-2 pr-2 text-left">구간</th>
             <th scope="col" className="px-2 py-2 text-right">종목</th>
             <th scope="col" className="px-2 py-2 text-right">최고</th>
@@ -315,12 +315,12 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
         </thead>
         <tbody>
           {tables.map((t) => (
-            <tr key={t.id} className="border-b border-slate-100">
-              <th scope="row" className="py-2 pr-2 text-left font-bold text-slate-700">{CREDIT_LABELS[t.id] ?? t.id}</th>
-              <td className="px-2 py-2 text-right tabular-nums text-slate-600">{t.rows ?? "—"}</td>
-              <td className="px-2 py-2 text-right font-bold text-emerald-600">{t.bestRating ?? "—"}</td>
-              <td className="px-2 py-2 text-right font-bold text-rose-600">{t.worstRating ?? "—"}</td>
-              <td className="px-2 py-2 text-right font-bold tabular-nums text-slate-700">
+            <tr key={t.id} className="border-b border-[var(--c-line-2)]">
+              <th scope="row" className="py-2 pr-2 text-left font-bold text-[var(--c-ink-2)]">{CREDIT_LABELS[t.id] ?? t.id}</th>
+              <td className="px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{t.rows ?? "—"}</td>
+              <td className="px-2 py-2 text-right font-bold text-[var(--c-up)]">{t.bestRating ?? "—"}</td>
+              <td className="px-2 py-2 text-right font-bold text-[var(--c-down)]">{t.worstRating ?? "—"}</td>
+              <td className="px-2 py-2 text-right font-bold tabular-nums text-[var(--c-ink-2)]">
                 {t.medianSpread === null ? "—" : `${(t.medianSpread * 100).toFixed(2)}%`}
               </td>
             </tr>
@@ -348,10 +348,10 @@ function Mag7Panel({ model }: MarketStructureSlotProps) {
   );
   return (
     <div className="min-w-0">
-      <div className="mb-2 flex flex-wrap gap-3 text-[11px] font-semibold text-slate-500">
-        <span>총 비중 <b className="text-slate-800">{mag7.totalWeight === null ? "—" : `${mag7.totalWeight.toFixed(1)}%`}</b></span>
+      <div className="mb-2 flex flex-wrap gap-3 text-[11px] font-semibold text-[var(--c-ink-3)]">
+        <span>총 비중 <b className="text-[var(--c-ink)]">{mag7.totalWeight === null ? "—" : `${mag7.totalWeight.toFixed(1)}%`}</b></span>
         {mag7.totalMarketCap !== null ? (
-          <span>총 시총 <b className="text-slate-800">{new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(mag7.totalMarketCap)}</b></span>
+          <span>총 시총 <b className="text-[var(--c-ink)]">{new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(mag7.totalMarketCap)}</b></span>
         ) : null}
       </div>
       <MarketChartFrame
@@ -369,10 +369,10 @@ function Mag7Panel({ model }: MarketStructureSlotProps) {
             {mag7.holdings.map((h) => {
               const chg = signedPct(numberOrNull(h.changePercent));
               return (
-                <tr key={h.symbol ?? String(h.rank ?? "")} className="border-b border-slate-100">
-                  <td className="py-1.5 pr-2 text-left font-bold text-slate-700">{h.rank ?? "—"} {h.symbol ?? "—"}</td>
-                  <td className="px-2 py-1.5 text-left text-slate-500">{h.company ?? ""}</td>
-                  <td className="px-2 py-1.5 text-right font-bold tabular-nums text-slate-800">{h.weight === null ? "—" : `${h.weight.toFixed(1)}%`}</td>
+                <tr key={h.symbol ?? String(h.rank ?? "")} className="border-b border-[var(--c-line-2)]">
+                  <td className="py-1.5 pr-2 text-left font-bold text-[var(--c-ink-2)]">{h.rank ?? "—"} {h.symbol ?? "—"}</td>
+                  <td className="px-2 py-1.5 text-left text-[var(--c-ink-3)]">{h.company ?? ""}</td>
+                  <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink)]">{h.weight === null ? "—" : `${h.weight.toFixed(1)}%`}</td>
                   <td className={`px-2 py-1.5 text-right font-bold tabular-nums ${chg.cls}`}>{chg.text}</td>
                 </tr>
               );
@@ -396,16 +396,16 @@ function MembershipPanel({ model }: MarketStructureSlotProps) {
   return (
     <div className="min-w-0 space-y-2">
       {recent.slice(0, 6).map((ev, index) => (
-        <div key={`${ev.date}-${ev.index}-${index}`} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div key={`${ev.date}-${ev.index}-${index}`} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{(ev.index ?? "—").toUpperCase()}</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{(ev.index ?? "—").toUpperCase()}</span>
             <span className="text-[10px] font-bold text-[var(--c-ink-2)]">{ev.date ?? "—"} · {ev.previousCount ?? "—"}→{ev.currentCount ?? "—"}</span>
           </div>
           <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5">
-            <span className="text-emerald-600">＋{ev.added.length}</span> {ev.added.slice(0, 8).join(" · ")}{ev.added.length > 8 ? " …" : ""}
+            <span className="text-[var(--c-up)]">＋{ev.added.length}</span> {ev.added.slice(0, 8).join(" · ")}{ev.added.length > 8 ? " …" : ""}
           </p>
           <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5">
-            <span className="text-rose-600">－{ev.removed.length}</span> {ev.removed.slice(0, 8).join(" · ")}{ev.removed.length > 8 ? " …" : ""}
+            <span className="text-[var(--c-down)]">－{ev.removed.length}</span> {ev.removed.slice(0, 8).join(" · ")}{ev.removed.length > 8 ? " …" : ""}
           </p>
         </div>
       ))}
