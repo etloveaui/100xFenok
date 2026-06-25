@@ -1,6 +1,6 @@
 # PLAN — Design System Remodel (P2 full migration active)
 
-> Status: **ACTIVE — P2 W3 deployed 2026-06-25**. The earlier P16 thin slice is complete and
+> Status: **ACTIVE — P2 W4 deployed 2026-06-25**. The earlier P16 thin slice is complete and
 > superseded by the owner-approved full migration track. Current operating rule: keep the public
 > product surfaces service-safe while moving the app through a staged token migration, with Codex
 > implementing, Claude gating, and Kimi/AGY/MMD used for independent map/visual checks as needed.
@@ -41,9 +41,9 @@ So this is **adoption + reconciliation**, not green-field design — which makes
 - W2 component color cleanup: shipped; component-level raw semantic color drift reduced.
 - W3 Tailwind palette alias remap: shipped and deployed. Named Tailwind families now map through
   semantic tokens in `globals.css`, with explicit fixed exceptions for dark surfaces and live badges.
-- W4 dark flip: next. First intentionally visible design change; use MMD tabular insertion map and
-  AGY per-screen acceptance criteria.
-- W5 polish/governance: next after W4. Lock remaining high-risk drift with QA/docs and prepare the
+- W4 dark flip: shipped and deployed. Dark is SSR-activated from `RootLayout`; shell/nav/footer/chart
+  surfaces use tokenized dark mappings; MMD tabular gaps are patched; AGY and Claude both gated PASS.
+- W5 polish/governance: next. Lock remaining high-risk drift with QA/docs and prepare the
   next productized surface migration.
 
 **Interactivity (parallel, deferred):**
@@ -73,3 +73,8 @@ data, public routes, or the data-state contract.
   `376a1bbc2` final metadata after remote data rebase. Live deploy:
   `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
   `7fbd66f7-bf5f-4f85-84f5-4ba4b9a223b6`.
+- W4: `37b599e9a` code, `35f73cfc4` build metadata, `a31da5577` deployed artifacts,
+  `d36313849` final metadata after manifest rebase, `8658332c6` final deployed metadata.
+  Final live deploy: `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
+  `6c2d92a0-da2d-4152-9ab0-f54cb6c6c07e`. Gates: local browser strict 54/54,
+  local a11y 18/18, live smoke 9/9, live a11y 18/18, AGY visual PASS, Claude gate PASS.

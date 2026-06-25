@@ -180,11 +180,11 @@ Each wave: Codex impl → **Claude gate** (build + behavior/visual) → Kimi/AGY
 | **W1** | CSS files (`design-v2`/`footer`/`overview-widgets`/`market-wrap-v2`; `market-structure` route stays W2 component work) hex→token + off-grid spacing props→grid tokens | mechanical, grep-verifiable; `qa:tokens` locks no raw color literals and no raw spacing px in W1 CSS | grep no hex/rgb/named white-black in those files + build |
 | **W2** | High-risk components (`ledgerChartPanels`, `marketStructurePanelComponents`, `stockDetailPanel`) | semantic-judgment mapping (chart/regime colors) | per-file visual + build |
 | **W3** | **3,339 Tailwind named utils** | **custom Tailwind plugin** mapping color-name→OKLCH token (handles all at once, prevents drift) — NOT 3,339 manual edits | build + visual on top screens |
-| **W4** | Dark flip (S2) + `tabular-nums` (7 gap files) + AGY guardrails (elevation>borders, desaturate semantics, +25% dense padding) | the VISIBLE transformation | dark correct on /explore,/stock,/screener + a11y |
+| **W4** | ✅ Dark flip (S2) + `tabular-nums` gap patches + AGY guardrails (elevation>borders, desaturate semantics, dense-zone padding) | visible transformation shipped 2026-06-25 | local browser 54/54, local a11y 18/18, live smoke 9/9, live a11y 18/18, AGY+Claude PASS |
 | **W5** | Lint gate: CI fails on new `#hex`/`rgb()` in `src/**` (explicit allowlist) | lock so it can't regress | CI gate active |
 | **W6** | Closeout: owner user-test HTML checklist (**feno-canvas**) → **SMB** (**feno-file-routing**) | self-contained Korean HTML, screen-by-screen + cross-cutting, PASS/FAIL column | delivered to SMB; owner tests against it before "complete" sign-off |
 
-"제대로" enforcement: no wave closes until its gate passes; W3 plugin approach (not blind find-replace) keeps the 3,339 correct in one controlled move.
+"제대로" enforcement: no wave closes until its gate passes; W3 plugin approach (not blind find-replace) keeps the 3,339 correct in one controlled move. W4 closed with final Worker deploy `6c2d92a0-da2d-4152-9ab0-f54cb6c6c07e`; W5 is the active next lock.
 
 ### 4c. Closeout deliverable — owner user-test HTML checklist (owner request 2026-06-25)
 
