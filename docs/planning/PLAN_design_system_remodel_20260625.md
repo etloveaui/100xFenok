@@ -1,6 +1,6 @@
 # PLAN — Design System Remodel (P2 full migration active)
 
-> Status: **ACTIVE — P2 W4 deployed 2026-06-25**. The earlier P16 thin slice is complete and
+> Status: **ACTIVE — P2 W5 deployed 2026-06-25**. The earlier P16 thin slice is complete and
 > superseded by the owner-approved full migration track. Current operating rule: keep the public
 > product surfaces service-safe while moving the app through a staged token migration, with Codex
 > implementing, Claude gating, and Kimi/AGY/MMD used for independent map/visual checks as needed.
@@ -43,8 +43,9 @@ So this is **adoption + reconciliation**, not green-field design — which makes
   semantic tokens in `globals.css`, with explicit fixed exceptions for dark surfaces and live badges.
 - W4 dark flip: shipped and deployed. Dark is SSR-activated from `RootLayout`; shell/nav/footer/chart
   surfaces use tokenized dark mappings; MMD tabular gaps are patched; AGY and Claude both gated PASS.
-- W5 polish/governance: next. Lock remaining high-risk drift with QA/docs and prepare the
-  next productized surface migration.
+- W5 polish/governance: shipped and deployed. `qa:tokens` now blocks new raw colors with a
+  categorized allowlist, active public/product component debt is zero, and Claude gate PASS
+  confirmed the lock.
 
 **Interactivity (parallel, deferred):**
 - Price charts Chart.js → Lightweight Charts (free crosshair, smaller); dashboards → ECharts.
@@ -78,3 +79,9 @@ data, public routes, or the data-state contract.
   Final live deploy: `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
   `6c2d92a0-da2d-4152-9ab0-f54cb6c6c07e`. Gates: local browser strict 54/54,
   local a11y 18/18, live smoke 9/9, live a11y 18/18, AGY visual PASS, Claude gate PASS.
+- W5: `0f7b596aa` code/governance, `2d073771c` generated metadata. Live deploy:
+  `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
+  `76c92054-d334-43b3-bff7-33a94843e079`. Gates: `qa:tokens` 711/711 raw-color
+  baseline with 30 categorized files, `qa:routes` PASS, build PASS, local browser
+  P2 36/36, local a11y P2 18/18, Alpha Scout v2 browser/a11y 2/2 + 2/2, live
+  smoke 10/10, live a11y P2 18/18, Claude gate PASS.
