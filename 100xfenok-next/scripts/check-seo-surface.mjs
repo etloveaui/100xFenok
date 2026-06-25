@@ -20,6 +20,7 @@ const sitemap = read("src/app/sitemap.ts");
 const siteUrl = read("src/lib/site-url.ts");
 const stockPage = read("src/app/stock/[ticker]/page.tsx");
 const etfPage = read("src/app/etfs/[ticker]/page.tsx");
+const routes = read("src/lib/routes.ts");
 
 assert(
   !nextConfig.includes('source: "/travel/:path*"'),
@@ -55,29 +56,54 @@ for (const required of [
 for (const required of ["/admin/", "/api/admin/", "/live-bench/", "/travel/"]) {
   assert(appRobots.includes(required), `app robots route missing ${required}`, errors);
 }
+// sitemap.ts is generated from the lib/routes.ts SSOT (SITEMAP_PRODUCT_ROUTES + ROUTES),
+// so validate the route source of truth rather than inline literals in sitemap.ts.
+assert(
+  sitemap.includes("SITEMAP_PRODUCT_ROUTES") && sitemap.includes("canonicalUrl"),
+  "sitemap.ts must build from SITEMAP_PRODUCT_ROUTES via canonicalUrl",
+  errors,
+);
+const sitemapStart = routes.indexOf("SITEMAP_PRODUCT_ROUTES");
+const sitemapBlock =
+  sitemapStart >= 0 ? routes.slice(sitemapStart, routes.indexOf("]", sitemapStart)) : "";
+assert(sitemapBlock.length > 0, "lib/routes.ts must define SITEMAP_PRODUCT_ROUTES", errors);
 for (const forbidden of [
-  'path: "/admin',
-  'path: "/api/admin',
-  'path: "/live-bench',
-  'path: "/travel',
-  'path: "/market"',
-  'path: "/filings/nvda-10k',
-  'path: "/winddown',
+  "admin",
+  "api/admin",
+  "live-bench",
+  "liveBench",
+  "travel",
+  "winddown",
+  "filings",
 ]) {
-  assert(!sitemap.includes(forbidden), `sitemap must not include ${forbidden}`, errors);
+  assert(
+    !sitemapBlock.includes(forbidden),
+    `SITEMAP_PRODUCT_ROUTES must not include ${forbidden}`,
+    errors,
+  );
+}
+for (const key of [
+  "ROUTES.home",
+  "ROUTES.explore",
+  "ROUTES.market",
+  "ROUTES.etfs",
+  "ROUTES.screener",
+  "ROUTES.superinvestors",
+]) {
+  assert(sitemapBlock.includes(key), `SITEMAP_PRODUCT_ROUTES missing ${key}`, errors);
 }
 for (const required of [
-  'path: "/"',
-  'path: "/explore"',
-  'path: "/market-valuation"',
-  'path: "/etfs"',
-  'path: "/screener"',
-  'path: "/superinvestors"',
+  'home: "/"',
+  'explore: "/explore"',
+  'market: "/market-valuation"',
+  'etfs: "/etfs"',
+  'screener: "/screener"',
+  'superinvestors: "/superinvestors"',
 ]) {
-  assert(sitemap.includes(required), `sitemap missing ${required}`, errors);
+  assert(routes.includes(required), `ROUTES SSOT missing ${required}`, errors);
 }
-assert(stockPage.includes("canonicalPath(`/stock/${symbol}`)"), "stock detail metadata must set canonical URL", errors);
-assert(etfPage.includes("canonicalPath(`/etfs/${symbol}`)"), "ETF detail metadata must set canonical URL", errors);
+assert(stockPage.includes("canonicalPath(ROUTES.stock(symbol))"), "stock detail metadata must set canonical URL", errors);
+assert(etfPage.includes("canonicalPath(ROUTES.etf(symbol))"), "ETF detail metadata must set canonical URL", errors);
 
 if (errors.length) {
   console.error("SEO surface guard failed:");
