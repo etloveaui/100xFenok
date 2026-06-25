@@ -230,7 +230,7 @@ Priority: secret pre-check + schema guard first (highest break-risk).
 |---|---|---|
 | left-top `%1622` | Codex | implementation · pipeline hardening · git · deploy |
 | right-top `%1623` | Claude | architecture · IA/route-key SSOT design · **this doc + QA contracts** · regression/push-readiness gate |
-| right-bottom `%1647` | Kimi | read-only research · route/key/data evidence · slice scouting (may swarm read-only) |
+| right-bottom `%1647` | **MMD** (MiMo Code / DeepSeek V4 Pro) — replaced **Kimi** 2026-06-25 (Kimi weekly quota exhausted mid-W3-mapping) | read-only research · token/mapping evidence · slice scouting |
 | left-bottom `%1648` | AGY | visual/UX/trend critique only — **facts/code verified by Codex/Claude** |
 
 - **Doc-monopoly**: planning docs = Claude only (no concurrent edits → no protected-path collision).
