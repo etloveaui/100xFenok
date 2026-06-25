@@ -413,9 +413,9 @@ export default function IndustryMapPanel() {
               <div className="mt-0.5 text-xs font-bold text-sky-700">순이익률 0% 초과</div>
             </div>
             <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 md:col-span-3">
-              <div className="text-[11px] font-black text-indigo-600">구성종목 상세</div>
-              <div className="mt-1 text-sm font-black text-indigo-900">{localSurfaceCount.toLocaleString("ko-KR")}개 자료</div>
-              <div className="mt-0.5 text-xs font-bold text-indigo-700">
+              <div className="text-[11px] font-black text-brand-navy">구성종목 상세</div>
+              <div className="mt-1 text-sm font-black text-brand-navy">{localSurfaceCount.toLocaleString("ko-KR")}개 자료</div>
+              <div className="mt-0.5 text-xs font-bold text-brand-navy">
                 산업 전체는 요약 기준, 구성종목 상세는 현재 기술 섹터와 반도체 산업부터 제공합니다.
               </div>
             </div>
@@ -567,7 +567,7 @@ export default function IndustryMapPanel() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-800">
+                <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-bold text-brand-navy">
                   {hasIndustryConstituentDetail(selectedIndustry)
                     ? `구성종목 상세 ${selectedConstituents.length.toLocaleString("ko-KR")}개를 제공합니다.`
                     : "이 산업은 현재 요약 지표만 제공합니다. 구성종목 상세는 데이터 수집 범위를 넓히며 순차적으로 붙입니다."}

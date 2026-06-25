@@ -41,8 +41,10 @@ So this is **adoption + reconciliation**, not green-field design — which makes
 - W2 component color cleanup: shipped; component-level raw semantic color drift reduced.
 - W3 Tailwind palette alias remap: shipped and deployed. Named Tailwind families now map through
   semantic tokens in `globals.css`, with explicit fixed exceptions for dark surfaces and live badges.
-- W4 dark flip: shipped and deployed. Dark is SSR-activated from `RootLayout`; shell/nav/footer/chart
-  surfaces use tokenized dark mappings; MMD tabular gaps are patched; AGY and Claude both gated PASS.
+- W4 dark ramp + numeric stability: shipped. Dark tokens/overrides remain available as optional
+  infrastructure, but owner correction restored `RootLayout` to light default. Shell/nav/footer/chart
+  surfaces keep tokenized dark mappings for opt-in use; MMD tabular gaps are patched; AGY and Claude
+  both gated PASS on the original W4 slice.
 - W5 polish/governance: shipped and deployed. `qa:tokens` now blocks new raw colors with a
   categorized allowlist, active public/product component debt is zero, and Claude gate PASS
   confirmed the lock.
@@ -79,6 +81,10 @@ data, public routes, or the data-state contract.
   Final live deploy: `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
   `6c2d92a0-da2d-4152-9ab0-f54cb6c6c07e`. Gates: local browser strict 54/54,
   local a11y 18/18, live smoke 9/9, live a11y 18/18, AGY visual PASS, Claude gate PASS.
+- W4 correction: owner preference requires light as the product default. `RootLayout` now emits
+  `data-theme="light"` and `color-scheme: light`; `[data-theme="dark"]` tokens remain optional.
+  Local correction gates: `qa:tokens` PASS, build PASS, browser P2 36/36, a11y P2 18/18,
+  SSR HTML check PASS.
 - W5: `0f7b596aa` code/governance, `2d073771c` generated metadata. Live deploy:
   `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
   `76c92054-d334-43b3-bff7-33a94843e079`. Gates: `qa:tokens` 711/711 raw-color

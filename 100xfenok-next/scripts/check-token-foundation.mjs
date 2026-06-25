@@ -496,11 +496,11 @@ if (/oklch\(\s*(?:100|[1-9]\d{2,})/.test(globals)) {
 if (!/body\s*\{\s*[^}]*background:\s*var\(--background\)/s.test(globals)) {
   failures.push("body background no longer uses --background");
 }
-if (!layout.includes('<html lang="ko" data-theme="dark"')) {
-  failures.push("W4 dark activator missing from RootLayout html");
+if (!layout.includes('<html lang="ko" data-theme="light"')) {
+  failures.push("default theme must remain light in RootLayout html");
 }
-if (!layout.includes('themeColor: "#15171c"')) {
-  failures.push("W4 dark viewport themeColor missing");
+if (!layout.includes('themeColor: "#f8fafc"')) {
+  failures.push("light default viewport themeColor missing");
 }
 if (!layout.includes("bg-background text-foreground")) {
   failures.push("W4 body no longer uses background/foreground utilities");

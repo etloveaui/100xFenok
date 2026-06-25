@@ -125,7 +125,7 @@ PASS requires ALL:
 ## 4. P2 — Design System enforcement  (→ PLAN_design_system_remodel_20260625.md)
 
 The full drop-in spec (Agent A) is to be **appended to PLAN_design_system_remodel**, corrected by §1 ground truth. Key points:
-- **Migrate-in-place, not greenfield**: globals.css already has `@theme inline`; swap hex→OKLCH, light→**dark-first** via swap-source-keep-name (existing `--c-up/--c-down/--brand-*` re-pointed at new ramp, no component edits).
+- **Migrate-in-place, not greenfield**: globals.css already has `@theme inline`; swap hex→OKLCH via swap-source-keep-name (existing `--c-up/--c-down/--brand-*` re-pointed at the semantic ramp, no component edits). Owner correction 2026-06-25: light is the product default; `[data-theme="dark"]` remains an optional retained ramp, not the default.
 - **tabular-nums**: extend the existing 26-file adoption to the gap surfaces (screener / stock-detail / chart axis labels). Not greenfield.
 - **⌘K decision (OPEN)**: revive `CommandPaletteV2` into `AppShell` **vs** adopt `cmdk` fresh. Recommend evaluate revive first (no new dep) — owner/Claude call.
 - **Charts (OPEN)**: keep Chart.js for summaries; **Lightweight Charts = NEW dep** for price/time-series (magnet crosshair, synced) — explicit owner decision, not assumed.
@@ -146,8 +146,8 @@ The full drop-in spec (Agent A) is to be **appended to PLAN_design_system_remode
 
 | Slice | Scope | QA acceptance (gate) |
 |---|---|---|
-| **P2-S1** Token foundation | OKLCH ramp + semantic `@theme` into globals.css; re-point existing `--c-*`/`--brand-*` to ramp (swap-source-keep-name, no component edits); dark default + light opt-in | `build` passes; existing routes render unchanged (behavior parity); token-coverage check. Depends on Kimi inventory. |
-| **P2-S2** Dark flip + numerics | default → dark; `tabular-nums` to gap surfaces (screener / stock-detail / chart axis labels) | numeric columns don't reflow on value change; dark default; light still works |
+| **P2-S1** Token foundation | OKLCH ramp + semantic `@theme` into globals.css; re-point existing `--c-*`/`--brand-*` to ramp (swap-source-keep-name, no component edits); light default + optional dark ramp retained | `build` passes; existing routes render unchanged (behavior parity); token-coverage check. Depends on Kimi inventory. |
+| **P2-S2** Dark ramp + numerics | keep `[data-theme="dark"]` as opt-in; `tabular-nums` to gap surfaces (screener / stock-detail / chart axis labels) | numeric columns don't reflow on value change; light default remains intact |
 | **P2-S3** Surface/spacing/motion | AGY dark guardrails: drop ~90% borders → **elevation contrast** (`L0.15`/`L0.22`)+soft shadow; desaturate semantics; +20–30% dense-zone padding; M3 motion + `prefers-reduced-motion` | `grep` arbitrary `-[Npx]` = 0; a11y reduced-motion pass; `/screener`+`/explore` not grid-prison |
 | **P2-S4** ⌘K into AppShell (D3) | port `CommandPaletteV2` into `AppShell` + keyboard nav (j/k / arrows / focus ring) + ticker-jump via `ROUTES.stock()` | ⌘K opens on product pages; ticker→`/stock/[t]`; keyboard nav works |
 | **P2-S5** Chart theme (D4) | shared theme (no vert gridlines, grey-first, magnet crosshair); price→Lightweight Charts, summaries→Chart.js | `qa:macro-chart` visual contract; no vert gridlines; crosshair sync |
@@ -168,7 +168,7 @@ Screen rollout: `/explore` → `/stock/[ticker]` → `/screener` (apply S1–S5 
 
 **S1 QA acceptance**: `npm run build` passes; existing routes render IDENTICALLY in current theme (behavior-parity, visual diff = 0); token-coverage check (no orphaned `--c-*`); light stays default (dark defined, not active).
 
-**S2 (next, VISIBLE)**: flip default → dark (Agent-A ramp) + `tabular-nums` to Kimi's 7 gap files + AGY dark guardrails (elevation > borders, desaturated semantics, +25% dense padding). **This is where the owner SEES the change.**
+**S2 status correction (2026-06-25)**: the dark ramp and `tabular-nums` work landed, but owner preference requires LIGHT as the product default. Keep dark tokens/overrides as optional infrastructure only; do not re-activate dark globally without explicit owner approval.
 
 ### 4b. P2 full-migration wave plan (owner HARD DESTINATION: complete now, no deferral)
 
@@ -180,11 +180,11 @@ Each wave: Codex impl → **Claude gate** (build + behavior/visual) → Kimi/AGY
 | **W1** | CSS files (`design-v2`/`footer`/`overview-widgets`/`market-wrap-v2`; `market-structure` route stays W2 component work) hex→token + off-grid spacing props→grid tokens | mechanical, grep-verifiable; `qa:tokens` locks no raw color literals and no raw spacing px in W1 CSS | grep no hex/rgb/named white-black in those files + build |
 | **W2** | High-risk components (`ledgerChartPanels`, `marketStructurePanelComponents`, `stockDetailPanel`) | semantic-judgment mapping (chart/regime colors) | per-file visual + build |
 | **W3** | **3,339 Tailwind named utils** | **custom Tailwind plugin** mapping color-name→OKLCH token (handles all at once, prevents drift) — NOT 3,339 manual edits | build + visual on top screens |
-| **W4** | ✅ Dark flip (S2) + `tabular-nums` gap patches + AGY guardrails (elevation>borders, desaturate semantics, dense-zone padding) | visible transformation shipped 2026-06-25 | local browser 54/54, local a11y 18/18, live smoke 9/9, live a11y 18/18, AGY+Claude PASS |
+| **W4** | ✅ Dark ramp (optional) + `tabular-nums` gap patches + AGY guardrails; owner correction restores light default | visible dark ramp kept as opt-in infrastructure; product default is light | light-default correction: `qa:tokens` PASS, build PASS, local browser P2 36/36, local a11y P2 18/18 |
 | **W5** | ✅ Lint/governance gate: `qa:tokens` fails on new or stale raw colors in `src/**`; every remaining raw file must carry an explicit category (`token-source`, `style-island`, `metadata-color`, `admin-internal`, `chart-exception`, `p4-delete`) | lock so it can't regress; no blanket grandfathering | 711/711 baseline, 30 categorized files, active public/product component debt 0, Claude gate PASS, deployed `76c92054-d334-43b3-bff7-33a94843e079` |
 | **W6** | Closeout: owner user-test HTML checklist (**feno-canvas**) → **SMB** (**feno-file-routing**) | self-contained Korean HTML, screen-by-screen + cross-cutting, PASS/FAIL column | next; owner tests against it before "complete" sign-off |
 
-"제대로" enforcement: no wave closes until its gate passes; W3 plugin approach (not blind find-replace) keeps the 3,339 correct in one controlled move. W4 closed with final Worker deploy `6c2d92a0-da2d-4152-9ab0-f54cb6c6c07e`; W5 closed with categorized raw-color governance and Worker deploy `76c92054-d334-43b3-bff7-33a94843e079`. W6 owner checklist is next.
+"제대로" enforcement: no wave closes until its gate passes; W3 plugin approach (not blind find-replace) keeps the 3,339 correct in one controlled move. W4 originally deployed a dark default (`6c2d92a0-da2d-4152-9ab0-f54cb6c6c07e`), then owner correction restored light as the default while retaining optional dark tokens/overrides. W5 closed with categorized raw-color governance and Worker deploy `76c92054-d334-43b3-bff7-33a94843e079`. W6 owner checklist is next.
 
 ### 4c. Closeout deliverable — owner user-test HTML checklist (owner request 2026-06-25)
 
@@ -193,8 +193,8 @@ When the FULL migration completes (W5 gate PASS), produce a self-contained HTML 
 - **Tool**: `feno-canvas` (self-contained Korean HTML artifact).
 - **Delivery**: SMB outbox via `feno-file-routing` (resolve exact SMB share/outbox path at closeout; do NOT use Drive `_inbox` — owner specified SMB).
 - **Content** (screen-by-screen + cross-cutting, each row with a **PASS / FAIL / note** column the owner fills in):
-  - **Per screen** (`/explore`, `/stock/[ticker]`, `/screener`, then the rest): what changed, what "correct" looks like (dark render, tabular-num alignment, elevation-not-grid-prison surfaces, spacing rhythm), and how to spot a regression.
-  - **Theme**: dark default renders correctly; light toggle still works; no neon glare on gain/loss; ⌘K palette opens + keyboard nav.
+  - **Per screen** (`/explore`, `/stock/[ticker]`, `/screener`, then the rest): what changed, what "correct" looks like (light default render, tabular-num alignment, elevation-not-grid-prison surfaces where dark is opt-in, spacing rhythm), and how to spot a regression.
+  - **Theme**: light default renders correctly; optional dark ramp still works when explicitly activated; no neon glare on gain/loss; ⌘K palette opens + keyboard nav.
   - **Routing / SSOT**: nav works; tickers resolve incl. edges (`BRK.B`, `^index`, leading-zero `005930.KS`); no broken cross-links.
   - **Backend non-regression** (the "절대 안 깨짐" constraint): data loads (yf / 13F / macro / sentiment); no empty states from broken fetch.
   - **Mobile**: responsive; no horizontal overflow on wide tables (AGY finding).

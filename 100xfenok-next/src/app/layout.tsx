@@ -92,7 +92,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#15171c",
+  themeColor: "#f8fafc",
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
 };
@@ -103,7 +103,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" data-theme="dark" style={{ colorScheme: "dark" }}>
+    <html lang="ko" data-theme="light" style={{ colorScheme: "light" }}>
       <body className={`${notoSansKr.variable} ${orbitron.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-background text-foreground overflow-x-hidden`}>
         <a href="#main-content" className="skip-link">
           본문으로 건너뛰기
