@@ -10,6 +10,12 @@ const CSS_TARGETS = [
   "src/styles/theme-c.css",
   "src/styles/app-shell.css",
 ];
+const W1_CSS_TARGETS = [
+  "src/styles/design-v2.css",
+  "src/styles/footer.css",
+  "src/styles/overview-widgets.css",
+  "src/styles/market-wrap-v2.css",
+];
 const SCAN_EXTENSIONS = new Set([".css", ".ts", ".tsx"]);
 const REQUIRED_THEME_ALIASES = [
   "background",
@@ -41,6 +47,52 @@ const REQUIRED_THEME_ALIASES = [
   "sidebar-border",
   "sidebar-ring",
 ];
+const REQUIRED_SPACING_TOKENS = [
+  "s0",
+  "s-px",
+  "s0-5",
+  "s0-75",
+  "s1",
+  "s1-25",
+  "s1-5",
+  "s1-75",
+  "s2",
+  "s2-25",
+  "s2-5",
+  "s2-75",
+  "s3",
+  "s3-25",
+  "s3-5",
+  "s3-75",
+  "s4",
+  "s4-25",
+  "s4-5",
+  "s4-75",
+  "s5",
+  "s5-5",
+  "s6",
+  "s7",
+  "s8",
+  "s8-5",
+  "s9",
+  "s9-5",
+  "s10",
+  "s11",
+  "s12",
+  "s14",
+  "s15",
+  "s16",
+  "s20",
+  "s24",
+  "s25",
+  "s30",
+];
+const SPACING_PROPERTY_PATTERN =
+  "(?:padding(?:-(?:top|right|bottom|left|inline|inline-start|inline-end|block|block-start|block-end))?|margin(?:-(?:top|right|bottom|left|inline|inline-start|inline-end|block|block-start|block-end))?|gap|row-gap|column-gap|top|right|bottom|left|inset(?:-(?:top|right|bottom|left|inline|inline-start|inline-end|block|block-start|block-end))?)";
+const spacingDeclaration = new RegExp(
+  `(^|[;{]\\s*)(${SPACING_PROPERTY_PATTERN})\\s*:\\s*([^;{}]+)`,
+  "gm",
+);
 
 function walk(path) {
   const stats = statSync(path);
@@ -143,6 +195,12 @@ for (const alias of REQUIRED_THEME_ALIASES) {
   }
 }
 
+for (const token of REQUIRED_SPACING_TOKENS) {
+  if (!globals.includes(`--${token}:`)) {
+    failures.push(`missing spacing token --${token}`);
+  }
+}
+
 if (!globals.includes('[data-theme="dark"]')) {
   failures.push('missing [data-theme="dark"] block');
 }
@@ -179,10 +237,33 @@ for (const [token, files] of referencedTokens) {
   }
 }
 
+for (const target of W1_CSS_TARGETS) {
+  const text = readFileSync(join(ROOT, target), "utf8");
+  const colorMatches = [];
+  for (const match of text.matchAll(/#[0-9A-Fa-f]{3,8}|rgba?\(/g)) {
+    colorMatches.push(`${target}:${text.slice(0, match.index).split("\n").length}`);
+  }
+  for (const match of text.matchAll(/(?<!-)\b(?:white|black)\b(?!-)/g)) {
+    colorMatches.push(`${target}:${text.slice(0, match.index).split("\n").length}`);
+  }
+  if (colorMatches.length > 0) {
+    failures.push(`W1 raw color literals remain: ${colorMatches.slice(0, 8).join(", ")}`);
+  }
+
+  for (const match of text.matchAll(spacingDeclaration)) {
+    const property = match[2];
+    const value = match[3];
+    if (/-?\d+px\b/.test(value)) {
+      const line = text.slice(0, match.index).split("\n").length;
+      failures.push(`W1 raw spacing px ${target}:${line} ${property}: ${value.trim()}`);
+    }
+  }
+}
+
 if (failures.length > 0) {
   fail("token foundation contract failed", failures);
 }
 
 console.log(
-  `[qa:tokens] token foundation OK (${REQUIRED_THEME_ALIASES.length} theme aliases, ${definedTokens.size} --c-* definitions, ${referencedTokens.size} --c-* references)`,
+  `[qa:tokens] token foundation OK (${REQUIRED_THEME_ALIASES.length} theme aliases, ${REQUIRED_SPACING_TOKENS.length} spacing tokens, ${definedTokens.size} --c-* definitions, ${referencedTokens.size} --c-* references)`,
 );

@@ -177,13 +177,28 @@ Each wave: Codex impl → **Claude gate** (build + behavior/visual) → Kimi/AGY
 | Wave | Surface | Approach | Gate |
 |---|---|---|---|
 | **W0** | Token foundation (S1) | OKLCH layer + re-point vars (in progress) | build + visual diff = 0 |
-| **W1** | CSS files (`design-v2`/`footer`/`overview-widgets`/`market-structure`) hex→token + 680 off-grid spacings→grid tokens | mechanical, grep-verifiable | grep no hex/rgb in those files + build |
+| **W1** | CSS files (`design-v2`/`footer`/`overview-widgets`/`market-wrap-v2`; `market-structure` route stays W2 component work) hex→token + off-grid spacing props→grid tokens | mechanical, grep-verifiable; `qa:tokens` locks no raw color literals and no raw spacing px in W1 CSS | grep no hex/rgb/named white-black in those files + build |
 | **W2** | High-risk components (`ledgerChartPanels`, `marketStructurePanelComponents`, `stockDetailPanel`) | semantic-judgment mapping (chart/regime colors) | per-file visual + build |
 | **W3** | **3,339 Tailwind named utils** | **custom Tailwind plugin** mapping color-name→OKLCH token (handles all at once, prevents drift) — NOT 3,339 manual edits | build + visual on top screens |
 | **W4** | Dark flip (S2) + `tabular-nums` (7 gap files) + AGY guardrails (elevation>borders, desaturate semantics, +25% dense padding) | the VISIBLE transformation | dark correct on /explore,/stock,/screener + a11y |
 | **W5** | Lint gate: CI fails on new `#hex`/`rgb()` in `src/**` (explicit allowlist) | lock so it can't regress | CI gate active |
+| **W6** | Closeout: owner user-test HTML checklist (**feno-canvas**) → **SMB** (**feno-file-routing**) | self-contained Korean HTML, screen-by-screen + cross-cutting, PASS/FAIL column | delivered to SMB; owner tests against it before "complete" sign-off |
 
 "제대로" enforcement: no wave closes until its gate passes; W3 plugin approach (not blind find-replace) keeps the 3,339 correct in one controlled move.
+
+### 4c. Closeout deliverable — owner user-test HTML checklist (owner request 2026-06-25)
+
+When the FULL migration completes (W5 gate PASS), produce a self-contained HTML checklist telling the owner **exactly what to look at when testing**, and deliver it to SMB. This is the LAST step before the owner's "complete" sign-off (owner-only declaration).
+
+- **Tool**: `feno-canvas` (self-contained Korean HTML artifact).
+- **Delivery**: SMB outbox via `feno-file-routing` (resolve exact SMB share/outbox path at closeout; do NOT use Drive `_inbox` — owner specified SMB).
+- **Content** (screen-by-screen + cross-cutting, each row with a **PASS / FAIL / note** column the owner fills in):
+  - **Per screen** (`/explore`, `/stock/[ticker]`, `/screener`, then the rest): what changed, what "correct" looks like (dark render, tabular-num alignment, elevation-not-grid-prison surfaces, spacing rhythm), and how to spot a regression.
+  - **Theme**: dark default renders correctly; light toggle still works; no neon glare on gain/loss; ⌘K palette opens + keyboard nav.
+  - **Routing / SSOT**: nav works; tickers resolve incl. edges (`BRK.B`, `^index`, leading-zero `005930.KS`); no broken cross-links.
+  - **Backend non-regression** (the "절대 안 깨짐" constraint): data loads (yf / 13F / macro / sentiment); no empty states from broken fetch.
+  - **Mobile**: responsive; no horizontal overflow on wide tables (AGY finding).
+- **Trigger**: after W5 gate PASS. AGY's per-screen visual acceptance + Kimi's coverage feed the checklist content; Claude authors via feno-canvas; deliver to SMB.
 
 ---
 
