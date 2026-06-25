@@ -35,12 +35,14 @@ function readFlag(
  */
 export function getDesignVersionFromSearchParams(
   searchParams: Record<string, string | string[] | undefined> | undefined,
+  persistedVersion?: string | null,
 ): DesignVersion {
   if (ENV_OVERRIDE) return ENV_OVERRIDE;
   if (readFlag(searchParams?.v5)) return "v5";
   if (readFlag(searchParams?.v4)) return "v4";
   if (readFlag(searchParams?.v3)) return "v3";
   if (readFlag(searchParams?.v2)) return "v2";
+  if (persistedVersion === "v5") return "v5";
   return "v1";
 }
 
