@@ -49,6 +49,9 @@
   --fnk-color-warn: #f2a93b;
   --fnk-color-warn-soft: #fdf3e3;
   --fnk-color-warn-ink: #b9791a;
+  --fnk-color-info: #3b82f6;
+  --fnk-color-info-soft: #eff6ff;
+  --fnk-color-recovery: #8b5cf6;
   --fnk-color-chart-1: #1B73D3;
   --fnk-color-chart-2: #1aa86f;
   --fnk-color-chart-3: #e84a5a;
@@ -73,6 +76,8 @@
   --fnk-brand-cta: #FED701;
   --fnk-color-white: #ffffff;
   --fnk-color-black: #000000;
+  --fnk-fixed-slate-900: #0f172a;
+  --fnk-fixed-slate-950: #020617;
   --fnk-neutral-25: #f8fbff;
   --fnk-neutral-225: #dbe5f2;
   --fnk-neutral-925: #020617;
@@ -138,6 +143,7 @@
   --fnk-blue-900: #1e3a8a;
   --fnk-sky-400: #38bdf8;
   --fnk-sky-700: #0369a1;
+  --fnk-sky-800: #075985;
   --fnk-indigo-100: #e0e7ff;
   --fnk-indigo-700: #3730a3;
   --fnk-purple-600: #7c3aed;
@@ -168,14 +174,22 @@
   --s5: 20px;
   --s5-5: 22px;
   --s6: 24px;
+  --s6-5: 26px;
   --s7: 28px;
+  --s7-5: 30px;
   --s8: 32px;
   --s8-5: 34px;
   --s9: 36px;
   --s9-5: 38px;
   --s10: 40px;
+  --s10-5: 42px;
   --s11: 44px;
+  --s11-5: 46px;
   --s12: 48px;
+  --s12-5: 50px;
+  --s13: 52px;
+  --s13-5: 54px;
+  --s13-75: 55px;
   --s14: 56px;
   --s15: 60px;
   --s16: 64px;
@@ -248,6 +262,17 @@
   --stroke-light: var(--fnk-color-border);
   --stroke-light-2: var(--fnk-color-input);
   --stroke-dark: rgba(255,255,255,0.10);
+  --c-bg: var(--paper-0);
+  --c-panel: var(--paper-1);
+  --c-surface-2: var(--paper-2);
+  --c-ink: var(--ink-1);
+  --c-ink-2: var(--ink-2);
+  --c-ink-3: var(--ink-3);
+  --c-ink-4: var(--ink-4);
+  --c-line: var(--stroke-light);
+  --c-line-2: var(--stroke-light-2);
+  --c-brand: var(--brand-interactive);
+  --c-brand-soft: var(--fnk-color-accent);
 
   /* Design System — Semantic Data Colors */
   --c-up: var(--fnk-color-gain);
@@ -258,10 +283,12 @@
   --c-warn-soft: var(--fnk-color-warn-soft);
   --c-warn-ink: var(--fnk-color-warn-ink);
   --c-neutral: var(--fnk-color-flat);
-  --c-info: var(--fnk-brand-interactive);
-  --c-info-soft: var(--info-bg);
-  --c-info-border: var(--info-border);
-  --c-recovery: var(--fnk-color-chart-eps);
+  --c-info: var(--fnk-color-info);
+  --c-info-soft: var(--fnk-color-info-soft);
+  --c-info-ink: var(--fnk-sky-700);
+  --c-info-ink-strong: var(--fnk-sky-800);
+  --c-info-border: color-mix(in srgb, var(--c-info) 28%, transparent);
+  --c-recovery: var(--fnk-color-recovery);
   --c-recovery-soft: color-mix(in srgb, var(--c-recovery) 10%, transparent);
   --c-recovery-border: color-mix(in srgb, var(--c-recovery) 28%, transparent);
   --up: var(--c-up);
@@ -276,10 +303,10 @@
   --warn-soft: var(--c-warn);
   --warn-bg: var(--c-warn-soft);
   --warn-border: #f6dca6;
-  --info: #1B73D3;
-  --info-bg: rgba(27,115,211,0.10);
-  --info-border: rgba(27,115,211,0.28);
-  --live: #22c55e;
+  --info: var(--c-info);
+  --info-bg: color-mix(in srgb, var(--c-info) 10%, transparent);
+  --info-border: var(--c-info-border);
+  --live: var(--fnk-emerald-400);
 
   /* Market state pairs */
   --state-regular-bg: #dcfce7;
@@ -352,6 +379,11 @@
   --fnk-color-warn: oklch(0.78 0.16 75);
   --fnk-color-warn-soft: oklch(0.30 0.055 75);
   --fnk-color-warn-ink: oklch(0.82 0.14 75);
+  --fnk-color-info: oklch(0.70 0.16 245);
+  --fnk-color-info-soft: oklch(0.28 0.05 245);
+  --fnk-color-recovery: oklch(0.68 0.20 305);
+  --fnk-sky-700: oklch(0.72 0.15 245);
+  --fnk-sky-800: oklch(0.80 0.13 245);
   --fnk-color-chart-1: oklch(0.67 0.18 255);
   --fnk-color-chart-2: oklch(0.72 0.17 155);
   --fnk-color-chart-3: oklch(0.66 0.20 25);
@@ -414,6 +446,224 @@
   --color-brand-gold: var(--brand-gold);
   --color-brand-interactive: var(--brand-interactive);
   --color-brand-bg: var(--brand-bg);
+
+  /* W3 named Tailwind palette aliases: utilities stay light-equivalent while becoming token-driven. */
+  --color-slate-50: var(--paper-0);
+  --color-slate-100: var(--paper-2);
+  --color-slate-200: var(--stroke-light);
+  --color-slate-300: var(--stroke-light-2);
+  --color-slate-400: var(--ink-4);
+  --color-slate-500: var(--ink-3);
+  --color-slate-600: var(--fnk-neutral-600);
+  --color-slate-700: var(--ink-2);
+  --color-slate-800: var(--foreground);
+  --color-slate-900: var(--ink-1);
+  --color-slate-950: var(--foreground);
+  --color-gray-50: var(--color-slate-50);
+  --color-gray-100: var(--color-slate-100);
+  --color-gray-200: var(--color-slate-200);
+  --color-gray-300: var(--color-slate-300);
+  --color-gray-400: var(--color-slate-400);
+  --color-gray-500: var(--color-slate-500);
+  --color-gray-600: var(--color-slate-600);
+  --color-gray-700: var(--color-slate-700);
+  --color-gray-800: var(--color-slate-800);
+  --color-gray-900: var(--color-slate-900);
+  --color-gray-950: var(--color-slate-950);
+  --color-zinc-50: var(--color-slate-50);
+  --color-zinc-100: var(--color-slate-100);
+  --color-zinc-200: var(--color-slate-200);
+  --color-zinc-300: var(--color-slate-300);
+  --color-zinc-400: var(--color-slate-400);
+  --color-zinc-500: var(--color-slate-500);
+  --color-zinc-600: var(--color-slate-600);
+  --color-zinc-700: var(--color-slate-700);
+  --color-zinc-800: var(--color-slate-800);
+  --color-zinc-900: var(--color-slate-900);
+  --color-zinc-950: var(--color-slate-950);
+  --color-neutral-50: var(--color-slate-50);
+  --color-neutral-100: var(--color-slate-100);
+  --color-neutral-200: var(--color-slate-200);
+  --color-neutral-300: var(--color-slate-300);
+  --color-neutral-400: var(--color-slate-400);
+  --color-neutral-500: var(--color-slate-500);
+  --color-neutral-600: var(--color-slate-600);
+  --color-neutral-700: var(--color-slate-700);
+  --color-neutral-800: var(--color-slate-800);
+  --color-neutral-900: var(--color-slate-900);
+  --color-neutral-950: var(--color-slate-950);
+  --color-stone-50: var(--color-slate-50);
+  --color-stone-100: var(--color-slate-100);
+  --color-stone-200: var(--color-slate-200);
+  --color-stone-300: var(--color-slate-300);
+  --color-stone-400: var(--color-slate-400);
+  --color-stone-500: var(--color-slate-500);
+  --color-stone-600: var(--color-slate-600);
+  --color-stone-700: var(--color-slate-700);
+  --color-stone-800: var(--color-slate-800);
+  --color-stone-900: var(--color-slate-900);
+  --color-stone-950: var(--color-slate-950);
+
+  --color-emerald-50: var(--c-up-soft);
+  --color-emerald-100: var(--c-up-soft);
+  --color-emerald-200: var(--c-up-soft);
+  --color-emerald-300: var(--c-up);
+  --color-emerald-400: var(--c-up);
+  --color-emerald-500: var(--c-up);
+  --color-emerald-600: var(--c-up);
+  --color-emerald-700: var(--c-up);
+  --color-emerald-800: var(--c-up);
+  --color-emerald-900: var(--c-up);
+  --color-green-50: var(--color-emerald-50);
+  --color-green-100: var(--color-emerald-100);
+  --color-green-200: var(--color-emerald-200);
+  --color-green-300: var(--color-emerald-300);
+  --color-green-400: var(--color-emerald-400);
+  --color-green-500: var(--color-emerald-500);
+  --color-green-600: var(--color-emerald-600);
+  --color-green-700: var(--color-emerald-700);
+  --color-green-800: var(--color-emerald-800);
+  --color-green-900: var(--color-emerald-900);
+  --color-teal-50: var(--color-emerald-50);
+  --color-teal-100: var(--color-emerald-100);
+  --color-teal-200: var(--color-emerald-200);
+  --color-teal-300: var(--color-emerald-300);
+  --color-teal-400: var(--color-emerald-400);
+  --color-teal-500: var(--color-emerald-500);
+  --color-teal-600: var(--color-emerald-600);
+  --color-teal-700: var(--color-emerald-700);
+  --color-teal-800: var(--color-emerald-800);
+  --color-teal-900: var(--color-emerald-900);
+
+  --color-rose-50: var(--c-down-soft);
+  --color-rose-100: var(--c-down-soft);
+  --color-rose-200: var(--c-down-soft);
+  --color-rose-300: var(--c-down);
+  --color-rose-400: var(--c-down);
+  --color-rose-500: var(--c-down);
+  --color-rose-600: var(--c-down);
+  --color-rose-700: var(--c-down);
+  --color-rose-800: var(--c-down);
+  --color-rose-900: var(--c-down);
+  --color-red-50: var(--color-rose-50);
+  --color-red-100: var(--color-rose-100);
+  --color-red-200: var(--color-rose-200);
+  --color-red-300: var(--color-rose-300);
+  --color-red-400: var(--color-rose-400);
+  --color-red-500: var(--color-rose-500);
+  --color-red-600: var(--color-rose-600);
+  --color-red-700: var(--color-rose-700);
+  --color-red-800: var(--color-rose-800);
+  --color-red-900: var(--color-rose-900);
+  --color-pink-50: var(--color-rose-50);
+  --color-pink-100: var(--color-rose-100);
+  --color-pink-200: var(--color-rose-200);
+  --color-pink-300: var(--color-rose-300);
+  --color-pink-400: var(--color-rose-400);
+  --color-pink-500: var(--color-rose-500);
+  --color-pink-600: var(--color-rose-600);
+  --color-pink-700: var(--color-rose-700);
+  --color-pink-800: var(--color-rose-800);
+  --color-pink-900: var(--color-rose-900);
+
+  --color-amber-50: var(--c-warn-soft);
+  --color-amber-100: var(--c-warn-soft);
+  --color-amber-200: var(--c-warn-soft);
+  --color-amber-300: var(--c-warn);
+  --color-amber-400: var(--c-warn);
+  --color-amber-500: var(--c-warn);
+  --color-amber-600: var(--c-warn);
+  --color-amber-700: var(--c-warn);
+  --color-amber-800: var(--c-warn-ink);
+  --color-amber-900: var(--c-warn-ink);
+  --color-yellow-50: var(--color-amber-50);
+  --color-yellow-100: var(--color-amber-100);
+  --color-yellow-200: var(--color-amber-200);
+  --color-yellow-300: var(--color-amber-300);
+  --color-yellow-400: var(--color-amber-400);
+  --color-yellow-500: var(--color-amber-500);
+  --color-yellow-600: var(--color-amber-600);
+  --color-yellow-700: var(--color-amber-700);
+  --color-yellow-800: var(--color-amber-800);
+  --color-yellow-900: var(--color-amber-900);
+  --color-orange-50: var(--color-amber-50);
+  --color-orange-100: var(--color-amber-100);
+  --color-orange-200: var(--color-amber-200);
+  --color-orange-300: var(--color-amber-300);
+  --color-orange-400: var(--color-amber-400);
+  --color-orange-500: var(--color-amber-500);
+  --color-orange-600: var(--color-amber-600);
+  --color-orange-700: var(--color-amber-700);
+  --color-orange-800: var(--color-amber-800);
+  --color-orange-900: var(--color-amber-900);
+
+  --color-blue-50: var(--c-brand-soft);
+  --color-blue-100: var(--c-brand-soft);
+  --color-blue-200: var(--c-brand-soft);
+  --color-blue-300: var(--c-brand);
+  --color-blue-400: var(--c-brand);
+  --color-blue-500: var(--c-brand);
+  --color-blue-600: var(--c-brand);
+  --color-blue-700: var(--c-brand);
+  --color-blue-800: var(--c-brand);
+  --color-blue-900: var(--c-brand);
+  --color-indigo-50: var(--color-blue-50);
+  --color-indigo-100: var(--color-blue-100);
+  --color-indigo-200: var(--color-blue-200);
+  --color-indigo-300: var(--color-blue-300);
+  --color-indigo-400: var(--color-blue-400);
+  --color-indigo-500: var(--color-blue-500);
+  --color-indigo-600: var(--color-blue-600);
+  --color-indigo-700: var(--color-blue-700);
+  --color-indigo-800: var(--color-blue-800);
+  --color-indigo-900: var(--color-blue-900);
+
+  --color-sky-50: var(--c-info-soft);
+  --color-sky-100: var(--c-info-soft);
+  --color-sky-200: var(--c-info-soft);
+  --color-sky-300: var(--c-info);
+  --color-sky-400: var(--c-info);
+  --color-sky-500: var(--c-info);
+  --color-sky-600: var(--c-info-ink);
+  --color-sky-700: var(--c-info-ink);
+  --color-sky-800: var(--c-info-ink-strong);
+  --color-cyan-50: var(--color-sky-50);
+  --color-cyan-100: var(--color-sky-100);
+  --color-cyan-200: var(--color-sky-200);
+  --color-cyan-300: var(--color-sky-300);
+  --color-cyan-400: var(--color-sky-400);
+  --color-cyan-500: var(--color-sky-500);
+  --color-cyan-600: var(--color-sky-600);
+  --color-cyan-700: var(--color-sky-700);
+  --color-cyan-800: var(--color-sky-800);
+
+  --color-violet-50: var(--c-recovery-soft);
+  --color-violet-100: var(--c-recovery-soft);
+  --color-violet-200: var(--c-recovery-soft);
+  --color-violet-300: var(--c-recovery);
+  --color-violet-400: var(--c-recovery);
+  --color-violet-500: var(--c-recovery);
+  --color-violet-600: var(--c-recovery);
+  --color-violet-700: var(--c-recovery);
+  --color-violet-800: var(--c-recovery);
+  --color-purple-50: var(--color-violet-50);
+  --color-purple-100: var(--color-violet-100);
+  --color-purple-200: var(--color-violet-200);
+  --color-purple-300: var(--color-violet-300);
+  --color-purple-400: var(--color-violet-400);
+  --color-purple-500: var(--color-violet-500);
+  --color-purple-600: var(--color-violet-600);
+  --color-purple-700: var(--color-violet-700);
+  --color-purple-800: var(--color-violet-800);
+
+  --spacing-s6-5: var(--s6-5);
+  --spacing-s7-5: var(--s7-5);
+  --spacing-s10-5: var(--s10-5);
+  --spacing-s11-5: var(--s11-5);
+  --spacing-s12-5: var(--s12-5);
+  --spacing-s13: var(--s13);
+  --spacing-s13-5: var(--s13-5);
+  --spacing-s13-75: var(--s13-75);
   --font-sans: var(--font-noto-sans-kr), Arial, Helvetica, sans-serif;
   --font-orbitron: var(--font-orbitron-face), sans-serif;
 }
@@ -424,22 +674,36 @@
 }
 
 /* Custom Brand Colors as Utilities */
-.text-brand-navy { color: #010079; }
-.text-brand-gold { color: #7a5a00; }
-.text-brand-interactive { color: #1B73D3; }
-.bg-brand-navy { background-color: #010079; }
-.bg-brand-gold { background-color: #D5AD36; }
-.bg-brand-interactive { background-color: #1B73D3; }
-.border-brand-navy { border-color: #010079; }
-.border-brand-gold { border-color: #D5AD36; }
-.hover\:text-brand-gold:hover { color: #7a5a00; }
-.hover\:text-brand-navy:hover { color: #010079; }
-.hover\:bg-brand-navy:hover { background-color: #010079; }
-.hover\:bg-brand-gold\/30:hover { background-color: rgba(213, 173, 54, 0.3); }
-.bg-brand-gold\/20 { background-color: rgba(213, 173, 54, 0.2); }
-.bg-brand-cta { background-color: #FED701; }
-.text-brand-cta { color: #FED701; }
-.border-brand-cta { border-color: #FED701; }
+.text-brand-navy { color: var(--brand-navy); }
+.text-brand-gold { color: var(--brand-gold); }
+.text-brand-interactive { color: var(--brand-interactive); }
+.bg-brand-navy { background-color: var(--brand-navy); }
+.bg-brand-gold { background-color: var(--brand-gold-bright); }
+.bg-brand-interactive { background-color: var(--brand-interactive); }
+.border-brand-navy { border-color: var(--brand-navy); }
+.border-brand-gold { border-color: var(--brand-gold-bright); }
+.hover\:text-brand-gold:hover { color: var(--brand-gold); }
+.hover\:text-brand-navy:hover { color: var(--brand-navy); }
+.hover\:bg-brand-navy:hover { background-color: var(--brand-navy); }
+.hover\:bg-brand-gold\/30:hover { background-color: color-mix(in srgb, var(--brand-gold-bright) 30%, transparent); }
+.bg-brand-gold\/20 { background-color: color-mix(in srgb, var(--brand-gold-bright) 20%, transparent); }
+.bg-brand-cta { background-color: var(--brand-cta); }
+.text-brand-cta { color: var(--brand-cta); }
+.border-brand-cta { border-color: var(--brand-cta); }
+
+/* W3 context exceptions: these classes intentionally remain fixed light-design accents. */
+.bg-slate-900 { background-color: var(--fnk-fixed-slate-900); }
+.bg-slate-950 { background-color: var(--fnk-fixed-slate-950); }
+.bg-slate-950\/90 { background-color: color-mix(in srgb, var(--fnk-fixed-slate-950) 90%, transparent); }
+.border-slate-900 { border-color: var(--fnk-fixed-slate-900); }
+.bg-emerald-400 { background-color: var(--fnk-emerald-400); }
+.bg-emerald-400\/10 { background-color: color-mix(in srgb, var(--fnk-emerald-400) 10%, transparent); }
+.bg-emerald-400\/12 { background-color: color-mix(in srgb, var(--fnk-emerald-400) 12%, transparent); }
+.border-emerald-400\/30 { border-color: color-mix(in srgb, var(--fnk-emerald-400) 30%, transparent); }
+.border-emerald-300\/20 { border-color: color-mix(in srgb, var(--fnk-gain-300) 20%, transparent); }
+.border-emerald-300\/25 { border-color: color-mix(in srgb, var(--fnk-gain-300) 25%, transparent); }
+.text-emerald-200 { color: var(--fnk-gain-200); }
+.text-emerald-300 { color: var(--fnk-gain-300); }
 
 /* Lightweight icon fallback for legacy Font Awesome class names */
 .fas {

@@ -78,14 +78,22 @@ const REQUIRED_SPACING_TOKENS = [
   "s5",
   "s5-5",
   "s6",
+  "s6-5",
   "s7",
+  "s7-5",
   "s8",
   "s8-5",
   "s9",
   "s9-5",
   "s10",
+  "s10-5",
   "s11",
+  "s11-5",
   "s12",
+  "s12-5",
+  "s13",
+  "s13-5",
+  "s13-75",
   "s14",
   "s15",
   "s16",
@@ -103,6 +111,163 @@ const spacingDeclaration = new RegExp(
 const rawColorPattern = /#[0-9A-Fa-f]{3,8}|rgba?\(|(?<!-)\b(?:white|black)\b(?!-)/g;
 const namedTailwindColorPattern =
   /(?:text|bg|border|fill|stroke|hover:bg|hover:border)-(?:slate|emerald|rose|amber|purple|sky|violet|brand)-/g;
+
+const W3_COLOR_ALIAS_EXPECTATIONS = buildW3ColorAliasExpectations();
+const W3_SPACING_ALIAS_EXPECTATIONS = {
+  "--spacing-s6-5": "var(--s6-5)",
+  "--spacing-s7-5": "var(--s7-5)",
+  "--spacing-s10-5": "var(--s10-5)",
+  "--spacing-s11-5": "var(--s11-5)",
+  "--spacing-s12-5": "var(--s12-5)",
+  "--spacing-s13": "var(--s13)",
+  "--spacing-s13-5": "var(--s13-5)",
+  "--spacing-s13-75": "var(--s13-75)",
+};
+const W3_CONTEXT_EXCEPTION_RULES = [
+  [".bg-slate-900", "background-color: var(--fnk-fixed-slate-900);"],
+  [".bg-slate-950", "background-color: var(--fnk-fixed-slate-950);"],
+  [".bg-slate-950\\/90", "background-color: color-mix(in srgb, var(--fnk-fixed-slate-950) 90%, transparent);"],
+  [".border-slate-900", "border-color: var(--fnk-fixed-slate-900);"],
+  [".bg-emerald-400", "background-color: var(--fnk-emerald-400);"],
+  [".bg-emerald-400\\/10", "background-color: color-mix(in srgb, var(--fnk-emerald-400) 10%, transparent);"],
+  [".bg-emerald-400\\/12", "background-color: color-mix(in srgb, var(--fnk-emerald-400) 12%, transparent);"],
+  [".border-emerald-400\\/30", "border-color: color-mix(in srgb, var(--fnk-emerald-400) 30%, transparent);"],
+  [".border-emerald-300\\/20", "border-color: color-mix(in srgb, var(--fnk-gain-300) 20%, transparent);"],
+  [".border-emerald-300\\/25", "border-color: color-mix(in srgb, var(--fnk-gain-300) 25%, transparent);"],
+  [".text-emerald-200", "color: var(--fnk-gain-200);"],
+  [".text-emerald-300", "color: var(--fnk-gain-300);"],
+];
+
+function buildW3ColorAliasExpectations() {
+  const entries = {};
+  const neutral = {
+    50: "var(--paper-0)",
+    100: "var(--paper-2)",
+    200: "var(--stroke-light)",
+    300: "var(--stroke-light-2)",
+    400: "var(--ink-4)",
+    500: "var(--ink-3)",
+    600: "var(--fnk-neutral-600)",
+    700: "var(--ink-2)",
+    800: "var(--foreground)",
+    900: "var(--ink-1)",
+    950: "var(--foreground)",
+  };
+  for (const family of ["slate", "gray", "zinc", "neutral", "stone"]) {
+    for (const [shade, value] of Object.entries(neutral)) {
+      entries[`--color-${family}-${shade}`] =
+        family === "slate" ? value : `var(--color-slate-${shade})`;
+    }
+  }
+
+  const semanticFamilies = [
+    {
+      families: ["emerald", "green", "teal"],
+      base: "emerald",
+      shades: {
+        50: "var(--c-up-soft)",
+        100: "var(--c-up-soft)",
+        200: "var(--c-up-soft)",
+        300: "var(--c-up)",
+        400: "var(--c-up)",
+        500: "var(--c-up)",
+        600: "var(--c-up)",
+        700: "var(--c-up)",
+        800: "var(--c-up)",
+        900: "var(--c-up)",
+      },
+    },
+    {
+      families: ["rose", "red", "pink"],
+      base: "rose",
+      shades: {
+        50: "var(--c-down-soft)",
+        100: "var(--c-down-soft)",
+        200: "var(--c-down-soft)",
+        300: "var(--c-down)",
+        400: "var(--c-down)",
+        500: "var(--c-down)",
+        600: "var(--c-down)",
+        700: "var(--c-down)",
+        800: "var(--c-down)",
+        900: "var(--c-down)",
+      },
+    },
+    {
+      families: ["amber", "yellow", "orange"],
+      base: "amber",
+      shades: {
+        50: "var(--c-warn-soft)",
+        100: "var(--c-warn-soft)",
+        200: "var(--c-warn-soft)",
+        300: "var(--c-warn)",
+        400: "var(--c-warn)",
+        500: "var(--c-warn)",
+        600: "var(--c-warn)",
+        700: "var(--c-warn)",
+        800: "var(--c-warn-ink)",
+        900: "var(--c-warn-ink)",
+      },
+    },
+    {
+      families: ["blue", "indigo"],
+      base: "blue",
+      shades: {
+        50: "var(--c-brand-soft)",
+        100: "var(--c-brand-soft)",
+        200: "var(--c-brand-soft)",
+        300: "var(--c-brand)",
+        400: "var(--c-brand)",
+        500: "var(--c-brand)",
+        600: "var(--c-brand)",
+        700: "var(--c-brand)",
+        800: "var(--c-brand)",
+        900: "var(--c-brand)",
+      },
+    },
+    {
+      families: ["sky", "cyan"],
+      base: "sky",
+      shades: {
+        50: "var(--c-info-soft)",
+        100: "var(--c-info-soft)",
+        200: "var(--c-info-soft)",
+        300: "var(--c-info)",
+        400: "var(--c-info)",
+        500: "var(--c-info)",
+        600: "var(--c-info-ink)",
+        700: "var(--c-info-ink)",
+        800: "var(--c-info-ink-strong)",
+      },
+    },
+    {
+      families: ["violet", "purple"],
+      base: "violet",
+      shades: {
+        50: "var(--c-recovery-soft)",
+        100: "var(--c-recovery-soft)",
+        200: "var(--c-recovery-soft)",
+        300: "var(--c-recovery)",
+        400: "var(--c-recovery)",
+        500: "var(--c-recovery)",
+        600: "var(--c-recovery)",
+        700: "var(--c-recovery)",
+        800: "var(--c-recovery)",
+      },
+    },
+  ];
+
+  for (const group of semanticFamilies) {
+    for (const family of group.families) {
+      for (const [shade, value] of Object.entries(group.shades)) {
+        entries[`--color-${family}-${shade}`] =
+          family === group.base ? value : `var(--color-${group.base}-${shade})`;
+      }
+    }
+  }
+
+  return entries;
+}
 
 function walk(path) {
   const stats = statSync(path);
@@ -208,6 +373,27 @@ for (const alias of REQUIRED_THEME_ALIASES) {
 for (const token of REQUIRED_SPACING_TOKENS) {
   if (!globals.includes(`--${token}:`)) {
     failures.push(`missing spacing token --${token}`);
+  }
+}
+
+for (const [name, value] of Object.entries(W3_COLOR_ALIAS_EXPECTATIONS)) {
+  const actual = declarationValue(globals, name);
+  if (actual !== value) {
+    failures.push(`W3 color alias ${name} expected ${value}, got ${actual ?? "missing"}`);
+  }
+}
+
+for (const [name, value] of Object.entries(W3_SPACING_ALIAS_EXPECTATIONS)) {
+  const actual = declarationValue(globals, name);
+  if (actual !== value) {
+    failures.push(`W3 spacing alias ${name} expected ${value}, got ${actual ?? "missing"}`);
+  }
+}
+
+for (const [selector, declaration] of W3_CONTEXT_EXCEPTION_RULES) {
+  const rule = `${selector} { ${declaration} }`;
+  if (!globals.includes(rule)) {
+    failures.push(`W3 context exception rule missing: ${rule}`);
   }
 }
 
