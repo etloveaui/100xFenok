@@ -663,7 +663,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             }}
             className="mt-2 text-sm font-bold text-slate-700 hover:text-brand-interactive"
           >
-            {fmt$(active?.cash ?? 0)} <span className="text-[10px] text-slate-400">편집</span>
+            <span className="tabular-nums">{fmt$(active?.cash ?? 0)}</span> <span className="text-[10px] text-slate-400">편집</span>
           </button>
         )}
       </div>
@@ -1134,7 +1134,7 @@ function MobileHoldingCard({
         <span className={`orbitron font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-400"}`}>
           {row.gainPct != null ? fmtPct(row.gainPct) : "—"}
         </span>
-        <span className="orbitron text-xs font-bold text-slate-500">
+        <span className="orbitron tabular-nums text-xs font-bold text-slate-500">
           {row.weight != null ? `${(row.weight * 100).toFixed(1)}%` : "—"}
         </span>
       </div>

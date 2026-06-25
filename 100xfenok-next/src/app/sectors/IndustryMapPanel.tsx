@@ -495,7 +495,7 @@ export default function IndustryMapPanel() {
                 >
                   <div className="min-w-0">
                     <div className="truncate text-sm font-black">{row.name}</div>
-                    <div className="mt-1 text-[11px] font-bold opacity-75">
+                    <div className="mt-1 text-[11px] font-bold opacity-95">
                       {row.stocksRaw}개 종목 · 시총 {row.marketCapRaw}
                     </div>
                     <div className="mt-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-black opacity-90">

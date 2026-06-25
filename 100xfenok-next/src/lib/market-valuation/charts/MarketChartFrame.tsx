@@ -231,7 +231,7 @@ export function MarketChartFrame({
       className={
         bare
           ? "min-w-0"
-          : "min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          : "min-w-0 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-sm"
       }
     >
       {(title || showRanges) && (
@@ -263,7 +263,7 @@ export function MarketChartFrame({
                     aria-pressed={active}
                     className={
                       active
-                        ? "rounded-md bg-slate-800 px-2 py-1 text-[11px] font-bold text-white"
+                        ? "rounded-md bg-[var(--c-brand)] px-2 py-1 text-[11px] font-bold text-white"
                         : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)]"
                     }
                   >

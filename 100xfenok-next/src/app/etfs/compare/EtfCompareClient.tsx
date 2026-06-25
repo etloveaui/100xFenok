@@ -65,15 +65,15 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
           <p className="mt-1 min-w-0 break-words text-xs font-bold leading-snug text-[var(--c-ink)]">{name}</p>
           <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">기준 {holdingsDate}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+        <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {fmtSigned(performance.tr1y)}
         </span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] font-bold text-[var(--c-ink-3)]">
-        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">AUM <b className="text-[var(--c-ink)]">{aum}</b></span>
-        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보수 <b className="text-[var(--c-ink)]">{fmtPercent(expenseRatio)}</b></span>
-        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">배당 <b className="text-[var(--c-ink)]">{fmtPercent(dividendYield)}</b></span>
-        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보유 <b className="text-[var(--c-ink)]">{holdingCount.toLocaleString("ko-KR")}</b></span>
+        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">AUM <b className="tabular-nums text-[var(--c-ink)]">{aum}</b></span>
+        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보수 <b className="tabular-nums text-[var(--c-ink)]">{fmtPercent(expenseRatio)}</b></span>
+        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">배당 <b className="tabular-nums text-[var(--c-ink)]">{fmtPercent(dividendYield)}</b></span>
+        <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보유 <b className="tabular-nums text-[var(--c-ink)]">{holdingCount.toLocaleString("ko-KR")}</b></span>
       </div>
       {row.failed ? <p className="mt-2 text-[10px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
     </div>
@@ -90,7 +90,7 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
           <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
         </div>
         <div className="text-right">
-          <p className="orbitron text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
+          <p className="orbitron tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
           <p className="text-[10px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
         </div>
       </div>

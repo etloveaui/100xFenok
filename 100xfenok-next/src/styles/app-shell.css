@@ -17,7 +17,7 @@
     --c-bg:var(--shell-background); --c-panel:var(--shell-panel); --c-surface-2:var(--shell-surface-muted); --c-rail:var(--shell-rail); --c-rail-active:var(--shell-rail-active);
     --c-ink:var(--shell-foreground); --c-ink-2:var(--shell-foreground-muted); --c-ink-3:var(--shell-foreground-subtle); --c-ink-4:var(--shell-foreground-faint);
     --c-line:var(--shell-border); --c-line-2:var(--shell-border-muted);
-    --c-brand:var(--shell-brand); --c-brand-soft:var(--shell-brand-soft);
+    --c-brand:var(--shell-brand); --c-brand-soft:var(--shell-brand-soft); --c-brand-active:var(--c-brand);
     --c-up:var(--shell-gain); --c-up-soft:var(--shell-gain-soft); --c-down:var(--shell-loss); --c-down-soft:var(--shell-loss-soft);
     --c-warn:var(--shell-warn); --c-warn-soft:var(--shell-warn-soft); --c-neutral:var(--shell-flat);
     --c-mult:var(--shell-multiple); --c-track:var(--shell-track); --c-zero:var(--shell-zero);
@@ -41,6 +41,23 @@
     --c-attention:var(--c-brand); --c-attention-soft:var(--c-brand-soft);
     --c-info:#3b82f6; --c-info-soft:#eff6ff; --c-info-border:color-mix(in srgb,var(--c-info) 28%,transparent);
     --c-recovery:var(--fnk-color-chart-eps); --c-recovery-soft:color-mix(in srgb,var(--c-recovery) 10%,transparent); --c-recovery-border:color-mix(in srgb,var(--c-recovery) 28%,transparent);
+  }
+[data-theme="dark"] .fnk-shell{
+    --shell-background:var(--fnk-color-background); --shell-panel:var(--fnk-color-card); --shell-surface-muted:var(--fnk-color-muted); --shell-rail:color-mix(in srgb,var(--fnk-color-card) 92%,black); --shell-rail-active:var(--fnk-color-accent);
+    --shell-foreground:var(--fnk-color-foreground); --shell-foreground-muted:var(--fnk-neutral-700); --shell-foreground-subtle:var(--fnk-neutral-600); --shell-foreground-faint:var(--fnk-neutral-500);
+    --shell-border:color-mix(in srgb,var(--fnk-color-foreground) 10%,transparent); --shell-border-muted:color-mix(in srgb,var(--fnk-color-foreground) 6%,transparent);
+    --shell-brand:oklch(0.76 0.13 255); --shell-brand-soft:var(--fnk-color-accent); --c-brand-active:oklch(0.46 0.16 255);
+    --shell-gain:oklch(0.72 0.12 155); --shell-gain-soft:oklch(0.27 0.045 155); --shell-loss:oklch(0.76 0.13 25); --shell-loss-soft:oklch(0.27 0.045 25);
+    --shell-warn:oklch(0.78 0.12 75); --shell-warn-soft:oklch(0.29 0.045 75); --shell-flat:var(--fnk-neutral-600);
+    --shell-multiple:oklch(0.70 0.13 255); --shell-track:color-mix(in srgb,var(--fnk-color-foreground) 8%,transparent); --shell-zero:color-mix(in srgb,var(--fnk-color-foreground) 18%,transparent);
+    --sh-sm:0 1px 0 color-mix(in srgb,var(--fnk-color-foreground) 5%,transparent),0 18px 42px -36px rgba(0,0,0,.72);
+    --sh-md:0 22px 56px -44px rgba(0,0,0,.78);
+    --sh-pop:0 28px 70px -38px rgba(0,0,0,.86);
+    --sh-focus:0 0 0 3px color-mix(in srgb,var(--c-brand) 24%,transparent);
+    --rgb-up:92 210 163; --rgb-down:226 113 113; --rgb-warn:232 184 88; --rgb-brand:145 180 255;
+    --c-warn-100:var(--shell-warn-soft); --c-warn-200:color-mix(in srgb,var(--shell-warn) 36%,transparent); --c-warn-ink:var(--shell-warn); --c-warn-ink-strong:oklch(0.84 0.11 75);
+    --c-info:var(--fnk-color-info); --c-info-soft:var(--fnk-color-info-soft); --c-info-border:color-mix(in srgb,var(--c-info) 32%,transparent);
+    --c-recovery:var(--fnk-color-recovery); --c-recovery-soft:color-mix(in srgb,var(--c-recovery) 14%,transparent); --c-recovery-border:color-mix(in srgb,var(--c-recovery) 32%,transparent);
   }
 .fnk-shell{background:var(--c-bg); color:var(--c-ink); font-family:var(--font); font-size:16px; line-height:1.5; letter-spacing:0; -webkit-font-smoothing:antialiased; word-break:keep-all; min-height:100dvh}
 .fnk-shell .num{font-variant-numeric:tabular-nums lining-nums}
@@ -386,3 +403,33 @@
 .fnk-shell .st.red{color:var(--c-down)}
 .fnk-shell .data-cap{text-align:center; font-size:12px; color:var(--c-ink-3); padding:var(--s6) 0 var(--s2)}
 .fnk-shell a{text-decoration:none; color:inherit}
+
+[data-theme="dark"] .fnk-shell .panel,
+[data-theme="dark"] .fnk-shell .c-card,
+[data-theme="dark"] .fnk-shell .stock-section,
+[data-theme="dark"] .fnk-shell .stock-tab-panel{box-shadow:var(--sh-sm)}
+[data-theme="dark"] .fnk-shell .topbar{background:color-mix(in srgb,var(--c-panel) 86%,transparent)}
+[data-theme="dark"] .fnk-shell .appbar{background:color-mix(in srgb,var(--c-bg) 90%,transparent)}
+[data-theme="dark"] .fnk-shell .ticker,
+[data-theme="dark"] .fnk-shell .tabbar{background:color-mix(in srgb,var(--c-panel) 94%,transparent)}
+[data-theme="dark"] .fnk-shell .gsearch:focus-within,
+[data-theme="dark"] .fnk-shell .gsearch .kbd,
+[data-theme="dark"] .fnk-shell .msearch .gs2{background:var(--c-panel)}
+[data-theme="dark"] .fnk-shell .ic-btn .badge{border-color:var(--c-panel)}
+[data-theme="dark"] .fnk-shell .seg button.on{background:var(--c-brand-active); color:#fff}
+[data-theme="dark"] .fnk-shell .wl .av,
+[data-theme="dark"] .fnk-shell .stock-logo{background:var(--c-surface-2); color:var(--c-ink)}
+[data-theme="dark"] .fnk-shell .data-shell-link{background:var(--c-surface-2); border-color:var(--c-line); color:var(--c-ink)}
+[data-theme="dark"] .fnk-shell .data-shell-link:hover{border-color:var(--c-brand); color:var(--c-ink)}
+[data-theme="dark"] .fnk-shell .data-shell-link.on,
+[data-theme="dark"] .fnk-shell .data-shell-link[aria-current="page"]{background:var(--c-brand-active); border-color:var(--c-brand-active); color:#fff}
+[data-theme="dark"] .fnk-shell .data-shell-link:disabled,
+[data-theme="dark"] .fnk-shell .data-shell-link[aria-disabled="true"]{background:var(--c-panel); border-color:var(--c-line-2); color:var(--c-ink-3); opacity:1}
+[data-theme="dark"] .fnk-shell .bg-\[var\(--c-brand\)\]{background-color:var(--c-brand-active)}
+[data-theme="dark"] .fnk-shell .border-\[var\(--c-brand\)\].bg-\[var\(--c-brand-soft\)\]{border-color:var(--c-brand); background-color:var(--c-brand-soft)}
+[data-theme="dark"] .fnk-shell .bg-\[var\(--c-ink\)\]{background-color:var(--c-brand-active)}
+[data-theme="dark"] .fnk-shell .border-\[var\(--c-ink\)\]{border-color:var(--c-brand-active)}
+[data-theme="dark"] .fnk-shell .bg-white{background-color:var(--c-panel)}
+[data-theme="dark"] .fnk-shell .bg-white\/70{background-color:color-mix(in srgb,var(--c-panel) 72%,transparent)}
+[data-theme="dark"] .fnk-shell .border-white{border-color:var(--c-panel)}
+[data-theme="dark"] .fnk-shell .scroll-hint-x::after{background:linear-gradient(90deg,transparent,var(--c-panel))}

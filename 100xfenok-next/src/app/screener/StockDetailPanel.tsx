@@ -1897,7 +1897,7 @@ export function StockDetailBody({
                 estimates={detail.income_statement_estimates?.revenue}
                 formatValue={fmtLarge}
               />
-              <div className="mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
+              <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
                 {fmtLarge(latestRevenue)}
                 {" (최신)"}
               </div>
@@ -1921,7 +1921,7 @@ export function StockDetailBody({
                 estimates={detail.per_share_estimates?.eps}
                 formatValue={(value) => `$${value.toFixed(2)}`}
               />
-              <div className="mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
+              <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-4)]">
                 {latestEps != null ? `$${latestEps.toFixed(2)} (최신)` : "—"}
               </div>
             </>

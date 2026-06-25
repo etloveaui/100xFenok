@@ -286,8 +286,13 @@ function fail(message, details = []) {
 }
 
 const globals = readFileSync(join(ROOT, "src/app/globals.css"), "utf8");
+const layout = readFileSync(join(ROOT, "src/app/layout.tsx"), "utf8");
 const themeC = readFileSync(join(ROOT, "src/styles/theme-c.css"), "utf8");
 const appShell = readFileSync(join(ROOT, "src/styles/app-shell.css"), "utf8");
+const footer = readFileSync(join(ROOT, "src/styles/footer.css"), "utf8");
+const navigation = readFileSync(join(ROOT, "src/styles/navigation.css"), "utf8");
+const marketChartFrame = readFileSync(join(ROOT, "src/lib/market-valuation/charts/MarketChartFrame.tsx"), "utf8");
+const marketChartEngine = readFileSync(join(ROOT, "src/lib/market-valuation/charts/MarketChartEngineClient.tsx"), "utf8");
 const failures = [];
 
 function declarationValue(text, name) {
@@ -400,17 +405,93 @@ for (const [selector, declaration] of W3_CONTEXT_EXCEPTION_RULES) {
 if (!globals.includes('[data-theme="dark"]')) {
   failures.push('missing [data-theme="dark"] block');
 }
+if (!globals.includes("color-scheme: dark;")) {
+  failures.push("missing dark color-scheme declaration");
+}
 if (!globals.includes("--fnk-neutral-50: oklch(0.205 0 0);")) {
   failures.push("missing Agent-A dark neutral-50 token");
 }
 if (!globals.includes("--fnk-neutral-950: oklch(0.985 0 0);")) {
   failures.push("missing Agent-A dark neutral-950 token");
 }
+for (const required of [
+  "--fnk-brand-interactive: oklch(0.76 0.13 255);",
+  "--fnk-brand-navy: oklch(0.76 0.13 255);",
+  "--fnk-color-loss: oklch(0.76 0.13 25);",
+  "--fnk-color-recovery: oklch(0.78 0.16 305);",
+  "--color-emerald-950: var(--c-up);",
+  "--color-blue-950: var(--c-brand);",
+]) {
+  if (!globals.includes(required)) {
+    failures.push(`W4 dark root token missing: ${required}`);
+  }
+}
 if (/oklch\(\s*(?:100|[1-9]\d{2,})/.test(globals)) {
   failures.push("out-of-gamut OKLCH lightness detected");
 }
 if (!/body\s*\{\s*[^}]*background:\s*var\(--background\)/s.test(globals)) {
   failures.push("body background no longer uses --background");
+}
+if (!layout.includes('<html lang="ko" data-theme="dark"')) {
+  failures.push("W4 dark activator missing from RootLayout html");
+}
+if (!layout.includes('themeColor: "#15171c"')) {
+  failures.push("W4 dark viewport themeColor missing");
+}
+if (!layout.includes("bg-background text-foreground")) {
+  failures.push("W4 body no longer uses background/foreground utilities");
+}
+if (!appShell.includes('[data-theme="dark"] .fnk-shell')) {
+  failures.push("W4 dark shell override missing");
+}
+for (const required of [
+  "--shell-background:var(--fnk-color-background)",
+  "--shell-panel:var(--fnk-color-card)",
+  "--shell-gain:oklch(0.72 0.12 155)",
+  "--c-brand-active:oklch(0.46 0.16 255)",
+  "--shell-loss:oklch(0.76 0.13 25)",
+  "--rgb-up:92 210 163",
+  "--rgb-brand:145 180 255",
+  ".bg-white{background-color:var(--c-panel)}",
+  ".data-shell-link{background:var(--c-surface-2); border-color:var(--c-line); color:var(--c-ink)}",
+  ".bg-\\[var\\(--c-brand\\)\\]{background-color:var(--c-brand-active)}",
+  ".bg-\\[var\\(--c-ink\\)\\]{background-color:var(--c-brand-active)}",
+]) {
+  if (!appShell.includes(required)) {
+    failures.push(`W4 dark shell contract missing: ${required}`);
+  }
+}
+for (const required of [
+  '[data-theme="dark"] [data-v1-chrome="footer"] .bg-white\\/95',
+  "background-color: color-mix(in srgb, var(--fnk-color-card) 95%, transparent) !important;",
+  '[data-theme="dark"] [data-v1-chrome="footer"] .text-slate-800',
+]) {
+  if (!footer.includes(required)) {
+    failures.push(`W4 dark footer contract missing: ${required}`);
+  }
+}
+for (const required of [
+  '[data-theme="dark"] #mainNav',
+  "background: color-mix(in srgb, var(--fnk-color-card) 94%, transparent) !important;",
+  "#mainNav .brand-text",
+  "#mainNav .dropdown-menu",
+]) {
+  if (!navigation.includes(required)) {
+    failures.push(`W4 dark navigation contract missing: ${required}`);
+  }
+}
+if (!marketChartFrame.includes("bg-[var(--c-panel)]")) {
+  failures.push("W4 MarketChartFrame panel background is not tokenized");
+}
+for (const required of [
+  'backgroundColor: theme.token("panel")',
+  'borderColor: theme.token("line")',
+  'bodyColor: theme.token("ink")',
+  'titleColor: theme.token("ink")',
+]) {
+  if (!marketChartEngine.includes(required)) {
+    failures.push(`W4 chart tooltip contract missing: ${required}`);
+  }
 }
 
 const cssText = CSS_TARGETS.map((path) => readFileSync(join(ROOT, path), "utf8")).join("\n");

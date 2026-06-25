@@ -178,6 +178,13 @@ function buildOptions({
         },
       },
       tooltip: {
+        backgroundColor: theme.token("panel"),
+        borderColor: theme.token("line"),
+        borderWidth: 1,
+        bodyColor: theme.token("ink"),
+        titleColor: theme.token("ink"),
+        titleFont: { size: 11, weight: "bold" },
+        bodyFont: { size: 11, weight: "bold" },
         mode: "index",
         intersect: false,
         callbacks: {

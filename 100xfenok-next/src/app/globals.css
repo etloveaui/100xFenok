@@ -344,7 +344,8 @@
 }
 
 [data-theme="dark"] {
-  /* Defined for S2, intentionally not activated in S1. */
+  /* W4 dark ramp: SSR-activated by RootLayout to avoid white mount flashes. */
+  color-scheme: dark;
   --fnk-neutral-50: oklch(0.205 0 0);
   --fnk-neutral-100: oklch(0.255 0 0);
   --fnk-neutral-200: oklch(0.32 0 0);
@@ -373,7 +374,7 @@
   --fnk-color-destructive-soft: oklch(0.27 0.06 25);
   --fnk-color-gain: oklch(0.72 0.17 155);
   --fnk-color-gain-soft: oklch(0.28 0.055 155);
-  --fnk-color-loss: oklch(0.66 0.20 25);
+  --fnk-color-loss: oklch(0.76 0.13 25);
   --fnk-color-loss-soft: oklch(0.28 0.06 25);
   --fnk-color-flat: var(--fnk-neutral-600);
   --fnk-color-warn: oklch(0.78 0.16 75);
@@ -381,15 +382,15 @@
   --fnk-color-warn-ink: oklch(0.82 0.14 75);
   --fnk-color-info: oklch(0.70 0.16 245);
   --fnk-color-info-soft: oklch(0.28 0.05 245);
-  --fnk-color-recovery: oklch(0.68 0.20 305);
+  --fnk-color-recovery: oklch(0.78 0.16 305);
   --fnk-sky-700: oklch(0.72 0.15 245);
   --fnk-sky-800: oklch(0.80 0.13 245);
   --fnk-color-chart-1: oklch(0.67 0.18 255);
   --fnk-color-chart-2: oklch(0.72 0.17 155);
-  --fnk-color-chart-3: oklch(0.66 0.20 25);
+  --fnk-color-chart-3: oklch(0.76 0.13 25);
   --fnk-color-chart-4: oklch(0.78 0.16 75);
   --fnk-color-chart-5: var(--fnk-neutral-700);
-  --fnk-color-chart-eps: oklch(0.68 0.20 305);
+  --fnk-color-chart-eps: oklch(0.78 0.16 305);
   --fnk-color-sidebar: var(--fnk-neutral-100);
   --fnk-color-sidebar-foreground: var(--fnk-neutral-950);
   --fnk-color-sidebar-primary: var(--fnk-color-ring);
@@ -399,12 +400,12 @@
   --fnk-color-sidebar-accent-foreground: var(--fnk-neutral-950);
   --fnk-color-sidebar-border: var(--fnk-color-border);
   --fnk-color-sidebar-ring: var(--fnk-color-ring);
-  --fnk-brand-navy: oklch(0.68 0.18 255);
-  --fnk-brand-navy-2: oklch(0.72 0.18 255);
+  --fnk-brand-navy: oklch(0.76 0.13 255);
+  --fnk-brand-navy-2: oklch(0.82 0.12 255);
   --fnk-brand-gold: oklch(0.78 0.15 85);
   --fnk-brand-gold-bright: oklch(0.84 0.16 85);
-  --fnk-brand-interactive: oklch(0.67 0.18 255);
-  --fnk-brand-interactive-2: oklch(0.74 0.16 255);
+  --fnk-brand-interactive: oklch(0.76 0.13 255);
+  --fnk-brand-interactive-2: oklch(0.82 0.12 255);
   --fnk-brand-cta: oklch(0.88 0.17 95);
 }
 
@@ -514,6 +515,7 @@
   --color-emerald-700: var(--c-up);
   --color-emerald-800: var(--c-up);
   --color-emerald-900: var(--c-up);
+  --color-emerald-950: var(--c-up);
   --color-green-50: var(--color-emerald-50);
   --color-green-100: var(--color-emerald-100);
   --color-green-200: var(--color-emerald-200);
@@ -524,6 +526,7 @@
   --color-green-700: var(--color-emerald-700);
   --color-green-800: var(--color-emerald-800);
   --color-green-900: var(--color-emerald-900);
+  --color-green-950: var(--color-emerald-950);
   --color-teal-50: var(--color-emerald-50);
   --color-teal-100: var(--color-emerald-100);
   --color-teal-200: var(--color-emerald-200);
@@ -534,6 +537,7 @@
   --color-teal-700: var(--color-emerald-700);
   --color-teal-800: var(--color-emerald-800);
   --color-teal-900: var(--color-emerald-900);
+  --color-teal-950: var(--color-emerald-950);
 
   --color-rose-50: var(--c-down-soft);
   --color-rose-100: var(--c-down-soft);
@@ -545,6 +549,7 @@
   --color-rose-700: var(--c-down);
   --color-rose-800: var(--c-down);
   --color-rose-900: var(--c-down);
+  --color-rose-950: var(--c-down);
   --color-red-50: var(--color-rose-50);
   --color-red-100: var(--color-rose-100);
   --color-red-200: var(--color-rose-200);
@@ -555,6 +560,7 @@
   --color-red-700: var(--color-rose-700);
   --color-red-800: var(--color-rose-800);
   --color-red-900: var(--color-rose-900);
+  --color-red-950: var(--color-rose-950);
   --color-pink-50: var(--color-rose-50);
   --color-pink-100: var(--color-rose-100);
   --color-pink-200: var(--color-rose-200);
@@ -565,6 +571,7 @@
   --color-pink-700: var(--color-rose-700);
   --color-pink-800: var(--color-rose-800);
   --color-pink-900: var(--color-rose-900);
+  --color-pink-950: var(--color-rose-950);
 
   --color-amber-50: var(--c-warn-soft);
   --color-amber-100: var(--c-warn-soft);
@@ -607,6 +614,7 @@
   --color-blue-700: var(--c-brand);
   --color-blue-800: var(--c-brand);
   --color-blue-900: var(--c-brand);
+  --color-blue-950: var(--c-brand);
   --color-indigo-50: var(--color-blue-50);
   --color-indigo-100: var(--color-blue-100);
   --color-indigo-200: var(--color-blue-200);
@@ -617,6 +625,7 @@
   --color-indigo-700: var(--color-blue-700);
   --color-indigo-800: var(--color-blue-800);
   --color-indigo-900: var(--color-blue-900);
+  --color-indigo-950: var(--color-blue-950);
 
   --color-sky-50: var(--c-info-soft);
   --color-sky-100: var(--c-info-soft);

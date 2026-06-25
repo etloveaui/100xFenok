@@ -644,7 +644,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
       const pct = bandPct(safeCurrent, safeMin, safeMax);
       const label = bandLabel(pct);
       return (
-        <span className="orbitron font-black text-slate-800 text-[10px] truncate">
+        <span className="orbitron font-black tabular-nums text-slate-800 text-[10px] truncate">
           {safeCurrent.toFixed(1)}x ({label} {Math.round(pct * 100)}%)
         </span>
       );
@@ -1630,9 +1630,8 @@ export default function ScreenerClient({
                             onClick={() => toggleSort(column.key)}
                             aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
                             className={cx(
-                              "inline-flex items-center gap-1 transition hover:text-[var(--c-ink)]",
+                              "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
                               column.align === "right" && "flex-row-reverse",
-                              active ? "text-brand-navy" : "text-[var(--c-ink)]",
                             )}
                           >
                             {column.label}

@@ -1198,7 +1198,7 @@ export default function SuperinvestorsClient({
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">AUM</p>
-                        <p className="orbitron mt-0.5 text-sm font-black text-slate-900">{fmtAum(inv.aum)}</p>
+                        <p className="orbitron tabular-nums mt-0.5 text-sm font-black text-slate-900">{fmtAum(inv.aum)}</p>
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">보유</p>
