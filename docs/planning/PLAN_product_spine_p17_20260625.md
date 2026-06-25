@@ -219,6 +219,7 @@ Priority: secret pre-check + schema guard first (highest break-risk).
 - Consolidate **3 nav components → AppShell only** (retire DataNav/NavbarV3). This also un-strands `CommandPaletteV2` (§4).
 - Fix `섹터` in 2 nav trees (DEC-246: market nav = 밸류에이션/국면/이벤트, 3-tab).
 - Restore entry to orphaned high-value tools (stock-analyzer / multichart / alpha-scout) or retire dead ones (winddown×3, vr, ib).
+  - **Ticket (W1 surfaced 2026-06-25)**: `qa:browser:p2` broader run fails on `#desktop-analytics-menu a[href^=/multichart]` — STALE assertion (multichart has no nav link). Resolve in P4: either re-link multichart in nav OR update/remove the assertion. Currently red; confirmed NOT a W1/CSS regression.
 - Complete stock-detail convergence (`/stock/[ticker]` consistent backHref + reachability).
 
 ---
