@@ -23,7 +23,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "manifest.json",
       "sizeBytes": 28629,
-      "updatedAt": "2026-06-25T04:03:59.519Z"
+      "updatedAt": "2026-06-25T04:26:21.839Z"
     },
     {
       "name": "reports-index.json",
@@ -45,7 +45,7 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "product-surface-coverage.json",
       "sizeBytes": 12402,
-      "updatedAt": "2026-06-25T04:20:13.188Z"
+      "updatedAt": "2026-06-25T04:27:00.535Z"
     },
     {
       "name": "stock-field-usage-manifest.json",
@@ -123,17 +123,17 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     {
       "name": "entity_graph_stock_index.json",
       "sizeBytes": 984625,
-      "updatedAt": "2026-06-25T04:20:12.840Z"
+      "updatedAt": "2026-06-25T04:27:00.375Z"
     },
     {
       "name": "entity_graph_stock_services.json",
       "sizeBytes": 145879,
-      "updatedAt": "2026-06-25T04:20:12.843Z"
+      "updatedAt": "2026-06-25T04:27:00.377Z"
     },
     {
       "name": "entity_graph.json",
       "sizeBytes": 7845620,
-      "updatedAt": "2026-06-25T04:20:12.814Z"
+      "updatedAt": "2026-06-25T04:27:00.353Z"
     },
     {
       "name": "market_data_audit.json",
@@ -47166,8 +47166,8 @@ export const DATA_JSON_FILES_BY_PATH: Record<string, StaticDataJsonFileEntry[]> 
     },
     {
       "name": "yahoo-ticker.json",
-      "sizeBytes": 734,
-      "updatedAt": "2026-06-25T02:32:51.000Z"
+      "sizeBytes": 738,
+      "updatedAt": "2026-06-25T04:26:21.839Z"
     }
   ],
   "metadata": [
