@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { EXPLORE_NAV_LABEL } from '@/lib/product-nav';
+import { ROUTES, isDockRoutePath, isRouteOrChild, normalizePathname } from '@/lib/routes';
 
 type NetworkInformationLike = {
   effectiveType?: string;
@@ -18,81 +19,46 @@ type NavigatorWithConnection = Navigator & {
 
 const dockItems = [
   {
-    href: '/',
+    href: ROUTES.home,
     label: 'DASHBOARD',
     icon: '⌂',
-    isActive: (pathname: string) => pathname === '/',
+    isActive: (pathname: string) => pathname === ROUTES.home,
   },
   {
-    href: '/market-valuation',
+    href: ROUTES.market,
     label: 'MARKET',
     icon: '◔',
     isActive: (pathname: string) =>
-      pathname === '/market' ||
-      pathname === '/market-valuation' ||
-      pathname === '/alpha-scout',
+      pathname === ROUTES.marketLegacy ||
+      pathname === ROUTES.market ||
+      pathname === ROUTES.alphaScout,
   },
   {
-    href: '/explore',
+    href: ROUTES.explore,
     label: EXPLORE_NAV_LABEL,
     icon: '◇',
     isActive: (pathname: string) =>
-      pathname === '/explore' ||
-      pathname === '/sectors' ||
-      pathname === '/etfs' ||
-      pathname.startsWith('/etfs/') ||
-      pathname === '/screener' ||
-      pathname === '/superinvestors' ||
-      pathname === '/posts' ||
-      pathname.startsWith('/posts/') ||
-      pathname === '/macro-chart' ||
-      pathname === '/multichart' ||
-      pathname === '/radar' ||
-      pathname === '/tools/stock-analyzer' ||
-      pathname === '/tools/stock-analyzer/native' ||
-      pathname === '/100x/daily-wrap',
+      pathname === ROUTES.explore ||
+      pathname === ROUTES.sectors ||
+      isRouteOrChild(pathname, ROUTES.etfs) ||
+      pathname === ROUTES.screener ||
+      pathname === ROUTES.superinvestors ||
+      isRouteOrChild(pathname, ROUTES.posts) ||
+      pathname === ROUTES.macroChart ||
+      pathname === ROUTES.multichart ||
+      pathname === ROUTES.radar ||
+      pathname === ROUTES.stockAnalyzer ||
+      pathname === ROUTES.stockAnalyzerNative ||
+      pathname === ROUTES.dailyWrap,
   },
   {
-    href: '/ib',
+    href: ROUTES.ib,
     label: 'STRATEGIES',
     icon: '∞',
     isActive: (pathname: string) =>
-      pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr',
+      pathname === ROUTES.ib || pathname === ROUTES.infiniteBuying || pathname === ROUTES.vr,
   },
 ] as const;
-
-function normalizePathname(pathname: string) {
-  if (!pathname || pathname === "/") return "/";
-  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
-}
-
-function isDockRoute(pathname: string) {
-  const normalized = normalizePathname(pathname);
-  return (
-    normalized === '/' ||
-    normalized === '/market' ||
-    normalized === '/market-valuation' ||
-    normalized === '/alpha-scout' ||
-    normalized === '/sectors' ||
-    normalized === '/etfs' ||
-    normalized.startsWith('/etfs/') ||
-    normalized === '/explore' ||
-    normalized === '/screener' ||
-    normalized === '/superinvestors' ||
-    normalized === '/portfolio' ||
-    normalized === '/posts' ||
-    normalized.startsWith('/posts/') ||
-    normalized === '/macro-chart' ||
-    normalized === '/multichart' ||
-    normalized === '/radar' ||
-    normalized === '/tools/stock-analyzer' ||
-    normalized === '/tools/stock-analyzer/native' ||
-    normalized === '/100x/daily-wrap' ||
-    normalized === '/ib' ||
-    normalized === '/infinite-buying' ||
-    normalized === '/vr'
-  );
-}
 
 function isEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -122,7 +88,7 @@ export default function AppEnhancements() {
   const pathname = usePathname();
   const normalizedPathname = normalizePathname(pathname);
   const router = useRouter();
-  const dockEnabled = isDockRoute(normalizedPathname);
+  const dockEnabled = isDockRoutePath(normalizedPathname);
   const lastScrollYRef = useRef(0);
   const dockNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dockLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -441,7 +407,7 @@ export default function AppEnhancements() {
     if (typeof window === 'undefined') return;
     if (isDataSaver) return;
 
-    const warmupRoutes = ['/market-valuation', '/posts', '/ib', '/tools/stock-analyzer/native'];
+    const warmupRoutes = [ROUTES.market, ROUTES.posts, ROUTES.ib, ROUTES.stockAnalyzerNative];
     let idleId: number | null = null;
     let timerId: ReturnType<typeof setTimeout> | null = null;
 

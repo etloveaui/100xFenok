@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import SuperinvestorsClient from "./SuperinvestorsClient";
 import type { SuperInvestorsTab } from "@/lib/superinvestors/types";
 
@@ -22,7 +23,7 @@ export default async function SuperinvestorsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const tab = firstParam(params.tab);
   const initialTab = VALID_TABS.has(tab as SuperInvestorsTab) ? (tab as SuperInvestorsTab) : undefined;
-  const initialTicker = firstParam(params.ticker ?? params.symbol).trim().toUpperCase();
+  const initialTicker = normalizeForEntityKey(firstParam(params.ticker ?? params.symbol));
   const initialGuru = firstParam(params.guru).trim();
   return (
     <div className="fnk-shell">

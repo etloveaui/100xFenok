@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import PortfolioClient from "./PortfolioClient";
 
 interface Props {
@@ -17,7 +18,7 @@ function firstParam(value: string | string[] | undefined): string {
 
 export default async function PortfolioPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
-  const initialTicker = firstParam(params.ticker).trim().toUpperCase();
+  const initialTicker = normalizeForEntityKey(firstParam(params.ticker));
 
   return (
     <div className="fnk-shell">

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { ROUTES } from "@/lib/routes";
+import { normalizeForFilePath } from "@/lib/ticker";
 
 type ExternalSourceKind = "stock" | "etf" | "filing";
 
@@ -15,7 +17,7 @@ interface ExternalSourceLinksProps {
 }
 
 function cleanTicker(ticker?: string | null) {
-  const value = (ticker ?? "").replace(/^\$/, "").trim().toUpperCase();
+  const value = normalizeForFilePath(ticker);
   return value || null;
 }
 
@@ -63,7 +65,7 @@ export default function ExternalSourceLinks({
     // is being absorbed into our DataPack (DEC-243). For filings, point to our own
     // stock page instead of sending users out to Yahoo/StockAnalysis.
     if (symbol) {
-      links.push({ label: "이 종목 페이지", href: `/stock/${symbol}`, hint: "시세·재무·밸류", external: false });
+      links.push({ label: "이 종목 페이지", href: ROUTES.stock(symbol), hint: "시세·재무·밸류", external: false });
     }
   } else if (symbol) {
     links.push({

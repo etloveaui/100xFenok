@@ -2,6 +2,7 @@ import type { Dirent } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { DATA_JSON_FILES_BY_PATH } from "@/generated/static-route-manifest";
+import { normalizeForFilePath } from "@/lib/ticker";
 import type { z } from "zod";
 import {
   benchmarkCatalogSchema,
@@ -114,7 +115,7 @@ export function normalizeStockanalysisAssetKind(value: string): StockanalysisAss
 }
 
 export function normalizeStockanalysisTicker(value: string): string | null {
-  const normalized = value.trim().toUpperCase();
+  const normalized = normalizeForFilePath(value);
   if (!/^[A-Z0-9][A-Z0-9.-]{0,19}$/.test(normalized)) return null;
   return normalized;
 }

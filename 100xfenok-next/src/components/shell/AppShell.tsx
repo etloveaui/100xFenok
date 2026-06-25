@@ -5,6 +5,7 @@ import BrandLogo from "@/components/BrandLogo";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import { CHART_NAV_LABEL, CHART_ROUTE, EXPLORE_NAV_LABEL } from "@/lib/product-nav";
+import { ROUTES } from "@/lib/routes";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
@@ -30,7 +31,7 @@ const NAV: NavItem[] = [
   {
     id: "explore",
     label: EXPLORE_NAV_LABEL,
-    href: "/explore",
+    href: ROUTES.explore,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <circle cx="10" cy="10" r="7.5" />
@@ -41,7 +42,7 @@ const NAV: NavItem[] = [
   {
     id: "market",
     label: "시장",
-    href: "/market-valuation",
+    href: ROUTES.market,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M2.5 13.5l4-4.5 3 2.5L17 4.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -52,7 +53,7 @@ const NAV: NavItem[] = [
   {
     id: "sectors",
     label: "섹터",
-    href: "/sectors",
+    href: ROUTES.sectors,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <rect x="3" y="3" width="6" height="6" rx="1.5" />
@@ -65,7 +66,7 @@ const NAV: NavItem[] = [
   {
     id: "etfs",
     label: "ETF",
-    href: "/etfs",
+    href: ROUTES.etfs,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
         <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
@@ -77,7 +78,7 @@ const NAV: NavItem[] = [
   {
     id: "screener",
     label: "스크리너",
-    href: "/screener",
+    href: ROUTES.screener,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
         <path d="M3 6h9M15 6h2M3 14h2M9 14h8" />
@@ -89,7 +90,7 @@ const NAV: NavItem[] = [
   {
     id: "superinvestors",
     label: "투자자",
-    href: "/superinvestors",
+    href: ROUTES.superinvestors,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <circle cx="7.2" cy="7.5" r="2.6" />
@@ -101,7 +102,7 @@ const NAV: NavItem[] = [
   {
     id: "portfolio",
     label: "포트폴리오",
-    href: "/portfolio",
+    href: ROUTES.portfolio,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <rect x="2.5" y="6" width="15" height="10.5" rx="2" />
@@ -283,7 +284,7 @@ export default function AppShell({
     <>
       {/* desktop left rail */}
       <aside className="rail">
-        <TransitionLink href="/" className="rail-logo" aria-label="100x Fenok 홈">
+        <TransitionLink href={ROUTES.home} className="rail-logo" aria-label="100x Fenok 홈">
           <BrandLogo size="md" />
           <span>
             100x <b>Fenok</b>
@@ -336,7 +337,7 @@ export default function AppShell({
               </svg>
             </TransitionLink>
           ) : (
-            <TransitionLink href="/" className="appbar-logo" aria-label="100x Fenok 홈">
+            <TransitionLink href={ROUTES.home} className="appbar-logo" aria-label="100x Fenok 홈">
               <BrandLogo size="md" />
             </TransitionLink>
           )}

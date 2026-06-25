@@ -29,6 +29,7 @@ import MetricHelp from "@/components/MetricHelp";
 import { formatSignedPercent } from "@/lib/format";
 import { makeDataState } from "@/lib/data-state";
 import { stockConnectionFreshnessState, type StockConnectionFreshnessSource } from "@/lib/data-entity-graph/freshness";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
@@ -101,7 +102,7 @@ function loadAnalyzer(): Promise<Record<string, AnalyzerRow> | null> {
       const map: Record<string, AnalyzerRow> = {};
       for (const record of records) {
         if (record.symbol.trim()) {
-          map[record.symbol.trim().toUpperCase()] = toAnalyzerRow(record);
+          map[normalizeForEntityKey(record.symbol)] = toAnalyzerRow(record);
         }
       }
       analyzerCache = map;
@@ -119,7 +120,7 @@ const yfCache: Record<string, any> = {};
 const yfPending: Record<string, Promise<any | null>> = {};
 
 function loadYfFinance(ticker: string): Promise<any | null> {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   if (!symbol) return Promise.resolve(null);
   if (symbol in yfCache) return Promise.resolve(yfCache[symbol] || null);
   if (symbol in yfPending) return yfPending[symbol];
@@ -224,7 +225,7 @@ interface StockanalysisStockPayload {
 }
 
 function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload | null> {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   if (!symbol) return Promise.resolve(null);
   return fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}`, { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : null))
@@ -237,7 +238,7 @@ function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload |
 }
 
 function loadStockanalysisStock(ticker: string): Promise<StockanalysisStockPayload | null> {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   if (!symbol) return Promise.resolve(null);
   return fetch(`/api/data/stockanalysis/stocks/${encodeURIComponent(symbol)}`, { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : null))
@@ -250,7 +251,7 @@ function loadStockanalysisStock(ticker: string): Promise<StockanalysisStockPaylo
 }
 
 function loadStockanalysisFinancials(ticker: string): Promise<StockanalysisFinancialPayload | null> {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   if (!symbol) return Promise.resolve(null);
   return fetch(`/api/data/stockanalysis/financials/${encodeURIComponent(symbol)}`, { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : null))
@@ -1050,7 +1051,7 @@ export default function StockDetailClient({
   assetHint?: "stock" | "etf";
   initialTab?: StockTab;
 }) {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
   const { data: marketFacts, loading: marketFactsLoading } = useMarketFacts(symbol, assetHint !== "etf");
   const canLoadStockData = row !== undefined && row !== null;

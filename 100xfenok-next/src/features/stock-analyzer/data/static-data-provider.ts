@@ -3,6 +3,7 @@ import type {
   StockAnalyzerDataProviderContext,
   StockAnalyzerRecord,
 } from "@/lib/stock-analyzer/types";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import { loadActionSummaryMap } from "./action-summary-provider";
 
 type JsonValue = string | number | boolean | null | undefined;
@@ -214,7 +215,7 @@ export class StaticStockAnalyzerDataProvider
     symbol: string,
     context?: StockAnalyzerDataProviderContext,
   ): Promise<StockAnalyzerRecord | null> {
-    const normalized = symbol.trim().toUpperCase();
+    const normalized = normalizeForEntityKey(symbol);
     if (!normalized) return null;
 
     const records = await this.load(context);

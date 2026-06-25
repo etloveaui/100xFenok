@@ -27,6 +27,7 @@ import {
   type Holding,
 } from "@/lib/portfolio";
 import { formatSignedPercent } from "@/lib/format";
+import { normalizeForEntityKey, normalizeForFilePath } from "@/lib/ticker";
 
 interface PriceDoc {
   data?: { info?: { currentPrice?: number | null } };
@@ -37,11 +38,11 @@ const pricePending = new Map<string, Promise<number | null>>();
 const analyzerProvider = new StaticStockAnalyzerDataProvider();
 
 function normalizeTicker(value: string | null | undefined): string {
-  return (value ?? "").trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
+  return normalizeForFilePath(value);
 }
 
 async function fetchPrice(ticker: string): Promise<number | null> {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   if (!symbol) return null;
   if (priceCache.has(symbol)) return priceCache.get(symbol)!;
   if (pricePending.has(symbol)) return pricePending.get(symbol)!;
@@ -170,7 +171,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   }, [active, editingCash]);
 
   const tickers = useMemo(
-    () => (active ? [...new Set(active.holdings.map((h) => h.ticker.trim().toUpperCase()).filter(Boolean))] : []),
+    () => (active ? [...new Set(active.holdings.map((h) => normalizeForEntityKey(h.ticker)).filter(Boolean))] : []),
     [active],
   );
 
@@ -203,7 +204,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
     let cost = 0;
     let missing = 0;
     for (const h of active.holdings) {
-      const price = prices.get(h.ticker.trim().toUpperCase());
+      const price = prices.get(normalizeForEntityKey(h.ticker));
       if (price == null) {
         missing++;
         continue;

@@ -173,7 +173,7 @@ async function inspectStaticContracts() {
   if (!macroSource.includes("__meta_source") || !macroSource.includes("__meta_frequency") || !macroSource.includes("definitionMetaLabel")) {
     addFailure(failures, "source-frequency-honesty", "source/frequency UI and CSV metadata contract missing");
   }
-  for (const href of ['href="/radar"', 'href="/posts"', 'href={EXPLORE_ROUTE}', 'EXPLORE_NAV_LABEL']) {
+  for (const href of ['href={ROUTES.radar}', 'href={ROUTES.posts}', 'href={EXPLORE_ROUTE}', 'EXPLORE_NAV_LABEL']) {
     if (!navbarSource.includes(href)) {
       addFailure(failures, "analytics-header-contract", `${href} missing from header analytics menu`);
     }
@@ -184,13 +184,13 @@ async function inspectStaticContracts() {
     }
   }
   for (const item of [
-    ['id: "explore"', 'href: "/explore"', 'label: EXPLORE_NAV_LABEL'],
-    ['id: "market"', 'href: "/market-valuation"', 'label: "시장"'],
-    ['id: "sectors"', 'href: "/sectors"', 'label: "섹터"'],
-    ['id: "etfs"', 'href: "/etfs"', 'label: "ETF"'],
-    ['id: "screener"', 'href: "/screener"', 'label: "스크리너"'],
-    ['id: "superinvestors"', 'href: "/superinvestors"', 'label: "투자자"'],
-    ['id: "portfolio"', 'href: "/portfolio"', 'label: "포트폴리오"'],
+    ['id: "explore"', 'href: ROUTES.explore', 'label: EXPLORE_NAV_LABEL'],
+    ['id: "market"', 'href: ROUTES.market', 'label: "시장"'],
+    ['id: "sectors"', 'href: ROUTES.sectors', 'label: "섹터"'],
+    ['id: "etfs"', 'href: ROUTES.etfs', 'label: "ETF"'],
+    ['id: "screener"', 'href: ROUTES.screener', 'label: "스크리너"'],
+    ['id: "superinvestors"', 'href: ROUTES.superinvestors', 'label: "투자자"'],
+    ['id: "portfolio"', 'href: ROUTES.portfolio', 'label: "포트폴리오"'],
     ['id: "chart"', 'href: CHART_ROUTE', 'label: CHART_NAV_LABEL'],
   ]) {
     for (const token of item) {
@@ -199,7 +199,7 @@ async function inspectStaticContracts() {
       }
     }
   }
-  for (const token of ['EXPLORE_NAV_LABEL = "워크벤치"', 'CHART_NAV_LABEL = "차트"', 'CHART_ROUTE = "/macro-chart"']) {
+  for (const token of ['EXPLORE_NAV_LABEL = "워크벤치"', 'CHART_NAV_LABEL = "차트"', 'CHART_ROUTE = ROUTES.macroChart']) {
     if (!productNavSource.includes(token)) {
       addFailure(failures, "product-nav-labels", `${token} missing from product-nav constants`);
     }

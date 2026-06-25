@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { normalizeForEntityKey } from "@/lib/ticker";
 
 export type SectionKey = "earnings" | "actions" | "markets" | "etfs" | "ipo" | "industry";
 export type AssetKind = "stock" | "etf";
@@ -38,7 +39,7 @@ const surfaceCache: Record<string, TickerSurfacePayload | null> = {};
 const surfacePending: Record<string, Promise<TickerSurfacePayload | null>> = {};
 
 export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promise<TickerSurfacePayload | null> {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   const cacheKey = `${symbol}:${assetKind ?? "all"}`;
   if (!symbol) return Promise.resolve(null);
   if (cacheKey in surfaceCache) return Promise.resolve(surfaceCache[cacheKey]);
@@ -114,7 +115,7 @@ export default function TickerSurfaceEventsCard({
   compact?: boolean;
   assetKind?: AssetKind;
 }) {
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   const requestKey = `${symbol}:${assetKind ?? "all"}`;
   const [state, setState] = useState<{ key: string; payload: TickerSurfacePayload | null; loaded: boolean }>({
     key: requestKey,

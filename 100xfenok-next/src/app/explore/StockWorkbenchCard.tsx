@@ -6,6 +6,7 @@ import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { latestAsOf, makeDataState } from "@/lib/data-state";
+import { normalizeForFilePath } from "@/lib/ticker";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
@@ -100,7 +101,7 @@ function loadWorkbench(): Promise<WorkbenchData> {
 }
 
 function cleanTicker(value: string | null | undefined): string {
-  return String(value || "").replace(/^\$/, "").trim().toUpperCase();
+  return normalizeForFilePath(value);
 }
 
 function shortName(value: string | null | undefined, fallback = "—", max = 36): string {

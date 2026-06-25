@@ -1,3 +1,5 @@
+import { normalizeForEntityKey } from "@/lib/ticker";
+
 export type StockConnectionFlags = {
   market_facts?: boolean;
   filings?: boolean;
@@ -102,7 +104,7 @@ let stockServicesCache: StockServicesIndex | null = null;
 let stockServicesPromise: Promise<StockServicesIndex | null> | null = null;
 
 export function normalizeStockConnectionTicker(ticker: string): string {
-  return ticker.trim().toUpperCase();
+  return normalizeForEntityKey(ticker);
 }
 
 export async function loadStockConnectionIndex(signal?: AbortSignal): Promise<StockConnectionIndex | null> {

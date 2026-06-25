@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AppShell from '@/components/shell/AppShell';
+import { ROUTES } from '@/lib/routes';
 import MacroChartClient from '../macro-chart/MacroChartClient';
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function MultichartPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="chart" title="시장 비교" backHref="/macro-chart">
+      <AppShell active="chart" title="시장 비교" backHref={ROUTES.macroChart}>
         <MacroChartClient initialMode="stock-compare" />
       </AppShell>
     </div>

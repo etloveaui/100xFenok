@@ -6,6 +6,8 @@ import TransitionLink from "@/components/TransitionLink";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
+import { ROUTES } from "@/lib/routes";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import { resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
@@ -698,13 +700,13 @@ export default function SuperinvestorsClient({
 
   const byTickerEntry = useMemo(() => {
     if (!byTicker || !search.trim()) return null;
-    const key = search.trim().toUpperCase();
+    const key = normalizeForEntityKey(search);
     return byTicker[key] ?? null;
   }, [byTicker, search]);
 
   const byTickerEnhanced = useMemo(() => {
     if (!enhancedConsensus || !search.trim()) return null;
-    const key = search.trim().toUpperCase();
+    const key = normalizeForEntityKey(search);
     return enhancedConsensus.enhanced_consensus?.[key] ?? null;
   }, [enhancedConsensus, search]);
 
@@ -1270,12 +1272,12 @@ export default function SuperinvestorsClient({
               <EmptyState title="티커를 입력하세요" desc="보유 투자자를 확인할 종목 코드를 검색해 주세요." />
             ) : !byTickerEntry ? (
               <EmptyState
-                title={`${search.trim().toUpperCase()} 데이터 없음`}
+                title={`${normalizeForEntityKey(search)} 데이터 없음`}
                 desc="해당 종목의 공시 보유 데이터가 아직 없습니다."
               />
             ) : byTickerEntry.holder_details.length === 0 ? (
               <EmptyState
-                title={`${search.trim().toUpperCase()}에 보유자가 없습니다`}
+                title={`${normalizeForEntityKey(search)}에 보유자가 없습니다`}
                 desc="현재 추적 중인 투자자 중 이 종목 보유자가 없습니다."
               />
             ) : (
@@ -1283,7 +1285,7 @@ export default function SuperinvestorsClient({
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-black tracking-tight text-slate-950">
-                      {search.trim().toUpperCase()}
+                      {normalizeForEntityKey(search)}
                     </h2>
                     {byTickerEnhanced ? (
                       <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
@@ -1354,7 +1356,7 @@ export default function SuperinvestorsClient({
                 </div>
                 <div className="flex justify-end">
                   <TransitionLink
-                    href={`/stock/${encodeURIComponent(search.trim().toUpperCase())}`}
+                    href={ROUTES.stock(search)}
                     className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
                   >
                     종목 상세 보기 →

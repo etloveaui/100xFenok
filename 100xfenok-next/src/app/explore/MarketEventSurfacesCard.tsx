@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
+import { normalizeForFilePath } from "@/lib/ticker";
 
 interface SurfaceResult {
   surface?: string;
@@ -192,7 +193,7 @@ function surfaceRows<T>(doc: SurfaceDoc<T> | null | undefined): T[] {
 }
 
 function cleanTicker(value: string | null | undefined): string {
-  return String(value || "").replace(/^\$/, "").trim().toUpperCase();
+  return normalizeForFilePath(value);
 }
 
 function kstDateKey(now = new Date()): string {

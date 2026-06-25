@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
+import { normalizeForEntityKey } from "@/lib/ticker";
 
 interface SurfaceDoc<T> {
   fetched_at?: string | null;
@@ -293,7 +294,7 @@ function EtfLink({
   detail?: string;
   value?: string;
 }) {
-  const symbol = String(ticker || "").trim().toUpperCase();
+  const symbol = normalizeForEntityKey(ticker);
   const body = (
     <>
       <span className="co">

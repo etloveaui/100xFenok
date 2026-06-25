@@ -1,6 +1,7 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 
 export type MarketSectionKey = "valuation" | "regime" | "events" | "sectors";
 
@@ -9,10 +10,10 @@ const MARKET_SECTION_ITEMS: Array<{
   href: string;
   label: string;
 }> = [
-  { key: "valuation", href: "/market-valuation", label: "밸류에이션" },
-  { key: "regime", href: "/regime", label: "국면" },
-  { key: "events", href: "/market/events", label: "이벤트" },
-  { key: "sectors", href: "/sectors", label: "섹터" },
+  { key: "valuation", href: ROUTES.market, label: "밸류에이션" },
+  { key: "regime", href: ROUTES.regime, label: "국면" },
+  { key: "events", href: ROUTES.marketEvents, label: "이벤트" },
+  { key: "sectors", href: ROUTES.sectors, label: "섹터" },
 ];
 
 export default function MarketSectionNav({ active }: { active: MarketSectionKey }) {

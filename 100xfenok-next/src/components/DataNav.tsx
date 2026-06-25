@@ -2,17 +2,18 @@
 
 import TransitionLink from "@/components/TransitionLink";
 import { CHART_NAV_LABEL, CHART_ROUTE, EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from "@/lib/product-nav";
+import { ROUTES } from "@/lib/routes";
 
 type Page = "explore" | "market" | "sectors" | "etfs" | "screener" | "superinvestors" | "portfolio" | "chart";
 
 const PAGES: Array<{ id: Page; label: string; href: string }> = [
   { id: "explore", label: EXPLORE_NAV_LABEL, href: EXPLORE_ROUTE },
-  { id: "market", label: "시장", href: "/market-valuation" },
-  { id: "sectors", label: "섹터", href: "/sectors" },
-  { id: "etfs", label: "ETF", href: "/etfs" },
-  { id: "screener", label: "스크리너", href: "/screener" },
-  { id: "superinvestors", label: "투자자", href: "/superinvestors" },
-  { id: "portfolio", label: "포트폴리오", href: "/portfolio" },
+  { id: "market", label: "시장", href: ROUTES.market },
+  { id: "sectors", label: "섹터", href: ROUTES.sectors },
+  { id: "etfs", label: "ETF", href: ROUTES.etfs },
+  { id: "screener", label: "스크리너", href: ROUTES.screener },
+  { id: "superinvestors", label: "투자자", href: ROUTES.superinvestors },
+  { id: "portfolio", label: "포트폴리오", href: ROUTES.portfolio },
   { id: "chart", label: CHART_NAV_LABEL, href: CHART_ROUTE },
 ];
 

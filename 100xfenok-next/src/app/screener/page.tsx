@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import ScreenerClient from "./ScreenerClient";
 
 interface Props {
@@ -18,7 +19,7 @@ function firstParam(value: string | string[] | undefined): string {
 
 export default async function ScreenerPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
-  const initialSearch = firstParam(params.ticker ?? params.q).trim().toUpperCase();
+  const initialSearch = normalizeForEntityKey(firstParam(params.ticker ?? params.q));
   const initialSector = firstParam(params.sector).trim();
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   return (

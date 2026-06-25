@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
+import { normalizeForRouteTicker } from "@/lib/ticker";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -161,9 +163,9 @@ export default function TickerTypeahead({
 
   const selectItem = (s: Suggestion) => {
     if (s.type === "stock" && s.stock) {
-      router.push(`/stock/${encodeURIComponent(s.stock.symbol)}`);
+      router.push(ROUTES.stock(s.stock.symbol));
     } else if (s.type === "guru" && s.guru) {
-      router.push(`/superinvestors?tab=gurus&guru=${encodeURIComponent(s.guru.id)}`);
+      router.push(`${ROUTES.superinvestors}?tab=gurus&guru=${encodeURIComponent(s.guru.id)}`);
     }
     setOpen(false);
     setValue("");
@@ -189,10 +191,10 @@ export default function TickerTypeahead({
       const sel = selectable[activeIdx];
       if (sel) { selectItem(sel); return true; }
     }
-    const t = value.trim().toUpperCase();
+    const t = normalizeForRouteTicker(value);
     if (t) {
       if (onSubmit) onSubmit(t);
-      else router.push(`/stock/${encodeURIComponent(t)}`);
+      else router.push(ROUTES.stock(t));
     }
     setOpen(false);
     return !!t;

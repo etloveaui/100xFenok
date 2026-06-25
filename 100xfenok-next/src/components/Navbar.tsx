@@ -6,6 +6,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { usePathname } from 'next/navigation';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/client/body-scroll-lock';
 import { EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from '@/lib/product-nav';
+import { ROUTES, isRouteOrChild } from '@/lib/routes';
 
 type DesktopMenuId = 'market' | 'analytics' | 'strategies';
 
@@ -26,26 +27,25 @@ export default function Navbar() {
   const strategiesMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
 
-  const isDashboard = pathname === '/';
+  const isDashboard = pathname === ROUTES.home;
   const isMarket =
-    pathname === '/market' ||
-    pathname.startsWith('/market/') ||
-    pathname === '/market-valuation' ||
-    pathname.startsWith('/market-valuation/') ||
-    pathname === '/alpha-scout';
+    pathname === ROUTES.marketLegacy ||
+    isRouteOrChild(pathname, ROUTES.marketLegacy) ||
+    pathname === ROUTES.market ||
+    isRouteOrChild(pathname, ROUTES.market) ||
+    pathname === ROUTES.alphaScout;
   const isAnalytics =
-    pathname === '/multichart' ||
-    pathname === '/macro-chart' ||
-    pathname === '/radar' ||
-    pathname === '/posts' ||
-    pathname === '/explore' ||
-    pathname === '/sectors' ||
-    pathname === '/screener' ||
-    pathname === '/superinvestors' ||
-    pathname === '/portfolio' ||
-    pathname === '/etfs' ||
-    pathname.startsWith('/etfs/');
-  const isStrategies = pathname === '/ib' || pathname === '/infinite-buying' || pathname === '/vr';
+    pathname === ROUTES.multichart ||
+    pathname === ROUTES.macroChart ||
+    pathname === ROUTES.radar ||
+    isRouteOrChild(pathname, ROUTES.posts) ||
+    pathname === ROUTES.explore ||
+    pathname === ROUTES.sectors ||
+    pathname === ROUTES.screener ||
+    pathname === ROUTES.superinvestors ||
+    pathname === ROUTES.portfolio ||
+    isRouteOrChild(pathname, ROUTES.etfs);
+  const isStrategies = pathname === ROUTES.ib || pathname === ROUTES.infiniteBuying || pathname === ROUTES.vr;
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
   const closeDesktopMenu = () => setDesktopMenuOpen(null);
@@ -284,7 +284,7 @@ export default function Navbar() {
           <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
             {/* Brand */}
               <Link
-                href="/"
+                href={ROUTES.home}
                 className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 cursor-pointer"
                 aria-label="Go to home"
                 onClick={handleAdminTap}
@@ -304,7 +304,7 @@ export default function Navbar() {
               <nav className="nav-text-only hidden md:flex items-center gap-1 ml-6">
                 {/* DASHBOARD */}
                 <Link
-                  href="/"
+                  href={ROUTES.home}
                   aria-current={isDashboard ? 'page' : undefined}
                   className={`nav-pill h-10 flex items-center px-4 text-xs font-[800] rounded-t-lg orbitron tracking-wide ${
                     isDashboard
@@ -352,12 +352,12 @@ export default function Navbar() {
                 >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Briefing Deck</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Link href="/market-valuation" role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.market} role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-chart-bar text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Market Wrap</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">Daily Pulse</span>
                     </Link>
-                    <Link href="/alpha-scout" role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.alphaScout} role="menuitem" tabIndex={desktopMenuOpen === 'market' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-compass text-xl text-brand-interactive mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Alpha Scout</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">Weekly Deep Dive</span>
@@ -399,11 +399,11 @@ export default function Navbar() {
                 >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">도구와 차트</div>
                   <div className="grid grid-cols-3 gap-2">
-                    <Link href="/radar" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.radar} role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-satellite-dish text-xl text-brand-navy mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Radar</span>
                     </Link>
-                    <Link href="/posts" role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="relative flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.posts} role="menuitem" tabIndex={desktopMenuOpen === 'analytics' ? 0 : -1} onClick={closeDesktopMenu} className="relative flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
                       <i className="fas fa-lightbulb text-xl text-amber-500 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Insights</span>
@@ -449,17 +449,17 @@ export default function Navbar() {
                 >
                   <div className="px-1 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-2">Playbooks</div>
                   <div className="grid grid-cols-3 gap-2">
-                    <Link href="/ib" role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.ib} role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-calculator text-xl text-rose-600 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">IB Helper</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">V2.2</span>
                     </Link>
-                    <Link href="/infinite-buying" role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.infiniteBuying} role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-infinity text-xl text-green-600 mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Infinite</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">DCA</span>
                     </Link>
-                    <Link href="/vr" role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
+                    <Link href={ROUTES.vr} role="menuitem" tabIndex={desktopMenuOpen === 'strategies' ? 0 : -1} onClick={closeDesktopMenu} className="flex flex-col items-center p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all text-center group/card">
                       <i className="fas fa-balance-scale text-xl text-brand-gold mb-2 group-hover/card:scale-110 transition-transform" />
                       <span className="text-xs font-bold text-slate-700">Rebalance</span>
                       <span className="text-[10px] text-slate-500 mt-0.5">VR</span>
@@ -471,16 +471,16 @@ export default function Navbar() {
 
             {/* Tablet Icon Navigation */}
             <nav className="nav-icon-only hidden sm:flex md:hidden items-center gap-1.5 ml-4" aria-label="태블릿 내비게이션">
-              <Link href="/" className={`nav-icon ${isDashboard ? 'active' : ''}`} title="홈" aria-label="홈">
+              <Link href={ROUTES.home} className={`nav-icon ${isDashboard ? 'active' : ''}`} title="홈" aria-label="홈">
                 <i className="fas fa-home" />
               </Link>
-              <Link href="/market-valuation" className={`nav-icon ${isMarket ? 'active' : ''}`} title="시장" aria-label="시장">
+              <Link href={ROUTES.market} className={`nav-icon ${isMarket ? 'active' : ''}`} title="시장" aria-label="시장">
                 <i className="fas fa-chart-bar" />
               </Link>
               <Link href={EXPLORE_ROUTE} className={`nav-icon ${isAnalytics ? 'active' : ''}`} title={EXPLORE_NAV_LABEL} aria-label={EXPLORE_NAV_LABEL}>
                 <i className="fas fa-compass" />
               </Link>
-              <Link href="/ib" className={`nav-icon ${isStrategies ? 'active' : ''}`} title="전략" aria-label="전략">
+              <Link href={ROUTES.ib} className={`nav-icon ${isStrategies ? 'active' : ''}`} title="전략" aria-label="전략">
                 <i className="fas fa-lightbulb" />
               </Link>
             </nav>
@@ -526,7 +526,7 @@ export default function Navbar() {
           <div className="px-4 pt-6 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2 overflow-y-auto h-[calc(100dvh-4.5rem)]">
             {/* Dashboard */}
             <Link
-              href="/"
+              href={ROUTES.home}
               onClick={closeMobileMenu}
               className={`block min-h-12 px-4 py-3 rounded-lg font-bold text-sm ${
                 isDashboard
@@ -545,8 +545,8 @@ export default function Navbar() {
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
-                <Link href="/market-valuation" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">시장 밸류에이션</Link>
-                <Link href="/alpha-scout" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
+                <Link href={ROUTES.market} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">시장 밸류에이션</Link>
+                <Link href={ROUTES.alphaScout} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Alpha Scout</Link>
               </div>
             </details>
 
@@ -558,8 +558,8 @@ export default function Navbar() {
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
-                <Link href="/radar" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
-                <Link href="/posts" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
+                <Link href={ROUTES.radar} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Radar</Link>
+                <Link href={ROUTES.posts} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Insights</Link>
                 <Link href={EXPLORE_ROUTE} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">{EXPLORE_NAV_LABEL}</Link>
               </div>
             </details>
@@ -572,9 +572,9 @@ export default function Navbar() {
                 <i className="fas fa-chevron-down text-xs text-slate-500 group-open:rotate-180 transition-transform" />
               </summary>
               <div className="ml-4 mt-1 space-y-1">
-                <Link href="/ib" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper (무한매수)</Link>
-                <Link href="/infinite-buying" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Infinite Buying</Link>
-                <Link href="/vr" onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Value Rebalancing</Link>
+                <Link href={ROUTES.ib} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">IB Helper (무한매수)</Link>
+                <Link href={ROUTES.infiniteBuying} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Infinite Buying</Link>
+                <Link href={ROUTES.vr} onClick={closeMobileMenu} className="flex items-center min-h-11 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Value Rebalancing</Link>
               </div>
             </details>
           </div>

@@ -4,6 +4,7 @@ import {
   normalizeStockanalysisTicker,
 } from "@/lib/server/data-loader";
 import { withResponseCache } from "@/lib/server/response-cache";
+import { normalizeForFilePath } from "@/lib/ticker";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -216,10 +217,7 @@ function asRecord(value: unknown): JsonRecord | null {
 }
 
 function cleanTicker(value: unknown): string {
-  return String(value ?? "")
-    .replace(/^\$/, "")
-    .trim()
-    .toUpperCase();
+  return normalizeForFilePath(String(value ?? ""));
 }
 
 function rowsFromSurface(payload: JsonRecord | null): JsonRecord[] {

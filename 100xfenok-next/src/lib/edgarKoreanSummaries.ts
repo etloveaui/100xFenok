@@ -1,3 +1,5 @@
+import { normalizeForEntityKey } from "@/lib/ticker";
+
 const EDGAR_KOREAN_SUMMARY_INDEX_URL = "/data/edgar-korean-summaries/index.json";
 
 interface EdgarKoreanSummaryIndex {
@@ -53,7 +55,16 @@ let indexCache: EdgarKoreanSummaryIndex | null = null;
 let indexPending: Promise<EdgarKoreanSummaryIndex | null> | null = null;
 
 export function normalizeEdgarTicker(ticker: string) {
-  return ticker.trim().toUpperCase();
+  return normalizeForEntityKey(ticker);
+}
+
+function edgarTickerCandidates(ticker: string): string[] {
+  const symbol = normalizeEdgarTicker(ticker);
+  if (!symbol) return [];
+  const candidates = [symbol];
+  if (symbol.includes("-")) candidates.push(symbol.replace(/-/g, "."));
+  if (symbol.includes(".")) candidates.push(symbol.replace(/\./g, "-"));
+  return [...new Set(candidates)];
 }
 
 export function edgarTickerManifestUrl(ticker: string) {
@@ -85,9 +96,9 @@ function loadEdgarKoreanSummaryIndex(): Promise<EdgarKoreanSummaryIndex | null> 
 }
 
 export function edgarFilingsForTicker(manifest: EdgarKoreanTickerSummaryManifest | null, ticker: string) {
-  const symbol = normalizeEdgarTicker(ticker);
+  const symbols = new Set(edgarTickerCandidates(ticker));
   return (manifest?.filings ?? [])
-    .filter((filing) => normalizeEdgarTicker(filing.ticker) === symbol)
+    .filter((filing) => symbols.has(normalizeEdgarTicker(filing.ticker)))
     .sort((a, b) => b.filingDate.localeCompare(a.filingDate));
 }
 
@@ -108,11 +119,12 @@ export function loadEdgarKoreanSummariesForTicker(ticker: string): Promise<Edgar
   if (symbol in tickerManifestPending) return tickerManifestPending[symbol];
   tickerManifestPending[symbol] = loadEdgarKoreanSummaryIndex()
     .then((index) => {
-      if (!index?.tickers.includes(symbol)) {
+      const matchedSymbol = edgarTickerCandidates(symbol).find((candidate) => index?.tickers.includes(candidate));
+      if (!index || !matchedSymbol) {
         tickerManifestCache[symbol] = null;
         return null;
       }
-      return fetch(index.byTicker?.[symbol] ?? edgarTickerManifestUrl(symbol), { cache: "no-store" });
+      return fetch(index.byTicker?.[matchedSymbol] ?? edgarTickerManifestUrl(matchedSymbol), { cache: "no-store" });
     })
     .then((response) => {
       if (response === null) return null;

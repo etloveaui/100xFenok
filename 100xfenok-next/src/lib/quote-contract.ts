@@ -1,4 +1,5 @@
 import type { DataReadinessStatus } from "@/lib/data-state";
+import { normalizeForQuoteProvider } from "@/lib/ticker";
 
 export const QUOTE_CONTRACT_VERSION = "quote.v1" as const;
 export const QUOTE_ENDPOINT_PATTERN = "/api/ticker/{symbol}/" as const;
@@ -58,7 +59,7 @@ export function quoteErrorState(detail: string): QuoteDataState {
 }
 
 export function normalizeQuoteSymbol(raw: string): string {
-  return raw.trim().toUpperCase();
+  return normalizeForQuoteProvider(raw);
 }
 
 export function isValidQuoteSymbol(raw: string): boolean {

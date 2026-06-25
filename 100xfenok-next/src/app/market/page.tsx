@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import { ROUTES } from '@/lib/routes';
 import {
   getSingleSearchParam,
   legacyPublicFileExists,
@@ -21,7 +22,7 @@ export default async function MarketPage({ searchParams }: PageProps) {
   const rawPath = getSingleSearchParam(params.path);
 
   if (!rawPath) {
-    redirect('/market-valuation');
+    redirect(ROUTES.market);
   }
 
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['100x/'] });

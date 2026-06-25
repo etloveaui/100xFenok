@@ -21,6 +21,7 @@ import {
   loadStockServicesIndex,
   type StockServicesIndex,
 } from "@/lib/data-entity-graph/stock-index";
+import { normalizeForEntityKey } from "@/lib/ticker";
 
 type MaybeNumber = number | null | undefined;
 
@@ -194,7 +195,7 @@ function isFiniteNumber(value: unknown): value is number {
 }
 
 function cleanSymbol(value: string) {
-  return value.trim().toUpperCase();
+  return normalizeForEntityKey(value);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {

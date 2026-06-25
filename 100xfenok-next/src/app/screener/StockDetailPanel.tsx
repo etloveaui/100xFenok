@@ -8,6 +8,7 @@ import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { makeDataState } from "@/lib/data-state";
+import { normalizeForEntityKey } from "@/lib/ticker";
 
 export type MaybeNumber = number | null | undefined;
 export type NumberSeries = MaybeNumber[];
@@ -255,10 +256,6 @@ interface MarketFactsData {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
-}
-
-function normalizeTicker(ticker: string): string {
-  return ticker.trim().toUpperCase();
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -550,7 +547,7 @@ export function useStockDetail(ticker: string, enabled = true) {
 
   useEffect(() => {
     let cancelled = false;
-    const symbol = normalizeTicker(ticker);
+    const symbol = normalizeForEntityKey(ticker);
     if (!enabled || !symbol) {
       setDetail(null);
       setLoading(false);
@@ -586,7 +583,7 @@ export function use13FData(ticker: string) {
 
   useEffect(() => {
     let cancelled = false;
-    const symbol = normalizeTicker(ticker);
+    const symbol = normalizeForEntityKey(ticker);
     if (!symbol) {
       Promise.resolve().then(() => {
         if (!cancelled) setEntries([]);
@@ -700,7 +697,7 @@ export function useSlickStock(ticker: string, enabled = true) {
 
   useEffect(() => {
     let cancelled = false;
-    const symbol = normalizeTicker(ticker);
+    const symbol = normalizeForEntityKey(ticker);
     if (!enabled || !symbol) {
       setData(null);
       setLoading(false);
@@ -752,7 +749,7 @@ export function useMarketFacts(ticker: string, enabled = true) {
 
   useEffect(() => {
     let cancelled = false;
-    const symbol = normalizeTicker(ticker);
+    const symbol = normalizeForEntityKey(ticker);
     if (!enabled || !symbol) {
       setData(null);
       setLoading(false);

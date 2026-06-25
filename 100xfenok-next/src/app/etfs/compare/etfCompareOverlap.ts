@@ -1,3 +1,5 @@
+import { normalizeForFilePath } from "@/lib/ticker";
+
 export interface EtfHolding {
   rank?: number | null;
   symbol?: string | null;
@@ -54,7 +56,7 @@ export interface PairOverlap {
 export const MAX_COMPARE_TICKERS = 4;
 
 export function cleanSymbol(value: string): string {
-  return value.replace(/^\$/, "").trim().toUpperCase();
+  return normalizeForFilePath(value);
 }
 
 export function parseTickers(value: string): string[] {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { normalizeForEntityKey } from "@/lib/ticker";
 import {
   isInverseEtf,
   isLeveragedEtf,
@@ -126,10 +127,10 @@ function countRows(payload: EtfSnapshotPayload | null): number {
 }
 
 function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "full" | "partial" | "pending" {
-  const symbol = ticker.trim().toUpperCase();
-  const missing = new Set((coverage?.missing_tickers ?? []).map((item) => item.trim().toUpperCase()));
+  const symbol = normalizeForEntityKey(ticker);
+  const missing = new Set((coverage?.missing_tickers ?? []).map((item) => normalizeForEntityKey(item)));
   if (missing.has(symbol)) return "pending";
-  const fallback = new Set((coverage?.yahoo_fallback_tickers ?? []).map((item) => item.trim().toUpperCase()));
+  const fallback = new Set((coverage?.yahoo_fallback_tickers ?? []).map((item) => normalizeForEntityKey(item)));
   if (fallback.has(symbol)) return "partial";
   return "full";
 }
