@@ -142,6 +142,18 @@ The full drop-in spec (Agent A) is to be **appended to PLAN_design_system_remode
 - **Spacing Suffocation**: dark shrinks perceived space; tight padding feels choked (worst on `/stock` tabular). Guardrail: expand gaps + internal padding +20–30%, clear visual grouping.
 - Note: AGY referenced a "FenoVerdictCard" — treat as an AGY suggestion; verify existence/scope before adopting (owner rule: AGY critique, we verify).
 
+**P2 sub-slices (concrete, sequenced — each independently shippable + QA-gated; rollout by AGY screen priority):**
+
+| Slice | Scope | QA acceptance (gate) |
+|---|---|---|
+| **P2-S1** Token foundation | OKLCH ramp + semantic `@theme` into globals.css; re-point existing `--c-*`/`--brand-*` to ramp (swap-source-keep-name, no component edits); dark default + light opt-in | `build` passes; existing routes render unchanged (behavior parity); token-coverage check. Depends on Kimi inventory. |
+| **P2-S2** Dark flip + numerics | default → dark; `tabular-nums` to gap surfaces (screener / stock-detail / chart axis labels) | numeric columns don't reflow on value change; dark default; light still works |
+| **P2-S3** Surface/spacing/motion | AGY dark guardrails: drop ~90% borders → **elevation contrast** (`L0.15`/`L0.22`)+soft shadow; desaturate semantics; +20–30% dense-zone padding; M3 motion + `prefers-reduced-motion` | `grep` arbitrary `-[Npx]` = 0; a11y reduced-motion pass; `/screener`+`/explore` not grid-prison |
+| **P2-S4** ⌘K into AppShell (D3) | port `CommandPaletteV2` into `AppShell` + keyboard nav (j/k / arrows / focus ring) + ticker-jump via `ROUTES.stock()` | ⌘K opens on product pages; ticker→`/stock/[t]`; keyboard nav works |
+| **P2-S5** Chart theme (D4) | shared theme (no vert gridlines, grey-first, magnet crosshair); price→Lightweight Charts, summaries→Chart.js | `qa:macro-chart` visual contract; no vert gridlines; crosshair sync |
+
+Screen rollout: `/explore` → `/stock/[ticker]` → `/screener` (apply S1–S5 progressively, these three first).
+
 ---
 
 ## 5. P3 — Backend Robustness guards (data automation must NOT break)
@@ -187,8 +199,8 @@ Priority: secret pre-check + schema guard first (highest break-risk).
 |---|---|---|
 | D1 | Trunk order P1→P4, portfolio last | ✅ owner approved (fh-097) |
 | D2 | Slice 1 = Route/Key SSOT | ✅ approved; QA contract §3d |
-| D3 | ⌘K: revive CommandPaletteV2 vs adopt cmdk | ⏳ open (P2/S4) |
-| D4 | Lightweight Charts as new dep for price views | ⏳ open (P2/S5) |
+| D3 | ⌘K: revive CommandPaletteV2 into AppShell vs adopt cmdk | 🟡 PROVISIONAL = **revive** (verified working palette exists, 0 new dep) — owner may override at P2-S4 |
+| D4 | Lightweight Charts new dep for price views | 🟡 PROVISIONAL = **add for price only**, Chart.js stays for summaries — owner may override at P2-S5 |
 | D5 | C = earnings-reactive pipeline (MU etc.) | ⏳ deferred follow-up, not blocker |
 
 ---
