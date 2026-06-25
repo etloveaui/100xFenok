@@ -4,13 +4,13 @@ import HomeV3Client from "./HomeV3Client";
 import HomeV4Client from "./HomeV4Client";
 import HomeV5Client from "./HomeV5Client";
 import { getDesignVersionFromSearchParams } from "@/lib/design/version";
+import { cookies } from "next/headers";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /**
  * Home route. Server component shell that branches on gated design versions.
- * V5 is isolated behind `?v5=1` / env override and does not change the
- * existing fallback branch.
+ * V5 is isolated behind `?v5=1` / env override / persisted v5 cookie.
  */
 export default async function Home({
   searchParams,
@@ -18,7 +18,11 @@ export default async function Home({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const version = getDesignVersionFromSearchParams(params);
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    params,
+    cookieStore.get("fenok_design_version")?.value,
+  );
   if (version === "v5") return <HomeV5Client />;
   if (version === "v4") return <HomeV4Client />;
   if (version === "v3") return <HomeV3Client />;

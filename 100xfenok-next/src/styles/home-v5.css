@@ -407,6 +407,14 @@
   align-items: start;
 }
 
+.fnk-shell.v5-home .v5-layout__side .panel-b > .grid[class*="xl:grid-cols"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.fnk-shell.v5-home .v5-layout__side .panel-b > .grid[class*="xl:grid-cols"] > * {
+  min-width: 0;
+}
+
 .fnk-shell.v5-home .v5-connected__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

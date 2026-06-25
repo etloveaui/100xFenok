@@ -384,6 +384,11 @@ export default function HomeV5Client() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
   const regime = useMemo(() => buildRegimeRead(dashboard), [dashboard]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("v5") !== "1") return;
+    document.cookie = "fenok_design_version=v5; Path=/; Max-Age=2592000; SameSite=Lax";
+  }, []);
+
   return (
     <div className="fnk-shell v5-home">
       <AppShell active="explore" title="마켓 홈">
@@ -399,13 +404,15 @@ export default function HomeV5Client() {
                 <ExploreDashboard />
                 <StockWorkbenchCard />
               </div>
+              <div className="v5-two">
+                <MacroPlaybookCard />
+                <V5ConnectedServicesPanel />
+              </div>
               <ExploreHotTopics />
             </div>
             <div className="v5-layout__side">
               <MyWatchlistStrip />
               <EtfUniverseCard limit={6} />
-              <MacroPlaybookCard />
-              <V5ConnectedServicesPanel />
             </div>
           </div>
 
