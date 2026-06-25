@@ -1,12 +1,9 @@
-# PLAN — Design System Remodel (research complete, P16 thin slice active)
+# PLAN — Design System Remodel (P2 full migration active)
 
-> Status: **ACTIVE — P16 started 2026-06-25** (owner greenlit). P16 scope (minimal, additive):
-> (1) macro-chart promoted to a rail **차트** tab (owner judged it worth a standalone tab — core
-> stock+macro compare tool, fixes the buried-entry problem); (2) **탐색** renamed to **워크벤치**
-> while keeping route `/explore`; (3) minimal shared ui primitives consuming EXISTING tokens, applied
-> to low-risk high-reuse components first (MacroContextCard / MarketQuickLinks / DataStateNotice).
-> The full strangler-fig CSS migration (Phase 1) stays DEFERRED. Codex impl + Claude QA/gate.
-> Architect: Claude. Source: 5 parallel research streams (2026-06-24).
+> Status: **ACTIVE — P2 W3 deployed 2026-06-25**. The earlier P16 thin slice is complete and
+> superseded by the owner-approved full migration track. Current operating rule: keep the public
+> product surfaces service-safe while moving the app through a staged token migration, with Codex
+> implementing, Claude gating, and Kimi/AGY/MMD used for independent map/visual checks as needed.
 
 ## Why (the convergent finding)
 
@@ -38,9 +35,16 @@ So this is **adoption + reconciliation**, not green-field design — which makes
 4. Codify into `DESIGN.md` + CI quality locks: ban arbitrary px/hex (lint), visual regression,
    a11y. This makes misalignment **mechanically impossible**, not eyeballed.
 
-**Phase 1 — Weekly loop (strangler-fig):**
-- Migrate one screen/week onto the shared components, deleting one legacy CSS file each time.
-- Priority (most inconsistent first): screener → market-valuation → sectors → regime.
+**Phase 1 — Current P2 migration loop:**
+- W0 token foundation: shipped via Tailwind v4 `@theme` plus token QA guard.
+- W1 CSS token migration: shipped; nav assertion follow-up tracked separately.
+- W2 component color cleanup: shipped; component-level raw semantic color drift reduced.
+- W3 Tailwind palette alias remap: shipped and deployed. Named Tailwind families now map through
+  semantic tokens in `globals.css`, with explicit fixed exceptions for dark surfaces and live badges.
+- W4 dark flip: next. First intentionally visible design change; use MMD tabular insertion map and
+  AGY per-screen acceptance criteria.
+- W5 polish/governance: next after W4. Lock remaining high-risk drift with QA/docs and prepare the
+  next productized surface migration.
 
 **Interactivity (parallel, deferred):**
 - Price charts Chart.js → Lightweight Charts (free crosshair, smaller); dashboards → ECharts.
@@ -55,6 +59,17 @@ So this is **adoption + reconciliation**, not green-field design — which makes
 
 ## Out of scope (now)
 
-Full token reconciliation, a broad CSS rewrite, shadcn/TanStack adoption, visual-regression CI,
-and screen-by-screen migration are still deferred. P16 is only the owner-approved thin slice:
-`워크벤치` naming, the official `차트` rail/mobile entry, and a small additive Surface primitive.
+shadcn/TanStack adoption, a broad component rewrite, and full visual-regression CI are still deferred
+until W4/W5 prove the service-safe migration path. The current priority is not new feature breadth:
+it is making the existing service feel coherent, resilient, and productizable without breaking live
+data, public routes, or the data-state contract.
+
+## Deployment Ledger
+
+- W1: `70544b72a` code, `32480df1f` metadata, `d5cfa08b7` deployed metadata.
+- W2: `6aaa302d5` code, `e8756fd98` metadata, `52339772b` lane-map docs,
+  `71f87a44e` deployed metadata, `a77322495` final metadata.
+- W3: `b0b484380` code, `18d79a48c` metadata, `491ecf03c` deployed metadata,
+  `376a1bbc2` final metadata after remote data rebase. Live deploy:
+  `https://100xfenok.etloveaui.workers.dev`, Cloudflare Version ID
+  `7fbd66f7-bf5f-4f85-84f5-4ba4b9a223b6`.
