@@ -164,7 +164,7 @@ export default function AdminAccessGate({ children }: AdminAccessGateProps) {
   if (!authenticated) {
     return (
       <main className="container mx-auto px-4 py-8">
-        <section className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white px-5 py-6 shadow-[0_22px_48px_-34px_rgba(15,23,42,0.7)]">
+        <section className="mx-auto w-full max-w-md rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] px-5 py-6 shadow-[var(--sh-sm)]">
           <div className="mb-5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Admin Access</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">관리자 인증</h1>

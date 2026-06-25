@@ -21,12 +21,12 @@ export default function SentimentGauge({ fearGreedScore, fearGreedLabel }: Senti
           <svg viewBox="0 0 100 50" className="w-full h-full" aria-hidden="true">
             <defs>
               <linearGradient id="gaugeFinal" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#ef4444" />
-                <stop offset="50%" stopColor="#eab308" />
-                <stop offset="100%" stopColor="#22c55e" />
+                <stop offset="0%" stopColor="var(--c-down)" />
+                <stop offset="50%" stopColor="var(--c-warn)" />
+                <stop offset="100%" stopColor="var(--c-up)" />
               </linearGradient>
             </defs>
-            <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" strokeWidth="6" strokeLinecap="round" />
+            <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="var(--c-line)" strokeWidth="6" strokeLinecap="round" />
             <path
               d="M 10 45 A 40 40 0 0 1 90 45"
               fill="none"

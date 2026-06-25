@@ -5,6 +5,16 @@ import { join, relative } from "node:path";
 
 const ROOT = process.cwd();
 const SRC_ROOT = join(ROOT, "src");
+const RAW_COLOR_ALLOWLIST_PATH = join(ROOT, "scripts/raw-color-allowlist.json");
+const RAW_COLOR_ALLOWLIST_SCHEMA = "raw-color-allowlist/v2";
+const ALLOWED_RAW_COLOR_CATEGORIES = new Set([
+  "token-source",
+  "style-island",
+  "metadata-color",
+  "admin-internal",
+  "chart-exception",
+  "p4-delete",
+]);
 const CSS_TARGETS = [
   "src/app/globals.css",
   "src/styles/theme-c.css",
@@ -109,6 +119,8 @@ const spacingDeclaration = new RegExp(
   "gm",
 );
 const rawColorPattern = /#[0-9A-Fa-f]{3,8}|rgba?\(|(?<!-)\b(?:white|black)\b(?!-)/g;
+const rawColorGovernancePattern =
+  /(?<![&\w-])#(?:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|(?=[0-9A-Fa-f]{3,4}\b)(?=[0-9A-Fa-f]*[A-Fa-f])[0-9A-Fa-f]{3,4})\b|rgba?\([^)]*\)|(?<!-)\b(?:white|black)\b(?!-)/g;
 const namedTailwindColorPattern =
   /(?:text|bg|border|fill|stroke|hover:bg|hover:border)-(?:slate|emerald|rose|amber|purple|sky|violet|brand)-/g;
 
@@ -285,6 +297,37 @@ function fail(message, details = []) {
   process.exit(1);
 }
 
+function isCommentOnlyLine(line) {
+  return /^\s*(?:\/\/|\/\*|\*)/.test(line);
+}
+
+function shouldIgnoreRawColorLiteral(literal) {
+  return /^rgba?\([^)]*var\(--/.test(literal);
+}
+
+function collectRawColorLiterals(text) {
+  const literals = new Map();
+  const lines = text.split("\n");
+
+  lines.forEach((line, index) => {
+    if (isCommentOnlyLine(line)) return;
+
+    for (const match of line.matchAll(rawColorGovernancePattern)) {
+      const literal = match[0];
+      if (shouldIgnoreRawColorLiteral(literal)) continue;
+
+      if (!literals.has(literal)) {
+        literals.set(literal, { count: 0, lines: [] });
+      }
+      const entry = literals.get(literal);
+      entry.count += 1;
+      entry.lines.push(index + 1);
+    }
+  });
+
+  return literals;
+}
+
 const globals = readFileSync(join(ROOT, "src/app/globals.css"), "utf8");
 const layout = readFileSync(join(ROOT, "src/app/layout.tsx"), "utf8");
 const themeC = readFileSync(join(ROOT, "src/styles/theme-c.css"), "utf8");
@@ -294,6 +337,27 @@ const navigation = readFileSync(join(ROOT, "src/styles/navigation.css"), "utf8")
 const marketChartFrame = readFileSync(join(ROOT, "src/lib/market-valuation/charts/MarketChartFrame.tsx"), "utf8");
 const marketChartEngine = readFileSync(join(ROOT, "src/lib/market-valuation/charts/MarketChartEngineClient.tsx"), "utf8");
 const failures = [];
+let rawColorAllowlist = { files: {}, file_categories: {}, total_allowed_occurrences: 0 };
+
+try {
+  rawColorAllowlist = JSON.parse(readFileSync(RAW_COLOR_ALLOWLIST_PATH, "utf8"));
+} catch (error) {
+  failures.push(`W5 raw color allowlist unreadable: ${error.message}`);
+}
+
+if (rawColorAllowlist.schema_version !== RAW_COLOR_ALLOWLIST_SCHEMA) {
+  failures.push(
+    `W5 raw color allowlist schema expected ${RAW_COLOR_ALLOWLIST_SCHEMA}, got ${rawColorAllowlist.schema_version ?? "missing"}`,
+  );
+}
+if (!rawColorAllowlist.files || typeof rawColorAllowlist.files !== "object") {
+  failures.push("W5 raw color allowlist files map missing");
+  rawColorAllowlist.files = {};
+}
+if (!rawColorAllowlist.file_categories || typeof rawColorAllowlist.file_categories !== "object") {
+  failures.push("W5 raw color allowlist file_categories map missing");
+  rawColorAllowlist.file_categories = {};
+}
 
 function declarationValue(text, name) {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -496,7 +560,7 @@ for (const required of [
 
 const cssText = CSS_TARGETS.map((path) => readFileSync(join(ROOT, path), "utf8")).join("\n");
 const definedTokens = new Set([...cssText.matchAll(/(--c-[A-Za-z0-9_-]+)\s*:/g)].map((match) => match[1]));
-const scannedFiles = walk(SRC_ROOT);
+const scannedFiles = walk(SRC_ROOT).sort();
 const referencedTokens = new Map();
 
 for (const file of scannedFiles) {
@@ -511,6 +575,54 @@ for (const file of scannedFiles) {
 for (const [token, files] of referencedTokens) {
   if (!definedTokens.has(token)) {
     failures.push(`orphaned ${token}: ${[...new Set(files)].slice(0, 5).join(", ")}`);
+  }
+}
+
+let rawColorCurrentCount = 0;
+const currentRawColorsByFile = new Map();
+for (const file of scannedFiles) {
+  const relPath = relative(ROOT, file);
+  const allowed = rawColorAllowlist.files[relPath] ?? {};
+  const literals = collectRawColorLiterals(readFileSync(file, "utf8"));
+  if (literals.size > 0) {
+    currentRawColorsByFile.set(relPath, literals);
+    const fileCategory = rawColorAllowlist.file_categories[relPath];
+    if (!fileCategory || typeof fileCategory !== "object") {
+      failures.push(`W5 raw color file missing category: ${relPath}`);
+    } else if (!ALLOWED_RAW_COLOR_CATEGORIES.has(fileCategory.category)) {
+      failures.push(`W5 raw color file has unknown category: ${relPath} ${fileCategory.category ?? "missing"}`);
+    }
+  }
+
+  for (const [literal, { count, lines }] of literals) {
+    rawColorCurrentCount += count;
+    const maxAllowed = Number(allowed[literal] ?? 0);
+    if (count > maxAllowed) {
+      failures.push(
+        `W5 raw color literal not allowlisted: ${relPath}:${lines.slice(0, 3).join(",")} ${literal} count ${count} > ${maxAllowed}`,
+      );
+    }
+  }
+}
+for (const [relPath, allowedLiterals] of Object.entries(rawColorAllowlist.files)) {
+  const fileCategory = rawColorAllowlist.file_categories[relPath];
+  if (!fileCategory || typeof fileCategory !== "object") {
+    failures.push(`W5 raw color allowlist entry missing category: ${relPath}`);
+  } else if (!ALLOWED_RAW_COLOR_CATEGORIES.has(fileCategory.category)) {
+    failures.push(`W5 raw color allowlist entry unknown category: ${relPath} ${fileCategory.category ?? "missing"}`);
+  }
+
+  const currentLiterals = currentRawColorsByFile.get(relPath) ?? new Map();
+  for (const [literal, allowedCountRaw] of Object.entries(allowedLiterals)) {
+    const allowedCount = Number(allowedCountRaw);
+    const currentCount = currentLiterals.get(literal)?.count ?? 0;
+    if (!Number.isFinite(allowedCount) || allowedCount < 0) {
+      failures.push(`W5 raw color allowlist invalid count: ${relPath} ${literal}=${allowedCountRaw}`);
+    } else if (currentCount < allowedCount) {
+      failures.push(
+        `W5 raw color allowlist stale: ${relPath} ${literal} count ${currentCount} < ${allowedCount}; run npm run qa:tokens:update-allowlist`,
+      );
+    }
   }
 }
 
@@ -558,5 +670,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `[qa:tokens] token foundation OK (${REQUIRED_THEME_ALIASES.length} theme aliases, ${REQUIRED_SPACING_TOKENS.length} spacing tokens, ${definedTokens.size} --c-* definitions, ${referencedTokens.size} --c-* references)`,
+  `[qa:tokens] token foundation OK (${REQUIRED_THEME_ALIASES.length} theme aliases, ${REQUIRED_SPACING_TOKENS.length} spacing tokens, ${definedTokens.size} --c-* definitions, ${referencedTokens.size} --c-* references, raw colors ${rawColorCurrentCount}/${rawColorAllowlist.total_allowed_occurrences} baseline)`,
 );

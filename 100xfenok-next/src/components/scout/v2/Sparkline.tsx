@@ -3,10 +3,10 @@
 import type { ScoutTone } from "./types";
 
 const STROKE: Record<ScoutTone, string> = {
-  up: "#10b981",
-  down: "#f43f5e",
-  warn: "#f59e0b",
-  flat: "#64748b",
+  up: "var(--c-up)",
+  down: "var(--c-down)",
+  warn: "var(--c-warn)",
+  flat: "var(--c-ink-3)",
 };
 
 export default function Sparkline({

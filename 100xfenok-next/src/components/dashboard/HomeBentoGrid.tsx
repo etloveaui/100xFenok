@@ -72,7 +72,7 @@ function toneFromRegimeClass(regimeClass: string) {
       value: "text-emerald-300",
       bar: "from-emerald-300 to-sky-300",
       label: "text-emerald-100",
-      ring: "shadow-[0_24px_54px_-38px_rgba(16,185,129,0.65)]",
+      ring: "shadow-[0_24px_54px_-38px_color-mix(in_srgb,var(--c-up)_65%,transparent)]",
     };
   }
   if (regimeClass === "is-risk-off") {
@@ -81,7 +81,7 @@ function toneFromRegimeClass(regimeClass: string) {
       value: "text-rose-200",
       bar: "from-rose-300 to-amber-300",
       label: "text-rose-100",
-      ring: "shadow-[0_24px_54px_-38px_rgba(244,63,94,0.55)]",
+      ring: "shadow-[0_24px_54px_-38px_color-mix(in_srgb,var(--c-down)_55%,transparent)]",
     };
   }
   return {
@@ -89,7 +89,7 @@ function toneFromRegimeClass(regimeClass: string) {
     value: "text-amber-200",
     bar: "from-amber-300 to-orange-200",
     label: "text-amber-100",
-    ring: "shadow-[0_24px_54px_-38px_rgba(245,158,11,0.55)]",
+    ring: "shadow-[0_24px_54px_-38px_color-mix(in_srgb,var(--c-warn)_55%,transparent)]",
   };
 }
 
@@ -141,7 +141,7 @@ function FreshnessBadge({
         aria-label={meta.label}
         title={meta.label}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.18)]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_color-mix(in_srgb,var(--c-up)_18%,transparent)]" />
         <FreshnessLabel meta={meta} />
       </span>
     );
@@ -203,8 +203,8 @@ function TileShell({
       className={cx(
         "relative min-w-0 overflow-hidden rounded-[1.5rem] border p-4 transition hover:-translate-y-px",
         dark
-          ? "border-white/10 bg-[linear-gradient(160deg,#020617_0%,#08182f_52%,#0f2e57_100%)] text-white shadow-[0_18px_42px_-32px_rgba(15,23,42,0.85)]"
-          : "border-slate-200 bg-white text-slate-950 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.10)] hover:shadow-[0_18px_48px_-12px_rgba(0,0,0,0.14)]",
+          ? "border-white/10 bg-[linear-gradient(160deg,var(--fnk-fixed-slate-950)_0%,color-mix(in_srgb,var(--c-brand)_14%,var(--fnk-fixed-slate-950))_52%,color-mix(in_srgb,var(--c-brand)_26%,var(--fnk-fixed-slate-950))_100%)] text-white shadow-[0_18px_42px_-32px_color-mix(in_srgb,var(--c-ink)_85%,transparent)]"
+          : "border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink)] shadow-[var(--sh-sm)] hover:shadow-[var(--sh-sm)]",
         muted && "opacity-[0.55] saturate-[0.75]",
         className,
       )}
@@ -246,8 +246,8 @@ function TileShell({
         className={cx(
           "pointer-events-none absolute inset-0 rounded-[inherit]",
           dark
-            ? "bg-[radial-gradient(120%_100%_at_0%_0%,rgba(52,211,153,0.12),rgba(52,211,153,0)_55%)]"
-            : "bg-[radial-gradient(120%_90%_at_0%_0%,rgba(27,115,211,0.06),rgba(27,115,211,0)_55%),radial-gradient(110%_80%_at_100%_100%,rgba(213,173,54,0.05),rgba(213,173,54,0)_52%)]",
+            ? "bg-[radial-gradient(120%_100%_at_0%_0%,color-mix(in_srgb,var(--c-up)_12%,transparent),transparent_55%)]"
+            : "bg-[radial-gradient(120%_90%_at_0%_0%,color-mix(in_srgb,var(--c-brand)_6%,transparent),transparent_55%),radial-gradient(110%_80%_at_100%_100%,color-mix(in_srgb,var(--fnk-brand-gold-bright)_5%,transparent),transparent_52%)]",
         )}
         aria-hidden="true"
       />
@@ -434,7 +434,7 @@ export default function HomeBentoGrid({
                   tone: "text-amber-700",
                 },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                <div key={item.label} className="rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-3 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--c-panel)_70%,transparent)]">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
                     {item.meta ? (
@@ -495,12 +495,12 @@ export default function HomeBentoGrid({
                 <svg viewBox="0 0 100 50" className="h-full w-full" aria-hidden="true">
                   <defs>
                     <linearGradient id="homeFearGreedGauge" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#ef4444" />
-                      <stop offset="50%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#22c55e" />
+                      <stop offset="0%" stopColor="var(--c-down)" />
+                      <stop offset="50%" stopColor="var(--c-warn)" />
+                      <stop offset="100%" stopColor="var(--c-up)" />
                     </linearGradient>
                   </defs>
-                  <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e2e8f0" strokeWidth="7" strokeLinecap="round" />
+                  <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="var(--c-line)" strokeWidth="7" strokeLinecap="round" />
                   <path
                     d="M 10 45 A 40 40 0 0 1 90 45"
                     fill="none"

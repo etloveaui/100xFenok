@@ -820,7 +820,7 @@ function MobileStockCard({
   const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
   const metrics = mobileMetricKeys(preset);
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]">
+    <article className="overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
         <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
@@ -1342,7 +1342,7 @@ export default function ScreenerClient({
       </section>
 
       {/* Filter bar */}
-      <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]">
+      <section className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label className="flex flex-col gap-1">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
@@ -1577,7 +1577,7 @@ export default function ScreenerClient({
       </div>
 
       {/* Results */}
-      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
+      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}>
         <div className="space-y-3 md:hidden">
           {pageRows.map((stock) => {
             const expanded = expandedTicker === stock.ticker;

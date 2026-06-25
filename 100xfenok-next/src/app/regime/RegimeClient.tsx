@@ -311,7 +311,7 @@ function EvidenceList({ items }: { items: Pulse[] }) {
 
 function AxisCard({ axis }: { axis: Axis }) {
   return (
-    <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_12px_36px_-24px_rgba(15,23,42,0.28)]">
+    <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
       <header className="mb-3 flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">판정 근거</p>
@@ -420,7 +420,7 @@ export default function RegimeClient() {
         </div>
       ) : null}
 
-      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-[0_16px_48px_-30px_rgba(15,23,42,0.35)]", !dataReady && "opacity-70")}>
+      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-[var(--sh-sm)]", !dataReady && "opacity-70")}>
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">종합 판독</p>
@@ -451,7 +451,7 @@ export default function RegimeClient() {
         ))}
       </section>
 
-      <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_12px_36px_-24px_rgba(15,23,42,0.28)]">
+      <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
         <header className="mb-3 flex min-w-0 flex-wrap items-end justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">자료 기준</p>

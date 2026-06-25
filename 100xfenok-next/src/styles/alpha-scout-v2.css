@@ -160,7 +160,7 @@
 .as-cover-card__tag {
   padding: 2px 8px;
   background: var(--brand-gold-bright);
-  color: #fff;
+  color: var(--fnk-color-black);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 10px;
@@ -237,14 +237,14 @@
 }
 .as-cover-art__bar {
   flex: 1;
-  background: rgba(255, 255, 255, 0.7);
+  background: color-mix(in srgb, var(--fnk-color-white) 70%, transparent);
   border-radius: 2px 2px 0 0;
 }
 .as-cover-art__pin {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.95);
+  background: color-mix(in srgb, var(--fnk-color-white) 95%, transparent);
   border-radius: 8px;
   padding: 6px 10px;
   display: flex;
@@ -278,8 +278,15 @@
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 54px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--fnk-color-white);
   letter-spacing: -0.02em;
+}
+.as-cover-art--tone-blue .as-cover-art__ticker,
+.as-cover-art--tone-gold .as-cover-art__ticker {
+  color: var(--fnk-color-black);
+}
+[data-theme="dark"] .as-cover-art--tone-navy .as-cover-art__ticker {
+  color: var(--fnk-color-black);
 }
 
 /* ===== Pick chip ===== */

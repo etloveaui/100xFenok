@@ -10,19 +10,19 @@ import TraceableNumber, {
 
 const TONE_COLOR = {
   stable: {
-    bg: "rgba(16,185,129,0.10)",
+    bg: "color-mix(in srgb, var(--c-up) 10%, transparent)",
     fg: "var(--up)",
-    border: "rgba(16,185,129,0.28)",
+    border: "color-mix(in srgb, var(--c-up) 28%, transparent)",
   },
   watch: {
-    bg: "rgba(245,158,11,0.10)",
-    fg: "#b45309",
-    border: "rgba(245,158,11,0.28)",
+    bg: "color-mix(in srgb, var(--c-warn) 10%, transparent)",
+    fg: "var(--c-warn)",
+    border: "color-mix(in srgb, var(--c-warn) 28%, transparent)",
   },
   stress: {
-    bg: "rgba(244,63,94,0.10)",
+    bg: "color-mix(in srgb, var(--c-down) 10%, transparent)",
     fg: "var(--down)",
-    border: "rgba(244,63,94,0.28)",
+    border: "color-mix(in srgb, var(--c-down) 28%, transparent)",
   },
 } as const;
 

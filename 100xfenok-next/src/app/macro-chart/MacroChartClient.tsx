@@ -652,7 +652,7 @@ async function downloadChartPng() {
   exportCanvas.height = canvas.height;
   const ctx = exportCanvas.getContext("2d");
   if (!ctx) return false;
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--c-panel").trim() || "Canvas";
   ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
   ctx.drawImage(canvas, 0, 0);
   const link = document.createElement("a");

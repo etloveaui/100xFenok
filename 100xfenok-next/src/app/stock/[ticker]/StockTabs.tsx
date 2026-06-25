@@ -801,9 +801,9 @@ export function computeSummaryScores(
 }
 
 function scoreColor(ratio: number): string {
-  if (ratio >= 0.75) return "#059669"; // emerald-600
-  if (ratio >= 0.5) return "#d97706"; // amber-600
-  return "#e11d48"; // rose-600
+  if (ratio >= 0.75) return "var(--c-up)";
+  if (ratio >= 0.5) return "var(--c-warn)";
+  return "var(--c-down)";
 }
 
 export function SummaryScoreCard({ data, perBand, industry }: {
@@ -820,7 +820,7 @@ export function SummaryScoreCard({ data, perBand, industry }: {
   const verdict = ratio >= 0.75 ? "우량 신호 우세" : ratio >= 0.5 ? "혼조 — 강점·약점 공존" : "주의 신호 우세";
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
+    <div className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

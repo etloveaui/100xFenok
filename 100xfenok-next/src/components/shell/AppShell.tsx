@@ -82,8 +82,8 @@ const NAV: NavItem[] = [
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
         <path d="M3 6h9M15 6h2M3 14h2M9 14h8" />
-        <circle cx="13.5" cy="6" r="2" fill="#fff" />
-        <circle cx="6.5" cy="14" r="2" fill="#fff" />
+        <circle cx="13.5" cy="6" r="2" fill="var(--c-panel)" />
+        <circle cx="6.5" cy="14" r="2" fill="var(--c-panel)" />
       </svg>
     ),
   },

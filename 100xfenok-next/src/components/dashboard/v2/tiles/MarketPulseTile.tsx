@@ -12,10 +12,10 @@ import TraceableNumber, {
 import RegimeSparkline from "@/components/dashboard/v4/RegimeSparkline";
 
 function axisBg(index: number, tone: V2RegimeAxis["tone"]) {
-  if (tone === "down") return "linear-gradient(to right,#f43f5e,#fb923c)";
-  if (index === 0) return "linear-gradient(to right,#10b981,#38bdf8)";
-  if (index === 1) return "linear-gradient(to right,#38bdf8,#6366f1)";
-  return "linear-gradient(to right,#f59e0b,#fb923c)";
+  if (tone === "down") return "linear-gradient(to right,var(--c-down),var(--c-warn))";
+  if (index === 0) return "linear-gradient(to right,var(--c-up),var(--c-info))";
+  if (index === 1) return "linear-gradient(to right,var(--c-info),var(--c-brand))";
+  return "linear-gradient(to right,var(--c-warn),var(--c-down))";
 }
 
 function gaugeClass(regimeClass: string) {

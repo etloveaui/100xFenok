@@ -47,7 +47,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
     <div 
       className="text-slate-800 min-h-screen"
       style={{
-        backgroundColor: '#f8fafc'
+        backgroundColor: 'var(--c-surface-2)'
       }}
     >
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
@@ -67,7 +67,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
             >
               <div
                 className="md:w-1/2 mb-6 md:mb-0 flex items-center justify-center rounded-lg min-h-[200px]"
-                style={{ background: 'linear-gradient(135deg, #fef2f2, #fffbeb, #f1f5f9)' }}
+                style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--c-down) 10%, transparent), color-mix(in srgb, var(--c-warn) 10%, transparent), var(--c-surface-2))' }}
               >
                 <div className="text-center p-6">
                   <div className="text-6xl mb-3">&#9878;</div>

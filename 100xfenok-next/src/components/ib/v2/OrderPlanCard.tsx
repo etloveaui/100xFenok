@@ -46,7 +46,7 @@ function OrderRow({ r, isNext, open, onToggle }: RowProps) {
           </div>
           <div>
             <dt>체결여부</dt>
-            <dd style={{ color: r.filled ? "#047857" : "#854d0e" }}>
+            <dd style={{ color: r.filled ? "var(--c-up)" : "var(--c-warn)" }}>
               {r.filled ? "체결 완료" : "대기"}
             </dd>
           </div>

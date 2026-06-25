@@ -15,7 +15,7 @@ export const ISSUES: Issue[] = [
       { kind: "value", ticker: "JPM", name: "JP모건", note: "P/E 12.8x" },
       { kind: "momentum", ticker: "GE", name: "GE", note: "YTD +62.5%" },
     ],
-    cover: { tone: "navy", accent: "#010079", pattern: "data", spark: [8,11,9,14,12,17,15,22,20,28,26,34] },
+    cover: { tone: "navy", accent: "var(--fnk-brand-navy)", pattern: "data", spark: [8,11,9,14,12,17,15,22,20,28,26,34] },
   },
   {
     id: 141, slug: "2025-08-17_pltr", date: "2025-08-17", dateLabel: "2025-08-17",
@@ -28,7 +28,7 @@ export const ISSUES: Issue[] = [
       { kind: "value", ticker: "JNJ", name: "존슨앤존슨", note: "배당 3.2%" },
       { kind: "institution", ticker: "AAPL", name: "애플", note: "TP $230" },
     ],
-    cover: { tone: "blue", accent: "#1B73D3", pattern: "gradient", spark: [12,13,11,15,18,17,21,24,23,26,28,30] },
+    cover: { tone: "blue", accent: "var(--fnk-brand-interactive)", pattern: "gradient", spark: [12,13,11,15,18,17,21,24,23,26,28,30] },
   },
   {
     id: 140, slug: "2025-08-10_energy", date: "2025-08-10", dateLabel: "2025-08-10",
@@ -41,7 +41,7 @@ export const ISSUES: Issue[] = [
       { kind: "momentum", ticker: "NEE", name: "넥스트에라", note: "+9% YTD" },
       { kind: "institution", ticker: "CVX", name: "쉐브론", note: "TP $172" },
     ],
-    cover: { tone: "gold", accent: "#7a5a00", pattern: "minimal", spark: [20,18,17,19,22,21,18,15,16,18,20,22] },
+    cover: { tone: "gold", accent: "var(--fnk-brand-gold)", pattern: "minimal", spark: [20,18,17,19,22,21,18,15,16,18,20,22] },
   },
   {
     id: 139, slug: "2025-08-03_banks", date: "2025-08-03", dateLabel: "2025-08-03",
@@ -54,7 +54,7 @@ export const ISSUES: Issue[] = [
       { kind: "momentum", ticker: "BAC", name: "뱅크오브아메리카", note: "+11% QoQ" },
       { kind: "institution", ticker: "GS", name: "골드만삭스", note: "TP $480" },
     ],
-    cover: { tone: "navy", accent: "#010079", pattern: "data", spark: [10,11,12,12,13,15,14,16,17,18,18,19] },
+    cover: { tone: "navy", accent: "var(--fnk-brand-navy)", pattern: "data", spark: [10,11,12,12,13,15,14,16,17,18,18,19] },
   },
   {
     id: 138, slug: "2025-07-27_big-tech", date: "2025-07-27", dateLabel: "2025-07-27",
@@ -67,7 +67,7 @@ export const ISSUES: Issue[] = [
       { kind: "momentum", ticker: "NVDA", name: "엔비디아", note: "+24% MoM" },
       { kind: "institution", ticker: "META", name: "메타", note: "TP $640" },
     ],
-    cover: { tone: "blue", accent: "#1B73D3", pattern: "data", spark: [14,15,17,16,19,22,21,24,26,28,27,30] },
+    cover: { tone: "blue", accent: "var(--fnk-brand-interactive)", pattern: "data", spark: [14,15,17,16,19,22,21,24,26,28,27,30] },
   },
   {
     id: 137, slug: "2025-07-20_jnj", date: "2025-07-20", dateLabel: "2025-07-20",
@@ -80,7 +80,7 @@ export const ISSUES: Issue[] = [
       { kind: "momentum", ticker: "PLTR", name: "팔란티어", note: "+18% MoM" },
       { kind: "institution", ticker: "AAPL", name: "애플", note: "TP $230" },
     ],
-    cover: { tone: "gold", accent: "#7a5a00", pattern: "gradient", spark: [6,7,7,8,8,9,9,10,10,10,11,11] },
+    cover: { tone: "gold", accent: "var(--fnk-brand-gold)", pattern: "gradient", spark: [6,7,7,8,8,9,9,10,10,10,11,11] },
   },
   {
     id: 136, slug: "2025-07-14_semis", date: "2025-07-14", dateLabel: "2025-07-14",
@@ -93,7 +93,7 @@ export const ISSUES: Issue[] = [
       { kind: "momentum", ticker: "NVDA", name: "엔비디아", note: "+24% MoM" },
       { kind: "institution", ticker: "AVGO", name: "브로드컴", note: "TP $1,950" },
     ],
-    cover: { tone: "navy", accent: "#010079", pattern: "minimal", spark: [10,12,11,14,16,15,18,22,21,24,27,30] },
+    cover: { tone: "navy", accent: "var(--fnk-brand-navy)", pattern: "minimal", spark: [10,12,11,14,16,15,18,22,21,24,27,30] },
   },
   {
     id: 135, slug: "2025-07-07_fx", date: "2025-07-07", dateLabel: "2025-07-07",
@@ -106,7 +106,7 @@ export const ISSUES: Issue[] = [
       { kind: "momentum", ticker: "TLT", name: "장기채", note: "베타 0.8" },
       { kind: "institution", ticker: "EEM", name: "신흥국", note: "TP $48" },
     ],
-    cover: { tone: "gold", accent: "#7a5a00", pattern: "data", spark: [16,17,17,16,15,14,15,16,16,17,18,18] },
+    cover: { tone: "gold", accent: "var(--fnk-brand-gold)", pattern: "data", spark: [16,17,17,16,15,14,15,16,16,17,18,18] },
   },
 ];
 

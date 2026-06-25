@@ -131,10 +131,10 @@ export default function RegimeSparkline({
 
   const bandColor =
     regimeTone === "down"
-      ? "rgba(244,63,94,0.10)"
+      ? "color-mix(in srgb, var(--c-down) 10%, transparent)"
       : regimeTone === "neutral"
-        ? "rgba(148,163,184,0.10)"
-        : "rgba(16,185,129,0.10)";
+        ? "color-mix(in srgb, var(--c-ink-4) 10%, transparent)"
+        : "color-mix(in srgb, var(--c-up) 10%, transparent)";
 
   const empty = hist.length === 0;
   const onePoint = hist.length === 1;
@@ -152,8 +152,8 @@ export default function RegimeSparkline({
         width,
         height,
         flexShrink: 0,
-        background: "#ffffff",
-        border: "1px solid #e2e8f0",
+        background: "var(--c-panel)",
+        border: "1px solid var(--c-line)",
         borderRadius: 8,
         overflow: "hidden",
       }}
@@ -171,25 +171,28 @@ export default function RegimeSparkline({
           y1={height / 2}
           x2={width}
           y2={height / 2}
-          stroke="#e2e8f0"
+          stroke="var(--c-line)"
           strokeWidth="1"
           strokeDasharray="2 3"
         />
         {view.areaPath ? (
-          <path d={view.areaPath} fill={view.isUp ? "rgba(16,185,129,0.12)" : "rgba(244,63,94,0.12)"} />
+          <path
+            d={view.areaPath}
+            fill={view.isUp ? "color-mix(in srgb, var(--c-up) 12%, transparent)" : "color-mix(in srgb, var(--c-down) 12%, transparent)"}
+          />
         ) : null}
         {view.path ? (
           <path
             d={view.path}
             fill="none"
-            stroke="#1B73D3"
+            stroke="var(--c-brand)"
             strokeWidth="1.6"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         ) : null}
         {view.dots.map((d, i) => (
-          <circle key={i} cx={d.x} cy={d.y} r="2.2" fill="#1B73D3" />
+          <circle key={i} cx={d.x} cy={d.y} r="2.2" fill="var(--c-brand)" />
         ))}
       </svg>
 
@@ -210,8 +213,8 @@ export default function RegimeSparkline({
             fontSize: 9,
             fontWeight: 700,
             letterSpacing: ".1em",
-            color: "#94a3b8",
-            background: "rgba(255,255,255,0.78)",
+            color: "var(--c-ink-4)",
+            background: "color-mix(in srgb, var(--c-panel) 78%, transparent)",
             padding: "1px 4px",
             borderRadius: 3,
           }}
@@ -223,7 +226,7 @@ export default function RegimeSparkline({
             style={{
               fontFamily: "'Noto Sans KR',sans-serif",
               fontSize: 10.5,
-              color: "#94a3b8",
+              color: "var(--c-ink-4)",
               fontWeight: 500,
             }}
           >
@@ -234,8 +237,8 @@ export default function RegimeSparkline({
             style={{
               fontFamily: "'JetBrains Mono',monospace",
               fontSize: 10,
-              color: "#475569",
-              background: "rgba(255,255,255,0.78)",
+              color: "var(--c-ink-3)",
+              background: "color-mix(in srgb, var(--c-panel) 78%, transparent)",
               padding: "1px 4px",
               borderRadius: 3,
             }}
@@ -248,8 +251,8 @@ export default function RegimeSparkline({
               fontFamily: "'JetBrains Mono',monospace",
               fontSize: 10,
               fontWeight: 700,
-              color: view.isUp ? "#047857" : "#9f1239",
-              background: "rgba(255,255,255,0.78)",
+              color: view.isUp ? "var(--c-up)" : "var(--c-down)",
+              background: "color-mix(in srgb, var(--c-panel) 78%, transparent)",
               padding: "1px 4px",
               borderRadius: 3,
             }}

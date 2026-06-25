@@ -9,12 +9,12 @@ import TraceableNumber, {
 } from "@/components/dashboard/v4/TraceableNumber";
 
 function colorFor(value: number) {
-  if (value >= 1.5) return { bg: "rgba(16,185,129,0.28)", fg: "#047857" };
-  if (value >= 0.5) return { bg: "rgba(16,185,129,0.16)", fg: "#047857" };
-  if (value >= 0) return { bg: "rgba(16,185,129,0.08)", fg: "var(--hp-ink-2)" };
-  if (value > -0.5) return { bg: "rgba(244,63,94,0.08)", fg: "var(--hp-ink-2)" };
-  if (value > -1.5) return { bg: "rgba(244,63,94,0.16)", fg: "#b91c1c" };
-  return { bg: "rgba(244,63,94,0.28)", fg: "#b91c1c" };
+  if (value >= 1.5) return { bg: "color-mix(in srgb, var(--c-up) 28%, transparent)", fg: "var(--c-up)" };
+  if (value >= 0.5) return { bg: "color-mix(in srgb, var(--c-up) 16%, transparent)", fg: "var(--c-up)" };
+  if (value >= 0) return { bg: "color-mix(in srgb, var(--c-up) 8%, transparent)", fg: "var(--hp-ink-2)" };
+  if (value > -0.5) return { bg: "color-mix(in srgb, var(--c-down) 8%, transparent)", fg: "var(--hp-ink-2)" };
+  if (value > -1.5) return { bg: "color-mix(in srgb, var(--c-down) 16%, transparent)", fg: "var(--c-down)" };
+  return { bg: "color-mix(in srgb, var(--c-down) 28%, transparent)", fg: "var(--c-down)" };
 }
 
 /**
@@ -51,7 +51,7 @@ export default function BreadthHeatmapTile({
     >
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
         <span className="hp-breadth-pill hp-breadth-pill--up">
-          <span className="hp-dot" style={{ background: "#10b981" }} aria-hidden="true" />
+          <span className="hp-dot" style={{ background: "var(--c-up)" }} aria-hidden="true" />
           상승{" "}
           <TraceableNumber
             mode={traceMode}
@@ -72,7 +72,7 @@ export default function BreadthHeatmapTile({
           </TraceableNumber>
         </span>
         <span className="hp-breadth-pill hp-breadth-pill--down">
-          <span className="hp-dot" style={{ background: "#f43f5e" }} aria-hidden="true" />
+          <span className="hp-dot" style={{ background: "var(--c-down)" }} aria-hidden="true" />
           하락 {dashboard.sectorDown}
         </span>
       </div>

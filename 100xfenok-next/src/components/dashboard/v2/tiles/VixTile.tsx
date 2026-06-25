@@ -93,14 +93,14 @@ export default function VixTile({
           >
             <defs>
               <linearGradient id="vixV2Grad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#1B73D3" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#1B73D3" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--c-brand)" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="var(--c-brand)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <polyline
               points={path}
               fill="none"
-              stroke="#1B73D3"
+              stroke="var(--c-brand)"
               strokeWidth={2}
               vectorEffect="non-scaling-stroke"
             />

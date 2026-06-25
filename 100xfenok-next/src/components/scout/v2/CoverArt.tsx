@@ -3,10 +3,19 @@
 import type { Issue } from "./types";
 
 const TONE_BG: Record<string, string> = {
-  navy: "linear-gradient(135deg, #010079 0%, #1B73D3 100%)",
-  blue: "linear-gradient(135deg, #1B73D3 0%, #4a8fdb 100%)",
-  gold: "linear-gradient(135deg, #7a5a00 0%, #D5AD36 100%)",
+  navy: "linear-gradient(135deg, var(--fnk-brand-navy) 0%, var(--fnk-brand-interactive) 100%)",
+  blue: "linear-gradient(135deg, var(--fnk-brand-interactive) 0%, var(--fnk-brand-interactive-2) 100%)",
+  gold: "linear-gradient(135deg, var(--fnk-brand-gold) 0%, var(--fnk-brand-gold-bright) 100%)",
 };
+
+const TONE_SOLID: Record<string, string> = {
+  navy: "var(--fnk-brand-navy)",
+  blue: "var(--fnk-brand-interactive)",
+  gold: "var(--fnk-brand-gold)",
+};
+
+const COVER_FILL = "color-mix(in srgb, var(--fnk-color-white) 18%, transparent)";
+const COVER_STROKE = "color-mix(in srgb, var(--fnk-color-white) 85%, transparent)";
 
 /**
  * 3 cover patterns auto-rendered from issue data with zero artwork:
@@ -25,13 +34,14 @@ export default function CoverArt({
   const isLarge = size === "lg";
   const height = isLarge ? 240 : 120;
   const bg = TONE_BG[cover.tone] ?? TONE_BG.navy;
+  const solid = cover.accent || TONE_SOLID[cover.tone] || TONE_SOLID.navy;
   const accentTicker = picks[0]?.ticker ?? "NVDA";
 
   if (cover.pattern === "minimal") {
     return (
       <div
-        className="as-cover-art as-cover-art--minimal"
-        style={{ background: cover.accent, height }}
+        className={`as-cover-art as-cover-art--minimal as-cover-art--tone-${cover.tone}`}
+        style={{ background: solid, height }}
       >
         <span className="as-cover-art__ticker">{accentTicker}</span>
       </div>
@@ -51,12 +61,12 @@ export default function CoverArt({
       .join(" ");
     return (
       <div
-        className="as-cover-art as-cover-art--gradient"
+        className={`as-cover-art as-cover-art--gradient as-cover-art--tone-${cover.tone}`}
         style={{ background: bg, height }}
       >
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="as-cover-art__svg">
-          <path d={`${path} L 100 100 L 0 100 Z`} fill="rgba(255,255,255,0.18)" />
-          <path d={path} fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} />
+          <path d={`${path} L 100 100 L 0 100 Z`} fill={COVER_FILL} />
+          <path d={path} fill="none" stroke={COVER_STROKE} strokeWidth={1.4} />
         </svg>
       </div>
     );
@@ -69,7 +79,7 @@ export default function CoverArt({
   const bars = cover.spark.map((v) => ((v - min) / range) * 80 + 10);
   return (
     <div
-      className="as-cover-art as-cover-art--data"
+      className={`as-cover-art as-cover-art--data as-cover-art--tone-${cover.tone}`}
       style={{ background: bg, height }}
     >
       <div className="as-cover-art__grid">

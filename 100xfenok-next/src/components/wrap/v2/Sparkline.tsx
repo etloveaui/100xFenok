@@ -3,10 +3,10 @@
 import type { WrapTone } from "./types";
 
 const TONE_STROKE: Record<WrapTone, string> = {
-  up: "#10b981",
-  down: "#f43f5e",
-  warn: "#f59e0b",
-  flat: "#475569",
+  up: "var(--c-up)",
+  down: "var(--c-down)",
+  warn: "var(--c-warn)",
+  flat: "var(--c-ink-3)",
 };
 
 export default function Sparkline({

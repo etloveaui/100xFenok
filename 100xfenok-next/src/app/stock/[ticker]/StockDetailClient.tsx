@@ -565,7 +565,8 @@ function MiniBarChart({
         />
         {bars.map((bar) => {
           const s = shape(bar.value);
-          const barColor = isFiniteNumber(bar.value) && bar.value < 0 ? "#f43f5e" : color;
+          const barColor = isFiniteNumber(bar.value) && bar.value < 0 ? "var(--c-down)" : color;
+          const estimateBarColor = `color-mix(in srgb, ${barColor} 28%, transparent)`;
           const label = `${bar.label}${bar.estimate ? " 추정" : ""} ${isFiniteNumber(bar.value) ? formatValue(bar.value) : "—"}`;
           const tooltipTop = s ? Math.max(0, s.top - 18) : 0;
           return (
@@ -582,13 +583,13 @@ function MiniBarChart({
                   style={{
                     top: `${s.top}%`,
                     height: `${s.height}%`,
-                    backgroundColor: bar.estimate ? `${barColor}40` : barColor,
+                    backgroundColor: bar.estimate ? estimateBarColor : barColor,
                     border: bar.estimate ? `2px dashed ${barColor}` : undefined,
                   }}
                 />
               ) : null}
               <span
-                className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black tabular-nums text-slate-700 opacity-0 shadow-sm transition-opacity group-focus:opacity-100 group-hover:opacity-100"
+                className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-1.5 py-0.5 text-[10px] font-black tabular-nums text-[var(--c-ink-2)] opacity-0 shadow-sm transition-opacity group-focus:opacity-100 group-hover:opacity-100"
                 style={{ top: `${tooltipTop}%` }}
               >
                 {label}
@@ -1424,10 +1425,10 @@ export default function StockDetailClient({
               <SectionCard title="재무 추이">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {([
-                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "#10b981"],
-                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "#06b6d4"],
-                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "#8b5cf6"],
-                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "#f59e0b"],
+                    ["매출", numberSeries(detail.income_statement?.revenue), detail.income_statement_estimates?.revenue, "var(--c-up)"],
+                    ["영업이익", numberSeries(detail.income_statement?.operating_income), detail.income_statement_estimates?.operating_income, "var(--c-info)"],
+                    ["순이익", numberSeries(detail.income_statement?.net_income), detail.income_statement_estimates?.net_income, "var(--c-recovery)"],
+                    ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "var(--c-warn)"],
                   ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
                     <div key={label}>
                       <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
@@ -1483,11 +1484,11 @@ export default function StockDetailClient({
                     <div>
                       <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
                       <div className="space-y-3">
-                        <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={profitabilityEstimates?.gross_margin} color="#14b8a6" years={years} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={profitabilityEstimates?.operating_margin} color="#06b6d4" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={profitabilityEstimates?.net_margin} color="#6366f1" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={profitabilityEstimates?.roe} color="#8b5cf6" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
-                        <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="#0ea5e9" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={profitabilityEstimates?.gross_margin} color="var(--c-up)" years={years} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={profitabilityEstimates?.operating_margin} color="var(--c-info)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={profitabilityEstimates?.net_margin} color="var(--c-brand)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={profitabilityEstimates?.roe} color="var(--c-recovery)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
+                        <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="var(--c-info)" years={years} formatValue={fmtWholePct} />
                       </div>
                       {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
                         <p className="mt-2 text-[10px] font-semibold text-slate-500">
@@ -1498,8 +1499,8 @@ export default function StockDetailClient({
                     <div>
                       <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
                       <div className="space-y-3">
-                        <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} estimates={estimateSeries(detail.growth_estimates?.revenue_growth, 100)} color="#10b981" years={years} formatValue={fmtPct} />
-                        <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} estimates={estimateSeries(detail.growth_estimates?.eps_growth, 100)} color="#f59e0b" years={years} formatValue={fmtPct} />
+                        <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} estimates={estimateSeries(detail.growth_estimates?.revenue_growth, 100)} color="var(--c-up)" years={years} formatValue={fmtPct} />
+                        <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} estimates={estimateSeries(detail.growth_estimates?.eps_growth, 100)} color="var(--c-warn)" years={years} formatValue={fmtPct} />
                       </div>
                     </div>
                   </div>

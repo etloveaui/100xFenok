@@ -26,7 +26,7 @@ export default function FooterMainBar({
   onInstallClick,
 }: FooterMainBarProps) {
   return (
-    <div className="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
+    <div className="bg-white/95 backdrop-blur-md border-t border-brand-navy/20 shadow-[var(--sh-sm)]">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="h-12 flex items-center justify-between gap-3">
           <Link

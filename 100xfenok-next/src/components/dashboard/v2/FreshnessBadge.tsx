@@ -7,28 +7,28 @@ const TONE_STYLE: Record<
   { dot: string; bg: string; fg: string; border: string; pulse: boolean }
 > = {
   live: {
-    dot: "#22c55e",
-    bg: "rgba(16,185,129,0.10)",
-    fg: "#047857",
-    border: "rgba(34,197,94,0.28)",
+    dot: "var(--c-up)",
+    bg: "color-mix(in srgb, var(--c-up) 10%, transparent)",
+    fg: "var(--c-up)",
+    border: "color-mix(in srgb, var(--c-up) 28%, transparent)",
     pulse: true,
   },
   dated: {
-    dot: "#94a3b8",
+    dot: "var(--c-ink-4)",
     bg: "var(--hp-tile-bg-soft)",
     fg: "var(--hp-ink-3)",
     border: "var(--hp-stroke)",
     pulse: false,
   },
   stale: {
-    dot: "#f59e0b",
-    bg: "rgba(245,158,11,0.10)",
-    fg: "#b45309",
-    border: "rgba(245,158,11,0.28)",
+    dot: "var(--c-warn)",
+    bg: "color-mix(in srgb, var(--c-warn) 10%, transparent)",
+    fg: "var(--c-warn)",
+    border: "color-mix(in srgb, var(--c-warn) 28%, transparent)",
     pulse: false,
   },
   offline: {
-    dot: "#94a3b8",
+    dot: "var(--c-ink-4)",
     bg: "var(--hp-tile-bg-softer)",
     fg: "var(--hp-ink-3)",
     border: "var(--hp-stroke-2)",

@@ -96,7 +96,7 @@ export default function FooterTickerV2({
         <span className="hp-ticker__delay">15m</span>
         <span
           className="hp-state-pill"
-          style={{ background: "linear-gradient(135deg,#10b981,#059669)" }}
+          style={{ background: "linear-gradient(135deg,var(--c-up),color-mix(in srgb, var(--c-up) 78%, var(--c-ink)))" }}
         >
           MARKET OPEN
         </span>

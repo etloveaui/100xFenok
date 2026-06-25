@@ -8,10 +8,10 @@ type Props = {
 };
 
 const STATE_STYLE: Record<string, { bg: string; label: string }> = {
-  OPEN: { bg: "rgba(16,185,129,0.20)", label: "MARKET OPEN" },
-  CLOSED: { bg: "rgba(244,63,94,0.20)", label: "MARKET CLOSED" },
-  PRE: { bg: "rgba(245,158,11,0.20)", label: "PRE MARKET" },
-  AFTER: { bg: "rgba(245,158,11,0.20)", label: "AFTER HOURS" },
+  OPEN: { bg: "color-mix(in srgb, var(--c-up) 20%, transparent)", label: "MARKET OPEN" },
+  CLOSED: { bg: "color-mix(in srgb, var(--c-down) 20%, transparent)", label: "MARKET CLOSED" },
+  PRE: { bg: "color-mix(in srgb, var(--c-warn) 20%, transparent)", label: "PRE MARKET" },
+  AFTER: { bg: "color-mix(in srgb, var(--c-warn) 20%, transparent)", label: "AFTER HOURS" },
 };
 
 export default function FooterTicker({ anchors, marketState = "OPEN" }: Props) {

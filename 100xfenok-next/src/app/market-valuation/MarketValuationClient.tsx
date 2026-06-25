@@ -144,7 +144,7 @@ function StructureDetailEntry() {
   return (
     <TransitionLink
       href="/market-valuation/structure"
-      className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 shadow-[0_10px_36px_-20px_rgba(15,23,42,0.28)] transition hover:border-brand-interactive hover:shadow-[0_14px_42px_-24px_rgba(27,115,211,0.42)]"
+      className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 shadow-[var(--sh-sm)] transition hover:border-brand-interactive hover:shadow-[var(--sh-sm)]"
     >
       <span className="min-w-0">
         <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">시장 구조 상세</span>
@@ -564,7 +564,7 @@ export default function MarketValuationClient() {
           {indices.map((index) => (
             <section
               key={index.id}
-              className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5"
+              className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5"
             >
               <header className="flex items-end justify-between gap-2">
                 <div className="min-w-0">

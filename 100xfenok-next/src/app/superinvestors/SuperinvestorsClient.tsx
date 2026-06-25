@@ -547,7 +547,7 @@ function TradeRankingPanel({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+      <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
         <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
         <EmptyState title="데이터가 없습니다" desc="해당 분기 매매 데이터가 존재하지 않습니다." />
       </div>
@@ -555,7 +555,7 @@ function TradeRankingPanel({
   }
 
   return (
-    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
       <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
       <div className="scroll-hint-x mt-3 -mx-1 px-1" role="region" tabIndex={0} aria-label={`${title} 표 가로 스크롤`}>
         <table className="w-full min-w-[440px] text-xs">
@@ -825,7 +825,7 @@ export default function SuperinvestorsClient({
 
       {dataReady ? (
         <section
-          className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)]"
+          className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
           aria-label="13F 자료 기준"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -917,7 +917,7 @@ export default function SuperinvestorsClient({
       <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.consensus} active={tab === "consensus"} className="space-y-3">
           {/* Total portfolio (collapsible) */}
           {pvData && !pvFailed ? (
-            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
               <button
                 type="button"
                 onClick={() => setTotalPortfolioOpen((v) => !v)}
@@ -957,7 +957,7 @@ export default function SuperinvestorsClient({
           ) : null}
 
           {sectorRows.length > 0 ? (
-            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-black tracking-tight text-slate-900">섹터 정렬</h2>
@@ -1012,7 +1012,7 @@ export default function SuperinvestorsClient({
             </button>
           </div>
 
-          <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-3", !dataReady && "opacity-60")}>
+          <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}>
             <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
@@ -1175,7 +1175,7 @@ export default function SuperinvestorsClient({
                   <div
                     key={id}
                     className={cx(
-                      "rounded-[1.5rem] border bg-white p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] transition",
+                      "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] transition",
                       // expanded detail (KPI + treemap + sector mix) needs the full row width
                       isOpen ? "border-brand-interactive sm:col-span-2 lg:col-span-3" : "border-slate-200",
                     )}
@@ -1261,7 +1261,7 @@ export default function SuperinvestorsClient({
             </div>
           </label>
 
-          <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4", !dataReady && "opacity-60")}>
+          <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4", !dataReady && "opacity-60")}>
             {!dataReady ? (
               <div className="space-y-3">
                 <div className="h-5 w-1/3 rounded bg-slate-200" />
@@ -1389,7 +1389,7 @@ export default function SuperinvestorsClient({
           {tradesLoading ? (
             <div className="grid gap-4 lg:grid-cols-2">
               {[0, 1].map((p) => (
-                <div key={p} className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-4">
+                <div key={p} className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
                   <div className="h-5 w-1/3 rounded bg-slate-200" />
                   <div className="mt-3 space-y-2">
                     {Array.from({ length: 5 }).map((_, i) => (

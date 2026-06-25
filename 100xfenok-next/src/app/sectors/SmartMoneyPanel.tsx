@@ -38,7 +38,7 @@ export default function SmartMoneyPanel({
   const generated = sourceMeta.smartMoneyGeneratedAt?.slice(0, 10) ?? null;
 
   return (
-    <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.10)] sm:p-5", className)}>
+    <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5", className)}>
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">스마트머니 섹터 동향</h2>
         <span className="inline-flex items-center rounded-full border border-[var(--c-line)] bg-[var(--c-brand-soft)] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">

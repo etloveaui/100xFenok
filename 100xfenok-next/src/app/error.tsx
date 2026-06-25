@@ -29,7 +29,7 @@ export default function GlobalError({
             <button
               type="button"
               onClick={reset}
-              className="rounded-lg bg-[#010079] px-5 py-2.5 text-sm font-semibold text-white"
+              className="rounded-lg bg-[var(--c-brand)] px-5 py-2.5 text-sm font-semibold text-white"
             >
               다시 시도
             </button>

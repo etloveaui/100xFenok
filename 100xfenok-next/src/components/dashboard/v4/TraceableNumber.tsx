@@ -32,10 +32,10 @@ export type TraceableMeta = {
 export type TraceableMode = "off" | "hover-one" | "hover-all";
 
 const TONE: Record<TraceableTone, { dot: string; label: string }> = {
-  live:    { dot: "#10b981", label: "실시간 · 15분 지연" },
-  dated:   { dot: "#1B73D3", label: "캐시 · 정상" },
-  stale:   { dot: "#D5AD36", label: "최신 폴백 · 경고" },
-  offline: { dot: "#94a3b8", label: "소스 실패 · 마지막 정상값" },
+  live:    { dot: "var(--c-up)", label: "실시간 · 15분 지연" },
+  dated:   { dot: "var(--c-brand)", label: "캐시 · 정상" },
+  stale:   { dot: "var(--c-warn)", label: "최신 폴백 · 경고" },
+  offline: { dot: "var(--c-ink-4)", label: "소스 실패 · 마지막 정상값" },
 };
 
 const CADENCE_KO: Record<NonNullable<TraceableMeta["cadence"]>, string> = {
@@ -112,7 +112,7 @@ export default function TraceableNumber({
           background: tone.dot,
           border: "none",
           cursor: "help",
-          boxShadow: `0 0 0 1.5px #fff, 0 0 0 2px ${tone.dot}66`,
+          boxShadow: `0 0 0 1.5px var(--c-panel), 0 0 0 2px color-mix(in srgb, ${tone.dot} 40%, transparent)`,
           verticalAlign: "super",
           flex: `0 0 ${dotSize}px`,
           transition: "transform .12s",
@@ -137,15 +137,15 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
         zIndex: 50,
         minWidth: 232,
         maxWidth: 280,
-        background: "#ffffff",
-        border: "1px solid #e2e8f0",
+        background: "var(--c-panel)",
+        border: "1px solid var(--c-line)",
         borderRadius: 10,
         padding: "10px 12px 11px",
         boxShadow:
-          "0 12px 32px -8px rgba(15,23,42,0.18), 0 2px 6px rgba(15,23,42,0.08)",
+          "var(--sh-sm)",
         fontFamily: "'Noto Sans KR',sans-serif",
         fontSize: 12,
-        color: "#0f172a",
+        color: "var(--c-ink)",
         lineHeight: 1.55,
         textAlign: "left",
       }}
@@ -157,7 +157,7 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
           gap: 6,
           marginBottom: 6,
           paddingBottom: 6,
-          borderBottom: "1px dashed #e2e8f0",
+          borderBottom: "1px dashed var(--c-line)",
         }}
       >
         <span style={{ width: 8, height: 8, borderRadius: "50%", background: tone.dot }} />
@@ -167,7 +167,7 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: ".1em",
-            color: "#475569",
+            color: "var(--c-ink-3)",
             textTransform: "uppercase",
           }}
         >
@@ -178,7 +178,7 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
             marginLeft: "auto",
             fontFamily: "'JetBrains Mono',monospace",
             fontSize: 10,
-            color: "#94a3b8",
+            color: "var(--c-ink-4)",
           }}
         >
           {data.sourceKey ?? "—"}
@@ -193,9 +193,9 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
           style={{
             marginTop: 6,
             paddingTop: 6,
-            borderTop: "1px dashed #e2e8f0",
+            borderTop: "1px dashed var(--c-line)",
             fontSize: 10.5,
-            color: "#64748b",
+            color: "var(--c-ink-3)",
             lineHeight: 1.5,
           }}
         >
@@ -220,10 +220,10 @@ function TracePopover({ data, tone }: { data: TraceableMeta; tone: { dot: string
 function Row({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
   return (
     <div style={{ display: "flex", gap: 8, fontSize: 11.5, padding: "2px 0" }}>
-      <span style={{ color: "#64748b", width: 50, flex: "0 0 50px" }}>{k}</span>
+      <span style={{ color: "var(--c-ink-3)", width: 50, flex: "0 0 50px" }}>{k}</span>
       <span
         style={{
-          color: "#0f172a",
+          color: "var(--c-ink)",
           fontWeight: 700,
           fontFamily: mono ? "'JetBrains Mono',monospace" : "'Noto Sans KR',sans-serif",
           wordBreak: "break-all",
