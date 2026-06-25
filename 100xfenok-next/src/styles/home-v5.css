@@ -3,6 +3,41 @@
  * Scope stays under `.fnk-shell.v5-home`; no backend/data-provider changes.
  */
 .fnk-shell.v5-home {
+  /* surface tiers: page recedes, wells sink, cards lift */
+  --v5-surface-page: color-mix(in srgb, var(--fnk-neutral-50) 72%, var(--fnk-surface-blue-50));
+  --v5-surface-sunken: color-mix(in srgb, var(--fnk-neutral-100) 70%, var(--fnk-surface-blue-50));
+  --v5-surface-card: var(--fnk-color-white);
+  --v5-surface-card-2: var(--fnk-neutral-25);
+  --v5-surface-header: color-mix(in srgb, var(--fnk-neutral-25) 80%, var(--fnk-color-white));
+  --v5-surface-hover: color-mix(in srgb, var(--fnk-neutral-100) 76%, var(--fnk-color-white));
+  --v5-border: color-mix(in srgb, var(--fnk-neutral-200) 82%, var(--fnk-surface-blue-150));
+  --v5-border-muted: color-mix(in srgb, var(--fnk-neutral-100) 84%, var(--fnk-color-white));
+  --v5-border-strong: var(--fnk-neutral-225);
+
+  /* two-stop shadows: contact + ambient, tuned for light UI */
+  --v5-shadow-rest: 0 1px 2px -1px color-mix(in srgb, var(--fnk-neutral-900) 10%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--fnk-neutral-900) 6%, transparent);
+  --v5-shadow-raised: 0 1px 2px -1px color-mix(in srgb, var(--fnk-neutral-900) 10%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--fnk-neutral-900) 12%, transparent), 0 12px 28px -12px color-mix(in srgb, var(--fnk-neutral-900) 8%, transparent);
+  --v5-shadow-hover: 0 2px 4px -1px color-mix(in srgb, var(--fnk-neutral-900) 12%, transparent), 0 10px 24px -8px color-mix(in srgb, var(--fnk-neutral-900) 16%, transparent);
+  --v5-shadow-inset: inset 0 1px 2px color-mix(in srgb, var(--fnk-neutral-900) 5%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--fnk-neutral-900) 2%, transparent);
+  --v5-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--v5-blue) 35%, transparent);
+
+  /* accent is reserved for text, 3px keylines, and <=10% washes */
+  --v5-blue: var(--fnk-brand-interactive);
+  --v5-navy: var(--fnk-brand-navy);
+  --v5-gold: var(--fnk-brand-gold-bright);
+  --v5-blue-wash: color-mix(in srgb, var(--v5-blue) 7%, var(--fnk-color-white));
+  --v5-hm-up-4: var(--fnk-color-gain);
+  --v5-hm-dn-4: var(--fnk-color-loss);
+
+  /* alias rebind: existing v5 panels inherit depth without markup edits */
+  --c-bg: var(--v5-surface-page);
+  --c-panel: var(--v5-surface-card);
+  --c-surface-2: var(--v5-surface-sunken);
+  --c-line: var(--v5-border);
+  --c-line-2: var(--v5-border-muted);
+  --sh-sm: var(--v5-shadow-rest);
+  --sh-md: var(--v5-shadow-raised);
+
   --shell-background: var(--fnk-neutral-50);
   --shell-panel: var(--fnk-color-white);
   --shell-surface-muted: var(--fnk-neutral-50);
@@ -21,6 +56,7 @@
   --shell-warn: var(--fnk-warn-700);
   --shell-warn-soft: var(--fnk-warn-50);
   --panel-r: 8px;
+  background: var(--v5-surface-page);
 }
 
 .fnk-shell.v5-home .content {
@@ -29,8 +65,24 @@
 
 .fnk-shell.v5-home .panel {
   border-color: var(--c-line);
+  border-left: 3px solid var(--v5-blue);
   border-radius: 8px;
+  background: var(--c-panel);
   box-shadow: var(--sh-sm);
+  transition: background-color 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+
+.fnk-shell.v5-home .panel:has(.up) {
+  border-left-color: var(--v5-hm-up-4);
+}
+
+.fnk-shell.v5-home .panel:has(.down) {
+  border-left-color: var(--v5-hm-dn-4);
+}
+
+.fnk-shell.v5-home .panel:hover {
+  border-color: var(--v5-border-strong);
+  box-shadow: var(--v5-shadow-hover);
 }
 
 .fnk-shell.v5-home .v5-stack {
@@ -43,6 +95,7 @@
   grid-template-columns: 190px minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid var(--c-line);
+  border-left: 3px solid var(--v5-blue);
   border-radius: 8px;
   background: var(--c-panel);
   box-shadow: var(--sh-sm);
@@ -132,11 +185,11 @@
 }
 
 .fnk-shell.v5-home .v5-reading.is-risk-on::before {
-  background: var(--c-up);
+  background: var(--v5-hm-up-4);
 }
 
 .fnk-shell.v5-home .v5-reading.is-risk-off::before {
-  background: var(--c-down);
+  background: var(--v5-hm-dn-4);
 }
 
 .fnk-shell.v5-home .v5-eyebrow {
@@ -341,22 +394,47 @@
 .fnk-shell.v5-home .v5-pulse__grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  border-top: 1px solid var(--c-line-2);
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--v5-border-muted);
+  border-radius: 8px;
+  background: var(--v5-surface-sunken);
+  box-shadow: var(--v5-shadow-inset);
+  padding: 1px;
 }
 
 .fnk-shell.v5-home .v5-pulse__tile {
   display: grid;
   gap: 3px;
   min-height: 86px;
-  border-right: 1px solid var(--c-line-2);
-  border-bottom: 1px solid var(--c-line-2);
+  border: 0;
+  background: var(--v5-surface-card);
+  box-shadow: inset 3px 0 0 var(--v5-blue);
   padding: 11px 12px;
   text-decoration: none;
-  transition: background-color 0.16s, box-shadow 0.16s;
+  transition: background-color 0.16s, box-shadow 0.16s, transform 0.16s;
+}
+
+.fnk-shell.v5-home .v5-pulse__tile:has(.up) {
+  box-shadow: inset 3px 0 0 var(--v5-hm-up-4);
+}
+
+.fnk-shell.v5-home .v5-pulse__tile:has(.down) {
+  box-shadow: inset 3px 0 0 var(--v5-hm-dn-4);
 }
 
 .fnk-shell.v5-home .v5-pulse__tile:hover {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-brand) 20%, transparent);
+  background: var(--v5-surface-hover);
+  box-shadow: inset 3px 0 0 var(--v5-blue), var(--v5-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.fnk-shell.v5-home .v5-pulse__tile:has(.up):hover {
+  box-shadow: inset 3px 0 0 var(--v5-hm-up-4), var(--v5-shadow-hover);
+}
+
+.fnk-shell.v5-home .v5-pulse__tile:has(.down):hover {
+  box-shadow: inset 3px 0 0 var(--v5-hm-dn-4), var(--v5-shadow-hover);
 }
 
 .fnk-shell.v5-home .v5-pulse__label {
@@ -419,20 +497,29 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  background: var(--c-line-2);
+  overflow: hidden;
+  border: 1px solid var(--v5-border-muted);
+  border-radius: 8px;
+  background: var(--v5-surface-sunken);
+  box-shadow: var(--v5-shadow-inset);
+  padding: 1px;
 }
 
 .fnk-shell.v5-home .v5-connected__item {
   display: grid;
   gap: 4px;
   min-height: 72px;
-  background: var(--c-panel);
+  background: var(--v5-surface-card);
+  box-shadow: inset 3px 0 0 var(--v5-blue);
   padding: 12px;
   text-decoration: none;
+  transition: background-color 0.16s, box-shadow 0.16s, transform 0.16s;
 }
 
 .fnk-shell.v5-home .v5-connected__item:hover {
-  background: var(--c-surface-2);
+  background: var(--v5-surface-hover);
+  box-shadow: inset 3px 0 0 var(--v5-blue), var(--v5-shadow-hover);
+  transform: translateY(-1px);
 }
 
 .fnk-shell.v5-home .v5-connected__item span {

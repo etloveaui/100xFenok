@@ -4,16 +4,14 @@
  * Inherits Theme C palette; adds shell tokens (rail/topbar/tabbar/panel density).
  * Reference: docs/design-handoff/100x-ux-redesign/08-claude-design-brief-app-shell-v3.md
  */
-
-
 .fnk-shell{
-    --shell-background:#f2f4f6; --shell-panel:#fff; --shell-surface-muted:#f7f9fb; --shell-rail:#f7f9fb; --shell-rail-active:#eaf1ff;
-    --shell-foreground:#1a1d21; --shell-foreground-muted:#4e5968; --shell-foreground-subtle:#667085; --shell-foreground-faint:#6b7280;
-    --shell-border:#e8ebee; --shell-border-muted:#eef1f4;
-    --shell-brand:#1d4ed8; --shell-brand-soft:#eaf1ff;
-    --shell-gain:#047857; --shell-gain-soft:#eafaf2; --shell-loss:#c5303f; --shell-loss-soft:#fdebed;
-    --shell-warn:#b45309; --shell-warn-soft:#fdf3e3; --shell-flat:#667085;
-    --shell-multiple:#3f74ff; --shell-track:#e9edf2; --shell-zero:#cdd5de;
+    --shell-background:#f4f6f9; --shell-panel:#fff; --shell-surface-muted:#f8fafc; --shell-rail:#f8fafc; --shell-rail-active:rgba(27,115,211,0.06);
+    --shell-foreground:#0f172a; --shell-foreground-muted:#475569; --shell-foreground-subtle:#64748b; --shell-foreground-faint:#94a3b8;
+    --shell-border:rgba(14,23,38,0.06); --shell-border-muted:rgba(14,23,38,0.03);
+    --shell-brand:#1B73D3; --shell-brand-soft:rgba(27,115,211,0.06);
+    --shell-gain:#0f8a5f; --shell-gain-soft:#e2f6ee; --shell-loss:#d1344c; --shell-loss-soft:#fcebee;
+    --shell-warn:#d97706; --shell-warn-soft:#fef3c7; --shell-flat:#64748b;
+    --shell-multiple:#1B73D3; --shell-track:#eaeef4; --shell-zero:#e0e6ef;
     --c-bg:var(--shell-background); --c-panel:var(--shell-panel); --c-surface-2:var(--shell-surface-muted); --c-rail:var(--shell-rail); --c-rail-active:var(--shell-rail-active);
     --c-ink:var(--shell-foreground); --c-ink-2:var(--shell-foreground-muted); --c-ink-3:var(--shell-foreground-subtle); --c-ink-4:var(--shell-foreground-faint);
     --c-line:var(--shell-border); --c-line-2:var(--shell-border-muted);
@@ -21,17 +19,17 @@
     --c-up:var(--shell-gain); --c-up-soft:var(--shell-gain-soft); --c-down:var(--shell-loss); --c-down-soft:var(--shell-loss-soft);
     --c-warn:var(--shell-warn); --c-warn-soft:var(--shell-warn-soft); --c-neutral:var(--shell-flat);
     --c-mult:var(--shell-multiple); --c-track:var(--shell-track); --c-zero:var(--shell-zero);
-    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px;
-    --r-sm:10px; --r-md:14px; --r-pill:999px;
-    --sh-sm:0 1px 2px rgba(20,30,50,.05);
-    --sh-md:0 6px 20px -6px rgba(20,30,50,.12);
-    --sh-pop:0 12px 32px -8px rgba(20,30,50,.22);
-    --sh-focus:0 0 0 3px rgba(47,107,255,.18);
-    --rail-w:232px; --topbar-h:60px; --ticker-h:34px; --tabbar-h:64px; --appbar-h:54px;
-    --panel-pad:16px; --panel-r:14px;
+    --s1:3px; --s2:6px; --s3:10px; --s4:14px; --s5:18px; --s6:22px; --s8:30px; --s10:38px;
+    --r-sm:4px; --r-md:6px; --r-pill:999px;
+    --sh-sm:0 1px 2px rgba(15,23,42,0.03);
+    --sh-md:0 1px 2px rgba(15,23,42,0.02), 0 4px 12px -4px rgba(15,23,42,0.08);
+    --sh-pop:0 12px 32px -8px rgba(15,23,42,0.18);
+    --sh-focus:0 0 0 3px rgba(27,115,211,0.18);
+    --rail-w:210px; --topbar-h:48px; --ticker-h:30px; --tabbar-h:56px; --appbar-h:46px;
+    --panel-pad:12px; --panel-r:6px;
     --font:var(--font-body),system-ui,-apple-system,sans-serif;
     --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
-    --rgb-up:4 120 87; --rgb-down:197 48 63; --rgb-warn:180 83 9; --rgb-brand:29 78 216;
+    --rgb-up:15 138 95; --rgb-down:209 52 76; --rgb-warn:217 119 6; --rgb-brand:27 115 211;
     --c-warn-100:#fef3c7; --c-warn-200:#fde68a; --c-warn-ink:var(--c-warn); --c-warn-ink-strong:#92400e;
     --c-chart-per:var(--c-mult); --c-chart-eps:var(--fnk-color-chart-eps);
     --c-badge-value:var(--c-up-soft); --c-badge-value-ink:var(--c-up);
@@ -41,7 +39,7 @@
     --c-attention:var(--c-brand); --c-attention-soft:var(--c-brand-soft);
     --c-info:#3b82f6; --c-info-soft:#eff6ff; --c-info-border:color-mix(in srgb,var(--c-info) 28%,transparent);
     --c-recovery:var(--fnk-color-chart-eps); --c-recovery-soft:color-mix(in srgb,var(--c-recovery) 10%,transparent); --c-recovery-border:color-mix(in srgb,var(--c-recovery) 28%,transparent);
-  }
+}
 [data-theme="dark"] .fnk-shell{
     --shell-background:var(--fnk-color-background); --shell-panel:var(--fnk-color-card); --shell-surface-muted:var(--fnk-color-muted); --shell-rail:color-mix(in srgb,var(--fnk-color-card) 92%,black); --shell-rail-active:var(--fnk-color-accent);
     --shell-foreground:var(--fnk-color-foreground); --shell-foreground-muted:var(--fnk-neutral-700); --shell-foreground-subtle:var(--fnk-neutral-600); --shell-foreground-faint:var(--fnk-neutral-500);

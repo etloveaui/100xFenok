@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import re
 from pathlib import Path
 import unittest
 
@@ -14,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[1]
 FETCHER_PATH = ROOT / "scripts" / "fetch-stockanalysis.py"
 SURFACE_DIR = ROOT / "data" / "stockanalysis" / "surfaces"
 PUBLIC_SURFACE_DIR = ROOT / "100xfenok-next" / "public" / "data" / "stockanalysis" / "surfaces"
-SURFACE_CATALOG_PATH = ROOT / "100xfenok-next" / "src" / "app" / "explore" / "SurfaceCatalogCard.tsx"
 
 
 def load_fetcher_module():
@@ -28,11 +26,6 @@ def load_fetcher_module():
 
 def surface_stems(directory: Path) -> set[str]:
     return {path.stem for path in directory.glob("*.json") if path.name != "index.json"}
-
-
-def catalog_group_labels() -> set[str]:
-    source = SURFACE_CATALOG_PATH.read_text(encoding="utf-8")
-    return set(re.findall(r'case "([^"]+)":\s*\n\s*return ', source))
 
 
 class StockanalysisSurfaceContractTest(unittest.TestCase):
@@ -84,17 +77,9 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
                 self.assertTrue(surfaces)
                 self.assertTrue(set(surfaces).issubset(defined))
 
-    def test_surface_catalog_labels_cover_all_index_groups(self) -> None:
-        indexed_groups = {
-            row.get("group")
-            for row in self.index.get("results", [])
-            if isinstance(row.get("group"), str)
-        }
-        self.assertTrue(indexed_groups)
-        self.assertTrue(
-            indexed_groups.issubset(catalog_group_labels()),
-            f"Missing SurfaceCatalogCard.groupLabel cases: {sorted(indexed_groups - catalog_group_labels())}",
-        )
+    # NOTE: test_surface_catalog_labels_cover_all_index_groups removed — it validated
+    # SurfaceCatalogCard.tsx groupLabel coverage, but that public diagnostic card was
+    # intentionally removed in ef5227996. The catalog/groupLabel surface no longer exists.
 
 
 if __name__ == "__main__":
