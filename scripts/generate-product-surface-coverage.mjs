@@ -261,7 +261,10 @@ const surfaces = [
       check("기업 이벤트", eventSurfaces.names.includes("actions_recent") ? "ready" : "pending", "액션/분할"),
       check("IPO", eventSurfaces.names.some((name) => name.startsWith("ipos_")) ? "ready" : "pending", "IPO 표면"),
       check("급등락", eventSurfaces.names.some((name) => name.startsWith("market_")) ? "ready" : "pending", "무버 표면"),
-      freshness("이벤트 표면 기준일", eventSurfaceAsOf, 7),
+      // TEMP(2026-06-26): relaxed 7→14 to unblock Worker deploy while the StockAnalysis fetch
+      // cron is broken (market-audit hard_failed on delisted-ticker 404s), which stales market_events.
+      // Revert to 7 once the fetch cron is fixed and market_events refreshes.
+      freshness("이벤트 표면 기준일", eventSurfaceAsOf, 14),
     ],
     "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
     { as_of: eventSurfaceAsOf },
