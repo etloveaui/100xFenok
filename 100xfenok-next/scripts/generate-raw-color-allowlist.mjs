@@ -115,7 +115,8 @@ function categoryForPath(relPath) {
     relPath === "src/styles/ib-light-v2.css" ||
     relPath === "src/styles/legacy-widgets.css" ||
     relPath === "src/styles/navigation.css" ||
-    relPath === "src/styles/route-embed.css"
+    relPath === "src/styles/route-embed.css" ||
+    relPath === "src/styles/design-v3-terminal.css"
   ) {
     return {
       category: "style-island",
