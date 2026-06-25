@@ -1,0 +1,188 @@
+#!/usr/bin/env node
+
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+
+const ROOT = process.cwd();
+const SRC_ROOT = join(ROOT, "src");
+const CSS_TARGETS = [
+  "src/app/globals.css",
+  "src/styles/theme-c.css",
+  "src/styles/app-shell.css",
+];
+const SCAN_EXTENSIONS = new Set([".css", ".ts", ".tsx"]);
+const REQUIRED_THEME_ALIASES = [
+  "background",
+  "foreground",
+  "card",
+  "popover",
+  "muted",
+  "accent",
+  "border",
+  "input",
+  "ring",
+  "destructive",
+  "gain",
+  "loss",
+  "flat",
+  "warn",
+  "chart-1",
+  "chart-2",
+  "chart-3",
+  "chart-4",
+  "chart-5",
+  "sidebar",
+  "sidebar-foreground",
+  "sidebar-primary",
+  "sidebar-primary-foreground",
+  "sidebar-muted",
+  "sidebar-accent",
+  "sidebar-accent-foreground",
+  "sidebar-border",
+  "sidebar-ring",
+];
+
+function walk(path) {
+  const stats = statSync(path);
+  if (stats.isFile()) {
+    const dot = path.lastIndexOf(".");
+    return dot >= 0 && SCAN_EXTENSIONS.has(path.slice(dot)) ? [path] : [];
+  }
+  if (!stats.isDirectory()) return [];
+  return readdirSync(path).flatMap((name) => walk(join(path, name)));
+}
+
+function fail(message, details = []) {
+  console.error(`[qa:tokens] ${message}`);
+  for (const detail of details) console.error(`- ${detail}`);
+  process.exit(1);
+}
+
+const globals = readFileSync(join(ROOT, "src/app/globals.css"), "utf8");
+const themeC = readFileSync(join(ROOT, "src/styles/theme-c.css"), "utf8");
+const appShell = readFileSync(join(ROOT, "src/styles/app-shell.css"), "utf8");
+const failures = [];
+
+function declarationValue(text, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = text.match(new RegExp(`${escaped}\\s*:\\s*([^;]+);`));
+  return match ? match[1].trim() : null;
+}
+
+function expectDeclarations(text, expected, label) {
+  for (const [name, value] of Object.entries(expected)) {
+    const actual = declarationValue(text, name);
+    if (actual !== value) {
+      failures.push(`${label} ${name} expected ${value}, got ${actual ?? "missing"}`);
+    }
+  }
+}
+
+expectDeclarations(
+  globals,
+  {
+    "--fnk-color-background": "#f8fafc",
+    "--fnk-color-foreground": "#171717",
+    "--fnk-brand-navy": "#010079",
+    "--fnk-brand-gold": "#7a5a00",
+    "--fnk-brand-gold-bright": "#D5AD36",
+    "--fnk-brand-interactive": "#1B73D3",
+    "--fnk-color-gain": "#1aa86f",
+    "--fnk-color-gain-soft": "#eafaf2",
+    "--fnk-color-loss": "#e84a5a",
+    "--fnk-color-loss-soft": "#fdebed",
+    "--fnk-color-warn": "#f2a93b",
+    "--fnk-color-warn-soft": "#fdf3e3",
+    "--fnk-color-warn-ink": "#b9791a",
+    "--fnk-color-flat": "#8b95a1",
+  },
+  "globals light snapshot",
+);
+
+expectDeclarations(
+  themeC,
+  {
+    "--theme-c-background": "#f2f4f6",
+    "--theme-c-surface": "#fff",
+    "--theme-c-surface-muted": "#f7f9fb",
+    "--theme-c-foreground": "#1a1d21",
+    "--theme-c-foreground-muted": "#4e5968",
+    "--theme-c-foreground-subtle": "#8b95a1",
+    "--theme-c-border": "#e8ebee",
+    "--theme-c-brand": "#2f6bff",
+    "--theme-c-brand-soft": "#eaf1ff",
+    "--theme-c-gain": "#1aa86f",
+    "--theme-c-loss": "#e84a5a",
+    "--theme-c-warn": "#f2a93b",
+  },
+  "theme-c light snapshot",
+);
+
+expectDeclarations(
+  appShell,
+  {
+    "--shell-background": "#f2f4f6",
+    "--shell-panel": "#fff",
+    "--shell-surface-muted": "#f7f9fb",
+    "--shell-foreground": "#1a1d21",
+    "--shell-foreground-muted": "#4e5968",
+    "--shell-foreground-subtle": "#667085",
+    "--shell-border": "#e8ebee",
+    "--shell-brand": "#1d4ed8",
+    "--shell-gain": "#047857",
+    "--shell-loss": "#c5303f",
+    "--shell-warn": "#b45309",
+    "--shell-flat": "#667085",
+  },
+  "app-shell light snapshot",
+);
+
+for (const alias of REQUIRED_THEME_ALIASES) {
+  if (!globals.includes(`--color-${alias}:`)) {
+    failures.push(`missing @theme alias --color-${alias}`);
+  }
+}
+
+if (!globals.includes('[data-theme="dark"]')) {
+  failures.push('missing [data-theme="dark"] block');
+}
+if (!globals.includes("--fnk-neutral-50: oklch(0.205 0 0);")) {
+  failures.push("missing Agent-A dark neutral-50 token");
+}
+if (!globals.includes("--fnk-neutral-950: oklch(0.985 0 0);")) {
+  failures.push("missing Agent-A dark neutral-950 token");
+}
+if (/oklch\(\s*(?:100|[1-9]\d{2,})/.test(globals)) {
+  failures.push("out-of-gamut OKLCH lightness detected");
+}
+if (!/body\s*\{\s*[^}]*background:\s*var\(--background\)/s.test(globals)) {
+  failures.push("body background no longer uses --background");
+}
+
+const cssText = CSS_TARGETS.map((path) => readFileSync(join(ROOT, path), "utf8")).join("\n");
+const definedTokens = new Set([...cssText.matchAll(/(--c-[A-Za-z0-9_-]+)\s*:/g)].map((match) => match[1]));
+const scannedFiles = walk(SRC_ROOT);
+const referencedTokens = new Map();
+
+for (const file of scannedFiles) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(/var\((--c-[A-Za-z0-9_-]+)/g)) {
+    const token = match[1];
+    if (!referencedTokens.has(token)) referencedTokens.set(token, []);
+    referencedTokens.get(token).push(relative(ROOT, file));
+  }
+}
+
+for (const [token, files] of referencedTokens) {
+  if (!definedTokens.has(token)) {
+    failures.push(`orphaned ${token}: ${[...new Set(files)].slice(0, 5).join(", ")}`);
+  }
+}
+
+if (failures.length > 0) {
+  fail("token foundation contract failed", failures);
+}
+
+console.log(
+  `[qa:tokens] token foundation OK (${REQUIRED_THEME_ALIASES.length} theme aliases, ${definedTokens.size} --c-* definitions, ${referencedTokens.size} --c-* references)`,
+);

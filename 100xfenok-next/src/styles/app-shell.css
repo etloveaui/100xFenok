@@ -7,13 +7,20 @@
 
 
 .fnk-shell{
-    --c-bg:#f2f4f6; --c-panel:#fff; --c-surface-2:#f7f9fb; --c-rail:#f7f9fb; --c-rail-active:#eaf1ff;
-    --c-ink:#1a1d21; --c-ink-2:#4e5968; --c-ink-3:#667085; --c-ink-4:#6b7280;
-    --c-line:#e8ebee; --c-line-2:#eef1f4;
-    --c-brand:#1d4ed8; --c-brand-soft:#eaf1ff;
-    --c-up:#047857; --c-up-soft:#eafaf2; --c-down:#c5303f; --c-down-soft:#fdebed;
-    --c-warn:#b45309; --c-warn-soft:#fdf3e3; --c-neutral:#667085;
-    --c-mult:#3f74ff; --c-track:#e9edf2; --c-zero:#cdd5de;
+    --shell-background:#f2f4f6; --shell-panel:#fff; --shell-surface-muted:#f7f9fb; --shell-rail:#f7f9fb; --shell-rail-active:#eaf1ff;
+    --shell-foreground:#1a1d21; --shell-foreground-muted:#4e5968; --shell-foreground-subtle:#667085; --shell-foreground-faint:#6b7280;
+    --shell-border:#e8ebee; --shell-border-muted:#eef1f4;
+    --shell-brand:#1d4ed8; --shell-brand-soft:#eaf1ff;
+    --shell-gain:#047857; --shell-gain-soft:#eafaf2; --shell-loss:#c5303f; --shell-loss-soft:#fdebed;
+    --shell-warn:#b45309; --shell-warn-soft:#fdf3e3; --shell-flat:#667085;
+    --shell-multiple:#3f74ff; --shell-track:#e9edf2; --shell-zero:#cdd5de;
+    --c-bg:var(--shell-background); --c-panel:var(--shell-panel); --c-surface-2:var(--shell-surface-muted); --c-rail:var(--shell-rail); --c-rail-active:var(--shell-rail-active);
+    --c-ink:var(--shell-foreground); --c-ink-2:var(--shell-foreground-muted); --c-ink-3:var(--shell-foreground-subtle); --c-ink-4:var(--shell-foreground-faint);
+    --c-line:var(--shell-border); --c-line-2:var(--shell-border-muted);
+    --c-brand:var(--shell-brand); --c-brand-soft:var(--shell-brand-soft);
+    --c-up:var(--shell-gain); --c-up-soft:var(--shell-gain-soft); --c-down:var(--shell-loss); --c-down-soft:var(--shell-loss-soft);
+    --c-warn:var(--shell-warn); --c-warn-soft:var(--shell-warn-soft); --c-neutral:var(--shell-flat);
+    --c-mult:var(--shell-multiple); --c-track:var(--shell-track); --c-zero:var(--shell-zero);
     --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px;
     --r-sm:10px; --r-md:14px; --r-pill:999px;
     --sh-sm:0 1px 2px rgba(20,30,50,.05);
@@ -25,7 +32,7 @@
     --font:var(--font-body),system-ui,-apple-system,sans-serif;
     --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
     --rgb-up:4 120 87; --rgb-down:197 48 63; --rgb-warn:180 83 9; --rgb-brand:29 78 216;
-    --c-warn-100:#fef3c7; --c-warn-200:#fde68a; --c-warn-ink-strong:#92400e;
+    --c-warn-100:#fef3c7; --c-warn-200:#fde68a; --c-warn-ink:var(--c-warn); --c-warn-ink-strong:#92400e;
     --c-chart-per:var(--c-mult); --c-chart-eps:var(--c-up);
     --c-badge-value:var(--c-up-soft); --c-badge-value-ink:var(--c-up);
     --c-badge-hedge:#e5e7eb; --c-badge-hedge-ink:#6b7280;

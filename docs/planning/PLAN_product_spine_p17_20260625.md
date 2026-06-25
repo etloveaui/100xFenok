@@ -154,6 +154,37 @@ The full drop-in spec (Agent A) is to be **appended to PLAN_design_system_remode
 
 Screen rollout: `/explore` → `/stock/[ticker]` → `/screener` (apply S1–S5 progressively, these three first).
 
+### 4a. P2-S1 token foundation — implementable spec (Kimi inventory fh-141 + Agent-A ramp)
+
+**SCALE (Kimi fh-141, verified large)**: migration surface = 935 hex + 308 rgb + **3,339 Tailwind named utils** + 792 CSS decls + 680 off-grid spacings (37 files) + 7 tabular-gap files.
+
+> **OWNER HARD DESTINATION (2026-06-25)**: do the FULL migration NOW, properly — **no long-tail deferral** ("deferred work never gets done"). So P2 = **complete** design-system migration in verified waves (§4b), NOT core-only-then-defer. Condition = "제대로": correct semantic mapping per touchpoint, behavior-parity where intended, no reckless mass find-replace. S1 below is the invisible foundation; W1–W5 (§4b) carry the rest to completion.
+
+**S1 scope (INVISIBLE, behavior-parity):**
+- Add OKLCH token layer: LIGHT theme = current hex values (appearance unchanged); DARK theme = **Agent-A ramp** (`neutral-50 #121212 = oklch(0.205 0 0)` … `neutral-950 = oklch(0.985 0 0)`), defined under `[data-theme="dark"]` but **NOT activated**.
+- Semantic `@theme` aliases: background/foreground/card/popover/muted/accent/border/input/ring/destructive/gain/loss/flat/warn/chart-1..5/sidebar-*.
+- Re-point existing vars (Kimi Table-4 **names**: `--c-bg/-surface/-ink*/-line/-brand*/-up*/-down*/-warn*/-neutral` + shadcn `--background/--foreground/--card/--muted/--border/--gain/--loss`) to the semantic tokens, **preserving current light values**.
+- ⚠️ **DO NOT use Kimi Table-4 raw OKLCH values** — out-of-gamut (`L>100%`, e.g. `oklch(100.32%…)`) + neutral-hue artifacts. Keep light hex for S1; use Agent-A computed values for the dark ramp.
+
+**S1 QA acceptance**: `npm run build` passes; existing routes render IDENTICALLY in current theme (behavior-parity, visual diff = 0); token-coverage check (no orphaned `--c-*`); light stays default (dark defined, not active).
+
+**S2 (next, VISIBLE)**: flip default → dark (Agent-A ramp) + `tabular-nums` to Kimi's 7 gap files + AGY dark guardrails (elevation > borders, desaturated semantics, +25% dense padding). **This is where the owner SEES the change.**
+
+### 4b. P2 full-migration wave plan (owner HARD DESTINATION: complete now, no deferral)
+
+Each wave: Codex impl → **Claude gate** (build + behavior/visual) → Kimi/AGY verify. Per-file exact mapping = Kimi (read-only); per-screen visual acceptance = AGY.
+
+| Wave | Surface | Approach | Gate |
+|---|---|---|---|
+| **W0** | Token foundation (S1) | OKLCH layer + re-point vars (in progress) | build + visual diff = 0 |
+| **W1** | CSS files (`design-v2`/`footer`/`overview-widgets`/`market-structure`) hex→token + 680 off-grid spacings→grid tokens | mechanical, grep-verifiable | grep no hex/rgb in those files + build |
+| **W2** | High-risk components (`ledgerChartPanels`, `marketStructurePanelComponents`, `stockDetailPanel`) | semantic-judgment mapping (chart/regime colors) | per-file visual + build |
+| **W3** | **3,339 Tailwind named utils** | **custom Tailwind plugin** mapping color-name→OKLCH token (handles all at once, prevents drift) — NOT 3,339 manual edits | build + visual on top screens |
+| **W4** | Dark flip (S2) + `tabular-nums` (7 gap files) + AGY guardrails (elevation>borders, desaturate semantics, +25% dense padding) | the VISIBLE transformation | dark correct on /explore,/stock,/screener + a11y |
+| **W5** | Lint gate: CI fails on new `#hex`/`rgb()` in `src/**` (explicit allowlist) | lock so it can't regress | CI gate active |
+
+"제대로" enforcement: no wave closes until its gate passes; W3 plugin approach (not blind find-replace) keeps the 3,339 correct in one controlled move.
+
 ---
 
 ## 5. P3 — Backend Robustness guards (data automation must NOT break)
@@ -202,6 +233,7 @@ Priority: secret pre-check + schema guard first (highest break-risk).
 | D3 | ⌘K: revive CommandPaletteV2 into AppShell vs adopt cmdk | 🟡 PROVISIONAL = **revive** (verified working palette exists, 0 new dep) — owner may override at P2-S4 |
 | D4 | Lightweight Charts new dep for price views | 🟡 PROVISIONAL = **add for price only**, Chart.js stays for summaries — owner may override at P2-S5 |
 | D5 | C = earnings-reactive pipeline (MU etc.) | ⏳ deferred follow-up, not blocker |
+| **D6** | P2 scope: full migration now vs core-then-defer | 🔒 **HARD DESTINATION = FULL migration now, no long-tail deferral** (owner 2026-06-25). Condition: "제대로" — correct mapping + verification, not reckless find-replace. Wave plan §4b. |
 
 ---
 
