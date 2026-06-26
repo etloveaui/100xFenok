@@ -30,6 +30,21 @@ interface TraversalTrailContextValue {
 
 const TraversalTrailContext = createContext<TraversalTrailContextValue | null>(null);
 const MAX_TRAIL_ITEMS = 12;
+export const VISIBLE_TRAVERSAL_TRAIL_ITEMS = 3;
+
+export function splitTraversalTrail(
+  trail: TraversalTrailItem[],
+  visibleCount = VISIBLE_TRAVERSAL_TRAIL_ITEMS,
+) {
+  const hiddenCount = Math.max(0, trail.length - visibleCount);
+  return {
+    hiddenItems: trail.slice(0, hiddenCount),
+    visibleItems: trail.slice(hiddenCount).map((item, offset) => ({
+      item,
+      index: hiddenCount + offset,
+    })),
+  };
+}
 
 function toTrailItem(entity: TraversalTrailEntity): TraversalTrailItem | null {
   const id = entity.id.trim();

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import {
+  splitTraversalTrail,
   TraversalTrailProvider,
   useTraversalTrail,
 } from "@/components/connected/useTraversalTrail";
@@ -242,6 +243,7 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
   const [pending, setPending] = useState(false);
   const timerRef = useRef<number | null>(null);
   const { trail, pushTrail, popTrailTo, clearTrail } = useTraversalTrail();
+  const visibleTrail = splitTraversalTrail(trail);
 
   useEffect(() => {
     let cancelled = false;
@@ -383,7 +385,17 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
 
         {trail.length > 0 ? (
           <div className="v5-traversal-trail" aria-label="리드 스토리 이동 경로">
-            {trail.map((item, index) => (
+            {visibleTrail.hiddenItems.length > 0 ? (
+              <button
+                type="button"
+                aria-label={`이전 이동 경로 ${visibleTrail.hiddenItems.length}개로 이동`}
+                title={visibleTrail.hiddenItems.map((item) => item.label ?? item.id).join(" · ")}
+                onClick={() => popTrailTo(visibleTrail.hiddenItems.length - 1)}
+              >
+                ...
+              </button>
+            ) : null}
+            {visibleTrail.visibleItems.map(({ item, index }) => (
               <button key={`${item.id}-${index}`} type="button" onClick={() => popTrailTo(index)}>
                 {item.label ?? item.id}
               </button>

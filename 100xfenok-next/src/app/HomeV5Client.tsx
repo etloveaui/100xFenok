@@ -6,7 +6,11 @@ import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import ConnectedView from "@/components/connected/ConnectedView";
 import LeadStoryCard from "@/components/connected/LeadStoryCard";
-import { TraversalTrailProvider, useTraversalTrail } from "@/components/connected/useTraversalTrail";
+import {
+  splitTraversalTrail,
+  TraversalTrailProvider,
+  useTraversalTrail,
+} from "@/components/connected/useTraversalTrail";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
@@ -528,6 +532,7 @@ function V5ConnectionConsoleInner() {
   const [activeTileId, setActiveTileId] = useState<ConnectionTileId | null>(null);
   const [selectedTickers, setSelectedTickers] = useState<Partial<Record<ConnectionTileId, string>>>({});
   const { trail, pushTrail, popTrailTo } = useTraversalTrail();
+  const visibleTrail = splitTraversalTrail(trail);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -557,10 +562,10 @@ function V5ConnectionConsoleInner() {
   }
 
   function openTile(tile: ConnectionTile) {
-    const nextOpen = activeTileId === tile.id ? null : tile.id;
-    setActiveTileId(nextOpen);
+    const shouldOpen = activeTileId !== tile.id;
+    setActiveTileId(shouldOpen ? tile.id : null);
     const candidate = selectedCandidate(tile);
-    if (nextOpen && candidate) {
+    if (shouldOpen && candidate) {
       setSelectedTickers((current) => ({ ...current, [tile.id]: candidate.ticker }));
       pushTrail({ id: `ticker:${candidate.ticker}`, label: candidate.ticker, kind: "ticker", href: candidate.href });
     }
@@ -616,7 +621,17 @@ function V5ConnectionConsoleInner() {
       </div>
       {trail.length > 0 ? (
         <div className="v5-traversal-trail" aria-label="연결 이동 경로">
-          {trail.map((item, index) => (
+          {visibleTrail.hiddenItems.length > 0 ? (
+            <button
+              type="button"
+              aria-label={`이전 이동 경로 ${visibleTrail.hiddenItems.length}개로 이동`}
+              title={visibleTrail.hiddenItems.map((item) => item.label ?? item.id).join(" · ")}
+              onClick={() => popTrailTo(visibleTrail.hiddenItems.length - 1)}
+            >
+              ...
+            </button>
+          ) : null}
+          {visibleTrail.visibleItems.map(({ item, index }) => (
             <button key={`${item.id}-${index}`} type="button" onClick={() => popTrailTo(index)}>
               {item.label ?? item.id}
             </button>
