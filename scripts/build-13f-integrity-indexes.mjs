@@ -16,6 +16,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  loadJsonGuarded,
+  requireArray,
+  requireKeys,
+  requireObject,
+} from "./lib/guarded-json.mjs";
 import { loadTickerResolver, SYMBOL_RE } from "./lib/sec13f-symbols.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -24,14 +30,6 @@ const PUBLIC_INVESTORS_DIR = path.join(ROOT, "100xfenok-next/public/data/sec-13f
 const BY_TICKER = "data/sec-13f/by_ticker.json";
 const CONSENSUS = "data/sec-13f/analytics/consensus.json";
 const ALIASES = "data/sec-13f/analytics/ticker_aliases.json";
-
-function readJson(filePath, fallback = null) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
 
 function writeJson(relPath, data) {
   const rootPath = path.join(ROOT, relPath);
@@ -53,7 +51,23 @@ function copyInvestorMirror() {
 
 const round4 = (value) => Math.round(value * 10000) / 10000;
 
-const previousConsensus = readJson(path.join(ROOT, CONSENSUS), {});
+function readExistingJson(filePath, fallback, guardFn) {
+  return fs.existsSync(filePath) ? loadJsonGuarded(filePath, guardFn) : fallback;
+}
+
+function guardPreviousConsensus(data, filePath) {
+  requireKeys(data, filePath, ["metadata"]);
+  requireObject(data.metadata, filePath, "metadata");
+}
+
+function guardInvestorDoc(data, filePath) {
+  requireKeys(data, filePath, ["investor"]);
+  requireObject(data.investor, filePath, "investor");
+  requireKeys(data.investor, filePath, ["filings"], "investor");
+  requireArray(data.investor.filings, filePath, "investor.filings");
+}
+
+const previousConsensus = readExistingJson(path.join(ROOT, CONSENSUS), {}, guardPreviousConsensus);
 const metadata = previousConsensus.metadata ?? {};
 const targetQuarter = metadata.quarter ?? null;
 const excluded = new Set(metadata.excluded_stale_investors ?? []);
@@ -133,7 +147,7 @@ function addHolding(symbol, investorId, holding) {
 for (const file of investorFiles) {
   const id = path.basename(file, ".json");
   if (excluded.has(id)) continue;
-  const payload = readJson(path.join(INVESTORS_DIR, file), {});
+  const payload = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   const filings = payload.investor?.filings ?? [];
   const filing = targetQuarter
     ? filings.find((item) => item.quarter === targetQuarter)

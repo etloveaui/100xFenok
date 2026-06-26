@@ -15,6 +15,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  loadJsonGuarded,
+  requireArray,
+  requireKeys,
+  requireObject,
+} from "./lib/guarded-json.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -117,17 +123,24 @@ function ensureDir(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
-function readJson(filePath, fallback = null) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
-
 function writeJson(filePath, payload) {
   ensureDir(filePath);
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function readExistingJson(filePath, fallback, guardFn) {
+  return fs.existsSync(filePath) ? loadJsonGuarded(filePath, guardFn) : fallback;
+}
+
+function guardStocksAnalyzer(data, filePath) {
+  requireKeys(data, filePath, ["data"]);
+  requireArray(data.data, filePath, "data");
+}
+
+function guardExistingManifest(data, filePath) {
+  requireObject(data, filePath);
+  requireKeys(data, filePath, ["filings"]);
+  requireArray(data.filings, filePath, "filings");
 }
 
 function loadUniverse(args) {
@@ -135,7 +148,7 @@ function loadUniverse(args) {
     return uniqueTickers(["NVDA", ...args.tickers]);
   }
 
-  const analyzer = readJson(ANALYZER_PATH, { data: [] });
+  const analyzer = readExistingJson(ANALYZER_PATH, { data: [] }, guardStocksAnalyzer);
   const rows = Array.isArray(analyzer?.data) ? analyzer.data : [];
   const tickers = rows
     .filter((row) => row?.country === "US")
@@ -255,7 +268,7 @@ function loadExistingManifests() {
     if (!fs.existsSync(dir)) continue;
     for (const file of fs.readdirSync(dir)) {
       if (!file.endsWith(".json")) continue;
-      const manifest = readJson(path.join(dir, file));
+      const manifest = loadJsonGuarded(path.join(dir, file), guardExistingManifest);
       const ticker = normalizeTicker(manifest?.ticker ?? file.replace(/\.json$/, ""));
       if (ticker && !manifests.has(ticker)) manifests.set(ticker, manifest);
     }

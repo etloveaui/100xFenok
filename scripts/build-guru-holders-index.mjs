@@ -11,6 +11,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  loadJsonGuarded,
+  requireKeys,
+  requireObject,
+} from "./lib/guarded-json.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "data/sec-13f/analytics/consensus.json");
@@ -20,7 +25,12 @@ const MIRROR = path.join(
   "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
 );
 
-const consensus = JSON.parse(fs.readFileSync(SRC, "utf8"));
+function guardConsensus(data, filePath) {
+  requireKeys(data, filePath, ["consensus"]);
+  requireObject(data.consensus, filePath, "consensus");
+}
+
+const consensus = loadJsonGuarded(SRC, guardConsensus);
 const holders = {};
 for (const [ticker, row] of Object.entries(consensus.consensus ?? {})) {
   const unique = new Set(row.holders_list ?? []);

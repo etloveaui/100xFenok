@@ -21,6 +21,13 @@ import {
   normalizeCompanyName,
   SYMBOL_RE,
 } from "./lib/sec13f-symbols.mjs";
+import {
+  loadJsonGuarded,
+  requireArray,
+  requireKeys,
+  requireNumber,
+  requireObject,
+} from "./lib/guarded-json.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
@@ -56,14 +63,6 @@ const YAHOO_SECTOR_TO_GICS = new Map([
   ["Utilities", "Utilities"],
 ]);
 
-function readJson(filePath, fallback = null) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
-
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`);
@@ -72,6 +71,41 @@ function writeJson(filePath, data) {
 function writeRootAndPublic(relPath, data) {
   writeJson(path.join(ROOT, relPath), data);
   writeJson(path.join(ROOT, "100xfenok-next/public", relPath), data);
+}
+
+function readExistingJson(filePath, fallback, guardFn) {
+  return fs.existsSync(filePath) ? loadJsonGuarded(filePath, guardFn) : fallback;
+}
+
+function guardYfSummary(data, filePath) {
+  requireKeys(data, filePath, ["count", "ok", "failed", "errors"]);
+  requireNumber(data.count, filePath, "count");
+  requireNumber(data.ok, filePath, "ok");
+  requireNumber(data.failed, filePath, "failed");
+  if (!Array.isArray(data.errors) && typeof data.errors !== "number") {
+    throw new Error("errors must be an array or number");
+  }
+}
+
+function guardQuarterCloses(data, filePath) {
+  requireKeys(data, filePath, ["tickers"]);
+  requireObject(data.tickers, filePath, "tickers");
+}
+
+function guardYfProfile(data, filePath) {
+  requireKeys(data, filePath, ["data"]);
+  requireObject(data.data, filePath, "data");
+}
+
+function guardInvestorDoc(data, filePath) {
+  requireKeys(data, filePath, ["investor"]);
+  requireObject(data.investor, filePath, "investor");
+  requireKeys(data.investor, filePath, ["filings"], "investor");
+  requireArray(data.investor.filings, filePath, "investor.filings");
+}
+
+function guardSummaryDoc(data, filePath) {
+  requireObject(data, filePath);
 }
 
 function numberOrNull(value) {
@@ -153,7 +187,7 @@ function quarterEnd(quarter) {
 }
 
 function ensureYfSummaryOk() {
-  const summary = readJson(YF_SUMMARY_PATH, {});
+  const summary = loadJsonGuarded(YF_SUMMARY_PATH, guardYfSummary);
   const count = Number(summary.count ?? 0);
   const ok = Number(summary.ok ?? 0);
   const failed = Number(summary.failed ?? 0);
@@ -167,7 +201,7 @@ function ensureYfSummaryOk() {
 }
 
 const yfSummary = ensureYfSummaryOk();
-const quarterDoc = readJson(QUARTER_CLOSES_PATH, {});
+const quarterDoc = readExistingJson(QUARTER_CLOSES_PATH, {}, guardQuarterCloses);
 const quarterCloses = quarterDoc.tickers ?? {};
 const resolver = loadTickerResolver(ROOT);
 const profileCache = new Map();
@@ -183,7 +217,7 @@ function profileForSymbol(symbol) {
     return null;
   }
 
-  const payload = readJson(filePath, {});
+  const payload = loadJsonGuarded(filePath, guardYfProfile);
   const info = payload.data?.info ?? {};
   const profile = {
     symbol: clean,
@@ -379,7 +413,7 @@ const generatedAt = new Date().toISOString();
 
 for (const file of investorFiles) {
   const id = path.basename(file, ".json");
-  const doc = readJson(path.join(INVESTORS_DIR, file), {});
+  const doc = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   doc.__id = id;
   for (const filing of doc.investor?.filings ?? []) {
     for (const holding of filing.holdings ?? []) {
@@ -406,7 +440,7 @@ for (const doc of investorDocs) {
   writeJson(path.join(PUBLIC_INVESTORS_DIR, `${id}.json`), doc);
 }
 
-const summary = readJson(SUMMARY_PATH, {});
+const summary = readExistingJson(SUMMARY_PATH, {}, guardSummaryDoc);
 summary.metadata = {
   ...(summary.metadata ?? {}),
   enrichment_coverage: coverage.coverage,

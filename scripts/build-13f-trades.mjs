@@ -14,6 +14,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  loadJsonGuarded,
+  requireArray,
+  requireKeys,
+  requireObject,
+} from "./lib/guarded-json.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -35,10 +41,6 @@ const STOCKS_ANALYZER_PATH = path.join(
 
 const TOP_N = 50;
 
-function loadJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
@@ -56,11 +58,29 @@ function median(values) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+function guardSectorMap(data, filePath) {
+  requireKeys(data, filePath, ["gicsToCanonical", "scouterToCanonical"]);
+  requireObject(data.gicsToCanonical, filePath, "gicsToCanonical");
+  requireObject(data.scouterToCanonical, filePath, "scouterToCanonical");
+}
+
+function guardStocksAnalyzer(data, filePath) {
+  requireKeys(data, filePath, ["data"]);
+  requireArray(data.data, filePath, "data");
+}
+
+function guardInvestorDoc(data, filePath) {
+  requireKeys(data, filePath, ["investor"]);
+  requireObject(data.investor, filePath, "investor");
+  requireKeys(data.investor, filePath, ["filings"], "investor");
+  requireArray(data.investor.filings, filePath, "investor.filings");
+}
+
 /* ── sector resolution (SSOT: sector-map.json, soft dependency) ── */
 let gicsToCanonical = {};
 let scouterToCanonical = {};
 if (fs.existsSync(SECTOR_MAP_PATH)) {
-  const sectorMap = loadJson(SECTOR_MAP_PATH);
+  const sectorMap = loadJsonGuarded(SECTOR_MAP_PATH, guardSectorMap);
   gicsToCanonical = sectorMap.gicsToCanonical ?? {};
   scouterToCanonical = sectorMap.scouterToCanonical ?? {};
 } else {
@@ -69,7 +89,7 @@ if (fs.existsSync(SECTOR_MAP_PATH)) {
 
 const scouterSectorByTicker = new Map();
 if (fs.existsSync(STOCKS_ANALYZER_PATH)) {
-  for (const row of loadJson(STOCKS_ANALYZER_PATH).data ?? []) {
+  for (const row of loadJsonGuarded(STOCKS_ANALYZER_PATH, guardStocksAnalyzer).data ?? []) {
     if (row.symbol && row.sector) scouterSectorByTicker.set(row.symbol, row.sector);
   }
 }
@@ -99,7 +119,7 @@ const investorFiles = fs
 
 const investors = investorFiles.map((file) => {
   const id = path.basename(file, ".json");
-  const { investor } = loadJson(path.join(INVESTORS_DIR, file));
+  const { investor } = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   return { id, name: investor.name, entity: investor.entity, filings: investor.filings };
 });
 

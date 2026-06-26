@@ -13,6 +13,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  loadJsonGuarded,
+  requireArray,
+  requireKeys,
+  requireObject,
+} from "./lib/guarded-json.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -35,10 +41,6 @@ const STOCKS_ANALYZER_PATH = path.join(
 const TREEMAP_TOP_N = 50;
 const TOTAL_TREEMAP_TOP_N = 100;
 
-function loadJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data));
@@ -51,14 +53,38 @@ function writeBoth(rootPath, data) {
 
 const round4 = (x) => Math.round(x * 10000) / 10000;
 
+function guardSectorMap(data, filePath) {
+  requireKeys(data, filePath, ["canonical", "gicsToCanonical", "scouterToCanonical"]);
+  requireArray(data.canonical, filePath, "canonical");
+  requireObject(data.gicsToCanonical, filePath, "gicsToCanonical");
+  requireObject(data.scouterToCanonical, filePath, "scouterToCanonical");
+}
+
+function guardStocksAnalyzer(data, filePath) {
+  requireKeys(data, filePath, ["data"]);
+  requireArray(data.data, filePath, "data");
+}
+
+function guardQuarterCloses(data, filePath) {
+  requireKeys(data, filePath, ["tickers"]);
+  requireObject(data.tickers, filePath, "tickers");
+}
+
+function guardInvestorDoc(data, filePath) {
+  requireKeys(data, filePath, ["investor"]);
+  requireObject(data.investor, filePath, "investor");
+  requireKeys(data.investor, filePath, ["filings"], "investor");
+  requireArray(data.investor.filings, filePath, "investor.filings");
+}
+
 /* ── sector + return-proxy joins ── */
-const sectorMap = loadJson(SECTOR_MAP_PATH);
+const sectorMap = loadJsonGuarded(SECTOR_MAP_PATH, guardSectorMap);
 const gicsToCanonical = sectorMap.gicsToCanonical ?? {};
 const scouterToCanonical = sectorMap.scouterToCanonical ?? {};
 const CANONICAL = sectorMap.canonical;
 
 const scouterByTicker = new Map();
-for (const row of loadJson(STOCKS_ANALYZER_PATH).data ?? []) {
+for (const row of loadJsonGuarded(STOCKS_ANALYZER_PATH, guardStocksAnalyzer).data ?? []) {
   if (!row.symbol) continue;
   scouterByTicker.set(row.symbol, {
     sector: row.sector ?? null,
@@ -91,7 +117,7 @@ function returnProxy(ticker) {
 /* ── quarter-end close snapshot (actual return since quarter end) ── */
 const QUARTER_CLOSES_PATH = path.join(ROOT, "data/yf/quarter_closes.json");
 const quarterCloses = fs.existsSync(QUARTER_CLOSES_PATH)
-  ? loadJson(QUARTER_CLOSES_PATH).tickers
+  ? loadJsonGuarded(QUARTER_CLOSES_PATH, guardQuarterCloses).tickers
   : {};
 
 function closeAt(ticker, isoDate) {
@@ -244,7 +270,7 @@ let globalQuarter = null;
 
 for (const file of investorFiles) {
   const id = path.basename(file, ".json");
-  const { investor } = loadJson(path.join(INVESTORS_DIR, file));
+  const { investor } = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   const filings = investor.filings ?? [];
   if (!filings.length) continue;
 
@@ -295,7 +321,7 @@ for (const { quarter, report_date, agg } of latestAggs) {
 /* ── cohort sector history (smart-money trend, last 12 global quarters) ── */
 const quarterSet = new Set();
 for (const file of investorFiles) {
-  const { investor } = loadJson(path.join(INVESTORS_DIR, file));
+  const { investor } = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   for (const f of investor.filings ?? []) quarterSet.add(f.quarter);
 }
 const historyQuarters = [...quarterSet].sort().slice(-12);
@@ -304,7 +330,7 @@ const cohortByQuarter = new Map(
 );
 const cohortTotals = new Map(historyQuarters.map((q) => [q, 0]));
 for (const file of investorFiles) {
-  const { investor } = loadJson(path.join(INVESTORS_DIR, file));
+  const { investor } = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   for (const filing of investor.filings ?? []) {
     if (!cohortByQuarter.has(filing.quarter)) continue;
     const agg = aggByTicker(filing);
