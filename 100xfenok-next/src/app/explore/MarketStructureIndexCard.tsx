@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 
 interface StructureDoc {
   generated_at?: string;
@@ -120,7 +121,7 @@ export default function MarketStructureIndexCard() {
       </div>
       <div className="panel-foot">
         CNN 약한 축 {weakSentiment.map((item) => `${labelComponent(item.id)} ${fmt(item.value)}`).join(" · ") || "—"}
-        <TransitionLink href="/market-valuation" style={{ marginLeft: "var(--s2)", fontWeight: 900 }}>
+        <TransitionLink href={ROUTES.market} style={{ marginLeft: "var(--s2)", fontWeight: 900 }}>
           시장 상세
         </TransitionLink>
       </div>

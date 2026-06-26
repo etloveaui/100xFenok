@@ -26,6 +26,7 @@ import {
 import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
 import { freshnessDataState } from "@/lib/data-state";
+import { ROUTES } from "@/lib/routes";
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -143,7 +144,7 @@ function MarketSection({
 function StructureDetailEntry() {
   return (
     <TransitionLink
-      href="/market-valuation/structure"
+      href={ROUTES.marketStructure}
       className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 shadow-[var(--sh-sm)] transition hover:border-brand-interactive hover:shadow-[var(--sh-sm)]"
     >
       <span className="min-w-0">

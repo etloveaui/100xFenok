@@ -4,6 +4,7 @@ import { type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import type { DashboardFreshnessMap, DashboardSnapshot } from "@/lib/dashboard/types";
 import { formatFreshnessLabels } from "@/lib/dashboard/freshness-labels";
+import { ROUTES } from "@/lib/routes";
 import TileBoundary from "@/components/dashboard/TileBoundary";
 import {
   clamp,
@@ -528,7 +529,7 @@ export default function HomeBentoGrid({
             title="Sector Expansion"
             muted={!dataReady || isOffline || tileFailed.breadth}
             freshness={freshnessMap.breadth}
-            href="/sectors"
+            href={ROUTES.sectors}
             hrefLabel="섹터 보기"
             className="col-span-1"
           >

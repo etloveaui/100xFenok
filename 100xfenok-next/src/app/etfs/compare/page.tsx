@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import { canonicalPath } from "@/lib/site-url";
+import { ROUTES } from "@/lib/routes";
 import EtfCompareClient from "./EtfCompareClient";
 
 interface Props {
@@ -37,7 +38,7 @@ export default async function EtfComparePage({ searchParams }: Props) {
               </p>
             </div>
             <div className="data-shell-head-actions">
-              <TransitionLink href="/etfs" className="data-shell-link">
+              <TransitionLink href={ROUTES.etfs} className="data-shell-link">
                 ETF 센터
               </TransitionLink>
             </div>

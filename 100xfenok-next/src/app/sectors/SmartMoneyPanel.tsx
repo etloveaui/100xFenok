@@ -1,6 +1,7 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 import type { SectorRow, SectorSourceMeta } from "@/lib/sectors/types";
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -44,7 +45,7 @@ export default function SmartMoneyPanel({
         <span className="inline-flex items-center rounded-full border border-[var(--c-line)] bg-[var(--c-brand-soft)] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">
           13F {quarter}{cohort}
         </span>
-        <TransitionLink href="/superinvestors" className="ml-auto text-[11px] font-black text-[var(--c-brand)] hover:underline">
+        <TransitionLink href={ROUTES.superinvestors} className="ml-auto text-[11px] font-black text-[var(--c-brand)] hover:underline">
           투자 대가 보기 →
         </TransitionLink>
       </div>

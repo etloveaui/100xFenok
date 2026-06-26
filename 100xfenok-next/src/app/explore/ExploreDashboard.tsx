@@ -7,6 +7,7 @@ import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import { formatSignedPercent } from "@/lib/format";
 import { makeDataState } from "@/lib/data-state";
+import { ROUTES } from "@/lib/routes";
 
 /**
  * 섹터 흐름 패널 — 11 sectors as sorted diverging-bar rows (shell v3).
@@ -106,7 +107,7 @@ export default function ExploreDashboard() {
       <div className="panel-h">
         <h2>섹터 흐름</h2>
         <span className="desc">최근 1개월 · 수익률순</span>
-        <TransitionLink href="/sectors" className="act">
+        <TransitionLink href={ROUTES.sectors} className="act">
           히트맵 →
         </TransitionLink>
       </div>
@@ -115,7 +116,7 @@ export default function ExploreDashboard() {
           const up = v >= 0;
           const w = Math.max((Math.abs(v) / max) * 50, 3);
           return (
-            <TransitionLink key={key} href="/sectors" className="sec-row" title={`${label} 1개월 ${pct(v)}`}>
+            <TransitionLink key={key} href={ROUTES.sectors} className="sec-row" title={`${label} 1개월 ${pct(v)}`}>
               <span className="sn">{label}</span>
               <div className="sec-track">
                 <span className="z" />

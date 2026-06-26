@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { ROUTES } from "@/lib/routes";
 import {
   isInverseEtf,
   isLeveragedEtf,
@@ -514,7 +515,7 @@ export default function NewEtfsList({
       {loaded && rows.length > 0 ? (
         <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
           <span>표시 중 {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개 · 각 행은 ETF 상세로 이동</span>
-          <TransitionLink href="/etfs" className="font-black text-[var(--c-brand)] hover:underline">
+          <TransitionLink href={ROUTES.etfs} className="font-black text-[var(--c-brand)] hover:underline">
             ETF 센터로 이동
           </TransitionLink>
         </div>

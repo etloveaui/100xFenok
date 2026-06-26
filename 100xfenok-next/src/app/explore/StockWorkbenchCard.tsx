@@ -9,6 +9,7 @@ import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tab
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { latestAsOf, makeDataState } from "@/lib/data-state";
 import { normalizeForFilePath } from "@/lib/ticker";
+import { ROUTES } from "@/lib/routes";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
@@ -508,7 +509,7 @@ export default function StockWorkbenchCard() {
 
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
         <span>계산 점수·추정치 변화·급등락 종목·수익/배당 요약은 데이터 갱신 시 자동 반영됩니다</span>
-        <TransitionLink href="/screener" className="font-black text-brand-interactive hover:underline">
+        <TransitionLink href={ROUTES.screener} className="font-black text-brand-interactive hover:underline">
           스크리너로 이동
         </TransitionLink>
       </div>

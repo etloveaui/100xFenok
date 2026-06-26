@@ -387,7 +387,7 @@ export default function MarketEventsClient({
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
             <span>산업 지도와 섹터별 구성종목은 섹터 화면에서 봅니다.</span>
-            <TransitionLink href="/sectors" className="font-black text-brand-interactive hover:underline">
+            <TransitionLink href={ROUTES.sectors} className="font-black text-brand-interactive hover:underline">
               섹터로 이동
             </TransitionLink>
           </div>

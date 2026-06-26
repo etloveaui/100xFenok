@@ -7,6 +7,7 @@ import DataStateNotice from "@/components/DataStateNotice";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import { makeDataState } from "@/lib/data-state";
 import { useWatchlist } from "@/lib/watchlist";
+import { ROUTES } from "@/lib/routes";
 
 interface AnalyzerLite {
   symbol: string;
@@ -62,7 +63,7 @@ export default function MyWatchlistStrip() {
         <div className="panel-h">
           <h2>내 종목</h2>
           <span className="desc num">(0)</span>
-          <TransitionLink href="/portfolio" className="act">포트폴리오 →</TransitionLink>
+          <TransitionLink href={ROUTES.portfolio} className="act">포트폴리오 →</TransitionLink>
         </div>
         <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">관심 종목을 추가하면 여기에서 바로 확인할 수 있습니다.</div>
       </section>
@@ -87,7 +88,7 @@ export default function MyWatchlistStrip() {
       <div className="panel-h">
         <h2>내 종목</h2>
         <span className="desc num">({tickers.length})</span>
-        <TransitionLink href="/portfolio" className="act">포트폴리오 →</TransitionLink>
+        <TransitionLink href={ROUTES.portfolio} className="act">포트폴리오 →</TransitionLink>
       </div>
       {watchlistState.status !== "ready" ? (
         <div className="panel-b">

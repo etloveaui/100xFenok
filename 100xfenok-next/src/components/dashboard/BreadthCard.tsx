@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { SectorSnapshot } from '@/lib/dashboard/types';
 import { formatSignedPercentDecimal } from '@/lib/dashboard/formatters';
+import { ROUTES } from '@/lib/routes';
 
 type BreadthCardProps = {
   sectorRows: SectorSnapshot[];
@@ -67,7 +68,7 @@ export default function BreadthCard({ sectorRows, sectorUp, sectorDown }: Breadt
           </div>
         </article>
       </div>
-      <Link href="/sectors" className="overview-widget-link">
+      <Link href={ROUTES.sectors} className="overview-widget-link">
         시장 랩 보기
       </Link>
     </article>

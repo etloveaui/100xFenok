@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 import NewEtfsList from "./NewEtfsList";
 
 interface Props {
@@ -32,7 +33,7 @@ export default async function NewEtfsPage({ searchParams }: Props) {
               </p>
             </div>
             <div className="data-shell-head-actions">
-              <TransitionLink href="/etfs" className="data-shell-link">
+              <TransitionLink href={ROUTES.etfs} className="data-shell-link">
                 ETF 센터
               </TransitionLink>
             </div>

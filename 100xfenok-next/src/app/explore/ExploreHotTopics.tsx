@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { makeDataState } from "@/lib/data-state";
+import { ROUTES } from "@/lib/routes";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 function fmtAmount(value: number): string {
@@ -135,11 +136,11 @@ export default function ExploreHotTopics() {
       <div className="panel-h">
         <h2>13F 핫토픽</h2>
         <span className="desc">{data.metadata.quarter} 기준</span>
-        <TransitionLink href="/superinvestors" className="act">투자자 전체 →</TransitionLink>
+        <TransitionLink href={ROUTES.superinvestors} className="act">투자자 전체 →</TransitionLink>
       </div>
       <div className="f13-grid">
         {topics.map((t) => (
-          <TransitionLink key={t.key} href="/superinvestors" className="f13">
+          <TransitionLink key={t.key} href={ROUTES.superinvestors} className="f13">
             <span className={`badge ${t.badgeCls}`}>{t.chip}</span>
             <span className="body">
               <span className="tkr">{t.text.split("—")[0].trim()}</span>

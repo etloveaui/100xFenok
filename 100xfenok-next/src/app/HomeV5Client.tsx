@@ -333,7 +333,7 @@ function V5MarketPulse({ dashboard }: { dashboard: DashboardSnapshot }) {
       <div className="panel-h">
         <h2 id="v5-pulse-title">시장 펄스</h2>
         <span className="desc">지수 · 섹터 · 강도</span>
-        <TransitionLink href="/sectors" className="act">
+        <TransitionLink href={ROUTES.sectors} className="act">
           섹터 →
         </TransitionLink>
       </div>
@@ -705,7 +705,7 @@ function V5ConnectionPeekDrawer({
       <div className="v5-connection-drawer__footer">
         역방향
         <TransitionLink href={ROUTES.stock(selected.ticker)}>{selected.ticker} 전체 보기</TransitionLink>
-        <TransitionLink href="/superinvestors">13F 맵</TransitionLink>
+        <TransitionLink href={ROUTES.superinvestors}>13F 맵</TransitionLink>
       </div>
     </div>
   );

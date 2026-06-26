@@ -11,6 +11,7 @@ import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/typ
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import { makeDataState } from "@/lib/data-state";
+import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import MetricHelp from "@/components/MetricHelp";
@@ -1265,7 +1266,7 @@ export default function ScreenerClient({
               필터 ETF 비교
             </TransitionLink>
           ) : null}
-          <TransitionLink href="/sectors" className="data-shell-link">
+          <TransitionLink href={ROUTES.sectors} className="data-shell-link">
             섹터
           </TransitionLink>
           <MarketQuickLinks />

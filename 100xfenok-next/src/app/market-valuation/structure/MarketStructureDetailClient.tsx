@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 import { EXPLORE_NAV_LABEL } from "@/lib/product-nav";
 import {
   loadMarketStructureModel,
@@ -175,7 +176,7 @@ export default function MarketStructureDetailClient({
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <div className="mb-2 hidden items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)] md:flex">
-            <TransitionLink href="/market-valuation" className="hover:text-[var(--c-brand)]">
+            <TransitionLink href={ROUTES.market} className="hover:text-[var(--c-brand)]">
               시장 밸류에이션
             </TransitionLink>
             <span>/</span>
@@ -194,10 +195,10 @@ export default function MarketStructureDetailClient({
               {model.generatedAt}
             </span>
           ) : null}
-          <TransitionLink href="/market-valuation" className="data-shell-link">
+          <TransitionLink href={ROUTES.market} className="data-shell-link">
             시장 밸류에이션
           </TransitionLink>
-          <TransitionLink href="/explore" className="data-shell-link">
+          <TransitionLink href={ROUTES.explore} className="data-shell-link">
             {EXPLORE_NAV_LABEL}
           </TransitionLink>
         </div>

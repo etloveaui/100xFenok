@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import type { DashboardFreshnessMap } from "@/lib/dashboard/types";
 import type { WatchableMetric } from "@/lib/watch/types";
+import { ROUTES } from "@/lib/routes";
 import type { V2HomeProps, V2SegmentFilter } from "@/components/dashboard/v2/types";
 import { deriveStatus } from "@/components/dashboard/v2/types";
 import TraceableNumber, { metaFromFreshness, type TraceableMode } from "@/components/dashboard/v4/TraceableNumber";
@@ -484,7 +485,7 @@ export default function HomeBentoGridV4({
           <h2>분석 및 실행 도구</h2>
         </div>
         <div className="tools">
-          <a className="tool" href="/explore">
+          <a className="tool" href={ROUTES.explore}>
             <span className="kik">
               <svg className="icon" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
@@ -498,7 +499,7 @@ export default function HomeBentoGridV4({
               진입 <span className="arr">→</span>
             </span>
           </a>
-          <a className="tool" href="/superinvestors">
+          <a className="tool" href={ROUTES.superinvestors}>
             <span className="kik">
               <svg className="icon" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -511,7 +512,7 @@ export default function HomeBentoGridV4({
               진입 <span className="arr">→</span>
             </span>
           </a>
-          <a className="tool" href="/portfolio">
+          <a className="tool" href={ROUTES.portfolio}>
             <span className="kik">
               <svg className="icon" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" />

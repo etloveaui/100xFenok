@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 import {
   ETF_TYPE_PARAM,
   asOfDate,
@@ -592,7 +593,7 @@ export default function EtfUniverseCard({
             );
           })}
           {newOnly ? (
-            <TransitionLink href="/etfs/new" className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive">
+            <TransitionLink href={ROUTES.etfNew} className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive">
               신규 ETF 상세
             </TransitionLink>
           ) : null}
@@ -672,7 +673,7 @@ export default function EtfUniverseCard({
       <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
         <span>현재 조건에서 {newOnly ? "상장일순" : "운용자산순"} {formatNumber(visibleRows.length)} / {formatNumber(filteredRows.length)}개 표시 · 각 행은 상세 페이지로 이동</span>
         {showOpenLink ? (
-          <TransitionLink href="/etfs" className="font-black text-brand-interactive hover:underline">
+          <TransitionLink href={ROUTES.etfs} className="font-black text-brand-interactive hover:underline">
             ETF 센터
           </TransitionLink>
         ) : null}

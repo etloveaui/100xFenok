@@ -2,6 +2,7 @@
 
 import TransitionLink from "@/components/TransitionLink";
 import { MACRO_CONTEXTS } from "@/lib/macro-chart/context";
+import { ROUTES } from "@/lib/routes";
 
 const MACRO_PLAYBOOKS = [
   {
@@ -37,7 +38,7 @@ export default function MacroPlaybookCard() {
       <div className="panel-h">
         <h2>매크로 플레이북</h2>
         <span className="desc">차트 분석</span>
-        <TransitionLink href="/macro-chart" className="act">
+        <TransitionLink href={ROUTES.macroChart} className="act">
           전체 →
         </TransitionLink>
       </div>
