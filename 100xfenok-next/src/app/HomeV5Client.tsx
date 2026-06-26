@@ -165,11 +165,10 @@ function formatDatePart(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
-function V5MarketNow({ dashboard, dataReady, failedSources, hidden = false }: {
+function V5MarketNow({ dashboard, dataReady, failedSources }: {
   dashboard: DashboardSnapshot;
   dataReady: boolean;
   failedSources: string[];
-  hidden?: boolean;
 }) {
   const quickItems = dashboard.quickIndices.map((item) => ({
     key: item.symbol,
@@ -212,7 +211,7 @@ function V5MarketNow({ dashboard, dataReady, failedSources, hidden = false }: {
   ];
 
   return (
-    <section className={`v5-market-now ${hidden ? "is-scroll-hidden" : ""}`} aria-label="시장 현재값">
+    <section className="v5-market-now" aria-label="시장 현재값">
       <div className="v5-market-now__head">
         <span className={`v5-live-dot ${dataReady ? "is-on" : ""}`} aria-hidden="true" />
         <span>Market Now</span>
@@ -814,38 +813,17 @@ function V5SmartMoneyTwoHop({ ticker, label }: { ticker: string; label: string }
 export default function HomeV5Client() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
   const regime = useMemo(() => buildRegimeRead(dashboard), [dashboard]);
-  const [marketNowHidden, setMarketNowHidden] = useState(false);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("v5") !== "1") return;
     document.cookie = "fenok_design_version=v5; Path=/; Max-Age=2592000; SameSite=Lax";
   }, []);
 
-  useEffect(() => {
-    let lastY = window.scrollY;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(() => {
-        const nextY = window.scrollY;
-        const delta = nextY - lastY;
-        if (nextY < 80) setMarketNowHidden(false);
-        else if (delta > 10) setMarketNowHidden(true);
-        else if (delta < -10) setMarketNowHidden(false);
-        lastY = nextY;
-        ticking = false;
-      });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <div className="fnk-shell v5-home">
       <AppShell active="explore" title="마켓 홈">
         <div className="v5-stack">
-          <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} hidden={marketNowHidden} />
+          <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />
           <V5MarketPulse dashboard={dashboard} />
           <LeadStoryCard />
@@ -857,14 +835,17 @@ export default function HomeV5Client() {
                 <ExploreDashboard />
                 <StockWorkbenchCard />
               </div>
-              <MacroPlaybookCard />
-              <ExploreHotTopics />
-              <V5ConnectionConsole />
             </div>
             <div className="v5-layout__side">
               <MyWatchlistStrip />
               <EtfUniverseCard limit={6} />
             </div>
+          </div>
+
+          <div className="v5-fullwidth">
+            <MacroPlaybookCard />
+            <ExploreHotTopics />
+            <V5ConnectionConsole />
           </div>
 
           <p className="data-cap">

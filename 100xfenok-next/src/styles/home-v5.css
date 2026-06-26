@@ -95,22 +95,12 @@
 .fnk-shell.v5-home .v5-market-now {
   display: grid;
   grid-template-columns: 190px minmax(0, 1fr);
-  position: sticky;
-  top: calc(var(--topbar-h) + var(--ticker-h) + var(--s2));
-  z-index: 25;
   overflow: hidden;
   border: 1px solid var(--c-line);
   border-left: 3px solid var(--v5-blue);
   border-radius: 8px;
   background: var(--c-panel);
   box-shadow: var(--sh-sm);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.fnk-shell.v5-home .v5-market-now.is-scroll-hidden {
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(calc(-100% - var(--s3)));
 }
 
 .fnk-shell.v5-home .v5-market-now__head {
@@ -754,11 +744,17 @@
   min-width: 0;
 }
 
+.fnk-shell.v5-home .v5-fullwidth {
+  display: grid;
+  gap: var(--s4);
+  min-width: 0;
+}
+
 .fnk-shell.v5-home .v5-two {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--s4);
-  align-items: start;
+  align-items: stretch;
 }
 
 .fnk-shell.v5-home .v5-layout__side .panel-b > .grid[class*="xl:grid-cols"] {
@@ -1125,7 +1121,6 @@
 @media (max-width: 820px) {
   .fnk-shell.v5-home .v5-market-now {
     grid-template-columns: 1fr;
-    top: calc(var(--safe-t) + var(--appbar-h) + var(--ticker-h) + var(--s2));
   }
 
   .fnk-shell.v5-home .v5-market-now__head {
