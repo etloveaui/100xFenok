@@ -178,8 +178,15 @@ jobs:
       - name: Build market source parity
         run: python3 scripts/build-market-source-parity.py
 
-      - name: Build market data audit
-        run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
+      - name: Refresh history-gap plan before report
+        env:
+          INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
+          INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
+        run: |
+          ARGS="--incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan --incremental-etf-limit 0"
+          if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
+          if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
+          python3 scripts/fetch-stockanalysis.py $ARGS
 
       - name: Build ETF history-gap report
         env:
@@ -188,6 +195,9 @@ jobs:
           ARGS="--write-report"
           if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
           npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
+
+      - name: Build market data audit
+        run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
 
       - name: Update manifest
         run: python3 scripts/update-manifest.py
