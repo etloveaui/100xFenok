@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, useEffect } from "react";
+import { Fragment, useMemo, useState, useEffect, useRef } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MacroContextCard from "@/components/macro/MacroContextCard";
@@ -19,6 +19,9 @@ import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock
 import type { MacroContextId } from "@/lib/macro-chart/context";
 
 const PAGE_SIZE = 50;
+const DESKTOP_ROW_HEIGHT = 52;
+const DESKTOP_VIRTUAL_HEIGHT = 620;
+const DESKTOP_VIRTUAL_OVERSCAN = 6;
 
 type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
 type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership" | "singleStockEtfs";
@@ -664,9 +667,9 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
     >
       {sections.map((section) => (
         <div key={section.title} className={compact ? "rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2" : "border-t border-[var(--c-line-2)] pt-3"}>
-          <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="mb-2 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
-            <span className="grid min-w-[132px] grid-cols-3 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)]">
+            <span className="grid w-full grid-cols-2 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
               {ESTIMATE_PERIOD_LABELS.map((label) => <span key={`${section.title}-${label}`}>{label}</span>)}
             </span>
           </div>
@@ -675,7 +678,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
               const completeness = estimateCompletenessFromValues(row.values);
               const showGap = hasEstimateGap(completeness);
               return (
-                <div key={`${section.title}-${row.label}`} className="grid grid-cols-[62px_minmax(0,1fr)] items-center gap-2">
+                <div key={`${section.title}-${row.label}`} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[62px_minmax(0,1fr)] sm:items-center sm:gap-2">
                   <span className="min-w-0 truncate text-[10px] font-black text-slate-500">
                     {row.label}
                     {showGap ? (
@@ -684,7 +687,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
                       </span>
                     ) : null}
                   </span>
-                  <span className="grid min-w-0 grid-cols-3 gap-1">
+                  <span className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-3">
                     {row.values.map((raw, index) => {
                       const value = normalizeTrendValue(raw);
                       return (
@@ -1064,6 +1067,57 @@ export default function ScreenerClient({
   const selectedSingleStockEtfCompareHref = useMemo(() => buildSingleStockEtfCompareHref(selectedRows), [selectedRows]);
   const pageSelectedCount = pageRows.filter((stock) => selectedTickers.has(stock.ticker)).length;
   const allPageSelected = pageRows.length > 0 && pageSelectedCount === pageRows.length;
+  const desktopScrollRef = useRef<HTMLDivElement | null>(null);
+  const [desktopScrollMetrics, setDesktopScrollMetrics] = useState({ scrollTop: 0, viewportHeight: DESKTOP_VIRTUAL_HEIGHT });
+
+  useEffect(() => {
+    const node = desktopScrollRef.current;
+    if (!node) return;
+
+    let frame = 0;
+    const readScrollMetrics = () => {
+      frame = 0;
+      setDesktopScrollMetrics({
+        scrollTop: node.scrollTop,
+        viewportHeight: node.clientHeight || DESKTOP_VIRTUAL_HEIGHT,
+      });
+    };
+    const scheduleRead = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(readScrollMetrics);
+    };
+
+    readScrollMetrics();
+    node.addEventListener("scroll", scheduleRead, { passive: true });
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleRead);
+    resizeObserver?.observe(node);
+
+    return () => {
+      node.removeEventListener("scroll", scheduleRead);
+      resizeObserver?.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [activeColumns.length, pageRows.length, preset, safePage]);
+
+  useEffect(() => {
+    const node = desktopScrollRef.current;
+    if (!node) return;
+    node.scrollTop = 0;
+    const frame = window.requestAnimationFrame(() => {
+      setDesktopScrollMetrics({
+        scrollTop: 0,
+        viewportHeight: node.clientHeight || DESKTOP_VIRTUAL_HEIGHT,
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [safePage, stateKey]);
+
+  const desktopVirtualStart = Math.max(0, Math.floor(desktopScrollMetrics.scrollTop / DESKTOP_ROW_HEIGHT) - DESKTOP_VIRTUAL_OVERSCAN);
+  const desktopVirtualCount = Math.ceil(desktopScrollMetrics.viewportHeight / DESKTOP_ROW_HEIGHT) + DESKTOP_VIRTUAL_OVERSCAN * 2;
+  const desktopVirtualEnd = Math.min(pageRows.length, desktopVirtualStart + desktopVirtualCount);
+  const desktopVirtualRows = pageRows.slice(desktopVirtualStart, desktopVirtualEnd);
+  const desktopTopSpacerHeight = desktopVirtualStart * DESKTOP_ROW_HEIGHT;
+  const desktopBottomSpacerHeight = Math.max(0, (pageRows.length - desktopVirtualEnd) * DESKTOP_ROW_HEIGHT);
 
   const screenerDataState = useMemo(() => {
     if (failed) {
@@ -1555,10 +1609,14 @@ export default function ScreenerClient({
         </div>
 
         <div className="hidden md:block">
-          <div className="-mx-1 overflow-x-auto px-1">
+          <div
+            ref={desktopScrollRef}
+            data-testid="screener-desktop-virtual-scroll"
+            className="-mx-1 max-h-[620px] overflow-auto px-1"
+          >
             <table className="w-full min-w-[760px] text-sm">
               <thead>
-                <tr className="border-b border-[var(--c-line)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+                <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
                   <th className="w-12 px-2 py-2 text-left">
                     <input
                       type="checkbox"
@@ -1597,12 +1655,19 @@ export default function ScreenerClient({
                 </tr>
               </thead>
               <tbody>
-                {pageRows.map((stock) => {
+                {desktopTopSpacerHeight > 0 ? (
+                  <tr aria-hidden="true">
+                    <td colSpan={activeColumns.length + 1} className="border-0 p-0" style={{ height: desktopTopSpacerHeight }} />
+                  </tr>
+                ) : null}
+                {desktopVirtualRows.map((stock) => {
                   const expanded = expandedTicker === stock.ticker;
                   const detailId = `screener-detail-${stock.ticker}`;
                   return (
                   <Fragment key={stock.ticker}>
                     <tr
+                      data-testid="screener-desktop-row"
+                      data-ticker={stock.ticker}
                       onClick={() =>
                         setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
                       }
@@ -1643,7 +1708,7 @@ export default function ScreenerClient({
                       ))}
                     </tr>
                     {expanded ? (
-                      <tr id={detailId}>
+                      <tr id={detailId} data-testid="screener-desktop-detail-row" data-ticker={stock.ticker}>
                         <td colSpan={activeColumns.length + 1} className="p-0">
                           <StockDetailPanel ticker={stock.ticker} stock={stock} />
                         </td>
@@ -1652,6 +1717,11 @@ export default function ScreenerClient({
                   </Fragment>
                   );
                 })}
+                {desktopBottomSpacerHeight > 0 ? (
+                  <tr aria-hidden="true">
+                    <td colSpan={activeColumns.length + 1} className="border-0 p-0" style={{ height: desktopBottomSpacerHeight }} />
+                  </tr>
+                ) : null}
                 {dataReady && pageRows.length === 0 ? (
                   <tr>
                     <td colSpan={activeColumns.length + 1} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
