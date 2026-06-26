@@ -111,6 +111,7 @@ interface TickerTypeaheadProps {
   placeholder?: string;
   className?: string;
   onSubmit?: (value: string) => void;
+  onStockSelect?: (ticker: string) => void;
   showButton?: boolean;
   buttonLabel?: string;
   buttonClass?: string;
@@ -121,6 +122,7 @@ export default function TickerTypeahead({
   placeholder = "티커 또는 투자자 검색…",
   className = "",
   onSubmit,
+  onStockSelect,
   showButton = false,
   buttonLabel = "→",
   buttonClass = "",
@@ -164,7 +166,9 @@ export default function TickerTypeahead({
 
   const selectItem = (s: Suggestion) => {
     if (s.type === "stock" && s.stock) {
-      router.push(ROUTES.stock(s.stock.symbol));
+      const ticker = normalizeForRouteTicker(s.stock.symbol);
+      if (onStockSelect) onStockSelect(ticker);
+      else router.push(ROUTES.stock(ticker));
     } else if (s.type === "guru" && s.guru) {
       router.push(`${ROUTES.superinvestors}?tab=gurus&guru=${encodeURIComponent(s.guru.id)}`);
     }
@@ -195,6 +199,7 @@ export default function TickerTypeahead({
     const t = normalizeForRouteTicker(value);
     if (t) {
       if (onSubmit) onSubmit(t);
+      else if (onStockSelect) onStockSelect(t);
       else router.push(ROUTES.stock(t));
     }
     setOpen(false);

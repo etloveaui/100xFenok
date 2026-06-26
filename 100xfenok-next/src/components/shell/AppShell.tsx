@@ -2,8 +2,17 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import BrandLogo from "@/components/BrandLogo";
+import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
+import {
+  getStockConnection,
+  getStockServices,
+  loadStockConnectionIndex,
+  loadStockServicesIndex,
+  type StockConnectionEntry,
+  type StockServicesEntry,
+} from "@/lib/data-entity-graph/stock-index";
 import { CHART_NAV_LABEL, CHART_ROUTE, EXPLORE_NAV_LABEL } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 
@@ -218,6 +227,85 @@ function BellIcon() {
   );
 }
 
+function TypeaheadPreviewDrawer({
+  ticker,
+  onClose,
+}: {
+  ticker: string;
+  onClose: () => void;
+}) {
+  const [entry, setEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
+  const [services, setServices] = useState<StockServicesEntry | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    setEntry(undefined);
+    setServices(null);
+    Promise.all([
+      loadStockConnectionIndex(controller.signal),
+      loadStockServicesIndex(controller.signal),
+    ]).then(([stockIndex, servicesIndex]) => {
+      if (cancelled) return;
+      setEntry(getStockConnection(stockIndex, ticker));
+      setServices(getStockServices(servicesIndex, ticker));
+    }).catch(() => {
+      if (cancelled) return;
+      setEntry(null);
+      setServices(null);
+    });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [ticker]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return (
+    <aside
+      className="typeahead-preview"
+      data-testid="typeahead-preview"
+      role="dialog"
+      aria-label={`${ticker} 연결 미리보기`}
+    >
+      <div className="typeahead-preview__head">
+        <div className="typeahead-preview__title">
+          <span>연결 미리보기</span>
+          <strong>{ticker}</strong>
+        </div>
+        <button type="button" className="typeahead-preview__close" onClick={onClose} aria-label="미리보기 닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="typeahead-preview__body">
+        {entry === null ? (
+          <div className="typeahead-preview__empty">
+            <strong>{ticker}</strong>
+            <span>연결 인덱스에는 아직 잡히지 않은 종목입니다.</span>
+          </div>
+        ) : (
+          <ConnectedView ticker={ticker} entry={entry} services={services} variant="drawer" compact />
+        )}
+      </div>
+      <div className="typeahead-preview__actions">
+        <button type="button" onClick={onClose} className="typeahead-preview__secondary">닫기</button>
+        <TransitionLink href={ROUTES.stock(ticker)} onClick={onClose} className="typeahead-preview__primary">
+          전체 보기
+        </TransitionLink>
+      </div>
+    </aside>
+  );
+}
+
 function Tape() {
   const [items, setItems] = useState<TapeItem[]>([]);
   useEffect(() => {
@@ -259,8 +347,15 @@ export default function AppShell({
 }) {
   const [searching, setSearching] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [typeaheadPreviewTicker, setTypeaheadPreviewTicker] = useState<string | null>(null);
   const [status, setStatus] = useState<{ dot: string; text: string }>(() => marketStatusKST());
   const navActive = active && NAV.some((item) => item.id === active) ? active : "explore";
+
+  const handleTypeaheadStockPreview = (ticker: string) => {
+    setTypeaheadPreviewTicker(ticker);
+    setSearching(false);
+    setMoreOpen(false);
+  };
 
   useEffect(() => {
     document.body.classList.add("fnk-shell-on");
@@ -304,9 +399,10 @@ export default function AppShell({
         <div className="gsearch">
           <SearchIcon />
           <TickerTypeahead
-            placeholder="종목명, 티커 검색 — 종목 상세로 이동"
+            placeholder="종목명, 티커 검색 — 연결 미리보기"
             className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
             formClass="flex w-full items-center"
+            onStockSelect={handleTypeaheadStockPreview}
           />
         </div>
         <div className="spacer" />
@@ -359,6 +455,7 @@ export default function AppShell({
               placeholder="종목명, 티커 검색"
               className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
               formClass="flex w-full items-center"
+              onStockSelect={handleTypeaheadStockPreview}
             />
           </div>
         </div>
@@ -368,6 +465,12 @@ export default function AppShell({
       </header>
 
       <div className="content">{children}</div>
+      {typeaheadPreviewTicker ? (
+        <TypeaheadPreviewDrawer
+          ticker={typeaheadPreviewTicker}
+          onClose={() => setTypeaheadPreviewTicker(null)}
+        />
+      ) : null}
 
       {/* mobile bottom tab bar */}
       <nav className="tabbar">
