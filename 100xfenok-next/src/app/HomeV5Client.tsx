@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "@/components/shell/AppShell";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
@@ -531,8 +531,9 @@ function V5ConnectionConsoleInner() {
   const [loaded, setLoaded] = useState(false);
   const [activeTileId, setActiveTileId] = useState<ConnectionTileId | null>(null);
   const [selectedTickers, setSelectedTickers] = useState<Partial<Record<ConnectionTileId, string>>>({});
-  const { trail, pushTrail, popTrailTo } = useTraversalTrail();
+  const { trail, pushTrail, popTrailTo, clearTrail } = useTraversalTrail();
   const visibleTrail = splitTraversalTrail(trail);
+  const drawerOpenRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -553,6 +554,27 @@ function V5ConnectionConsoleInner() {
 
     return () => controller.abort();
   }, []);
+
+  // Rollout gate 5 (Risk-3/B-3): sync the open peek drawer to window.history
+  // so the browser back button closes the drawer instead of leaving the home
+  // page. One history entry is pushed when a drawer opens; popstate (back)
+  // closes it and clears the traversal trail.
+  useEffect(() => {
+    const open = activeTileId !== null;
+    if (open && !drawerOpenRef.current) {
+      window.history.pushState({ v5Drawer: true }, "");
+    }
+    drawerOpenRef.current = open;
+  }, [activeTileId]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      setActiveTileId(null);
+      clearTrail();
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [clearTrail]);
 
   const { summary, tiles } = useMemo(() => buildConnectionTiles(stockIndex, serviceIndex), [serviceIndex, stockIndex]);
 
