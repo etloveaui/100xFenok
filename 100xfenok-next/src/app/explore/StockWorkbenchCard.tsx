@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import PerBandBar from "@/components/screener/PerBandBar";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
@@ -69,10 +70,25 @@ interface DiscoveryDoc {
   };
 }
 
+interface PerBandTuple {
+  current?: number | null;
+  min?: number | null;
+  avg?: number | null;
+  max?: number | null;
+}
+
+interface PerBandDoc {
+  generated_at?: string | null;
+  source_date?: string | null;
+  count?: number | null;
+  data?: Record<string, PerBandTuple | undefined>;
+}
+
 interface WorkbenchData {
   actions: ActionDoc | null;
   revisions: RevisionDoc | null;
   discovery: DiscoveryDoc | null;
+  perBands: PerBandDoc | null;
 }
 
 let cache: WorkbenchData | null = null;
@@ -91,12 +107,13 @@ function loadWorkbench(): Promise<WorkbenchData> {
     loadActionSummaryDocument(),
     loadJson<RevisionDoc>("/data/global-scouter/core/revision_movers.json"),
     loadJson<DiscoveryDoc>("/data/slickcharts/discovery-summary.json"),
-  ]).then(([actions, revisions, discovery]) => {
-    cache = { actions, revisions, discovery };
+    loadJson<PerBandDoc>("/data/global-scouter/core/per_bands_index.json"),
+  ]).then(([actions, revisions, discovery, perBands]) => {
+    cache = { actions, revisions, discovery, perBands };
     return cache;
   }).catch(() => {
     pending = null;
-    return { actions: null, revisions: null, discovery: null };
+    return { actions: null, revisions: null, discovery: null, perBands: null };
   });
   return pending;
 }
@@ -148,6 +165,23 @@ function fmtDollars(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(2)}` : "—";
 }
 
+function numberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function hasPerBandValues(value: PerBandTuple | null | undefined): value is PerBandTuple {
+  const current = numberOrNull(value?.current);
+  const min = numberOrNull(value?.min);
+  const max = numberOrNull(value?.max);
+  return current !== null && min !== null && max !== null && min < max;
+}
+
+function perBandFor(index: PerBandDoc["data"] | null | undefined, symbol: string | null | undefined): PerBandTuple | null {
+  const ticker = cleanTicker(symbol);
+  if (!ticker || !index) return null;
+  return index[ticker] ?? null;
+}
+
 function confidenceText(label: string | null | undefined): string {
   if (label === "high") return "신뢰 높음";
   if (label === "medium") return "신뢰 중간";
@@ -167,19 +201,32 @@ function StockRowLink({
   detail,
   value,
   tone = "neutral",
+  perBand,
 }: {
   symbol?: string | null;
   name?: string | null;
   detail?: string | null;
   value?: string | null;
   tone?: "up" | "down" | "neutral";
+  perBand?: PerBandTuple | null;
 }) {
   const ticker = cleanTicker(symbol);
+  const valuation = hasPerBandValues(perBand) ? perBand : null;
   const body = (
     <>
       <span className="co">
         <div className="n">{shortName(name || ticker)}</div>
         <div className="tk">{ticker ? <TickerChip ticker={ticker} variant="inline" /> : "—"}{detail ? ` · ${detail}` : ""}</div>
+        {valuation ? (
+          <div className="mt-1 max-w-[250px] pr-1">
+            <PerBandBar
+              current={numberOrNull(valuation.current)}
+              min={numberOrNull(valuation.min)}
+              avg={numberOrNull(valuation.avg)}
+              max={numberOrNull(valuation.max)}
+            />
+          </div>
+        ) : null}
       </span>
       <span className={`pc num ${tone}`}>{value || "—"}</span>
     </>
@@ -234,6 +281,7 @@ export default function StockWorkbenchCard() {
     + (data?.discovery?.movers?.losers?.count ?? losers.length);
   const revisionCount = (data?.revisions?.up?.length ?? 0) + (data?.revisions?.down?.length ?? 0);
   const returnsCount = data?.discovery?.universe?.uniqueCount ?? null;
+  const perBandIndex = data?.perBands?.data ?? null;
   const actionTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "action", label: "이벤트", count: allActions.length };
   const revisionTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "revision", label: "추정치", count: revisionCount };
   const moversTabItem: TabItem<WorkbenchTab> & { count: number | null } = { id: "movers", label: "급등락", count: moverCount };
@@ -243,6 +291,8 @@ export default function StockWorkbenchCard() {
     data?.actions?.generated_at,
     data?.revisions?.generated_at,
     data?.discovery?.generated_at,
+    data?.perBands?.generated_at,
+    data?.perBands?.source_date,
     data?.discovery?.movers?.gainers?.date,
     data?.discovery?.returns?.asOf,
     data?.discovery?.dividends?.asOf,
@@ -331,6 +381,7 @@ export default function StockWorkbenchCard() {
                     detail={`${row.actionLabel || "관찰"} · ${row.sector || "섹터 미정"} · ${confidenceText(row.confidenceLabel)}`}
                     value={`${fmtScore(row.actionScore)} / ${fmtFraction(row.return12m)}`}
                     tone={actionTone(row)}
+                    perBand={perBandFor(perBandIndex, row.symbol)}
                   />
                 )) : (
                   <StockRowLink name="표시할 투자 후보 없음" detail="선택한 분류에 표시할 종목이 없습니다" tone="neutral" />
@@ -349,6 +400,7 @@ export default function StockWorkbenchCard() {
                     detail={`FY+1 EPS ${row.eps_fy1 ?? "—"} · ${datePart(row.as_of)}`}
                     value={fmtRevision(row.change_1w)}
                     tone="up"
+                    perBand={perBandFor(perBandIndex, row.ticker)}
                   />
                 ))}
               </div>
@@ -362,6 +414,7 @@ export default function StockWorkbenchCard() {
                     detail={`FY+1 EPS ${row.eps_fy1 ?? "—"} · ${datePart(row.as_of)}`}
                     value={fmtRevision(row.change_1w)}
                     tone="down"
+                    perBand={perBandFor(perBandIndex, row.ticker)}
                   />
                 ))}
               </div>
@@ -378,6 +431,7 @@ export default function StockWorkbenchCard() {
                     detail={`${row.sector || "섹터 미정"} · ${row.price ? `$${row.price.toFixed(2)}` : "가격 —"}`}
                     value={fmtMove(row.changePercent)}
                     tone="up"
+                    perBand={perBandFor(perBandIndex, row.symbol)}
                   />
                 ))}
               </div>
@@ -391,6 +445,7 @@ export default function StockWorkbenchCard() {
                     detail={`${row.sector || "섹터 미정"} · ${row.price ? `$${row.price.toFixed(2)}` : "가격 —"}`}
                     value={fmtMove(row.changePercent)}
                     tone="down"
+                    perBand={perBandFor(perBandIndex, row.symbol)}
                   />
                 ))}
               </div>
@@ -400,19 +455,51 @@ export default function StockWorkbenchCard() {
               <div className="mv-col">
                 <div className="mv-h up">수익률</div>
                 {best1y.map((row) => (
-                  <StockRowLink key={`b1-${row.symbol}`} symbol={row.symbol} name={row.company} detail={row.sector} value={fmtFraction(row.value ?? row.changePercent)} tone="up" />
+                  <StockRowLink
+                    key={`b1-${row.symbol}`}
+                    symbol={row.symbol}
+                    name={row.company}
+                    detail={row.sector}
+                    value={fmtFraction(row.value ?? row.changePercent)}
+                    tone="up"
+                    perBand={perBandFor(perBandIndex, row.symbol)}
+                  />
                 ))}
                 {worst1y.map((row) => (
-                  <StockRowLink key={`w1-${row.symbol}`} symbol={row.symbol} name={row.company} detail={row.sector} value={fmtFraction(row.value ?? row.changePercent)} tone="down" />
+                  <StockRowLink
+                    key={`w1-${row.symbol}`}
+                    symbol={row.symbol}
+                    name={row.company}
+                    detail={row.sector}
+                    value={fmtFraction(row.value ?? row.changePercent)}
+                    tone="down"
+                    perBand={perBandFor(perBandIndex, row.symbol)}
+                  />
                 ))}
               </div>
               <div className="mv-col">
                 <div className="mv-h up">배당</div>
                 {highYield.map((row) => (
-                  <StockRowLink key={`hy-${row.symbol}`} symbol={row.symbol} name={row.company} detail={row.sector} value={fmtDividendYield(row.value)} tone="up" />
+                  <StockRowLink
+                    key={`hy-${row.symbol}`}
+                    symbol={row.symbol}
+                    name={row.company}
+                    detail={row.sector}
+                    value={fmtDividendYield(row.value)}
+                    tone="up"
+                    perBand={perBandFor(perBandIndex, row.symbol)}
+                  />
                 ))}
                 {highTtm.map((row) => (
-                  <StockRowLink key={`ht-${row.symbol}`} symbol={row.symbol} name={row.company} detail={row.sector} value={fmtDollars(row.value)} tone="up" />
+                  <StockRowLink
+                    key={`ht-${row.symbol}`}
+                    symbol={row.symbol}
+                    name={row.company}
+                    detail={row.sector}
+                    value={fmtDollars(row.value)}
+                    tone="up"
+                    perBand={perBandFor(perBandIndex, row.symbol)}
+                  />
                 ))}
               </div>
           </TabPanel>

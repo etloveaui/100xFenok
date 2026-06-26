@@ -2,7 +2,7 @@
  * PER band SSOT utilities.
  *
  * Source: src/lib/screener/bands.ts
- * Used by: ScreenerClient (PerBandBar + bandFilter)
+ * Used by: shared PerBandBar + Screener bandFilter
  */
 
 export const BAND_CHEAP = 0.25;
