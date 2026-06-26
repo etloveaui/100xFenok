@@ -163,8 +163,8 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
   remains the completed-run evidence.
 - **History gap QA summary**: run `npm run qa:history-gap` from
   `100xfenok-next/` before dispatching a live history refresh. It directly
-  scans local primary StockAnalysis ETF detail files, compares the current
-  fetchable-history count to `incremental_plan_latest.json`, separates
+  scans local primary StockAnalysis ETF detail files, reconciles the dispatch
+  plan in `incremental_plan_latest.json` against the full-scan report, separates
   fetchable gaps from inception-limited recent-launch ETFs, and prints the
   recommended workflow inputs without making network calls. Use
   `-- --required-history-periods <comma-list>` when the workflow dispatch is

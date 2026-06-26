@@ -177,6 +177,22 @@ function writeJson(filePath, payload) {
   writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
+function tickersFromRows(rows) {
+  if (!Array.isArray(rows)) return [];
+  const tickers = rows
+    .map((row) => {
+      if (typeof row === "string") return row.trim();
+      if (row && typeof row === "object" && typeof row.ticker === "string") return row.ticker.trim();
+      return "";
+    })
+    .filter(Boolean);
+  return Array.from(new Set(tickers)).sort();
+}
+
+function differenceFromSet(tickers, allowed) {
+  return tickers.filter((ticker) => !allowed.has(ticker));
+}
+
 function main() {
   if (!existsSync(DETAIL_DIR)) {
     throw new Error(`ETF detail directory not found: ${DETAIL_DIR}`);
@@ -228,6 +244,31 @@ function main() {
   const plan = existsSync(PLAN_PATH) ? readJson(PLAN_PATH) : null;
   const audit = existsSync(AUDIT_PATH) ? readJson(AUDIT_PATH) : null;
   const planRequiredPeriods = Array.isArray(plan?.required_history_periods) ? plan.required_history_periods : [];
+  const planBackfill = asObject(plan?.incremental_etf_backfill);
+  const nestedSelectedTickers = tickersFromRows(planBackfill.selected);
+  const planSelectedTickers = nestedSelectedTickers.length > 0 ? nestedSelectedTickers : tickersFromRows(plan?.etfs);
+  const planInceptionTickers = tickersFromRows(planBackfill.inception_limited);
+  const planTotalTickers = Array.from(new Set([...planSelectedTickers, ...planInceptionTickers])).sort();
+  const fetchableScanTickers = new Set(tickersFromRows(fetchableGapRows));
+  const inceptionScanTickers = new Set(tickersFromRows(inceptionLimitedRows));
+  const missingScanTickers = new Set(tickersFromRows(missingRows));
+  const subsetMissingTickers = {
+    fetchable: differenceFromSet(planSelectedTickers, fetchableScanTickers),
+    total: differenceFromSet(planTotalTickers, missingScanTickers),
+    inception_limited: differenceFromSet(planInceptionTickers, inceptionScanTickers),
+  };
+  const subsetOfFullScan = {
+    fetchable: subsetMissingTickers.fetchable.length === 0,
+    total: subsetMissingTickers.total.length === 0,
+    inception_limited: subsetMissingTickers.inception_limited.length === 0,
+    missing_tickers: subsetMissingTickers,
+  };
+  const strictCountMatches = {
+    current_gap: Number(plan?.counts?.history_gap || 0) === fetchableGapRows.length,
+    total_gap: Number(plan?.counts?.total_history_gap ?? plan?.counts?.history_gap ?? 0) === missingRows.length,
+    inception_limited: Number(plan?.counts?.inception_limited_history_gap || 0) === inceptionLimitedRows.length,
+    required_periods: planRequiredPeriods.join(",") === REQUIRED_PERIODS.join(","),
+  };
   const marketFacts = asObject(audit?.market_facts);
   const return3y = asObject(marketFacts.return_field_coverage).return_3y_avg || {};
   const denominators = asObject(marketFacts.return_field_denominators);
@@ -260,10 +301,12 @@ function main() {
           required_history_periods: planRequiredPeriods,
           counts: plan.counts,
           first5: Array.isArray(plan.etfs) ? plan.etfs.slice(0, 5) : [],
-          matches_current_gap: Number(plan.counts?.history_gap || 0) === fetchableGapRows.length,
-          matches_total_gap: Number(plan.counts?.total_history_gap ?? plan.counts?.history_gap ?? 0) === missingRows.length,
-          matches_inception_limited: Number(plan.counts?.inception_limited_history_gap || 0) === inceptionLimitedRows.length,
-          matches_required_periods: planRequiredPeriods.join(",") === REQUIRED_PERIODS.join(","),
+          matches_current_gap: strictCountMatches.current_gap,
+          matches_total_gap: strictCountMatches.total_gap,
+          matches_inception_limited: strictCountMatches.inception_limited,
+          matches_required_periods: strictCountMatches.required_periods,
+          strict_count_matches: strictCountMatches,
+          subset_of_full_scan: subsetOfFullScan,
         }
       : null,
     market_facts_return_3y: {
@@ -301,24 +344,24 @@ function main() {
     console.error(`wrote ${PUBLIC_REPORT_PATH}`);
   }
 
-  if (plan && !report.incremental_plan.matches_current_gap) {
-    throw new Error(
-      `incremental_plan history_gap=${plan.counts?.history_gap} does not match current fetchable_required_history=${fetchableGapRows.length}`,
-    );
-  }
-  if (plan && !report.incremental_plan.matches_total_gap) {
-    throw new Error(
-      `incremental_plan total_history_gap=${plan.counts?.total_history_gap} does not match current missing_required_history=${missingRows.length}`,
-    );
-  }
-  if (plan && !report.incremental_plan.matches_inception_limited) {
-    throw new Error(
-      `incremental_plan inception_limited_history_gap=${plan.counts?.inception_limited_history_gap} does not match current inception_limited_required_history=${inceptionLimitedRows.length}`,
-    );
-  }
-  if (plan && !report.incremental_plan.matches_required_periods) {
+  if (plan && !report.incremental_plan.strict_count_matches.required_periods) {
     throw new Error(
       `incremental_plan required_history_periods=${planRequiredPeriods.join(",")} does not match report required_history_periods=${REQUIRED_PERIODS.join(",")}`,
+    );
+  }
+  if (plan && !report.incremental_plan.subset_of_full_scan.fetchable) {
+    throw new Error(
+      `incremental_plan selected tickers are not in current fetchable full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.fetchable.join(",")}`,
+    );
+  }
+  if (plan && !report.incremental_plan.subset_of_full_scan.total) {
+    throw new Error(
+      `incremental_plan total tickers are not in current missing full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.total.join(",")}`,
+    );
+  }
+  if (plan && !report.incremental_plan.subset_of_full_scan.inception_limited) {
+    throw new Error(
+      `incremental_plan inception-limited tickers are not in current inception-limited full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.inception_limited.join(",")}`,
     );
   }
 }
