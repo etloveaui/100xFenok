@@ -94,17 +94,26 @@ function ageDays(value, now = Date.now()) {
   return Math.max(0, Math.floor((now - time) / DAY_MS));
 }
 
-function freshness(label, asOf, maxAgeDays) {
+function freshness(label, asOf, maxAgeDays, { warnOnly = false } = {}) {
   const days = ageDays(asOf);
   if (!asOf || days === null) {
-    return check(label, "unavailable", "기준일 없음", { as_of: asOf ?? null, max_age_days: maxAgeDays });
+    return check(
+      label,
+      warnOnly ? "ready" : "unavailable",
+      warnOnly ? "수집 요약 없음(경고)" : "기준일 없음",
+      warnOnly
+        ? { as_of: asOf ?? null, age_days: null, max_age_days: maxAgeDays, warn_only: true }
+        : { as_of: asOf ?? null, max_age_days: maxAgeDays },
+    );
   }
   const stale = days > maxAgeDays;
   return check(
     label,
-    stale ? "stale" : "ready",
-    `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전`,
-    { as_of: asOf, age_days: days, max_age_days: maxAgeDays },
+    warnOnly ? "ready" : stale ? "stale" : "ready",
+    stale && warnOnly
+      ? `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전 (경고: ${maxAgeDays}일 초과 노후화)`
+      : `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전`,
+    { as_of: asOf, age_days: days, max_age_days: maxAgeDays, warn_only: warnOnly ? stale : undefined },
   );
 }
 
@@ -183,6 +192,7 @@ const dataUsage = readJson("admin/data-usage-manifest.json");
 const stockFieldManifest = readJson("admin/stock-field-usage-manifest.json");
 const stocksAnalyzer = readJson("global-scouter/core/stocks_analyzer.json");
 const actionSummary = readJson("computed/stock_action_summary.json");
+const yfSummary = readJson("yf/finance/_summary.json");
 const edgarIndex = readJson("edgar-korean-summaries/index.json");
 
 const counts = {
@@ -208,6 +218,7 @@ const generatedAt = new Date().toISOString();
 const eventSurfaceAsOf = latestDate(surfaceIndex?.generated_at, surfaceIndex?.fetched_at);
 const etfAsOf = latestDate(etfUniverse?.generated_at, etfUniverse?.fetched_at, etfCoverage?.generated_at);
 const screenerAsOf = latestDate(stocksAnalyzer?.generated_at, stocksAnalyzer?.source_date, actionSummary?.generated_at);
+const yfAsOf = yfSummary?.generated_at ?? null;
 const marketFactsAsOf = latestDate(marketFactsIndex?.generated_at, sourceParity?.generated_at, marketAudit?.generated_at);
 const edgarAsOf = latestDate(edgarIndex?.generated_at, edgarIndex?.generatedAt, edgarIndex?.updated_at, edgarIndex?.updated);
 const eventSurfaces = surfaceRowsForRoute(surfaceIndex, surfaceConsumers, "/market/events");
@@ -230,6 +241,7 @@ const surfaces = [
       check("한글 공시", counts.edgarByTicker > 0 ? "partial" : "unavailable", `${counts.edgarByTicker.toLocaleString("ko-KR")}개 by-ticker`, { count: counts.edgarByTicker, reason: "요약 보유 티커만 표시" }),
       check("이벤트 보강", stockSurfaces.surfaceCount > 0 ? "ready" : "pending", `${stockSurfaces.surfaceCount}개 화면 연결`, { count: stockSurfaces.surfaceCount }),
       freshness("가격 기준일", marketFactsAsOf, 7),
+      freshness("야후 파이낸스 수집일", yfAsOf, 8, { warnOnly: true }),
       freshness("공시 요약 기준일", edgarAsOf, 14),
     ],
     "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
@@ -245,6 +257,7 @@ const surfaces = [
       check("거시·심리", counts.dataUsageRootJson > 0 ? "ready" : "pending", `${counts.dataUsageRootJson.toLocaleString("ko-KR")}개 루트 JSON`, { count: counts.dataUsageRootJson }),
       check("시장 구조", exists("computed/market_structure_index.json") ? "ready" : "pending", "시장 구조 인덱스"),
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
+      freshness("야후 파이낸스 수집일", yfAsOf, 8, { warnOnly: true }),
       freshness("시장 데이터 기준일", marketFactsAsOf, 7),
     ],
     "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
@@ -275,6 +288,7 @@ const surfaces = [
       check("섹터 흐름", exists("benchmarks/summaries.json") ? "ready" : "pending", "섹터 모멘텀"),
       check("산업 세분화", sectorSurfaces.surfaceCount > 0 ? "ready" : "pending", `${sectorSurfaces.surfaceCount}개 항목 · ${sectorSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: sectorSurfaces.surfaceCount, rows: sectorSurfaces.rowCount }),
       check("기관 보유", counts.sec13fJson > 0 ? "ready" : "pending", `${counts.sec13fJson.toLocaleString("ko-KR")}개 13F JSON`, { count: counts.sec13fJson }),
+      freshness("야후 파이낸스 수집일", yfAsOf, 8, { warnOnly: true }),
       freshness("섹터 데이터 기준일", latestDate(eventSurfaceAsOf, marketFactsAsOf), 14),
     ],
     "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
@@ -341,6 +355,7 @@ const payload = {
     "computed/market_source_parity.json",
     "global-scouter/core/stocks_analyzer.json",
     "computed/stock_action_summary.json",
+    "yf/finance/_summary.json",
     "edgar-korean-summaries/index.json",
     "stockanalysis/index.json",
     "stockanalysis/coverage/etf_detail.json",
