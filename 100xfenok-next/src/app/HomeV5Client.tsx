@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import ConnectedView from "@/components/connected/ConnectedView";
+import LeadStoryCard from "@/components/connected/LeadStoryCard";
 import { TraversalTrailProvider, useTraversalTrail } from "@/components/connected/useTraversalTrail";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
@@ -806,6 +807,7 @@ export default function HomeV5Client() {
           <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />
           <V5MarketPulse dashboard={dashboard} />
+          <LeadStoryCard />
 
           <div className="v5-layout">
             <div className="v5-layout__main">
