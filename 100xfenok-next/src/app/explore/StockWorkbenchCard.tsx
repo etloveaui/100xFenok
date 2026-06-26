@@ -6,7 +6,8 @@ import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { latestAsOf, makeDataState } from "@/lib/data-state";
-import { normalizeForFilePath } from "@/lib/ticker";
+import { ROUTES } from "@/lib/routes";
+import { isValidRouteTicker, normalizeForFilePath } from "@/lib/ticker";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
@@ -183,8 +184,8 @@ function StockRowLink({
       <span className={`pc num ${tone}`}>{value || "—"}</span>
     </>
   );
-  return ticker ? (
-    <TransitionLink href={`/stock/${encodeURIComponent(ticker)}`} className="mv-row">
+  return ticker && isValidRouteTicker(ticker) ? (
+    <TransitionLink href={ROUTES.stock(ticker)} className="mv-row">
       {body}
     </TransitionLink>
   ) : (

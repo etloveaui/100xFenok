@@ -3,7 +3,9 @@
 import TransitionLink from "@/components/TransitionLink";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
+import TickerChip from "@/components/TickerChip";
 import { stockConnectionFreshnessState, type StockConnectionFreshnessSource } from "@/lib/data-entity-graph/freshness";
+import { ROUTES } from "@/lib/routes";
 import type {
   StockConnectionEntry,
   StockServiceEtfLink,
@@ -119,7 +121,7 @@ export function ConnectedView({
   ];
   const connected = [
     flags.market_facts ? { label: "시장팩트", tone: "border-sky-200 bg-sky-50 text-sky-700", href: null } : null,
-    flags.filings ? { label: "공시", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", href: `/stock/${encodeURIComponent(ticker)}?tab=filings` } : null,
+    flags.filings ? { label: "공시", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", href: ROUTES.stockFilings(ticker) } : null,
     flags.sec_13f ? { label: "13F", tone: "border-violet-200 bg-violet-50 text-violet-700", href: `/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(ticker)}` } : null,
     flags.index_membership ? { label: "지수", tone: "border-amber-200 bg-amber-50 text-amber-700", href: null } : null,
     flags.single_stock_etfs ? { label: `ETF${etfCount ? ` ${etfCount}` : ""}`, tone: "border-cyan-200 bg-cyan-50 text-cyan-700", href: etfCompareHref } : null,
@@ -179,18 +181,16 @@ export function ConnectedView({
         {singleStockEtfs.length > 0 && etfChipLimit > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {singleStockEtfs.slice(0, etfChipLimit).map((etf) => (
-              <TransitionLink
+              <span
                 key={etf.ticker}
-                href={etf.route || `/etfs/${encodeURIComponent(etf.ticker)}`}
-                className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-2 text-[10px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
                 title={[
                   etf.label ?? etf.ticker,
                   etf.raw_underlying ? `분류 원문 ${etf.raw_underlying}` : null,
                   etf.classification_source ? `분류 출처 ${etf.classification_source}` : null,
                 ].filter(Boolean).join(" · ")}
               >
-                {etf.ticker}
-              </TransitionLink>
+                <TickerChip ticker={etf.ticker} variant="pill" />
+              </span>
             ))}
             {singleStockEtfs.length > etfChipLimit ? (
               <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-500">

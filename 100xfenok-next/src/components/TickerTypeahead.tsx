@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import TickerChip from "@/components/TickerChip";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForRouteTicker } from "@/lib/ticker";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
@@ -270,7 +271,9 @@ export default function TickerTypeahead({
                 >
                   {s.type === "stock" && s.stock ? (
                     <>
-                      <span className="orbitron text-sm font-black text-slate-900">{s.stock.symbol}</span>
+                      <span className="orbitron text-sm">
+                        <TickerChip ticker={s.stock.symbol} variant="inline" />
+                      </span>
                       <span className="truncate text-xs font-semibold text-slate-600">{s.stock.companyName}</span>
                       <span className="ml-auto shrink-0 text-[10px] text-slate-400">{s.stock.sector}</span>
                     </>
