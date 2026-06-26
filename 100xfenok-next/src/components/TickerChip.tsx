@@ -10,6 +10,8 @@ interface TickerChipProps {
   ticker: string;
   label?: string;
   variant?: TickerChipVariant;
+  href?: string;
+  className?: string;
 }
 
 const LINK_CLASSES: Record<TickerChipVariant, string> = {
@@ -22,21 +24,27 @@ const TEXT_CLASSES: Record<TickerChipVariant, string> = {
   inline: "font-black text-slate-700",
 };
 
+function cx(...parts: Array<string | false | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
+
 export default function TickerChip({
   ticker,
   label,
   variant = "inline",
+  href,
+  className,
 }: TickerChipProps) {
   const normalized = normalizeForRouteTicker(ticker);
   const display = label ?? normalized ?? ticker;
 
-  if (!display) return <span className={TEXT_CLASSES[variant]}>—</span>;
+  if (!display) return <span className={cx(TEXT_CLASSES[variant], className)}>—</span>;
   if (!isValidRouteTicker(ticker)) {
-    return <span className={TEXT_CLASSES[variant]}>{display}</span>;
+    return <span className={cx(TEXT_CLASSES[variant], className)}>{display}</span>;
   }
 
   return (
-    <TransitionLink href={ROUTES.stock(normalized)} className={LINK_CLASSES[variant]}>
+    <TransitionLink href={href ?? ROUTES.stock(normalized)} className={cx(LINK_CLASSES[variant], className)}>
       {display}
     </TransitionLink>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import TickerChip from '@/components/TickerChip';
 import type { QuotePayload } from '@/lib/quote-contract';
 
 type FooterMarketStatus = 'regular' | 'pre' | 'after' | 'overnight' | 'closed';
@@ -125,7 +126,7 @@ export default function FooterTickerBar({ marketStatus, tickerLabel, statusLabel
 
   const tickerTape = tickerItems.map((item) => (
     <span key={item.symbol} className="footer-ticker-item">
-      <span className="footer-ticker-symbol">{item.symbol}</span>
+      <TickerChip ticker={item.symbol} variant="inline" className="footer-ticker-symbol" />
       <span className="footer-ticker-price">{formatTickerPrice(item.price)}</span>
       <span className={`footer-ticker-change ${item.changePercent >= 0 ? 'is-up' : 'is-down'}`}>
         {formatTickerChange(item.changePercent)}

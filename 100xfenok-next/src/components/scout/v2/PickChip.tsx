@@ -1,6 +1,7 @@
 "use client";
 
 import { v2cx } from "@/components/dashboard/v2/types";
+import TickerChip from "@/components/TickerChip";
 import type { Pick } from "./types";
 
 const KIND_LABEL: Record<Pick["kind"], string> = {
@@ -13,7 +14,7 @@ export default function PickChip({ pick }: { pick: Pick }) {
   return (
     <span className={v2cx("as-pick", `as-pick--${pick.kind}`)}>
       <span className="as-pick__kind">{KIND_LABEL[pick.kind]}</span>
-      <span className="as-pick__ticker">{pick.ticker}</span>
+      <TickerChip ticker={pick.ticker} variant="inline" className="as-pick__ticker" />
       <span className="as-pick__name">{pick.name}</span>
       <span className="as-pick__note">{pick.note}</span>
     </span>

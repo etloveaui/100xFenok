@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import TransitionLink from "@/components/TransitionLink";
+import TickerChip from "@/components/TickerChip";
 import { formatSignedPercent } from "@/lib/format";
 import { MAX_COMPARE_TICKERS, buildCompareCsv, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
 import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
@@ -59,9 +59,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <TransitionLink href={`/etfs/${encodeURIComponent(row.ticker)}`} className="orbitron text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
-            {row.ticker}
-          </TransitionLink>
+          <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-[var(--c-ink)]" />
           <p className="mt-1 min-w-0 break-words text-xs font-bold leading-snug text-[var(--c-ink)]">{name}</p>
           <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">기준 {holdingsDate}</p>
         </div>
@@ -86,7 +84,11 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="orbitron text-sm font-black text-[var(--c-ink)]">{pair.left.ticker} / {pair.right.ticker}</p>
+          <p className="orbitron text-sm font-black text-[var(--c-ink)]">
+            <TickerChip ticker={pair.left.ticker} href={`/etfs/${encodeURIComponent(pair.left.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
+            {" / "}
+            <TickerChip ticker={pair.right.ticker} href={`/etfs/${encodeURIComponent(pair.right.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
+          </p>
           <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
         </div>
         <div className="text-right">

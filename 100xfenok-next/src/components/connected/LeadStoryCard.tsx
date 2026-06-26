@@ -359,10 +359,10 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
 
           <LeadStoryStep index={3} title="ETF가 싣는가" meta="ETF edge" open={revealedHop >= 3}>
             {topEtf ? (
-              <TransitionLink href={topEtfHref}>
-                {topEtf.ticker}
+              <div className="v5-lead-story__entity-card">
+                <TickerChip ticker={topEtf.ticker} href={topEtfHref} variant="inline" />
                 <b>{shortText(topEtf.label, "ETF", 28)}</b>
-              </TransitionLink>
+              </div>
             ) : <p>단일종목 ETF 연결은 아직 없습니다.</p>}
           </LeadStoryStep>
 

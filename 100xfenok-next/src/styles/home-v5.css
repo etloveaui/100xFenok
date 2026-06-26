@@ -25,6 +25,8 @@
   --v5-blue: var(--fnk-brand-interactive);
   --v5-navy: var(--fnk-brand-navy);
   --v5-gold: var(--fnk-brand-gold-bright);
+  --v5-amber: var(--fnk-warn-600); /* index-membership edge keyline — amber, NOT gold (gold reserved for the single gauge needle per §3) */
+  --v5-violet: var(--fnk-purple-700); /* 13F edge keyline — violet-700, matches ConnectedView 13F tone, no runtime color-mix */
   --v5-blue-wash: color-mix(in srgb, var(--v5-blue) 7%, var(--fnk-color-white));
   --v5-hm-up-4: var(--fnk-color-gain);
   --v5-hm-dn-4: var(--fnk-color-loss);
@@ -679,6 +681,47 @@
   font-weight: 850;
 }
 
+.fnk-shell.v5-home .v5-lead-story__body .v5-lead-story__entity-card {
+  display: grid;
+  gap: 2px;
+  min-height: 38px;
+  border: 1px solid var(--v5-border);
+  border-radius: 8px;
+  background: var(--v5-surface-card);
+  padding: 8px 9px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.fnk-shell.v5-home .v5-lead-story__body .v5-lead-story__entity-card:hover {
+  border-color: var(--v5-border-strong);
+  box-shadow: var(--v5-shadow-rest);
+}
+
+.fnk-shell.v5-home .v5-lead-story__body .v5-lead-story__entity-card a {
+  display: inline-block;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--c-brand);
+  padding: 0;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.fnk-shell.v5-home .v5-lead-story__body .v5-lead-story__entity-card a:hover {
+  border-color: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+}
+
+.fnk-shell.v5-home .v5-lead-story__body .v5-lead-story__entity-card b {
+  color: var(--c-ink-3);
+  font-size: 10px;
+  font-weight: 850;
+}
+
 .fnk-shell.v5-home .v5-lead-story__next {
   min-height: 36px;
   border: 1px solid var(--v5-border);
@@ -786,7 +829,7 @@
 }
 
 .fnk-shell.v5-home .v5-connection-row.is-violet {
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--v5-blue) 62%, var(--v5-gold));
+  box-shadow: inset 3px 0 0 var(--v5-violet);
 }
 
 .fnk-shell.v5-home .v5-connection-row.is-cyan {
@@ -794,7 +837,7 @@
 }
 
 .fnk-shell.v5-home .v5-connection-row.is-amber {
-  box-shadow: inset 3px 0 0 var(--v5-gold);
+  box-shadow: inset 3px 0 0 var(--v5-amber);
 }
 
 .fnk-shell.v5-home .v5-connection-row.is-emerald {
