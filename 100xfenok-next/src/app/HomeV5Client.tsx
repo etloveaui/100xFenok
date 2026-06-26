@@ -165,10 +165,11 @@ function formatDatePart(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
-function V5MarketNow({ dashboard, dataReady, failedSources }: {
+function V5MarketNow({ dashboard, dataReady, failedSources, hidden = false }: {
   dashboard: DashboardSnapshot;
   dataReady: boolean;
   failedSources: string[];
+  hidden?: boolean;
 }) {
   const quickItems = dashboard.quickIndices.map((item) => ({
     key: item.symbol,
@@ -211,7 +212,7 @@ function V5MarketNow({ dashboard, dataReady, failedSources }: {
   ];
 
   return (
-    <section className="v5-market-now" aria-label="시장 현재값">
+    <section className={`v5-market-now ${hidden ? "is-scroll-hidden" : ""}`} aria-label="시장 현재값">
       <div className="v5-market-now__head">
         <span className={`v5-live-dot ${dataReady ? "is-on" : ""}`} aria-hidden="true" />
         <span>Market Now</span>
@@ -787,17 +788,18 @@ function V5SmartMoneyTwoHop({ ticker, label }: { ticker: string; label: string }
           {investor === undefined ? (
             <p className="v5-two-hop__empty">포트폴리오 확인 중...</p>
           ) : otherHoldings.length > 0 ? (
-            <div className="v5-holder-holdings">
+            <div className="v5-holder-holdings v5-holder-holdings--badges">
               {otherHoldings.map((holding) => (
-                <div
+                <TransitionLink
                   key={`${selectedHolder.investor}-${holding.ticker}`}
+                  href={ROUTES.stock(holding.ticker)}
+                  className="v5-holder-chip v5-edge-chip"
+                  title={holding.company ?? holding.name ?? holding.ticker}
+                  onClick={() => pushTrail({ id: `ticker:${holding.ticker}`, label: holding.ticker, kind: "ticker", href: ROUTES.stock(holding.ticker) })}
                 >
-                  <span onClick={() => pushTrail({ id: `ticker:${holding.ticker}`, label: holding.ticker, kind: "ticker", href: ROUTES.stock(holding.ticker) })}>
-                    <TickerChip ticker={holding.ticker} variant="inline" />
-                  </span>
+                  <TickerChip ticker={holding.ticker} variant="inline" />
                   <b>{formatMoney(holding.market_value)}</b>
-                  <small>{holding.company ?? holding.name ?? "holding"}</small>
-                </div>
+                </TransitionLink>
               ))}
             </div>
           ) : (
@@ -812,17 +814,38 @@ function V5SmartMoneyTwoHop({ ticker, label }: { ticker: string; label: string }
 export default function HomeV5Client() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
   const regime = useMemo(() => buildRegimeRead(dashboard), [dashboard]);
+  const [marketNowHidden, setMarketNowHidden] = useState(false);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("v5") !== "1") return;
     document.cookie = "fenok_design_version=v5; Path=/; Max-Age=2592000; SameSite=Lax";
   }, []);
 
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const nextY = window.scrollY;
+        const delta = nextY - lastY;
+        if (nextY < 80) setMarketNowHidden(false);
+        else if (delta > 10) setMarketNowHidden(true);
+        else if (delta < -10) setMarketNowHidden(false);
+        lastY = nextY;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="fnk-shell v5-home">
       <AppShell active="explore" title="마켓 홈">
         <div className="v5-stack">
-          <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
+          <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} hidden={marketNowHidden} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />
           <V5MarketPulse dashboard={dashboard} />
           <LeadStoryCard />
@@ -834,11 +857,9 @@ export default function HomeV5Client() {
                 <ExploreDashboard />
                 <StockWorkbenchCard />
               </div>
-              <div className="v5-two">
-                <MacroPlaybookCard />
-                <V5ConnectionConsole />
-              </div>
+              <MacroPlaybookCard />
               <ExploreHotTopics />
+              <V5ConnectionConsole />
             </div>
             <div className="v5-layout__side">
               <MyWatchlistStrip />
