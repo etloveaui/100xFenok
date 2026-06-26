@@ -327,3 +327,20 @@ html[data-data-saver='1'] .route-embed-state {
     height: calc(100dvh - var(--nav-height-desktop) - var(--footer-height-desktop) - var(--layout-gap) - env(safe-area-inset-bottom));
   }
 }
+
+.fnk-shell .route-embed-shell-app {
+  border-radius: var(--panel-r);
+  min-height: calc(100vh - var(--topbar-h) - var(--ticker-h) - var(--s5) - var(--s10));
+  height: calc(100vh - var(--topbar-h) - var(--ticker-h) - var(--s5) - var(--s10));
+  min-height: calc(100dvh - var(--topbar-h) - var(--ticker-h) - var(--s5) - var(--s10));
+  height: calc(100dvh - var(--topbar-h) - var(--ticker-h) - var(--s5) - var(--s10));
+}
+
+@media (max-width: 1023px) {
+  .fnk-shell .route-embed-shell-app {
+    min-height: calc(100vh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--safe-b) - var(--s4) - var(--s5));
+    height: calc(100vh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--safe-b) - var(--s4) - var(--s5));
+    min-height: calc(100dvh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--safe-b) - var(--s4) - var(--s5));
+    height: calc(100dvh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--safe-b) - var(--s4) - var(--s5));
+  }
+}

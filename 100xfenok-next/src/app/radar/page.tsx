@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import AppShell from '@/components/shell/AppShell';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import { getDesignVersionFromSearchParams } from '@/lib/design/version';
+import { ROUTES } from '@/lib/routes';
 import {
   getSingleSearchParam,
   legacyPublicFileExists,
@@ -14,14 +18,16 @@ export const metadata: Metadata = {
 const VALID_RADAR_CATEGORIES = new Set(['all', 'liquidity', 'rates', 'sentiment']);
 
 type PageProps = {
-  searchParams?: Promise<{
-    path?: string | string[];
-    category?: string | string[];
-  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function RadarPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    params,
+    cookieStore.get("fenok_design_version")?.value,
+  );
   const rawPath = getSingleSearchParam(params.path);
   const rawCategory = getSingleSearchParam(params.category);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['tools/macro-monitor/'] });
@@ -37,5 +43,22 @@ export default async function RadarPage({ searchParams }: PageProps) {
     ? `${baseIframeSrc}?category=${encodeURIComponent(rawCategory)}`
     : baseIframeSrc;
 
-  return <RouteEmbedFrame src={iframeSrc} title="100x Market Radar" loading="eager" />;
+  const frame = (
+    <RouteEmbedFrame
+      src={iframeSrc}
+      title="100x Market Radar"
+      loading="eager"
+      shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
+    />
+  );
+
+  if (version === "v1") return frame;
+
+  return (
+    <div className="fnk-shell">
+      <AppShell active="explore" title="Market Radar" backHref={ROUTES.explore}>
+        {frame}
+      </AppShell>
+    </div>
+  );
 }

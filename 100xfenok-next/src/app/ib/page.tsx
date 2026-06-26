@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import IbV1Embed from "./IbV1Embed";
 import IbV2Client from "./IbV2Client";
 import { getDesignVersionFromSearchParams } from "@/lib/design/version";
@@ -12,10 +13,10 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /**
  * IB Helper route. Server shell branches between:
- * - V1 (default): vanilla HTML embed via RouteEmbedFrame (production-shipped).
- * - V2 (`?v2=1`): native React light theme port — dual ticker (TQQQ + SOXL)
+ * - V5/default: native React light theme port — dual ticker (TQQQ + SOXL)
  *   first-class, Cash inset alert (no sticky banner), profile picker as
  *   bottom sheet. Mock data for now; live data wiring deferred to BACKLOG.
+ * - V1 (`?v1=1` or persisted v1): vanilla HTML embed via RouteEmbedFrame.
  *
  * Plan: docs/design-handoff/2026-05-12-ib-helper-light-v2/project/handoff/README.md
  */
@@ -25,8 +26,12 @@ export default async function IBPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const version = getDesignVersionFromSearchParams(params);
-  if (version === "v2" || version === "v3" || version === "v4") {
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    params,
+    cookieStore.get("fenok_design_version")?.value,
+  );
+  if (version !== "v1") {
     return <IbV2Client />;
   }
   return <IbV1Embed />;

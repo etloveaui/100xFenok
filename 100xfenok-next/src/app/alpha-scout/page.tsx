@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import {
   getSingleSearchParam,
@@ -35,13 +36,17 @@ function sanitizeReportFilename(rawReport?: string): string | null {
 
 export default async function AlphaScoutPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
-  const version = getDesignVersionFromSearchParams(params);
-  if (version === "v2" || version === "v3" || version === "v4") {
-    return <AlphaScoutV2Client />;
-  }
-
   const rawPath = getSingleSearchParam(params.path);
   const rawReport = getSingleSearchParam(params.report);
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    params,
+    cookieStore.get("fenok_design_version")?.value,
+  );
+
+  if (version !== "v1" && !rawPath && !rawReport) {
+    return <AlphaScoutV2Client />;
+  }
 
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['alpha-scout/'] });
   const safeReport = sanitizeReportFilename(rawReport);
