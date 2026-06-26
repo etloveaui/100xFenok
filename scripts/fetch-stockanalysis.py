@@ -2485,8 +2485,10 @@ def run_one(
 
 
 def is_expected_missing_error(error: str | None) -> bool:
-    """StockAnalysis has universe rows whose holdings endpoint returns a stable 404."""
-    return bool(error and "HTTP Error 404" in error)
+    """StockAnalysis has universe rows whose holdings endpoint returns a stable 404
+    or 400 (delisted/invalid symbols, e.g. LSTB/MSIX). Treat both as expected-missing
+    so dead tickers do not hard-fail the unattended fetch + market-audit gate."""
+    return bool(error and ("HTTP Error 404" in error or "HTTP Error 400" in error))
 
 
 def is_hard_error(error: str | None) -> bool:
