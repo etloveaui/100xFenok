@@ -26,6 +26,7 @@ import { ROUTES } from "@/lib/routes";
 export type ShellPage =
   | "explore"
   | "market"
+  | "regime"
   | "sectors"
   | "etfs"
   | "screener"
@@ -56,6 +57,18 @@ const NAV: NavItem[] = [
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M2.5 13.5l4-4.5 3 2.5L17 4.5" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M13 4.5h4v4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "regime",
+    label: "국면",
+    href: ROUTES.regime,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M4 12a6 6 0 1112 0" strokeLinecap="round" />
+        <path d="M10 12l3-4" strokeLinecap="round" />
+        <path d="M5.5 15h9" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -148,7 +161,7 @@ const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
 };
 
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
-const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors", "portfolio"];
+const MORE_TAB_IDS: ShellPage[] = ["regime", "sectors", "etfs", "superinvestors", "portfolio"];
 
 function navById(id: ShellPage): NavItem {
   return NAV.find((item) => item.id === id)!;

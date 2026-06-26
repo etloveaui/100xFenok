@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RegimePage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="market" title="시장 국면" backHref="/market-valuation">
+      <AppShell active="regime" title="시장 국면">
         <RegimeClient />
       </AppShell>
     </div>

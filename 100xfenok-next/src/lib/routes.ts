@@ -6,6 +6,7 @@ export const ROUTES = {
   home: "/",
   explore: "/explore",
   market: "/market-valuation",
+  // Legacy bookmark target only; `/market` redirects to `ROUTES.market`.
   marketLegacy: "/market",
   marketStructure: "/market-valuation/structure",
   regime: "/regime",
@@ -77,7 +78,6 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.home,
   ROUTES.explore,
   ROUTES.market,
-  ROUTES.marketLegacy,
   ROUTES.marketStructure,
   ROUTES.regime,
   ROUTES.marketEvents,
@@ -104,6 +104,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
 export const PRIMARY_PRODUCT_ROUTES = [
   ROUTES.explore,
   ROUTES.market,
+  ROUTES.regime,
   ROUTES.sectors,
   ROUTES.etfs,
   ROUTES.screener,
@@ -114,7 +115,6 @@ export const PRIMARY_PRODUCT_ROUTES = [
 
 export const DOCK_PRODUCT_ROUTES = [
   ROUTES.home,
-  ROUTES.marketLegacy,
   ROUTES.market,
   ROUTES.alphaScout,
   ROUTES.sectors,
