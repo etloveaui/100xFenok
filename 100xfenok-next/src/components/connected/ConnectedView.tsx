@@ -211,12 +211,12 @@ export function ConnectedView({
             <TransitionLink
               key={item.label}
               href={item.href}
-              className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${item.tone}`}
+              className={`inline-flex min-h-10 sm:min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${item.tone}`}
             >
               {item.label}
             </TransitionLink>
           ) : (
-            <span key={item.label} className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black ${item.tone}`}>
+            <span key={item.label} className={`inline-flex min-h-10 sm:min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black ${item.tone}`}>
               {item.label}
             </span>
           ))}

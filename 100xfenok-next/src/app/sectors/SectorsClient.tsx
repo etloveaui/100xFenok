@@ -180,7 +180,7 @@ function MobileViewSwitch({
 }) {
   return (
     <div className="md:hidden">
-      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm">
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm">
         {MOBILE_VIEWS.map((view) => {
           const active = view.key === value;
           return (
@@ -190,7 +190,7 @@ function MobileViewSwitch({
               onClick={() => onChange(view.key)}
               aria-pressed={active}
               className={cx(
-                "min-h-10 rounded-xl px-2 text-[11px] font-black transition",
+                "min-h-11 rounded-xl px-2 text-[11px] font-black transition",
                 active ? "bg-[var(--c-brand)] text-white" : "text-[var(--c-ink-3)] hover:bg-[var(--c-surface-2)]",
               )}
             >
