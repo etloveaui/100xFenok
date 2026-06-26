@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
+import { ROUTES } from "@/lib/routes";
 import SectorsClient from "./SectorsClient";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function SectorsPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="sectors" title="섹터">
+      <AppShell active="sectors" title="섹터" backHref={ROUTES.explore}>
         <SectorsClient />
       </AppShell>
     </div>

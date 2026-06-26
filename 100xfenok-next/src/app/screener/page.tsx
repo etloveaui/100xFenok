@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
+import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import ScreenerClient from "./ScreenerClient";
 
@@ -24,7 +25,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   return (
     <div className="fnk-shell">
-      <AppShell active="screener" title="스크리너">
+      <AppShell active="screener" title="스크리너" backHref={ROUTES.explore}>
         <ScreenerClient
           initialSearch={initialSearch}
           initialSector={initialSector}

@@ -3,6 +3,7 @@ import MacroContextCard from "@/components/macro/MacroContextCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import AppShell from "@/components/shell/AppShell";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
+import { ROUTES } from "@/lib/routes";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
 import type { EtfTypeFilter } from "../explore/etfUniverseUtils";
 import EtfSurfaceSnapshotCard from "./EtfSurfaceSnapshotCard";
@@ -50,7 +51,7 @@ export default async function EtfsPage({ searchParams }: Props) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="etfs" title="ETF">
+      <AppShell active="etfs" title="ETF" backHref={ROUTES.explore}>
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">

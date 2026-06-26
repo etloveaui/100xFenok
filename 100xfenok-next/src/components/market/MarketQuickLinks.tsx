@@ -13,7 +13,6 @@ interface MarketQuickLinksProps {
 }
 
 const BASE_LINKS = [
-  { href: ROUTES.regime, label: "국면", textLabel: "국면 보기" },
   { href: ROUTES.macroChart, label: "매크로", textLabel: "매크로 차트 보기" },
   { href: ROUTES.marketEvents, label: "이벤트", textLabel: "이벤트 보기" },
 ] as const;
