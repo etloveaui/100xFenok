@@ -1481,7 +1481,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
           <table className="w-full min-w-[520px] text-[10px]">
             <thead>
               <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
-                <th className="px-2 py-1 text-left">일자</th>
+                <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1 text-left">일자</th>
                 <th className="px-2 py-1 text-right">가격</th>
                 <th className="px-2 py-1 text-right">매출 컨센</th>
                 <th className="px-2 py-1 text-right">EPS 컨센</th>
@@ -1491,7 +1491,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
             <tbody>
               {historyRows.map((row, index) => (
                 <tr key={`${row.date}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
-                  <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.date}</td>
+                  <td className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.date}</td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtPlainNumber(row.price, 2)}</td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtLarge(row.revenue_consensus)}</td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtEps(row.eps_consensus)}</td>
@@ -1540,7 +1540,7 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
         <table className="w-full min-w-[720px] text-[10px]">
           <thead>
             <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-4)]">
-              <th className="px-2 py-1.5 text-left">항목</th>
+              <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left">항목</th>
               {periods.map((period) => (
                 <th key={period} className="px-2 py-1.5 text-right">{period}</th>
               ))}
@@ -1549,7 +1549,7 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
           <tbody>
             {validRows.map((row) => (
               <tr key={row.label} className="border-b border-[var(--c-line-2)] last:border-b-0">
-                <td className="px-2 py-1.5 font-black text-[var(--c-ink-2)]">{row.label}</td>
+                <td className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 font-black text-[var(--c-ink-2)]">{row.label}</td>
                 {periods.map((period, index) => {
                   const value = row.data?.[index];
                   return (
