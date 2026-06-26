@@ -375,7 +375,7 @@ export default function MarketEventSurfacesCard() {
           onValueChange={setActiveTab}
           ariaLabel="이벤트 리스크 분류"
           className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]"
-          getTabClassName={(_, selected) => `min-h-9 rounded-full border px-3 text-[11px] font-black uppercase tracking-wide transition ${
+          getTabClassName={(_, selected) => `min-h-11 rounded-full border px-3 text-[11px] font-black uppercase tracking-wide transition ${
             selected
               ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
               : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"

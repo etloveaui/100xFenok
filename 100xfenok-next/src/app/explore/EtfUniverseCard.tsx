@@ -496,14 +496,14 @@ export default function EtfUniverseCard({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="티커 또는 이름 검색"
-            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           />
           <label className="sr-only" htmlFor="etf-universe-category">카테고리</label>
           <select
             id="etf-universe-category"
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체</option>
             {categories.map((item) => (
@@ -518,7 +518,7 @@ export default function EtfUniverseCard({
               setAssetClassFilter(event.target.value);
               syncFilterParams({ assetClassFilter: event.target.value });
             }}
-            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체 자산군</option>
             {assetClasses.map((item) => (
@@ -533,7 +533,7 @@ export default function EtfUniverseCard({
               setIssuerFilter(event.target.value);
               syncFilterParams({ issuerFilter: event.target.value });
             }}
-            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             <option value="전체">전체 운용사</option>
             {issuers.map((item) => (
@@ -549,7 +549,7 @@ export default function EtfUniverseCard({
               setAumFilter(value);
               syncFilterParams({ aumFilter: value });
             }}
-            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             {Object.keys(ETF_AUM_PARAM).map((item) => (
               <option key={item} value={item}>{item}</option>
@@ -564,7 +564,7 @@ export default function EtfUniverseCard({
               setExpenseFilter(value);
               syncFilterParams({ expenseFilter: value });
             }}
-            className="min-h-10 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 w-full rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-bold text-[var(--c-ink-2)] outline-none transition focus:border-brand-interactive"
           >
             {Object.keys(ETF_EXPENSE_PARAM).map((item) => (
               <option key={item} value={item}>{item}</option>
@@ -580,7 +580,7 @@ export default function EtfUniverseCard({
                 type="button"
                 onClick={() => handleSegmentChange(option.value)}
                 aria-pressed={selected}
-                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
+                className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
                   selected
                     ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white shadow-sm"
                     : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
@@ -592,7 +592,7 @@ export default function EtfUniverseCard({
             );
           })}
           {newOnly ? (
-            <TransitionLink href="/etfs/new" className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive">
+            <TransitionLink href="/etfs/new" className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive">
               신규 ETF 상세
             </TransitionLink>
           ) : null}
@@ -663,7 +663,7 @@ export default function EtfUniverseCard({
               key: filterKey,
               count: Math.min(filteredRows.length, visibleRows.length + visibleLimit),
             })}
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-4 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-brand-interactive hover:text-brand-interactive"
           >
             더 보기 · {formatNumber(visibleRows.length)} / {formatNumber(filteredRows.length)}
           </button>

@@ -342,7 +342,7 @@ export default function StockWorkbenchCard() {
             onValueChange={setTab}
             ariaLabel="종목 후보 분류"
             className="mt-3 flex flex-wrap gap-2 px-[var(--panel-pad)]"
-            getTabClassName={(item, selected) => `min-h-9 rounded-full border px-3 text-[11px] font-black tracking-wide transition ${
+            getTabClassName={(item, selected) => `min-h-11 rounded-full border px-3 text-[11px] font-black tracking-wide transition ${
               selected
                 ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
                 : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
@@ -362,7 +362,7 @@ export default function StockWorkbenchCard() {
                     type="button"
                     aria-pressed={actionBucket === key}
                     onClick={() => setActionBucket(key as ActionBucket)}
-                    className={`min-h-8 rounded-full border px-2.5 text-[10px] font-black transition ${
+                    className={`min-h-11 rounded-full border px-2.5 text-[10px] font-black transition ${
                       actionBucket === key
                         ? "border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
                         : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-3)]"
