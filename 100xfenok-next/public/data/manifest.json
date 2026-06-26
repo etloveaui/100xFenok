@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-06-25",
+  "last_updated": "2026-06-26",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -51,7 +51,7 @@
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2026-06-25",
+      "updated": "2026-06-26",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
       "file_count": 9,
@@ -96,10 +96,10 @@
     },
     "computed": {
       "version": "1.0.0",
-      "updated": "2026-06-25",
+      "updated": "2026-06-26",
       "update_frequency": "after source data refresh",
       "source": "Macro Monitor computed signal export",
-      "file_count": 6455,
+      "file_count": 6489,
       "schema": false,
       "description": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
     },
@@ -114,19 +114,19 @@
     },
     "yf": {
       "version": "1.0.0",
-      "updated": "2026-06-18",
+      "updated": "2026-06-26",
       "update_frequency": "weekly / on-demand",
       "source": "Yahoo Finance via yfinance",
-      "file_count": 1821,
+      "file_count": 1850,
       "schema": false,
       "description": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
     },
     "stockanalysis": {
       "version": "1.2.0",
-      "updated": "2026-06-20",
+      "updated": "2026-06-26",
       "update_frequency": "weekly / on-demand",
       "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
-      "file_count": 5394,
+      "file_count": 5428,
       "schema": true,
       "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
     },
@@ -593,14 +593,14 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-06-25T22:20:51Z",
+  "generatedAt": "2026-06-26T04:46:01Z",
   "categories": [
     {
       "name": "computed",
       "path": "/data/computed/",
       "schemaVersion": "1.0.0",
-      "fileCount": 6455,
-      "lastUpdated": "2026-06-25",
+      "fileCount": 6489,
+      "lastUpdated": "2026-06-26",
       "notes": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
     },
     {
@@ -631,16 +631,16 @@
       "name": "stockanalysis",
       "path": "/data/stockanalysis/",
       "schemaVersion": "1.2.0",
-      "fileCount": 5394,
-      "lastUpdated": "2026-06-20",
+      "fileCount": 5428,
+      "lastUpdated": "2026-06-26",
       "notes": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
     },
     {
       "name": "yf",
       "path": "/data/yf/",
       "schemaVersion": "1.0.0",
-      "fileCount": 1821,
-      "lastUpdated": "2026-06-18",
+      "fileCount": 1850,
+      "lastUpdated": "2026-06-26",
       "notes": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
     },
     {
@@ -688,7 +688,7 @@
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
       "fileCount": 9,
-      "lastUpdated": "2026-06-25",
+      "lastUpdated": "2026-06-26",
       "notes": "Macro banking, liquidity, and monthly activity survey series: 924 activity records, OECD CLI through 2026-04, PMI/ISM through 2026-05"
     },
     {

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "TSLO",
   "asset_type": "etf",
-  "generated_at": "2026-06-19T08:08:21Z",
+  "generated_at": "2026-06-26T04:44:49Z",
   "identity": {
     "name": "TSLO",
     "exchange": null,
@@ -151,31 +151,6 @@
       ],
       "candidate_count": 1
     },
-    "return_1m": {
-      "value": -4.390172457983952,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-06-17T14:00:25Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance"
-      ],
-      "candidates": [
-        {
-          "value": -4.390172457983952,
-          "source": "stockanalysis.etf_screener.performance",
-          "as_of": null,
-          "fetched_at": "2026-06-17T14:00:25Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
     "return_3m": {
       "value": 9.303577194933812,
       "source": "stockanalysis.detail.history",
@@ -194,32 +169,6 @@
           "as_of": "2026-06-01",
           "fetched_at": "2026-06-17T09:13:07Z",
           "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_ytd": {
-      "value": -9.401641619413928,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-06-17T14:00:25Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -9.401641619413928,
-          "source": "stockanalysis.etf_screener.performance",
-          "as_of": null,
-          "fetched_at": "2026-06-17T14:00:25Z",
-          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -342,14 +291,14 @@
     "yf": false,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": true,
+    "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": "stockanalysis/etfs/TSLO.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
+    "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {

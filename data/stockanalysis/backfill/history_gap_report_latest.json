@@ -1,23 +1,23 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-06-20T19:10:42.503Z",
+  "generated_at": "2026-06-26T04:45:59.813Z",
   "required_history_periods": [
     "monthly_3y",
     "monthly_5y"
   ],
-  "primary_stockanalysis_detail_files": 4579,
-  "complete_required_history": 4568,
-  "missing_required_history": 11,
-  "fetchable_required_history": 0,
+  "primary_stockanalysis_detail_files": 4584,
+  "complete_required_history": 4572,
+  "missing_required_history": 12,
+  "fetchable_required_history": 1,
   "inception_limited_required_history": 11,
-  "coverage_pct": 99.76,
+  "coverage_pct": 99.74,
   "missing_by_period": {
-    "monthly_3y": 11,
-    "monthly_5y": 11
+    "monthly_3y": 12,
+    "monthly_5y": 12
   },
   "fetchable_by_period": {
-    "monthly_3y": 0,
-    "monthly_5y": 0
+    "monthly_3y": 1,
+    "monthly_5y": 1
   },
   "inception_limited_by_period": {
     "monthly_3y": 11,
@@ -143,20 +143,34 @@
         "inception_date": "2025-08-13"
       },
       {
-        "ticker": "SCLS",
+        "ticker": "QNDX",
         "missing": [
           "monthly_3y",
           "monthly_5y"
         ],
-        "fetchable_missing": [],
-        "inception_limited_missing": [
+        "fetchable_missing": [
           "monthly_3y",
           "monthly_5y"
         ],
-        "inception_date": "2025-11-03"
+        "inception_limited_missing": [],
+        "inception_date": null
       }
     ],
-    "fetchable": [],
+    "fetchable": [
+      {
+        "ticker": "QNDX",
+        "missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ],
+        "fetchable_missing": [
+          "monthly_3y",
+          "monthly_5y"
+        ],
+        "inception_limited_missing": [],
+        "inception_date": null
+      }
+    ],
     "inception_limited": [
       {
         "ticker": "BITA",
@@ -328,7 +342,7 @@
     ]
   },
   "incremental_plan": {
-    "generated_at": "2026-06-20T19:10:10Z",
+    "generated_at": "2026-06-26T04:45:52Z",
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
@@ -337,31 +351,53 @@
       "monthly_5y"
     ],
     "counts": {
-      "etfs_planned": 0,
-      "incremental_selected": 0,
-      "incremental_candidates": 0,
-      "history_gap": 0,
-      "inception_limited_history_gap": 11,
-      "total_history_gap": 11,
+      "etfs_planned": 1,
+      "incremental_selected": 1,
+      "incremental_candidates": 1,
+      "history_gap": 1,
+      "inception_limited_history_gap": 3,
+      "total_history_gap": 4,
       "cooldown_skipped": 0
     },
-    "first5": [],
+    "first5": [
+      "QNDX"
+    ],
     "matches_current_gap": true,
-    "matches_total_gap": true,
-    "matches_inception_limited": true,
-    "matches_required_periods": true
+    "matches_total_gap": false,
+    "matches_inception_limited": false,
+    "matches_required_periods": true,
+    "strict_count_matches": {
+      "current_gap": true,
+      "total_gap": false,
+      "inception_limited": false,
+      "required_periods": true
+    },
+    "subset_of_full_scan": {
+      "fetchable": true,
+      "total": true,
+      "inception_limited": true,
+      "missing_tickers": {
+        "fetchable": [],
+        "total": [],
+        "inception_limited": []
+      }
+    }
   },
   "market_facts_return_3y": {
     "etf": 2863,
-    "stockanalysis_history": 2634,
+    "stockanalysis_history": 2605,
     "etf_coverage_pct": 54.36,
     "etf_denominator": 5267,
     "stockanalysis_universe_denominator": 5280
   },
   "recommended_dispatch": {
-    "status": "not_recommended",
+    "status": "owner_gated",
     "workflow": "fetch-stockanalysis.yml",
-    "inputs": null,
-    "note": "All current gaps are inception-limited; a live fetch is expected to be futile until the funds age into the requested windows."
+    "inputs": {
+      "history_gaps_only": "true",
+      "required_history_periods": "monthly_3y,monthly_5y",
+      "incremental_etf_limit": "120"
+    },
+    "note": "External StockAnalysis calls; run only after explicit approval."
   }
 }
