@@ -235,8 +235,8 @@ export function MarketChartFrame({
       }
     >
       {(title || showRanges) && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             {title && (
               <figcaption className="truncate text-sm font-extrabold text-slate-800">
                 {title}
@@ -247,7 +247,7 @@ export function MarketChartFrame({
             )}
           </div>
           {showRanges && (
-            <div className="flex shrink-0 gap-1" role="group" aria-label="기간 선택">
+            <div className="flex max-w-full flex-wrap justify-end gap-1 sm:shrink-0" role="group" aria-label="기간 선택">
               {ranges.map((range) => {
                 const active = range.id === activeRange?.id;
                 return (
@@ -277,7 +277,7 @@ export function MarketChartFrame({
       )}
 
       {showToggles && (
-        <div className="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="시리즈 토글">
+        <div className="mb-3 flex min-w-0 flex-wrap items-start gap-1.5" role="group" aria-label="시리즈 토글">
           {series.map((item, index) => {
             const off = hiddenIds.has(item.id);
             const dot = theme.seriesColor(item, index);
@@ -289,16 +289,16 @@ export function MarketChartFrame({
                 aria-pressed={!off}
                 className={
                   off
-                    ? "inline-flex items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-[11px] font-bold text-[var(--c-ink-3)]"
-                    : "inline-flex items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-[11px] font-bold text-[var(--c-ink-2)]"
+                    ? "inline-flex min-h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-3)] sm:text-[11px]"
+                    : "inline-flex min-h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-2)] sm:text-[11px]"
                 }
               >
                 <span
                   aria-hidden
-                  className="h-2 w-2 rounded-full"
+                  className="h-2 w-2 shrink-0 rounded-full"
                   style={{ backgroundColor: off ? theme.token("line") : dot }}
                 />
-                {item.label}
+                <span className="min-w-0 break-words">{item.label}</span>
               </button>
             );
           })}
@@ -310,7 +310,7 @@ export function MarketChartFrame({
         series={renderedSeries}
         ariaLabel={ariaLabel}
         heightClassName={heightClassName}
-        showLegend={showLegend}
+        showLegend={showLegend && !showToggles}
         sortLabels={sortLabels}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}

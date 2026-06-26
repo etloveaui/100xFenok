@@ -1290,7 +1290,15 @@ export default function SuperinvestorsClient({
                   </span>
                 </div>
                 <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="종목별 보유자 표 가로 스크롤">
-                  <table className="w-full min-w-[720px] text-sm">
+                  <table className="w-full min-w-[820px] table-fixed text-sm">
+                    <colgroup>
+                      <col className="w-[190px]" />
+                      <col className="w-[104px]" />
+                      <col className="w-[132px]" />
+                      <col className="w-[128px]" />
+                      <col className="w-[104px]" />
+                      <col className="w-[162px]" />
+                    </colgroup>
                     <thead>
                       <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
                         <th className="px-3 py-2 text-left">보유자</th>
@@ -1307,18 +1315,18 @@ export default function SuperinvestorsClient({
                         .map((h) => (
                           <tr key={h.investor} className="border-b border-slate-100 last:border-b-0">
                             <td className="px-3 py-3">
-                              <span className="font-black text-slate-900">{h.investor}</span>
+                              <span className="block truncate whitespace-nowrap font-black text-slate-900" title={h.investor}>{h.investor}</span>
                             </td>
-                            <td className="px-3 py-3 text-right">
+                            <td className="whitespace-nowrap px-3 py-3 text-right">
                               <span className="orbitron tabular-nums font-bold text-slate-900">{fmtWeight(h.weight)}</span>
                             </td>
-                            <td className="px-3 py-3 text-right">
+                            <td className="whitespace-nowrap px-3 py-3 text-right">
                               <span className="orbitron tabular-nums text-slate-700">{fmtAum(h.market_value)}</span>
                             </td>
-                            <td className="px-3 py-3 text-right">
+                            <td className="whitespace-nowrap px-3 py-3 text-right">
                               <span className="orbitron tabular-nums text-slate-700">{fmtShares(h.shares)}</span>
                             </td>
-                            <td className="px-3 py-3 text-right">
+                            <td className="whitespace-nowrap px-3 py-3 text-right">
                               <span className="orbitron tabular-nums text-slate-500">
                                 {((h.shares / (byTickerEntry.total_shares || 1)) * 100).toFixed(1)}%
                               </span>

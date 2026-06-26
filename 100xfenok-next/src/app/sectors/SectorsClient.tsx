@@ -478,8 +478,8 @@ export default function SectorsClient() {
             <SectorMomentumCard key={row.key} row={row} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
           ))}
         </div>
-        <div className="hidden -mx-1 overflow-x-auto px-1 md:block">
-          <table className="w-full min-w-[640px] border-separate border-spacing-1 text-sm">
+        <div className="scroll-hint-x -mx-1 mt-3 px-1 md:mt-0" role="region" tabIndex={0} aria-label="섹터 기간별 성과표 가로 스크롤">
+          <table className="w-full min-w-[720px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
                 <th scope="col" className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-2 text-left text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] shadow-sm">

@@ -302,25 +302,25 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
 function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
   const tables = model.creditRatings.tables;
   return (
-    <div className="min-w-0 overflow-x-auto">
-      <table className="w-full min-w-[360px] border-collapse text-[12px]">
+    <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="신용등급 스프레드 표 가로 스크롤">
+      <table className="w-full min-w-[520px] border-collapse text-[12px]">
         <thead>
           <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
-            <th scope="col" className="py-2 pr-2 text-left">구간</th>
-            <th scope="col" className="px-2 py-2 text-right">종목</th>
-            <th scope="col" className="px-2 py-2 text-right">최고</th>
-            <th scope="col" className="px-2 py-2 text-right">최저</th>
-            <th scope="col" className="px-2 py-2 text-right">중앙 스프레드</th>
+            <th scope="col" className="w-[128px] py-2 pr-2 text-left">구간</th>
+            <th scope="col" className="w-[72px] px-2 py-2 text-right">종목</th>
+            <th scope="col" className="w-[86px] px-2 py-2 text-right">최고</th>
+            <th scope="col" className="w-[86px] px-2 py-2 text-right">최저</th>
+            <th scope="col" className="w-[132px] px-2 py-2 text-right">중앙 스프레드</th>
           </tr>
         </thead>
         <tbody>
           {tables.map((t) => (
             <tr key={t.id} className="border-b border-[var(--c-line-2)]">
-              <th scope="row" className="py-2 pr-2 text-left font-bold text-[var(--c-ink-2)]">{CREDIT_LABELS[t.id] ?? t.id}</th>
-              <td className="px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{t.rows ?? "—"}</td>
-              <td className="px-2 py-2 text-right font-bold text-[var(--c-up)]">{t.bestRating ?? "—"}</td>
-              <td className="px-2 py-2 text-right font-bold text-[var(--c-down)]">{t.worstRating ?? "—"}</td>
-              <td className="px-2 py-2 text-right font-bold tabular-nums text-[var(--c-ink-2)]">
+              <th scope="row" className="whitespace-nowrap py-2 pr-2 text-left font-bold text-[var(--c-ink-2)]">{CREDIT_LABELS[t.id] ?? t.id}</th>
+              <td className="whitespace-nowrap px-2 py-2 text-right tabular-nums text-[var(--c-ink-2)]">{t.rows ?? "—"}</td>
+              <td className="whitespace-nowrap px-2 py-2 text-right font-bold text-[var(--c-up)]">{t.bestRating ?? "—"}</td>
+              <td className="whitespace-nowrap px-2 py-2 text-right font-bold text-[var(--c-down)]">{t.worstRating ?? "—"}</td>
+              <td className="whitespace-nowrap px-2 py-2 text-right font-bold tabular-nums text-[var(--c-ink-2)]">
                 {t.medianSpread === null ? "—" : `${(t.medianSpread * 100).toFixed(2)}%`}
               </td>
             </tr>
