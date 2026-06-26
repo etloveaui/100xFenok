@@ -54,8 +54,24 @@ async function fetchText(url) {
     try {
       const response = await fetch(url, { signal: controller.signal });
       const text = await response.text();
-      if (response.status < 500 || attempt >= RETRIES) return { response, text };
-      lastError = new Error(`${url} returned HTTP ${response.status}`);
+      // Detect a truncated body: a large response can arrive HTTP 200 with the
+      // stream cut short (no thrown error), which JSON.parse then rejects with
+      // "Unterminated string". Compare received bytes against Content-Length and
+      // treat any shortfall as retryable rather than returning a partial body.
+      const declaredBytes = Number(response.headers.get("content-length"));
+      const receivedBytes = Buffer.byteLength(text);
+      const truncated =
+        Number.isFinite(declaredBytes) && declaredBytes > 0 && receivedBytes < declaredBytes;
+      if (truncated) {
+        lastError = new Error(
+          `${url} body truncated: received ${receivedBytes} of ${declaredBytes} bytes`,
+        );
+        if (attempt >= RETRIES) throw lastError;
+      } else if (response.status >= 500 && attempt < RETRIES) {
+        lastError = new Error(`${url} returned HTTP ${response.status}`);
+      } else {
+        return { response, text };
+      }
     } catch (error) {
       lastError = error;
       if (attempt >= RETRIES) throw error;
