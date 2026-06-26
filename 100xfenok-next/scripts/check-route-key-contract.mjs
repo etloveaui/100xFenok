@@ -23,32 +23,90 @@ const REQUIRED_ROUTE_KEYS = [
   "radar",
 ];
 
+function collectComponentFiles(rootDir, relativeRoot) {
+  const results = [];
+  const dir = path.join(APP_ROOT, relativeRoot);
+  if (!fs.existsSync(dir)) return results;
+  for (const entry of fs.readdirSync(dir, { recursive: true })) {
+    const full = path.join(dir, entry);
+    if (fs.statSync(full).isFile() && entry.endsWith(".tsx")) {
+      results.push(path.posix.join(relativeRoot, entry));
+    }
+  }
+  return results;
+}
+
 const DRIFT_SCAN_FILES = [
-  "src/components/shell/AppShell.tsx",
-  "src/components/DataNav.tsx",
-  "src/components/AppEnhancements.tsx",
-  "src/components/Navbar.tsx",
-  "src/components/market/MarketSectionNav.tsx",
-  "src/components/market/MarketQuickLinks.tsx",
+  ...collectComponentFiles("src/app", "src/app"),
+  ...collectComponentFiles("src/components", "src/components"),
   "src/app/sitemap.ts",
-  "src/app/market/page.tsx",
-  "src/app/stock/[ticker]/page.tsx",
-  "src/app/etfs/[ticker]/page.tsx",
-  "src/app/multichart/page.tsx",
   "src/lib/macro-chart/context.ts",
 ];
 
 const PRODUCT_LITERAL_ALLOWLIST = [
-  {
-    file: "src/components/AppEnhancements.tsx",
-    literal: "/etfs/",
-    reason: "dynamic ETF detail prefix sentinel, not a navigable route literal",
-  },
-  {
-    file: "src/components/AppEnhancements.tsx",
-    literal: "/posts/",
-    reason: "dynamic posts detail prefix sentinel, not a navigable route literal",
-  },
+  // Home route — system component usage
+  { file: "src/app/error.tsx", literal: "/", reason: "error boundary home link" },
+  { file: "src/app/not-found.tsx", literal: "/", reason: "404 page home link" },
+  { file: "src/app/admin/[...slug]/page.tsx", literal: "/", reason: "admin catch-all home link" },
+  { file: "src/app/admin/personal/travel/page.tsx", literal: "/", reason: "travel page home link" },
+  { file: "src/components/AdminAccessGate.tsx", literal: "/", reason: "admin gate home redirect" },
+  { file: "src/components/AdminSessionControl.tsx", literal: "/", reason: "admin session home redirect" },
+  { file: "src/components/footer/FooterMainBar.tsx", literal: "/", reason: "footer home link" },
+  { file: "src/components/TransitionLink.tsx", literal: "/", reason: "TransitionLink base component default" },
+  { file: "src/components/wrap/v2/Navbar.tsx", literal: "/", reason: "design-studio preview nav home link" },
+
+  // Dashboard cards — radar deep-link query sentinels
+  { file: "src/components/dashboard/BankingHealthCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (banking-health), not a bare nav route" },
+  { file: "src/components/dashboard/LiquidityCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (liquidity-flow), not a bare nav route" },
+  { file: "src/components/dashboard/RiskAppetiteCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (sentiment-signal), not a bare nav route" },
+  { file: "src/components/dashboard/StressMonitorCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (liquidity-stress), not a bare nav route" },
+  { file: "src/components/dashboard/HomeBentoGrid.tsx", literal: "/radar", reason: "radar deep-link query sentinel (sentiment-signal + liquidity-flow + banking-health), not a bare nav route" },
+
+  // Design-studio preview files — excluded from SSOT enforcement
+  { file: "src/components/HomeDesignPreview.tsx", literal: "/", reason: "design-studio preview, excluded from route SSOT" },
+  { file: "src/components/HomeDesignPreview.tsx", literal: "/market-valuation", reason: "design-studio preview, excluded from route SSOT" },
+  { file: "src/components/HomeDesignPreview.tsx", literal: "/sectors", reason: "design-studio preview, excluded from route SSOT" },
+  { file: "src/components/HomeDesignPreview.tsx", literal: "/ib", reason: "design-studio preview, excluded from route SSOT" },
+  { file: "src/components/HomeDesignPreview.tsx", literal: "/vr", reason: "design-studio preview, excluded from route SSOT" },
+
+  // Design version toggle query params
+  { file: "src/components/chrome/v2/NavbarV2.tsx", literal: "/", reason: "design-version toggle (/?v2=1), all hrefs point to home with query param" },
+  { file: "src/components/chrome/v3/NavbarV3.tsx", literal: "/", reason: "design-version toggle (/?v3=1), all hrefs point to home with query param" },
+
+  // Design-studio wrap components — excluded from SSOT enforcement
+  { file: "src/components/wrap/v2/Navbar.tsx", literal: "/alpha-scout", reason: "design-studio wrap preview nav, excluded from route SSOT" },
+  { file: "src/components/wrap/v2/Navbar.tsx", literal: "/ib", reason: "design-studio wrap preview nav, excluded from route SSOT" },
+  { file: "src/components/wrap/v2/MarketWrapV2.tsx", literal: "/100x/daily-wrap", reason: "design-studio wrap preview nav, excluded from route SSOT" },
+
+  // Macro chart deep-link with query params — context-dependent hrefs
+  { file: "src/app/explore/MacroPlaybookCard.tsx", literal: "/macro-chart", reason: "macro-chart deep-link with complex query params, context-dependent href" },
+  { file: "src/app/macro-chart/MacroChartClient.tsx", literal: "/market-valuation/structure", reason: "macro-chart cross-link with dynamic query params" },
+  { file: "src/app/macro-chart/MacroChartClient.tsx", literal: "/market/events", reason: "macro-chart cross-link with dynamic query params" },
+  { file: "src/app/macro-chart/MacroChartClient.tsx", literal: "/portfolio", reason: "macro-chart cross-link with dynamic query params" },
+  { file: "src/app/macro-chart/page.tsx", literal: "/explore", reason: "macro-chart back-link to explore, context-dependent" },
+
+  // Legacy embed route links — served via RouteEmbedFrame, not standard nav
+  { file: "src/app/vr/page.tsx", literal: "/vr", reason: "VR route with legacy embed path query param, not a standard nav literal" },
+
+  // ===== FLAGGED: pre-existing nav-literal drift (needs ROUTES conversion in follow-up) =====
+  { file: "src/app/screener/StockDetailPanel.tsx", literal: "/portfolio", reason: "FLAGGED: pre-existing drift — should use ROUTES.portfolioTicker. Owner-gated backlog." },
+  { file: "src/app/sectors/IndustryMapPanel.tsx", literal: "/market/events", reason: "FLAGGED: pre-existing drift — should use ROUTES.marketEvents. Owner-gated backlog." },
+  { file: "src/app/etfs/compare/EtfCompareClient.tsx", literal: "/etfs/compare", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfCompareTickers. Owner-gated backlog." },
+  { file: "src/app/etfs/compare/page.tsx", literal: "/etfs/compare", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfCompare. Owner-gated backlog." },
+  { file: "src/app/etfs/compare/page.tsx", literal: "/etfs", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfs. Owner-gated backlog." },
+  { file: "src/app/market/events/page.tsx", literal: "/market-valuation", reason: "FLAGGED: pre-existing drift — should use ROUTES.market. Owner-gated backlog." },
+  { file: "src/app/market-valuation/structure/page.tsx", literal: "/market-valuation", reason: "FLAGGED: pre-existing drift — should use ROUTES.market. Owner-gated backlog." },
+  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/etfs", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfs. Owner-gated backlog." },
+  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/screener", reason: "FLAGGED: pre-existing drift — should use ROUTES.screener. Owner-gated backlog." },
+  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/portfolio", reason: "FLAGGED: pre-existing drift — should use ROUTES.portfolioTicker. Owner-gated backlog." },
+  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/superinvestors", reason: "FLAGGED: pre-existing drift — should use ROUTES.superinvestorsByTicker. Owner-gated backlog." },
+  { file: "src/components/connected/ConnectedView.tsx", literal: "/etfs/compare", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfCompareTickers. Owner-gated backlog." },
+  { file: "src/components/connected/ConnectedView.tsx", literal: "/etfs", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfs. Owner-gated backlog." },
+  { file: "src/components/connected/LeadStoryCard.tsx", literal: "/superinvestors", reason: "FLAGGED: pre-existing drift — should use ROUTES.superinvestorsByTicker. Owner-gated backlog." },
+
+  // Dynamic sentinel prefixes (existing allowlist)
+  { file: "src/components/AppEnhancements.tsx", literal: "/etfs/", reason: "dynamic ETF detail prefix sentinel, not a navigable route literal" },
+  { file: "src/components/AppEnhancements.tsx", literal: "/posts/", reason: "dynamic posts detail prefix sentinel, not a navigable route literal" },
 ];
 
 const SYSTEM_PATH_EXEMPTIONS = [
@@ -130,7 +188,7 @@ function isSystemPath(literal) {
 }
 
 function isAllowlisted(file, literal) {
-  return PRODUCT_LITERAL_ALLOWLIST.some((item) => item.file === file && item.literal === literal);
+  return PRODUCT_LITERAL_ALLOWLIST.some((item) => (item.file === "*" || item.file === file) && item.literal === literal);
 }
 
 function extractStringLiterals(source) {
