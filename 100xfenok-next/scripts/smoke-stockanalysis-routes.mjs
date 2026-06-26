@@ -1,37 +1,13 @@
 #!/usr/bin/env node
 
+import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
+
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
 const RETRIES = Number(process.env.QA_STOCKANALYSIS_RETRIES || 2);
 const RETRY_DELAY_MS = Number(process.env.QA_STOCKANALYSIS_RETRY_DELAY_MS || 2500);
 
-const FATAL_MARKERS = [
-  "예상치 못한 오류",
-  "일시적인 내부 오류",
-  "asOfDate is not a function",
-  "stocks_analyzer.json에 존재하지 않는 티커",
-];
-
-const PAGE_ROUTES = [
-  "/explore",
-  "/etfs",
-  "/etfs?type=leveraged",
-  "/etfs?type=single-stock",
-  "/etfs?type=inverse",
-  "/etfs?new=1",
-  "/etfs?digital=1",
-  "/etfs?asset=Equity&issuer=Vanguard&aum=large&fee=low",
-  "/etfs/new",
-  "/etfs/new?type=single-stock&days=14&sort=change",
-  "/etfs/IEFA",
-  "/etfs/SQQQ",
-  "/etfs/TSLL",
-  "/etfs/ADIU",
-  "/admin/data-lab/",
-  "/sectors",
-  "/market/events",
-  "/market/events?section=IPO%20%EC%8B%A0%EC%B2%AD&range=30&sort=section",
-];
+const PAGE_ROUTES = SMOKE_PAGE_ROUTES;
 
 function argValue(name) {
   const hit = process.argv.find((arg) => arg.startsWith(`${name}=`));

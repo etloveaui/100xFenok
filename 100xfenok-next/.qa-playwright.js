@@ -3,6 +3,8 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
+const qaCatalog = await import("./scripts/qa-route-catalog.mjs");
+
 const base = process.env.QA_BASE_URL || "http://127.0.0.1:4173";
 const baseOrigin = new URL(base).origin;
 const adminPassword = process.env.QA_ADMIN_PASSWORD || "";
@@ -106,110 +108,24 @@ function isDevServerNoise(message) {
   );
 }
 
-const postsDeepLinkRoute = "/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html";
-const vrDeepLinkRoute = "/vr/?path=vr/vr-complete-system.html";
-const alphaReportDeepLinkRoute = "/alpha-scout?report=2025-08-24_100x-alpha-scout.html";
-const designLabNativeRoute = "/admin/design-lab?mode=native";
-const tabSectorsRoute = "/?tab=sectors";
-const tabLiquidityRoute = "/?tab=liquidity";
-const tabSentimentRoute = "/?tab=sentiment";
-const p2DataStateRoutes = [
-  "/explore",
-  "/screener",
-  "/stock/NVDA",
-  "/stock/ZZZZ",
-  "/market-valuation",
-  "/sectors",
-];
+const postsDeepLinkRoute = qaCatalog.postsDeepLinkRoute;
+const vrDeepLinkRoute = qaCatalog.vrDeepLinkRoute;
+const alphaReportDeepLinkRoute = qaCatalog.alphaReportDeepLinkRoute;
+const designLabNativeRoute = qaCatalog.designLabNativeRoute;
+const tabSectorsRoute = qaCatalog.tabSectorsRoute;
+const tabLiquidityRoute = qaCatalog.tabLiquidityRoute;
+const tabSentimentRoute = qaCatalog.tabSentimentRoute;
+const p2DataStateRoutes = qaCatalog.P2_DATA_STATE_ROUTES;
 
-const defaultRoutes = [
-  "/",
-  tabSectorsRoute,
-  tabLiquidityRoute,
-  tabSentimentRoute,
-  "/market",
-  "/alpha-scout",
-  alphaReportDeepLinkRoute,
-  "/multichart",
-  "/radar",
-  "/ib",
-  "/infinite-buying",
-  "/vr",
-  vrDeepLinkRoute,
-  "/posts",
-  postsDeepLinkRoute,
-  "/explore",
-  "/screener",
-  "/stock/NVDA",
-  "/market-valuation",
-  "/sectors",
-  "/etfs",
-  "/etfs?type=single-stock",
-  "/etfs/new",
-  "/etfs/SPY",
-  "/etfs/ADIU",
-  "/market/events",
-  // Week 2 routes
-  "/100x/daily-wrap",
-  "/admin",
-  "/admin/design-lab",
-  designLabNativeRoute,
-  "/admin/data-lab",
-  "/admin/macro-monitor",
-  "/admin/market-radar",
-  "/admin/valuation-lab",
-  "/admin/stark-lab",
-  "/admin/ib-helper",
-  "/admin/stats",
-  "/admin/api-test",
-  // Week 3 route (skeleton)
-  "/tools/stock-analyzer",
-  "/tools/stock-analyzer/native",
-  "/this-route-should-not-exist",
-];
+const defaultRoutes = qaCatalog.PLAYWRIGHT_ROUTES;
 const requestedRoutes = parseCsvEnv(process.env.QA_ROUTES);
 const routes = requestedRoutes.length > 0 ? requestedRoutes : defaultRoutes;
 
-const expectedIframeRoutes = new Set([
-  "/market",
-  "/ib",
-  "/infinite-buying",
-  vrDeepLinkRoute,
-  postsDeepLinkRoute,
-  alphaReportDeepLinkRoute,
-  "/admin/design-lab",
-  "/admin/data-lab",
-  "/admin/macro-monitor",
-  "/admin/market-radar",
-  "/admin/valuation-lab",
-  "/admin/stark-lab",
-  "/admin/ib-helper",
-  "/admin/stats",
-  "/admin/api-test",
-  "/tools/stock-analyzer",
-]);
+const expectedIframeRoutes = qaCatalog.EXPECTED_IFRAME_ROUTES;
 
-const expectedInnerShellCleanRoutes = new Set([
-  "/market",
-  vrDeepLinkRoute,
-]);
+const expectedInnerShellCleanRoutes = qaCatalog.EXPECTED_INNER_SHELL_CLEAN_ROUTES;
 
-const expectedIframeSrcByRoute = {
-  "/market": "/100x/100x-main.html",
-  [alphaReportDeepLinkRoute]: "/alpha-scout/reports/2025-08-24_100x-alpha-scout.html",
-  [postsDeepLinkRoute]: "/posts-raw/2026-02-21_tariff-ruling-comprehensive.html",
-  [vrDeepLinkRoute]: "/vr/vr-complete-system.html",
-  "/admin/design-lab": "/admin/design-lab/index.html",
-  "/admin/data-lab": "/admin/data-lab/index.html",
-  "/admin/macro-monitor": "/admin/market-radar/index.html",
-  "/admin/market-radar": "/admin/market-radar/index.html",
-  "/admin/valuation-lab": "/admin/valuation-lab/index.html",
-  "/admin/stark-lab": "/admin/stark-lab/index.html",
-  "/admin/ib-helper": "/ib/ib-helper/index.html",
-  "/admin/stats": "/admin/stats.html",
-  "/admin/api-test": "/admin/api-test.html",
-  "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
-};
+const expectedIframeSrcByRoute = qaCatalog.EXPECTED_IFRAME_SRC_BY_ROUTE;
 
 const viewportCatalog = [
   { name: "desktop", width: 1440, height: 900 },
