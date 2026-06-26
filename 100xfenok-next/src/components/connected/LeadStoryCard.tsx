@@ -108,6 +108,13 @@ function shortText(value: string | null | undefined, fallback: string, max = 34)
   return text.length > max ? `${text.slice(0, max - 1)}...` : text;
 }
 
+const SAFE_ETF_ROUTE_PATTERN = /^\/etfs\/[A-Za-z0-9.-]+$/;
+
+function safeEtfHref(link: StockServiceEtfLink | null | undefined): string {
+  const route = typeof link?.route === "string" ? link.route.trim() : "";
+  return SAFE_ETF_ROUTE_PATTERN.test(route) ? route : ROUTES.etfs;
+}
+
 function formatInvestorName(value: string): string {
   return value
     .split("_")
@@ -261,6 +268,7 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
 
   const topHolder = story?.topHolders[0] ?? null;
   const topEtf = story?.etfs[0] ?? null;
+  const topEtfHref = topEtf ? safeEtfHref(topEtf) : ROUTES.etfs;
   const tone = story && story.changePercent < 0 ? "down" : "up";
   const stockHref = story ? ROUTES.stock(story.ticker) : "";
   const filingHref = story ? ROUTES.stockFilings(story.ticker) : "";
@@ -274,7 +282,24 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
     return `${direction} · 순매수 ${row.net_buyers} / 순매도 ${row.net_sellers} · ${fmtMoney(row.total_value_change)}`;
   }, [story]);
 
-  if (story === undefined || story === null) return null;
+  if (story === undefined) {
+    return (
+      <section className="panel v5-lead-story v5-lead-story--loading" data-testid="v5-lead-story" aria-labelledby="v5-lead-story-title">
+        <div className="panel-h">
+          <h2 id="v5-lead-story-title">오늘의 리드 스토리</h2>
+          <span className="desc">연결 대기</span>
+        </div>
+        <div className="panel-b">
+          <div className="v5-lead-story__placeholder">
+            <b>연결 대기</b>
+            <p>오늘의 주도주 및 연결 맵을 불러오는 중입니다</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (story === null) return null;
 
   function revealNext() {
     if (!story || pending || revealedHop >= 4) return;
@@ -288,7 +313,7 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
       } else if (nextHop === 2 && topHolder) {
         pushTrail({ id: `holder:${topHolder.investor}`, label: formatInvestorName(topHolder.investor), kind: "13f-holder" });
       } else if (nextHop === 3 && topEtf) {
-        pushTrail({ id: `etf:${topEtf.ticker}`, label: topEtf.ticker, kind: "etf", href: topEtf.route || `/etfs/${encodeURIComponent(topEtf.ticker)}` });
+        pushTrail({ id: `etf:${topEtf.ticker}`, label: topEtf.ticker, kind: "etf", href: topEtfHref });
       } else if (nextHop === 4) {
         pushTrail({ id: `filing:${story.ticker}`, label: "공시", kind: "filing", href: filingHref });
       }
@@ -332,7 +357,7 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
 
           <LeadStoryStep index={3} title="ETF가 싣는가" meta="ETF edge" open={revealedHop >= 3}>
             {topEtf ? (
-              <TransitionLink href={topEtf.route || `/etfs/${encodeURIComponent(topEtf.ticker)}`}>
+              <TransitionLink href={topEtfHref}>
                 {topEtf.ticker}
                 <b>{shortText(topEtf.label, "ETF", 28)}</b>
               </TransitionLink>

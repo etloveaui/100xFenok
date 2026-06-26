@@ -1036,7 +1036,7 @@ export default function SuperinvestorsClient({
                             <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{rank}</span>
                           </td>
                           <td className="px-3 py-3">
-                            <span className="text-sm font-black text-slate-950">{row.ticker}</span>
+                            <TickerChip ticker={row.ticker} variant="inline" />
                           </td>
                           <td className="px-3 py-3 text-right">
                             <span className="orbitron tabular-nums text-base font-black text-brand-interactive">
