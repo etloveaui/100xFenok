@@ -92,8 +92,6 @@ const PRODUCT_LITERAL_ALLOWLIST = [
   { file: "src/components/AppEnhancements.tsx", literal: "/etfs/", reason: "dynamic ETF detail prefix sentinel, not a navigable route literal" },
   { file: "src/components/AppEnhancements.tsx", literal: "/posts/", reason: "dynamic posts detail prefix sentinel, not a navigable route literal" },
 
-  // Owner-gated (Codex owns screener components, cannot touch)
-  { file: "src/app/screener/StockDetailPanel.tsx", literal: "/portfolio", reason: "owner-gated: Codex owns screener/, ROUTES conversion deferred" },
 ];
 
 const SYSTEM_PATH_EXEMPTIONS = [

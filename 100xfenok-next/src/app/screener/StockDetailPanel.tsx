@@ -1996,7 +1996,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
         </span>
         <div className="flex flex-wrap items-center gap-2">
           <TransitionLink
-            href={`/portfolio?ticker=${encodeURIComponent(ticker)}`}
+            href={ROUTES.portfolioTicker(ticker)}
             className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[10px] font-black text-[var(--c-ink-3)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
           >
             포트폴리오
