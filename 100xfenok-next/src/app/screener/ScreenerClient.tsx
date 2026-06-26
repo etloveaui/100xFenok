@@ -24,7 +24,7 @@ const DESKTOP_ROW_HEIGHT = 52;
 const DESKTOP_VIRTUAL_HEIGHT = 620;
 const DESKTOP_VIRTUAL_OVERSCAN = 6;
 
-type ActionFilter = "" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
+type ActionFilter = "" | "guru_held" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
 type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership" | "singleStockEtfs";
 
 const COUNTRY_LABEL: Record<string, string> = {
@@ -147,6 +147,7 @@ function coerceColumnPreset(value: string | null | undefined): ColumnPreset | nu
 
 function coerceActionFilter(value: string | null | undefined): ActionFilter {
   if (
+    value === "guru_held" ||
     value === "smart_money" ||
     value === "value_momentum" ||
     value === "index_core" ||
@@ -269,6 +270,32 @@ function actionTone(bucket: string | null | undefined, confidenceLabel?: string 
   if (bucket === "income") return "border-amber-200 bg-amber-50 text-amber-700";
   if (bucket === "momentum") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function guruHoldersCount(stock: ScreenerStock): number | null {
+  return typeof stock.guruHolders === "number" && Number.isFinite(stock.guruHolders) && stock.guruHolders > 0
+    ? stock.guruHolders
+    : null;
+}
+
+function hasGuruHolders(stock: ScreenerStock): boolean {
+  return guruHoldersCount(stock) !== null;
+}
+
+function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
+  const holders = guruHoldersCount(stock);
+  if (holders === null) return null;
+  return (
+    <span
+      data-testid="screener-guru-badge"
+      data-ticker={stock.ticker}
+      data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
+      className="pointer-events-none inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[9px] font-black text-violet-700"
+      title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명`}
+    >
+      {compact ? `고수 ${holders}` : `기관·고수 ${holders}`}
+    </span>
+  );
 }
 
 const CONNECTION_BADGES = [
@@ -412,7 +439,12 @@ function getMomentumClass(value: number | null): string {
 function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset): React.ReactNode {
   switch (key) {
     case "ticker":
-      return <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>;
+      return (
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <GuruHolderBadge stock={stock} compact />
+        </span>
+      );
     case "name":
       return <span className="block max-w-[180px] truncate text-sm font-semibold text-[var(--c-ink)]">{stock.name}</span>;
     case "actionScore": {
@@ -482,8 +514,8 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
     case "grossMarginFy3":
       return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-700");
     case "guruHolders":
-      return stock.guruHolders != null ? (
-        <span className="orbitron tabular-nums font-bold text-violet-700">{stock.guruHolders}</span>
+      return guruHoldersCount(stock) !== null ? (
+        <span className="orbitron tabular-nums font-bold text-violet-700">{guruHoldersCount(stock)}</span>
       ) : (
         <span className="text-slate-300">—</span>
       );
@@ -783,6 +815,7 @@ function MobileStockCard({
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-base font-black text-slate-950">{stock.ticker}</span>
+            <GuruHolderBadge stock={stock} compact />
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
               {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
             </span>
@@ -1014,7 +1047,11 @@ export default function ScreenerClient({
       if (sector && stock.sector !== sector) return false;
       if (country && stock.country !== country) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
-      if (actionFilter && stock.actionBucket !== actionFilter) return false;
+      if (actionFilter === "guru_held") {
+        if (!hasGuruHolders(stock)) return false;
+      } else if (actionFilter && stock.actionBucket !== actionFilter) {
+        return false;
+      }
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       if (forwardPerMaxValid && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > (forwardPerMaxValue as number))) return false;
@@ -1489,6 +1526,7 @@ export default function ScreenerClient({
                 className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
               >
                 <option value="">전체 신호</option>
+                <option value="guru_held">기관·고수 보유</option>
                 <option value="smart_money">기관/고수 주목</option>
                 <option value="value_momentum">저평가+모멘텀</option>
                 <option value="index_core">지수 핵심</option>
@@ -1703,6 +1741,7 @@ export default function ScreenerClient({
                             >
                               <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
                               <span className="truncate">{stock.ticker}</span>
+                              <GuruHolderBadge stock={stock} compact />
                             </button>
                           ) : renderCell(stock, column.key, preset)}
                         </td>
