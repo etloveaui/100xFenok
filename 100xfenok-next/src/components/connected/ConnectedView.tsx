@@ -1,9 +1,15 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TickerChip from "@/components/TickerChip";
+import {
+  loadTickerIndexMembership,
+  type IndexMembershipEntry,
+  type IndexMembershipResult,
+} from "@/lib/connected/connected-loaders";
 import { stockConnectionFreshnessState, type StockConnectionFreshnessSource } from "@/lib/data-entity-graph/freshness";
 import { ROUTES } from "@/lib/routes";
 import type {
@@ -36,6 +42,33 @@ function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string | null {
   if (tickers.length >= 2) return `/etfs/compare?tickers=${encodeURIComponent(tickers.slice(0, 4).join(","))}`;
   if (tickers.length === 1) return links[0]?.route || `/etfs/${encodeURIComponent(tickers[0])}`;
   return "/etfs";
+}
+
+const INDEX_LABELS = {
+  sp500: "S&P 500",
+  nasdaq100: "Nasdaq 100",
+  dowjones: "Dow Jones",
+} as const;
+
+function formatIndexWeight(weight: number): string {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(weight);
+}
+
+function topIndexMembershipLabel(membership: IndexMembershipResult | null): string | null {
+  if (!membership) return null;
+  const candidates = ([
+    ["sp500", membership.sp500],
+    ["nasdaq100", membership.nasdaq100],
+    ["dowjones", membership.dowjones],
+  ] as Array<[keyof typeof INDEX_LABELS, IndexMembershipEntry | null]>)
+    .filter((candidate): candidate is [keyof typeof INDEX_LABELS, IndexMembershipEntry] => (
+      candidate[1] !== null && isFiniteNumber(candidate[1].weight)
+    ))
+    .sort((a, b) => b[1].weight - a[1].weight);
+  const top = candidates[0];
+  return top ? `${INDEX_LABELS[top[0]]} · ${formatIndexWeight(top[1].weight)}%` : null;
 }
 
 function csvCell(value: unknown): string {
@@ -93,6 +126,31 @@ export function ConnectedView({
   compact = false,
 }: ConnectedViewProps) {
   const isPageVariant = variant === "page";
+  const flags = entry?.flags ?? {};
+  const hasIndexMembership = flags.index_membership === true;
+  const [indexMembership, setIndexMembership] = useState<IndexMembershipResult | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    if (!hasIndexMembership) {
+      setIndexMembership(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+    setIndexMembership(null);
+    loadTickerIndexMembership(ticker).then((next) => {
+      if (!cancelled) setIndexMembership(next);
+    }).catch(() => {
+      if (!cancelled) setIndexMembership(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasIndexMembership, ticker]);
+  const indexMembershipLabel = useMemo(
+    () => topIndexMembershipLabel(indexMembership) ?? "지수",
+    [indexMembership],
+  );
 
   if (entry === undefined) {
     return (
@@ -107,7 +165,6 @@ export function ConnectedView({
 
   if (!entry) return null;
 
-  const flags = entry.flags ?? {};
   const singleStockEtfs = services?.single_stock_etfs ?? [];
   const etfCount = singleStockEtfs.length || entry.service_count || 0;
   const etfCompareHref = buildSingleStockEtfHref(singleStockEtfs);
@@ -123,7 +180,7 @@ export function ConnectedView({
     flags.market_facts ? { label: "시장팩트", tone: "border-sky-200 bg-sky-50 text-sky-700", href: null } : null,
     flags.filings ? { label: "공시", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", href: ROUTES.stockFilings(ticker) } : null,
     flags.sec_13f ? { label: "13F", tone: "border-violet-200 bg-violet-50 text-violet-700", href: `/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(ticker)}` } : null,
-    flags.index_membership ? { label: "지수", tone: "border-amber-200 bg-amber-50 text-amber-700", href: null } : null,
+    hasIndexMembership ? { label: indexMembershipLabel, tone: "border-amber-200 bg-amber-50 text-amber-700", href: ROUTES.market } : null,
     flags.single_stock_etfs ? { label: `ETF${etfCount ? ` ${etfCount}` : ""}`, tone: "border-cyan-200 bg-cyan-50 text-cyan-700", href: etfCompareHref } : null,
   ].filter(Boolean) as Array<{ label: string; tone: string; href: string | null }>;
   let traversableCount = 0;
