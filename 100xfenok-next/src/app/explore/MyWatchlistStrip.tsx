@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
@@ -98,10 +99,10 @@ export default function MyWatchlistStrip() {
           const row = rows?.get(t) ?? null;
           const ret = row?.return12m ?? null;
           return (
-            <TransitionLink key={t} href={`/stock/${encodeURIComponent(t)}`} className="row">
+            <div key={t} className="row">
               <span className="av">{t.slice(0, 2)}</span>
               <span>
-                <div className="nm">{t}</div>
+                <div className="nm"><TickerChip ticker={t} variant="inline" /></div>
                 {row?.companyName ? <div className="sub">{row.companyName}</div> : null}
               </span>
               {ret !== null ? (
@@ -109,7 +110,7 @@ export default function MyWatchlistStrip() {
                   {ret >= 0 ? "+" : ""}{(ret * 100).toFixed(1)}%
                 </span>
               ) : null}
-            </TransitionLink>
+            </div>
           );
         })}
       </div>

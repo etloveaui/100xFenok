@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/shell/AppShell";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import ConnectedView from "@/components/connected/ConnectedView";
 import LeadStoryCard from "@/components/connected/LeadStoryCard";
@@ -10,6 +11,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
 import { formatSignedPercent } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
 import {
   getStockConnection,
   getStockServices,
@@ -333,19 +335,20 @@ function V5MarketPulse({ dashboard }: { dashboard: DashboardSnapshot }) {
       </div>
       <div className="v5-pulse__grid">
         {tiles.map((tile) => (
-          <TransitionLink
+          <div
             key={tile.key}
-            href={tile.key === "SPY" || tile.key === "QQQ" ? `/stock/${tile.key}` : "/sectors"}
             className="v5-pulse__tile"
             style={{ backgroundColor: pulseTint(tile.change) }}
           >
-            <span className="v5-pulse__label">{tile.label}</span>
+            <span className="v5-pulse__label">
+              {tile.key === "SPY" || tile.key === "QQQ" ? <TickerChip ticker={tile.key} label={tile.label} variant="inline" /> : tile.label}
+            </span>
             <span className="v5-pulse__value num">{tile.value}</span>
             <span className={`v5-pulse__change num ${signedClass(tile.change)}`}>
               {pct(tile.change)}
               <small>{tile.meta}</small>
             </span>
-          </TransitionLink>
+          </div>
         ))}
       </div>
     </section>
@@ -414,7 +417,7 @@ function makeCandidate(
   return {
     ticker: entry.ticker,
     label: entry.label || entry.ticker,
-    href: href ?? entry.route ?? `/stock/${encodeURIComponent(entry.ticker)}`,
+    href: href ?? entry.route ?? ROUTES.stock(entry.ticker),
     stat,
     meta,
     entry,
@@ -465,7 +468,7 @@ function buildConnectionTiles(
     .filter((entry) => entry.flags?.filings)
     .sort((a, b) => (b.as_of?.filings ?? "").localeCompare(a.as_of?.filings ?? "") || entryScore(b) - entryScore(a))
     .slice(0, 3)
-    .map((entry) => makeCandidate(entry, serviceIndex, entry.as_of?.filings ?? "공시", entry.canonical_sector ?? "EDGAR", `/stock/${encodeURIComponent(entry.ticker)}?tab=filings`));
+    .map((entry) => makeCandidate(entry, serviceIndex, entry.as_of?.filings ?? "공시", entry.canonical_sector ?? "EDGAR", ROUTES.stockFilings(entry.ticker)));
 
   return {
     summary,
@@ -663,7 +666,7 @@ function V5ConnectionPeekDrawer({
       {tile.id === "smart-money" ? <V5SmartMoneyTwoHop ticker={selected.ticker} label={selected.label} /> : null}
       <div className="v5-connection-drawer__footer">
         역방향
-        <TransitionLink href={`/stock/${encodeURIComponent(selected.ticker)}`}>{selected.ticker} 전체 보기</TransitionLink>
+        <TransitionLink href={ROUTES.stock(selected.ticker)}>{selected.ticker} 전체 보기</TransitionLink>
         <TransitionLink href="/superinvestors">13F 맵</TransitionLink>
       </div>
     </div>
@@ -771,15 +774,15 @@ function V5SmartMoneyTwoHop({ ticker, label }: { ticker: string; label: string }
           ) : otherHoldings.length > 0 ? (
             <div className="v5-holder-holdings">
               {otherHoldings.map((holding) => (
-                <TransitionLink
+                <div
                   key={`${selectedHolder.investor}-${holding.ticker}`}
-                  href={`/stock/${encodeURIComponent(holding.ticker)}`}
-                  onClick={() => pushTrail({ id: `ticker:${holding.ticker}`, label: holding.ticker, kind: "ticker", href: `/stock/${encodeURIComponent(holding.ticker)}` })}
                 >
-                  <span>{holding.ticker}</span>
+                  <span onClick={() => pushTrail({ id: `ticker:${holding.ticker}`, label: holding.ticker, kind: "ticker", href: ROUTES.stock(holding.ticker) })}>
+                    <TickerChip ticker={holding.ticker} variant="inline" />
+                  </span>
                   <b>{formatMoney(holding.market_value)}</b>
                   <small>{holding.company ?? holding.name ?? "holding"}</small>
-                </TransitionLink>
+                </div>
               ))}
             </div>
           ) : (

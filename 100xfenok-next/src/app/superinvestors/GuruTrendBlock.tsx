@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import TransitionLink from "@/components/TransitionLink";
+import TickerChip from "@/components/TickerChip";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 interface TrendDoc {
@@ -197,17 +197,16 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
           {topStreaks.map((s) => {
             const isBuy = s.direction === "buy";
             return (
-              <TransitionLink
+              <span
                 key={s.ticker}
-                href={`/stock/${encodeURIComponent(s.ticker)}`}
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black transition hover:opacity-80 ${
                   isBuy
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-rose-100 text-rose-700"
                 }`}
               >
-                {s.ticker} {s.streak_quarters}분기 연속 {isBuy ? "매수" : "매도"}
-              </TransitionLink>
+                <TickerChip ticker={s.ticker} variant="inline" /> {s.streak_quarters}분기 연속 {isBuy ? "매수" : "매도"}
+              </span>
             );
           })}
         </div>

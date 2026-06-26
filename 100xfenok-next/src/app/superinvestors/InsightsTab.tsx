@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import TransitionLink from "@/components/TransitionLink";
+import TickerChip from "@/components/TickerChip";
 import type {
   BuyingPressureData,
   NewPositionsData,
@@ -247,9 +247,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
             {rows.map((r) => (
               <tr key={r.ticker} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-1.5">
-                  <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
-                    {r.ticker}
-                  </TransitionLink>
+                  <TickerChip ticker={r.ticker} variant="inline" />
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   <span className={`text-[10px] font-bold ${textColor}`}>{signLabel(r)}</span>
@@ -306,9 +304,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
               <tr key={`${r.ticker}-${r.investor}-${i}`} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-1.5">
                   {isTicker(r.ticker) ? (
-                    <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
-                      {r.ticker}
-                    </TransitionLink>
+                    <TickerChip ticker={r.ticker} variant="inline" />
                   ) : (
                     <span className="font-semibold text-slate-700">{r.ticker}</span>
                   )}
@@ -369,9 +365,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
                   <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5">
-                  <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
-                    {r.ticker}
-                  </TransitionLink>
+                  <TickerChip ticker={r.ticker} variant="inline" />
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   <span className="orbitron tabular-nums font-bold text-slate-900">{(r.weight * 100).toFixed(1)}%</span>
@@ -418,9 +412,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
                 </td>
                 <td className="px-2 py-1.5">
                   {isTicker(r.ticker) ? (
-                    <TransitionLink href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-black text-brand-interactive hover:underline">
-                      {r.ticker}
-                    </TransitionLink>
+                    <TickerChip ticker={r.ticker} variant="inline" />
                   ) : (
                     <span className="font-bold text-slate-800">{r.ticker}</span>
                   )}

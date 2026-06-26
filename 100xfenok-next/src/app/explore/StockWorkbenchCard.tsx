@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { latestAsOf, makeDataState } from "@/lib/data-state";
-import { ROUTES } from "@/lib/routes";
-import { isValidRouteTicker, normalizeForFilePath } from "@/lib/ticker";
+import { normalizeForFilePath } from "@/lib/ticker";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 
 type WorkbenchTab = "action" | "revision" | "movers" | "returns";
@@ -179,18 +179,12 @@ function StockRowLink({
     <>
       <span className="co">
         <div className="n">{shortName(name || ticker)}</div>
-        <div className="tk">{ticker || "—"}{detail ? ` · ${detail}` : ""}</div>
+        <div className="tk">{ticker ? <TickerChip ticker={ticker} variant="inline" /> : "—"}{detail ? ` · ${detail}` : ""}</div>
       </span>
       <span className={`pc num ${tone}`}>{value || "—"}</span>
     </>
   );
-  return ticker && isValidRouteTicker(ticker) ? (
-    <TransitionLink href={ROUTES.stock(ticker)} className="mv-row">
-      {body}
-    </TransitionLink>
-  ) : (
-    <div className="mv-row">{body}</div>
-  );
+  return <div className="mv-row">{body}</div>;
 }
 
 export default function StockWorkbenchCard() {

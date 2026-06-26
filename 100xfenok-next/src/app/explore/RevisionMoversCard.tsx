@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import TransitionLink from "@/components/TransitionLink";
+import TickerChip from "@/components/TickerChip";
 
 interface MoverRow {
   ticker: string;
@@ -35,15 +35,15 @@ function MoverList({ rows, tone }: { rows: MoverRow[]; tone: "up" | "down" }) {
     <div className="mv-col">
       <div className={`mv-h ${tone}`}>{tone === "up" ? "▲ 상향" : "▼ 하향"}</div>
       {rows.map((r) => (
-        <TransitionLink key={r.ticker} href={`/stock/${encodeURIComponent(r.ticker)}`} className="mv-row">
+        <div key={r.ticker} className="mv-row">
           <span className="co">
             <div className="n">{r.name ?? r.ticker}</div>
-            <div className="tk">{r.ticker}</div>
+            <div className="tk"><TickerChip ticker={r.ticker} variant="inline" /></div>
           </span>
           <span className={`pc num ${tone}`}>
             {r.change_1w >= 0 ? "+" : ""}{(r.change_1w * 100).toFixed(1)}%
           </span>
-        </TransitionLink>
+        </div>
       ))}
     </div>
   );

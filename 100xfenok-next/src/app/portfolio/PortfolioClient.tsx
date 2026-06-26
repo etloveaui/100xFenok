@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
@@ -27,6 +28,7 @@ import {
   type Holding,
 } from "@/lib/portfolio";
 import { formatSignedPercent } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey, normalizeForFilePath } from "@/lib/ticker";
 
 interface PriceDoc {
@@ -860,9 +862,9 @@ function HoldingConnectionActions({ row }: { row: HoldingRow }) {
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      <ConnectionActionLink href={`/stock/${encodeURIComponent(row.ticker)}`}>상세</ConnectionActionLink>
+      <ConnectionActionLink href={ROUTES.stock(row.ticker)}>상세</ConnectionActionLink>
       {flags?.filings ? (
-        <ConnectionActionLink href={`/stock/${encodeURIComponent(row.ticker)}?tab=filings`} tone="emerald">
+        <ConnectionActionLink href={ROUTES.stockFilings(row.ticker)} tone="emerald">
           공시
         </ConnectionActionLink>
       ) : null}
@@ -1000,12 +1002,7 @@ function PortfolioConnectionPanel({
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <TransitionLink
-                      href={`/stock/${encodeURIComponent(row.ticker)}`}
-                      className="text-sm font-black text-brand-interactive hover:underline"
-                    >
-                      {row.ticker}
-                    </TransitionLink>
+                    <TickerChip ticker={row.ticker} variant="inline" />
                     {row.connection?.canonical_sector ? (
                       <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-500">
                         {row.connection.canonical_sector}
@@ -1073,12 +1070,7 @@ function MobileHoldingCard({
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <TransitionLink
-            href={`/stock/${encodeURIComponent(row.ticker)}`}
-            className="text-base font-black text-brand-interactive hover:underline"
-          >
-            {row.ticker}
-          </TransitionLink>
+          <TickerChip ticker={row.ticker} variant="inline" />
           <p className="mt-0.5 max-w-[14rem] truncate text-xs font-bold text-slate-500">{subtitle}</p>
         </div>
         {onEdit || onDelete ? (
@@ -1173,12 +1165,7 @@ function HoldingsTable({
         {rows.map((r) => (
           <tr key={r.ticker} className="border-b border-slate-100 last:border-b-0">
             <td className="px-2 py-2">
-              <TransitionLink
-                href={`/stock/${encodeURIComponent(r.ticker)}`}
-                className="font-black text-brand-interactive hover:underline"
-              >
-                {r.ticker}
-              </TransitionLink>
+              <TickerChip ticker={r.ticker} variant="inline" />
             </td>
             <td className="px-2 py-2">
               <HoldingConnectionMini row={r} />

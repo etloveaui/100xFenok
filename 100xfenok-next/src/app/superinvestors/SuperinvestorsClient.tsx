@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
@@ -320,12 +321,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
             <tr key={`${h.ticker}-${h.cusip}`} className="border-b border-slate-100 last:border-b-0">
               <td className="px-2 py-2">
                 {h.ticker ? (
-                  <TransitionLink
-                    href={`/stock/${encodeURIComponent(h.ticker)}`}
-                    className="font-black text-brand-interactive hover:underline"
-                  >
-                    {h.ticker}
-                  </TransitionLink>
+                  <TickerChip ticker={h.ticker} variant="inline" />
                 ) : (
                   <span className="text-[var(--c-ink-3)]">—</span>
                 )}
@@ -577,12 +573,7 @@ function TradeRankingPanel({
                 </td>
                 <td className="px-2 py-2">
                   <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
-                  <TransitionLink
-                    href={`/stock/${encodeURIComponent(r.ticker)}`}
-                    className="text-[10px] font-black text-brand-interactive hover:underline"
-                  >
-                    {r.ticker}
-                  </TransitionLink>
+                  <TickerChip ticker={r.ticker} variant="inline" />
                 </td>
                 <td className="px-2 py-2">
                   <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">

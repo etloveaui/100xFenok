@@ -8,6 +8,7 @@ import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { makeDataState } from "@/lib/data-state";
+import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 
 export type MaybeNumber = number | null | undefined;
@@ -2001,7 +2002,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
             포트폴리오
           </TransitionLink>
           <TransitionLink
-            href={`/stock/${encodeURIComponent(ticker)}`}
+            href={ROUTES.stock(ticker)}
             className="inline-flex min-h-8 items-center rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_5%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_10%,transparent)]"
           >
             전체 화면

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import TransitionLink from "@/components/TransitionLink";
+import TickerChip from "@/components/TickerChip";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 
@@ -116,13 +116,13 @@ function RowList({
   return (
     <div className="mv-col">
       {rows.slice(0, 5).map((row) => (
-        <TransitionLink key={row.symbol} href={`/stock/${encodeURIComponent(row.symbol)}`} className="mv-row">
+        <div key={row.symbol} className="mv-row">
           <span className="co">
             <div className="n">{row.company || row.symbol}</div>
-            <div className="tk">{row.symbol}{row.sector ? ` · ${row.sector}` : ""}</div>
+            <div className="tk"><TickerChip ticker={row.symbol} variant="inline" />{row.sector ? ` · ${row.sector}` : ""}</div>
           </span>
           <span className={`pc num ${tone}`}>{formatValue(row.value ?? row.changePercent)}</span>
-        </TransitionLink>
+        </div>
       ))}
     </div>
   );

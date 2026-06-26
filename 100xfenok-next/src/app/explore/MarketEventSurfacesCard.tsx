@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import TransitionLink from "@/components/TransitionLink";
+import TickerChip from "@/components/TickerChip";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { normalizeForFilePath } from "@/lib/ticker";
 
@@ -247,13 +247,12 @@ function previousForEvent(event: CalendarEvent, doc: PrevValuesDoc | null) {
   return null;
 }
 
-function TickerRowLink({ symbol, children }: { symbol?: string | null; children: ReactNode }) {
+function TickerRow({ symbol, children }: { symbol?: string | null; children: ReactNode }) {
   const ticker = cleanTicker(symbol);
-  if (!ticker) return <div className="mv-row">{children}</div>;
   return (
-    <TransitionLink href={`/stock/${encodeURIComponent(ticker)}`} className="mv-row">
+    <div className="mv-row" data-ticker={ticker || undefined}>
       {children}
-    </TransitionLink>
+    </div>
   );
 }
 
@@ -428,31 +427,31 @@ export default function MarketEventSurfacesCard() {
       {loaded ? (
         <TabPanel idBase={tabsId} item={sessionTabItem} active={activeTab === "session"} className="mv-col mt-3">
           {premarketTop ? (
-            <TickerRowLink symbol={premarketTop.symbol}>
+            <TickerRow symbol={premarketTop.symbol}>
               <span className="co">
-                <div className="n">장전 {cleanTicker(premarketTop.symbol) || "—"}</div>
+                <div className="n">장전 {cleanTicker(premarketTop.symbol) ? <TickerChip ticker={cleanTicker(premarketTop.symbol)} variant="inline" /> : "—"}</div>
                 <div className="tk">{shortName(premarketTop.company_name)} · 거래 {premarketTop.pre_volume || "—"}</div>
               </span>
               <span className="pc num up">{premarketTop.pct_change || premarketTop.premkt_price || "—"}</span>
-            </TickerRowLink>
+            </TickerRow>
           ) : null}
           {afterhoursTop ? (
-            <TickerRowLink symbol={afterhoursTop.symbol}>
+            <TickerRow symbol={afterhoursTop.symbol}>
               <span className="co">
-                <div className="n">장후 {cleanTicker(afterhoursTop.symbol) || "—"}</div>
+                <div className="n">장후 {cleanTicker(afterhoursTop.symbol) ? <TickerChip ticker={cleanTicker(afterhoursTop.symbol)} variant="inline" /> : "—"}</div>
                 <div className="tk">{shortName(afterhoursTop.company_name)} · 종가 {afterhoursTop.afterhr_close || "—"}</div>
               </span>
               <span className="pc num up">{afterhoursTop.pct_change || afterhoursTop.afterhr_price || "—"}</span>
-            </TickerRowLink>
+            </TickerRow>
           ) : null}
           {latestSplit ? (
-            <TickerRowLink symbol={latestSplit.symbol}>
+            <TickerRow symbol={latestSplit.symbol}>
               <span className="co">
-                <div className="n">분할 {cleanTicker(latestSplit.symbol) || "—"}</div>
+                <div className="n">분할 {cleanTicker(latestSplit.symbol) ? <TickerChip ticker={cleanTicker(latestSplit.symbol)} variant="inline" /> : "—"}</div>
                 <div className="tk">{datePart(latestSplit.date)} · {shortName(latestSplit.company_name || latestSplit.name)}</div>
               </span>
               <span className="pc num neutral">{latestSplit.split_ratio || latestSplit.type || "—"}</span>
-            </TickerRowLink>
+            </TickerRow>
           ) : null}
           {!premarketTop && !afterhoursTop && !latestSplit ? (
             <div className="mv-row">
@@ -472,13 +471,13 @@ export default function MarketEventSurfacesCard() {
             <div className="mv-col">
               <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">어닝 캘린더</div>
               {upcomingEarnings.map((row, index) => (
-                <TickerRowLink key={safeRowKey("earn", index, row.symbol, row.date, row.name)} symbol={row.symbol}>
+                <TickerRow key={safeRowKey("earn", index, row.symbol, row.date, row.name)} symbol={row.symbol}>
                   <span className="co">
-                    <div className="n">{cleanTicker(row.symbol) || shortName(row.name)}</div>
+                    <div className="n">{cleanTicker(row.symbol) ? <TickerChip ticker={cleanTicker(row.symbol)} variant="inline" /> : shortName(row.name)}</div>
                     <div className="tk">{earningsDetail(row)}</div>
                   </span>
                   <span className="pc num neutral">{fmtCompactMoney(row.market_cap)}</span>
-                </TickerRowLink>
+                </TickerRow>
               ))}
             </div>
           ) : null}
@@ -487,13 +486,13 @@ export default function MarketEventSurfacesCard() {
             <div className="mv-col">
               <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">기업 이벤트</div>
               {latestActions.map((row, index) => (
-                <TickerRowLink key={safeRowKey("action", index, row.symbol, row.date, row.type, row.text)} symbol={row.symbol}>
+                <TickerRow key={safeRowKey("action", index, row.symbol, row.date, row.type, row.text)} symbol={row.symbol}>
                   <span className="co">
-                    <div className="n">{cleanTicker(row.symbol) || shortName(row.name || row.company_name)}</div>
+                    <div className="n">{cleanTicker(row.symbol) ? <TickerChip ticker={cleanTicker(row.symbol)} variant="inline" /> : shortName(row.name || row.company_name)}</div>
                     <div className="tk">{datePart(row.date)} · {shortName(row.text || row.name || row.company_name, "—", 46)}</div>
                   </span>
                   <span className="pc num neutral">{row.split_ratio || row.type || "—"}</span>
-                </TickerRowLink>
+                </TickerRow>
               ))}
             </div>
           ) : null}

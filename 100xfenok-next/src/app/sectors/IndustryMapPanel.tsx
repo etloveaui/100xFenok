@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 
 interface SurfaceDoc<T = EventRow> {
@@ -150,10 +151,6 @@ function compareNumbers(a: number | null, b: number | null, direction: "asc" | "
 
 function rowSymbol(row: EventRow): string {
   return text(row.symbol).replace(/^\$/, "").toUpperCase();
-}
-
-function stockHref(symbol: string): string {
-  return `/stock/${encodeURIComponent(symbol.replace(/^\$/, "").toUpperCase())}`;
 }
 
 function buildIndustryMapRows(data: IndustryData | null): IndustryMapRow[] {
@@ -309,13 +306,13 @@ function IndustryConstituentList({
       {visible.length ? visible.map((row, index) => {
         const symbol = rowSymbol(row);
         return (
-          <TransitionLink key={`${symbol || index}-${index}`} href={symbol ? stockHref(symbol) : "/sectors"} className="mv-row">
+          <div key={`${symbol || index}-${index}`} className="mv-row">
             <span className="co">
-              <div className="n">{symbol || index + 1} · {text(row.company_name)}</div>
+              <div className="n">{symbol ? <TickerChip ticker={symbol} variant="inline" /> : index + 1} · {text(row.company_name)}</div>
               <div className="tk">거래량 {text(row.volume)} · 매출 {text(row.revenue)}</div>
             </span>
             <span className="pc num neutral">{text(row.market_cap)}</span>
-          </TransitionLink>
+          </div>
         );
       }) : <EmptyRows label={emptyLabel} />}
     </div>

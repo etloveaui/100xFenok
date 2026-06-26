@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import {
   TraversalTrailProvider,
@@ -22,6 +23,7 @@ import {
   type StockServiceEtfLink,
 } from "@/lib/data-entity-graph/stock-index";
 import { isValidRouteTicker, normalizeForEntityKey, normalizeForRouteTicker } from "@/lib/ticker";
+import { ROUTES } from "@/lib/routes";
 
 type MoverSide = "gainer" | "loser";
 
@@ -260,8 +262,8 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
   const topHolder = story?.topHolders[0] ?? null;
   const topEtf = story?.etfs[0] ?? null;
   const tone = story && story.changePercent < 0 ? "down" : "up";
-  const stockHref = story ? `/stock/${encodeURIComponent(story.ticker)}` : "";
-  const filingHref = story ? `${stockHref}?tab=filings` : "";
+  const stockHref = story ? ROUTES.stock(story.ticker) : "";
+  const filingHref = story ? ROUTES.stockFilings(story.ticker) : "";
   const filingReady = Boolean(story?.connectionEntry?.flags?.filings);
   const nextLabel = revealedHop >= 4 ? "연결 완료" : pending ? "확인 중" : "다음 연결";
 
@@ -302,7 +304,7 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
       <div className="panel-b">
         <div className="v5-lead-story__hero">
           <span>{story.side === "gainer" ? "상승 모멘텀" : "하락 모멘텀"}</span>
-          <b>{story.ticker}</b>
+          <b><TickerChip ticker={story.ticker} variant="inline" /></b>
           <p>{story.company}</p>
           <strong className={`num ${tone}`}>{fmtPct(story.changePercent)}</strong>
         </div>

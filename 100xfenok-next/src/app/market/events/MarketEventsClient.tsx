@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
+import { ROUTES } from "@/lib/routes";
 
 type EventTab = "earnings" | "actions" | "ipo" | "movers";
 
@@ -190,7 +192,7 @@ function rowSymbol(row: EventRow): string {
 }
 
 function stockHref(symbol: string): string {
-  return `/stock/${encodeURIComponent(symbol.replace(/^\$/, "").toUpperCase())}`;
+  return ROUTES.stock(symbol.replace(/^\$/, "").toUpperCase());
 }
 
 function pctClass(value: unknown): string {
@@ -208,23 +210,25 @@ function firstText(row: EventRow, keys: string[], fallback = "-"): string {
   return fallback;
 }
 
-function makeRow(row: EventRow, title: string, detail: string, value: string, href?: string, valueClass = "neutral") {
-  const content = (
+function rowTitle(title: string, symbol?: string) {
+  if (!symbol) return title;
+  const rest = title.startsWith(`${symbol} · `) ? title.slice(symbol.length + 3) : title;
+  return (
     <>
+      <TickerChip ticker={symbol} variant="inline" />
+      {rest ? ` · ${rest}` : null}
+    </>
+  );
+}
+
+function makeRow(row: EventRow, title: string, detail: string, value: string, symbol?: string, valueClass = "neutral") {
+  return (
+    <div key={`${symbol ?? "row"}-${title}-${detail}`} className="mv-row">
       <span className="co">
-        <div className="n">{title}</div>
+        <div className="n">{rowTitle(title, symbol)}</div>
         <div className="tk">{detail}</div>
       </span>
       <span className={`pc num ${valueClass}`}>{value}</span>
-    </>
-  );
-  return href ? (
-    <TransitionLink key={`${href}-${title}-${detail}`} href={href} className="mv-row">
-      {content}
-    </TransitionLink>
-  ) : (
-    <div key={`${title}-${detail}`} className="mv-row">
-      {content}
     </div>
   );
 }
@@ -822,22 +826,13 @@ function EventDrilldown({
       </div>
       <div className="mv-col">
         {visible.length ? visible.map((row) => {
-          const content = (
-            <>
+          return (
+            <div key={row.id} className="mv-row">
               <span className="co">
-                <div className="n">{row.title}</div>
+                <div className="n">{rowTitle(row.title, row.symbol)}</div>
                 <div className="tk">{row.section} · {row.date} · {row.detail}</div>
               </span>
               <span className={`pc num ${row.valueClass ?? "neutral"}`}>{row.value}</span>
-            </>
-          );
-          return row.href ? (
-            <TransitionLink key={row.id} href={row.href} className="mv-row">
-              {content}
-            </TransitionLink>
-          ) : (
-            <div key={row.id} className="mv-row">
-              {content}
             </div>
           );
         }) : <EmptyRows label="검색 결과가 없습니다." />}
@@ -873,7 +868,7 @@ function EarningsPanel({ data }: { data: EventData | null }) {
           const symbol = rowSymbol(row);
           const timing = text(row.timing).toUpperCase();
           const detail = `${dateText(row.date)} · ${timing} · EPS ${numberText(row.eps_estimate)} · 매출 ${numberText(row.revenue_estimate)}`;
-          return makeRow(row, `${symbol} · ${text(row.name)}`, detail, numberText(row.market_cap), symbol ? stockHref(symbol) : undefined);
+          return makeRow(row, `${symbol} · ${text(row.name)}`, detail, numberText(row.market_cap), symbol || undefined);
         }) : <EmptyRows label="오늘 이후 어닝 일정이 없습니다." />}
       </div>
     </section>
@@ -893,7 +888,7 @@ function ActionsPanel({ data }: { data: EventData | null }) {
         <div className="mv-col">
           {recent.length ? recent.map((row) => {
             const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.name)}`, `${dateText(row.date)} · ${text(row.type)} · ${text(row.text)}`, text(row.other), symbol ? stockHref(symbol) : undefined);
+            return makeRow(row, `${symbol} · ${text(row.name)}`, `${dateText(row.date)} · ${text(row.type)} · ${text(row.text)}`, text(row.other), symbol || undefined);
           }) : <EmptyRows label="최근 기업 이벤트가 없습니다." />}
         </div>
       </section>
@@ -905,7 +900,7 @@ function ActionsPanel({ data }: { data: EventData | null }) {
         <div className="mv-col">
           {splits.length ? splits.map((row) => {
             const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.company_name)}`, `${dateText(row.date)} · ${text(row.type)}`, text(row.split_ratio), symbol ? stockHref(symbol) : undefined);
+            return makeRow(row, `${symbol} · ${text(row.company_name)}`, `${dateText(row.date)} · ${text(row.type)}`, text(row.split_ratio), symbol || undefined);
           }) : <EmptyRows label="표시할 분할·병합 항목이 없습니다." />}
         </div>
       </section>
@@ -928,7 +923,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
         </div>
         <div className="mv-col">
           {calendar.length ? calendar.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.ipo_date)} · ${text(row.exchange)} · ${text(row.price_range)}`, text(row.deal_size))
+            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.ipo_date)} · ${text(row.exchange)} · ${text(row.price_range)}`, text(row.deal_size), rowSymbol(row) || undefined)
           )) : <EmptyRows label="예정 IPO가 없습니다." />}
         </div>
       </section>
@@ -939,7 +934,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
         </div>
         <div className="mv-col">
           {recent.length ? recent.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.ipo_date)} · 공모가 ${text(row.ipo_price)} · 현재 ${text(row.current)}`, text(row.return), undefined, pctClass(row.return))
+            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.ipo_date)} · 공모가 ${text(row.ipo_price)} · 현재 ${text(row.current)}`, text(row.return), rowSymbol(row) || undefined, pctClass(row.return))
           )) : <EmptyRows label="최근 상장 성과가 없습니다." />}
         </div>
       </section>
@@ -950,7 +945,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
         </div>
         <div className="mv-col">
           {filings.length ? filings.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.filing_date)} · ${text(row.price_range)}`, text(row.shares_offered))
+            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.filing_date)} · ${text(row.price_range)}`, text(row.shares_offered), rowSymbol(row) || undefined)
           )) : <EmptyRows label="신규 신청 목록이 없습니다." />}
         </div>
       </section>
@@ -962,7 +957,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
         <div className="mv-col">
           {stats.length ? stats.map((row) => {
             const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.name)}`, "최근 IPO 통계에 포함된 상장", dateText(row.date), symbol ? stockHref(symbol) : undefined);
+            return makeRow(row, `${symbol} · ${text(row.name)}`, "최근 IPO 통계에 포함된 상장", dateText(row.date), symbol || undefined);
           }) : <EmptyRows label="IPO 활동 데이터가 없습니다." />}
         </div>
       </section>
@@ -973,7 +968,7 @@ function IpoPanel({ data }: { data: EventData | null }) {
         </div>
         <div className="mv-col">
           {withdrawn.length ? withdrawn.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.withdrawn_date)} · ${text(row.price_range)}`, text(row.shares_offered))
+            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.withdrawn_date)} · ${text(row.price_range)}`, text(row.shares_offered), rowSymbol(row) || undefined)
           )) : <EmptyRows label="철회 목록이 없습니다." />}
         </div>
       </section>
@@ -1008,7 +1003,7 @@ function MoversPanel({ data }: { data: EventData | null }) {
               const volume = firstText(row, group.volumeKeys ?? ["volume"]);
               const extra = firstText(row, group.extraKeys ?? []);
               const activity = extra !== "-" ? `기준가 ${extra}` : `거래량 ${volume}`;
-              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `가격 ${price} · ${activity} · 시총 ${text(row.market_cap)}`, value, symbol ? stockHref(symbol) : undefined, pctClass(value));
+              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `가격 ${price} · ${activity} · 시총 ${text(row.market_cap)}`, value, symbol || undefined, pctClass(value));
             }) : <EmptyRows label={`${group.title} 데이터가 없습니다.`} />}
           </div>
         </section>
