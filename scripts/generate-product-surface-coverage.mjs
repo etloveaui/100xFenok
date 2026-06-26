@@ -261,9 +261,12 @@ const surfaces = [
       check("기업 이벤트", eventSurfaces.names.includes("actions_recent") ? "ready" : "pending", "액션/분할"),
       check("IPO", eventSurfaces.names.some((name) => name.startsWith("ipos_")) ? "ready" : "pending", "IPO 표면"),
       check("급등락", eventSurfaces.names.some((name) => name.startsWith("market_")) ? "ready" : "pending", "무버 표면"),
-      // TEMP(2026-06-26): relaxed 7→14 to unblock Worker deploy while the StockAnalysis fetch
-      // cron is broken (market-audit hard_failed on delisted-ticker 404s), which stales market_events.
-      // Revert to 7 once the fetch cron is fixed and market_events refreshes.
+      // TEMP(2026-06-26): relaxed 7→14 to unblock Worker deploy. NOTE: 404s are NOT the cause
+      // (they are correctly expected-missing; market-audit hard_failed=0). The fetch-stockanalysis
+      // cron fails at the ETF history-gap report's plan==report 4-way assert — the unconditional
+      // plan refresh fixed the fetchable count, but total/inception still drift on GHA fetch-after
+      // data. surfaces frozen at 2026-06-17. Tracked as a separate deep-dive in BACKLOG.
+      // Revert to 7 once the cron actually refreshes surfaces.
       freshness("이벤트 표면 기준일", eventSurfaceAsOf, 14),
     ],
     "시장 이벤트는 수집 표면별 준비 상태가 곧 화면 준비 상태다.",
