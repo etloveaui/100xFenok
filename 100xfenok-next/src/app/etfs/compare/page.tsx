@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "ETF 겹침 비교 | 100xFenok",
   description: "ETF 상위 보유 항목 기준으로 구성 겹침과 핵심 지표를 비교합니다.",
   alternates: {
-    canonical: canonicalPath("/etfs/compare"),
+    canonical: canonicalPath(ROUTES.etfCompare),
   },
 };
 
@@ -27,7 +27,7 @@ export default async function EtfComparePage({ searchParams }: Props) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="etfs" title="ETF 비교" backHref="/etfs">
+      <AppShell active="etfs" title="ETF 비교" backHref={ROUTES.etfs}>
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">

@@ -350,7 +350,7 @@ function LeadStoryCardInner({ providedStory }: { providedStory?: LeadStory | nul
 
           <LeadStoryStep index={2} title="누가 들고 있나" meta="13F holder" open={revealedHop >= 2}>
             {topHolder ? (
-              <TransitionLink href={`/superinvestors?tab=gurus&guru=${encodeURIComponent(topHolder.investor)}`}>
+              <TransitionLink href={`${ROUTES.superinvestors}?tab=gurus&guru=${encodeURIComponent(topHolder.investor)}`}>
                 {formatInvestorName(topHolder.investor)}
                 <b>{fmtMoney(topHolder.market_value)}</b>
               </TransitionLink>

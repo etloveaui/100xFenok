@@ -1111,8 +1111,8 @@ export default function StockDetailClient({
                 <MarketFactsDepth ticker={symbol} />
               )}
               <footer className="stock-footer">
-                <TransitionLink href={isEtfAsset ? "/etfs" : "/screener"} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록으로 이동" : "스크리너로 이동"}</TransitionLink>
-                <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+                <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screener} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록으로 이동" : "스크리너로 이동"}</TransitionLink>
+                <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
               </footer>
             </div>
           </div>
@@ -1188,8 +1188,8 @@ export default function StockDetailClient({
     asOf: typeof marketFacts?.generated_at === "string" ? marketFacts.generated_at : null,
   });
   const sectorFilterHref = row?.sector
-    ? `/screener?sector=${encodeURIComponent(row.sector)}`
-    : "/screener";
+    ? `${ROUTES.screener}?sector=${encodeURIComponent(row.sector)}`
+    : ROUTES.screener;
 
   function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
@@ -1201,8 +1201,8 @@ export default function StockDetailClient({
         <div className="stock-main-stack">
           <EtfDataPanel ticker={symbol} data={etfData} loading={etfData === undefined} marketFacts={marketFacts} />
           <footer className="stock-footer">
-            <TransitionLink href={isEtfAsset ? "/etfs" : `/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록에서 보기" : "스크리너에서 보기"}</TransitionLink>
-            <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+            <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록에서 보기" : "스크리너에서 보기"}</TransitionLink>
+            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
           </footer>
         </div>
       );
@@ -1347,9 +1347,9 @@ export default function StockDetailClient({
           </SectionCard>
         )}
         <footer className="stock-footer">
-          <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-          <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
-          <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+          <TransitionLink href={ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+          <TransitionLink href={ROUTES.superinvestorsByTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
+          <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
         </footer>
       </div>
     );
@@ -1529,8 +1529,8 @@ export default function StockDetailClient({
           )}
 
           <footer className="stock-footer">
-            <TransitionLink href={`/screener?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-            <TransitionLink href={`/superinvestors?tab=by-ticker&ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
+            <TransitionLink href={ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+            <TransitionLink href={ROUTES.superinvestorsByTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
           </footer>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
+import { ROUTES } from "@/lib/routes";
 import MarketEventsClient from "./MarketEventsClient";
 
 interface Props {
@@ -20,7 +21,7 @@ export default async function MarketEventsPage({ searchParams }: Props) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="market" title="시장 이벤트" backHref="/market-valuation">
+      <AppShell active="market" title="시장 이벤트" backHref={ROUTES.market}>
         <MarketEventsClient
           initialTab={firstParam(params.tab)}
           initialQuery={firstParam(params.q)}

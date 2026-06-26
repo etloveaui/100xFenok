@@ -88,25 +88,12 @@ const PRODUCT_LITERAL_ALLOWLIST = [
   // Legacy embed route links — served via RouteEmbedFrame, not standard nav
   { file: "src/app/vr/page.tsx", literal: "/vr", reason: "VR route with legacy embed path query param, not a standard nav literal" },
 
-  // ===== FLAGGED: pre-existing nav-literal drift (needs ROUTES conversion in follow-up) =====
-  { file: "src/app/screener/StockDetailPanel.tsx", literal: "/portfolio", reason: "FLAGGED: pre-existing drift — should use ROUTES.portfolioTicker. Owner-gated backlog." },
-  { file: "src/app/sectors/IndustryMapPanel.tsx", literal: "/market/events", reason: "FLAGGED: pre-existing drift — should use ROUTES.marketEvents. Owner-gated backlog." },
-  { file: "src/app/etfs/compare/EtfCompareClient.tsx", literal: "/etfs/compare", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfCompareTickers. Owner-gated backlog." },
-  { file: "src/app/etfs/compare/page.tsx", literal: "/etfs/compare", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfCompare. Owner-gated backlog." },
-  { file: "src/app/etfs/compare/page.tsx", literal: "/etfs", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfs. Owner-gated backlog." },
-  { file: "src/app/market/events/page.tsx", literal: "/market-valuation", reason: "FLAGGED: pre-existing drift — should use ROUTES.market. Owner-gated backlog." },
-  { file: "src/app/market-valuation/structure/page.tsx", literal: "/market-valuation", reason: "FLAGGED: pre-existing drift — should use ROUTES.market. Owner-gated backlog." },
-  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/etfs", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfs. Owner-gated backlog." },
-  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/screener", reason: "FLAGGED: pre-existing drift — should use ROUTES.screener. Owner-gated backlog." },
-  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/portfolio", reason: "FLAGGED: pre-existing drift — should use ROUTES.portfolioTicker. Owner-gated backlog." },
-  { file: "src/app/stock/[ticker]/StockDetailClient.tsx", literal: "/superinvestors", reason: "FLAGGED: pre-existing drift — should use ROUTES.superinvestorsByTicker. Owner-gated backlog." },
-  { file: "src/components/connected/ConnectedView.tsx", literal: "/etfs/compare", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfCompareTickers. Owner-gated backlog." },
-  { file: "src/components/connected/ConnectedView.tsx", literal: "/etfs", reason: "FLAGGED: pre-existing drift — should use ROUTES.etfs. Owner-gated backlog." },
-  { file: "src/components/connected/LeadStoryCard.tsx", literal: "/superinvestors", reason: "FLAGGED: pre-existing drift — should use ROUTES.superinvestorsByTicker. Owner-gated backlog." },
-
   // Dynamic sentinel prefixes (existing allowlist)
   { file: "src/components/AppEnhancements.tsx", literal: "/etfs/", reason: "dynamic ETF detail prefix sentinel, not a navigable route literal" },
   { file: "src/components/AppEnhancements.tsx", literal: "/posts/", reason: "dynamic posts detail prefix sentinel, not a navigable route literal" },
+
+  // Owner-gated (Codex owns screener components, cannot touch)
+  { file: "src/app/screener/StockDetailPanel.tsx", literal: "/portfolio", reason: "owner-gated: Codex owns screener/, ROUTES conversion deferred" },
 ];
 
 const SYSTEM_PATH_EXEMPTIONS = [

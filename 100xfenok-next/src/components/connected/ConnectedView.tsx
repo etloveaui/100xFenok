@@ -39,9 +39,9 @@ function fmtDateish(value: unknown): string {
 
 function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string | null {
   const tickers = links.map((link) => link.ticker).filter(Boolean);
-  if (tickers.length >= 2) return `/etfs/compare?tickers=${encodeURIComponent(tickers.slice(0, 4).join(","))}`;
-  if (tickers.length === 1) return links[0]?.route || `/etfs/${encodeURIComponent(tickers[0])}`;
-  return "/etfs";
+  if (tickers.length >= 2) return ROUTES.etfCompareTickers(tickers.slice(0, 4));
+  if (tickers.length === 1) return links[0]?.route || ROUTES.etf(tickers[0]);
+  return ROUTES.etfs;
 }
 
 const INDEX_LABELS = {

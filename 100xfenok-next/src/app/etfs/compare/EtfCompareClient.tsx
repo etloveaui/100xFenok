@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import TickerChip from "@/components/TickerChip";
 import { formatSignedPercent } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
 import { MAX_COMPARE_TICKERS, buildCompareCsv, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
 import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
 
@@ -181,7 +182,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
     if (next.length < 2) return;
     setTickers(next);
     setInput(next.join(", "));
-    window.history.replaceState(null, "", `/etfs/compare?tickers=${encodeURIComponent(next.join(","))}`);
+    window.history.replaceState(null, "", ROUTES.etfCompareTickers(next));
   }
 
   return (

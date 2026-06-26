@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import AppShell from "@/components/shell/AppShell";
 import { MarketStructureDetailWired } from "@/lib/market-valuation/charts/marketStructurePanelComponents";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "시장 구조 상세 | 100xFenok",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 export default function MarketStructureDetailPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="market" title="시장 구조" backHref="/market-valuation">
+      <AppShell active="market" title="시장 구조" backHref={ROUTES.market}>
         <section className="panel mb-[var(--s4)]">
           <div className="panel-b">
             <MarketSectionNav active="valuation" />

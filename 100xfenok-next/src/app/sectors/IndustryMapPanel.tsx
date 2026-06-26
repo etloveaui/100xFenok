@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
+import { ROUTES } from "@/lib/routes";
 
 interface SurfaceDoc<T = EventRow> {
   fetched_at?: string | null;
@@ -389,7 +390,7 @@ export default function IndustryMapPanel() {
         <div className="panel-b">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
             <span>시장 이벤트의 산업 흐름은 이 섹터 화면에서 이어서 확인합니다.</span>
-            <TransitionLink href="/market/events" className="font-black text-brand-interactive hover:underline">
+            <TransitionLink href={ROUTES.marketEvents} className="font-black text-brand-interactive hover:underline">
               이벤트 보기
             </TransitionLink>
           </div>
