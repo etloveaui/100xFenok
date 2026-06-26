@@ -580,7 +580,7 @@ function V5ConnectionConsoleInner() {
     <section className="panel v5-connected v5-connection-console" aria-labelledby="v5-connected-title">
       <div className="panel-h">
         <h2 id="v5-connected-title">연결 콘솔</h2>
-        <span className="desc">{summary.generatedAt ? formatDatePart(summary.generatedAt) : loaded ? "대기" : "확인 중"}</span>
+        <span className="desc">{summary.generatedAt ? formatDatePart(summary.generatedAt) : loaded ? "대기" : <span className="v5-skel v5-skel--text skeleton" aria-hidden="true" />}</span>
       </div>
       <div className="v5-connection-console__rows">
         {tiles.map((tile) => {
@@ -594,7 +594,7 @@ function V5ConnectionConsoleInner() {
                   <p>{tile.description}</p>
                 </div>
                 <div className="v5-connection-row__metric">
-                  <b className="num">{tile.value}</b>
+                  <b className="num">{loaded ? tile.value : <span className="v5-skel v5-skel--num skeleton" aria-hidden="true" />}</b>
                   <small>{tile.meta}</small>
                 </div>
                 <button
@@ -602,6 +602,7 @@ function V5ConnectionConsoleInner() {
                   className="v5-peek-button"
                   aria-expanded={isOpen}
                   onClick={() => openTile(tile)}
+                  disabled={!loaded}
                 >
                   {isOpen ? "[peek ▴]" : "[peek ▾]"}
                 </button>
