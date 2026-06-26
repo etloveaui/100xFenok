@@ -2003,9 +2003,12 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
           </TransitionLink>
           <TransitionLink
             href={ROUTES.stock(ticker)}
-            className="inline-flex min-h-8 items-center rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_5%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_10%,transparent)]"
+            className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_8%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_14%,transparent)]"
           >
-            전체 화면
+            <span className="orbitron rounded-full bg-[var(--brand-interactive)] px-2 py-0.5 text-[9px] font-black text-white">
+              {ticker}
+            </span>
+            종목 상세 →
           </TransitionLink>
         </div>
       </div>

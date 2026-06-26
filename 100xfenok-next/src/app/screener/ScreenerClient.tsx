@@ -522,10 +522,10 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
 }
 
 const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  basic: ["marketCap", "per", "dividendYield", "return12m"],
-  action: ["marketCap", "guruHolders", "return12m", "dividendYield"],
-  connected: ["connectionCount", "guruHolders", "forwardPeFy1", "return12m"],
-  value: ["per", "peForward", "pbr", "perBandCurrent", "roe", "opm"],
+  basic: ["marketCap", "per", "pbr", "dividendYield", "return12m", "roe", "opm", "eps"],
+  action: ["actionScore", "marketCap", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "connectionCount"],
+  connected: ["connectionCount", "guruHolders", "forwardPeFy1", "return12m", "marketCap", "perBandCurrent", "dividendYield", "ret1y"],
+  value: ["per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
   estimate: [
     "forwardPeFy1",
     "forwardPeFy2",
@@ -549,9 +549,9 @@ const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
     "grossMarginFy2",
     "grossMarginFy3",
   ],
-  momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m"],
-  dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y"],
-  guru: ["guruHolders", "per", "peForward", "return12m"],
+  momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
+  dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
+  guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
 };
 
 function columnLabel(key: ScreenerSortKey): string {
@@ -643,9 +643,10 @@ function buildMobileEstimateTrendSections(stock: ScreenerStock): MobileEstimateT
     .filter((section) => section.rows.length > 0);
 }
 
-function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
+function MobileEstimateTrendSections({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
   const sections = buildMobileEstimateTrendSections(stock);
   if (sections.length === 0) {
+    if (compact) return null;
     return (
       <div className="px-3 pb-3">
         <div className="border-t border-[var(--c-line-2)] pt-3 text-xs font-bold text-[var(--c-ink-3)]">추정치 없음</div>
@@ -654,9 +655,15 @@ function MobileEstimateTrendSections({ stock }: { stock: ScreenerStock }) {
   }
 
   return (
-    <div className="space-y-3 px-3 pb-3">
+    <div
+      data-testid={compact ? "screener-mobile-estimate-trend" : undefined}
+      className={cx(
+        "space-y-3 px-3",
+        compact ? "border-t border-[var(--c-line-2)] py-3" : "pb-3",
+      )}
+    >
       {sections.map((section) => (
-        <div key={section.title} className="border-t border-[var(--c-line-2)] pt-3">
+        <div key={section.title} className={compact ? "rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2" : "border-t border-[var(--c-line-2)] pt-3"}>
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
             <span className="grid min-w-[132px] grid-cols-3 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)]">
@@ -716,7 +723,7 @@ function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metr
 
 function mobileMetricKeys(preset: ColumnPreset): ScreenerSortKey[] {
   const keys = MOBILE_PRESET_KEYS[preset];
-  return preset === "value" ? keys.slice(0, 5) : keys.slice(0, 4);
+  return keys.slice(0, 8);
 }
 
 function MobileStockCard({
@@ -804,17 +811,14 @@ function MobileStockCard({
           </span>
         </span>
       </button>
+      <div data-testid="screener-mobile-metric-grid" className="grid grid-cols-2 gap-2 border-t border-[var(--c-line-2)] px-3 py-3 sm:grid-cols-4">
+        {metrics.map((metricKey) => (
+          <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
+        ))}
+      </div>
+      {preset === "estimate" ? <MobileEstimateTrendSections stock={stock} compact /> : null}
       {expanded ? (
         <div id={detailId} className="border-t border-[var(--c-line-2)]">
-          {preset === "estimate" ? (
-            <MobileEstimateTrendSections stock={stock} />
-          ) : (
-            <div className="grid grid-cols-2 gap-2 px-3 pb-3 pt-3 sm:grid-cols-3">
-              {metrics.map((metricKey) => (
-                <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
-              ))}
-            </div>
-          )}
           <StockDetailPanel ticker={stock.ticker} stock={stock} />
         </div>
       ) : null}
@@ -1168,6 +1172,19 @@ export default function ScreenerClient({
 
   const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
   const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || bandFilter || actionFilter || connectionFilter);
+  const activeAdvancedFilterCount = [
+    perMax,
+    forwardPerMax,
+    revenueGrowthMin,
+    epsGrowthMin,
+    dividendYieldMin,
+    roeFy1Min,
+    ret3yMin,
+    ret5yMin,
+    bandFilter,
+    actionFilter,
+    connectionFilter,
+  ].filter(Boolean).length;
 
   return (
     <div className="data-shell-page">
@@ -1447,9 +1464,21 @@ export default function ScreenerClient({
           onClick={() => setFiltersOpen((value) => !value)}
           aria-expanded={filtersOpen}
           aria-controls="advanced-filters"
-          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] md:hidden"
+          aria-label={`고급 필터 ${filtersOpen ? "접기" : "열기"}${activeAdvancedFilterCount > 0 ? `, ${activeAdvancedFilterCount}개 적용 중` : ""}`}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] md:hidden"
         >
-          {filtersOpen ? "고급 필터 접기" : advancedFiltersActive ? "고급 필터 적용 중" : "고급 필터 열기"}
+          <span>{filtersOpen ? "고급 필터 접기" : "고급 필터 열기"}</span>
+          <span
+            data-testid="screener-mobile-advanced-count"
+            className={cx(
+              "inline-flex min-h-7 shrink-0 items-center rounded-full px-2.5 text-[10px] tracking-normal",
+              advancedFiltersActive
+                ? "bg-[var(--brand-interactive)] text-white"
+                : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-2)]",
+            )}
+          >
+            {activeAdvancedFilterCount > 0 ? `${activeAdvancedFilterCount}개 적용` : "상세 조건"}
+          </span>
         </button>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <label className="inline-flex items-center gap-2 text-sm font-bold text-[var(--c-ink-2)]">
