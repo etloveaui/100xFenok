@@ -173,8 +173,11 @@ async function checkEtfDetails(root) {
   const adiu = await fetchJson(`${root}/api/data/stockanalysis/etfs/ADIU`);
   assert(adiu?.ticker === "ADIU", "ADIU fallback ticker mismatch");
   assert(adiu?.asset_type === "etf", "ADIU fallback must be ETF");
-  assert(["surface_only", "universe_only"].includes(adiu?.detail_status), `ADIU fallback status invalid: ${adiu?.detail_status}`);
-  assert(adiu?.normalized?.overview?.name, "ADIU fallback overview name missing");
+  assert(["surface_only", "universe_only", "yf_fallback"].includes(adiu?.detail_status), `ADIU fallback status invalid: ${adiu?.detail_status}`);
+  // yf_fallback (Yahoo) carries classification but may lack a stockanalysis overview name; require the name only for stockanalysis-sourced fallbacks.
+  if (adiu?.detail_status !== "yf_fallback") {
+    assert(adiu?.normalized?.overview?.name, "ADIU fallback overview name missing");
+  }
   assert(adiu?.normalized?.classification?.is_leveraged === true, "ADIU fallback leveraged classification missing");
   assert(adiu?.normalized?.classification?.is_single_stock === true, "ADIU fallback single-stock classification missing");
   assert(adiu?.normalized?.classification?.underlying === "ADI", `ADIU fallback underlying mismatch: ${adiu?.normalized?.classification?.underlying}`);
