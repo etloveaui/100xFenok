@@ -83,6 +83,18 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run cf:build
 
+      - name: Verify build manifest routes presence
+        run: node scripts/check-source-paths.mjs
+
+      - name: Verify Cloudflare token presence
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "ERROR: CLOUDFLARE_API_TOKEN secret is missing or empty. Deploy cannot proceed."
+            exit 1
+          fi
+
       - name: Deploy to Cloudflare Workers
         working-directory: 100xfenok-next
         run: npx wrangler deploy
