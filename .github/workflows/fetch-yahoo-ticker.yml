@@ -40,23 +40,41 @@ jobs:
           // applies deriveMarketStateFromTradingPeriods fallback + 5min edge cache.
           const WORKER_BASE = 'https://ticker-api.etloveaui.workers.dev/api/ticker';
 
-          function fetchJson(url) {
-            return new Promise((resolve, reject) => {
-              https.get(url, { headers: { 'Accept': 'application/json' } }, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                  try {
-                    if (res.statusCode < 200 || res.statusCode >= 300) {
-                      throw new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
-                    }
-                    resolve(JSON.parse(data));
-                  } catch (e) {
-                    reject(e);
-                  }
+          const MAX_RETRIES = 2;
+          const BACKOFFS_MS = [1000, 2000, 4000];
+          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+          async function fetchJson(url) {
+            let lastError;
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+              try {
+                if (attempt > 0) {
+                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
+                  console.error(`[retry] ${url} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
+                  await sleep(delay);
+                }
+                return await new Promise((resolve, reject) => {
+                  https.get(url, { headers: { 'Accept': 'application/json' } }, (res) => {
+                    let data = '';
+                    res.on('data', chunk => data += chunk);
+                    res.on('end', () => {
+                      try {
+                        if (res.statusCode < 200 || res.statusCode >= 300) {
+                          throw new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
+                        }
+                        resolve(JSON.parse(data));
+                      } catch (e) {
+                        reject(e);
+                      }
+                    });
+                  }).on('error', reject);
                 });
-              }).on('error', reject);
-            });
+              } catch (e) {
+                lastError = e;
+                if (attempt < MAX_RETRIES) continue;
+              }
+            }
+            throw lastError;
           }
 
           function toFiniteNumber(value) {

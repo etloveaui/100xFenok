@@ -48,37 +48,52 @@ jobs:
             return date.toISOString().split('T')[0];
           }
 
-          function fetchSeries(seriesId, days) {
-            return new Promise((resolve) => {
-              const end = formatDate(new Date());
-              const startDate = new Date();
-              startDate.setDate(startDate.getDate() - days);
-              const start = formatDate(startDate);
-              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+          const MAX_RETRIES = 2;
+          const BACKOFFS_MS = [1000, 2000, 4000];
+          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-              https.get(url, (res) => {
-                let data = '';
-                res.on('data', (chunk) => { data += chunk; });
-                res.on('end', () => {
-                  try {
-                    const json = JSON.parse(data);
-                    const observations = Array.isArray(json.observations) ? json.observations : [];
-                    const rows = observations
-                      .filter((item) => item.value !== '.')
-                      .map((item) => ({ date: item.date, value: Number(item.value) }))
-                      .filter((item) => item.date && Number.isFinite(item.value));
-                    console.log(`${seriesId}: ${rows.length} points`);
-                    resolve({ id: seriesId, data: rows });
-                  } catch (error) {
-                    console.error(`${seriesId}: parse error - ${error.message}`);
-                    resolve({ id: seriesId, data: [] });
-                  }
+          async function fetchSeries(seriesId, days) {
+            const end = formatDate(new Date());
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            const start = formatDate(startDate);
+            const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}&sort_order=asc`;
+
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+              try {
+                if (attempt > 0) {
+                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
+                  console.error(`[retry] ${seriesId} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
+                  await sleep(delay);
+                }
+                const result = await new Promise((resolve, reject) => {
+                  https.get(url, (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => { data += chunk; });
+                    res.on('end', () => {
+                      try {
+                        const json = JSON.parse(data);
+                        const observations = Array.isArray(json.observations) ? json.observations : [];
+                        const rows = observations
+                          .filter((item) => item.value !== '.')
+                          .map((item) => ({ date: item.date, value: Number(item.value) }))
+                          .filter((item) => item.date && Number.isFinite(item.value));
+                        console.log(`${seriesId}: ${rows.length} points`);
+                        resolve({ id: seriesId, data: rows });
+                      } catch (error) {
+                        reject(new Error(`${seriesId}: parse error - ${error.message}`));
+                      }
+                    });
+                  }).on('error', reject);
                 });
-              }).on('error', (error) => {
-                console.error(`${seriesId}: network error - ${error.message}`);
-                resolve({ id: seriesId, data: [] });
-              });
-            });
+                return result;
+              } catch (error) {
+                if (attempt < MAX_RETRIES) continue;
+                console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${error.message}`);
+                return { id: seriesId, data: [] };
+              }
+            }
+            return { id: seriesId, data: [] };
           }
 
           async function main() {

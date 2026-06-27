@@ -70,28 +70,49 @@ const today = new Date().toISOString().slice(0, 10);
 
 // ─── HTTP ─────────────────────────────────────────────────────────────────────
 
-function fetchJson(url, { headers = {}, timeoutMs = 30000 } = {}) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers }, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 160)}`));
-          return;
-        }
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          reject(new Error(`JSON parse failed: ${e.message} :: ${data.slice(0, 120)}`));
-        }
+function sleepMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchJson(url, { headers = {}, timeoutMs = 30000 } = {}) {
+  const MAX_RETRIES = 2;
+  const BACKOFFS_MS = [1000, 2000, 4000];
+  let lastError;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
+        console.error(`[retry] ${url} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
+        await sleepMs(delay);
+      }
+      return await new Promise((resolve, reject) => {
+        const req = https.get(url, { headers }, (res) => {
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+              reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 160)}`));
+              return;
+            }
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error(`JSON parse failed: ${e.message} :: ${data.slice(0, 120)}`));
+            }
+          });
+        });
+        req.on('error', reject);
+        req.setTimeout(timeoutMs, () => {
+          req.destroy(new Error(`timeout after ${timeoutMs}ms`));
+        });
       });
-    });
-    req.on('error', reject);
-    req.setTimeout(timeoutMs, () => {
-      req.destroy(new Error(`timeout after ${timeoutMs}ms`));
-    });
-  });
+    } catch (err) {
+      lastError = err;
+      if (attempt < MAX_RETRIES) continue;
+    }
+  }
+  throw lastError;
 }
 
 // ─── Merge-by-date (cnn.gs / vix.gs semantics) ─────────────────────────────────

@@ -56,34 +56,49 @@ jobs:
             { id: 'BAMLH0A0HYM2', name: 'HY Spread' }
           ];
 
-          function fetchSeries(seriesId, days = 9999) {
-            return new Promise((resolve) => {
-              const end = new Date().toISOString().split('T')[0];
-              const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+          const MAX_RETRIES = 2;
+          const BACKOFFS_MS = [1000, 2000, 4000];
+          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-              https.get(url, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                  try {
-                    const json = JSON.parse(data);
-                    const observations = json.observations || [];
-                    const result = observations
-                      .filter(o => o.value !== '.')
-                      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
-                    console.log(`${seriesId}: ${result.length} points`);
-                    resolve({ id: seriesId, data: result });
-                  } catch (e) {
-                    console.error(`${seriesId}: Error - ${e.message}`);
-                    resolve({ id: seriesId, data: [] });
-                  }
+          async function fetchSeries(seriesId, days = 9999) {
+            const end = new Date().toISOString().split('T')[0];
+            const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+            const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+              try {
+                if (attempt > 0) {
+                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
+                  console.error(`[retry] ${seriesId} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
+                  await sleep(delay);
+                }
+                const result = await new Promise((resolve, reject) => {
+                  https.get(url, (res) => {
+                    let data = '';
+                    res.on('data', chunk => data += chunk);
+                    res.on('end', () => {
+                      try {
+                        const json = JSON.parse(data);
+                        const observations = json.observations || [];
+                        const points = observations
+                          .filter(o => o.value !== '.')
+                          .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                        console.log(`${seriesId}: ${points.length} points`);
+                        resolve({ id: seriesId, data: points });
+                      } catch (e) {
+                        reject(new Error(`${seriesId}: Parse error - ${e.message}`));
+                      }
+                    });
+                  }).on('error', reject);
                 });
-              }).on('error', (e) => {
-                console.error(`${seriesId}: Network error - ${e.message}`);
-                resolve({ id: seriesId, data: [] });
-              });
-            });
+                return result;
+              } catch (e) {
+                if (attempt < MAX_RETRIES) continue;
+                console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${e.message}`);
+                return { id: seriesId, data: [] };
+              }
+            }
+            return { id: seriesId, data: [] };
           }
 
           async function main() {
@@ -216,34 +231,49 @@ jobs:
             { id: 'CORCREXFACBS', name: 'CRE NCO' }
           ];
 
-          function fetchSeries(seriesId, days = 9999) {
-            return new Promise((resolve) => {
-              const end = new Date().toISOString().split('T')[0];
-              const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-              const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+          const MAX_RETRIES = 2;
+          const BACKOFFS_MS = [1000, 2000, 4000];
+          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-              https.get(url, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                  try {
-                    const json = JSON.parse(data);
-                    const observations = json.observations || [];
-                    const result = observations
-                      .filter(o => o.value !== '.')
-                      .map(o => ({ date: o.date, value: parseFloat(o.value) }));
-                    console.log(`${seriesId}: ${result.length} points`);
-                    resolve({ id: seriesId, data: result });
-                  } catch (e) {
-                    console.error(`${seriesId}: Error - ${e.message}`);
-                    resolve({ id: seriesId, data: [] });
-                  }
+          async function fetchSeries(seriesId, days = 9999) {
+            const end = new Date().toISOString().split('T')[0];
+            const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+            const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${API_KEY}&file_type=json&observation_start=${start}&observation_end=${end}`;
+
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+              try {
+                if (attempt > 0) {
+                  const delay = BACKOFFS_MS[Math.min(attempt - 1, BACKOFFS_MS.length - 1)] ?? 1000;
+                  console.error(`[retry] ${seriesId} attempt ${attempt + 1}/${MAX_RETRIES + 1} after ${delay}ms`);
+                  await sleep(delay);
+                }
+                const result = await new Promise((resolve, reject) => {
+                  https.get(url, (res) => {
+                    let data = '';
+                    res.on('data', chunk => data += chunk);
+                    res.on('end', () => {
+                      try {
+                        const json = JSON.parse(data);
+                        const observations = json.observations || [];
+                        const points = observations
+                          .filter(o => o.value !== '.')
+                          .map(o => ({ date: o.date, value: parseFloat(o.value) }));
+                        console.log(`${seriesId}: ${points.length} points`);
+                        resolve({ id: seriesId, data: points });
+                      } catch (e) {
+                        reject(new Error(`${seriesId}: Parse error - ${e.message}`));
+                      }
+                    });
+                  }).on('error', reject);
                 });
-              }).on('error', (e) => {
-                console.error(`${seriesId}: Network error - ${e.message}`);
-                resolve({ id: seriesId, data: [] });
-              });
-            });
+                return result;
+              } catch (e) {
+                if (attempt < MAX_RETRIES) continue;
+                console.error(`${seriesId}: Failed after ${MAX_RETRIES + 1} attempts - ${e.message}`);
+                return { id: seriesId, data: [] };
+              }
+            }
+            return { id: seriesId, data: [] };
           }
 
           async function main() {
