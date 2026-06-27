@@ -233,7 +233,7 @@ const NAV: NavItem[] = [
   {
     id: "alphaScout",
     group: "더보기",
-    label: "Alpha Scout",
+    label: "Alpha Scout (미리보기)",
     href: ROUTES.alphaScout,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -245,7 +245,7 @@ const NAV: NavItem[] = [
   {
     id: "stockAnalyzer",
     group: "더보기",
-    label: "종목분석",
+    label: "종목분석 (레거시)",
     href: ROUTES.stockAnalyzer,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
