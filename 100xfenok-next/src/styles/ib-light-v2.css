@@ -15,7 +15,11 @@
 .ib-v2-shell {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - var(--nav-height-desktop, 64px));
+  /* Bounded viewport height so .ib-scroll owns the scroll (overflow:auto engages)
+     instead of the document scrolling and the sticky .ib-foot overlapping cards.
+     /ib is a standalone app route (global nav absent, shell offsetTop=0). */
+  height: 100vh;
+  height: 100dvh;
   background: var(--paper-0);
 }
 
