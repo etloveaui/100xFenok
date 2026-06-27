@@ -47,7 +47,13 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
   );
 
   if (version !== "v1" && !rawPath && !rawReport) {
-    return <AlphaScoutV2Client />;
+    return (
+      <div className="fnk-shell">
+        <AppShell active="explore" title="Alpha Scout" backHref={ROUTES.explore}>
+          <AlphaScoutV2Client />
+        </AppShell>
+      </div>
+    );
   }
 
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['alpha-scout/'] });
