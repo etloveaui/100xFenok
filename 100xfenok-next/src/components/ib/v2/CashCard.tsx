@@ -2,21 +2,24 @@
 
 import { v2cx } from "@/components/dashboard/v2/types";
 import Fresh from "./Fresh";
-import { CASH_BASE, type AlertState, type Profile } from "./mockData";
+import type { AlertState, CashSnapshot, Profile } from "./mockData";
 
 type Props = {
   alertState: AlertState;
   skeleton?: boolean;
   profile: Profile;
+  cash: CashSnapshot;
 };
 
-export default function CashCard({ alertState, skeleton, profile }: Props) {
+export default function CashCard({ alertState, skeleton, profile, cash }: Props) {
   const isWarn = alertState === "warn";
   const isBad = alertState === "margin-call";
   const cardCls = isBad ? "ib-card--bad" : isWarn ? "ib-card--warn" : "";
   const tone: "ok" | "warn" | "bad" = isBad ? "bad" : isWarn ? "warn" : "ok";
 
-  const deficit = isBad ? 680 : isWarn ? 420 : 0;
+  const deficit = isBad
+    ? Math.max(0, cash.nextBuy - cash.bal)
+    : Math.max(0, cash.nextBuy * 2 - cash.bal);
   const headerLabel = isBad
     ? "Cash · MARGIN CALL"
     : isWarn
@@ -86,27 +89,27 @@ export default function CashCard({ alertState, skeleton, profile }: Props) {
 
         <div className="ib-cashfield">
           <span className="ib-cashfield__unit">$</span>
-          <input defaultValue="1,080.00" aria-label="현금 잔고" />
+          <input value={cash.bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} aria-label="현금 잔고" readOnly />
           <span className="ib-cashfield__unit">USD</span>
         </div>
 
         <div className="ib-cashrows">
           <div className="ib-cashrow">
-            <span>다음 매수 (TQQQ+SOXL)</span>
-            <b>${CASH_BASE.nextBuy.toFixed(2)}</b>
+            <span>다음 매수 ({profile.tickers.join("+") || "-"})</span>
+            <b>${cash.nextBuy.toFixed(2)}</b>
           </div>
           <div className="ib-cashrow">
             <span>향후 5회 필요금액</span>
-            <b>${CASH_BASE.needed5.toLocaleString()}.00</b>
+            <b>${cash.needed5.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>
           </div>
           <div className="ib-cashrow">
             <span>현재 보유</span>
-            <b>${CASH_BASE.bal.toLocaleString()}.00</b>
+            <b>${cash.bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>
           </div>
           {isWarn || isBad ? (
             <div className={v2cx("ib-cashrow", "delta")}>
               <span>부족액</span>
-              <b>−${deficit}.00</b>
+              <b>−${deficit.toFixed(2)}</b>
             </div>
           ) : null}
         </div>

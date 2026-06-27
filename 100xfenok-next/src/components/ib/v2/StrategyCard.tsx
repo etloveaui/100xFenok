@@ -60,6 +60,7 @@ export default function StrategyCard({ t, compact, skeleton }: Props) {
             <div className="ib-tk__sym">{t.sym}</div>
             <div className="ib-tk__meta">
               {t.name} · {t.exch}
+              {t.priceSource ? <span className="ib-source-badge">{t.priceSource}</span> : null}
             </div>
             <span className={v2cx("ib-tk__state", t.state === "closed" && "ib-tk__state--closed")}>
               MARKET {t.state.toUpperCase()}
@@ -73,6 +74,13 @@ export default function StrategyCard({ t, compact, skeleton }: Props) {
             </div>
           </div>
         </div>
+
+        {t.error ? (
+          <div className="ib-inline-alert">
+            <i className="fas fa-exclamation-triangle" aria-hidden="true" />
+            <span>{t.error}</span>
+          </div>
+        ) : null}
 
         <div className={v2cx("ib-inputs", compact && "fold")}>
           <div className="ib-in">

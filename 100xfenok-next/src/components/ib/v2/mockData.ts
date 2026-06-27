@@ -42,6 +42,9 @@ export type StrategyData = {
   };
   orders: OrderRowData[];
   nextN: number;
+  priceSource?: string;
+  error?: string;
+  calculation?: unknown;
 };
 
 export const PROFILES: Profile[] = [

@@ -2,9 +2,14 @@
 
 import type { Profile } from "./mockData";
 
-type Props = { profile: Profile; onOpenPicker: () => void };
+type Props = {
+  profile: Profile;
+  onOpenPicker: () => void;
+  onRefresh: () => void;
+  isRefreshing?: boolean;
+};
 
-export default function IbNav({ profile, onOpenPicker }: Props) {
+export default function IbNav({ profile, onOpenPicker, onRefresh, isRefreshing }: Props) {
   return (
     <div className="ib-nav">
       <button className="ib-nav__back" aria-label="뒤로">
@@ -20,8 +25,8 @@ export default function IbNav({ profile, onOpenPicker }: Props) {
         </button>
       </div>
       <div className="ib-nav__actions">
-        <button className="ib-nav__icn" aria-label="새로고침">
-          <i className="fas fa-sync-alt" aria-hidden="true" />
+        <button className="ib-nav__icn" aria-label="새로고침" onClick={onRefresh} disabled={isRefreshing}>
+          <i className={`fas fa-sync-alt${isRefreshing ? " fa-spin" : ""}`} aria-hidden="true" />
         </button>
         <button className="ib-nav__icn" aria-label="추가 메뉴">
           <i className="fas fa-bars" aria-hidden="true" />

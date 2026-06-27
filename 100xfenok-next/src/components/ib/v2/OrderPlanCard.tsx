@@ -64,9 +64,9 @@ function OrderRow({ r, isNext, open, onToggle }: RowProps) {
   );
 }
 
-type Props = { t: StrategyData; compact?: boolean; skeleton?: boolean };
+type Props = { t: StrategyData; compact?: boolean; skeleton?: boolean; error?: string };
 
-export default function OrderPlanCard({ t, compact, skeleton }: Props) {
+export default function OrderPlanCard({ t, compact, skeleton, error }: Props) {
   const initialIdx = t.orders.findIndex((o) => o.n === t.nextN);
   const [openIdx, setOpenIdx] = useState(initialIdx);
 
@@ -122,15 +122,25 @@ export default function OrderPlanCard({ t, compact, skeleton }: Props) {
           </div>
         </div>
         <div className="ib-orders">
-          {rows.map((r, i) => (
-            <OrderRow
-              key={r.n}
-              r={r}
-              isNext={r.n === t.nextN}
-              open={openIdx === i}
-              onToggle={() => setOpenIdx(openIdx === i ? -1 : i)}
-            />
-          ))}
+          {error ? (
+            <div className="ib-inline-alert">
+              <i className="fas fa-exclamation-triangle" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          ) : null}
+          {rows.length > 0 ? (
+            rows.map((r, i) => (
+              <OrderRow
+                key={`${r.side}-${r.n}-${r.type}`}
+                r={r}
+                isNext={r.n === t.nextN}
+                open={openIdx === i}
+                onToggle={() => setOpenIdx(openIdx === i ? -1 : i)}
+              />
+            ))
+          ) : (
+            <div className="ib-empty-note">주문 없음</div>
+          )}
         </div>
       </div>
     </section>
