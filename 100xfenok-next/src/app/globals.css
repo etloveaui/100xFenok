@@ -954,19 +954,22 @@ main {
   padding-bottom: 1rem;
 }
 
-/* Design V2/V3/V4 — hide V1 chrome wrappers when alternate version is active */
+/* Hide V1 chrome wrappers (legacy GNB navbar + footer) when an alternate design
+   version, the product shell, or any immersive (chrome-less full-screen) route is
+   active. Immersive routes opt in via [data-immersive-route] — currently winddown*
+   and /ib (data-immersive-route="ib"). */
 body.design-v2 [data-v1-chrome],
 body.design-v3 [data-v1-chrome],
 body.design-v4 [data-v1-chrome],
 body.fnk-shell-on [data-v1-chrome],
-body:has([data-immersive-route^="winddown"]) [data-v1-chrome] { display: none !important; }
+body:has([data-immersive-route]) [data-v1-chrome] { display: none !important; }
 body.fnk-shell-on .app-mobile-dock,
-body:has([data-immersive-route^="winddown"]) .app-mobile-dock { display: none !important; }
+body:has([data-immersive-route]) .app-mobile-dock { display: none !important; }
 body.design-v2 main,
 body.design-v3 main,
 body.design-v4 main,
 body.fnk-shell-on main { padding-top: 0 !important; padding-bottom: 0 !important; }
-body:has([data-immersive-route^="winddown"]) #main-content {
+body:has([data-immersive-route]) #main-content {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
