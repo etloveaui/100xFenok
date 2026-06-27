@@ -79,6 +79,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:ib-parity
 
+      - name: Verify IB V2 live-data input quirks
+        working-directory: 100xfenok-next
+        run: npm run qa:ib-live-data
+
       - name: Verify public SEO surface
         working-directory: 100xfenok-next
         run: npm run qa:seo-surface
