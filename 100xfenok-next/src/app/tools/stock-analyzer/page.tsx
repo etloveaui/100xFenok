@@ -35,7 +35,7 @@ export default async function StockAnalyzerPage({ searchParams }: PageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="explore" title="Stock Analyzer" backHref={ROUTES.explore}>
+      <AppShell active="stockAnalyzer" title="Stock Analyzer" backHref={ROUTES.explore}>
         {frame}
       </AppShell>
     </div>

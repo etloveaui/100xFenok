@@ -32,7 +32,7 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
     const native = <MarketWrapV2 />;
     return (
       <div className="fnk-shell">
-        <AppShell active="explore" title="100x Daily Wrap" backHref={ROUTES.explore}>
+        <AppShell active="dailyWrap" title="100x Daily Wrap" backHref={ROUTES.explore}>
           {native}
         </AppShell>
       </div>
@@ -57,7 +57,7 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
 
   return (
     <div className="fnk-shell">
-      <AppShell active="explore" title="100x Daily Wrap" backHref={ROUTES.explore}>
+      <AppShell active="dailyWrap" title="100x Daily Wrap" backHref={ROUTES.explore}>
         {frame}
       </AppShell>
     </div>

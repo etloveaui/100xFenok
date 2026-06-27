@@ -74,6 +74,7 @@
 .fnk-shell .rail-logo{display:flex; align-items:center; gap:var(--s2); height:var(--topbar-h); padding:0 var(--s5); font-size:17px; font-weight:700; letter-spacing:-.02em; border-bottom:1px solid var(--c-line)}
 .fnk-shell .rail-logo b{color:var(--c-ink)}
 .fnk-shell .rail-nav{flex:1; padding:var(--s4) var(--s3); display:flex; flex-direction:column; gap:2px; overflow-y:auto}
+.fnk-shell .rail-group{display:flex; flex-direction:column; gap:2px}
 .fnk-shell .rail-sect{font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--c-ink-4); padding:var(--s3) var(--s3) var(--s2)}
 .fnk-shell .rail-item{display:flex; align-items:center; gap:var(--s3); padding:10px var(--s3); border-radius:10px; color:var(--c-ink-2); font-size:15px; font-weight:600; cursor:pointer; text-decoration:none; position:relative; transition:.14s}
 .fnk-shell .rail-item svg{width:20px; height:20px; flex:none; color:var(--c-ink-3); transition:.14s}
@@ -375,13 +376,13 @@
 
   .fnk-shell .mobile-more-sheet{position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end}
   .fnk-shell .mobile-more-backdrop{position:absolute; inset:0; background:rgba(15,23,42,.38)}
-  .fnk-shell .mobile-more-panel{position:relative; background:var(--c-panel); border-radius:20px 20px 0 0; padding:var(--s4) var(--s4) calc(var(--s4) + var(--safe-b)); box-shadow:var(--sh-pop)}
+  .fnk-shell .mobile-more-panel{position:relative; display:flex; max-height:min(82dvh,640px); flex-direction:column; background:var(--c-panel); border-radius:20px 20px 0 0; padding:var(--s4) var(--s4) calc(var(--s4) + var(--safe-b)); box-shadow:var(--sh-pop)}
   .fnk-shell .mobile-more-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s3)}
   .fnk-shell .mobile-more-header span{font-size:15px; font-weight:800; color:var(--c-ink)}
   .fnk-shell .mobile-more-close{width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:10px; background:transparent; color:var(--c-ink-2)}
   .fnk-shell .mobile-more-close:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-close svg{width:20px; height:20px}
-  .fnk-shell .mobile-more-list{display:grid; gap:2px}
+  .fnk-shell .mobile-more-list{display:grid; gap:2px; overflow-y:auto; overscroll-behavior:contain}
   .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:12px; color:var(--c-ink); font-size:15px; font-weight:700}
   .fnk-shell .mobile-more-item:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-item.on{background:var(--c-brand-soft); color:var(--c-brand)}

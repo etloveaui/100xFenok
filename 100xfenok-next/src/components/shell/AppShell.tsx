@@ -40,14 +40,23 @@ export type ShellPage =
   | "screener"
   | "superinvestors"
   | "portfolio"
-  | "chart";
+  | "chart"
+  | "dailyWrap"
+  | "posts"
+  | "alphaScout"
+  | "stockAnalyzer"
+  | "ib"
+  | "vr";
 
-type NavItem = { id: ShellPage; label: string; href: string; icon: ReactNode };
+type NavGroupName = "분석" | "도구" | "더보기";
+type NavItem = { id: ShellPage; group: NavGroupName; label: string; href: string; icon: ReactNode };
 type MobileTabId = ShellPage | "more";
+type NavGroup = { label: NavGroupName; items: NavItem[] };
 
 const NAV: NavItem[] = [
   {
     id: "explore",
+    group: "분석",
     label: EXPLORE_NAV_LABEL,
     href: EXPLORE_ROUTE,
     icon: (
@@ -59,6 +68,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "briefing",
+    group: "분석",
     label: BRIEFING_NAV_LABEL,
     href: BRIEFING_ROUTE,
     icon: (
@@ -70,6 +80,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "market",
+    group: "분석",
     label: "시장",
     href: ROUTES.market,
     icon: (
@@ -81,6 +92,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "regime",
+    group: "분석",
     label: "국면",
     href: ROUTES.regime,
     icon: (
@@ -93,6 +105,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "sectors",
+    group: "분석",
     label: "섹터",
     href: ROUTES.sectors,
     icon: (
@@ -106,6 +119,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "etfs",
+    group: "분석",
     label: "ETF",
     href: ROUTES.etfs,
     icon: (
@@ -118,6 +132,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "screener",
+    group: "분석",
     label: "스크리너",
     href: ROUTES.screener,
     icon: (
@@ -130,6 +145,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "superinvestors",
+    group: "분석",
     label: "투자자",
     href: ROUTES.superinvestors,
     icon: (
@@ -142,6 +158,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "portfolio",
+    group: "분석",
     label: "포트폴리오",
     href: ROUTES.portfolio,
     icon: (
@@ -154,6 +171,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "chart",
+    group: "분석",
     label: CHART_NAV_LABEL,
     href: CHART_ROUTE,
     icon: (
@@ -164,9 +182,82 @@ const NAV: NavItem[] = [
       </svg>
     ),
   },
+  {
+    id: "ib",
+    group: "도구",
+    label: "무한매수",
+    href: ROUTES.ib,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M3.8 10c1.7-3.3 4.2-3.3 6.2 0s4.5 3.3 6.2 0" strokeLinecap="round" />
+        <path d="M3.8 10c1.7 3.3 4.2 3.3 6.2 0s4.5-3.3 6.2 0" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "vr",
+    group: "도구",
+    label: "VR 계산기",
+    href: ROUTES.vr,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 3v13M5 6h10M5 6l-2 4h4zM15 6l-2 4h4z" />
+        <path d="M6.5 16h7" />
+      </svg>
+    ),
+  },
+  {
+    id: "dailyWrap",
+    group: "더보기",
+    label: "Daily Wrap",
+    href: ROUTES.dailyWrap,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3.5" width="14" height="13" rx="2" />
+        <path d="M6 7h8M6 10h5M6 13h7" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "posts",
+    group: "더보기",
+    label: "아카이브",
+    href: ROUTES.posts,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M5 3.5h7l3 3v10H5z" strokeLinejoin="round" />
+        <path d="M12 3.5v4h4M7.5 10.5h5M7.5 13.5h4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "alphaScout",
+    group: "더보기",
+    label: "Alpha Scout",
+    href: ROUTES.alphaScout,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="8.5" cy="8.5" r="4.8" />
+        <path d="M12 12l4 4M14.5 4.5l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1.1 1.5-.2z" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "stockAnalyzer",
+    group: "더보기",
+    label: "종목분석",
+    href: ROUTES.stockAnalyzer,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3.5" width="14" height="13" rx="2" />
+        <path d="M6.2 12.8l2.3-2.7 2 1.8 3.3-4.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 15h8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
-const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
+const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
   id: "more",
   label: "더보기",
   href: "#more",
@@ -180,7 +271,27 @@ const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
 };
 
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
-const MORE_TAB_IDS: ShellPage[] = ["briefing", "regime", "sectors", "etfs", "superinvestors", "portfolio"];
+const MORE_TAB_IDS: ShellPage[] = [
+  "briefing",
+  "ib",
+  "vr",
+  "dailyWrap",
+  "posts",
+  "alphaScout",
+  "stockAnalyzer",
+  "regime",
+  "sectors",
+  "etfs",
+  "superinvestors",
+  "portfolio",
+];
+
+const NAV_GROUP_ORDER: NavGroupName[] = ["분석", "도구", "더보기"];
+
+const NAV_GROUPS: NavGroup[] = NAV_GROUP_ORDER.map((label) => ({
+  label,
+  items: NAV.filter((item) => item.group === label),
+})).filter((group) => group.items.length > 0);
 
 function navById(id: ShellPage): NavItem {
   return NAV.find((item) => item.id === id)!;
@@ -272,8 +383,6 @@ function TypeaheadPreviewDrawer({
   useEffect(() => {
     let cancelled = false;
     const controller = new AbortController();
-    setEntry(undefined);
-    setServices(null);
     Promise.all([
       loadStockConnectionIndex(controller.signal),
       loadStockServicesIndex(controller.signal),
@@ -418,10 +527,17 @@ export default function AppShell({
           </span>
         </TransitionLink>
         <nav className="rail-nav">
-          {NAV.map((n) => (
-            <TransitionLink key={n.id} href={n.href} className={`rail-item ${n.id === navActive ? "on" : ""}`}>
-              {n.icon} {n.label}
-            </TransitionLink>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label} className="rail-group">
+              <div className="rail-sect">{group.label}</div>
+              {group.items.map((n) => {
+                return (
+                  <TransitionLink key={n.id} href={n.href} className={`rail-item ${n.id === navActive ? "on" : ""}`}>
+                    {n.icon} {n.label}
+                  </TransitionLink>
+                );
+              })}
+            </div>
           ))}
         </nav>
       </aside>
@@ -499,6 +615,7 @@ export default function AppShell({
       <div className="content">{children}</div>
       {typeaheadPreviewTicker ? (
         <TypeaheadPreviewDrawer
+          key={typeaheadPreviewTicker}
           ticker={typeaheadPreviewTicker}
           onClose={() => setTypeaheadPreviewTicker(null)}
         />
