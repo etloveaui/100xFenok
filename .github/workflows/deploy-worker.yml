@@ -75,6 +75,10 @@ jobs:
         working-directory: 100xfenok-next
         run: npm run qa:data-state
 
+      - name: Verify IB V2 calculator parity (no drift vs V1)
+        working-directory: 100xfenok-next
+        run: npm run qa:ib-parity
+
       - name: Verify public SEO surface
         working-directory: 100xfenok-next
         run: npm run qa:seo-surface
