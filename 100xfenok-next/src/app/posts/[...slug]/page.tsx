@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import AppShell from "@/components/shell/AppShell";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import { ROUTES } from "@/lib/routes";
+import { getDesignVersionFromSearchParams } from "@/lib/design/version";
 import { canonicalPath } from "@/lib/site-url";
 import { isSafeSlugSegments } from "@/lib/server/legacy-bridge";
 import { readPostMetadataBySlug, readPostStaticParams } from "@/lib/server/posts";
@@ -44,6 +48,11 @@ export async function generateMetadata({
 
 export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
   const { slug } = await params;
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    {},
+    cookieStore.get("fenok_design_version")?.value,
+  );
 
   if (!slug || slug.length === 0 || !isSafeSlugSegments(slug)) {
     notFound();
@@ -54,5 +63,22 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
     notFound();
   }
 
-  return <RouteEmbedFrame src={post.publicPath} title={post.title} loading="eager" />;
+  const frame = (
+    <RouteEmbedFrame
+      src={post.publicPath}
+      title={post.title}
+      loading="eager"
+      shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
+    />
+  );
+
+  if (version === "v1") return frame;
+
+  return (
+    <div className="fnk-shell">
+      <AppShell active="explore" title={post.title} backHref={ROUTES.explore}>
+        {frame}
+      </AppShell>
+    </div>
+  );
 }

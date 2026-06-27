@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { EXPLORE_NAV_LABEL } from '@/lib/product-nav';
+import { BRIEFING_NAV_LABEL, BRIEFING_ROUTE, EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from '@/lib/product-nav';
 import { ROUTES, isDockRoutePath, isRouteOrChild, normalizePathname } from '@/lib/routes';
 
 type NetworkInformationLike = {
@@ -19,10 +19,10 @@ type NavigatorWithConnection = Navigator & {
 
 const dockItems = [
   {
-    href: ROUTES.home,
-    label: 'DASHBOARD',
+    href: BRIEFING_ROUTE,
+    label: BRIEFING_NAV_LABEL,
     icon: '⌂',
-    isActive: (pathname: string) => pathname === ROUTES.home,
+    isActive: (pathname: string) => pathname === BRIEFING_ROUTE,
   },
   {
     href: ROUTES.market,
@@ -34,10 +34,11 @@ const dockItems = [
       pathname === ROUTES.alphaScout,
   },
   {
-    href: ROUTES.explore,
+    href: EXPLORE_ROUTE,
     label: EXPLORE_NAV_LABEL,
     icon: '◇',
     isActive: (pathname: string) =>
+      pathname === ROUTES.home ||
       pathname === ROUTES.explore ||
       pathname === ROUTES.sectors ||
       isRouteOrChild(pathname, ROUTES.etfs) ||

@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
+import AppShell from '@/components/shell/AppShell';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import { ROUTES } from '@/lib/routes';
+import { getDesignVersionFromSearchParams } from '@/lib/design/version';
 import {
   getSingleSearchParam,
   legacyPublicFileExists,
@@ -32,6 +36,11 @@ type PageProps = {
 
 export default async function PostsPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    params,
+    cookieStore.get("fenok_design_version")?.value,
+  );
   const rawPath = getSingleSearchParam(params.path);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['posts/'] });
   const posts = await readPostCatalog();
@@ -40,11 +49,19 @@ export default async function PostsPage({ searchParams }: PageProps) {
   const filePath = safePath ? safePath.replace(/^posts\//, 'posts-raw/') : null;
   if (filePath && await legacyPublicFileExists(filePath)) {
     const rawSrc = `/${filePath}`;
-    return <RouteEmbedFrame src={rawSrc} title="Posts Detail" loading="eager" />;
+    const frame = <RouteEmbedFrame src={rawSrc} title="Posts Detail" loading="eager" shellClassName={version === "v1" ? undefined : "route-embed-shell-app"} />;
+    if (version === "v1") return frame;
+    return (
+      <div className="fnk-shell">
+        <AppShell active="explore" title="분석 아카이브 상세" backHref={ROUTES.explore}>
+          {frame}
+        </AppShell>
+      </div>
+    );
   }
 
-  return (
-    <div 
+  const landing = (
+    <div
       className="text-slate-800 min-h-screen"
       style={{
         backgroundColor: 'var(--c-surface-2)'
@@ -119,6 +136,16 @@ export default async function PostsPage({ searchParams }: PageProps) {
         </section>
 
       </div>
+    </div>
+  );
+
+  if (version === "v1") return landing;
+
+  return (
+    <div className="fnk-shell">
+      <AppShell active="explore" title="분석 아카이브" backHref={ROUTES.explore}>
+        {landing}
+      </AppShell>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import AppShell from '@/components/shell/AppShell';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import { ROUTES } from '@/lib/routes';
 import {
   getSingleSearchParam,
   legacyPublicFileExists,
@@ -60,5 +62,22 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
         ? `/${reportPath}`
         : '/alpha-scout/alpha-scout-main.html';
 
-  return <RouteEmbedFrame src={iframeSrc} title="100x Alpha Scout" loading="eager" />;
+  const frame = (
+    <RouteEmbedFrame
+      src={iframeSrc}
+      title="100x Alpha Scout"
+      loading="eager"
+      shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
+    />
+  );
+
+  if (version === "v1") return frame;
+
+  return (
+    <div className="fnk-shell">
+      <AppShell active="explore" title="Alpha Scout" backHref={ROUTES.explore}>
+        {frame}
+      </AppShell>
+    </div>
+  );
 }

@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
+import AppShell from '@/components/shell/AppShell';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
+import { ROUTES } from '@/lib/routes';
+import { getDesignVersionFromSearchParams } from '@/lib/design/version';
 import {
   getSingleSearchParam,
   legacyPublicFileExists,
@@ -31,6 +35,11 @@ type PageProps = {
 
 export default async function VRPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
+  const cookieStore = await cookies();
+  const version = getDesignVersionFromSearchParams(
+    params,
+    cookieStore.get("fenok_design_version")?.value,
+  );
   const rawPath = getSingleSearchParam(params.path);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['vr/'] });
 
@@ -40,10 +49,25 @@ export default async function VRPage({ searchParams }: PageProps) {
       : safePath.endsWith('vr-total-guide-calculator.html')
         ? 'VR 계산기'
         : 'VR 전략 가이드';
-    return <RouteEmbedFrame src={`/${safePath}`} title={frameTitle} loading="eager" />;
+    const frame = (
+      <RouteEmbedFrame
+        src={`/${safePath}`}
+        title={frameTitle}
+        loading="eager"
+        shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
+      />
+    );
+    if (version === "v1") return frame;
+    return (
+      <div className="fnk-shell">
+        <AppShell active="explore" title={frameTitle} backHref={ROUTES.explore}>
+          {frame}
+        </AppShell>
+      </div>
+    );
   }
 
-  return (
+  const landing = (
     <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2">
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center mb-10 md:mb-16">
@@ -182,6 +206,16 @@ export default async function VRPage({ searchParams }: PageProps) {
           </p>
         </div>
       </div>
+    </div>
+  );
+
+  if (version === "v1") return landing;
+
+  return (
+    <div className="fnk-shell">
+      <AppShell active="explore" title="VR 전략 가이드" backHref={ROUTES.explore}>
+        {landing}
+      </AppShell>
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { clamp, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatter
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
 import { formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
+import { BRIEFING_PRODUCT_TITLE } from "@/lib/product-nav";
 import {
   getStockConnection,
   getStockServices,
@@ -844,7 +845,7 @@ export default function HomeV5Client() {
 
   return (
     <div className="fnk-shell v5-home">
-      <AppShell active="explore" title="마켓 홈">
+      <AppShell active="briefing" title={BRIEFING_PRODUCT_TITLE}>
         <div className="v5-stack">
           <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />

@@ -13,7 +13,14 @@ import {
   type StockConnectionEntry,
   type StockServicesEntry,
 } from "@/lib/data-entity-graph/stock-index";
-import { CHART_NAV_LABEL, CHART_ROUTE, EXPLORE_NAV_LABEL } from "@/lib/product-nav";
+import {
+  BRIEFING_NAV_LABEL,
+  BRIEFING_ROUTE,
+  CHART_NAV_LABEL,
+  CHART_ROUTE,
+  EXPLORE_NAV_LABEL,
+  EXPLORE_ROUTE,
+} from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -25,6 +32,7 @@ import { ROUTES } from "@/lib/routes";
 
 export type ShellPage =
   | "explore"
+  | "briefing"
   | "market"
   | "regime"
   | "sectors"
@@ -41,11 +49,22 @@ const NAV: NavItem[] = [
   {
     id: "explore",
     label: EXPLORE_NAV_LABEL,
-    href: ROUTES.explore,
+    href: EXPLORE_ROUTE,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <circle cx="10" cy="10" r="7.5" />
         <path d="M13.2 6.8l-2 4.4-4.4 2 2-4.4z" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "briefing",
+    label: BRIEFING_NAV_LABEL,
+    href: BRIEFING_ROUTE,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="4" width="14" height="12" rx="2" />
+        <path d="M6.5 8h7M6.5 11h7M6.5 14h4" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -161,7 +180,7 @@ const MORE_TAB: Omit<NavItem, "id"> & { id: "more" } = {
 };
 
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
-const MORE_TAB_IDS: ShellPage[] = ["regime", "sectors", "etfs", "superinvestors", "portfolio"];
+const MORE_TAB_IDS: ShellPage[] = ["briefing", "regime", "sectors", "etfs", "superinvestors", "portfolio"];
 
 function navById(id: ShellPage): NavItem {
   return NAV.find((item) => item.id === id)!;
