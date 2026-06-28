@@ -168,6 +168,19 @@ export function useScreenerData(): ScreenerDataResult {
           fenokSignalConfidence: fenokSignal?.confidence ?? null,
           fenokSignalCoverageRatio: fenokSignal?.coverageRatio ?? null,
           fenokSignalAsOf: fenokSignal?.asOf ?? null,
+          fenokConvictionScore: fenokSignal?.convictionScore ?? null,
+          fenokConvictionCall:
+            fenokSignal?.convictionCall === "accumulate" || fenokSignal?.convictionCall === "hold" || fenokSignal?.convictionCall === "reduce"
+              ? fenokSignal.convictionCall
+              : null,
+          profitabilityScore: fenokSignal?.profitabilityScore ?? null,
+          profitabilityDirection: fenokSignal?.profitabilityDirection ?? null,
+          growthScore: fenokSignal?.growthScore ?? null,
+          growthDirection: fenokSignal?.growthDirection ?? null,
+          technicalFlowScore: fenokSignal?.technicalFlowScore ?? null,
+          technicalFlowDirection: fenokSignal?.technicalFlowDirection ?? null,
+          marketSimilarityScore: fenokSignal?.marketSimilarityScore ?? null,
+          marketSimilarityDirection: fenokSignal?.marketSimilarityDirection ?? null,
           confidenceLabel: typeof item.confidenceLabel === "string" ? item.confidenceLabel : null,
           actionLabel: typeof item.actionLabel === "string" ? item.actionLabel : null,
           actionBucket: typeof item.actionBucket === "string" ? item.actionBucket : null,
