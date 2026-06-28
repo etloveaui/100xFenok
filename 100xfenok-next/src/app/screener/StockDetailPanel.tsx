@@ -4,6 +4,8 @@ import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { FenokSignalRadar } from "@/components/screener/FenokSignalRadar";
+import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
+import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
@@ -48,6 +50,14 @@ function fenokTooltip(stock: ScreenerStock): string {
   push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
   return lines.join("\n");
 }
+
+const LABEL_TO_HELP_KEY: Record<string, FenokSignalHelpKey> = {
+  수익성: "profitability",
+  성장: "growth",
+  "기술·자금": "technicalFlow",
+  "Fenok Edge": "upsideDownside",
+};
+
 export type NumberSeries = MaybeNumber[];
 export type EstimateSeries = { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
 const ESTIMATE_KEYS = ["fy1", "fy2", "fy3"] as const;
@@ -2060,6 +2070,11 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
                     title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
                   >
                     <span aria-hidden="true">{item.label}</span>
+                    <FenokSignalHelpPopover
+                      signal={LABEL_TO_HELP_KEY[item.label] ?? "profitability"}
+                      score={score}
+                      direction={item.direction}
+                    />
                     {score ?? "—"}
                   </span>
                 );

@@ -1,5 +1,7 @@
 import type { FenokSignalsSummaryRecord } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
 import { FenokSignalRadar } from "@/components/screener/FenokSignalRadar";
+import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
+import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 
 interface FenokSignalLensCardProps {
   record: FenokSignalsSummaryRecord | null | undefined;
@@ -13,6 +15,7 @@ interface SignalConfig {
   scoreKey: keyof FenokSignalsSummaryRecord;
   directionKey: keyof FenokSignalsSummaryRecord;
   interpretation: string;
+  helpKey: FenokSignalHelpKey;
 }
 
 const SIGNALS: SignalConfig[] = [
@@ -22,6 +25,7 @@ const SIGNALS: SignalConfig[] = [
     scoreKey: "profitabilityScore",
     directionKey: "profitabilityDirection",
     interpretation: "기업의 이익 창출 능력과 자본 효율성",
+    helpKey: "profitability",
   },
   {
     key: "growth",
@@ -29,6 +33,7 @@ const SIGNALS: SignalConfig[] = [
     scoreKey: "growthScore",
     directionKey: "growthDirection",
     interpretation: "향후 매출·이익 성장 잠재력",
+    helpKey: "growth",
   },
   {
     key: "technicalFlow",
@@ -36,6 +41,7 @@ const SIGNALS: SignalConfig[] = [
     scoreKey: "technicalFlowScore",
     directionKey: "technicalFlowDirection",
     interpretation: "가격 모멘텀과 자금 흐름의 기술적 상태",
+    helpKey: "technicalFlow",
   },
   {
     key: "upsideDownside",
@@ -43,6 +49,7 @@ const SIGNALS: SignalConfig[] = [
     scoreKey: "upsideDownsideScore",
     directionKey: "upsideDownsideDirection",
     interpretation: "상대적 상방/하방 기대의 파생 프록시",
+    helpKey: "upsideDownside",
   },
 ];
 
@@ -66,8 +73,8 @@ function confidenceKo(value: string | null | undefined): string {
 function directionKo(key: SignalKey, value: string | null | undefined): string {
   if (!value || value === "unavailable") return "미확인";
   if (key === "upsideDownside") {
-    if (value === "upside_bias") return "상방 우위";
-    if (value === "downside_bias") return "하방 압력";
+    if (value === "upside_bias") return "상방 편중";
+    if (value === "downside_bias") return "하방 편중";
     if (value === "balanced") return "균형";
   }
   if (value === "strong") return "강함";
@@ -193,6 +200,11 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-baseline gap-2">
                       <span className="text-xs font-black text-[var(--c-ink)]">{chip.label}</span>
+                      <FenokSignalHelpPopover
+                        signal={chip.helpKey}
+                        score={chip.score}
+                        direction={chip.direction}
+                      />
                       <span className="truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
                         {chip.interpretation}
                       </span>
