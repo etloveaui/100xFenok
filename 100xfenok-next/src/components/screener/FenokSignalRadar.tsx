@@ -83,7 +83,12 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
 
   const chartData = useMemo<ChartData<"radar">>(
     () => ({
-      labels: AXES.map((axis) => axis.label),
+      // In the condensed (sm) radar the long "Fenok Edge" axis label clips at the
+      // narrow canvas edge. Render it on two lines there so the full Fenok brand
+      // stays visible without widening the card. md keeps the single-line label.
+      labels: AXES.map((axis) =>
+        size === "sm" && axis.label === "Fenok Edge" ? ["Fenok", "Edge"] : axis.label,
+      ),
       datasets: [
         {
           label: "Fenok 4-신호",
@@ -106,8 +111,8 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
       maintainAspectRatio: false,
       layout: {
         padding: {
-          left: size === "md" ? 12 : 8,
-          right: size === "md" ? 12 : 8,
+          left: size === "md" ? 12 : 14,
+          right: size === "md" ? 12 : 14,
         },
       },
       plugins: {
