@@ -19,7 +19,13 @@ function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function convictionCallFromScore(score: number | null | undefined): ScreenerStock["fenokConvictionCall"] {
+function convictionCallFromRecord(
+  call: string | null | undefined,
+  score: number | null | undefined,
+): ScreenerStock["fenokConvictionCall"] {
+  if (call === "concentrated") return "집중";
+  if (call === "mixed") return "혼재";
+  if (call === "diluted") return "희석";
   if (score === null || score === undefined) return null;
   if (score >= 70) return "집중";
   if (score >= 41) return "혼재";
@@ -176,7 +182,7 @@ export function useScreenerData(): ScreenerDataResult {
           fenokSignalCoverageRatio: fenokSignal?.coverageRatio ?? null,
           fenokSignalAsOf: fenokSignal?.asOf ?? null,
           fenokConvictionScore: fenokSignal?.convictionScore ?? null,
-          fenokConvictionCall: convictionCallFromScore(fenokSignal?.convictionScore),
+          fenokConvictionCall: convictionCallFromRecord(fenokSignal?.convictionCall, fenokSignal?.convictionScore),
           profitabilityScore: fenokSignal?.profitabilityScore ?? null,
           profitabilityDirection: fenokSignal?.profitabilityDirection ?? null,
           growthScore: fenokSignal?.growthScore ?? null,

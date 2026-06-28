@@ -3,6 +3,7 @@
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
+import { FenokSignalRadar } from "@/components/screener/FenokSignalRadar";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
@@ -12,6 +13,41 @@ import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 
 export type MaybeNumber = number | null | undefined;
+
+function convictionTone(call: ScreenerStock["fenokConvictionCall"]): string {
+  if (call === "집중") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (call === "희석") return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-50 text-slate-500";
+}
+
+function signalScoreTone(score: number | null): string {
+  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
+  if (score >= 70) return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (score >= 50) return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-50 text-slate-500";
+}
+
+function signalDirectionLabel(direction: string | null | undefined): string {
+  if (direction === "positive" || direction === "upside_bias" || direction === "strong" || direction === "constructive") return "상";
+  if (direction === "negative" || direction === "downside_bias" || direction === "weak" || direction === "stressed") return "하";
+  if (direction === "neutral" || direction === "balanced") return "중";
+  return "·";
+}
+
+function fenokTooltip(stock: ScreenerStock): string {
+  const lines = ["Fenok 4-신호 동등가중 종합 · 매수권유 아님"];
+  const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
+    const s = isFiniteNumber(score) ? Math.round(score) : "—";
+    lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
+  };
+  push("수익성", stock.profitabilityScore, stock.profitabilityDirection);
+  push("성장", stock.growthScore, stock.growthDirection);
+  push("기술·자금", stock.technicalFlowScore, stock.technicalFlowDirection);
+  push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
+  return lines.join("\n");
+}
 export type NumberSeries = MaybeNumber[];
 export type EstimateSeries = { fy1?: MaybeNumber; fy2?: MaybeNumber; fy3?: MaybeNumber };
 const ESTIMATE_KEYS = ["fy1", "fy2", "fy3"] as const;
@@ -1988,8 +2024,50 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
     );
   }
 
+  const convictionScore = isFiniteNumber(stock?.fenokConvictionScore) ? Math.round(stock.fenokConvictionScore) : null;
+  const convictionCall = stock?.fenokConvictionCall ?? null;
+
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 p-4">
+      {stock && (
+        <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)]">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+              Fenok 신호 한눈에 보기 · 매수권유 아님
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(convictionCall)}`}
+              title={fenokTooltip(stock)}
+            >
+              <span aria-hidden="true">{convictionCall ?? "미정"}</span>
+              {convictionScore ?? "—"}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <FenokSignalRadar stock={stock} />
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: "수익성", score: stock.profitabilityScore, direction: stock.profitabilityDirection },
+                { label: "성장", score: stock.growthScore, direction: stock.growthDirection },
+                { label: "기술·자금", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection },
+                { label: "Fenok Edge", score: stock.fenokEdgeScore, direction: stock.fenokEdgeDirection },
+              ].map((item) => {
+                const score = isFiniteNumber(item.score) ? Math.round(item.score) : null;
+                return (
+                  <span
+                    key={item.label}
+                    className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-[2px] text-[10px] font-black tabular-nums ${signalScoreTone(score)}`}
+                    title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
+                  >
+                    <span aria-hidden="true">{item.label}</span>
+                    {score ?? "—"}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
           종목 상세
