@@ -287,15 +287,17 @@ function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; com
   const holders = guruHoldersCount(stock);
   if (holders === null) return null;
   return (
-    <span
+    <TransitionLink
+      href={ROUTES.superinvestorsByTicker(stock.ticker)}
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="pointer-events-none inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[9px] font-black text-violet-700"
-      title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명`}
+      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[9px] font-black text-violet-700 transition hover:border-violet-400 hover:bg-violet-100"
+      title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명 — 클릭하면 /superinvestors 종목별 보유로 이동`}
+      onClick={(event) => event.stopPropagation()}
     >
       {compact ? `고수 ${holders}` : `기관·고수 ${holders}`}
-    </span>
+    </TransitionLink>
   );
 }
 
@@ -804,18 +806,21 @@ function MobileStockCard({
           {stock.connection?.singleStockEtfs?.length ? "ETF 연결" : "단일 종목"}
         </span>
       </div>
-      <button
-        type="button"
-        aria-expanded={expanded}
-        aria-controls={detailId}
-        aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-        onClick={onToggle}
-        className="flex min-h-14 w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--c-surface-2)] text-sm font-black text-[var(--c-ink-2)]" aria-hidden="true">
+      <div className="flex min-h-14 w-full min-w-0 items-start gap-2 px-3 py-3 text-left transition hover:bg-[var(--c-surface-2)]">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={detailId}
+          aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggle();
+          }}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--c-surface-2)] text-sm font-black text-[var(--c-ink-2)] transition focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+        >
           {expanded ? "-" : "+"}
-        </span>
-        <span className="min-w-0 flex-1">
+        </button>
+        <div onClick={onToggle} className="min-w-0 flex-1 cursor-pointer">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-base font-black text-slate-950">{stock.ticker}</span>
             <GuruHolderBadge stock={stock} compact />
@@ -838,8 +843,8 @@ function MobileStockCard({
           {estimateSummary ? (
             <span className="mt-1 block min-w-0 truncate text-[11px] font-black text-[var(--c-brand)]">{estimateSummary}</span>
           ) : null}
-        </span>
-        <span className="shrink-0 text-right">
+        </div>
+        <div onClick={onToggle} className="shrink-0 cursor-pointer text-right">
           <span className="orbitron block text-sm font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
@@ -849,8 +854,8 @@ function MobileStockCard({
           <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
-        </span>
-      </button>
+        </div>
+      </div>
       <div data-testid="screener-mobile-metric-grid" className="grid grid-cols-2 gap-2 border-t border-[var(--c-line-2)] px-3 py-3 sm:grid-cols-4">
         {metrics.map((metricKey) => (
           <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
@@ -2079,21 +2084,23 @@ export default function ScreenerClient({
                           className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
                         >
                           {column.key === "ticker" ? (
-                            <button
-                              type="button"
-                              aria-expanded={expanded}
-                              aria-controls={detailId}
-                              aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
-                              }}
-                              className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-md px-1.5 text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-                            >
-                              <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
-                              <span className="truncate">{stock.ticker}</span>
+                            <div className="flex min-h-11 max-w-full items-center gap-1.5 px-1.5">
+                              <button
+                                type="button"
+                                aria-expanded={expanded}
+                                aria-controls={detailId}
+                                aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
+                                }}
+                                className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                              >
+                                <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                                <span className="truncate">{stock.ticker}</span>
+                              </button>
                               <GuruHolderBadge stock={stock} compact />
-                            </button>
+                            </div>
                           ) : renderCell(stock, column.key, preset)}
                         </td>
                       ))}
