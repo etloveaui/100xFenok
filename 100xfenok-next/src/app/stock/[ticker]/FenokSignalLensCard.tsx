@@ -4,6 +4,7 @@ import { FenokSignalRadarHexagon, type FenokSignalRadarHexagonAxis } from "@/com
 import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
 import type { FenokSignalHelpKey, FenokSignalTone } from "@/lib/fenok-signals/signal-help-config";
 import { getSignalHelpEntry, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
+import { directionKo as axisDirectionKo } from "@/lib/fenok-signals/direction-ko";
 
 interface FenokSignalLensCardProps {
   record: FenokSignalsSummaryRecord | null | undefined;
@@ -676,7 +677,7 @@ const SHORT_TERM_AXIS_CONFIG: ShortTermAxisConfig[] = [
     fullLabel: "옵션 활동 프록시",
     scoreKey: "netOptionsProxyScore",
     helpKey: "netOptionsProxy",
-    tooltipNote: "공개 옵션 체인 파생, 실제 매수·매도 흐름 아님",
+    tooltipNote: "OCC 옵션 거래량 편향, 실제 플로우 아님",
   },
   {
     key: "offExchangeActivityProxy",
@@ -770,22 +771,26 @@ function buildShortTermAxes(record: FenokSignalsSummaryRecord): ShortTermAxis[] 
 
 function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
   const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
+  const scoreText = formatScore(axis.score);
+  const tierText = axis.meta.tier ?? "미확인";
+  const directionText = axisDirectionKo(axis.direction, "미확인");
+  const ariaLabel = `${axis.fullLabel}: ${scoreText}점, ${directionText}, ${tierText}${axis.tooltipNote ? ` · ${axis.tooltipNote}` : ""}`;
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2">
+    <div
+      aria-label={ariaLabel}
+      className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2"
+    >
       <div className="min-w-0 flex-1">
         <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
           {axis.fullLabel}
         </div>
-        <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
-          Fenok 파생 신호 · 매수권유 아님
-        </div>
         {axis.tooltipNote ? (
-          <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
+          <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
             {axis.tooltipNote}
           </div>
         ) : null}
         {axis.coverage !== null ? (
-          <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
+          <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
             데이터 {formatCoverage(axis.coverage)}
           </div>
         ) : null}
@@ -793,13 +798,13 @@ function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
       <FenokSignalHelpPopover signal={axis.helpKey} score={axis.score} direction={axis.direction} />
       {axis.meta.tier && axis.score !== null ? (
         <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-black ${toneClass(axis.meta.tone)}`}
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${toneClass(axis.meta.tone)}`}
         >
           {axis.meta.tier}
         </span>
       ) : null}
       <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
-        {formatScore(axis.score)}
+        {scoreText}
       </span>
       <div className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-[var(--c-surface-2)] sm:block">
         <div
@@ -903,6 +908,10 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
           <FenokSignalRadarHexagon title="Short-term" axes={shortTermAxes} size="lg" />
           <FenokSignalRadarHexagon title="Long-term" axes={longTermAxes} size="lg" />
         </div>
+
+        <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
+          Fenok 파생 신호 · 매수권유 아님
+        </p>
 
         <div className="grid gap-4 lg:grid-cols-2">
           {hasShortTermSignal ? (

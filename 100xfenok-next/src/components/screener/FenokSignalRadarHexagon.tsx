@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   Chart as ChartJS,
   type ChartData,
@@ -67,7 +67,7 @@ function tierLabel(value: string | null | undefined): string {
 
 const SIZE_CLASS = {
   md: "h-[200px] w-[200px]",
-  lg: "h-[280px] w-[280px]",
+  lg: "h-[200px] w-[200px] md:h-[280px] md:w-[280px]",
 } as const;
 
 const LAYOUT_PADDING = {
@@ -81,12 +81,23 @@ const POINT_LABEL_PADDING = {
 } as const;
 
 const FONT_SIZE = {
-  md: 10,
-  lg: 11,
+  md: 12,
+  lg: 13,
 } as const;
 
 export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }: FenokSignalRadarHexagonProps) {
   const theme = useMarketChartTheme();
+  const tableId = useId();
+  const [effectiveSize, setEffectiveSize] = useState<"md" | "lg">(size);
+
+  useEffect(() => {
+    function update() {
+      setEffectiveSize(window.innerWidth < 768 ? "md" : size);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [size]);
 
   const safeAxes = useMemo(
     () => axes.slice(0, 6).map((axis) => ({ ...axis, score: isFiniteNumber(axis.score) ? axis.score : null })),
@@ -110,13 +121,13 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
           borderColor: theme.token("brand"),
           backgroundColor: theme.alpha("brand", 0.16),
           borderWidth: 2,
-          pointRadius: size === "lg" ? 4 : 3,
-          pointHoverRadius: size === "lg" ? 6 : 5,
+          pointRadius: effectiveSize === "lg" ? 4 : 3,
+          pointHoverRadius: effectiveSize === "lg" ? 6 : 5,
           pointBackgroundColor: theme.token("brand"),
         },
       ],
     }),
-    [safeAxes, values, theme, title, size],
+    [safeAxes, values, theme, title, effectiveSize],
   );
 
   const options = useMemo<ChartOptions<"radar">>(
@@ -124,7 +135,7 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: LAYOUT_PADDING[size],
+        padding: LAYOUT_PADDING[effectiveSize],
       },
       plugins: {
         legend: { display: false },
@@ -150,8 +161,8 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
           grid: { color: theme.token("line") },
           pointLabels: {
             color: theme.token("ink2"),
-            font: { size: FONT_SIZE[size], weight: "bold" as const },
-            padding: POINT_LABEL_PADDING[size],
+            font: { size: FONT_SIZE[effectiveSize], weight: "bold" as const },
+            padding: POINT_LABEL_PADDING[effectiveSize],
             callback: (value: string | string[]) => {
               const text = Array.isArray(value) ? value.join(" ") : value;
               if (text.includes(" ")) return text.split(" ");
@@ -162,21 +173,48 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
         },
       },
     }),
-    [safeAxes, theme, size],
+    [safeAxes, theme, effectiveSize],
   );
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2 antialiased">
       <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
         {title}
       </span>
       {hasAnyScore ? (
-        <div className={`relative ${SIZE_CLASS[size]}`}>
-          <Radar data={chartData} options={options} role="img" aria-label={`${title} 6축 레이더`} />
+        <div className={`relative ${SIZE_CLASS[effectiveSize]}`}>
+          <Radar
+            data={chartData}
+            options={options}
+            role="img"
+            aria-label={`${title} 6축 레이더`}
+            aria-describedby={tableId}
+          />
+          <table id={tableId} className="sr-only">
+            <caption>{title} 6축 신호 점수</caption>
+            <thead>
+              <tr>
+                <th scope="col">축</th>
+                <th scope="col">점수</th>
+                <th scope="col">등급</th>
+              </tr>
+            </thead>
+            <tbody>
+              {safeAxes.map((axis) => (
+                <tr key={axis.label}>
+                  <td>{axis.fullLabel ?? axis.label}</td>
+                  <td>{axis.score !== null ? Math.round(axis.score) : "—"}</td>
+                  <td>{axis.tier ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div
-          className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-center text-[10px] font-bold text-[var(--c-ink-3)]`}
+          role="img"
+          aria-label={`${title} 신호 없음`}
+          className={`grid ${SIZE_CLASS[effectiveSize]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-center text-[10px] font-bold text-[var(--c-ink-3)]`}
           title="신호 데이터 없음"
         >
           {emptyLabel ?? (

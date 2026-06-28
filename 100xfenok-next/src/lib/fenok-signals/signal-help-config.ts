@@ -118,7 +118,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   netOptionsProxy: makeDefaultEntry(
     "netOptionsProxy",
     "옵션 프록시",
-    "공개/허용 소스의 옵션 체인과 콜·풋 성격을 이용한 Fenok 파생 프록시예요. 실제 매수·매도 주체 흐름은 아니에요.",
+    "OCC 공개 Volume Query의 콜·풋 거래량만 이용한 Fenok 파생 프록시예요. 실제 옵션 플로우, OPRA, 매수·매도 주체 방향은 아니에요.",
   ),
   offExchangeActivityProxy: makeDefaultEntry(
     "offExchangeActivityProxy",
@@ -175,7 +175,7 @@ export function toneClass(tone: FenokSignalTone): string {
     case "up":
       return "bg-[var(--c-up-soft)] text-[var(--c-up)]";
     case "warn":
-      return "bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+      return "bg-[var(--c-warn-soft)] text-[var(--c-warn-ink)] border border-[var(--c-warn)]";
     case "down":
       return "bg-[var(--c-down-soft)] text-[var(--c-down)]";
     case "neutral":
