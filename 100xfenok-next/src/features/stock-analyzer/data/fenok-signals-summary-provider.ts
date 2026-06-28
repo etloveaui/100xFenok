@@ -39,8 +39,14 @@ export interface FenokSignalsSummaryRecord {
   shortTermScore?: number | null;
   longTermConvictionScore?: number | null;
   longTermConvictionCall?: "concentrated" | "mixed" | "diluted" | null;
+  shortTermConvictionScore?: number | null;
+  shortTermConvictionCall?: "concentrated" | "mixed" | "diluted" | null;
   peerSimilarityScore?: number | null;
   sp500TrackingSimilarityScore?: number | null;
+  volumeLiquidityTrendScore?: number | null;
+  volumeLiquidityTrendDirection?: string | null;
+  shortTermRelativeStrengthScore?: number | null;
+  shortTermRelativeStrengthDirection?: string | null;
   technicalIndicatorProxyScore?: number | null;
   netOptionsProxyScore?: number | null;
   offExchangeActivityProxyScore?: number | null;
@@ -144,8 +150,14 @@ export function normalizeFenokSignalsSummaryRecord(
     shortTermScore: numberValue(row, fields, "shortTermScore"),
     longTermConvictionScore: numberValue(row, fields, "longTermConvictionScore"),
     longTermConvictionCall: convictionCallValue(row, fields, "longTermConvictionCall"),
+    shortTermConvictionScore: numberValue(row, fields, "shortTermConvictionScore"),
+    shortTermConvictionCall: convictionCallValue(row, fields, "shortTermConvictionCall"),
     peerSimilarityScore: numberValue(row, fields, "peerSimilarityScore"),
     sp500TrackingSimilarityScore: numberValue(row, fields, "sp500TrackingSimilarityScore"),
+    volumeLiquidityTrendScore: numberValue(row, fields, "volumeLiquidityTrendScore"),
+    volumeLiquidityTrendDirection: stringValue(row, fields, "volumeLiquidityTrendDirection"),
+    shortTermRelativeStrengthScore: numberValue(row, fields, "shortTermRelativeStrengthScore"),
+    shortTermRelativeStrengthDirection: stringValue(row, fields, "shortTermRelativeStrengthDirection"),
     technicalIndicatorProxyScore: numberValue(row, fields, "technicalIndicatorProxyScore"),
     netOptionsProxyScore: numberValue(row, fields, "netOptionsProxyScore"),
     offExchangeActivityProxyScore: numberValue(row, fields, "offExchangeActivityProxyScore"),

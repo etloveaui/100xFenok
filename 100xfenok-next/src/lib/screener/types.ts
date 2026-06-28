@@ -46,6 +46,8 @@ export interface ScreenerStock {
   fenokConvictionScore?: number | null;
   fenokConvictionCall?: "집중" | "혼재" | "희석" | null;
   fenokShortTermScore?: number | null;
+  fenokShortTermConvictionScore?: number | null;
+  fenokShortTermConvictionCall?: "집중" | "혼재" | "희석" | null;
   fenokLongTermScore?: number | null;
   fenokLongTermConvictionScore?: number | null;
   fenokLongTermConvictionCall?: "집중" | "혼재" | "희석" | null;
@@ -55,6 +57,14 @@ export interface ScreenerStock {
   growthDirection?: string | null;
   technicalFlowScore?: number | null;
   technicalFlowDirection?: string | null;
+  volumeLiquidityTrendScore?: number | null;
+  volumeLiquidityTrendDirection?: string | null;
+  shortTermRelativeStrengthScore?: number | null;
+  shortTermRelativeStrengthDirection?: string | null;
+  technicalIndicatorProxyScore?: number | null;
+  netOptionsProxyScore?: number | null;
+  offExchangeActivityProxyScore?: number | null;
+  shortPressureProxyScore?: number | null;
   durabilityProfitabilityScore?: number | null;
   durabilityProfitabilityCoverage?: number | null;
   upsidePotentialScore?: number | null;

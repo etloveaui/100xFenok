@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
+const privateFlowRoot = path.join(repoRoot, "_private", "admin", "fenok-flow");
 
 const FORMULA_VERSION = "fenok-native-signals-v0.2.0-phase-a";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md";
@@ -16,6 +17,13 @@ const SUMMARY_OUTPUT_FILE = "computed/fenok_signals_summary.json";
 const STOCKANALYSIS_FINANCIALS_DIR = "stockanalysis/financials";
 const NATIVE_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside", "market_similarity"];
 const PHASE_A_SIGNAL_KEYS = ["durability_profitability"];
+const PHASE_B_SIGNAL_KEYS = [
+  "volume_liquidity_trend",
+  "short_term_relative_strength",
+  "net_options_proxy",
+  "off_exchange_activity_proxy",
+  "short_pressure_proxy",
+];
 const CONVICTION_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside"];
 
 const HORIZON_WEIGHTS = [
@@ -50,6 +58,12 @@ function readFinancialsByTicker(tickers) {
   );
 }
 
+function readFlowProxiesByTicker() {
+  const flow = readOptionalJson("computed/fenok_flow_proxies.json");
+  const rows = Array.isArray(flow?.rows) ? flow.rows : [];
+  return new Map(rows.map((row) => [String(row.ticker ?? "").toUpperCase(), row]));
+}
+
 function ensureDir(absPath) {
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
 }
@@ -72,11 +86,6 @@ function writeJsonToBoth(relPath, payload, options = {}) {
   writeJson(relPath, payload, [dataRoot, publicDataRoot], options);
 }
 
-function removePublicFile(relPath) {
-  const abs = path.join(publicDataRoot, relPath);
-  if (fs.existsSync(abs)) fs.unlinkSync(abs);
-}
-
 function finite(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -91,6 +100,37 @@ function round(value, digits = 4) {
 
 function clamp(value, min = 0, max = 100) {
   return Math.min(max, Math.max(min, value));
+}
+
+function loadPriceHistory(ticker) {
+  const payload = readOptionalJson(`yf/finance/${ticker}.json`);
+  const history = payload?.data?.history_1y;
+  if (!Array.isArray(history)) return [];
+  return history
+    .map((row) => ({
+      date: row.date,
+      close: num(row.Close ?? row.close),
+      volume: num(row.Volume ?? row.volume),
+    }))
+    .filter((row) => row.date && finite(row.close) && row.close > 0)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+function movingAverage(values, window) {
+  if (!Array.isArray(values) || values.length < window) return null;
+  const slice = values.slice(-window);
+  return slice.reduce((sum, value) => sum + value, 0) / window;
+}
+
+function returnOver(history, days) {
+  if (!Array.isArray(history) || history.length <= days) return null;
+  const latest = history.at(-1)?.close;
+  const prior = history.at(-(days + 1))?.close;
+  return finite(latest) && finite(prior) && prior > 0 ? latest / prior - 1 : null;
+}
+
+function scoreRange(value, low, high) {
+  return finite(value) && high > low ? round(clamp(((value - low) / (high - low)) * 100), 2) : null;
 }
 
 function weightedAverage(block, metric) {
@@ -655,6 +695,151 @@ function buildUpsideDownsideSignal(stats, row, profitability, growth, technical)
   };
 }
 
+function buildVolumeLiquidityTrendSignal(row) {
+  const history = loadPriceHistory(row.symbol);
+  const closes = history.map((item) => item.close).filter(finite);
+  const volumes = history.map((item) => item.volume).filter(finite);
+  const latestClose = closes.at(-1);
+  const latestVolume = volumes.at(-1);
+  const avgVolume20 = movingAverage(volumes, 20);
+  const avgVolume60 = movingAverage(volumes, 60);
+  const return20d = returnOver(history, 20);
+  const dollarVolume20 = finite(latestClose) && finite(avgVolume20) ? latestClose * avgVolume20 : null;
+  const volumeTrend = finite(avgVolume20) && finite(avgVolume60) && avgVolume60 > 0 ? avgVolume20 / avgVolume60 : null;
+  const latestVolumeRatio = finite(latestVolume) && finite(avgVolume20) && avgVolume20 > 0 ? latestVolume / avgVolume20 : null;
+  const result = scoreFromComponents([
+    { key: "dollar_liquidity_20d", weight: 0.35, component: customComponent(dollarVolume20, finite(dollarVolume20) && dollarVolume20 > 0 ? scoreRange(Math.log10(dollarVolume20), 6, 10) : null) },
+    { key: "volume_trend_20d_vs_60d", weight: 0.25, component: customComponent(volumeTrend, scoreRange(volumeTrend, 0.65, 1.5)) },
+    { key: "latest_volume_vs_20d", weight: 0.15, component: customComponent(latestVolumeRatio, scoreRange(latestVolumeRatio, 0.5, 2.0)) },
+    { key: "price_confirmation_20d", weight: 0.25, component: customComponent(return20d, scoreRange(return20d, -0.12, 0.22)) },
+  ]);
+  return {
+    score_0_100: result.score,
+    direction: directionFromScore(result.score),
+    coverage_ratio: result.coverage_ratio,
+    confidence: confidenceFromCoverage(result.coverage_ratio, row.coverageRatio),
+    basis: "local_yf_1y_volume_liquidity_trend_proxy",
+    caveat: "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
+    components: result.components,
+  };
+}
+
+function buildShortTermRelativeStrengthSignal(row, spyHistory) {
+  const history = loadPriceHistory(row.symbol);
+  const ticker20d = returnOver(history, 20);
+  const ticker60d = returnOver(history, 60);
+  const spy20d = returnOver(spyHistory, 20);
+  const spy60d = returnOver(spyHistory, 60);
+  const relative20d = finite(ticker20d) && finite(spy20d) ? ticker20d - spy20d : null;
+  const relative60d = finite(ticker60d) && finite(spy60d) ? ticker60d - spy60d : null;
+  const result = scoreFromComponents([
+    { key: "relative_return_20d_vs_spy", weight: 0.45, component: customComponent(relative20d, scoreRange(relative20d, -0.12, 0.18)) },
+    { key: "relative_return_60d_vs_spy", weight: 0.35, component: customComponent(relative60d, scoreRange(relative60d, -0.18, 0.3)) },
+    { key: "absolute_return_20d", weight: 0.2, component: customComponent(ticker20d, scoreRange(ticker20d, -0.12, 0.22)) },
+  ]);
+  return {
+    score_0_100: result.score,
+    direction: directionFromScore(result.score),
+    coverage_ratio: result.coverage_ratio,
+    confidence: confidenceFromCoverage(result.coverage_ratio, row.coverageRatio),
+    basis: "local_yf_20d_60d_relative_strength_vs_spy",
+    caveat: "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
+    components: result.components,
+  };
+}
+
+function buildOptionsActivityProxySignal(row) {
+  const privatePath = path.join(privateFlowRoot, "yf_options", `${row.symbol}.json`);
+  let chains = null;
+  if (fs.existsSync(privatePath)) {
+    try {
+      chains = JSON.parse(fs.readFileSync(privatePath, "utf8"))?.options;
+    } catch {
+      chains = null;
+    }
+  }
+  if (!Array.isArray(chains) || chains.length === 0) {
+    return {
+      score_0_100: null,
+      direction: "unavailable",
+      coverage_ratio: 0,
+      confidence: "low",
+      basis: "private_yf_option_chain_snapshot_missing",
+      caveat: "Options activity proxy requires a private targeted yfinance option-chain snapshot; no raw chains are public.",
+    };
+  }
+
+  let callVolume = 0;
+  let putVolume = 0;
+  let callOpenInterest = 0;
+  let putOpenInterest = 0;
+  let rowCount = 0;
+  for (const chain of chains) {
+    for (const option of chain.calls ?? []) {
+      callVolume += num(option.volume) ?? 0;
+      callOpenInterest += num(option.openInterest) ?? 0;
+      rowCount += 1;
+    }
+    for (const option of chain.puts ?? []) {
+      putVolume += num(option.volume) ?? 0;
+      putOpenInterest += num(option.openInterest) ?? 0;
+      rowCount += 1;
+    }
+  }
+  if (rowCount === 0 || callVolume + putVolume + callOpenInterest + putOpenInterest === 0) {
+    return {
+      score_0_100: null,
+      direction: "unavailable",
+      coverage_ratio: 0.2,
+      confidence: "low",
+      basis: "private_yf_option_chain_snapshot_empty",
+      caveat: "Options activity proxy has a private snapshot but no usable volume/OI rows.",
+    };
+  }
+
+  const volumeLogRatio = Math.log((callVolume + 1) / (putVolume + 1));
+  const oiLogRatio = Math.log((callOpenInterest + 1) / (putOpenInterest + 1));
+  const raw = (0.55 * volumeLogRatio) + (0.45 * oiLogRatio);
+  const score = round(clamp(50 + (50 * Math.tanh(1.3 * raw))), 2);
+  return {
+    score_0_100: score,
+    direction: score >= 60 ? "call_skew_proxy" : score <= 40 ? "put_skew_proxy" : "neutral_proxy",
+    coverage_ratio: 0.7,
+    confidence: confidenceFromCoverage(0.7, row.coverageRatio),
+    basis: "private_yfinance_option_chain_volume_oi_activity_proxy",
+    caveat: "Options activity proxy is derived from delayed/free yfinance chain volume/OI; it is not buyer/seller options flow.",
+    components: {
+      call_volume: { value: round(callVolume, 0), score: null, peer_group: "private", peer_count: rowCount },
+      put_volume: { value: round(putVolume, 0), score: null, peer_group: "private", peer_count: rowCount },
+      call_open_interest: { value: round(callOpenInterest, 0), score: null, peer_group: "private", peer_count: rowCount },
+      put_open_interest: { value: round(putOpenInterest, 0), score: null, peer_group: "private", peer_count: rowCount },
+      volume_log_ratio: customComponent(volumeLogRatio, scoreRange(volumeLogRatio, -1, 1)),
+      open_interest_log_ratio: customComponent(oiLogRatio, scoreRange(oiLogRatio, -1, 1)),
+    },
+  };
+}
+
+function buildFlowProxySignal(row, flowByTicker, kind) {
+  const flow = flowByTicker.get(String(row.symbol ?? "").toUpperCase());
+  const source = kind === "off_exchange_activity_proxy"
+    ? flow?.off_exchange_activity_proxy
+    : flow?.short_pressure_proxy;
+  const label = kind === "off_exchange_activity_proxy" ? "off_exchange_activity_proxy" : "short_pressure_proxy";
+  const fallbackCaveat = kind === "off_exchange_activity_proxy"
+    ? "Off-exchange activity proxy uses FINRA reported off-exchange volume share; it is not ATS-only dark-pool flow."
+    : "Short-volume pressure proxy uses FINRA reported short-sale volume share; it is not short interest.";
+  return {
+    score_0_100: source?.score_0_100 ?? null,
+    direction: source?.direction ?? "unavailable",
+    coverage_ratio: source?.score_0_100 == null ? 0 : (flow?.coverage_ratio ?? 0.6),
+    confidence: confidenceFromCoverage(source?.score_0_100 == null ? 0 : (flow?.coverage_ratio ?? 0.6), row.coverageRatio),
+    basis: `computed_fenok_flow_proxies_${label}`,
+    caveat: source?.caveat ?? fallbackCaveat,
+    source_date: flow?.source_date ?? null,
+    components: source ?? null,
+  };
+}
+
 function rawRankComponent(stats, row, key) {
   return metricComponent(stats, row, key, { rawRank: true });
 }
@@ -784,6 +969,30 @@ function buildLongTermConvictionScore(signals) {
     : null;
 }
 
+function convictionCallFromScore(score) {
+  if (score !== null && score >= 70) return "concentrated";
+  if (score !== null && score <= 40) return "diluted";
+  return "mixed";
+}
+
+function buildShortTermConvictionComposite(signals) {
+  const shortPressure = signals?.short_pressure_proxy?.score_0_100;
+  const presentScores = [
+    signals?.technical_flow?.score_0_100,
+    signals?.volume_liquidity_trend?.score_0_100,
+    signals?.short_term_relative_strength?.score_0_100,
+    signals?.net_options_proxy?.score_0_100,
+    finite(shortPressure) ? 100 - shortPressure : null,
+  ].filter(finite);
+  const shortTermConvictionScore = presentScores.length > 0
+    ? round(presentScores.reduce((sum, score) => sum + score, 0) / presentScores.length, 2)
+    : null;
+  return {
+    shortTermConvictionScore,
+    shortTermConvictionCall: convictionCallFromScore(shortTermConvictionScore),
+  };
+}
+
 function buildFenokSignalsSummary(fenokSignals) {
   const fields = [
     "ticker",
@@ -806,10 +1015,21 @@ function buildFenokSignalsSummary(fenokSignals) {
     "convictionScore",
     "convictionCall",
     "longTermConvictionScore",
+    "longTermConvictionCall",
+    "shortTermScore",
+    "shortTermConvictionScore",
+    "shortTermConvictionCall",
     "durabilityProfitabilityScore",
     "durabilityProfitabilityCoverage",
     "upsidePotentialScore",
     "downsidePressureScore",
+    "volumeLiquidityTrendScore",
+    "volumeLiquidityTrendDirection",
+    "shortTermRelativeStrengthScore",
+    "shortTermRelativeStrengthDirection",
+    "netOptionsProxyScore",
+    "offExchangeActivityProxyScore",
+    "shortPressureProxyScore",
   ];
 
   return {
@@ -819,6 +1039,16 @@ function buildFenokSignalsSummary(fenokSignals) {
     formula_version: fenokSignals.formula_version,
     contract_doc: CONTRACT_DOC,
     public_surface_status: PUBLIC_SURFACE_STATUS,
+    field_semantics: {
+      shortTermScore: "Alias of shortTermConvictionScore for current UI group-score consumers.",
+      shortTermConvictionScore: "Directional short-term mean: technical flow, volume/liquidity trend, relative strength, options-activity proxy, and inverted short-volume pressure when present. Off-exchange activity is excluded because it is non-directional.",
+      volumeLiquidityTrendScore: "Local OHLCV volume/liquidity trend proxy, not true order flow.",
+      shortTermRelativeStrengthScore: "Local 20d/60d relative-strength proxy versus SPY, not a forecast.",
+      netOptionsProxyScore: "Options activity proxy derived from private yfinance option-chain volume/OI snapshots; not buyer/seller options flow.",
+      offExchangeActivityProxyScore: "FINRA reported off-exchange activity proxy; not ATS-only dark-pool flow and not directional intent.",
+      shortPressureProxyScore: "FINRA reported short-sale volume pressure proxy; not short interest, borrow fee, utilization, or buy/sell direction.",
+      directCorpusToneProxyScore: "Private/admin only; never included in this public summary.",
+    },
     fields,
     coverage: {
       row_count: fenokSignals.coverage.row_count,
@@ -828,6 +1058,8 @@ function buildFenokSignalsSummary(fenokSignals) {
     },
     rows: fenokSignals.rows.map((row) => {
       const conviction = buildConvictionComposite(row.signals);
+      const longTermConvictionScore = buildLongTermConvictionScore(row.signals);
+      const shortTermConviction = buildShortTermConvictionComposite(row.signals);
       return [
         row.ticker,
         row.company,
@@ -848,11 +1080,22 @@ function buildFenokSignalsSummary(fenokSignals) {
         row.signals.market_similarity?.direction ?? "unavailable",
         conviction.convictionScore,
         conviction.convictionCall,
-        buildLongTermConvictionScore(row.signals),
+        longTermConvictionScore,
+        convictionCallFromScore(longTermConvictionScore),
+        shortTermConviction.shortTermConvictionScore,
+        shortTermConviction.shortTermConvictionScore,
+        shortTermConviction.shortTermConvictionCall,
         row.signals.durability_profitability?.score_0_100 ?? null,
         row.signals.durability_profitability?.coverage_ratio ?? null,
         row.signals.upside_downside?.upside_score_0_100 ?? null,
         row.signals.upside_downside?.downside_score_0_100 ?? null,
+        row.signals.volume_liquidity_trend?.score_0_100 ?? null,
+        row.signals.volume_liquidity_trend?.direction ?? "unavailable",
+        row.signals.short_term_relative_strength?.score_0_100 ?? null,
+        row.signals.short_term_relative_strength?.direction ?? "unavailable",
+        row.signals.net_options_proxy?.score_0_100 ?? null,
+        row.signals.off_exchange_activity_proxy?.score_0_100 ?? null,
+        row.signals.short_pressure_proxy?.score_0_100 ?? null,
       ];
     }),
   };
@@ -862,6 +1105,8 @@ function buildFenokSignals(stockActionIndex) {
   const rows = Array.isArray(stockActionIndex.rows) ? stockActionIndex.rows : [];
   const stats = buildMetricStats(rows);
   const financialsByTicker = readFinancialsByTicker(rows.map((row) => row.symbol).filter(Boolean));
+  const flowByTicker = readFlowProxiesByTicker();
+  const spyHistory = loadPriceHistory("SPY");
   const generatedAt = new Date().toISOString();
   const vectors = new Map();
 
@@ -871,6 +1116,11 @@ function buildFenokSignals(stockActionIndex) {
     const growth = buildGrowthSignal(stats, row);
     const technicalFlow = buildTechnicalSignal(stats, row);
     const upsideDownside = buildUpsideDownsideSignal(stats, row, profitability, growth, technicalFlow);
+    const volumeLiquidityTrend = buildVolumeLiquidityTrendSignal(row);
+    const shortTermRelativeStrength = buildShortTermRelativeStrengthSignal(row, spyHistory);
+    const netOptionsProxy = buildOptionsActivityProxySignal(row);
+    const offExchangeActivityProxy = buildFlowProxySignal(row, flowByTicker, "off_exchange_activity_proxy");
+    const shortPressureProxy = buildFlowProxySignal(row, flowByTicker, "short_pressure_proxy");
     const signals = {
       profitability,
       durability_profitability: durabilityProfitability,
@@ -878,6 +1128,11 @@ function buildFenokSignals(stockActionIndex) {
       technical_flow: technicalFlow,
       upside_downside: upsideDownside,
       market_similarity: null,
+      volume_liquidity_trend: volumeLiquidityTrend,
+      short_term_relative_strength: shortTermRelativeStrength,
+      net_options_proxy: netOptionsProxy,
+      off_exchange_activity_proxy: offExchangeActivityProxy,
+      short_pressure_proxy: shortPressureProxy,
     };
     const nativeCoverage = compactSignalCoverage(signals);
     vectors.set(row.symbol, buildVector(stats, row, signals));
@@ -900,7 +1155,11 @@ function buildFenokSignals(stockActionIndex) {
         "yf/quarter_closes.json",
         "slickcharts/stocks-returns.json",
         "stockanalysis/financials/*.json",
-      ],
+        "yf/finance/{TICKER}.json",
+        "yf/finance/SPY.json",
+        flowByTicker.has(String(row.symbol ?? "").toUpperCase()) ? "computed/fenok_flow_proxies.json" : null,
+        fs.existsSync(path.join(privateFlowRoot, "yf_options", `${row.symbol}.json`)) ? "_private/admin/fenok-flow/yf_options/{TICKER}.json" : null,
+      ].filter(Boolean),
       stock_action_context: {
         action_score: num(row.actionScore),
         signal_score: num(row.signalScore),
@@ -919,7 +1178,7 @@ function buildFenokSignals(stockActionIndex) {
     row.confidence = confidenceFromCoverage(row.coverage_ratio, row.stock_action_context.coverage_ratio);
   }
 
-  const signalKeys = [...NATIVE_SIGNAL_KEYS, ...PHASE_A_SIGNAL_KEYS];
+  const signalKeys = [...NATIVE_SIGNAL_KEYS, ...PHASE_A_SIGNAL_KEYS, ...PHASE_B_SIGNAL_KEYS];
   return {
     schema_version: 1,
     generated_at: generatedAt,
@@ -933,16 +1192,18 @@ function buildFenokSignals(stockActionIndex) {
       external_collection: false,
       full_public_mirror: false,
       third_party_raw_public: false,
+      private_proxy_sources: true,
+      direct_corpus_tone_public: false,
       public_payload: SUMMARY_OUTPUT_FILE,
     },
     signal_keys: signalKeys,
     missing_class_a_inputs: {
       analyst_target_upside: "not_present_in_stock_action_index; upside_downside v0 uses valuation band, forward PE, growth, revision, and momentum proxies",
-      true_volume_flow: "not_present_in_stock_action_index; technical_flow v0 uses return and revision proxies",
-      short_pressure: "source_contract_pending; excluded from Class A native v0",
-      options_flow: "source_contract_pending; excluded from Class A native v0",
-      dark_pool_ats: "source_contract_pending; excluded from Class A native v0",
-      social_news: "source_contract_pending; excluded from Class A native v0",
+      true_volume_flow: "not_present_in_stock_action_index; technical_flow and volume_liquidity_trend use local OHLCV proxies, not true order flow",
+      short_interest: "not_free_daily; short_pressure_proxy uses FINRA reported short-sale volume share, not short interest",
+      true_options_flow: "not_free_official; net_options_proxy uses private yfinance option-chain volume/OI proxy, not buyer/seller flow",
+      dark_pool_ats: "not_free_daily; off_exchange_activity_proxy is FINRA reported off-exchange bucket, not ATS-only dark-pool prints",
+      social_news: "directCorpusTone remains private/admin only and is not included in public summary",
     },
     coverage: {
       row_count: resultRows.length,
@@ -970,7 +1231,6 @@ function main() {
   const stockActionIndex = readJson(SOURCE_FILE);
   const fenokSignals = buildFenokSignals(stockActionIndex);
   writeJsonToRoot(OUTPUT_FILE, fenokSignals);
-  removePublicFile(OUTPUT_FILE);
 
   const fenokSignalsSummary = buildFenokSignalsSummary(fenokSignals);
   writeJsonToBoth(SUMMARY_OUTPUT_FILE, fenokSignalsSummary, { compact: true });

@@ -12,7 +12,9 @@ export type FenokSignalHelpKey =
   | "netOptionsProxy"
   | "offExchangeActivityProxy"
   | "shortPressureProxy"
-  | "directNewsToneProxy";
+  | "directNewsToneProxy"
+  | "volumeLiquidityTrend"
+  | "shortTermRelativeStrength";
 
 export type FenokSignalTone = "up" | "warn" | "down" | "neutral";
 
@@ -139,6 +141,16 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
     "directNewsToneProxy",
     "뉴스톤",
     "허용된 뉴스/문서 소스에서 파생한 직접 뉴스 톤 프록시예요. 소셜 원문 수집이 승인되기 전까지는 저신뢰 보조축이에요.",
+  ),
+  volumeLiquidityTrend: makeDefaultEntry(
+    "volumeLiquidityTrend",
+    "거래량·유동성",
+    "로컬 OHLCV 가격/거래량 데이터에서 파생한 거래량·유동성 추세 프록시예요. 실제 주문 흐름은 아니에요.",
+  ),
+  shortTermRelativeStrength: makeDefaultEntry(
+    "shortTermRelativeStrength",
+    "상대 강도",
+    "로컬 20일/60일 수익률과 SPY 대비 상대 강도를 이용한 Fenok 파생 프록시예요. 예측 신호가 아니에요.",
   ),
 };
 
