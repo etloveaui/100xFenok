@@ -81,6 +81,12 @@ function numberValue(row: JsonRecord | unknown[], fields: string[], key: string)
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function convictionCallValue(row: JsonRecord | unknown[], fields: string[]): FenokSignalsSummaryRecord["convictionCall"] {
+  const value = stringValue(row, fields, "convictionCall");
+  if (value === "concentrated" || value === "mixed" || value === "diluted") return value;
+  return null;
+}
+
 export function normalizeFenokSignalsSummaryRecord(
   row: JsonRecord | unknown[],
   fields: string[],
@@ -97,6 +103,8 @@ export function normalizeFenokSignalsSummaryRecord(
     asOf: stringValue(row, fields, "asOf"),
     confidence: stringValue(row, fields, "confidence"),
     coverageRatio: numberValue(row, fields, "coverageRatio"),
+    convictionScore: numberValue(row, fields, "convictionScore"),
+    convictionCall: convictionCallValue(row, fields),
     profitabilityScore: numberValue(row, fields, "profitabilityScore"),
     profitabilityDirection: stringValue(row, fields, "profitabilityDirection"),
     growthScore: numberValue(row, fields, "growthScore"),
