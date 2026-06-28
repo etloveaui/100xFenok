@@ -86,18 +86,17 @@ function convictionCallKo(call: FenokSignalsSummaryRecord["convictionCall"]): st
 }
 
 function convictionTone(call: FenokSignalsSummaryRecord["convictionCall"]): string {
-  if (call === "concentrated") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (call === "concentrated") return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
   if (call === "mixed") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (call === "diluted") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-500";
+  if (call === "diluted") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
-function scoreTone(score: number | null): string {
-  if (score === null || score === undefined) return "bg-slate-100";
-  if (score >= 70) return "bg-emerald-500";
-  if (score >= 50) return "bg-cyan-500";
-  if (score >= 30) return "bg-amber-500";
-  return "bg-rose-500";
+function scoreBarColor(score: number | null): string {
+  if (score === null || score === undefined) return "bg-[var(--c-line)]";
+  if (score >= 70) return "bg-[var(--c-up)]";
+  if (score >= 50) return "bg-[var(--c-warn)]";
+  return "bg-[var(--c-down)]";
 }
 
 function formatAsOf(value: string | null | undefined): string {
@@ -207,7 +206,7 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--c-surface-2)]">
                     <div
-                      className={`h-full rounded-full transition-all ${scoreTone(chip.score)}`}
+                      className={`h-full rounded-full transition-all ${scoreBarColor(chip.score)}`}
                       style={{ width: `${width}%` }}
                     />
                   </div>
