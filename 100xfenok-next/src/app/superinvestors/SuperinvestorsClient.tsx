@@ -1284,10 +1284,18 @@ export default function SuperinvestorsClient({
                       </p>
                     ) : null}
                   </div>
-                  <span className="text-sm font-bold text-slate-500">
-                    보유자{" "}
-                    <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-slate-500">
+                      보유자{" "}
+                      <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
+                    </span>
+                    <TransitionLink
+                      href={ROUTES.screenerTicker(normalizeForEntityKey(search))}
+                      className="inline-flex min-h-7 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                    >
+                      스크리너에서 보기
+                    </TransitionLink>
+                  </div>
                 </div>
                 <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="종목별 보유자 표 가로 스크롤">
                   <table className="w-full min-w-[820px] table-fixed text-sm">
