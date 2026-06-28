@@ -1320,6 +1320,75 @@ export default function ScreenerClient({
     connectionFilter,
   ].filter(Boolean).length;
 
+  const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
+    "": "",
+    guru_held: "기관·고수 보유",
+    smart_money: "기관/고수 주목",
+    value_momentum: "저평가+모멘텀",
+    index_core: "지수 핵심",
+    income: "배당 점검",
+    momentum: "모멘텀 리더",
+    watch: "관찰",
+  };
+  const CONNECTION_FILTER_LABEL: Record<ConnectionFilter, string> = {
+    "": "",
+    filings: "공시 요약 연결",
+    smartMoney: "13F 보유 연결",
+    indexMembership: "지수 편입 연결",
+    singleStockEtfs: "단일종목 ETF 연결",
+  };
+
+  const activeFilterChips: { active: boolean; label: string; clear: () => void }[] = [
+    { active: Boolean(search.trim()), label: `검색: ${search.trim()}`, clear: () => setSearch("") },
+    { active: Boolean(perMax), label: `PER ≤ ${perMax}`, clear: () => setPerMax("") },
+    { active: Boolean(forwardPerMax), label: `예상 PER ≤ ${forwardPerMax}`, clear: () => setForwardPerMax("") },
+    ...(marketCapMin || marketCapMax
+      ? [
+          {
+            active: true,
+            label: marketCapMin && marketCapMax ? `시총 ${marketCapMin}~${marketCapMax}$B` : marketCapMin ? `시총 ≥ ${marketCapMin}$B` : `시총 ≤ ${marketCapMax}$B`,
+            clear: () => {
+              setMarketCapMin("");
+              setMarketCapMax("");
+            },
+          },
+        ]
+      : []),
+    ...(pbrMin || pbrMax
+      ? [
+          {
+            active: true,
+            label: pbrMin && pbrMax ? `PBR ${pbrMin}~${pbrMax}` : pbrMin ? `PBR ≥ ${pbrMin}` : `PBR ≤ ${pbrMax}`,
+            clear: () => {
+              setPbrMin("");
+              setPbrMax("");
+            },
+          },
+        ]
+      : []),
+    { active: Boolean(roeMin), label: `ROE ≥ ${roeMin}%`, clear: () => setRoeMin("") },
+    { active: Boolean(opmMin), label: `OPM ≥ ${opmMin}%`, clear: () => setOpmMin("") },
+    { active: Boolean(return12mMin), label: `12M 수익률 ≥ ${return12mMin}%`, clear: () => setReturn12mMin("") },
+    { active: Boolean(dividendYieldMin), label: `배당 ≥ ${dividendYieldMin}%`, clear: () => setDividendYieldMin("") },
+    { active: Boolean(roeFy1Min), label: `FY+1 ROE ≥ ${roeFy1Min}%`, clear: () => setRoeFy1Min("") },
+    { active: Boolean(ret3yMin), label: `3Y 수익률 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
+    { active: Boolean(ret5yMin), label: `5Y 수익률 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
+    { active: Boolean(revenueGrowthMin), label: `매출+1 ≥ ${revenueGrowthMin}%`, clear: () => setRevenueGrowthMin("") },
+    { active: Boolean(epsGrowthMin), label: `EPS+1 ≥ ${epsGrowthMin}%`, clear: () => setEpsGrowthMin("") },
+    { active: profitableOnly, label: "흑자만", clear: () => setProfitableOnly(false) },
+    ...(bandFilter
+      ? [{ active: true, label: `밴드: ${bandFilter === "cheap" ? "저평가" : bandFilter === "fair" ? "적정" : "고평가"}`, clear: () => setBandFilter("") }]
+      : []),
+    ...(actionFilter
+      ? [{ active: true, label: `신호: ${ACTION_FILTER_LABEL[actionFilter]}`, clear: () => setActionFilter("") }]
+      : []),
+    ...(connectionFilter
+      ? [{ active: true, label: `연결: ${CONNECTION_FILTER_LABEL[connectionFilter]}`, clear: () => setConnectionFilter("" as ConnectionFilter) }]
+      : []),
+    ...(selectedSectors.length > 0 ? [{ active: true, label: `섹터: ${selectedSectors.length}개`, clear: () => setSelectedSectors([]) }] : []),
+    ...(selectedCountries.length > 0 ? [{ active: true, label: `국가: ${selectedCountries.length}개`, clear: () => setSelectedCountries([]) }] : []),
+  ].filter((chip) => chip.active);
+
   return (
     <div className="data-shell-page">
       <section className="panel data-shell-header">
@@ -1624,7 +1693,7 @@ export default function ScreenerClient({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소(%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -1635,7 +1704,7 @@ export default function ScreenerClient({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소(%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -1668,7 +1737,7 @@ export default function ScreenerClient({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소(%)</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -1771,6 +1840,26 @@ export default function ScreenerClient({
             ) : null}
           </div>
         </div>
+        {activeFilterChips.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {activeFilterChips.map((chip) => (
+              <span
+                key={chip.label}
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-900"
+              >
+                {chip.label}
+                <button
+                  type="button"
+                  onClick={chip.clear}
+                  className="text-slate-500 hover:text-slate-900"
+                  aria-label={`Clear ${chip.label}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Preset selector */}
