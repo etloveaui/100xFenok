@@ -34,6 +34,16 @@ export interface FenokSignalsSummaryRecord {
   durabilityProfitabilityCoverage?: number | null;
   upsidePotentialScore?: number | null;
   downsidePressureScore?: number | null;
+  lensCoverageRatio?: number | null;
+  longTermScore?: number | null;
+  shortTermScore?: number | null;
+  peerSimilarityScore?: number | null;
+  sp500TrackingSimilarityScore?: number | null;
+  technicalIndicatorProxyScore?: number | null;
+  netOptionsProxyScore?: number | null;
+  offExchangeActivityProxyScore?: number | null;
+  shortPressureProxyScore?: number | null;
+  directNewsToneProxyScore?: number | null;
 }
 
 export interface FenokSignalsSummaryDocument {
@@ -123,6 +133,16 @@ export function normalizeFenokSignalsSummaryRecord(
     durabilityProfitabilityCoverage: numberValue(row, fields, "durabilityProfitabilityCoverage"),
     upsidePotentialScore: numberValue(row, fields, "upsidePotentialScore"),
     downsidePressureScore: numberValue(row, fields, "downsidePressureScore"),
+    lensCoverageRatio: numberValue(row, fields, "lensCoverageRatio"),
+    longTermScore: numberValue(row, fields, "longTermScore"),
+    shortTermScore: numberValue(row, fields, "shortTermScore"),
+    peerSimilarityScore: numberValue(row, fields, "peerSimilarityScore"),
+    sp500TrackingSimilarityScore: numberValue(row, fields, "sp500TrackingSimilarityScore"),
+    technicalIndicatorProxyScore: numberValue(row, fields, "technicalIndicatorProxyScore"),
+    netOptionsProxyScore: numberValue(row, fields, "netOptionsProxyScore"),
+    offExchangeActivityProxyScore: numberValue(row, fields, "offExchangeActivityProxyScore"),
+    shortPressureProxyScore: numberValue(row, fields, "shortPressureProxyScore"),
+    directNewsToneProxyScore: numberValue(row, fields, "directNewsToneProxyScore"),
   };
 }
 

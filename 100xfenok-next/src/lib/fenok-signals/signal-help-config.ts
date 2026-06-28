@@ -5,7 +5,13 @@ export type FenokSignalHelpKey =
   | "upsideDownside"
   | "durabilityProfitability"
   | "upsidePotential"
-  | "downsidePressure";
+  | "downsidePressure"
+  | "sp500TrackingSimilarity"
+  | "technicalIndicatorProxy"
+  | "netOptionsProxy"
+  | "offExchangeActivityProxy"
+  | "shortPressureProxy"
+  | "directNewsToneProxy";
 
 export type FenokSignalTone = "up" | "warn" | "down" | "neutral";
 
@@ -31,7 +37,7 @@ const DEFAULT_BANDS: FenokSignalHelpBand[] = [
 ];
 
 function makeDefaultEntry(
-  key: Exclude<FenokSignalHelpKey, "upsideDownside" | "downsidePressure">,
+  key: Exclude<FenokSignalHelpKey, "upsideDownside" | "downsidePressure" | "shortPressureProxy">,
   label: string,
   interpretation: string,
 ): FenokSignalHelpEntry {
@@ -91,6 +97,43 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       { min: 0, max: 40, label: "안정", tone: "up" },
     ],
   },
+  sp500TrackingSimilarity: makeDefaultEntry(
+    "sp500TrackingSimilarity",
+    "SPY 추적",
+    "1년 일별 수익률 기준으로 SPY 움직임과 얼마나 비슷하게 움직였는지 산출한 Fenok 파생 축이에요.",
+  ),
+  technicalIndicatorProxy: makeDefaultEntry(
+    "technicalIndicatorProxy",
+    "기술 지표",
+    "RSI, 이동평균 위치, 20/60일 수익률, 거래량 확장을 묶은 Fenok 기술 지표 프록시예요.",
+  ),
+  netOptionsProxy: makeDefaultEntry(
+    "netOptionsProxy",
+    "옵션 프록시",
+    "공개/허용 소스의 옵션 체인과 콜·풋 성격을 이용한 Fenok 파생 프록시예요. 실제 매수·매도 주체 흐름은 아니에요.",
+  ),
+  offExchangeActivityProxy: makeDefaultEntry(
+    "offExchangeActivityProxy",
+    "오프거래소",
+    "FINRA 계열 공개 데이터에서 파생한 오프거래소 활동 프록시예요. 실시간 다크풀 의도 신호로 해석하면 안 돼요.",
+  ),
+  shortPressureProxy: {
+    key: "shortPressureProxy",
+    label: "숏 압력",
+    interpretation:
+      "공개 short volume/short activity 데이터를 이용한 Fenok 파생 압력 축이에요. 점수가 높을수록 숏 관련 압력이 큰 쪽이에요.",
+    bands: [
+      { min: 81, max: 100, label: "압력 높음", tone: "down" },
+      { min: 61, max: 80, label: "압력 다소", tone: "warn" },
+      { min: 41, max: 60, label: "중립", tone: "warn" },
+      { min: 0, max: 40, label: "압력 낮음", tone: "up" },
+    ],
+  },
+  directNewsToneProxy: makeDefaultEntry(
+    "directNewsToneProxy",
+    "뉴스톤",
+    "허용된 뉴스/문서 소스에서 파생한 직접 뉴스 톤 프록시예요. 소셜 원문 수집이 승인되기 전까지는 저신뢰 보조축이에요.",
+  ),
 };
 
 export function getSignalHelpEntry(key: FenokSignalHelpKey): FenokSignalHelpEntry {

@@ -37,9 +37,17 @@ export interface FenokSignalRadarData {
   fenokEdgeDirection?: string | null;
 }
 
+export interface FenokSignalRadarAxis {
+  label: string;
+  score: number | null | undefined;
+  direction?: string | null;
+}
+
 interface FenokSignalRadarProps {
-  data: FenokSignalRadarData;
+  data?: FenokSignalRadarData;
+  axes?: FenokSignalRadarAxis[];
   size?: "sm" | "md";
+  ariaLabel?: string;
 }
 
 interface RadarAxis {
@@ -71,14 +79,27 @@ const SIZE_CLASS = {
   md: "h-[160px] w-[160px]",
 } as const;
 
-export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
+export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSignalRadarProps) {
   const theme = useMarketChartTheme();
 
-  const hasAnyScore = AXES.some((axis) => isFiniteNumber(data[axis.scoreKey]));
+  const resolvedAxes = useMemo<FenokSignalRadarAxis[]>(
+    () => (
+      axes?.length
+        ? axes
+        : AXES.map((axis) => ({
+          label: axis.label,
+          score: data?.[axis.scoreKey] as number | null | undefined,
+          direction: data?.[axis.directionKey] as string | null | undefined,
+        }))
+    ),
+    [axes, data],
+  );
+
+  const hasAnyScore = resolvedAxes.some((axis) => isFiniteNumber(axis.score));
 
   const values = useMemo(
-    () => AXES.map((axis) => (isFiniteNumber(data[axis.scoreKey]) ? (data[axis.scoreKey] as number) : 0)),
-    [data],
+    () => resolvedAxes.map((axis) => (isFiniteNumber(axis.score) ? axis.score : 0)),
+    [resolvedAxes],
   );
 
   const chartData = useMemo<ChartData<"radar">>(
@@ -86,12 +107,12 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
       // In the condensed (sm) radar the long "Fenok Edge" axis label clips at the
       // narrow canvas edge. Render it on two lines there so the full Fenok brand
       // stays visible without widening the card. md keeps the single-line label.
-      labels: AXES.map((axis) =>
+      labels: resolvedAxes.map((axis) =>
         size === "sm" && axis.label === "Fenok Edge" ? ["Fenok", "Edge"] : axis.label,
       ),
       datasets: [
         {
-          label: "Fenok 4-신호",
+          label: "Fenok 신호",
           data: values,
           borderColor: theme.token("brand"),
           backgroundColor: theme.alpha("brand", 0.16),
@@ -102,7 +123,7 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
         },
       ],
     }),
-    [values, theme, size],
+    [resolvedAxes, values, theme, size],
   );
 
   const options = useMemo<ChartOptions<"radar">>(
@@ -120,11 +141,11 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
         tooltip: {
           callbacks: {
             label: (ctx) => {
-              const axis = AXES[ctx.dataIndex];
-              const rawScore = data[axis.scoreKey];
+              const axis = resolvedAxes[ctx.dataIndex];
+              const rawScore = axis?.score;
               const score = isFiniteNumber(rawScore) ? Math.round(rawScore).toString() : "—";
-              const direction = directionLabel(data[axis.directionKey] as string | null | undefined);
-              return `${axis.label}: ${score} · ${direction}`;
+              const direction = directionLabel(axis?.direction);
+              return `${axis?.label ?? "신호"}: ${score} · ${direction}`;
             },
           },
         },
@@ -144,7 +165,7 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
         },
       },
     }),
-    [data, theme, size],
+    [resolvedAxes, theme, size],
   );
 
   if (!hasAnyScore) {
@@ -162,7 +183,7 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
 
   return (
     <div className={`relative ${SIZE_CLASS[size]}`}>
-      <Radar data={chartData} options={options} role="img" aria-label="Fenok 4-신호 레이더" />
+      <Radar data={chartData} options={options} role="img" aria-label={ariaLabel ?? "Fenok 신호 레이더"} />
     </div>
   );
 }
