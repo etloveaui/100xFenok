@@ -38,6 +38,11 @@ export interface ScreenerConnectionMeta {
 export interface ScreenerStock {
   guruHolders?: number | null;
   actionScore?: number | null;
+  fenokEdgeScore?: number | null;
+  fenokEdgeDirection?: string | null;
+  fenokSignalConfidence?: string | null;
+  fenokSignalCoverageRatio?: number | null;
+  fenokSignalAsOf?: string | null;
   confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
@@ -139,6 +144,7 @@ export type ScreenerSortKey =
   | "ret3y"
   | "ret5y"
   | "actionScore"
+  | "fenokEdgeScore"
   | "guruHolders"
   | "operatingMarginFy1"
   | "roeFy1"
@@ -192,6 +198,7 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ret3y",
   "ret5y",
   "actionScore",
+  "fenokEdgeScore",
   "guruHolders",
   "operatingMarginFy1",
   "roeFy1",

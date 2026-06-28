@@ -30,12 +30,20 @@ Scope: FINRA short-pressure sources for #324
 - `fallback`: FINRA Reg SHO Daily API
 - `verification_status`: sample row verified on 2026-06-28
 - `evidence`: https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data/daily-short-sale-volume-files
+- `terms_review`: `docs/planning/TERMS_REVIEW_finra_short_pressure_20260628.md`
 
 Derived-only candidates:
 
 - `short_volume_ratio`
 - `short_exempt_ratio`
 - `short_volume_pressure`
+
+Boundary:
+
+- `ShortVolume / TotalVolume` must be labeled as FINRA reported short-sale
+  volume share, not off-exchange percent.
+- It does not prove buyer/seller direction and does not identify true ATS-only
+  dark-pool prints.
 
 ### FINRA Reg SHO Daily API
 

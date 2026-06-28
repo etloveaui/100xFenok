@@ -18,6 +18,7 @@ export type ActionFilter =
   | "watch";
 
 export type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership" | "singleStockEtfs";
+export type FenokEdgeFilter = "" | "70" | "60" | "50";
 
 export type ColumnPreset =
   | "basic"
@@ -31,7 +32,7 @@ export type ColumnPreset =
 
 export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
-  action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
+  action: ["ticker", "actionScore", "fenokEdgeScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
   connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "peg", "roe", "opm", "perBandCurrent", "rank"],
   estimate: [
@@ -105,6 +106,11 @@ export function coerceConnectionFilter(value: string | null | undefined): Connec
   return "";
 }
 
+export function coerceFenokEdgeFilter(value: string | null | undefined): FenokEdgeFilter {
+  if (value === "70" || value === "60" || value === "50") return value;
+  return "";
+}
+
 function firstParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
@@ -164,6 +170,7 @@ export interface ScreenerFilterState {
   profitableOnly: boolean;
   bandFilter: "" | "cheap" | "fair" | "rich";
   actionFilter: ActionFilter;
+  fenokEdgeMin: FenokEdgeFilter;
   connectionFilter: ConnectionFilter;
   sortKey: ScreenerSortKey;
   sortDir: SortDir;
@@ -196,6 +203,7 @@ export function defaultScreenerFilterState(): ScreenerFilterState {
     profitableOnly: false,
     bandFilter: "",
     actionFilter: "",
+    fenokEdgeMin: "",
     connectionFilter: "",
     sortKey: "marketCap",
     sortDir: "desc",
@@ -230,6 +238,7 @@ export function parseScreenerFilterState(params: Record<string, string | string[
     profitableOnly: parseBoolParam(params.profitable),
     bandFilter: parseBand(firstParam(params.band)),
     actionFilter: coerceActionFilter(firstParam(params.action)),
+    fenokEdgeMin: coerceFenokEdgeFilter(firstParam(params.fenokEdgeMin)),
     connectionFilter: coerceConnectionFilter(firstParam(params.connection)),
     sortKey: parseSortKey(firstParam(params.sort)),
     sortDir: firstParam(params.dir) === "asc" ? "asc" : "desc",
@@ -263,6 +272,7 @@ const URL_KEYS = [
   "profitable",
   "band",
   "action",
+  "fenokEdgeMin",
   "connection",
   "sort",
   "dir",
@@ -305,6 +315,7 @@ export function serializeScreenerFilterState(state: ScreenerFilterState, preferT
   setIfPresent(params, "profitable", state.profitableOnly ? "1" : "");
   setIfPresent(params, "band", state.bandFilter);
   setIfPresent(params, "action", state.actionFilter);
+  setIfPresent(params, "fenokEdgeMin", state.fenokEdgeMin);
   setIfPresent(params, "connection", state.connectionFilter);
   const isDefaultSort = state.sortKey === "marketCap" && state.sortDir === "desc";
   setIfPresent(params, "sort", isDefaultSort ? "" : state.sortKey);
