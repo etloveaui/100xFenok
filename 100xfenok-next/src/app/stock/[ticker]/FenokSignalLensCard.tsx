@@ -15,7 +15,6 @@ type SignalKey =
   | "growth"
   | "upsidePotential"
   | "downsidePressure"
-  | "sp500TrackingSimilarity"
   | "technicalFlow"
   | "technicalIndicatorProxy"
   | "netOptionsProxy"
@@ -62,13 +61,6 @@ const LONG_TERM_SIGNALS: SignalConfig[] = [
   { key: "growth", label: "성장", scoreKey: "growthScore", helpKey: "growth" },
   { key: "upsidePotential", label: "상방", scoreKey: "upsidePotentialScore", helpKey: "upsidePotential" },
   { key: "downsidePressure", label: "하방 압력", scoreKey: "downsidePressureScore", helpKey: "downsidePressure", inverted: true },
-  {
-    key: "sp500TrackingSimilarity",
-    label: "SPY 추적",
-    scoreKey: "sp500TrackingSimilarityScore",
-    helpKey: "sp500TrackingSimilarity",
-    contextual: true,
-  },
 ];
 
 const SHORT_TERM_SIGNALS: SignalConfig[] = [
@@ -413,7 +405,6 @@ function hasLensUiData(record: FenokSignalsSummaryRecord): boolean {
     record.upsidePotentialScore,
     record.downsidePressureScore,
     record.marketSimilarityScore,
-    record.sp500TrackingSimilarityScore,
     record.technicalIndicatorProxyScore,
     record.netOptionsProxyScore,
     record.offExchangeActivityProxyScore,
