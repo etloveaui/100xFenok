@@ -15,18 +15,18 @@ import { normalizeForEntityKey } from "@/lib/ticker";
 export type MaybeNumber = number | null | undefined;
 
 function convictionTone(call: ScreenerStock["fenokConvictionCall"]): string {
-  if (call === "집중") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (call === "집중") return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
   if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (call === "희석") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-500";
+  if (call === "희석") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
 function signalScoreTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
-  if (score >= 70) return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (score === null || score === undefined) return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
+  if (score >= 70) return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
   if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (score >= 50) return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-500";
+  if (score >= 50) return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
 function signalDirectionLabel(direction: string | null | undefined): string {
