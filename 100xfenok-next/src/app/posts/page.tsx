@@ -53,7 +53,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
     if (version === "v1") return frame;
     return (
       <div className="fnk-shell">
-        <AppShell active="posts" title="분석 아카이브 상세" backHref={ROUTES.explore}>
+        <AppShell active="posts" title="분석 아카이브 상세" backHref={ROUTES.home}>
           {frame}
         </AppShell>
       </div>
@@ -143,7 +143,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="posts" title="분석 아카이브" backHref={ROUTES.explore}>
+      <AppShell active="posts" title="분석 아카이브" backHref={ROUTES.home}>
         {landing}
       </AppShell>
     </div>

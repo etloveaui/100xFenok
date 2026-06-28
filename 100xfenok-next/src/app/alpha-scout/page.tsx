@@ -49,7 +49,7 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
   if (version !== "v1" && !rawPath && !rawReport) {
     return (
       <div className="fnk-shell">
-        <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.explore}>
+        <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
           <AlphaScoutV2Client />
         </AppShell>
       </div>
@@ -81,7 +81,7 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.explore}>
+      <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
         {frame}
       </AppShell>
     </div>

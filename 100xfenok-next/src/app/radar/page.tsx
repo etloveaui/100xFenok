@@ -56,7 +56,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="explore" title="Market Radar" backHref={ROUTES.explore}>
+      <AppShell active="explore" title="Market Radar" backHref={ROUTES.home}>
         {frame}
       </AppShell>
     </div>

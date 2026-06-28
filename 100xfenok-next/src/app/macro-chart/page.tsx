@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import AppShell from "@/components/shell/AppShell";
+import { ROUTES } from "@/lib/routes";
 import MacroChartClient from "./MacroChartClient";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export default function MacroChartPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="chart" title="차트" backHref="/explore">
+      <AppShell active="chart" title="차트" backHref={ROUTES.home}>
         <MacroChartClient />
       </AppShell>
     </div>

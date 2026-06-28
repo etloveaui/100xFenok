@@ -60,7 +60,7 @@ export default async function VRPage({ searchParams }: PageProps) {
     if (version === "v1") return frame;
     return (
       <div className="fnk-shell">
-        <AppShell active="vr" title={frameTitle} backHref={ROUTES.explore}>
+        <AppShell active="vr" title={frameTitle} backHref={ROUTES.home}>
           {frame}
         </AppShell>
       </div>
@@ -213,7 +213,7 @@ export default async function VRPage({ searchParams }: PageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="vr" title="VR 전략 가이드" backHref={ROUTES.explore}>
+      <AppShell active="vr" title="VR 전략 가이드" backHref={ROUTES.home}>
         {landing}
       </AppShell>
     </div>

@@ -25,7 +25,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   return (
     <div className="fnk-shell">
-      <AppShell active="screener" title="스크리너" backHref={ROUTES.explore}>
+      <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
         <ScreenerClient
           initialSearch={initialSearch}
           initialSector={initialSector}

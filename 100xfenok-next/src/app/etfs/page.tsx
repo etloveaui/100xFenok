@@ -51,7 +51,7 @@ export default async function EtfsPage({ searchParams }: Props) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="etfs" title="ETF" backHref={ROUTES.explore}>
+      <AppShell active="etfs" title="ETF" backHref={ROUTES.home}>
         <section className="panel">
           <div className="data-shell-header">
             <div className="data-shell-head-main">

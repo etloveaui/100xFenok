@@ -34,7 +34,7 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="ib" title="Infinite Buying" backHref={ROUTES.explore}>
+      <AppShell active="ib" title="Infinite Buying" backHref={ROUTES.home}>
         {frame}
       </AppShell>
     </div>

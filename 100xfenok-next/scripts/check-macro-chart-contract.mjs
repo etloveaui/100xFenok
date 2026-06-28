@@ -184,7 +184,8 @@ async function inspectStaticContracts() {
     }
   }
   for (const item of [
-    ['id: "explore"', 'href: ROUTES.explore', 'label: EXPLORE_NAV_LABEL'],
+    ['id: "explore"', 'href: EXPLORE_ROUTE', 'label: EXPLORE_NAV_LABEL'],
+    ['id: "workbench"', 'href: ROUTES.workbench', 'label: WORKBENCH_NAV_LABEL', 'group: "더보기"'],
     ['id: "market"', 'href: ROUTES.market', 'label: "시장"'],
     ['id: "sectors"', 'href: ROUTES.sectors', 'label: "섹터"'],
     ['id: "etfs"', 'href: ROUTES.etfs', 'label: "ETF"'],
@@ -199,16 +200,27 @@ async function inspectStaticContracts() {
       }
     }
   }
-  for (const token of ['EXPLORE_NAV_LABEL = "워크벤치"', 'CHART_NAV_LABEL = "차트"', 'CHART_ROUTE = ROUTES.macroChart']) {
+  for (const token of [
+    'EXPLORE_ROUTE = ROUTES.home',
+    'EXPLORE_NAV_LABEL = "홈"',
+    'WORKBENCH_ROUTE = ROUTES.workbench',
+    'WORKBENCH_NAV_LABEL = "워크벤치"',
+    'CHART_NAV_LABEL = "차트"',
+    'CHART_ROUTE = ROUTES.macroChart',
+  ]) {
     if (!productNavSource.includes(token)) {
       addFailure(failures, "product-nav-labels", `${token} missing from product-nav constants`);
     }
   }
   if (
     !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"]') ||
-    !shellSource.includes('const MORE_TAB_IDS: ShellPage[] = ["sectors", "etfs", "superinvestors", "portfolio"]')
+    !shellSource.includes('const MORE_TAB_IDS: ShellPage[] = [') ||
+    !shellSource.includes('"workbench"') ||
+    !shellSource.includes('"briefing"') ||
+    !shellSource.includes('"sectors"') ||
+    !shellSource.includes('"portfolio"')
   ) {
-    addFailure(failures, "app-shell-mobile-tabs", "mobile primary [explore,market,chart,screener,more] + more [sectors,etfs,superinvestors,portfolio]");
+    addFailure(failures, "app-shell-mobile-tabs", "mobile primary starts at home; workbench/briefing live under more");
   }
 
   return { route: "static:macro-chart", viewport: "static", status: null, failures };

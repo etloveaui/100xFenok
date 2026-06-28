@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
-import { EXPLORE_NAV_LABEL } from "@/lib/product-nav";
+import { EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from "@/lib/product-nav";
 import {
   loadMarketStructureModel,
   type MarketStructureModel,
@@ -198,7 +198,7 @@ export default function MarketStructureDetailClient({
           <TransitionLink href={ROUTES.market} className="data-shell-link">
             시장 밸류에이션
           </TransitionLink>
-          <TransitionLink href={ROUTES.explore} className="data-shell-link">
+          <TransitionLink href={EXPLORE_ROUTE} className="data-shell-link">
             {EXPLORE_NAV_LABEL}
           </TransitionLink>
         </div>

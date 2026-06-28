@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function SectorsPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="sectors" title="섹터" backHref={ROUTES.explore}>
+      <AppShell active="sectors" title="섹터" backHref={ROUTES.home}>
         <SectorsClient />
       </AppShell>
     </div>

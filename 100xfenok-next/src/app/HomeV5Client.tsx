@@ -845,7 +845,7 @@ export default function HomeV5Client() {
 
   return (
     <div className="fnk-shell v5-home">
-      <AppShell active="briefing" title={BRIEFING_PRODUCT_TITLE}>
+      <AppShell active="explore" title={BRIEFING_PRODUCT_TITLE}>
         <div className="v5-stack">
           <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />

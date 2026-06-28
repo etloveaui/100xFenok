@@ -7,12 +7,12 @@ import MyWatchlistStrip from "@/app/explore/MyWatchlistStrip";
 import StockWorkbenchCard from "@/app/explore/StockWorkbenchCard";
 import MacroPlaybookCard from "@/app/explore/MacroPlaybookCard";
 import EtfUniverseCard from "@/app/explore/EtfUniverseCard";
-import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
+import { WORKBENCH_PRODUCT_TITLE } from "@/lib/product-nav";
 
 export default function WorkbenchView() {
   return (
     <div className="fnk-shell">
-      <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
+      <AppShell active="workbench" title={WORKBENCH_PRODUCT_TITLE}>
         <SignalStrip />
 
         <div className="cols" style={{ marginTop: "var(--s4)" }}>

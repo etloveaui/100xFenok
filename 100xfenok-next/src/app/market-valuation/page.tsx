@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function MarketValuationPage() {
   return (
     <div className="fnk-shell">
-      <AppShell active="market" title="시장" backHref={ROUTES.explore}>
+      <AppShell active="market" title="시장" backHref={ROUTES.home}>
         <MarketValuationClient />
       </AppShell>
     </div>

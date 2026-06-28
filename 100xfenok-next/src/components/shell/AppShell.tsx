@@ -19,6 +19,8 @@ import {
   CHART_NAV_LABEL,
   CHART_ROUTE,
   EXPLORE_NAV_LABEL,
+  EXPLORE_ROUTE,
+  WORKBENCH_NAV_LABEL,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 
@@ -31,6 +33,7 @@ import { ROUTES } from "@/lib/routes";
 
 export type ShellPage =
   | "explore"
+  | "workbench"
   | "briefing"
   | "market"
   | "regime"
@@ -57,11 +60,12 @@ const NAV: NavItem[] = [
     id: "explore",
     group: "분석",
     label: EXPLORE_NAV_LABEL,
-    href: ROUTES.workbench,
+    href: EXPLORE_ROUTE,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="10" cy="10" r="7.5" />
-        <path d="M13.2 6.8l-2 4.4-4.4 2 2-4.4z" strokeLinejoin="round" />
+        <path d="M3.5 9.2L10 3.8l6.5 5.4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5.4 8.6v7.2h9.2V8.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8.4 15.8v-4.2h3.2v4.2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -206,6 +210,18 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "workbench",
+    group: "더보기",
+    label: WORKBENCH_NAV_LABEL,
+    href: ROUTES.workbench,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="10" cy="10" r="7.5" />
+        <path d="M13.2 6.8l-2 4.4-4.4 2 2-4.4z" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     id: "dailyWrap",
     group: "더보기",
     label: "Daily Wrap",
@@ -271,6 +287,7 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
 const MORE_TAB_IDS: ShellPage[] = [
+  "workbench",
   "briefing",
   "ib",
   "vr",

@@ -76,7 +76,7 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="explore" title={post.title} backHref={ROUTES.explore}>
+      <AppShell active="posts" title={post.title} backHref={ROUTES.home}>
         {frame}
       </AppShell>
     </div>
