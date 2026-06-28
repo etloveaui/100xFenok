@@ -954,8 +954,8 @@ export default function ScreenerClient({
   }, [rawStocks, guruMap, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
-  const [sector, setSector] = useState(initialSector);
-  const [country, setCountry] = useState("");
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => (initialSector ? [initialSector] : []));
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [perMax, setPerMax] = useState("");
   const [forwardPerMax, setForwardPerMax] = useState("");
   const [revenueGrowthMin, setRevenueGrowthMin] = useState("");
@@ -991,7 +991,7 @@ export default function ScreenerClient({
   }
   if (prevInitialSector !== initialSector) {
     setPrevInitialSector(initialSector);
-    setSector(initialSector);
+    setSelectedSectors(initialSector ? [initialSector] : []);
   }
 
   const initialColumnPreset = coerceColumnPreset(initialPreset);
@@ -1065,8 +1065,8 @@ export default function ScreenerClient({
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
         return false;
       }
-      if (sector && stock.sector !== sector) return false;
-      if (country && stock.country !== country) return false;
+      if (selectedSectors.length > 0 && !selectedSectors.includes(stock.sector)) return false;
+      if (selectedCountries.length > 0 && !selectedCountries.includes(stock.country)) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (actionFilter === "guru_held") {
         if (!hasGuruHolders(stock)) return false;
@@ -1100,7 +1100,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1114,7 +1114,7 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1274,8 +1274,8 @@ export default function ScreenerClient({
 
   function resetFilters() {
     setSearch("");
-    setSector("");
-    setCountry("");
+    setSelectedSectors([]);
+    setSelectedCountries([]);
     setPerMax("");
     setForwardPerMax("");
     setRevenueGrowthMin("");
@@ -1297,7 +1297,7 @@ export default function ScreenerClient({
     setConnectionFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
   const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || bandFilter || actionFilter || connectionFilter);
   const activeAdvancedFilterCount = [
     perMax,
@@ -1431,32 +1431,86 @@ export default function ScreenerClient({
           <label className="flex flex-col gap-1">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
             <select
-              value={sector}
-              onChange={(event) => setSector(event.target.value)}
+              value=""
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value && !selectedSectors.includes(value)) {
+                  setSelectedSectors((prev) => [...prev, value]);
+                }
+              }}
               className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
             >
-              <option value="">전체 섹터</option>
-              {sectors.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
+              <option value="">섹터 추가</option>
+              {sectors
+                .filter((item) => !selectedSectors.includes(item))
+                .map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
             </select>
+            {selectedSectors.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedSectors.map((item) => (
+                  <span
+                    key={item}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                  >
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSectors((prev) => prev.filter((s) => s !== item))}
+                      className="text-slate-500 hover:text-slate-900"
+                      aria-label={`Remove ${item}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
             <select
-              value={country}
-              onChange={(event) => setCountry(event.target.value)}
+              value=""
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value && !selectedCountries.includes(value)) {
+                  setSelectedCountries((prev) => [...prev, value]);
+                }
+              }}
               className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
             >
-              <option value="">전체 국가</option>
-              {countries.map((code) => (
-                <option key={code} value={code}>
-                  {COUNTRY_LABEL[code] ?? code}
-                </option>
-              ))}
+              <option value="">국가 추가</option>
+              {countries
+                .filter((code) => !selectedCountries.includes(code))
+                .map((code) => (
+                  <option key={code} value={code}>
+                    {COUNTRY_LABEL[code] ?? code}
+                  </option>
+                ))}
             </select>
+            {selectedCountries.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedCountries.map((code) => (
+                  <span
+                    key={code}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                  >
+                    {COUNTRY_LABEL[code] ?? code}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCountries((prev) => prev.filter((c) => c !== code))}
+                      className="text-slate-500 hover:text-slate-900"
+                      aria-label={`Remove ${code}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </label>
           <div id="advanced-filters" className={filtersOpen ? "contents" : "hidden md:contents"}>
             <label className="flex flex-col gap-1">
