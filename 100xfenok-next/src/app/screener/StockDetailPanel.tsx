@@ -328,6 +328,7 @@ interface DetailLongTermAxis extends FenokSignalRadarHexagonAxis {
   helpKey: FenokSignalHelpKey;
   fullLabel: string;
   coverage: number | null;
+  tooltipNote?: string | null;
   meta: { tier: string | null; tone: "up" | "warn" | "down" | "neutral" };
 }
 
@@ -339,6 +340,8 @@ interface DetailLongTermAxisConfig {
   directionKey?: keyof ScreenerStock;
   coverageKey?: keyof ScreenerStock;
   helpKey: FenokSignalHelpKey;
+  invertScore?: boolean;
+  tooltipNote?: string;
 }
 
 const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
@@ -367,10 +370,12 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하방",
-    fullLabel: "하락 압력",
+    spokeLabel: "하방안전",
+    fullLabel: "하방안전",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
+    invertScore: true,
+    tooltipNote: "하락 압력의 역수, 높을수록 위험 낮음",
   },
   {
     key: "marketSimilarity",
@@ -407,7 +412,10 @@ function deriveDetailAxisMeta(
 function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
   return DETAIL_LONG_TERM_AXIS_CONFIG.map((config) => {
     const rawScore = stock[config.scoreKey as keyof ScreenerStock];
-    const score = isFiniteNumber(rawScore) ? rawScore : null;
+    let score = isFiniteNumber(rawScore) ? rawScore : null;
+    if (score !== null && config.invertScore) {
+      score = Math.max(0, Math.min(100, 100 - score));
+    }
     const rawDirection = config.directionKey
       ? stock[config.directionKey as keyof ScreenerStock]
       : null;
@@ -417,7 +425,8 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       ? stock[config.coverageKey as keyof ScreenerStock]
       : null;
     const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
-    const meta = deriveDetailAxisMeta(score, config.helpKey);
+    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
+    const meta = deriveDetailAxisMeta(score, metaHelpKey);
     return {
       key: config.key,
       label: config.spokeLabel,
@@ -426,6 +435,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       direction: explicitDirection ?? meta.direction,
       tier: meta.tier,
       helpKey: config.helpKey,
+      tooltipNote: config.tooltipNote ?? null,
       coverage,
       meta,
     };
@@ -443,6 +453,11 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
         <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
           Fenok 파생 신호 · 매수권유 아님
         </div>
+        {axis.tooltipNote ? (
+          <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
+            {axis.tooltipNote}
+          </div>
+        ) : null}
         {axis.coverage !== null ? (
           <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
             데이터 {Math.round(axis.coverage * 100)}%
