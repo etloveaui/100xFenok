@@ -154,7 +154,7 @@ export default function FenokSignalHelpPopover({
         aria-expanded={isOpen}
         aria-controls={popoverId}
         onClick={toggle}
-        className="inline-flex size-4 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] text-[10px] font-black leading-none text-[var(--c-ink-3)] shadow-sm transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-interactive)]/40"
+        className="inline-flex size-6 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] text-xs font-black leading-none text-[var(--c-ink-3)] shadow-sm transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-interactive)]/40"
       >
         ?
       </button>

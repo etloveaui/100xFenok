@@ -25,7 +25,7 @@ export function FenokSignalRadarHexagonPair({
   rightEmptyLabel,
 }: FenokSignalRadarHexagonPairProps) {
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-center">
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
       <FenokSignalRadarHexagon title={leftTitle} axes={leftAxes} size={size} emptyLabel={leftEmptyLabel} />
       <FenokSignalRadarHexagon title={rightTitle} axes={rightAxes} size={size} emptyLabel={rightEmptyLabel} />
     </div>
