@@ -36,6 +36,19 @@ function removeGeneratedPublicMirror(relativePath) {
 }
 
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
+for (const relativePath of [
+  "public/data/computed/fenok_flow_proxies.json",
+  "public/data/computed/fenok_flow_proxies_history.json",
+  "public/data/computed/fenok_occ_options_volume.json",
+  "public/data/computed/fenok_occ_options_volume_history.json",
+  "public/data/computed/fenok_news_tone_proxy.json",
+  "public/data/computed/fenok_news_tone_proxy_history.json",
+  "public/data/computed/fenok_signal_lens_proxies.json",
+  "public/data/computed/fenok_signal_lens_proxies_history.json",
+  "public/data/computed/fenok_signal_lens_proxies_summary.json",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 
 applyReplacements("public/tools/stock_analyzer/stock_analyzer.html", [
   [
