@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController, RadialLinearScale, RadarController, Filler } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData, ChartOptions } from "chart.js";
-import { Doughnut, Bar, Line, Chart, Scatter } from "react-chartjs-2";
+import { Doughnut, Bar, Line, Chart, Scatter, Radar } from "react-chartjs-2";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
-import type { PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
+import type { FactorExposureRecord, FactorExposuresSummaryData, PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 type MaybeNumber = number | null | undefined;
@@ -27,6 +27,9 @@ ChartJS.register(
   LineElement,
   PointElement,
   ScatterController,
+  RadialLinearScale,
+  RadarController,
+  Filler,
   TreemapController,
   TreemapElement,
 );
@@ -37,6 +40,8 @@ ChartJS.register(
 
 let pvCache: PortfolioViewsData | null = null;
 let pvPromise: Promise<PortfolioViewsData | null> | null = null;
+let factorCache: FactorExposuresSummaryData | null = null;
+let factorPromise: Promise<FactorExposuresSummaryData | null> | null = null;
 
 export function loadPortfolioViews(): Promise<PortfolioViewsData | null> {
   if (pvCache) return Promise.resolve(pvCache);
@@ -55,6 +60,86 @@ export function loadPortfolioViews(): Promise<PortfolioViewsData | null> {
       return null;
     });
   return pvPromise;
+}
+
+type RawFactorExposuresSummary = Omit<FactorExposuresSummaryData, "rows"> & {
+  rows?: Array<Record<string, unknown> | unknown[]>;
+};
+
+function readField(row: Record<string, unknown> | unknown[], fields: string[], key: string): unknown {
+  if (Array.isArray(row)) {
+    const index = fields.indexOf(key);
+    return index >= 0 ? row[index] : undefined;
+  }
+  return row[key];
+}
+
+function factorString(row: Record<string, unknown> | unknown[], fields: string[], key: string): string | null {
+  const value = readField(row, fields, key);
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function factorNumber(row: Record<string, unknown> | unknown[], fields: string[], key: string): number | null {
+  const value = readField(row, fields, key);
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function normalizeFactorExposureRecord(
+  row: Record<string, unknown> | unknown[],
+  fields: string[],
+): FactorExposureRecord | null {
+  const investorId = factorString(row, fields, "investorId");
+  const name = factorString(row, fields, "name");
+  if (!investorId || !name) return null;
+  return {
+    investorId,
+    name,
+    asOf: factorString(row, fields, "asOf"),
+    confidence: factorString(row, fields, "confidence"),
+    coverageRatio: factorNumber(row, fields, "coverageRatio"),
+    observationCount: factorNumber(row, fields, "observationCount"),
+    rSquared: factorNumber(row, fields, "rSquared"),
+    marketBeta: factorNumber(row, fields, "marketBeta"),
+    sizeBeta: factorNumber(row, fields, "sizeBeta"),
+    valueBeta: factorNumber(row, fields, "valueBeta"),
+    profitabilityBeta: factorNumber(row, fields, "profitabilityBeta"),
+    investmentBeta: factorNumber(row, fields, "investmentBeta"),
+    momentumBeta: factorNumber(row, fields, "momentumBeta"),
+    marketScore: factorNumber(row, fields, "marketScore"),
+    sizeScore: factorNumber(row, fields, "sizeScore"),
+    valueScore: factorNumber(row, fields, "valueScore"),
+    profitabilityScore: factorNumber(row, fields, "profitabilityScore"),
+    investmentScore: factorNumber(row, fields, "investmentScore"),
+    momentumScore: factorNumber(row, fields, "momentumScore"),
+    tiltStrengthScore: factorNumber(row, fields, "tiltStrengthScore"),
+  };
+}
+
+export function loadFactorExposuresSummary(): Promise<FactorExposuresSummaryData | null> {
+  if (factorCache) return Promise.resolve(factorCache);
+  if (factorPromise) return factorPromise;
+  factorPromise = fetch("/data/sec-13f/analytics/factor_exposures_summary.json")
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json() as Promise<RawFactorExposuresSummary>;
+    })
+    .then((payload) => {
+      const fields = Array.isArray(payload.fields) ? payload.fields : [];
+      const rows = Array.isArray(payload.rows) ? payload.rows : [];
+      factorCache = {
+        ...payload,
+        fields,
+        rows: rows
+          .map((row) => normalizeFactorExposureRecord(row, fields))
+          .filter((row): row is FactorExposureRecord => Boolean(row)),
+      };
+      return factorCache;
+    })
+    .catch(() => {
+      factorPromise = null;
+      return null;
+    });
+  return factorPromise;
 }
 
 function retStr(ret: MaybeNumber): string {
@@ -913,6 +998,189 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
       </div>
       <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
         2021-Q1 동일 기준{commonEndDate ? ` · ${commonEndDate}까지` : ""} · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// FactorExposureRadar — FF-derived factor tilt, derived-public only
+// ---------------------------------------------------------------------------
+
+interface FactorExposureRadarProps {
+  data: FactorExposuresSummaryData;
+}
+
+const FACTOR_RADAR_AXES = [
+  { label: "Market", scoreKey: "marketScore", betaKey: "marketBeta" },
+  { label: "Size", scoreKey: "sizeScore", betaKey: "sizeBeta" },
+  { label: "Value", scoreKey: "valueScore", betaKey: "valueBeta" },
+  { label: "Profit", scoreKey: "profitabilityScore", betaKey: "profitabilityBeta" },
+  { label: "Invest", scoreKey: "investmentScore", betaKey: "investmentBeta" },
+  { label: "Momentum", scoreKey: "momentumScore", betaKey: "momentumBeta" },
+] as const;
+
+function factorPct(value: number | null | undefined, digits = 0): string {
+  if (!isFiniteNumber(value)) return "—";
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
+function confidenceKo(value: string | null | undefined): string {
+  if (value === "high") return "신뢰 높음";
+  if (value === "medium") return "신뢰 보통";
+  if (value === "low") return "신뢰 낮음";
+  return "신뢰 미정";
+}
+
+function factorTitle(record: FactorExposureRecord): string {
+  return [
+    "FF-derived factor tilt",
+    confidenceKo(record.confidence),
+    `coverage=${factorPct(record.coverageRatio)}`,
+    record.asOf ? `as_of=${record.asOf}` : null,
+  ].filter(Boolean).join(" · ");
+}
+
+export function FactorExposureRadar({ data }: FactorExposureRadarProps) {
+  const chartTheme = useMarketChartTheme();
+  const records = useMemo(
+    () => [...data.rows].sort((a, b) => (b.tiltStrengthScore ?? 0) - (a.tiltStrengthScore ?? 0) || a.name.localeCompare(b.name)),
+    [data.rows],
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = records.find((record) => record.investorId === selectedId) ?? records[0] ?? null;
+  const topRecords = records.slice(0, 12);
+
+  const chartData = useMemo<ChartData<"radar">>(() => {
+    const values = selected
+      ? FACTOR_RADAR_AXES.map((axis) => selected[axis.scoreKey] ?? 0)
+      : [];
+    return {
+      labels: FACTOR_RADAR_AXES.map((axis) => axis.label),
+      datasets: [
+        {
+          label: selected?.name ?? "Factor tilt",
+          data: values,
+          borderColor: chartTheme.token("brand"),
+          backgroundColor: chartTheme.alpha("brand", 0.16),
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        },
+      ],
+    };
+  }, [selected, chartTheme]);
+
+  const options = useMemo<ChartOptions<"radar">>(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const axis = FACTOR_RADAR_AXES[ctx.dataIndex];
+            const score = Number(ctx.raw);
+            const beta = selected ? selected[axis.betaKey] : null;
+            return `${axis.label}: ${score.toFixed(0)} / beta ${isFiniteNumber(beta) ? beta.toFixed(2) : "—"}`;
+          },
+        },
+      },
+    },
+    scales: {
+      r: {
+        min: 0,
+        max: 100,
+        angleLines: { color: chartTheme.token("line") },
+        grid: { color: chartTheme.token("line") },
+        pointLabels: { color: chartTheme.token("ink2"), font: { size: 11, weight: "bold" as const } },
+        ticks: {
+          stepSize: 25,
+          color: chartTheme.token("ink3"),
+          backdropColor: "transparent",
+          font: { size: 9 },
+        },
+      },
+    },
+  }), [selected, chartTheme]);
+
+  if (!selected) {
+    return (
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+        팩터 틸트 데이터가 없습니다
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span
+          className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-700"
+          title={factorTitle(selected)}
+        >
+          FF-derived factor tilt
+        </span>
+        <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+          {confidenceKo(selected.confidence)} · coverage {factorPct(selected.coverageRatio)} · {selected.asOf ?? data.coverage?.factor_aligned_as_of ?? "as_of 미정"}
+        </span>
+      </div>
+
+      <div className="mb-3 flex max-h-[88px] flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2">
+        {topRecords.map((record) => {
+          const active = record.investorId === selected.investorId;
+          return (
+            <button
+              key={record.investorId}
+              type="button"
+              onClick={() => setSelectedId(record.investorId)}
+              className={`
+                inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold transition
+                ${
+                  active
+                    ? "border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }
+              `}
+              title={factorTitle(record)}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-brand-interactive" : "bg-slate-300"}`} />
+              {record.name}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)]">
+        <div className="relative h-[300px] sm:h-[380px]">
+          <Radar
+            data={chartData}
+            options={options}
+            role="img"
+            aria-label={`${selected.name} Fama-French 파생 팩터 틸트 레이더`}
+          />
+        </div>
+        <div className="grid content-center gap-2">
+          {FACTOR_RADAR_AXES.map((axis) => {
+            const score = selected[axis.scoreKey];
+            const beta = selected[axis.betaKey];
+            return (
+              <div key={axis.scoreKey} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
+                <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-600">{axis.label}</span>
+                <span className="text-[11px] font-black tabular-nums text-slate-900">
+                  {isFiniteNumber(score) ? score.toFixed(0) : "—"}
+                  <span className="ml-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                    β {isFiniteNumber(beta) ? beta.toFixed(2) : "—"}
+                  </span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+        Fama-French 5-factor + momentum 월간 수익률 기반 파생 틸트 · raw FF 데이터 비공개 · 공개 JSON은 derived score만 포함
       </p>
     </div>
   );

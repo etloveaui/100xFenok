@@ -11,10 +11,11 @@ import type {
   ConvictionEntry,
   BuyingPressureRow,
   ConvictionPosition,
+  FactorExposuresSummaryData,
   TradesRankingData,
   PortfolioViewsData,
 } from "@/lib/superinvestors/types";
-import { loadPortfolioViews, RiskReturnScatter, CumulativeReturnOverlay } from "./PortfolioCharts";
+import { loadPortfolioViews, loadFactorExposuresSummary, RiskReturnScatter, CumulativeReturnOverlay, FactorExposureRadar } from "./PortfolioCharts";
 
 // ---------------------------------------------------------------------------
 // Module-level caches
@@ -505,16 +506,17 @@ export default function InsightsTab() {
   const [cv, setCv] = useState<ConvictionData | null>(null);
   const [ce, setCe] = useState<ConvictionEntriesData | null>(null);
   const [pv, setPv] = useState<PortfolioViewsData | null>(null);
+  const [fx, setFx] = useState<FactorExposuresSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction(), loadConvictionEntries(), loadPortfolioViews()]).then(([bpR, trR, npR, hhiR, cvR, ceR, pvR]) => {
+    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction(), loadConvictionEntries(), loadPortfolioViews(), loadFactorExposuresSummary()]).then(([bpR, trR, npR, hhiR, cvR, ceR, pvR, fxR]) => {
       if (cancelled) return;
-      const anyData = bpR || trR || npR || hhiR || cvR || ceR || pvR;
+      const anyData = bpR || trR || npR || hhiR || cvR || ceR || pvR || fxR;
       if (!anyData) { setFailed(true); }
-      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR); setCe(ceR); setPv(pvR);
+      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR); setCe(ceR); setPv(pvR); setFx(fxR);
       setLoading(false);
     });
     return () => { cancelled = true; };
@@ -567,6 +569,13 @@ export default function InsightsTab() {
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">2021-Q1 기준 누적 수익 (동일기간)</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">22개 분기 전체 데이터를 가진 투자자만 대상으로 2021-Q1 기준 100에서 누적 성과 비교</p>
             {pv ? <CumulativeReturnOverlay data={pv} /> : <SkeletonCard />}
+          </div>
+
+          {/* 0c. Fama-French 파생 팩터 틸트 */}
+          <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
+            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">팩터 틸트 레이더</h3>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">FF-derived factor tilt · confidence · coverage · as_of</p>
+            {fx ? <FactorExposureRadar data={fx} /> : <SkeletonCard />}
           </div>
 
           {/* 1. 매수 압력 */}

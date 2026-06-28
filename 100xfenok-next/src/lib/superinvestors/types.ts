@@ -105,6 +105,51 @@ export interface PortfolioViewsData {
   investors: Record<string, InvestorPortfolioView>;
 }
 
+export interface FactorExposureRecord {
+  investorId: string;
+  name: string;
+  asOf: string | null;
+  confidence: string | null;
+  coverageRatio: number | null;
+  observationCount: number | null;
+  rSquared: number | null;
+  marketBeta: number | null;
+  sizeBeta: number | null;
+  valueBeta: number | null;
+  profitabilityBeta: number | null;
+  investmentBeta: number | null;
+  momentumBeta: number | null;
+  marketScore: number | null;
+  sizeScore: number | null;
+  valueScore: number | null;
+  profitabilityScore: number | null;
+  investmentScore: number | null;
+  momentumScore: number | null;
+  tiltStrengthScore: number | null;
+}
+
+export interface FactorExposuresSummaryData {
+  schema_version?: number;
+  generated_at?: string;
+  source_file?: string;
+  formula_version?: string;
+  contract_doc?: string;
+  feasibility_doc?: string;
+  public_surface_status?: string;
+  raw_data_boundary?: string;
+  coverage?: {
+    row_count?: number | null;
+    same_period_cohort_count?: number | null;
+    common_performance_end_date?: string | null;
+    factor_aligned_as_of?: string | null;
+    observation_count_min?: number | null;
+    observation_count_max?: number | null;
+    confidence_counts?: Record<string, number>;
+  };
+  fields: string[];
+  rows: FactorExposureRecord[];
+}
+
 // ---------------------------------------------------------------------------
 // W3a Insight tab types
 // ---------------------------------------------------------------------------
