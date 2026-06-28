@@ -5,6 +5,7 @@ export type ProductRoutePath = `/${string}`;
 export const ROUTES = {
   home: "/",
   explore: "/explore",
+  workbench: "/workbench",
   briefing: "/briefing",
   market: "/market-valuation",
   // Legacy bookmark target only; `/market` redirects to `ROUTES.market`.
@@ -48,6 +49,7 @@ export type RouteKey = keyof typeof ROUTES;
 export const APP_ROUTE_PATTERNS = [
   "/",
   "/explore",
+  "/workbench",
   "/briefing",
   "/market",
   "/market-valuation",
@@ -79,6 +81,7 @@ export const APP_ROUTE_PATTERNS = [
 export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.home,
   ROUTES.explore,
+  ROUTES.workbench,
   ROUTES.briefing,
   ROUTES.market,
   ROUTES.marketStructure,
@@ -107,6 +110,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
 export const PRIMARY_PRODUCT_ROUTES = [
   ROUTES.home,
   ROUTES.explore,
+  ROUTES.workbench,
   ROUTES.briefing,
   ROUTES.market,
   ROUTES.regime,
@@ -121,6 +125,7 @@ export const PRIMARY_PRODUCT_ROUTES = [
 export const DOCK_PRODUCT_ROUTES = [
   ROUTES.home,
   ROUTES.briefing,
+  ROUTES.workbench,
   ROUTES.market,
   ROUTES.alphaScout,
   ROUTES.sectors,
@@ -146,6 +151,7 @@ export const DOCK_PRODUCT_ROUTES = [
 export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.home, changeFrequency: "daily", priority: 1 },
   { path: ROUTES.explore, changeFrequency: "daily", priority: 0.9 },
+  { path: ROUTES.workbench, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.briefing, changeFrequency: "daily", priority: 0.8 },
   { path: ROUTES.market, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.marketStructure, changeFrequency: "daily", priority: 0.8 },

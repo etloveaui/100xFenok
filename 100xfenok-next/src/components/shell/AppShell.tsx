@@ -19,7 +19,6 @@ import {
   CHART_NAV_LABEL,
   CHART_ROUTE,
   EXPLORE_NAV_LABEL,
-  EXPLORE_ROUTE,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 
@@ -58,7 +57,7 @@ const NAV: NavItem[] = [
     id: "explore",
     group: "분석",
     label: EXPLORE_NAV_LABEL,
-    href: EXPLORE_ROUTE,
+    href: ROUTES.workbench,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
         <circle cx="10" cy="10" r="7.5" />
