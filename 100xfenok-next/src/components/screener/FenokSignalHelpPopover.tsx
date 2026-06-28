@@ -83,7 +83,7 @@ export default function FenokSignalHelpPopover({
     setIsOpen((prev) => !prev);
   }
 
-  const headerDirection = directionKo(direction, "미확인");
+  const headerDirection = directionKo(direction, "");
 
   const popover = (
     <div
@@ -109,7 +109,8 @@ export default function FenokSignalHelpPopover({
           {entry.label}
         </strong>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-          {scoreValue ?? "—"} · {headerDirection}
+          {scoreValue ?? "—"}
+          {headerDirection ? ` · ${headerDirection}` : null}
         </span>
       </div>
       <p className="mb-2 text-[11px] font-semibold leading-snug text-[var(--c-ink-2)]">
