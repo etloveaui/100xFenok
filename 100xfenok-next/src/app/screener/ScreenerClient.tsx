@@ -25,6 +25,7 @@ import {
   coerceActionFilter,
   coerceConnectionFilter,
   coerceFenokEdgeFilter,
+  coerceConvictionFilter,
   parseFilterNumber,
   PRESET_KEYS,
   PRESET_LABEL,
@@ -32,6 +33,7 @@ import {
   type ActionFilter,
   type ConnectionFilter,
   type FenokEdgeFilter,
+  type ConvictionFilter,
   type ColumnPreset,
   type ScreenerFilterState,
 } from "@/lib/screener/filter-url";
@@ -72,6 +74,10 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "rank", label: "순위", align: "right" },
   { key: "guruHolders", label: "대가 보유", align: "right" },
   { key: "connectionCount", label: "연결", align: "left" },
+  { key: "fenokConvictionScore", label: "Fenok 컨빅션", align: "right" },
+  { key: "profitabilityScore", label: "수익성", align: "right" },
+  { key: "growthScore", label: "성장", align: "right" },
+  { key: "technicalFlowScore", label: "기술/자금", align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
@@ -240,6 +246,50 @@ function fenokEdgeTitle(stock: ScreenerStock): string {
     coverage,
     stock.fenokSignalAsOf ? `as_of=${stock.fenokSignalAsOf}` : null,
   ].filter(Boolean).join(" · ");
+}
+
+function convictionCallLabel(call: ScreenerStock["fenokConvictionCall"]): string {
+  return call ?? "미정";
+}
+
+function convictionTone(score: number | null, call: ScreenerStock["fenokConvictionCall"]): string {
+  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
+  if (call === "집중") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (call === "희석") return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-50 text-slate-500";
+}
+
+function signalDirectionLabel(direction: string | null | undefined): string {
+  if (direction === "positive" || direction === "upside_bias") return "상";
+  if (direction === "negative" || direction === "downside_bias") return "하";
+  if (direction === "neutral" || direction === "balanced") return "중";
+  return "·";
+}
+
+function signalScoreTone(score: number | null): string {
+  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
+  if (score >= 70) return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (score >= 50) return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-50 text-slate-500";
+}
+
+function convictionTooltip(stock: ScreenerStock): string {
+  const lines = ["Fenok 4-신호 동등가중 종합 · 매수권유 아님"];
+  const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
+    const s = typeof score === "number" && Number.isFinite(score) ? Math.round(score) : "—";
+    lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
+  };
+  push("수익성", stock.profitabilityScore, stock.profitabilityDirection);
+  push("성장", stock.growthScore, stock.growthDirection);
+  push("기술/자금", stock.technicalFlowScore, stock.technicalFlowDirection);
+  push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
+  const coverage = typeof stock.fenokSignalCoverageRatio === "number"
+    ? `coverage=${Math.round(stock.fenokSignalCoverageRatio * 100)}%`
+    : "coverage=unknown";
+  lines.push([confidenceText(stock.fenokSignalConfidence), coverage, stock.fenokSignalAsOf ? `as_of=${stock.fenokSignalAsOf}` : null].filter(Boolean).join(" · "));
+  return lines.join("\n");
 }
 
 function guruHoldersCount(stock: ScreenerStock): number | null {
@@ -452,6 +502,63 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             title={fenokEdgeTitle(stock)}
           >
             <span aria-hidden="true">{fenokEdgeDirectionMark(stock.fenokEdgeDirection)}</span>
+            {score ?? "—"}
+          </span>
+        </span>
+      );
+    }
+    case "fenokConvictionScore": {
+      const score = typeof stock.fenokConvictionScore === "number" && Number.isFinite(stock.fenokConvictionScore)
+        ? Math.round(stock.fenokConvictionScore)
+        : null;
+      const call = stock.fenokConvictionCall;
+      const isPicks = preset === "fenokPicks";
+      return (
+        <span className={cx("inline-flex flex-col items-end gap-1", isPicks ? "min-w-[140px]" : "min-w-[80px]")}>
+          <span
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", convictionTone(score, call))}
+            title={convictionTooltip(stock)}
+          >
+            <span aria-hidden="true">{convictionCallLabel(call)}</span>
+            {score ?? "—"}
+          </span>
+          {isPicks ? (
+            <span className="inline-flex flex-wrap justify-end gap-1">
+              {[
+                { label: "수익", score: stock.profitabilityScore, direction: stock.profitabilityDirection },
+                { label: "성장", score: stock.growthScore, direction: stock.growthDirection },
+                { label: "기술", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection },
+                { label: "Edge", score: stock.fenokEdgeScore, direction: stock.fenokEdgeDirection },
+              ].map((item) => {
+                const itemScore = typeof item.score === "number" && Number.isFinite(item.score) ? Math.round(item.score) : null;
+                return (
+                  <span
+                    key={item.label}
+                    className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", signalScoreTone(itemScore))}
+                    title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
+                  >
+                    <span aria-hidden="true">{item.label}</span>
+                    {itemScore ?? "—"}
+                  </span>
+                );
+              })}
+            </span>
+          ) : null}
+        </span>
+      );
+    }
+    case "profitabilityScore":
+    case "growthScore":
+    case "technicalFlowScore": {
+      const score = typeof stock[key] === "number" && Number.isFinite(stock[key]) ? Math.round(stock[key] as number) : null;
+      const direction = key === "profitabilityScore" ? stock.profitabilityDirection : key === "growthScore" ? stock.growthDirection : stock.technicalFlowDirection;
+      return (
+        <span className="inline-flex min-w-[64px] justify-end">
+          <span
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
+            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · Fenok 파생 신호 · 매수권유 아님`}
+          >
+            <span aria-hidden="true">{signalDirectionLabel(direction)}</span>
             {score ?? "—"}
           </span>
         </span>
@@ -951,6 +1058,7 @@ export default function ScreenerClient({
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">(() => initialFilterValues.bandFilter ?? "");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter || initialFilterValues.actionFilter));
   const [fenokEdgeMin, setFenokEdgeMin] = useState<FenokEdgeFilter>(() => coerceFenokEdgeFilter(initialFilterValues.fenokEdgeMin));
+  const [convictionMin, setConvictionMin] = useState<ConvictionFilter>(() => coerceConvictionFilter(initialFilterValues.convictionMin));
   const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter || initialFilterValues.connectionFilter));
   const [sortKey, setSortKey] = useState<ScreenerSortKey>(() => initialFilterValues.sortKey ?? "marketCap");
   const [sortDir, setSortDir] = useState<SortDir>(() => initialFilterValues.sortDir ?? "desc");
@@ -982,7 +1090,7 @@ export default function ScreenerClient({
       setSortKey((current) => {
         if (PRESET_KEYS[saved].includes(current)) return current;
         setSortDir("desc");
-        return "marketCap";
+        return saved === "fenokPicks" ? "fenokConvictionScore" : "marketCap";
       });
     });
     return () => window.cancelAnimationFrame(frame);
@@ -996,11 +1104,16 @@ export default function ScreenerClient({
   function handlePresetChange(next: ColumnPreset) {
     setPreset(next);
     localStorage.setItem("screener-preset", next);
-    // Reset sort to a column that exists in the new preset
-    const validKeys = PRESET_KEYS[next];
-    if (!validKeys.includes(sortKey)) {
-      setSortKey("marketCap");
+    // Default sort for Fenok Picks is conviction desc; otherwise reset to a valid column
+    if (next === "fenokPicks") {
+      setSortKey("fenokConvictionScore");
       setSortDir("desc");
+    } else {
+      const validKeys = PRESET_KEYS[next];
+      if (!validKeys.includes(sortKey)) {
+        setSortKey("marketCap");
+        setSortDir("desc");
+      }
     }
   }
 
@@ -1033,6 +1146,7 @@ export default function ScreenerClient({
       bandFilter,
       actionFilter,
       fenokEdgeMin,
+      convictionMin,
       connectionFilter,
       sortKey,
       sortDir,
@@ -1067,6 +1181,7 @@ export default function ScreenerClient({
     bandFilter,
     actionFilter,
     fenokEdgeMin,
+    convictionMin,
     connectionFilter,
     sortKey,
     sortDir,
@@ -1094,6 +1209,7 @@ export default function ScreenerClient({
     const opmMinValue = parseFilterNumber(opmMin);
     const return12mMinValue = parseFilterNumber(return12mMin);
     const fenokEdgeMinValue = parseFilterNumber(fenokEdgeMin);
+    const convictionMinValue = parseFilterNumber(convictionMin);
 
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
@@ -1108,6 +1224,7 @@ export default function ScreenerClient({
         return false;
       }
       if (fenokEdgeMinValue !== null && (stock.fenokEdgeScore === null || stock.fenokEdgeScore === undefined || stock.fenokEdgeScore < fenokEdgeMinValue)) return false;
+      if (convictionMinValue !== null && (stock.fenokConvictionScore === null || stock.fenokConvictionScore === undefined || stock.fenokConvictionScore < convictionMinValue)) return false;
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMinValue !== null && (stock.per === null || stock.per < perMinValue)) return false;
       if (perMaxValue !== null && (stock.per === null || stock.per <= 0 || stock.per > perMaxValue)) return false;
@@ -1138,7 +1255,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, fenokEdgeMin, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, fenokEdgeMin, convictionMin, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1152,7 +1269,7 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${fenokEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${fenokEdgeMin}|${convictionMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1284,6 +1401,7 @@ export default function ScreenerClient({
     setBandFilter("");
     setActionFilter("");
     setFenokEdgeMin("");
+    setConvictionMin("");
     setConnectionFilter("");
     setSortKey("marketCap");
     setSortDir("desc");
@@ -1316,6 +1434,7 @@ export default function ScreenerClient({
       bandFilter,
       actionFilter,
       fenokEdgeMin,
+      convictionMin,
       connectionFilter,
       sortKey,
       sortDir,
@@ -1349,6 +1468,7 @@ export default function ScreenerClient({
     setBandFilter(next.bandFilter);
     setActionFilter(next.actionFilter);
     setFenokEdgeMin(coerceFenokEdgeFilter(next.fenokEdgeMin));
+    setConvictionMin(coerceConvictionFilter(next.convictionMin));
     setConnectionFilter(next.connectionFilter);
     setSortKey(next.sortKey);
     setSortDir(next.sortDir);
@@ -1405,7 +1525,7 @@ export default function ScreenerClient({
     setSavedPresets((prev) => prev.filter((p) => p.name !== name));
   }
 
-  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || fenokEdgeMin || connectionFilter);
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || fenokEdgeMin || convictionMin || connectionFilter);
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
@@ -1495,6 +1615,9 @@ export default function ScreenerClient({
     ...(fenokEdgeMin
       ? [{ active: true, label: `Fenok Edge ≥ ${fenokEdgeMin}`, clear: () => setFenokEdgeMin("") }]
       : []),
+    ...(convictionMin
+      ? [{ active: true, label: `Fenok 컨빅션 ≥ ${convictionMin}`, clear: () => setConvictionMin("") }]
+      : []),
     ...(connectionFilter
       ? [{ active: true, label: `연결: ${CONNECTION_FILTER_LABEL[connectionFilter]}`, clear: () => setConnectionFilter("" as ConnectionFilter) }]
       : []),
@@ -1518,7 +1641,7 @@ export default function ScreenerClient({
   const valueCount = Number(Boolean(perMin)) + Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
-  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(fenokEdgeMin)) + Number(Boolean(connectionFilter));
+  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(fenokEdgeMin)) + Number(Boolean(convictionMin)) + Number(Boolean(connectionFilter));
 
   return (
     <div className="data-shell-page">
@@ -2105,6 +2228,20 @@ export default function ScreenerClient({
                     title="Fenok 파생 upside/downside 프록시"
                   >
                     <option value="">전체 Edge</option>
+                    <option value="70">70 이상</option>
+                    <option value="60">60 이상</option>
+                    <option value="50">50 이상</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Fenok 컨빅션</span>
+                  <select
+                    value={convictionMin}
+                    onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                    title="Fenok 4-신호 동등가중 종합 · 매수권유 아님"
+                  >
+                    <option value="">전체 컨빅션</option>
                     <option value="70">70 이상</option>
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>

@@ -18,6 +18,8 @@ export interface FenokSignalsSummaryRecord {
   asOf?: string | null;
   confidence?: string | null;
   coverageRatio?: number | null;
+  convictionScore?: number | null;
+  convictionCall?: "accumulate" | "hold" | "reduce" | null;
   profitabilityScore?: number | null;
   profitabilityDirection?: string | null;
   growthScore?: number | null;

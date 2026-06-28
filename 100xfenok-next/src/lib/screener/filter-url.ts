@@ -19,6 +19,7 @@ export type ActionFilter =
 
 export type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership" | "singleStockEtfs";
 export type FenokEdgeFilter = "" | "70" | "60" | "50";
+export type ConvictionFilter = "" | "70" | "60" | "50";
 
 export type ColumnPreset =
   | "basic"
@@ -28,7 +29,8 @@ export type ColumnPreset =
   | "estimate"
   | "momentum"
   | "dividend"
-  | "guru";
+  | "guru"
+  | "fenokPicks";
 
 export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
@@ -67,6 +69,18 @@ export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "pbr", "peg", "roe", "marketCap", "return12m"],
+  fenokPicks: [
+    "ticker",
+    "name",
+    "sector",
+    "fenokConvictionScore",
+    "profitabilityScore",
+    "growthScore",
+    "technicalFlowScore",
+    "fenokEdgeScore",
+    "marketCap",
+    "per",
+  ],
 };
 
 export const PRESET_LABEL: Record<ColumnPreset, string> = {
@@ -78,6 +92,7 @@ export const PRESET_LABEL: Record<ColumnPreset, string> = {
   momentum: "모멘텀",
   dividend: "배당",
   guru: "대가 관심",
+  fenokPicks: "Fenok Picks",
 };
 
 export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
@@ -111,6 +126,7 @@ export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
   dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
+  fenokPicks: ["fenokConvictionScore", "profitabilityScore", "growthScore", "technicalFlowScore", "fenokEdgeScore", "marketCap", "per"],
 };
 
 export function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {
@@ -140,6 +156,11 @@ export function coerceConnectionFilter(value: string | null | undefined): Connec
 }
 
 export function coerceFenokEdgeFilter(value: string | null | undefined): FenokEdgeFilter {
+  if (value === "70" || value === "60" || value === "50") return value;
+  return "";
+}
+
+export function coerceConvictionFilter(value: string | null | undefined): ConvictionFilter {
   if (value === "70" || value === "60" || value === "50") return value;
   return "";
 }
@@ -211,6 +232,7 @@ export interface ScreenerFilterState {
   bandFilter: "" | "cheap" | "fair" | "rich";
   actionFilter: ActionFilter;
   fenokEdgeMin: FenokEdgeFilter;
+  convictionMin: ConvictionFilter;
   connectionFilter: ConnectionFilter;
   sortKey: ScreenerSortKey;
   sortDir: SortDir;
@@ -244,6 +266,7 @@ export function defaultScreenerFilterState(): ScreenerFilterState {
     bandFilter: "",
     actionFilter: "",
     fenokEdgeMin: "",
+    convictionMin: "",
     connectionFilter: "",
     sortKey: "marketCap",
     sortDir: "desc",
@@ -279,6 +302,7 @@ export function parseScreenerFilterState(params: Record<string, string | string[
     bandFilter: parseBand(firstParam(params.band)),
     actionFilter: coerceActionFilter(firstParam(params.action)),
     fenokEdgeMin: coerceFenokEdgeFilter(firstParam(params.fenokEdgeMin)),
+    convictionMin: coerceConvictionFilter(firstParam(params.convictionMin ?? params.convMin)),
     connectionFilter: coerceConnectionFilter(firstParam(params.connection)),
     sortKey: parseSortKey(firstParam(params.sort)),
     sortDir: firstParam(params.dir) === "asc" ? "asc" : "desc",
@@ -313,6 +337,7 @@ const URL_KEYS = [
   "band",
   "action",
   "fenokEdgeMin",
+  "convictionMin",
   "connection",
   "sort",
   "dir",
@@ -356,6 +381,7 @@ export function serializeScreenerFilterState(state: ScreenerFilterState, preferT
   setIfPresent(params, "band", state.bandFilter);
   setIfPresent(params, "action", state.actionFilter);
   setIfPresent(params, "fenokEdgeMin", state.fenokEdgeMin);
+  setIfPresent(params, "convictionMin", state.convictionMin);
   setIfPresent(params, "connection", state.connectionFilter);
   const isDefaultSort = state.sortKey === "marketCap" && state.sortDir === "desc";
   setIfPresent(params, "sort", isDefaultSort ? "" : state.sortKey);

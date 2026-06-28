@@ -43,6 +43,14 @@ export interface ScreenerStock {
   fenokSignalConfidence?: string | null;
   fenokSignalCoverageRatio?: number | null;
   fenokSignalAsOf?: string | null;
+  fenokConvictionScore?: number | null;
+  fenokConvictionCall?: "집중" | "혼재" | "희석" | null;
+  profitabilityScore?: number | null;
+  profitabilityDirection?: string | null;
+  growthScore?: number | null;
+  growthDirection?: string | null;
+  technicalFlowScore?: number | null;
+  technicalFlowDirection?: string | null;
   confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
@@ -156,7 +164,11 @@ export type ScreenerSortKey =
   | "roeFy3"
   | "grossMarginFy3"
   | "peg"
-  | "connectionCount";
+  | "connectionCount"
+  | "fenokConvictionScore"
+  | "profitabilityScore"
+  | "growthScore"
+  | "technicalFlowScore";
 
 export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ticker",
@@ -211,6 +223,10 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "grossMarginFy3",
   "peg",
   "connectionCount",
+  "fenokConvictionScore",
+  "profitabilityScore",
+  "growthScore",
+  "technicalFlowScore",
 ];
 
 export type SortDir = "asc" | "desc";
