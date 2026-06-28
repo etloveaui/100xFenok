@@ -28,6 +28,15 @@ function applyReplacements(relativePath, replacements) {
   console.log(`[sync-static-overrides] applied ${relativePath}`);
 }
 
+function removeGeneratedPublicMirror(relativePath) {
+  const filePath = path.join(rootDir, relativePath);
+  if (!fs.existsSync(filePath)) return;
+  fs.unlinkSync(filePath);
+  console.log(`[sync-static-overrides] removed private-only public mirror ${relativePath}`);
+}
+
+removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
+
 applyReplacements("public/tools/stock_analyzer/stock_analyzer.html", [
   [
     "<title>Stock Analytics Dashboard - Sprint 4</title>",

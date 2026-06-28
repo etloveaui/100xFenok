@@ -43,6 +43,11 @@ import {
   type StockConnectionEntry,
   type StockServicesEntry,
 } from "@/lib/data-entity-graph/stock-index";
+import {
+  loadFenokSignalsSummaryMap,
+  type FenokSignalsSummaryRecord,
+} from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import FenokSignalLensCard from "./FenokSignalLensCard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -885,6 +890,7 @@ export default function StockDetailClient({
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
   const [connectionEntry, setConnectionEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
   const [stockServicesEntry, setStockServicesEntry] = useState<StockServicesEntry | null | undefined>(undefined);
+  const [fenokSignalLens, setFenokSignalLens] = useState<FenokSignalsSummaryRecord | null | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
 
   useEffect(() => {
@@ -913,6 +919,21 @@ export default function StockDetailClient({
       })
       .catch(() => {
         if (!cancelled) setStockServicesEntry(null);
+      });
+    return () => { cancelled = true; };
+  }, [symbol]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setFenokSignalLens(undefined);
+    });
+    loadFenokSignalsSummaryMap()
+      .then((map) => {
+        if (!cancelled) setFenokSignalLens(map.get(symbol) ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setFenokSignalLens(null);
       });
     return () => { cancelled = true; };
   }, [symbol]);
@@ -1415,6 +1436,7 @@ export default function StockDetailClient({
               industry={industryBench}
             />
           ) : null}
+          {!isEtfAsset ? <FenokSignalLensCard record={fenokSignalLens} /> : null}
           {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
           <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
           {!isEtfAsset ? <ConnectedView ticker={symbol} entry={connectionEntry} services={stockServicesEntry} variant="page" compact /> : null}

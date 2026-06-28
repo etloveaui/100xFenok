@@ -1,0 +1,186 @@
+# CONTRACT: Options and ATS Flow Free Sources v0
+
+Date: 2026-06-28
+Status: source-contract verification only
+Scope: options regime, ticker option volume proxy, delayed OTC/ATS proxy for #324
+
+## Owner Direction
+
+- Free sources only.
+- Raw rows stay admin-only.
+- Public outputs are derived Fenok proxy scores only.
+- No production collector is approved by this document.
+- Do not label these proxies as true buyer/seller order flow or real-time
+  dark-pool intent.
+
+## Source Contracts
+
+### Cboe Put/Call CSV Files
+
+- `source_id`: `cboe_put_call_csv`
+- `provider`: Cboe
+- `endpoint`: `https://cdn.cboe.com/resources/options/volume_and_call_put_ratios/{totalpc,equitypc,indexpc}.csv`
+- `alternate_archive_endpoint`: `https://cdn.cboe.com/resources/options/volume_and_call_put_ratios/{pcratioarchive,equitypc,indexpcarchive}.csv`
+- `access_type`: `free_public`
+- `terms_status`: `needs_owner_review`
+- `redistribution_policy`: `derived_only_raw_admin_only`
+- `cadence`: daily historical CSV
+- `lag`: daily market-statistics cadence; exact publication time not verified
+- `rate_limit`: not found
+- `raw_public`: false
+- `public_derived_path`: future market options-regime overlay
+- `fallback`: existing Fenok market sentiment put/call inputs
+- `verification_status`: CSV header/sample verified on 2026-06-28
+- `evidence`: https://cdn.cboe.com/resources/options/volume_and_call_put_ratios/totalpc.csv
+- `terms_evidence`: https://www.cboe.com/terms and https://www.cboe.com/use-of-content
+
+Observed sample fields:
+
+- `DATE`
+- `CALLS`
+- `PUTS`
+- `TOTAL`
+- `P/C Ratio`
+
+Boundary:
+
+- Use for market-regime put/call ratios only.
+- Do not claim ticker-level order direction.
+- CSV text states Cboe terms apply. Separate Cboe terms research indicates
+  content reuse/service use requires permission or license outside personal
+  non-commercial browsing, so owner review is required before any automated
+  collector or redistribution decision.
+
+### Cboe U.S. Options Daily Market Statistics Page
+
+- `source_id`: `cboe_options_daily_market_statistics`
+- `provider`: Cboe
+- `endpoint`: `https://www.cboe.com/markets/us/options/market-statistics/daily/`
+- `access_type`: `free_public_page`
+- `terms_status`: `needs_owner_review`
+- `redistribution_policy`: `derived_only_raw_admin_only`
+- `cadence`: daily page
+- `lag`: not fully verified
+- `rate_limit`: needs_review
+- `raw_public`: false
+- `public_derived_path`: future market options-regime overlay
+- `fallback`: Cboe put/call CSV files
+- `verification_status`: page title and table content observed on 2026-06-28
+- `evidence`: https://www.cboe.com/markets/us/options/market-statistics/daily/
+
+Boundary:
+
+- Use as validation/reference for daily options market statistics.
+- Prefer CSV files for durable automated parsing if terms pass.
+
+### OCC Volume Query
+
+- `source_id`: `occ_volume_query`
+- `provider`: OCC
+- `endpoint`: `https://marketdata.theocc.com/volume-query?reportDate=YYYYMMDD&format=csv&volumeQueryType=O&symbolType=O&symbol={TICKER}&reportType=D&accountType=C&productKind=OSTK&porc={C|P}`
+- `access_type`: `free_public_endpoint_observed`
+- `terms_status`: `needs_owner_review`
+- `redistribution_policy`: `derived_only_raw_admin_only`
+- `cadence`: daily query by report date
+- `lag`: date availability window not fully verified
+- `rate_limit`: not found
+- `raw_public`: false
+- `public_derived_path`: future ticker option-volume proxy
+- `fallback`: existing YF targeted option-chain snapshots
+- `verification_status`: NVDA call-volume CSV sample verified on 2026-06-28; OCC terms require owner review before automation/service use
+- `evidence`: https://marketdata.theocc.com/volume-query
+- `docs_evidence`: https://www.theocc.com/market-data/market-data-reports/other-market-data-info/batch-processing/volume-query-batch-processing
+- `terms_evidence`: https://www.theocc.com/specialpages/legal/terms-and-conditions
+
+Observed sample fields:
+
+- `quantity`
+- `underlying`
+- `symbol`
+- `actype`
+- `porc`
+- `exchange`
+- `actdate`
+
+Boundary:
+
+- Use as ticker call/put volume proxy only.
+- Do not infer buyer/seller initiation, sweeps, blocks, or premium flow.
+- Do not automate beyond a bounded owner-approved collector; OCC terms research
+  flags automated systems and commercial exploitation constraints.
+
+### FINRA OTC/ATS Weekly Summary
+
+- `source_id`: `finra_otc_ats_weekly_summary`
+- `provider`: FINRA
+- `endpoint`: `https://api.finra.org/data/group/otcMarket/name/weeklySummary`
+- `metadata_endpoint`: `https://api.finra.org/metadata/group/otcMarket/name/weeklySummary`
+- `historic_endpoint`: `https://api.finra.org/data/group/otcMarket/name/weeklySummaryHistoric`
+- `access_type`: `free_public_credential_or_public_endpoint_observed`
+- `terms_status`: `approved_for_public_reference_needs_owner_review_for_api_integration`
+- `redistribution_policy`: `derived_only_raw_admin_only`
+- `cadence`: weekly
+- `lag`: FINRA specification states Tier 1 NMS has a two-week delay and Tier 2/OTC has a four-week delay
+- `rate_limit`: published platform limits exist; exact local account policy remains owner-review gated
+- `raw_public`: false
+- `public_derived_path`: future delayed ATS/OTC proxy
+- `fallback`: existing 13F/YF institutional proxy only
+- `verification_status`: API sample and metadata sample verified on 2026-06-28
+- `evidence`: https://www.finra.org/filing-reporting/otc-transparency
+- `api_spec_evidence`: https://www.finra.org/sites/default/files/OTC-Transparency-Data-File-Download-API-v04.pdf
+- `rate_limit_evidence`: https://developer.finra.org/docs
+
+Observed sample fields:
+
+- `issueSymbolIdentifier`
+- `issueName`
+- `MPID`
+- `marketParticipantName`
+- `tierIdentifier`
+- `summaryStartDate`
+- `totalWeeklyShareQuantity`
+- `totalWeeklyTradeCount`
+- `totalNotionalSum`
+- `summaryTypeCode`
+
+Boundary:
+
+- Use as delayed ATS/OTC activity proxy only.
+- Do not label as real-time dark-pool prints.
+- Raw venue/MPID rows stay admin-only unless terms are explicitly cleared.
+- API integration remains gated on FINRA credential/TOS review.
+
+### FINRA ATS Block Data
+
+- `source_id`: `finra_ats_block_data`
+- `provider`: FINRA
+- `endpoint`: FINRA OTC Transparency ATS Block family; exact API dataset name still requires API catalog confirmation
+- `access_type`: `free_public_credential_or_public_endpoint_candidate`
+- `terms_status`: `approved_for_public_reference_needs_owner_review_for_api_integration`
+- `redistribution_policy`: `derived_only_raw_admin_only`
+- `cadence`: monthly in FINRA specification
+- `lag`: delayed publication; exact dataset route pending
+- `rate_limit`: published platform limits exist; exact local account policy remains owner-review gated
+- `raw_public`: false
+- `public_derived_path`: future delayed ATS block proxy
+- `fallback`: weeklySummary without block component
+- `verification_status`: FINRA specification confirms ATS Block Data concept and fields; exact endpoint not yet verified
+- `evidence`: https://www.finra.org/sites/default/files/OTC-transparency-data-user-guide-v4.pdf
+- `api_spec_evidence`: https://www.finra.org/sites/default/files/OTC-Transparency-Data-File-Download-API-v04.pdf
+
+Boundary:
+
+- Use only after exact dataset route and terms are verified.
+- If unavailable, omit block features and cap dark-pool/ATS confidence.
+
+## Implementation Gate
+
+Before any collector is added:
+
+1. Owner accepts or updates `terms_status=needs_owner_review`.
+2. Raw storage path is admin-only.
+3. Public artifact contains only derived proxy scores.
+4. Rate-limit and retry policy are encoded in the collector contract.
+5. Freshness and confidence are separate fields.
+6. UI labels must say options-volume proxy or delayed ATS proxy, never true net
+   flow or real-time dark-pool intent.
