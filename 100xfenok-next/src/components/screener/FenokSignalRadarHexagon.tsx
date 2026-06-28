@@ -33,6 +33,8 @@ export interface FenokSignalRadarHexagonAxis {
   tier?: string | null;
   /** Full honest label for tooltips/legends (spokes use the short `label`). */
   fullLabel?: string | null;
+  /** Extra tooltip caveat for inverted/neutral axes. */
+  tooltipNote?: string | null;
 }
 
 export interface FenokSignalRadarHexagonProps {
@@ -134,7 +136,7 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
               const direction = directionLabel(axis.direction);
               const tier = tierLabel(axis.tier);
               const name = axis.fullLabel ?? axis.label;
-              const parts = [`${name}: ${score}`, direction, tier].filter(Boolean);
+              const parts = [`${name}: ${score}`, direction, tier, axis.tooltipNote].filter(Boolean);
               return parts.join(" · ");
             },
           },

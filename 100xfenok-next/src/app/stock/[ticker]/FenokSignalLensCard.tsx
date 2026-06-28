@@ -555,6 +555,8 @@ interface LongTermAxisConfig {
   directionKey?: keyof FenokSignalsSummaryRecord;
   coverageKey?: keyof FenokSignalsSummaryRecord;
   helpKey: FenokSignalHelpKey;
+  invertScore?: boolean;
+  tooltipNote?: string;
 }
 
 interface LongTermAxis extends FenokSignalRadarHexagonAxis {
@@ -562,6 +564,7 @@ interface LongTermAxis extends FenokSignalRadarHexagonAxis {
   helpKey: FenokSignalHelpKey;
   fullLabel: string;
   coverage: number | null;
+  tooltipNote?: string | null;
   meta: {
     tier: string | null;
     tone: "up" | "warn" | "down" | "neutral";
@@ -594,10 +597,12 @@ const LONG_TERM_AXIS_CONFIG: LongTermAxisConfig[] = [
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하방",
-    fullLabel: "하락 압력",
+    spokeLabel: "하방안전",
+    fullLabel: "하방안전",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
+    invertScore: true,
+    tooltipNote: "하락 압력의 역수, 높을수록 위험 낮음",
   },
   {
     key: "marketSimilarity",
@@ -634,13 +639,18 @@ function deriveAxisMeta(
 function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
   return LONG_TERM_AXIS_CONFIG.map((config) => {
     const rawScore = record[config.scoreKey];
-    const score = isFiniteNumber(rawScore) ? rawScore : null;
+    let score = isFiniteNumber(rawScore) ? rawScore : null;
+    if (score !== null && config.invertScore) {
+      score = Math.max(0, Math.min(100, 100 - score));
+    }
     const rawDirection = config.directionKey ? record[config.directionKey] : null;
     const explicitDirection =
       typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
     const rawCoverage = config.coverageKey ? record[config.coverageKey] : null;
     const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
-    const meta = deriveAxisMeta(score, config.helpKey);
+    // For inverted axes, use default (non-inverted) bands so high score reads as positive.
+    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
+    const meta = deriveAxisMeta(score, metaHelpKey);
     return {
       key: config.key,
       label: config.spokeLabel,
@@ -650,6 +660,7 @@ function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
       tier: meta.tier,
       helpKey: config.helpKey,
       coverage,
+      tooltipNote: config.tooltipNote ?? null,
       meta,
     };
   });
@@ -666,6 +677,11 @@ function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
         <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
           Fenok 파생 신호 · 매수권유 아님
         </div>
+        {axis.tooltipNote ? (
+          <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
+            {axis.tooltipNote}
+          </div>
+        ) : null}
         {axis.coverage !== null ? (
           <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
             데이터 {formatCoverage(axis.coverage)}
