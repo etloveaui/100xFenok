@@ -18,14 +18,26 @@ import MetricHelp from "@/components/MetricHelp";
 import StockDetailPanel from "./StockDetailPanel";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import type { MacroContextId } from "@/lib/macro-chart/context";
+import {
+  updateScreenerUrl,
+  serializeScreenerFilterState,
+  parseScreenerFilterState,
+  defaultScreenerFilterState,
+  coerceColumnPreset,
+  coerceActionFilter,
+  coerceConnectionFilter,
+  PRESET_KEYS,
+  PRESET_LABEL,
+  type ActionFilter,
+  type ConnectionFilter,
+  type ColumnPreset,
+  type ScreenerFilterState,
+} from "@/lib/screener/filter-url";
 
 const PAGE_SIZE = 50;
 const DESKTOP_ROW_HEIGHT = 52;
 const DESKTOP_VIRTUAL_HEIGHT = 620;
 const DESKTOP_VIRTUAL_OVERSCAN = 6;
-
-type ActionFilter = "" | "guru_held" | "smart_money" | "value_momentum" | "index_core" | "income" | "momentum" | "watch";
-type ConnectionFilter = "" | "filings" | "smartMoney" | "indexMembership" | "singleStockEtfs";
 
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
@@ -89,84 +101,6 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "ret3y", label: "3Y", align: "right" },
   { key: "ret5y", label: "5Y", align: "right" },
 ];
-
-type ColumnPreset = "basic" | "action" | "connected" | "value" | "estimate" | "momentum" | "dividend" | "guru";
-
-const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
-  action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
-  connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
-  value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "peg", "roe", "opm", "perBandCurrent", "rank"],
-  estimate: [
-    "ticker",
-    "actionScore",
-    "name",
-    "sector",
-    "forwardPeFy1",
-    "forwardPeFy2",
-    "forwardPeFy3",
-    "forwardEpsFy1",
-    "forwardEpsFy2",
-    "forwardEpsFy3",
-    "revenueGrowthFy1",
-    "revenueGrowthFy2",
-    "revenueGrowthFy3",
-    "epsGrowthFy1",
-    "epsGrowthFy2",
-    "epsGrowthFy3",
-    "roeFy1",
-    "roeFy2",
-    "roeFy3",
-    "operatingMarginFy1",
-    "operatingMarginFy2",
-    "operatingMarginFy3",
-    "grossMarginFy1",
-    "grossMarginFy2",
-    "grossMarginFy3",
-    "perBandCurrent",
-    "marketCap",
-  ],
-  momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "rank"],
-  dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
-  guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "pbr", "peg", "roe", "marketCap", "return12m"],
-};
-
-const PRESET_LABEL: Record<ColumnPreset, string> = {
-  basic: "기본",
-  action: "투자 신호",
-  connected: "연결 데이터",
-  value: "가치",
-  estimate: "추정치",
-  momentum: "모멘텀",
-  dividend: "배당",
-  guru: "대가 관심",
-};
-
-function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {
-  return value && value in PRESET_KEYS ? (value as ColumnPreset) : null;
-}
-
-function coerceActionFilter(value: string | null | undefined): ActionFilter {
-  if (
-    value === "guru_held" ||
-    value === "smart_money" ||
-    value === "value_momentum" ||
-    value === "index_core" ||
-    value === "income" ||
-    value === "momentum" ||
-    value === "watch"
-  ) {
-    return value;
-  }
-  return "";
-}
-
-function coerceConnectionFilter(value: string | null | undefined): ConnectionFilter {
-  if (value === "filings" || value === "smartMoney" || value === "indexMembership" || value === "singleStockEtfs") {
-    return value;
-  }
-  return "";
-}
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -878,6 +812,7 @@ export default function ScreenerClient({
   initialPreset,
   initialActionFilter,
   initialConnectionFilter,
+  initialFilters,
 }: {
   initialSearch?: string;
   initialSector?: string;
@@ -885,7 +820,9 @@ export default function ScreenerClient({
   initialPreset?: string;
   initialActionFilter?: string;
   initialConnectionFilter?: string;
+  initialFilters?: Partial<ScreenerFilterState>;
 }) {
+  const initialFilterValues = initialFilters ?? defaultScreenerFilterState();
   const {
     stocks: rawStocks,
     dataReady,
@@ -967,30 +904,32 @@ export default function ScreenerClient({
   }, [rawStocks, guruMap, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
-  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => (initialSector ? [initialSector] : []));
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [perMax, setPerMax] = useState("");
-  const [forwardPerMax, setForwardPerMax] = useState("");
-  const [revenueGrowthMin, setRevenueGrowthMin] = useState("");
-  const [epsGrowthMin, setEpsGrowthMin] = useState("");
-  const [dividendYieldMin, setDividendYieldMin] = useState("");
-  const [roeFy1Min, setRoeFy1Min] = useState("");
-  const [ret3yMin, setRet3yMin] = useState("");
-  const [ret5yMin, setRet5yMin] = useState("");
-  const [marketCapMin, setMarketCapMin] = useState("");
-  const [marketCapMax, setMarketCapMax] = useState("");
-  const [pbrMin, setPbrMin] = useState("");
-  const [pbrMax, setPbrMax] = useState("");
-  const [pegMax, setPegMax] = useState("");
-  const [roeMin, setRoeMin] = useState("");
-  const [opmMin, setOpmMin] = useState("");
-  const [return12mMin, setReturn12mMin] = useState("");
-  const [profitableOnly, setProfitableOnly] = useState(false);
-  const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
-  const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter));
-  const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter));
-  const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => (initialSector ? [initialSector] : initialFilterValues.selectedSectors ?? []));
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(() => initialFilterValues.selectedCountries ?? []);
+  const [perMin, setPerMin] = useState(() => initialFilterValues.perMin ?? "");
+  const [perMax, setPerMax] = useState(() => initialFilterValues.perMax ?? "");
+  const [forwardPerMax, setForwardPerMax] = useState(() => initialFilterValues.forwardPerMax ?? "");
+  const [revenueGrowthMin, setRevenueGrowthMin] = useState(() => initialFilterValues.revenueGrowthMin ?? "");
+  const [epsGrowthMin, setEpsGrowthMin] = useState(() => initialFilterValues.epsGrowthMin ?? "");
+  const [dividendYieldMin, setDividendYieldMin] = useState(() => initialFilterValues.dividendYieldMin ?? "");
+  const [dividendYieldMax, setDividendYieldMax] = useState(() => initialFilterValues.dividendYieldMax ?? "");
+  const [roeFy1Min, setRoeFy1Min] = useState(() => initialFilterValues.roeFy1Min ?? "");
+  const [ret3yMin, setRet3yMin] = useState(() => initialFilterValues.ret3yMin ?? "");
+  const [ret5yMin, setRet5yMin] = useState(() => initialFilterValues.ret5yMin ?? "");
+  const [marketCapMin, setMarketCapMin] = useState(() => initialFilterValues.marketCapMin ?? "");
+  const [marketCapMax, setMarketCapMax] = useState(() => initialFilterValues.marketCapMax ?? "");
+  const [pbrMin, setPbrMin] = useState(() => initialFilterValues.pbrMin ?? "");
+  const [pbrMax, setPbrMax] = useState(() => initialFilterValues.pbrMax ?? "");
+  const [pegMax, setPegMax] = useState(() => initialFilterValues.pegMax ?? "");
+  const [roeMin, setRoeMin] = useState(() => initialFilterValues.roeMin ?? "");
+  const [opmMin, setOpmMin] = useState(() => initialFilterValues.opmMin ?? "");
+  const [return12mMin, setReturn12mMin] = useState(() => initialFilterValues.return12mMin ?? "");
+  const [profitableOnly, setProfitableOnly] = useState(() => initialFilterValues.profitableOnly ?? false);
+  const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">(() => initialFilterValues.bandFilter ?? "");
+  const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter || initialFilterValues.actionFilter));
+  const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter || initialFilterValues.connectionFilter));
+  const [sortKey, setSortKey] = useState<ScreenerSortKey>(() => initialFilterValues.sortKey ?? "marketCap");
+  const [sortDir, setSortDir] = useState<SortDir>(() => initialFilterValues.sortDir ?? "desc");
   const [page, setPage] = useState(0);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
   const [selectedTickers, setSelectedTickers] = useState<ReadonlySet<string>>(() => new Set());
@@ -1008,7 +947,7 @@ export default function ScreenerClient({
   }
 
   const initialColumnPreset = coerceColumnPreset(initialPreset);
-  const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? "basic");
+  const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? initialFilterValues.preset ?? "basic");
 
   useEffect(() => {
     if (initialColumnPreset) return;
@@ -1041,8 +980,77 @@ export default function ScreenerClient({
     }
   }
 
+  // Sync filter state to URL for deep-link round-trips.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const next = updateScreenerUrl(window.location.href, {
+      search,
+      selectedSectors,
+      selectedCountries,
+      perMin,
+      perMax,
+      forwardPerMax,
+      revenueGrowthMin,
+      epsGrowthMin,
+      dividendYieldMin,
+      dividendYieldMax,
+      roeFy1Min,
+      ret3yMin,
+      ret5yMin,
+      marketCapMin,
+      marketCapMax,
+      pbrMin,
+      pbrMax,
+      pegMax,
+      roeMin,
+      opmMin,
+      return12mMin,
+      profitableOnly,
+      bandFilter,
+      actionFilter,
+      connectionFilter,
+      sortKey,
+      sortDir,
+      preset,
+    });
+    if (next !== window.location.href) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [
+    search,
+    selectedSectors,
+    selectedCountries,
+    perMin,
+    perMax,
+    forwardPerMax,
+    revenueGrowthMin,
+    epsGrowthMin,
+    dividendYieldMin,
+    dividendYieldMax,
+    roeFy1Min,
+    ret3yMin,
+    ret5yMin,
+    marketCapMin,
+    marketCapMax,
+    pbrMin,
+    pbrMax,
+    pegMax,
+    roeMin,
+    opmMin,
+    return12mMin,
+    profitableOnly,
+    bandFilter,
+    actionFilter,
+    connectionFilter,
+    sortKey,
+    sortDir,
+    preset,
+  ]);
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
+    const perMinValue = perMin.trim() === "" ? null : Number(perMin);
+    const perMinValid = perMinValue !== null && !Number.isNaN(perMinValue);
     const perMaxValue = perMax.trim() === "" ? null : Number(perMax);
     const perMaxValid = perMaxValue !== null && !Number.isNaN(perMaxValue);
     const forwardPerMaxValue = forwardPerMax.trim() === "" ? null : Number(forwardPerMax);
@@ -1053,6 +1061,8 @@ export default function ScreenerClient({
     const epsGrowthMinValid = epsGrowthMinValue !== null && !Number.isNaN(epsGrowthMinValue);
     const dividendYieldMinValue = dividendYieldMin.trim() === "" ? null : Number(dividendYieldMin);
     const dividendYieldMinValid = dividendYieldMinValue !== null && !Number.isNaN(dividendYieldMinValue);
+    const dividendYieldMaxValue = dividendYieldMax.trim() === "" ? null : Number(dividendYieldMax);
+    const dividendYieldMaxValid = dividendYieldMaxValue !== null && !Number.isNaN(dividendYieldMaxValue);
     const roeFy1MinValue = roeFy1Min.trim() === "" ? null : Number(roeFy1Min);
     const roeFy1MinValid = roeFy1MinValue !== null && !Number.isNaN(roeFy1MinValue);
     const ret3yMinValue = ret3yMin.trim() === "" ? null : Number(ret3yMin);
@@ -1089,11 +1099,13 @@ export default function ScreenerClient({
         return false;
       }
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
+      if (perMinValid && (stock.per === null || stock.per < (perMinValue as number))) return false;
       if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
       if (forwardPerMaxValid && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > (forwardPerMaxValue as number))) return false;
       if (revenueGrowthMinValid && ((stock.revenueGrowthFy1 ?? null) === null || (stock.revenueGrowthFy1 as number) < (revenueGrowthMinValue as number))) return false;
       if (epsGrowthMinValid && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < (epsGrowthMinValue as number))) return false;
       if (dividendYieldMinValid && (stock.dividendYield === null || (stock.dividendYield * 100) < (dividendYieldMinValue as number))) return false;
+      if (dividendYieldMaxValid && (stock.dividendYield === null || (stock.dividendYield * 100) > (dividendYieldMaxValue as number))) return false;
       if (roeFy1MinValid && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < (roeFy1MinValue as number))) return false;
       if (ret3yMinValid && (stock.ret3y === null || (stock.ret3y * 100) < (ret3yMinValue as number))) return false;
       if (ret5yMinValid && (stock.ret5y === null || (stock.ret5y * 100) < (ret5yMinValue as number))) return false;
@@ -1116,7 +1128,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, selectedSectors, selectedCountries, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1130,7 +1142,7 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1292,11 +1304,13 @@ export default function ScreenerClient({
     setSearch("");
     setSelectedSectors([]);
     setSelectedCountries([]);
+    setPerMin("");
     setPerMax("");
     setForwardPerMax("");
     setRevenueGrowthMin("");
     setEpsGrowthMin("");
     setDividendYieldMin("");
+    setDividendYieldMax("");
     setRoeFy1Min("");
     setRet3yMin("");
     setRet5yMin("");
@@ -1312,9 +1326,120 @@ export default function ScreenerClient({
     setBandFilter("");
     setActionFilter("");
     setConnectionFilter("");
+    setSortKey("marketCap");
+    setSortDir("desc");
   }
 
-  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
+  function getFilterState(): ScreenerFilterState {
+    return {
+      search,
+      selectedSectors,
+      selectedCountries,
+      perMin,
+      perMax,
+      forwardPerMax,
+      revenueGrowthMin,
+      epsGrowthMin,
+      dividendYieldMin,
+      dividendYieldMax,
+      roeFy1Min,
+      ret3yMin,
+      ret5yMin,
+      marketCapMin,
+      marketCapMax,
+      pbrMin,
+      pbrMax,
+      pegMax,
+      roeMin,
+      opmMin,
+      return12mMin,
+      profitableOnly,
+      bandFilter,
+      actionFilter,
+      connectionFilter,
+      sortKey,
+      sortDir,
+      preset,
+    };
+  }
+
+  function applyFilterState(next: ScreenerFilterState) {
+    setSearch(next.search);
+    setSelectedSectors(next.selectedSectors);
+    setSelectedCountries(next.selectedCountries);
+    setPerMin(next.perMin);
+    setPerMax(next.perMax);
+    setForwardPerMax(next.forwardPerMax);
+    setRevenueGrowthMin(next.revenueGrowthMin);
+    setEpsGrowthMin(next.epsGrowthMin);
+    setDividendYieldMin(next.dividendYieldMin);
+    setDividendYieldMax(next.dividendYieldMax);
+    setRoeFy1Min(next.roeFy1Min);
+    setRet3yMin(next.ret3yMin);
+    setRet5yMin(next.ret5yMin);
+    setMarketCapMin(next.marketCapMin);
+    setMarketCapMax(next.marketCapMax);
+    setPbrMin(next.pbrMin);
+    setPbrMax(next.pbrMax);
+    setPegMax(next.pegMax);
+    setRoeMin(next.roeMin);
+    setOpmMin(next.opmMin);
+    setReturn12mMin(next.return12mMin);
+    setProfitableOnly(next.profitableOnly);
+    setBandFilter(next.bandFilter);
+    setActionFilter(next.actionFilter);
+    setConnectionFilter(next.connectionFilter);
+    setSortKey(next.sortKey);
+    setSortDir(next.sortDir);
+    setPreset(next.preset);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("screener-preset", next.preset);
+    }
+  }
+
+  const [savedPresets, setSavedPresets] = useState<{ name: string; state: ScreenerFilterState }[]>([]);
+  const [presetMenuOpen, setPresetMenuOpen] = useState(false);
+  const [presetName, setPresetName] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem("screener-filter-presets");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        setSavedPresets(parsed.filter((p): p is { name: string; state: ScreenerFilterState } => typeof p === "object" && p !== null && typeof (p as { name?: unknown }).name === "string" && typeof (p as { state?: unknown }).state === "object"));
+      }
+    } catch {
+      // ignore malformed localStorage
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("screener-filter-presets", JSON.stringify(savedPresets));
+  }, [savedPresets]);
+
+  function handleSavePreset() {
+    const name = presetName.trim();
+    if (!name) return;
+    setSavedPresets((prev) => {
+      const filtered = prev.filter((p) => p.name !== name);
+      return [...filtered, { name, state: getFilterState() }];
+    });
+    setPresetName("");
+  }
+
+  function handleLoadPreset(state: ScreenerFilterState) {
+    applyFilterState(state);
+    setPresetMenuOpen(false);
+  }
+
+  function handleDeletePreset(name: string) {
+    setSavedPresets((prev) => prev.filter((p) => p.name !== name));
+  }
+
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
@@ -1336,7 +1461,18 @@ export default function ScreenerClient({
 
   const activeFilterChips: { active: boolean; label: string; clear: () => void }[] = [
     { active: Boolean(search.trim()), label: `검색: ${search.trim()}`, clear: () => setSearch("") },
-    { active: Boolean(perMax), label: `PER ≤ ${perMax}`, clear: () => setPerMax("") },
+    ...(perMin || perMax
+      ? [
+          {
+            active: true,
+            label: perMin && perMax ? `PER ${perMin}~${perMax}` : perMin ? `PER ≥ ${perMin}` : `PER ≤ ${perMax}`,
+            clear: () => {
+              setPerMin("");
+              setPerMax("");
+            },
+          },
+        ]
+      : []),
     { active: Boolean(forwardPerMax), label: `예상 PER ≤ ${forwardPerMax}`, clear: () => setForwardPerMax("") },
     ...(marketCapMin || marketCapMax
       ? [
@@ -1366,7 +1502,18 @@ export default function ScreenerClient({
     { active: Boolean(roeMin), label: `ROE ≥ ${roeMin}%`, clear: () => setRoeMin("") },
     { active: Boolean(opmMin), label: `OPM ≥ ${opmMin}%`, clear: () => setOpmMin("") },
     { active: Boolean(return12mMin), label: `12M 수익률 ≥ ${return12mMin}%`, clear: () => setReturn12mMin("") },
-    { active: Boolean(dividendYieldMin), label: `배당 ≥ ${dividendYieldMin}%`, clear: () => setDividendYieldMin("") },
+    ...(dividendYieldMin || dividendYieldMax
+      ? [
+          {
+            active: true,
+            label: dividendYieldMin && dividendYieldMax ? `배당 ${dividendYieldMin}~${dividendYieldMax}%` : dividendYieldMin ? `배당 ≥ ${dividendYieldMin}%` : `배당 ≤ ${dividendYieldMax}%`,
+            clear: () => {
+              setDividendYieldMin("");
+              setDividendYieldMax("");
+            },
+          },
+        ]
+      : []),
     { active: Boolean(roeFy1Min), label: `FY+1 ROE ≥ ${roeFy1Min}%`, clear: () => setRoeFy1Min("") },
     { active: Boolean(ret3yMin), label: `3Y 수익률 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
     { active: Boolean(ret5yMin), label: `5Y 수익률 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
@@ -1398,9 +1545,9 @@ export default function ScreenerClient({
   }, []);
 
   const scaleCount = Number(Boolean(search.trim())) + selectedSectors.length + selectedCountries.length + Number(Boolean(marketCapMin)) + Number(Boolean(marketCapMax));
-  const valueCount = Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
+  const valueCount = Number(Boolean(perMin)) + Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
-    Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
+    Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
   const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(connectionFilter));
 
   return (
@@ -1432,6 +1579,65 @@ export default function ScreenerClient({
             섹터
           </TransitionLink>
           <MarketQuickLinks />
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setPresetMenuOpen((v) => !v)}
+              className="data-shell-link"
+              aria-expanded={presetMenuOpen}
+              aria-haspopup="menu"
+            >
+              필터 저장
+            </button>
+            {presetMenuOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={presetName}
+                    onChange={(event) => setPresetName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") handleSavePreset();
+                    }}
+                    placeholder="프리셋 이름"
+                    className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSavePreset}
+                    disabled={!presetName.trim()}
+                    className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-xs font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
+                  >
+                    저장
+                  </button>
+                </div>
+                {savedPresets.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {savedPresets.map((p) => (
+                      <div key={p.name} className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleLoadPreset(p.state)}
+                          className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                          title={p.name}
+                        >
+                          {p.name}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePreset(p.name)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
+                          aria-label={`${p.name} 삭제`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -1660,6 +1866,17 @@ export default function ScreenerClient({
             {valueOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최소</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={perMin}
+                    onChange={(event) => setPerMin(event.target.value)}
+                    placeholder="예: 5"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
                   <input
                     type="number"
@@ -1789,6 +2006,17 @@ export default function ScreenerClient({
                     value={dividendYieldMin}
                     onChange={(event) => setDividendYieldMin(event.target.value)}
                     placeholder="예: 3"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최대 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={dividendYieldMax}
+                    onChange={(event) => setDividendYieldMax(event.target.value)}
+                    placeholder="예: 6"
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   />
                 </label>

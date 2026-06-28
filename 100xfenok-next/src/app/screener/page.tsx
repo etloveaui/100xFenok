@@ -3,6 +3,7 @@ import AppShell from "@/components/shell/AppShell";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { parseScreenerFilterState } from "@/lib/screener/filter-url";
 import ScreenerClient from "./ScreenerClient";
 
 interface Props {
@@ -23,6 +24,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
   const initialSearch = normalizeForEntityKey(firstParam(params.ticker ?? params.q));
   const initialSector = firstParam(params.sector).trim();
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
+  const initialFilters = parseScreenerFilterState(params);
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
@@ -33,6 +35,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
           initialPreset={firstParam(params.preset)}
           initialActionFilter={firstParam(params.action)}
           initialConnectionFilter={firstParam(params.connection)}
+          initialFilters={initialFilters}
         />
       </AppShell>
     </div>
