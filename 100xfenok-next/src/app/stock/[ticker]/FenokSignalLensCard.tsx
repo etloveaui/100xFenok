@@ -1,21 +1,18 @@
 import type { FenokSignalsSummaryRecord } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import { FenokSignalRadar } from "@/components/screener/FenokSignalRadar";
 
 interface FenokSignalLensCardProps {
   record: FenokSignalsSummaryRecord | null | undefined;
 }
 
-type SignalKey =
-  | "profitability"
-  | "growth"
-  | "technicalFlow"
-  | "upsideDownside"
-  | "marketSimilarity";
+type SignalKey = "profitability" | "growth" | "technicalFlow" | "upsideDownside";
 
 interface SignalConfig {
   key: SignalKey;
   label: string;
   scoreKey: keyof FenokSignalsSummaryRecord;
   directionKey: keyof FenokSignalsSummaryRecord;
+  interpretation: string;
 }
 
 const SIGNALS: SignalConfig[] = [
@@ -24,30 +21,28 @@ const SIGNALS: SignalConfig[] = [
     label: "수익성",
     scoreKey: "profitabilityScore",
     directionKey: "profitabilityDirection",
+    interpretation: "기업의 이익 창출 능력과 자본 효율성",
   },
   {
     key: "growth",
     label: "성장",
     scoreKey: "growthScore",
     directionKey: "growthDirection",
+    interpretation: "향후 매출·이익 성장 잠재력",
   },
   {
     key: "technicalFlow",
-    label: "가격 흐름",
+    label: "기술·자금",
     scoreKey: "technicalFlowScore",
     directionKey: "technicalFlowDirection",
+    interpretation: "가격 모멘텀과 자금 흐름의 기술적 상태",
   },
   {
     key: "upsideDownside",
-    label: "상방/하방",
+    label: "Fenok Edge",
     scoreKey: "upsideDownsideScore",
     directionKey: "upsideDownsideDirection",
-  },
-  {
-    key: "marketSimilarity",
-    label: "유사 종목",
-    scoreKey: "marketSimilarityScore",
-    directionKey: "marketSimilarityDirection",
+    interpretation: "상대적 상방/하방 기대의 파생 프록시",
   },
 ];
 
@@ -75,7 +70,6 @@ function directionKo(key: SignalKey, value: string | null | undefined): string {
     if (value === "downside_bias") return "하방 압력";
     if (value === "balanced") return "균형";
   }
-  if (key === "marketSimilarity" && value === "peer_comparable") return "비교 가능";
   if (value === "strong") return "강함";
   if (value === "constructive") return "우호";
   if (value === "neutral") return "중립";
@@ -84,13 +78,26 @@ function directionKo(key: SignalKey, value: string | null | undefined): string {
   return value.replaceAll("_", " ");
 }
 
-function scoreTone(score: number | null, confidence: string | null | undefined): string {
-  if (score === null || confidence === "low") {
-    return "border-slate-200 bg-slate-50 text-slate-500";
-  }
-  if (score >= 70) return "border-emerald-200 bg-emerald-50 text-emerald-800";
-  if (score <= 30) return "border-rose-200 bg-rose-50 text-rose-800";
-  return "border-slate-200 bg-white text-slate-800";
+function convictionCallKo(call: FenokSignalsSummaryRecord["convictionCall"]): string {
+  if (call === "concentrated") return "집중";
+  if (call === "mixed") return "혼재";
+  if (call === "diluted") return "희석";
+  return "미정";
+}
+
+function convictionTone(call: FenokSignalsSummaryRecord["convictionCall"]): string {
+  if (call === "concentrated") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (call === "mixed") return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (call === "diluted") return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-50 text-slate-500";
+}
+
+function scoreTone(score: number | null): string {
+  if (score === null || score === undefined) return "bg-slate-100";
+  if (score >= 70) return "bg-emerald-500";
+  if (score >= 50) return "bg-cyan-500";
+  if (score >= 30) return "bg-amber-500";
+  return "bg-rose-500";
 }
 
 function formatAsOf(value: string | null | undefined): string {
@@ -106,7 +113,7 @@ function formatCoverage(value: number | null | undefined): string {
 }
 
 function formatScore(value: number | null): string {
-  return value === null ? "-" : Math.round(value).toString();
+  return value === null ? "—" : Math.round(value).toString();
 }
 
 export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps) {
@@ -117,50 +124,103 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
     const score = isFiniteNumber(scoreValue) ? scoreValue : null;
     const directionValue = record[signal.directionKey];
     const direction = typeof directionValue === "string" ? directionValue : null;
-    return {
-      ...signal,
-      score,
-      direction,
-    };
+    return { ...signal, score, direction };
   });
   const hasSignal = chips.some((chip) => chip.score !== null);
   if (!hasSignal) return null;
 
   const confidence = record.confidence ?? null;
+  const convictionScore = isFiniteNumber(record.convictionScore) ? Math.round(record.convictionScore) : null;
+  const convictionCall = record.convictionCall ?? null;
+
+  const radarData = {
+    profitabilityScore: record.profitabilityScore,
+    profitabilityDirection: record.profitabilityDirection,
+    growthScore: record.growthScore,
+    growthDirection: record.growthDirection,
+    technicalFlowScore: record.technicalFlowScore,
+    technicalFlowDirection: record.technicalFlowDirection,
+    fenokEdgeScore: record.upsideDownsideScore,
+    fenokEdgeDirection: record.upsideDownsideDirection,
+  };
 
   return (
-    <section className="panel overflow-hidden border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 px-3 py-2">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-900">
-            Fenok 신호 렌즈
-          </h2>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black text-slate-600">
-            {confidenceKo(confidence)}
+    <section className="panel overflow-hidden border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
+      <div className="border-b border-[var(--c-line-2)] px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
+              Fenok 신호 분석
+            </h2>
+            <span className="rounded-full bg-[var(--c-surface-2)] px-2 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
+              {confidenceKo(confidence)}
+            </span>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+            매수권유 아님
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
-        {chips.map((chip) => (
-          <div
-            key={chip.key}
-            className={`min-h-16 rounded-lg border px-2.5 py-2 ${scoreTone(chip.score, confidence)}`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className="min-w-0 text-[10px] font-black text-current">{chip.label}</span>
-              <span className="orbitron shrink-0 text-sm font-black tabular-nums">{formatScore(chip.score)}</span>
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[9px] font-black">
-              <span>{directionKo(chip.key, chip.direction)}</span>
-              {chip.score === null || confidence === "low" ? (
-                <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-slate-500">프록시 낮음</span>
-              ) : null}
-            </div>
+
+      <div className="p-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-black tabular-nums ${convictionTone(convictionCall)}`}
+              title="Fenok 4-신호 동등가중 종합 점수"
+            >
+              <span aria-hidden="true">{convictionCallKo(convictionCall)}</span>
+              {convictionScore ?? "—"}
+            </span>
+            <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
+              Fenok 4-신호 동등가중 종합
+            </span>
           </div>
-        ))}
+          <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
+            as_of {formatAsOf(record.asOf)} · coverage {formatCoverage(record.coverageRatio)}
+          </span>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
+          <div className="flex justify-center sm:justify-start">
+            <FenokSignalRadar data={radarData} size="md" />
+          </div>
+
+          <div className="grid content-center gap-3">
+            {chips.map((chip) => {
+              const width = chip.score === null ? 0 : Math.max(0, Math.min(100, chip.score));
+              return (
+                <div key={chip.key} className="space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-baseline gap-2">
+                      <span className="text-xs font-black text-[var(--c-ink)]">{chip.label}</span>
+                      <span className="truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+                        {chip.interpretation}
+                      </span>
+                    </div>
+                    <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
+                      {formatScore(chip.score)}
+                      <span className="ml-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+                        {directionKo(chip.key, chip.direction)}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--c-surface-2)]">
+                    <div
+                      className={`h-full rounded-full transition-all ${scoreTone(chip.score)}`}
+                      style={{ width: `${width}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
-      <p className="border-t border-slate-100 px-3 py-2 text-[10px] font-bold text-slate-500">
-        Fenok 파생 프록시 · as_of {formatAsOf(record.asOf)} · coverage {formatCoverage(record.coverageRatio)}
+
+      <p className="border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-4 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
+        Fenok 파생 프록시 · 매수권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+        {formatCoverage(record.coverageRatio)}
       </p>
     </section>
   );

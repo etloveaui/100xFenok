@@ -14,7 +14,6 @@ import {
   Tooltip,
 } from "chart.js";
 import { Radar } from "react-chartjs-2";
-import type { ScreenerStock } from "@/lib/screener/types";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
 ChartJS.register(
@@ -27,14 +26,26 @@ ChartJS.register(
   Legend,
 );
 
+export interface FenokSignalRadarData {
+  profitabilityScore?: number | null;
+  profitabilityDirection?: string | null;
+  growthScore?: number | null;
+  growthDirection?: string | null;
+  technicalFlowScore?: number | null;
+  technicalFlowDirection?: string | null;
+  fenokEdgeScore?: number | null;
+  fenokEdgeDirection?: string | null;
+}
+
 interface FenokSignalRadarProps {
-  stock: ScreenerStock;
+  data: FenokSignalRadarData;
+  size?: "sm" | "md";
 }
 
 interface RadarAxis {
   label: string;
-  scoreKey: keyof ScreenerStock;
-  directionKey: keyof ScreenerStock;
+  scoreKey: keyof FenokSignalRadarData;
+  directionKey: keyof FenokSignalRadarData;
 }
 
 const AXES: RadarAxis[] = [
@@ -55,14 +66,19 @@ function directionLabel(value: string | null | undefined): string {
   return "·";
 }
 
-export function FenokSignalRadar({ stock }: FenokSignalRadarProps) {
+const SIZE_CLASS = {
+  sm: "h-[80px] w-[80px]",
+  md: "h-[160px] w-[160px]",
+} as const;
+
+export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
   const theme = useMarketChartTheme();
 
-  const hasAnyScore = AXES.some((axis) => isFiniteNumber(stock[axis.scoreKey]));
+  const hasAnyScore = AXES.some((axis) => isFiniteNumber(data[axis.scoreKey]));
 
   const values = useMemo(
-    () => AXES.map((axis) => (isFiniteNumber(stock[axis.scoreKey]) ? (stock[axis.scoreKey] as number) : 0)),
-    [stock],
+    () => AXES.map((axis) => (isFiniteNumber(data[axis.scoreKey]) ? (data[axis.scoreKey] as number) : 0)),
+    [data],
   );
 
   const chartData = useMemo<ChartData<"radar">>(
@@ -75,13 +91,13 @@ export function FenokSignalRadar({ stock }: FenokSignalRadarProps) {
           borderColor: theme.token("brand"),
           backgroundColor: theme.alpha("brand", 0.16),
           borderWidth: 2,
-          pointRadius: 2,
-          pointHoverRadius: 4,
+          pointRadius: size === "md" ? 3 : 2,
+          pointHoverRadius: size === "md" ? 5 : 4,
           pointBackgroundColor: theme.token("brand"),
         },
       ],
     }),
-    [values, theme],
+    [values, theme, size],
   );
 
   const options = useMemo<ChartOptions<"radar">>(
@@ -94,9 +110,9 @@ export function FenokSignalRadar({ stock }: FenokSignalRadarProps) {
           callbacks: {
             label: (ctx) => {
               const axis = AXES[ctx.dataIndex];
-              const rawScore = stock[axis.scoreKey];
+              const rawScore = data[axis.scoreKey];
               const score = isFiniteNumber(rawScore) ? Math.round(rawScore).toString() : "—";
-              const direction = directionLabel(stock[axis.directionKey] as string | null | undefined);
+              const direction = directionLabel(data[axis.directionKey] as string | null | undefined);
               return `${axis.label}: ${score} · ${direction}`;
             },
           },
@@ -110,19 +126,19 @@ export function FenokSignalRadar({ stock }: FenokSignalRadarProps) {
           grid: { color: theme.token("line") },
           pointLabels: {
             color: theme.token("ink2"),
-            font: { size: 9, weight: "bold" as const },
+            font: { size: size === "md" ? 11 : 9, weight: "bold" as const },
           },
           ticks: { display: false },
         },
       },
     }),
-    [stock, theme],
+    [data, theme, size],
   );
 
   if (!hasAnyScore) {
     return (
       <div
-        className="grid h-[80px] w-[80px] place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[9px] font-bold text-[var(--c-ink-3)]"
+        className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[9px] font-bold text-[var(--c-ink-3)]`}
         title="Fenok 신호 데이터 없음"
       >
         신호
@@ -133,7 +149,7 @@ export function FenokSignalRadar({ stock }: FenokSignalRadarProps) {
   }
 
   return (
-    <div className="relative h-[80px] w-[80px]">
+    <div className={`relative ${SIZE_CLASS[size]}`}>
       <Radar data={chartData} options={options} role="img" aria-label="Fenok 4-신호 레이더" />
     </div>
   );

@@ -2044,7 +2044,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <FenokSignalRadar stock={stock} />
+            <FenokSignalRadar data={stock} size="sm" />
             <div className="flex flex-wrap gap-1.5">
               {[
                 { label: "수익성", score: stock.profitabilityScore, direction: stock.profitabilityDirection },
