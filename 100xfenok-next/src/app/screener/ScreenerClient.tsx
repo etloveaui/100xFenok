@@ -975,7 +975,6 @@ export default function ScreenerClient({
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter));
   const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter));
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortKey, setSortKey] = useState<ScreenerSortKey>("marketCap");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
@@ -1298,27 +1297,6 @@ export default function ScreenerClient({
   }
 
   const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
-  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || bandFilter || actionFilter || connectionFilter);
-  const activeAdvancedFilterCount = [
-    perMax,
-    forwardPerMax,
-    revenueGrowthMin,
-    epsGrowthMin,
-    dividendYieldMin,
-    roeFy1Min,
-    ret3yMin,
-    ret5yMin,
-    marketCapMin,
-    marketCapMax,
-    pbrMin,
-    pbrMax,
-    roeMin,
-    opmMin,
-    return12mMin,
-    bandFilter,
-    actionFilter,
-    connectionFilter,
-  ].filter(Boolean).length;
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
@@ -1388,6 +1366,23 @@ export default function ScreenerClient({
     ...(selectedSectors.length > 0 ? [{ active: true, label: `섹터: ${selectedSectors.length}개`, clear: () => setSelectedSectors([]) }] : []),
     ...(selectedCountries.length > 0 ? [{ active: true, label: `국가: ${selectedCountries.length}개`, clear: () => setSelectedCountries([]) }] : []),
   ].filter((chip) => chip.active);
+
+  const [scaleOpen, setScaleOpen] = useState(false);
+  const [valueOpen, setValueOpen] = useState(false);
+  const [growthOpen, setGrowthOpen] = useState(false);
+  const [qualityOpen, setQualityOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      setScaleOpen(true);
+    }
+  }, []);
+
+  const scaleCount = Number(Boolean(search.trim())) + selectedSectors.length + selectedCountries.length + Number(Boolean(marketCapMin)) + Number(Boolean(marketCapMax));
+  const valueCount = Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
+  const growthCount =
+    Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
+  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(connectionFilter));
 
   return (
     <div className="data-shell-page">
@@ -1486,345 +1481,414 @@ export default function ScreenerClient({
 
       {/* Filter bar */}
       <section className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="티커 또는 종목명"
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
-            <select
-              value=""
-              onChange={(event) => {
-                const value = event.target.value;
-                if (value && !selectedSectors.includes(value)) {
-                  setSelectedSectors((prev) => [...prev, value]);
-                }
-              }}
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+        <div className="flex flex-col gap-3">
+          {/* Scale & Domain */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <button
+              type="button"
+              onClick={() => setScaleOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
             >
-              <option value="">섹터 추가</option>
-              {sectors
-                .filter((item) => !selectedSectors.includes(item))
-                .map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-            </select>
-            {selectedSectors.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedSectors.map((item) => (
-                  <span
-                    key={item}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
-                  >
-                    {item}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedSectors((prev) => prev.filter((s) => s !== item))}
-                      className="text-slate-500 hover:text-slate-900"
-                      aria-label={`Remove ${item}`}
-                    >
-                      ×
-                    </button>
+              <span>Scale & Domain</span>
+              <span className="flex items-center gap-2">
+                {scaleCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-interactive)] px-1 text-[10px] font-black text-white">
+                    {scaleCount}
                   </span>
-                ))}
+                )}
+                <span className="text-slate-500">{scaleOpen ? "▲" : "▼"}</span>
+              </span>
+            </button>
+            {scaleOpen && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="티커 또는 종목명"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
+                  <select
+                    value=""
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (value && !selectedSectors.includes(value)) {
+                        setSelectedSectors((prev) => [...prev, value]);
+                      }
+                    }}
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  >
+                    <option value="">섹터 추가</option>
+                    {sectors
+                      .filter((item) => !selectedSectors.includes(item))
+                      .map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                  </select>
+                  {selectedSectors.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSectors.map((item) => (
+                        <span
+                          key={item}
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSectors((prev) => prev.filter((s) => s !== item))}
+                            className="text-slate-500 hover:text-slate-900"
+                            aria-label={`Remove ${item}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
+                  <select
+                    value=""
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (value && !selectedCountries.includes(value)) {
+                        setSelectedCountries((prev) => [...prev, value]);
+                      }
+                    }}
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  >
+                    <option value="">국가 추가</option>
+                    {countries
+                      .filter((code) => !selectedCountries.includes(code))
+                      .map((code) => (
+                        <option key={code} value={code}>
+                          {COUNTRY_LABEL[code] ?? code}
+                        </option>
+                      ))}
+                  </select>
+                  {selectedCountries.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedCountries.map((code) => (
+                        <span
+                          key={code}
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                        >
+                          {COUNTRY_LABEL[code] ?? code}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCountries((prev) => prev.filter((c) => c !== code))}
+                            className="text-slate-500 hover:text-slate-900"
+                            aria-label={`Remove ${code}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={marketCapMin}
+                    onChange={(event) => setMarketCapMin(event.target.value)}
+                    placeholder="예: 100"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={marketCapMax}
+                    onChange={(event) => setMarketCapMax(event.target.value)}
+                    placeholder="예: 1000"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
               </div>
             )}
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
-            <select
-              value=""
-              onChange={(event) => {
-                const value = event.target.value;
-                if (value && !selectedCountries.includes(value)) {
-                  setSelectedCountries((prev) => [...prev, value]);
-                }
-              }}
-              className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+          </div>
+
+          {/* Value & Valuation */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <button
+              type="button"
+              onClick={() => setValueOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
             >
-              <option value="">국가 추가</option>
-              {countries
-                .filter((code) => !selectedCountries.includes(code))
-                .map((code) => (
-                  <option key={code} value={code}>
-                    {COUNTRY_LABEL[code] ?? code}
-                  </option>
-                ))}
-            </select>
-            {selectedCountries.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedCountries.map((code) => (
-                  <span
-                    key={code}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
-                  >
-                    {COUNTRY_LABEL[code] ?? code}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCountries((prev) => prev.filter((c) => c !== code))}
-                      className="text-slate-500 hover:text-slate-900"
-                      aria-label={`Remove ${code}`}
-                    >
-                      ×
-                    </button>
+              <span>Value & Valuation</span>
+              <span className="flex items-center gap-2">
+                {valueCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-interactive)] px-1 text-[10px] font-black text-white">
+                    {valueCount}
                   </span>
-                ))}
+                )}
+                <span className="text-slate-500">{valueOpen ? "▲" : "▼"}</span>
+              </span>
+            </button>
+            {valueOpen && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={perMax}
+                    onChange={(event) => setPerMax(event.target.value)}
+                    placeholder="예: 20"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={forwardPerMax}
+                    onChange={(event) => setForwardPerMax(event.target.value)}
+                    placeholder="예: 25"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={pbrMin}
+                    onChange={(event) => setPbrMin(event.target.value)}
+                    placeholder="예: 0.5"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={pbrMax}
+                    onChange={(event) => setPbrMax(event.target.value)}
+                    placeholder="예: 1.5"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
+                  <select
+                    value={bandFilter}
+                    onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  >
+                    <option value="">전체 밴드</option>
+                    <option value="cheap">저평가 (하위 25%)</option>
+                    <option value="fair">적정 (중간 50%)</option>
+                    <option value="rich">고평가 (상위 25%)</option>
+                  </select>
+                </label>
+                <label className="inline-flex items-center gap-2 self-end text-sm font-bold text-[var(--c-ink-2)]">
+                  <input
+                    type="checkbox"
+                    checked={profitableOnly}
+                    onChange={(event) => setProfitableOnly(event.target.checked)}
+                    className="h-5 w-5 min-h-5 min-w-5 rounded border-slate-300 text-brand-interactive"
+                  />
+                  흑자 종목만 (PER &gt; 0)
+                </label>
               </div>
             )}
-          </label>
-          <div id="advanced-filters" className={filtersOpen ? "contents" : "hidden md:contents"}>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={perMax}
-                onChange={(event) => setPerMax(event.target.value)}
-                placeholder="예: 20"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={forwardPerMax}
-                onChange={(event) => setForwardPerMax(event.target.value)}
-                placeholder="예: 25"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={marketCapMin}
-                onChange={(event) => setMarketCapMin(event.target.value)}
-                placeholder="예: 100"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={marketCapMax}
-                onChange={(event) => setMarketCapMax(event.target.value)}
-                placeholder="예: 1000"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={pbrMin}
-                onChange={(event) => setPbrMin(event.target.value)}
-                placeholder="예: 0.5"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={pbrMax}
-                onChange={(event) => setPbrMax(event.target.value)}
-                placeholder="예: 1.5"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={revenueGrowthMin}
-                onChange={(event) => setRevenueGrowthMin(event.target.value)}
-                placeholder="예: 10"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={epsGrowthMin}
-                onChange={(event) => setEpsGrowthMin(event.target.value)}
-                placeholder="예: 10"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={dividendYieldMin}
-                onChange={(event) => setDividendYieldMin(event.target.value)}
-                placeholder="예: 3"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">FY+1 ROE 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={roeFy1Min}
-                onChange={(event) => setRoeFy1Min(event.target.value)}
-                placeholder="예: 15"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={roeMin}
-                onChange={(event) => setRoeMin(event.target.value)}
-                placeholder="예: 20"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={opmMin}
-                onChange={(event) => setOpmMin(event.target.value)}
-                placeholder="예: 15"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={ret3yMin}
-                onChange={(event) => setRet3yMin(event.target.value)}
-                placeholder="예: 20"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={ret5yMin}
-                onChange={(event) => setRet5yMin(event.target.value)}
-                placeholder="예: 50"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={return12mMin}
-                onChange={(event) => setReturn12mMin(event.target.value)}
-                placeholder="예: 0"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
-              <select
-                value={bandFilter}
-                onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              >
-                <option value="">전체 밴드</option>
-                <option value="cheap">저평가 (하위 25%)</option>
-                <option value="fair">적정 (중간 50%)</option>
-                <option value="rich">고평가 (상위 25%)</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
-              <select
-                value={actionFilter}
-                onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              >
-                <option value="">전체 신호</option>
-                <option value="guru_held">기관·고수 보유</option>
-                <option value="smart_money">기관/고수 주목</option>
-                <option value="value_momentum">저평가+모멘텀</option>
-                <option value="index_core">지수 핵심</option>
-                <option value="income">배당 점검</option>
-                <option value="momentum">모멘텀 리더</option>
-                <option value="watch">관찰</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
-              <select
-                value={connectionFilter}
-                onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
-                disabled={!connectionIndexReady}
-                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition focus:border-brand-interactive disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
-              >
-                <option value="">전체 연결</option>
-                <option value="filings">공시 요약 연결</option>
-                <option value="smartMoney">13F 보유 연결</option>
-                <option value="indexMembership">지수 편입 연결</option>
-                <option value="singleStockEtfs">단일종목 ETF 연결</option>
-              </select>
-            </label>
+          </div>
+
+          {/* Growth & Return */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <button
+              type="button"
+              onClick={() => setGrowthOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+            >
+              <span>Growth & Return</span>
+              <span className="flex items-center gap-2">
+                {growthCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-interactive)] px-1 text-[10px] font-black text-white">
+                    {growthCount}
+                  </span>
+                )}
+                <span className="text-slate-500">{growthOpen ? "▲" : "▼"}</span>
+              </span>
+            </button>
+            {growthOpen && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={revenueGrowthMin}
+                    onChange={(event) => setRevenueGrowthMin(event.target.value)}
+                    placeholder="예: 10"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={epsGrowthMin}
+                    onChange={(event) => setEpsGrowthMin(event.target.value)}
+                    placeholder="예: 10"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={dividendYieldMin}
+                    onChange={(event) => setDividendYieldMin(event.target.value)}
+                    placeholder="예: 3"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={return12mMin}
+                    onChange={(event) => setReturn12mMin(event.target.value)}
+                    placeholder="예: 0"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={ret3yMin}
+                    onChange={(event) => setRet3yMin(event.target.value)}
+                    placeholder="예: 20"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={ret5yMin}
+                    onChange={(event) => setRet5yMin(event.target.value)}
+                    placeholder="예: 50"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* Quality & Signals */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <button
+              type="button"
+              onClick={() => setQualityOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+            >
+              <span>Quality & Signals</span>
+              <span className="flex items-center gap-2">
+                {qualityCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-interactive)] px-1 text-[10px] font-black text-white">
+                    {qualityCount}
+                  </span>
+                )}
+                <span className="text-slate-500">{qualityOpen ? "▲" : "▼"}</span>
+              </span>
+            </button>
+            {qualityOpen && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={roeMin}
+                    onChange={(event) => setRoeMin(event.target.value)}
+                    placeholder="예: 20"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">FY+1 ROE 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={roeFy1Min}
+                    onChange={(event) => setRoeFy1Min(event.target.value)}
+                    placeholder="예: 15"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={opmMin}
+                    onChange={(event) => setOpmMin(event.target.value)}
+                    placeholder="예: 15"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
+                  <select
+                    value={actionFilter}
+                    onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  >
+                    <option value="">전체 신호</option>
+                    <option value="guru_held">기관·고수 보유</option>
+                    <option value="smart_money">기관/고수 주목</option>
+                    <option value="value_momentum">저평가+모멘텀</option>
+                    <option value="index_core">지수 핵심</option>
+                    <option value="income">배당 점검</option>
+                    <option value="momentum">모멘텀 리더</option>
+                    <option value="watch">관찰</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
+                  <select
+                    value={connectionFilter}
+                    onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
+                    disabled={!connectionIndexReady}
+                    className="min-h-10 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition focus:border-brand-interactive disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
+                  >
+                    <option value="">전체 연결</option>
+                    <option value="filings">공시 요약 연결</option>
+                    <option value="smartMoney">13F 보유 연결</option>
+                    <option value="indexMembership">지수 편입 연결</option>
+                    <option value="singleStockEtfs">단일종목 ETF 연결</option>
+                  </select>
+                </label>
+              </div>
+            )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((value) => !value)}
-          aria-expanded={filtersOpen}
-          aria-controls="advanced-filters"
-          aria-label={`고급 필터 ${filtersOpen ? "접기" : "열기"}${activeAdvancedFilterCount > 0 ? `, ${activeAdvancedFilterCount}개 적용 중` : ""}`}
-          className="mt-3 inline-flex min-h-10 w-full items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] md:hidden"
-        >
-          <span>{filtersOpen ? "고급 필터 접기" : "고급 필터 열기"}</span>
-          <span
-            data-testid="screener-mobile-advanced-count"
-            className={cx(
-              "inline-flex min-h-7 shrink-0 items-center rounded-full px-2.5 text-[10px] tracking-normal",
-              advancedFiltersActive
-                ? "bg-[var(--brand-interactive)] text-white"
-                : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-2)]",
-            )}
-          >
-            {activeAdvancedFilterCount > 0 ? `${activeAdvancedFilterCount}개 적용` : "상세 조건"}
-          </span>
-        </button>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <label className="inline-flex items-center gap-2 text-sm font-bold text-[var(--c-ink-2)]">
-            <input
-              type="checkbox"
-              checked={profitableOnly}
-              onChange={(event) => setProfitableOnly(event.target.checked)}
-              className="h-5 w-5 min-h-5 min-w-5 rounded border-slate-300 text-brand-interactive"
-            />
-            흑자 종목만 (PER &gt; 0)
-          </label>
+          <div />
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-[var(--c-ink-3)]">
               <strong className="orbitron text-[var(--c-ink)]">{sorted.length.toLocaleString()}</strong>개 종목
