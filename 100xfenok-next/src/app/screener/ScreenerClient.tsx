@@ -964,6 +964,13 @@ export default function ScreenerClient({
   const [roeFy1Min, setRoeFy1Min] = useState("");
   const [ret3yMin, setRet3yMin] = useState("");
   const [ret5yMin, setRet5yMin] = useState("");
+  const [marketCapMin, setMarketCapMin] = useState("");
+  const [marketCapMax, setMarketCapMax] = useState("");
+  const [pbrMin, setPbrMin] = useState("");
+  const [pbrMax, setPbrMax] = useState("");
+  const [roeMin, setRoeMin] = useState("");
+  const [opmMin, setOpmMin] = useState("");
+  const [return12mMin, setReturn12mMin] = useState("");
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter));
@@ -1039,6 +1046,20 @@ export default function ScreenerClient({
     const ret3yMinValid = ret3yMinValue !== null && !Number.isNaN(ret3yMinValue);
     const ret5yMinValue = ret5yMin.trim() === "" ? null : Number(ret5yMin);
     const ret5yMinValid = ret5yMinValue !== null && !Number.isNaN(ret5yMinValue);
+    const marketCapMinValue = marketCapMin.trim() === "" ? null : Number(marketCapMin);
+    const marketCapMinValid = marketCapMinValue !== null && !Number.isNaN(marketCapMinValue);
+    const marketCapMaxValue = marketCapMax.trim() === "" ? null : Number(marketCapMax);
+    const marketCapMaxValid = marketCapMaxValue !== null && !Number.isNaN(marketCapMaxValue);
+    const pbrMinValue = pbrMin.trim() === "" ? null : Number(pbrMin);
+    const pbrMinValid = pbrMinValue !== null && !Number.isNaN(pbrMinValue);
+    const pbrMaxValue = pbrMax.trim() === "" ? null : Number(pbrMax);
+    const pbrMaxValid = pbrMaxValue !== null && !Number.isNaN(pbrMaxValue);
+    const roeMinValue = roeMin.trim() === "" ? null : Number(roeMin);
+    const roeMinValid = roeMinValue !== null && !Number.isNaN(roeMinValue);
+    const opmMinValue = opmMin.trim() === "" ? null : Number(opmMin);
+    const opmMinValid = opmMinValue !== null && !Number.isNaN(opmMinValue);
+    const return12mMinValue = return12mMin.trim() === "" ? null : Number(return12mMin);
+    const return12mMinValid = return12mMinValue !== null && !Number.isNaN(return12mMinValue);
 
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
@@ -1061,6 +1082,13 @@ export default function ScreenerClient({
       if (roeFy1MinValid && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < (roeFy1MinValue as number))) return false;
       if (ret3yMinValid && (stock.ret3y === null || (stock.ret3y * 100) < (ret3yMinValue as number))) return false;
       if (ret5yMinValid && (stock.ret5y === null || (stock.ret5y * 100) < (ret5yMinValue as number))) return false;
+      if (marketCapMinValid && (stock.marketCap === null || stock.marketCap < (marketCapMinValue as number) * 1000)) return false;
+      if (marketCapMaxValid && (stock.marketCap === null || stock.marketCap > (marketCapMaxValue as number) * 1000)) return false;
+      if (pbrMinValid && (stock.pbr === null || stock.pbr < (pbrMinValue as number))) return false;
+      if (pbrMaxValid && (stock.pbr === null || stock.pbr > (pbrMaxValue as number))) return false;
+      if (roeMinValid && (stock.roe === null || stock.roe * 100 < (roeMinValue as number))) return false;
+      if (opmMinValid && (stock.opm === null || stock.opm * 100 < (opmMinValue as number))) return false;
+      if (return12mMinValid && (stock.return12m === null || stock.return12m * 100 < (return12mMinValue as number))) return false;
 
       if (bandFilter) {
         const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
@@ -1072,7 +1100,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
+  }, [stocks, search, sector, country, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1086,7 +1114,7 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${sector}|${country}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1256,14 +1284,21 @@ export default function ScreenerClient({
     setRoeFy1Min("");
     setRet3yMin("");
     setRet5yMin("");
+    setMarketCapMin("");
+    setMarketCapMax("");
+    setPbrMin("");
+    setPbrMax("");
+    setRoeMin("");
+    setOpmMin("");
+    setReturn12mMin("");
     setProfitableOnly(false);
     setBandFilter("");
     setActionFilter("");
     setConnectionFilter("");
   }
 
-  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
-  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || bandFilter || actionFilter || connectionFilter);
+  const hasFilters = Boolean(search || sector || country || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
+  const advancedFiltersActive = Boolean(perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || bandFilter || actionFilter || connectionFilter);
   const activeAdvancedFilterCount = [
     perMax,
     forwardPerMax,
@@ -1273,6 +1308,13 @@ export default function ScreenerClient({
     roeFy1Min,
     ret3yMin,
     ret5yMin,
+    marketCapMin,
+    marketCapMax,
+    pbrMin,
+    pbrMax,
+    roeMin,
+    opmMin,
+    return12mMin,
     bandFilter,
     actionFilter,
     connectionFilter,
@@ -1440,6 +1482,50 @@ export default function ScreenerClient({
               />
             </label>
             <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={marketCapMin}
+                onChange={(event) => setMarketCapMin(event.target.value)}
+                placeholder="예: 100"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={marketCapMax}
+                onChange={(event) => setMarketCapMax(event.target.value)}
+                placeholder="예: 1000"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={pbrMin}
+                onChange={(event) => setPbrMin(event.target.value)}
+                placeholder="예: 0.5"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={pbrMax}
+                onChange={(event) => setPbrMax(event.target.value)}
+                placeholder="예: 1.5"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
               <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
               <input
                 type="number"
@@ -1484,6 +1570,28 @@ export default function ScreenerClient({
               />
             </label>
             <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소(%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={roeMin}
+                onChange={(event) => setRoeMin(event.target.value)}
+                placeholder="예: 20"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소(%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={opmMin}
+                onChange={(event) => setOpmMin(event.target.value)}
+                placeholder="예: 15"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
               <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
               <input
                 type="number"
@@ -1502,6 +1610,17 @@ export default function ScreenerClient({
                 value={ret5yMin}
                 onChange={(event) => setRet5yMin(event.target.value)}
                 placeholder="예: 50"
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소(%)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={return12mMin}
+                onChange={(event) => setReturn12mMin(event.target.value)}
+                placeholder="예: 0"
                 className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
               />
             </label>
