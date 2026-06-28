@@ -7,13 +7,15 @@ const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 
-const FORMULA_VERSION = "fenok-native-signals-v0.1.1";
-const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_1_20260628.md";
-const PUBLIC_SURFACE_STATUS = "phase_a_stock_signal_lens_approved_summary_public";
+const FORMULA_VERSION = "fenok-native-signals-v0.2.0-phase-a";
+const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md";
+const PUBLIC_SURFACE_STATUS = "phase_a_v0_2_stock_signal_lens_approved_summary_public";
 const SOURCE_FILE = "computed/stock_action_index.json";
 const OUTPUT_FILE = "computed/fenok_signals.json";
 const SUMMARY_OUTPUT_FILE = "computed/fenok_signals_summary.json";
+const STOCKANALYSIS_FINANCIALS_DIR = "stockanalysis/financials";
 const NATIVE_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside", "market_similarity"];
+const PHASE_A_SIGNAL_KEYS = ["durability_profitability"];
 const CONVICTION_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside"];
 
 const HORIZON_WEIGHTS = [
@@ -22,8 +24,30 @@ const HORIZON_WEIGHTS = [
   ["fy3", 0.2],
 ];
 
+const SECTOR_DURABILITY_CAPS = {
+  Technology: { grossMargin: 100, operatingMargin: 60, roe: 70, roic: 70, fcfMargin: 55 },
+  Healthcare: { grossMargin: 65, operatingMargin: 30, roe: 35, roic: 35, fcfMargin: 12 },
+  Industrials: { grossMargin: 70, operatingMargin: 40, roe: 45, roic: 45, fcfMargin: 25 },
+  default: { grossMargin: 75, operatingMargin: 40, roe: 45, roic: 45, fcfMargin: 25 },
+};
+
 function readJson(relPath) {
   return JSON.parse(fs.readFileSync(path.join(dataRoot, relPath), "utf8"));
+}
+
+function readOptionalJson(relPath) {
+  const abs = path.join(dataRoot, relPath);
+  if (!fs.existsSync(abs)) return null;
+  return JSON.parse(fs.readFileSync(abs, "utf8"));
+}
+
+function readFinancialsByTicker(tickers) {
+  return new Map(
+    tickers.map((ticker) => [
+      ticker,
+      readOptionalJson(path.join(STOCKANALYSIS_FINANCIALS_DIR, `${ticker}.json`)),
+    ]),
+  );
 }
 
 function ensureDir(absPath) {
@@ -79,6 +103,122 @@ function weightedAverage(block, metric) {
     denominator += weight;
   }
   return denominator > 0 ? round(numerator / denominator, 4) : null;
+}
+
+function absoluteCapScore(value, cap) {
+  return finite(value) && finite(cap) && cap > 0 ? round(clamp((value / cap) * 100), 2) : null;
+}
+
+function weightedObservedScore(components) {
+  const totalWeight = components.reduce((sum, component) => sum + component.weight, 0);
+  let observedWeight = 0;
+  let weighted = 0;
+  for (const component of components) {
+    if (!finite(component.score)) continue;
+    observedWeight += component.weight;
+    weighted += component.score * component.weight;
+  }
+
+  const observedOnlyScore = observedWeight > 0 ? weighted / observedWeight : null;
+  const coverageRatio = totalWeight > 0 ? observedWeight / totalWeight : null;
+  return {
+    score: round(observedOnlyScore, 2),
+    coverage_adjusted_score: finite(observedOnlyScore) && finite(coverageRatio)
+      ? round(observedOnlyScore * coverageRatio, 2)
+      : null,
+    observed_weight: round(observedWeight, 4),
+    total_weight: round(totalWeight, 4),
+    coverage_ratio: round(coverageRatio, 4),
+    missing_keys: components
+      .filter((component) => !finite(component.score))
+      .map((component) => component.key),
+  };
+}
+
+function sectorDurabilityCaps(row) {
+  return SECTOR_DURABILITY_CAPS[row?.canonicalSector] ?? SECTOR_DURABILITY_CAPS.default;
+}
+
+function signalComponentValue(signal, componentKey) {
+  const value = signal?.components?.[componentKey]?.value;
+  return finite(value) ? value : null;
+}
+
+function statementRows(financials, section) {
+  return financials?.statements?.annual?.[section]?.rows ?? [];
+}
+
+function statementPeriods(financials, section) {
+  return financials?.statements?.annual?.[section]?.periods ?? [];
+}
+
+function statementValues(financials, section, field) {
+  const row = statementRows(financials, section).find((item) => item.field === field);
+  return Array.isArray(row?.values) ? row.values : [];
+}
+
+function annualStatementValues(financials, section, fields, limit = 5) {
+  const periods = statementPeriods(financials, section);
+  const startIndex = periods[0] === "TTM" ? 1 : 0;
+  for (const field of fields) {
+    const values = statementValues(financials, section, field)
+      .slice(startIndex, startIndex + limit)
+      .filter(finite);
+    if (values.length > 0) return { field, values };
+  }
+  return { field: null, values: [] };
+}
+
+function average(values) {
+  const finiteValues = Array.isArray(values) ? values.filter(finite) : [];
+  if (finiteValues.length === 0) return null;
+  return finiteValues.reduce((sum, value) => sum + value, 0) / finiteValues.length;
+}
+
+function latestAnnualValue(annualValues) {
+  return Array.isArray(annualValues?.values) && finite(annualValues.values[0])
+    ? { field: annualValues.field, value: annualValues.values[0] }
+    : { field: annualValues?.field ?? null, value: null };
+}
+
+function toPercent(value) {
+  return finite(value) ? value * 100 : null;
+}
+
+function positiveHistory(values) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return {
+      score: null,
+      positive_count: 0,
+      years: 0,
+      consecutive_positive_from_latest: 0,
+    };
+  }
+
+  const positiveCount = values.filter((value) => finite(value) && value > 0).length;
+  let consecutivePositiveFromLatest = 0;
+  for (const value of values) {
+    if (!finite(value) || value <= 0) break;
+    consecutivePositiveFromLatest += 1;
+  }
+
+  const countScore = (positiveCount / values.length) * 100;
+  const consecutiveScore = (consecutivePositiveFromLatest / values.length) * 100;
+  return {
+    score: round((countScore + consecutiveScore) / 2, 2),
+    positive_count: positiveCount,
+    years: values.length,
+    consecutive_positive_from_latest: consecutivePositiveFromLatest,
+  };
+}
+
+function positiveEarningsScore({ operatingMargin, roe, latestEps }) {
+  if (finite(latestEps)) return latestEps > 0 ? 100 : 15;
+  if (!finite(operatingMargin) && !finite(roe)) return null;
+  const positiveCount = [operatingMargin, roe].filter((value) => finite(value) && value > 0).length;
+  if (positiveCount === 2) return 100;
+  if (positiveCount === 1) return 65;
+  return 15;
 }
 
 function revisionScore(revision) {
@@ -306,6 +446,140 @@ function buildProfitabilitySignal(stats, row) {
   };
 }
 
+function buildDurabilityProfitabilitySignal(row, profitability, financials) {
+  const caps = sectorDurabilityCaps(row);
+  const grossMargin = signalComponentValue(profitability, "gross_margin_avg");
+  const operatingMargin = signalComponentValue(profitability, "operating_margin_avg");
+  const roe = signalComponentValue(profitability, "roe_avg");
+  const epsHistory = annualStatementValues(financials, "income", ["epsDiluted", "epsBasic"]);
+  const latestEps = latestAnnualValue(epsHistory);
+  const fcfMarginHistory = annualStatementValues(financials, "cash_flow", ["fcfMargin"]);
+  const fallbackFcfMarginHistory = annualStatementValues(financials, "income", ["fcfMargin"]);
+  const roicHistory = annualStatementValues(financials, "ratios", ["roic"]);
+  const fcfHistory = annualStatementValues(financials, "cash_flow", ["fcf"]);
+  const fallbackFcfHistory = annualStatementValues(financials, "income", ["fcf"]);
+  const fcfMarginAnnual = fcfMarginHistory.values.length > 0 ? fcfMarginHistory : fallbackFcfMarginHistory;
+  const fcfAnnual = fcfHistory.values.length > 0 ? fcfHistory : fallbackFcfHistory;
+  const avgFcfMargin = {
+    field: fcfMarginAnnual.field,
+    value: average(fcfMarginAnnual.values),
+  };
+  const latestRoic = latestAnnualValue(roicHistory);
+
+  const grossMarginScore = absoluteCapScore(grossMargin, caps.grossMargin);
+  const operatingMarginScore = absoluteCapScore(operatingMargin, caps.operatingMargin);
+  const marginLevel = weightedObservedScore([
+    { key: "gross_margin_avg", score: grossMarginScore, weight: 0.4 },
+    { key: "operating_margin_avg", score: operatingMarginScore, weight: 0.6 },
+  ]);
+
+  const roeScore = absoluteCapScore(roe, caps.roe);
+  const roic = toPercent(latestRoic.value);
+  const roicScore = absoluteCapScore(roic, caps.roic);
+  const returnEfficiency = weightedObservedScore([
+    { key: "roe_avg", score: roeScore, weight: 0.7 },
+    { key: "roic", score: roicScore, weight: 0.3 },
+  ]);
+
+  const fcfMarginScore = absoluteCapScore(toPercent(avgFcfMargin.value), caps.fcfMargin);
+  const fcfStability = positiveHistory(fcfAnnual.values);
+  const positiveFcfCountScore = fcfStability.years > 0
+    ? round((fcfStability.positive_count / fcfStability.years) * 100, 2)
+    : null;
+  const cashDurability = weightedObservedScore([
+    { key: "average_fcf_margin", score: fcfMarginScore, weight: 0.65 },
+    { key: "positive_fcf_count", score: positiveFcfCountScore, weight: 0.35 },
+  ]);
+
+  const epsStability = positiveHistory(epsHistory.values);
+  const multiYearStability = weightedObservedScore([
+    { key: "positive_eps_history", score: epsStability.score, weight: 0.5 },
+    { key: "positive_fcf_history", score: fcfStability.score, weight: 0.5 },
+  ]);
+
+  const components = [
+    { key: "positive_earnings", score: positiveEarningsScore({ operatingMargin, roe, latestEps: latestEps.value }), weight: 0.2 },
+    { key: "cash_durability", score: cashDurability.score, weight: 0.2 },
+    { key: "margin_level", score: marginLevel.score, weight: 0.25 },
+    { key: "roe_roic_efficiency", score: returnEfficiency.score, weight: 0.25 },
+    { key: "multi_year_stability", score: multiYearStability.score, weight: 0.1 },
+  ];
+  const result = weightedObservedScore(components);
+
+  return {
+    score_0_100: result.score,
+    direction: directionFromScore(result.score),
+    coverage_ratio: result.coverage_ratio,
+    confidence: confidenceFromCoverage(result.coverage_ratio ?? 0, row.coverageRatio),
+    basis: "observed_only_absolute_durability_phase_a",
+    observed_only_score_0_100: result.score,
+    coverage_adjusted_score_0_100: result.coverage_adjusted_score,
+    missing_inputs: result.missing_keys,
+    financials_source: financials ? {
+      path: `${STOCKANALYSIS_FINANCIALS_DIR}/${financials.ticker}.json`,
+      role: financials.role ?? null,
+    } : null,
+    sector_caps: caps,
+    components: {
+      positive_earnings: {
+        score: components[0].score,
+        operating_margin: operatingMargin,
+        roe,
+        latest_eps: latestEps.value,
+        source_field: latestEps.field,
+        note: finite(latestEps.value)
+          ? "based on latest EPS from local stockanalysis financials"
+          : "inferred from positive operating margin and ROE",
+      },
+      cash_durability: {
+        score: cashDurability.score,
+        coverage_ratio: cashDurability.coverage_ratio,
+        average_fcf_margin: toPercent(avgFcfMargin.value),
+        fcf_margin_field: avgFcfMargin.field,
+        fcf_margin_score: fcfMarginScore,
+        fcf_field: fcfAnnual.field,
+        fcf_positive_count: fcfStability.positive_count,
+        fcf_years: fcfStability.years,
+        positive_fcf_count_score: positiveFcfCountScore,
+        status: cashDurability.score === null ? "missing_financials_input" : "available_from_local_stockanalysis",
+      },
+      margin_level: {
+        score: marginLevel.score,
+        coverage_ratio: marginLevel.coverage_ratio,
+        gross_margin: grossMargin,
+        gross_margin_score: grossMarginScore,
+        operating_margin: operatingMargin,
+        operating_margin_score: operatingMarginScore,
+      },
+      roe_roic_efficiency: {
+        score: returnEfficiency.score,
+        coverage_ratio: returnEfficiency.coverage_ratio,
+        roe,
+        roe_score: roeScore,
+        roic,
+        roic_field: latestRoic.field,
+        roic_score: roicScore,
+        note: finite(roic)
+          ? "ROE from Fenok profitability signal plus ROIC from local stockanalysis financials"
+          : "ROIC missing; ROE available when profitability signal exists",
+      },
+      multi_year_stability: {
+        score: multiYearStability.score,
+        coverage_ratio: multiYearStability.coverage_ratio,
+        eps_field: epsHistory.field,
+        eps_positive_count: epsStability.positive_count,
+        eps_years: epsStability.years,
+        eps_consecutive_positive_from_latest: epsStability.consecutive_positive_from_latest,
+        fcf_field: fcfAnnual.field,
+        fcf_positive_count: fcfStability.positive_count,
+        fcf_years: fcfStability.years,
+        fcf_consecutive_positive_from_latest: fcfStability.consecutive_positive_from_latest,
+        status: multiYearStability.score === null ? "missing_history_input" : "available_from_local_stockanalysis",
+      },
+    },
+  };
+}
+
 function buildGrowthSignal(stats, row) {
   const revision = revisionScore(row.revision);
   const result = scoreFromComponents([
@@ -474,8 +748,8 @@ function buildMarketSimilaritySignals(rows, vectors, resultRows) {
   }
 }
 
-function compactSignalCoverage(signals) {
-  const entries = Object.values(signals);
+function compactSignalCoverage(signals, keys = NATIVE_SIGNAL_KEYS) {
+  const entries = keys.map((key) => signals?.[key]);
   const available = entries.filter((signal) => finite(signal?.score_0_100));
   return {
     available_signal_count: available.length,
@@ -517,6 +791,10 @@ function buildFenokSignalsSummary(fenokSignals) {
     "marketSimilarityDirection",
     "convictionScore",
     "convictionCall",
+    "durabilityProfitabilityScore",
+    "durabilityProfitabilityCoverage",
+    "upsidePotentialScore",
+    "downsidePressureScore",
   ];
 
   return {
@@ -555,6 +833,10 @@ function buildFenokSignalsSummary(fenokSignals) {
         row.signals.market_similarity?.direction ?? "unavailable",
         conviction.convictionScore,
         conviction.convictionCall,
+        row.signals.durability_profitability?.score_0_100 ?? null,
+        row.signals.durability_profitability?.coverage_ratio ?? null,
+        row.signals.upside_downside?.upside_score_0_100 ?? null,
+        row.signals.upside_downside?.downside_score_0_100 ?? null,
       ];
     }),
   };
@@ -563,16 +845,19 @@ function buildFenokSignalsSummary(fenokSignals) {
 function buildFenokSignals(stockActionIndex) {
   const rows = Array.isArray(stockActionIndex.rows) ? stockActionIndex.rows : [];
   const stats = buildMetricStats(rows);
+  const financialsByTicker = readFinancialsByTicker(rows.map((row) => row.symbol).filter(Boolean));
   const generatedAt = new Date().toISOString();
   const vectors = new Map();
 
   const resultRows = rows.map((row) => {
     const profitability = buildProfitabilitySignal(stats, row);
+    const durabilityProfitability = buildDurabilityProfitabilitySignal(row, profitability, financialsByTicker.get(row.symbol));
     const growth = buildGrowthSignal(stats, row);
     const technicalFlow = buildTechnicalSignal(stats, row);
     const upsideDownside = buildUpsideDownsideSignal(stats, row, profitability, growth, technicalFlow);
     const signals = {
       profitability,
+      durability_profitability: durabilityProfitability,
       growth,
       technical_flow: technicalFlow,
       upside_downside: upsideDownside,
@@ -598,6 +883,7 @@ function buildFenokSignals(stockActionIndex) {
         "global-scouter/core/revision_movers.json",
         "yf/quarter_closes.json",
         "slickcharts/stocks-returns.json",
+        "stockanalysis/financials/*.json",
       ],
       stock_action_context: {
         action_score: num(row.actionScore),
@@ -617,7 +903,7 @@ function buildFenokSignals(stockActionIndex) {
     row.confidence = confidenceFromCoverage(row.coverage_ratio, row.stock_action_context.coverage_ratio);
   }
 
-  const signalKeys = NATIVE_SIGNAL_KEYS;
+  const signalKeys = [...NATIVE_SIGNAL_KEYS, ...PHASE_A_SIGNAL_KEYS];
   return {
     schema_version: 1,
     generated_at: generatedAt,
