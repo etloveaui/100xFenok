@@ -549,15 +549,19 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
 
 interface LongTermAxisConfig {
   key: string;
-  label: string;
+  spokeLabel: string;
+  fullLabel: string;
   scoreKey: keyof FenokSignalsSummaryRecord;
   directionKey?: keyof FenokSignalsSummaryRecord;
+  coverageKey?: keyof FenokSignalsSummaryRecord;
   helpKey: FenokSignalHelpKey;
 }
 
 interface LongTermAxis extends FenokSignalRadarHexagonAxis {
   key: string;
   helpKey: FenokSignalHelpKey;
+  fullLabel: string;
+  coverage: number | null;
   meta: {
     tier: string | null;
     tone: "up" | "warn" | "down" | "neutral";
@@ -567,41 +571,48 @@ interface LongTermAxis extends FenokSignalRadarHexagonAxis {
 const LONG_TERM_AXIS_CONFIG: LongTermAxisConfig[] = [
   {
     key: "profitability",
-    label: "수익성",
+    spokeLabel: "수익성",
+    fullLabel: "수익성",
     scoreKey: "profitabilityScore",
     directionKey: "profitabilityDirection",
     helpKey: "profitability",
   },
   {
     key: "growth",
-    label: "성장성",
+    spokeLabel: "성장",
+    fullLabel: "성장",
     scoreKey: "growthScore",
     directionKey: "growthDirection",
     helpKey: "growth",
   },
   {
     key: "upsidePotential",
-    label: "상승 잠재력",
+    spokeLabel: "상방",
+    fullLabel: "상승 잠재력",
     scoreKey: "upsidePotentialScore",
     helpKey: "upsidePotential",
   },
   {
     key: "downsidePressure",
-    label: "하락 압력",
+    spokeLabel: "하방",
+    fullLabel: "하락 압력",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
   },
   {
     key: "marketSimilarity",
-    label: "동종군 유사도",
+    spokeLabel: "동종군",
+    fullLabel: "동종군 유사도",
     scoreKey: "marketSimilarityScore",
     helpKey: "marketSimilarity",
   },
   {
-    key: "sp500TrackingSimilarity",
-    label: "S&P500 추종 유사도",
-    scoreKey: "sp500TrackingSimilarityScore",
-    helpKey: "sp500TrackingSimilarity",
+    key: "durabilityProfitability",
+    spokeLabel: "내구",
+    fullLabel: "내구 수익성",
+    scoreKey: "durabilityProfitabilityScore",
+    coverageKey: "durabilityProfitabilityCoverage",
+    helpKey: "durabilityProfitability",
   },
 ];
 
@@ -627,14 +638,18 @@ function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
     const rawDirection = config.directionKey ? record[config.directionKey] : null;
     const explicitDirection =
       typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
+    const rawCoverage = config.coverageKey ? record[config.coverageKey] : null;
+    const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
     const meta = deriveAxisMeta(score, config.helpKey);
     return {
       key: config.key,
-      label: config.label,
+      label: config.spokeLabel,
+      fullLabel: config.fullLabel,
       score,
       direction: explicitDirection ?? meta.direction,
       tier: meta.tier,
       helpKey: config.helpKey,
+      coverage,
       meta,
     };
   });
@@ -644,9 +659,19 @@ function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
   const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2">
-      <span className="min-w-0 flex-1 truncate text-[11px] font-black text-[var(--c-ink)]">
-        {axis.label}
-      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
+          {axis.fullLabel}
+        </div>
+        <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
+          Fenok 파생 신호 · 매수권유 아님
+        </div>
+        {axis.coverage !== null ? (
+          <div className="truncate text-[9px] font-bold text-[var(--c-ink-3)]">
+            데이터 {formatCoverage(axis.coverage)}
+          </div>
+        ) : null}
+      </div>
       <FenokSignalHelpPopover signal={axis.helpKey} score={axis.score} direction={axis.direction} />
       {axis.meta.tier && axis.score !== null ? (
         <span

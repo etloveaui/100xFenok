@@ -4,21 +4,21 @@ import { FenokSignalRadarHexagonPair } from "./FenokSignalRadarHexagonPair";
 import type { FenokSignalRadarHexagonAxis } from "./FenokSignalRadarHexagon";
 
 const SAMPLE_SHORT_TERM_AXES: FenokSignalRadarHexagonAxis[] = [
-  { label: "수익성", score: 88, direction: "strong", tier: "strong" },
-  { label: "내구 수익성", score: 74, direction: "constructive", tier: "constructive" },
-  { label: "성장", score: 76, direction: "constructive", tier: "constructive" },
-  { label: "기술·자금", score: 59, direction: "neutral", tier: "neutral" },
-  { label: "상방 잠재력", score: 63, direction: "upside_bias", tier: "constructive" },
-  { label: "하방 압력", score: 42, direction: "downside_bias", tier: "neutral" },
+  { label: "수익성", fullLabel: "수익성", score: 88, direction: "strong", tier: "strong" },
+  { label: "내구", fullLabel: "내구 수익성", score: 74, direction: "constructive", tier: "constructive" },
+  { label: "성장", fullLabel: "성장", score: 76, direction: "constructive", tier: "constructive" },
+  { label: "기술", fullLabel: "기술·자금", score: 59, direction: "neutral", tier: "neutral" },
+  { label: "상방", fullLabel: "상승 잠재력", score: 63, direction: "upside_bias", tier: "constructive" },
+  { label: "하방", fullLabel: "하락 압력", score: 42, direction: "downside_bias", tier: "neutral" },
 ];
 
 const SAMPLE_LONG_TERM_AXES: FenokSignalRadarHexagonAxis[] = [
-  { label: "수익성", score: 72, direction: "constructive", tier: "constructive" },
-  { label: "내구 수익성", score: 81, direction: "strong", tier: "strong" },
-  { label: "성장", score: 68, direction: "constructive", tier: "constructive" },
-  { label: "기술·자금", score: 55, direction: "neutral", tier: "neutral" },
-  { label: "상방 잠재력", score: 58, direction: "balanced", tier: "neutral" },
-  { label: "하방 압력", score: 35, direction: "downside_bias", tier: "constructive" },
+  { label: "수익성", fullLabel: "수익성", score: 72, direction: "constructive", tier: "constructive" },
+  { label: "내구", fullLabel: "내구 수익성", score: 81, direction: "strong", tier: "strong" },
+  { label: "성장", fullLabel: "성장", score: 68, direction: "constructive", tier: "constructive" },
+  { label: "상방", fullLabel: "상승 잠재력", score: 58, direction: "balanced", tier: "neutral" },
+  { label: "하방", fullLabel: "하락 압력", score: 35, direction: "downside_bias", tier: "constructive" },
+  { label: "동종군", fullLabel: "동종군 유사도", score: 60, direction: "neutral", tier: "neutral" },
 ];
 
 export function FenokSignalRadarHexagonPairSample() {

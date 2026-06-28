@@ -31,6 +31,8 @@ export interface FenokSignalRadarHexagonAxis {
   score: number | null;
   direction?: string | null;
   tier?: string | null;
+  /** Full honest label for tooltips/legends (spokes use the short `label`). */
+  fullLabel?: string | null;
 }
 
 export interface FenokSignalRadarHexagonProps {
@@ -131,7 +133,8 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
               const score = axis.score !== null ? Math.round(axis.score).toString() : "—";
               const direction = directionLabel(axis.direction);
               const tier = tierLabel(axis.tier);
-              const parts = [`${axis.label}: ${score}`, direction, tier].filter(Boolean);
+              const name = axis.fullLabel ?? axis.label;
+              const parts = [`${name}: ${score}`, direction, tier].filter(Boolean);
               return parts.join(" · ");
             },
           },
@@ -147,6 +150,11 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
             color: theme.token("ink2"),
             font: { size: FONT_SIZE[size], weight: "bold" as const },
             padding: POINT_LABEL_PADDING[size],
+            callback: (value: string | string[]) => {
+              const text = Array.isArray(value) ? value.join(" ") : value;
+              if (text.includes(" ")) return text.split(" ");
+              return text;
+            },
           },
           ticks: { display: false },
         },
