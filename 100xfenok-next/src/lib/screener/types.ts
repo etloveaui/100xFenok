@@ -71,6 +71,7 @@ export interface ScreenerStock {
   epsForward: number | null;
   forwardPeFy1?: number | null;
   forwardEpsFy1?: number | null;
+  peg: number | null;
   revenueGrowthFy1?: number | null;
   epsGrowthFy1?: number | null;
   forwardPeFy2?: number | null;
@@ -148,6 +149,7 @@ export type ScreenerSortKey =
   | "operatingMarginFy3"
   | "roeFy3"
   | "grossMarginFy3"
+  | "peg"
   | "connectionCount";
 
 export type SortDir = "asc" | "desc";

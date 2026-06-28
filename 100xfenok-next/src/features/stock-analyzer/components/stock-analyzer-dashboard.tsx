@@ -97,6 +97,11 @@ function toScreenerStock(record: StockAnalyzerRecord): ScreenerStock {
     lowEvidence: record.lowEvidence ?? null,
     forwardPeFy1: numberOrNull(record.forwardPeFy1),
     forwardEpsFy1: numberOrNull(record.forwardEpsFy1),
+    peg: (() => {
+      const fpe = numberOrNull(record.forwardPeFy1);
+      const eg = numberOrNull(record.epsGrowthFy1);
+      return fpe !== null && fpe > 0 && eg !== null && eg > 0 ? fpe / eg : null;
+    })(),
     revenueGrowthFy1: numberOrNull(record.revenueGrowthFy1),
     epsGrowthFy1: numberOrNull(record.epsGrowthFy1),
     forwardPeFy2: numberOrNull(record.forwardPeFy2),

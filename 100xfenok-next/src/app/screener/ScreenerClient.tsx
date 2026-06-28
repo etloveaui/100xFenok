@@ -46,6 +46,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "marketCap", label: "시총", align: "right" },
   { key: "per", label: "PER", align: "right" },
   { key: "pbr", label: "PBR", align: "right" },
+  { key: "peg", label: "PEG", align: "right" },
   { key: "dividendYield", label: "배당", align: "right" },
   { key: "return12m", label: "12M", align: "right" },
   { key: "roe", label: "ROE", align: "right" },
@@ -95,7 +96,7 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
   action: ["ticker", "actionScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap"],
   connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
-  value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
+  value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "peg", "roe", "opm", "perBandCurrent", "rank"],
   estimate: [
     "ticker",
     "actionScore",
@@ -127,7 +128,7 @@ const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   ],
   momentum: ["ticker", "name", "sector", "growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "rank"],
   dividend: ["ticker", "name", "sector", "dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
-  guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m"],
+  guru: ["ticker", "name", "sector", "guruHolders", "per", "peForward", "perBandCurrent", "pbr", "peg", "roe", "marketCap", "return12m"],
 };
 
 const PRESET_LABEL: Record<ColumnPreset, string> = {
@@ -481,6 +482,8 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
       return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</span>;
     case "pbr":
       return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</span>;
+    case "peg":
+      return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.peg, 2)}</span>;
     case "dividendYield":
       return <span className="orbitron tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</span>;
     case "return12m":
@@ -930,6 +933,11 @@ export default function ScreenerClient({
         lowEvidence: action?.lowEvidence ?? null,
         forwardPeFy1: action?.forwardPeFy1 ?? s.peForward ?? null,
         forwardEpsFy1: action?.forwardEpsFy1 ?? s.epsForward ?? null,
+        peg: (() => {
+          const fpe = action?.forwardPeFy1 ?? s.peForward ?? null;
+          const eg = action?.epsGrowthFy1 ?? null;
+          return fpe !== null && fpe > 0 && eg !== null && eg > 0 ? fpe / eg : null;
+        })(),
         revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
         epsGrowthFy1: action?.epsGrowthFy1 ?? null,
         grossMarginFy1: action?.grossMarginFy1 ?? null,
@@ -968,6 +976,7 @@ export default function ScreenerClient({
   const [marketCapMax, setMarketCapMax] = useState("");
   const [pbrMin, setPbrMin] = useState("");
   const [pbrMax, setPbrMax] = useState("");
+  const [pegMax, setPegMax] = useState("");
   const [roeMin, setRoeMin] = useState("");
   const [opmMin, setOpmMin] = useState("");
   const [return12mMin, setReturn12mMin] = useState("");
@@ -1053,6 +1062,8 @@ export default function ScreenerClient({
     const pbrMinValid = pbrMinValue !== null && !Number.isNaN(pbrMinValue);
     const pbrMaxValue = pbrMax.trim() === "" ? null : Number(pbrMax);
     const pbrMaxValid = pbrMaxValue !== null && !Number.isNaN(pbrMaxValue);
+    const pegMaxValue = pegMax.trim() === "" ? null : Number(pegMax);
+    const pegMaxValid = pegMaxValue !== null && !Number.isNaN(pegMaxValue);
     const roeMinValue = roeMin.trim() === "" ? null : Number(roeMin);
     const roeMinValid = roeMinValue !== null && !Number.isNaN(roeMinValue);
     const opmMinValue = opmMin.trim() === "" ? null : Number(opmMin);
@@ -1085,6 +1096,7 @@ export default function ScreenerClient({
       if (marketCapMaxValid && (stock.marketCap === null || stock.marketCap > (marketCapMaxValue as number) * 1000)) return false;
       if (pbrMinValid && (stock.pbr === null || stock.pbr < (pbrMinValue as number))) return false;
       if (pbrMaxValid && (stock.pbr === null || stock.pbr > (pbrMaxValue as number))) return false;
+      if (pegMaxValid && (stock.peg === null || stock.peg > (pegMaxValue as number))) return false;
       if (roeMinValid && (stock.roe === null || stock.roe * 100 < (roeMinValue as number))) return false;
       if (opmMinValid && (stock.opm === null || stock.opm * 100 < (opmMinValue as number))) return false;
       if (return12mMinValid && (stock.return12m === null || stock.return12m * 100 < (return12mMinValue as number))) return false;
@@ -1099,7 +1111,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, selectedSectors, selectedCountries, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1113,7 +1125,7 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1287,6 +1299,7 @@ export default function ScreenerClient({
     setMarketCapMax("");
     setPbrMin("");
     setPbrMax("");
+    setPegMax("");
     setRoeMin("");
     setOpmMin("");
     setReturn12mMin("");
@@ -1296,7 +1309,7 @@ export default function ScreenerClient({
     setConnectionFilter("");
   }
 
-  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || connectionFilter);
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
@@ -1344,6 +1357,7 @@ export default function ScreenerClient({
           },
         ]
       : []),
+    { active: Boolean(pegMax), label: `PEG ≤ ${pegMax}`, clear: () => setPegMax("") },
     { active: Boolean(roeMin), label: `ROE ≥ ${roeMin}%`, clear: () => setRoeMin("") },
     { active: Boolean(opmMin), label: `OPM ≥ ${opmMin}%`, clear: () => setOpmMin("") },
     { active: Boolean(return12mMin), label: `12M 수익률 ≥ ${return12mMin}%`, clear: () => setReturn12mMin("") },
@@ -1379,7 +1393,7 @@ export default function ScreenerClient({
   }, []);
 
   const scaleCount = Number(Boolean(search.trim())) + selectedSectors.length + selectedCountries.length + Number(Boolean(marketCapMin)) + Number(Boolean(marketCapMax));
-  const valueCount = Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
+  const valueCount = Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
   const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(connectionFilter));
@@ -1681,6 +1695,17 @@ export default function ScreenerClient({
                     value={pbrMax}
                     onChange={(event) => setPbrMax(event.target.value)}
                     placeholder="예: 1.5"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PEG 최대</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={pegMax}
+                    onChange={(event) => setPegMax(event.target.value)}
+                    placeholder="예: 1"
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   />
                 </label>

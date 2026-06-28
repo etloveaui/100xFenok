@@ -153,6 +153,11 @@ export function useScreenerData(): ScreenerDataResult {
           lowEvidence: typeof item.lowEvidence === "boolean" ? item.lowEvidence : null,
           forwardPeFy1: num(item.forwardPeFy1),
           forwardEpsFy1: num(item.forwardEpsFy1),
+          peg: (() => {
+            const fpe = num(item.forwardPeFy1);
+            const eg = num(item.epsGrowthFy1);
+            return fpe !== null && fpe > 0 && eg !== null && eg > 0 ? fpe / eg : null;
+          })(),
           revenueGrowthFy1: num(item.revenueGrowthFy1),
           epsGrowthFy1: num(item.epsGrowthFy1),
           forwardPeFy2: num(item.forwardPeFy2),
