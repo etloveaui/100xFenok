@@ -956,7 +956,12 @@ export default function ScreenerClient({
   }, [rawStocks, guruMap, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
-  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => (initialSector ? [initialSector] : initialFilterValues.selectedSectors ?? []));
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
+    if (initialFilterValues.selectedSectors && initialFilterValues.selectedSectors.length > 0) {
+      return initialFilterValues.selectedSectors;
+    }
+    return initialSector ? [initialSector] : [];
+  });
   const [selectedCountries, setSelectedCountries] = useState<string[]>(() => initialFilterValues.selectedCountries ?? []);
   const [perMin, setPerMin] = useState(() => initialFilterValues.perMin ?? "");
   const [perMax, setPerMax] = useState(() => initialFilterValues.perMax ?? "");
