@@ -20,7 +20,9 @@ type SignalKey =
   | "netOptionsProxy"
   | "offExchangeActivityProxy"
   | "shortPressureProxy"
-  | "directNewsToneProxy";
+  | "directNewsToneProxy"
+  | "volumeLiquidityTrend"
+  | "shortTermRelativeStrength";
 
 interface SignalConfig {
   key: SignalKey;
@@ -66,10 +68,16 @@ const LONG_TERM_SIGNALS: SignalConfig[] = [
 const SHORT_TERM_SIGNALS: SignalConfig[] = [
   { key: "technicalFlow", label: "기술·자금", scoreKey: "technicalFlowScore", helpKey: "technicalFlow" },
   {
-    key: "technicalIndicatorProxy",
-    label: "기술 지표",
-    scoreKey: "technicalIndicatorProxyScore",
-    helpKey: "technicalIndicatorProxy",
+    key: "volumeLiquidityTrend",
+    label: "거래량",
+    scoreKey: "volumeLiquidityTrendScore",
+    helpKey: "volumeLiquidityTrend",
+  },
+  {
+    key: "shortTermRelativeStrength",
+    label: "상대강도",
+    scoreKey: "shortTermRelativeStrengthScore",
+    helpKey: "shortTermRelativeStrength",
   },
   { key: "netOptionsProxy", label: "옵션", scoreKey: "netOptionsProxyScore", helpKey: "netOptionsProxy" },
   {
@@ -86,7 +94,6 @@ const SHORT_TERM_SIGNALS: SignalConfig[] = [
     helpKey: "shortPressureProxy",
     inverted: true,
   },
-  { key: "directNewsToneProxy", label: "뉴스톤", scoreKey: "directNewsToneProxyScore", helpKey: "directNewsToneProxy" },
 ];
 
 const SIGNAL_GROUPS: SignalGroupConfig[] = [
@@ -409,7 +416,8 @@ function hasLensUiData(record: FenokSignalsSummaryRecord): boolean {
     record.netOptionsProxyScore,
     record.offExchangeActivityProxyScore,
     record.shortPressureProxyScore,
-    record.directNewsToneProxyScore,
+    record.volumeLiquidityTrendScore,
+    record.shortTermRelativeStrengthScore,
   ].some(isFiniteNumber);
 }
 
@@ -612,6 +620,82 @@ const LONG_TERM_AXIS_CONFIG: LongTermAxisConfig[] = [
   },
 ];
 
+interface ShortTermAxisConfig {
+  key: string;
+  spokeLabel: string;
+  fullLabel: string;
+  scoreKey: keyof FenokSignalsSummaryRecord;
+  directionKey?: keyof FenokSignalsSummaryRecord;
+  helpKey: FenokSignalHelpKey;
+  invertScore?: boolean;
+  tooltipNote?: string;
+}
+
+interface ShortTermAxis extends FenokSignalRadarHexagonAxis {
+  key: string;
+  helpKey: FenokSignalHelpKey;
+  fullLabel: string;
+  coverage: number | null;
+  tooltipNote?: string | null;
+  meta: {
+    tier: string | null;
+    tone: "up" | "warn" | "down" | "neutral";
+  };
+}
+
+const SHORT_TERM_AXIS_CONFIG: ShortTermAxisConfig[] = [
+  {
+    key: "technicalFlow",
+    spokeLabel: "기술·자금",
+    fullLabel: "기술·자금 흐름",
+    scoreKey: "technicalFlowScore",
+    directionKey: "technicalFlowDirection",
+    helpKey: "technicalFlow",
+  },
+  {
+    key: "volumeLiquidityTrend",
+    spokeLabel: "거래량",
+    fullLabel: "거래량·유동성 추세",
+    scoreKey: "volumeLiquidityTrendScore",
+    directionKey: "volumeLiquidityTrendDirection",
+    helpKey: "volumeLiquidityTrend",
+    tooltipNote: "로컬 OHLCV 프록시, 실제 주문 흐름 아님",
+  },
+  {
+    key: "shortTermRelativeStrength",
+    spokeLabel: "상대강도",
+    fullLabel: "단기 상대 강도",
+    scoreKey: "shortTermRelativeStrengthScore",
+    directionKey: "shortTermRelativeStrengthDirection",
+    helpKey: "shortTermRelativeStrength",
+    tooltipNote: "20일/60일 SPY 대비 상대 강도 프록시",
+  },
+  {
+    key: "netOptionsProxy",
+    spokeLabel: "옵션",
+    fullLabel: "옵션 활동 프록시",
+    scoreKey: "netOptionsProxyScore",
+    helpKey: "netOptionsProxy",
+    tooltipNote: "공개 옵션 체인 파생, 실제 매수·매도 흐름 아님",
+  },
+  {
+    key: "offExchangeActivityProxy",
+    spokeLabel: "오프거래소",
+    fullLabel: "오프거래소 활동 프록시",
+    scoreKey: "offExchangeActivityProxyScore",
+    helpKey: "offExchangeActivityProxy",
+    tooltipNote: "FINRA 공개 데이터 파생, 다크풀/방향 신호 아님",
+  },
+  {
+    key: "shortPressureProxy",
+    spokeLabel: "숏압력",
+    fullLabel: "숏 볼륨 압력 프록시",
+    scoreKey: "shortPressureProxyScore",
+    helpKey: "shortPressureProxy",
+    tooltipNote: "공개 short volume 파생, 숏 이자·대차비용 아님",
+  },
+];
+
 function deriveAxisMeta(
   score: number | null,
   helpKey: FenokSignalHelpKey,
@@ -652,6 +736,33 @@ function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
       helpKey: config.helpKey,
       coverage,
       tooltipNote: config.tooltipNote ?? null,
+      meta,
+    };
+  });
+}
+
+function buildShortTermAxes(record: FenokSignalsSummaryRecord): ShortTermAxis[] {
+  return SHORT_TERM_AXIS_CONFIG.map((config) => {
+    const rawScore = record[config.scoreKey];
+    let score = isFiniteNumber(rawScore) ? rawScore : null;
+    if (score !== null && config.invertScore) {
+      score = Math.max(0, Math.min(100, 100 - score));
+    }
+    const rawDirection = config.directionKey ? record[config.directionKey] : null;
+    const explicitDirection =
+      typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
+    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
+    const meta = deriveAxisMeta(score, metaHelpKey);
+    return {
+      key: config.key,
+      label: config.spokeLabel,
+      fullLabel: config.fullLabel,
+      score,
+      direction: explicitDirection ?? meta.direction,
+      tier: meta.tier,
+      helpKey: config.helpKey,
+      tooltipNote: config.tooltipNote ?? null,
+      coverage: null,
       meta,
     };
   });
@@ -716,8 +827,11 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
   }
 
   const longTermAxes = buildLongTermAxes(record);
+  const shortTermAxes = buildShortTermAxes(record);
   const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
+  const hasShortTermSignal = shortTermAxes.some((axis) => axis.score !== null);
   const coverage = record.lensCoverageRatio ?? record.coverageRatio;
+
   const rawLongTermCall = record.longTermConvictionCall ?? record.convictionCall;
   const longTermScore = isFiniteNumber(record.longTermConvictionScore)
     ? Math.round(record.longTermConvictionScore)
@@ -725,6 +839,16 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
       ? Math.round(record.convictionScore)
       : null;
   const longTermCall = rawLongTermCall ?? null;
+
+  const rawShortTermCall = record.shortTermConvictionCall ?? record.convictionCall;
+  const shortTermScore = isFiniteNumber(record.shortTermConvictionScore)
+    ? Math.round(record.shortTermConvictionScore)
+    : isFiniteNumber(record.shortTermScore)
+      ? Math.round(record.shortTermScore)
+      : isFiniteNumber(record.convictionScore)
+        ? Math.round(record.convictionScore)
+        : null;
+  const shortTermCall = rawShortTermCall ?? null;
 
   return (
     <section className="panel overflow-hidden border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
@@ -737,8 +861,8 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
             <span className="rounded-full bg-[var(--c-brand-soft)] px-2 py-0.5 text-[9px] font-black text-[var(--c-brand)]">
               장기 6축
             </span>
-            <span className="rounded-full bg-[var(--c-surface-2)] px-2 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
-              단기 Phase B 대기
+            <span className="rounded-full bg-[var(--c-brand-soft)] px-2 py-0.5 text-[9px] font-black text-[var(--c-brand)]">
+              단기 6축
             </span>
           </div>
           <span className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
@@ -748,13 +872,25 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
       </div>
 
       <div className="space-y-4 p-4">
-        <div className="flex justify-center">
-          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-6 py-3">
+        <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-5 py-2.5">
+            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+              단기 Conviction
+            </span>
+            <span
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-base font-black tabular-nums ${convictionTone(shortTermCall)}`}
+              title="Fenok 단기 6축 종합 점수"
+            >
+              <span>{convictionCallKo(shortTermCall)}</span>
+              {shortTermScore ?? "—"}
+            </span>
+          </div>
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-5 py-2.5">
             <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
               장기 Conviction
             </span>
             <span
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-lg font-black tabular-nums ${convictionTone(longTermCall)}`}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-base font-black tabular-nums ${convictionTone(longTermCall)}`}
               title="Fenok 장기 6축 종합 점수"
             >
               <span>{convictionCallKo(longTermCall)}</span>
@@ -763,23 +899,37 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-center">
-          <FenokSignalRadarHexagon
-            title="Short-term"
-            axes={[]}
-            size="lg"
-            emptyLabel="Phase B 대기"
-          />
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-center">
+          <FenokSignalRadarHexagon title="Short-term" axes={shortTermAxes} size="lg" />
           <FenokSignalRadarHexagon title="Long-term" axes={longTermAxes} size="lg" />
         </div>
 
-        {hasLongTermSignal ? (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {longTermAxes.map((axis) => (
-              <LongTermAxisLegend key={axis.key} axis={axis} />
-            ))}
-          </div>
-        ) : null}
+        <div className="grid gap-4 lg:grid-cols-2">
+          {hasShortTermSignal ? (
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                단기 축
+              </h3>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {shortTermAxes.map((axis) => (
+                  <LongTermAxisLegend key={axis.key} axis={axis} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {hasLongTermSignal ? (
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                장기 축
+              </h3>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {longTermAxes.map((axis) => (
+                  <LongTermAxisLegend key={axis.key} axis={axis} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
 
         <p className="text-[10px] font-bold text-[var(--c-ink-3)]">
           Fenok 파생 신호 · 매수권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}

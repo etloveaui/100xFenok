@@ -394,6 +394,59 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
 ];
 
+const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
+  {
+    key: "technicalFlow",
+    spokeLabel: "기술·자금",
+    fullLabel: "기술·자금 흐름",
+    scoreKey: "technicalFlowScore",
+    directionKey: "technicalFlowDirection",
+    helpKey: "technicalFlow",
+  },
+  {
+    key: "volumeLiquidityTrend",
+    spokeLabel: "거래량",
+    fullLabel: "거래량·유동성 추세",
+    scoreKey: "volumeLiquidityTrendScore",
+    directionKey: "volumeLiquidityTrendDirection",
+    helpKey: "volumeLiquidityTrend",
+    tooltipNote: "로컬 OHLCV 프록시, 실제 주문 흐름 아님",
+  },
+  {
+    key: "shortTermRelativeStrength",
+    spokeLabel: "상대강도",
+    fullLabel: "단기 상대 강도",
+    scoreKey: "shortTermRelativeStrengthScore",
+    directionKey: "shortTermRelativeStrengthDirection",
+    helpKey: "shortTermRelativeStrength",
+    tooltipNote: "20일/60일 SPY 대비 상대 강도 프록시",
+  },
+  {
+    key: "netOptionsProxy",
+    spokeLabel: "옵션",
+    fullLabel: "옵션 활동 프록시",
+    scoreKey: "netOptionsProxyScore",
+    helpKey: "netOptionsProxy",
+    tooltipNote: "공개 옵션 체인 파생, 실제 매수·매도 흐름 아님",
+  },
+  {
+    key: "offExchangeActivityProxy",
+    spokeLabel: "오프거래소",
+    fullLabel: "오프거래소 활동 프록시",
+    scoreKey: "offExchangeActivityProxyScore",
+    helpKey: "offExchangeActivityProxy",
+    tooltipNote: "FINRA 공개 데이터 파생, 다크풀/방향 신호 아님",
+  },
+  {
+    key: "shortPressureProxy",
+    spokeLabel: "숏압력",
+    fullLabel: "숏 볼륨 압력 프록시",
+    scoreKey: "shortPressureProxyScore",
+    helpKey: "shortPressureProxy",
+    tooltipNote: "공개 short volume 파생, 숏 이자·대차비용 아님",
+  },
+];
+
 function deriveDetailAxisMeta(
   score: number | null,
   helpKey: FenokSignalHelpKey,
@@ -411,6 +464,39 @@ function deriveDetailAxisMeta(
 
 function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
   return DETAIL_LONG_TERM_AXIS_CONFIG.map((config) => {
+    const rawScore = stock[config.scoreKey as keyof ScreenerStock];
+    let score = isFiniteNumber(rawScore) ? rawScore : null;
+    if (score !== null && config.invertScore) {
+      score = Math.max(0, Math.min(100, 100 - score));
+    }
+    const rawDirection = config.directionKey
+      ? stock[config.directionKey as keyof ScreenerStock]
+      : null;
+    const explicitDirection =
+      typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
+    const rawCoverage = config.coverageKey
+      ? stock[config.coverageKey as keyof ScreenerStock]
+      : null;
+    const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
+    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
+    const meta = deriveDetailAxisMeta(score, metaHelpKey);
+    return {
+      key: config.key,
+      label: config.spokeLabel,
+      fullLabel: config.fullLabel,
+      score,
+      direction: explicitDirection ?? meta.direction,
+      tier: meta.tier,
+      helpKey: config.helpKey,
+      tooltipNote: config.tooltipNote ?? null,
+      coverage,
+      meta,
+    };
+  });
+}
+
+function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
+  return DETAIL_SHORT_TERM_AXIS_CONFIG.map((config) => {
     const rawScore = stock[config.scoreKey as keyof ScreenerStock];
     let score = isFiniteNumber(rawScore) ? rawScore : null;
     if (score !== null && config.invertScore) {
@@ -2224,7 +2310,17 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
     ? Math.round(stock.fenokConvictionScore)
     : null;
   const convictionCall = stock?.fenokConvictionCall ?? null;
+  const shortTermConvictionScore = isFiniteNumber(stock?.fenokShortTermConvictionScore)
+    ? Math.round(stock.fenokShortTermConvictionScore)
+    : null;
+  const shortTermConvictionCall = stock?.fenokShortTermConvictionCall ?? null;
+  const longTermConvictionScore = isFiniteNumber(stock?.fenokLongTermConvictionScore)
+    ? Math.round(stock.fenokLongTermConvictionScore)
+    : null;
+  const longTermConvictionCall = stock?.fenokLongTermConvictionCall ?? null;
+  const shortTermAxes = stock ? buildDetailShortTermAxes(stock) : [];
   const longTermAxes = stock ? buildDetailLongTermAxes(stock) : [];
+  const hasShortTermSignal = shortTermAxes.some((axis) => axis.score !== null);
   const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
 
   return (
@@ -2235,30 +2331,57 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
               Fenok 신호 한눈에 보기 · 매수권유 아님
             </span>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(convictionCall)}`}
-              title={fenokTooltip(stock)}
-            >
-              <span aria-hidden="true">{convictionCall ?? "미정"}</span>
-              {convictionScore ?? "—"}
-            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(shortTermConvictionCall)}`}
+                title="Fenok 단기 6축 종합 점수"
+              >
+                <span aria-hidden="true">{shortTermConvictionCall ?? "미정"}</span>
+                {shortTermConvictionScore ?? "—"}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(longTermConvictionCall)}`}
+                title="Fenok 장기 6축 종합 점수"
+              >
+                <span aria-hidden="true">{longTermConvictionCall ?? "미정"}</span>
+                {longTermConvictionScore ?? "—"}
+              </span>
+            </div>
           </div>
           <div className="space-y-4">
             <FenokSignalRadarHexagonPair
               leftTitle="Short-term"
               rightTitle="Long-term"
-              leftAxes={[]}
+              leftAxes={shortTermAxes}
               rightAxes={longTermAxes}
-              leftEmptyLabel="Phase B 대기"
               size="lg"
             />
-            {hasLongTermSignal ? (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {longTermAxes.map((axis) => (
-                  <DetailAxisLegend key={axis.key} axis={axis} />
-                ))}
-              </div>
-            ) : null}
+            <div className="grid gap-4 lg:grid-cols-2">
+              {hasShortTermSignal ? (
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                    단기 축
+                  </h3>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {shortTermAxes.map((axis) => (
+                      <DetailAxisLegend key={axis.key} axis={axis} />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {hasLongTermSignal ? (
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                    장기 축
+                  </h3>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {longTermAxes.map((axis) => (
+                      <DetailAxisLegend key={axis.key} axis={axis} />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       )}
