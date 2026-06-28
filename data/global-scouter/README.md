@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,080
+> **Files**: 1,084
 > **Version**: v2.3.0
 
 ---
@@ -18,7 +18,11 @@ global-scouter/
 ├── core/                    # Core reference files
 │   ├── dashboard.json       # Dashboard configuration
 │   ├── metadata.json        # System metadata
-│   └── stocks_index.json    # Master stock index
+│   ├── stocks_index.json    # Master stock index
+│   ├── stocks_analyzer.json # Site screener/analyzer index
+│   ├── per_bands_index.json # PER/PBR band index
+│   ├── slick_index.json     # Slick-style score index
+│   └── revision_movers.json # Weekly revision movers
 ├── stocks/
 │   └── detail/              # Individual stock profiles (1,066 files)
 │       ├── AAPL.json
@@ -27,7 +31,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (23 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,064 records)
+│   └── economic.json        # Economic indicators (1,065 records)
 └── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -41,12 +45,12 @@ global-scouter/
 
 | Folder | Files |
 |--------|-------|
-| core/ | 3 |
+| core/ | 7 |
 | stocks/detail/ | 1,066 |
 | etfs/ | 1 |
 | indicators/ | 1 |
 | raw/ | 9 |
-| **Total** | 1,080 |
+| **Total** | 1,084 |
 
 ## Schema
 
@@ -144,7 +148,7 @@ global-scouter/
 
 ```json
 {
-  "count": 1064,
+  "count": 1065,
   "records": [
     {
       "date": "2026-01-02",
@@ -184,6 +188,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.3.0 | 2026-06-28 | Weekly data refresh (2026-06-26 source): 1,066 stocks, 1,065 indicators (+1), per_bands 98.3% (1,048), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.3.0 | 2026-06-21 | Data refresh (2026-06-19 source): 1,066 stocks, 1,064 indicators (+1), per_bands 98.3%, 9 raw files |
 | 2.3.0 | 2026-06-14 | Data refresh (2026-06-12 source): 1,066 stocks, 1,063 indicators (+1), per_bands 98.3%, 9 raw files |
 | 2.3.0 | 2026-06-08 | Data refresh (2026-06-05 source): 1,066 stocks, 1,062 indicators (+1), per_bands 98.3%, 9 raw files |
@@ -211,4 +216,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-06-21*
+*Last Updated: 2026-06-28*
