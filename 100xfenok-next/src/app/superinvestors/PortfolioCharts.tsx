@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, ScatterController } from "chart.js";
+import { useEffect, useMemo, useState } from "react";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData, ChartOptions } from "chart.js";
 import { Doughnut, Bar, Line, Chart, Scatter } from "react-chartjs-2";
@@ -23,6 +23,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineController,
   LineElement,
   PointElement,
   ScatterController,
@@ -648,6 +649,233 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
       </div>
       <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
         좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CumulativeReturnOverlay — same-period cross-guru line chart vs SPY
+// ---------------------------------------------------------------------------
+
+interface FullSeriesEntry {
+  id: string;
+  name: string;
+  performance: PerformanceSeries;
+  annReturn: number;
+}
+
+const MAX_OVERLAY_LINES = 15;
+const SAME_START_DATE = "2021-03-31";
+const MIN_FULL_OBSERVATIONS = 22;
+
+function rebaseTo100(values: number[]): number[] {
+  const base = values[0];
+  if (!isFiniteNumber(base) || base === 0) return values.map(() => null as unknown as number);
+  return values.map((v) => (isFiniteNumber(v) ? (v / base) * 100 : null as unknown as number));
+}
+
+interface CumulativeReturnOverlayProps {
+  data: PortfolioViewsData;
+}
+
+export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) {
+  const chartTheme = useMarketChartTheme();
+
+  const { fullSeries, spySeries, labels } = useMemo(() => {
+    const full: FullSeriesEntry[] = [];
+    let spy: number[] | null = null;
+    let labs: string[] = [];
+    for (const [id, view] of Object.entries(data.investors)) {
+      const perf = view.performance;
+      if (!perf) continue;
+      if (perf.portfolio.length < MIN_FULL_OBSERVATIONS || perf.dates[0] !== SAME_START_DATE) continue;
+      const calc = computeAnnualizedRiskReturn(perf);
+      if (!calc) continue;
+      full.push({ id, name: view.name || id, performance: perf, annReturn: calc.annReturn });
+      if (labs.length === 0) {
+        labs = perf.dates.map((d) => d.slice(0, 7));
+      }
+      if (!spy && Array.isArray(perf.spy) && perf.spy.length > 0) {
+        spy = perf.spy;
+      }
+    }
+    full.sort((a, b) => b.annReturn - a.annReturn);
+    return { fullSeries: full, spySeries: spy, labels: labs };
+  }, [data]);
+
+  const top10Ids = useMemo(() => new Set(fullSeries.slice(0, 10).map((s) => s.id)), [fullSeries]);
+  const [selected, setSelected] = useState<Set<string>>(top10Ids);
+
+  // Reset to top-10 when the underlying full-series set changes and current selection is empty/invalid.
+  useEffect(() => {
+    setSelected((prev) => {
+      const valid = new Set([...prev].filter((id) => fullSeries.some((s) => s.id === id)));
+      if (valid.size === 0) return top10Ids;
+      return valid;
+    });
+  }, [fullSeries, top10Ids]);
+
+  const chartData = useMemo<ChartData<"line">>(() => {
+    const palette = chartTheme.palette;
+    const datasets: ChartData<"line">["datasets"] = [];
+    let colorIdx = 0;
+    for (const s of fullSeries) {
+      if (!selected.has(s.id)) continue;
+      const color = palette[colorIdx % palette.length];
+      datasets.push({
+        label: s.name,
+        data: rebaseTo100(s.performance.portfolio) as number[],
+        borderColor: color,
+        backgroundColor: color,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        tension: 0.25,
+        borderDash: colorIdx >= palette.length ? ([6, 4] as number[]) : undefined,
+      });
+      colorIdx++;
+    }
+    if (spySeries && spySeries.length > 0) {
+      datasets.push({
+        label: "SPY",
+        data: rebaseTo100(spySeries) as number[],
+        borderColor: chartTheme.token("neutral"),
+        backgroundColor: chartTheme.token("neutral"),
+        borderWidth: 3,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        tension: 0.25,
+      });
+    }
+    return { labels, datasets };
+  }, [fullSeries, selected, spySeries, labels, chartTheme]);
+
+  const options = useMemo<ChartOptions<"line">>(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index" as const, intersect: false },
+      plugins: {
+        legend: {
+          position: "top" as const,
+          align: "end" as const,
+          labels: {
+            color: chartTheme.token("ink2"),
+            font: { size: 10, weight: "bold" as const },
+            usePointStyle: true,
+            pointStyleWidth: 8,
+            boxHeight: 6,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = Number(ctx.raw);
+              const ret = v - 100;
+              return `${ctx.dataset.label}: ${v.toFixed(1)} (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: chartTheme.token("ink3"),
+            font: { size: 9 },
+            maxTicksLimit: 8,
+          },
+          grid: { color: chartTheme.token("line") },
+        },
+        y: {
+          ticks: {
+            color: chartTheme.token("ink3"),
+            font: { size: 10 },
+            callback: (value: string | number) => `${Number(value).toFixed(0)}`,
+          },
+          grid: { color: chartTheme.token("line") },
+        },
+      },
+    };
+  }, [chartTheme]);
+
+  const toggleInvestor = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else if (next.size < MAX_OVERLAY_LINES) {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectTop10 = () => setSelected(top10Ids);
+
+  if (fullSeries.length === 0) {
+    return (
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+        동일기간 누적 데이터가 없습니다
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Controls */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={selectTop10}
+          className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+        >
+          상위 10
+        </button>
+        <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+          {selected.size}/{MAX_OVERLAY_LINES}명 · 2021-Q1 기준 100
+        </span>
+      </div>
+
+      {/* Investor selector chips */}
+      <div className="mb-3 flex max-h-[96px] flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2">
+        {fullSeries.map((s) => {
+          const active = selected.has(s.id);
+          const retPct = (s.annReturn * 100).toFixed(0);
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => toggleInvestor(s.id)}
+              disabled={!active && selected.size >= MAX_OVERLAY_LINES}
+              className={`
+                inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold transition
+                ${
+                  active
+                    ? "border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 disabled:opacity-40"
+                }
+              `}
+              title={`${s.name} 연수익률 ${retPct}%`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-brand-interactive" : "bg-slate-300"}`} />
+              {s.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Chart */}
+      <div className="relative h-[300px] sm:h-[420px]">
+        <Line
+          data={chartData}
+          options={options}
+          role="img"
+          aria-label="2021년 1분기 기준 거장 누적 수익 오버레이"
+        />
+      </div>
+      <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+        2021-Q1 동일 기준 · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
       </p>
     </div>
   );
