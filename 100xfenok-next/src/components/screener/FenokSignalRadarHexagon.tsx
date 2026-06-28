@@ -3,8 +3,6 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import {
   Chart as ChartJS,
-  type ChartData,
-  type ChartOptions,
   Filler,
   Legend,
   LineElement,
@@ -13,6 +11,7 @@ import {
   RadarController,
   Tooltip,
 } from "chart.js";
+import type { ChartData, ChartOptions } from "chart.js";
 import { Radar } from "react-chartjs-2";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 
@@ -107,27 +106,33 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
   const hasAnyScore = safeAxes.some((axis) => axis.score !== null);
 
   const values = useMemo(
-    () => safeAxes.map((axis) => (axis.score !== null ? axis.score : 0)),
+    () => safeAxes.map((axis) => (axis.score !== null ? axis.score : null)),
     [safeAxes],
   );
 
-  const chartData = useMemo<ChartData<"radar">>(
-    () => ({
-      labels: safeAxes.map((axis) => axis.label),
-      datasets: [
-        {
-          label: title,
-          data: values,
-          borderColor: theme.token("brand"),
-          backgroundColor: theme.alpha("brand", 0.16),
-          borderWidth: 2,
-          pointRadius: effectiveSize === "lg" ? 4 : 3,
-          pointHoverRadius: effectiveSize === "lg" ? 6 : 5,
-          pointBackgroundColor: theme.token("brand"),
-        },
-      ],
-    }),
-    [safeAxes, values, theme, title, effectiveSize],
+  const pointRadius = effectiveSize === "lg" ? 4 : 3;
+  const pointHoverRadius = effectiveSize === "lg" ? 6 : 5;
+
+  const chartData = useMemo(
+    () =>
+      ({
+        labels: safeAxes.map((axis) => axis.label),
+        datasets: [
+          {
+            label: title,
+            data: values as unknown as number[],
+            borderColor: theme.token("brand"),
+            backgroundColor: theme.alpha("brand", 0.16),
+            borderWidth: 2,
+            pointRadius: safeAxes.map((axis) => (axis.score !== null ? pointRadius : 0)),
+            pointHoverRadius: safeAxes.map((axis) => (axis.score !== null ? pointHoverRadius : 0)),
+            pointBackgroundColor: safeAxes.map((axis) =>
+              axis.score !== null ? theme.token("brand") : "transparent",
+            ),
+          },
+        ],
+      }) satisfies ChartData<"radar">,
+    [safeAxes, values, theme, title, pointRadius, pointHoverRadius],
   );
 
   const options = useMemo<ChartOptions<"radar">>(
@@ -143,7 +148,11 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
           callbacks: {
             label: (ctx) => {
               const axis = safeAxes[ctx.dataIndex];
-              const score = axis.score !== null ? Math.round(axis.score).toString() : "—";
+              if (axis.score === null) {
+                const name = axis.fullLabel ?? axis.label;
+                return `${name}: 미확인`;
+              }
+              const score = Math.round(axis.score).toString();
               const direction = directionLabel(axis.direction);
               const tier = tierLabel(axis.tier);
               const name = axis.fullLabel ?? axis.label;
@@ -160,7 +169,10 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
           angleLines: { color: theme.token("line") },
           grid: { color: theme.token("line") },
           pointLabels: {
-            color: theme.token("ink2"),
+            color: (ctx) => {
+              const axis = safeAxes[ctx.index];
+              return axis?.score === null ? theme.token("ink4") : theme.token("ink2");
+            },
             font: { size: FONT_SIZE[effectiveSize], weight: "bold" as const },
             padding: POINT_LABEL_PADDING[effectiveSize],
             callback: (value: string | string[]) => {

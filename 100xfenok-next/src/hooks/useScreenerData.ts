@@ -189,7 +189,7 @@ export function useScreenerData(): ScreenerDataResult {
             fenokSignal?.shortTermConvictionCall,
             fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore,
           ),
-          fenokLongTermScore: fenokSignal?.longTermScore ?? fenokSignal?.convictionScore ?? null,
+          fenokLongTermScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.longTermScore ?? fenokSignal?.convictionScore ?? null,
           fenokLongTermConvictionScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
           fenokLongTermConvictionCall: convictionCallFromRecord(
             fenokSignal?.longTermConvictionCall,
