@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData, ChartOptions } from "chart.js";
@@ -471,6 +471,44 @@ interface ScatterPoint {
   investor: string;
 }
 
+const MAX_OVERLAY_LINES = 15;
+const SAME_START_DATE = "2021-03-31";
+const MIN_FULL_OBSERVATIONS = 22;
+
+function isSamePeriodPerformance(performance: PerformanceSeries | null | undefined): performance is PerformanceSeries {
+  return Boolean(
+    performance
+      && performance.dates[0] === SAME_START_DATE
+      && performance.portfolio.length >= MIN_FULL_OBSERVATIONS,
+  );
+}
+
+function commonSamePeriodEndDate(data: PortfolioViewsData): string | null {
+  const endCounts = new Map<string, number>();
+  for (const view of Object.values(data.investors)) {
+    const perf = view.performance;
+    if (!isSamePeriodPerformance(perf)) continue;
+    const endDate = perf.dates.at(-1);
+    if (endDate) endCounts.set(endDate, (endCounts.get(endDate) ?? 0) + 1);
+  }
+  return [...endCounts.entries()].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0]?.[0] ?? null;
+}
+
+function alignSamePeriodPerformance(
+  performance: PerformanceSeries | null | undefined,
+  endDate: string | null,
+): PerformanceSeries | null {
+  if (!isSamePeriodPerformance(performance) || !endDate) return null;
+  const endIndex = performance.dates.indexOf(endDate);
+  if (endIndex < MIN_FULL_OBSERVATIONS - 1) return null;
+  return {
+    dates: performance.dates.slice(0, endIndex + 1),
+    portfolio: performance.portfolio.slice(0, endIndex + 1),
+    spy: performance.spy ? performance.spy.slice(0, endIndex + 1) : null,
+    coverage: performance.coverage.slice(0, endIndex),
+  };
+}
+
 function computeAnnualizedRiskReturn(performance: PerformanceSeries): { annReturn: number; annVol: number } | null {
   const dates = performance.dates;
   const values = performance.portfolio;
@@ -516,12 +554,14 @@ interface RiskReturnScatterProps {
 
 export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
   const chartTheme = useMarketChartTheme();
+  const commonEndDate = useMemo(() => commonSamePeriodEndDate(data), [data]);
 
   const { investorPoints, spyPoint } = useMemo(() => {
     const points: ScatterPoint[] = [];
     for (const [id, view] of Object.entries(data.investors)) {
-      if (!view.performance) continue;
-      const calc = computeAnnualizedRiskReturn(view.performance);
+      const performance = alignSamePeriodPerformance(view.performance, commonEndDate);
+      if (!performance) continue;
+      const calc = computeAnnualizedRiskReturn(performance);
       if (!calc) continue;
       points.push({
         x: calc.annVol,
@@ -533,7 +573,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
 
     let spy: ScatterPoint | null = null;
     for (const view of Object.values(data.investors)) {
-      const perf = view.performance;
+      const perf = alignSamePeriodPerformance(view.performance, commonEndDate);
       const spySeries = perf?.spy;
       if (!perf || !spySeries || !Array.isArray(spySeries) || spySeries.length === 0) continue;
       const calc = computeAnnualizedRiskReturn({
@@ -548,7 +588,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
       }
     }
     return { investorPoints: points, spyPoint: spy };
-  }, [data]);
+  }, [data, commonEndDate]);
 
   const chartData = useMemo<ChartData<"scatter">>(() => {
     const datasets: ChartData<"scatter">["datasets"] = [
@@ -648,7 +688,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
         />
       </div>
       <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
-        좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준
+        좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준{commonEndDate ? ` · ${commonEndDate}까지` : ""}
       </p>
     </div>
   );
@@ -665,10 +705,6 @@ interface FullSeriesEntry {
   annReturn: number;
 }
 
-const MAX_OVERLAY_LINES = 15;
-const SAME_START_DATE = "2021-03-31";
-const MIN_FULL_OBSERVATIONS = 22;
-
 function rebaseTo100(values: number[]): number[] {
   const base = values[0];
   if (!isFiniteNumber(base) || base === 0) return values.map(() => null as unknown as number);
@@ -681,15 +717,15 @@ interface CumulativeReturnOverlayProps {
 
 export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) {
   const chartTheme = useMarketChartTheme();
+  const commonEndDate = useMemo(() => commonSamePeriodEndDate(data), [data]);
 
   const { fullSeries, spySeries, labels } = useMemo(() => {
     const full: FullSeriesEntry[] = [];
     let spy: number[] | null = null;
     let labs: string[] = [];
     for (const [id, view] of Object.entries(data.investors)) {
-      const perf = view.performance;
+      const perf = alignSamePeriodPerformance(view.performance, commonEndDate);
       if (!perf) continue;
-      if (perf.portfolio.length < MIN_FULL_OBSERVATIONS || perf.dates[0] !== SAME_START_DATE) continue;
       const calc = computeAnnualizedRiskReturn(perf);
       if (!calc) continue;
       full.push({ id, name: view.name || id, performance: perf, annReturn: calc.annReturn });
@@ -702,19 +738,20 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
     }
     full.sort((a, b) => b.annReturn - a.annReturn);
     return { fullSeries: full, spySeries: spy, labels: labs };
-  }, [data]);
+  }, [data, commonEndDate]);
 
   const top10Ids = useMemo(() => new Set(fullSeries.slice(0, 10).map((s) => s.id)), [fullSeries]);
-  const [selected, setSelected] = useState<Set<string>>(top10Ids);
-
-  // Reset to top-10 when the underlying full-series set changes and current selection is empty/invalid.
-  useEffect(() => {
-    setSelected((prev) => {
-      const valid = new Set([...prev].filter((id) => fullSeries.some((s) => s.id === id)));
-      if (valid.size === 0) return top10Ids;
-      return valid;
-    });
-  }, [fullSeries, top10Ids]);
+  const fullSeriesKey = useMemo(() => fullSeries.map((s) => s.id).join("|"), [fullSeries]);
+  const fullSeriesIds = useMemo(() => new Set(fullSeries.map((s) => s.id)), [fullSeries]);
+  const [selection, setSelection] = useState<{ key: string | null; ids: Set<string> }>(() => ({
+    key: null,
+    ids: new Set(),
+  }));
+  const selected = useMemo(() => {
+    const valid = new Set([...selection.ids].filter((id) => fullSeriesIds.has(id)));
+    if (selection.key !== fullSeriesKey && valid.size === 0) return top10Ids;
+    return valid;
+  }, [selection, fullSeriesIds, fullSeriesKey, top10Ids]);
 
   const chartData = useMemo<ChartData<"line">>(() => {
     const palette = chartTheme.palette;
@@ -800,18 +837,18 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
   }, [chartTheme]);
 
   const toggleInvestor = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
+    setSelection(() => {
+      const next = new Set(selected);
       if (next.has(id)) {
         next.delete(id);
       } else if (next.size < MAX_OVERLAY_LINES) {
         next.add(id);
       }
-      return next;
+      return { key: fullSeriesKey, ids: next };
     });
   };
 
-  const selectTop10 = () => setSelected(top10Ids);
+  const selectTop10 = () => setSelection({ key: fullSeriesKey, ids: new Set(top10Ids) });
 
   if (fullSeries.length === 0) {
     return (
@@ -833,7 +870,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
           상위 10
         </button>
         <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
-          {selected.size}/{MAX_OVERLAY_LINES}명 · 2021-Q1 기준 100
+          {selected.size}/{MAX_OVERLAY_LINES}명 · 2021-Q1 기준 100{commonEndDate ? ` · ${commonEndDate}까지` : ""}
         </span>
       </div>
 
@@ -875,7 +912,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
         />
       </div>
       <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
-        2021-Q1 동일 기준 · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
+        2021-Q1 동일 기준{commonEndDate ? ` · ${commonEndDate}까지` : ""} · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
       </p>
     </div>
   );
