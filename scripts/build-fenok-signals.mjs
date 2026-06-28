@@ -770,6 +770,20 @@ function buildConvictionComposite(signals) {
   return { convictionScore, convictionCall: "mixed" };
 }
 
+function buildLongTermConvictionScore(signals) {
+  const downsidePressure = signals?.upside_downside?.downside_score_0_100;
+  const presentScores = [
+    signals?.profitability?.score_0_100,
+    signals?.growth?.score_0_100,
+    signals?.upside_downside?.upside_score_0_100,
+    finite(downsidePressure) ? 100 - downsidePressure : null,
+    signals?.durability_profitability?.score_0_100,
+  ].filter(finite);
+  return presentScores.length > 0
+    ? round(presentScores.reduce((sum, score) => sum + score, 0) / presentScores.length, 2)
+    : null;
+}
+
 function buildFenokSignalsSummary(fenokSignals) {
   const fields = [
     "ticker",
@@ -791,6 +805,7 @@ function buildFenokSignalsSummary(fenokSignals) {
     "marketSimilarityDirection",
     "convictionScore",
     "convictionCall",
+    "longTermConvictionScore",
     "durabilityProfitabilityScore",
     "durabilityProfitabilityCoverage",
     "upsidePotentialScore",
@@ -833,6 +848,7 @@ function buildFenokSignalsSummary(fenokSignals) {
         row.signals.market_similarity?.direction ?? "unavailable",
         conviction.convictionScore,
         conviction.convictionCall,
+        buildLongTermConvictionScore(row.signals),
         row.signals.durability_profitability?.score_0_100 ?? null,
         row.signals.durability_profitability?.coverage_ratio ?? null,
         row.signals.upside_downside?.upside_score_0_100 ?? null,
