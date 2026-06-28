@@ -7,7 +7,13 @@ interface FenokSignalLensCardProps {
   record: FenokSignalsSummaryRecord | null | undefined;
 }
 
-type SignalKey = "profitability" | "growth" | "technicalFlow" | "upsideDownside";
+type SignalKey =
+  | "profitability"
+  | "durabilityProfitability"
+  | "growth"
+  | "technicalFlow"
+  | "upsidePotential"
+  | "downsidePressure";
 
 interface SignalConfig {
   key: SignalKey;
@@ -16,6 +22,8 @@ interface SignalConfig {
   directionKey: keyof FenokSignalsSummaryRecord;
   interpretation: string;
   helpKey: FenokSignalHelpKey;
+  inverted?: boolean;
+  coverageKey?: keyof FenokSignalsSummaryRecord;
 }
 
 const SIGNALS: SignalConfig[] = [
@@ -26,6 +34,15 @@ const SIGNALS: SignalConfig[] = [
     directionKey: "profitabilityDirection",
     interpretation: "기업의 이익 창출 능력과 자본 효율성",
     helpKey: "profitability",
+  },
+  {
+    key: "durabilityProfitability",
+    label: "내구 수익성",
+    scoreKey: "durabilityProfitabilityScore",
+    directionKey: "durabilityProfitabilityScore",
+    interpretation: "수익성의 지속 가능성과 재무적 내구력",
+    helpKey: "durabilityProfitability",
+    coverageKey: "durabilityProfitabilityCoverage",
   },
   {
     key: "growth",
@@ -44,12 +61,21 @@ const SIGNALS: SignalConfig[] = [
     helpKey: "technicalFlow",
   },
   {
-    key: "upsideDownside",
-    label: "Fenok Edge",
-    scoreKey: "upsideDownsideScore",
-    directionKey: "upsideDownsideDirection",
-    interpretation: "상대적 상방/하방 기대의 파생 프록시",
-    helpKey: "upsideDownside",
+    key: "upsidePotential",
+    label: "상방 잠재력",
+    scoreKey: "upsidePotentialScore",
+    directionKey: "upsidePotentialScore",
+    interpretation: "상대적 상방 기대를 요약한 파생 프록시",
+    helpKey: "upsidePotential",
+  },
+  {
+    key: "downsidePressure",
+    label: "하방 압력",
+    scoreKey: "downsidePressureScore",
+    directionKey: "downsidePressureScore",
+    interpretation: "상대적 하방 위험을 요약한 리스크 축",
+    helpKey: "downsidePressure",
+    inverted: true,
   },
 ];
 
@@ -71,12 +97,15 @@ function confidenceKo(value: string | null | undefined): string {
 }
 
 function directionKo(key: SignalKey, value: string | null | undefined): string {
-  if (!value || value === "unavailable") return "미확인";
-  if (key === "upsideDownside") {
-    if (value === "upside_bias") return "상방 편중";
-    if (value === "downside_bias") return "하방 편중";
-    if (value === "balanced") return "균형";
+  if (!value || value === "unavailable") {
+    if (key === "durabilityProfitability" || key === "upsidePotential" || key === "downsidePressure") {
+      return "";
+    }
+    return "미확인";
   }
+  if (value === "upside_bias") return "상방 편중";
+  if (value === "downside_bias") return "하방 편중";
+  if (value === "balanced") return "균형";
   if (value === "strong") return "강함";
   if (value === "constructive") return "우호";
   if (value === "neutral") return "중립";
@@ -99,8 +128,13 @@ function convictionTone(call: FenokSignalsSummaryRecord["convictionCall"]): stri
   return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
-function scoreBarColor(score: number | null): string {
+function scoreBarColor(score: number | null, inverted = false): string {
   if (score === null || score === undefined) return "bg-[var(--c-line)]";
+  if (inverted) {
+    if (score >= 70) return "bg-[var(--c-down)]";
+    if (score >= 50) return "bg-[var(--c-warn)]";
+    return "bg-[var(--c-up)]";
+  }
   if (score >= 70) return "bg-[var(--c-up)]";
   if (score >= 50) return "bg-[var(--c-warn)]";
   return "bg-[var(--c-down)]";
@@ -130,7 +164,9 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
     const score = isFiniteNumber(scoreValue) ? scoreValue : null;
     const directionValue = record[signal.directionKey];
     const direction = typeof directionValue === "string" ? directionValue : null;
-    return { ...signal, score, direction };
+    const coverageValue = signal.coverageKey ? record[signal.coverageKey] : null;
+    const coverage = isFiniteNumber(coverageValue) ? coverageValue : null;
+    return { ...signal, score, direction, coverage };
   });
   const hasSignal = chips.some((chip) => chip.score !== null);
   if (!hasSignal) return null;
@@ -195,6 +231,7 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
           <div className="grid content-center gap-3">
             {chips.map((chip) => {
               const width = chip.score === null ? 0 : Math.max(0, Math.min(100, chip.score));
+              const directionText = directionKo(chip.key, chip.direction);
               return (
                 <div key={chip.key} className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
@@ -205,20 +242,30 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
                         score={chip.score}
                         direction={chip.direction}
                       />
+                      {chip.coverageKey && chip.coverage !== null ? (
+                        <span
+                          className="shrink-0 rounded bg-[var(--c-surface-2)] px-1 py-0.5 text-[9px] font-bold text-[var(--c-ink-3)]"
+                          title={`내구 수익성 데이터 커버리지 ${formatCoverage(chip.coverage)}`}
+                        >
+                          데이터 {formatCoverage(chip.coverage)}
+                        </span>
+                      ) : null}
                       <span className="truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
                         {chip.interpretation}
                       </span>
                     </div>
                     <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
                       {formatScore(chip.score)}
-                      <span className="ml-1 text-[10px] font-bold text-[var(--c-ink-3)]">
-                        {directionKo(chip.key, chip.direction)}
-                      </span>
+                      {directionText ? (
+                        <span className="ml-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+                          {directionText}
+                        </span>
+                      ) : null}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--c-surface-2)]">
                     <div
-                      className={`h-full rounded-full transition-all ${scoreBarColor(chip.score)}`}
+                      className={`h-full rounded-full transition-all ${scoreBarColor(chip.score, chip.inverted)}`}
                       style={{ width: `${width}%` }}
                     />
                   </div>

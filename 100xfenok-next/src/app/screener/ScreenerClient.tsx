@@ -78,6 +78,9 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "profitabilityScore", label: "수익성", align: "right" },
   { key: "growthScore", label: "성장", align: "right" },
   { key: "technicalFlowScore", label: "기술/자금", align: "right" },
+  { key: "durabilityProfitabilityScore", label: "내구 수익성", align: "right" },
+  { key: "upsidePotentialScore", label: "상방 잠재력", align: "right" },
+  { key: "downsidePressureScore", label: "하방 압력", align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
@@ -203,6 +206,11 @@ function confidenceClass(label: string | null | undefined, lowEvidence: boolean)
   return "text-[var(--c-ink-2)]";
 }
 
+function formatCoverage(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "미확인";
+  return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
 function actionTone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
   if (lowEvidence || confidenceLabel === "low") return "border-slate-200 bg-slate-50 text-slate-700";
   if (bucket === "smart_money") return "border-violet-200 bg-violet-50 text-violet-700";
@@ -273,6 +281,14 @@ function signalScoreTone(score: number | null): string {
   if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
   if (score >= 50) return "border-amber-200 bg-amber-50 text-amber-700";
   return "border-slate-200 bg-slate-50 text-slate-500";
+}
+
+function downsideRiskTone(score: number | null): string {
+  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
+  if (score >= 70) return "border-rose-200 bg-rose-50 text-rose-700";
+  if (score >= 60) return "border-amber-200 bg-amber-50 text-amber-700";
+  if (score >= 50) return "border-slate-200 bg-slate-50 text-slate-500";
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 function convictionTooltip(stock: ScreenerStock): string {
@@ -525,16 +541,18 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
           {isPicks ? (
             <span className="inline-flex flex-wrap justify-end gap-1">
               {[
-                { label: "수익", score: stock.profitabilityScore, direction: stock.profitabilityDirection },
-                { label: "성장", score: stock.growthScore, direction: stock.growthDirection },
-                { label: "기술", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection },
-                { label: "Edge", score: stock.fenokEdgeScore, direction: stock.fenokEdgeDirection },
+                { label: "수익", score: stock.profitabilityScore, direction: stock.profitabilityDirection, tone: "signal" as const },
+                { label: "내구", score: stock.durabilityProfitabilityScore, direction: null, tone: "signal" as const },
+                { label: "성장", score: stock.growthScore, direction: stock.growthDirection, tone: "signal" as const },
+                { label: "기술", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection, tone: "signal" as const },
+                { label: "상방", score: stock.upsidePotentialScore, direction: null, tone: "signal" as const },
+                { label: "하방", score: stock.downsidePressureScore, direction: null, tone: "risk" as const },
               ].map((item) => {
                 const itemScore = typeof item.score === "number" && Number.isFinite(item.score) ? Math.round(item.score) : null;
                 return (
                   <span
                     key={item.label}
-                    className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", signalScoreTone(itemScore))}
+                    className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", item.tone === "risk" ? downsideRiskTone(itemScore) : signalScoreTone(itemScore))}
                     title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
                   >
                     <span aria-hidden="true">{item.label}</span>
@@ -549,16 +567,42 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
     }
     case "profitabilityScore":
     case "growthScore":
-    case "technicalFlowScore": {
+    case "technicalFlowScore":
+    case "durabilityProfitabilityScore":
+    case "upsidePotentialScore": {
       const score = typeof stock[key] === "number" && Number.isFinite(stock[key]) ? Math.round(stock[key] as number) : null;
-      const direction = key === "profitabilityScore" ? stock.profitabilityDirection : key === "growthScore" ? stock.growthDirection : stock.technicalFlowDirection;
+      const direction = key === "profitabilityScore"
+        ? stock.profitabilityDirection
+        : key === "growthScore"
+          ? stock.growthDirection
+          : key === "technicalFlowScore"
+            ? stock.technicalFlowDirection
+            : null;
+      const titleSuffix = key === "durabilityProfitabilityScore"
+        ? `데이터 ${formatCoverage(stock.durabilityProfitabilityCoverage)} · Fenok 파생 신호 · 매수권유 아님`
+        : "Fenok 파생 신호 · 매수권유 아님";
       return (
         <span className="inline-flex min-w-[64px] justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
-            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · Fenok 파생 신호 · 매수권유 아님`}
+            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
           >
             <span aria-hidden="true">{signalDirectionLabel(direction)}</span>
+            {score ?? "—"}
+          </span>
+        </span>
+      );
+    }
+    case "downsidePressureScore": {
+      const score = typeof stock.downsidePressureScore === "number" && Number.isFinite(stock.downsidePressureScore)
+        ? Math.round(stock.downsidePressureScore)
+        : null;
+      return (
+        <span className="inline-flex min-w-[64px] justify-end">
+          <span
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", downsideRiskTone(score))}
+            title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · Fenok 파생 신호 · 매수권유 아님`}
+          >
             {score ?? "—"}
           </span>
         </span>

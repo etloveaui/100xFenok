@@ -2,7 +2,10 @@ export type FenokSignalHelpKey =
   | "profitability"
   | "growth"
   | "technicalFlow"
-  | "upsideDownside";
+  | "upsideDownside"
+  | "durabilityProfitability"
+  | "upsidePotential"
+  | "downsidePressure";
 
 export type FenokSignalTone = "up" | "warn" | "down" | "neutral";
 
@@ -28,7 +31,7 @@ const DEFAULT_BANDS: FenokSignalHelpBand[] = [
 ];
 
 function makeDefaultEntry(
-  key: Exclude<FenokSignalHelpKey, "upsideDownside">,
+  key: Exclude<FenokSignalHelpKey, "upsideDownside" | "downsidePressure">,
   label: string,
   interpretation: string,
 ): FenokSignalHelpEntry {
@@ -64,6 +67,28 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       { min: 61, max: 80, label: "상방 우호", tone: "up" },
       { min: 41, max: 60, label: "균형", tone: "warn" },
       { min: 0, max: 40, label: "하방 우세", tone: "down" },
+    ],
+  },
+  durabilityProfitability: makeDefaultEntry(
+    "durabilityProfitability",
+    "내구 수익성",
+    "수익성의 지속 가능성과 재무적 내구력을 종합한 Fenok 파생 신호예요.",
+  ),
+  upsidePotential: makeDefaultEntry(
+    "upsidePotential",
+    "상방 잠재력",
+    "Fenok 파생 신호로 산출한 상대적 상방 기대치예요.",
+  ),
+  downsidePressure: {
+    key: "downsidePressure",
+    label: "하방 압력",
+    interpretation:
+      "Fenok 파생 신호로 산출한 상대적 하방 위험 축이에요. 점수가 높을수록 위험이 커요.",
+    bands: [
+      { min: 81, max: 100, label: "위험 높음", tone: "down" },
+      { min: 61, max: 80, label: "위험 다소", tone: "warn" },
+      { min: 41, max: 60, label: "보통", tone: "warn" },
+      { min: 0, max: 40, label: "안정", tone: "up" },
     ],
   },
 };

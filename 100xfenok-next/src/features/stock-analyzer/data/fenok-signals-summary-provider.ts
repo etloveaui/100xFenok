@@ -30,6 +30,10 @@ export interface FenokSignalsSummaryRecord {
   upsideDownsideDirection?: string | null;
   marketSimilarityScore?: number | null;
   marketSimilarityDirection?: string | null;
+  durabilityProfitabilityScore?: number | null;
+  durabilityProfitabilityCoverage?: number | null;
+  upsidePotentialScore?: number | null;
+  downsidePressureScore?: number | null;
 }
 
 export interface FenokSignalsSummaryDocument {
@@ -115,6 +119,10 @@ export function normalizeFenokSignalsSummaryRecord(
     upsideDownsideDirection: stringValue(row, fields, "upsideDownsideDirection"),
     marketSimilarityScore: numberValue(row, fields, "marketSimilarityScore"),
     marketSimilarityDirection: stringValue(row, fields, "marketSimilarityDirection"),
+    durabilityProfitabilityScore: numberValue(row, fields, "durabilityProfitabilityScore"),
+    durabilityProfitabilityCoverage: numberValue(row, fields, "durabilityProfitabilityCoverage"),
+    upsidePotentialScore: numberValue(row, fields, "upsidePotentialScore"),
+    downsidePressureScore: numberValue(row, fields, "downsidePressureScore"),
   };
 }
 

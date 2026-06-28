@@ -51,6 +51,10 @@ export interface ScreenerStock {
   growthDirection?: string | null;
   technicalFlowScore?: number | null;
   technicalFlowDirection?: string | null;
+  durabilityProfitabilityScore?: number | null;
+  durabilityProfitabilityCoverage?: number | null;
+  upsidePotentialScore?: number | null;
+  downsidePressureScore?: number | null;
   confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
@@ -168,7 +172,10 @@ export type ScreenerSortKey =
   | "fenokConvictionScore"
   | "profitabilityScore"
   | "growthScore"
-  | "technicalFlowScore";
+  | "technicalFlowScore"
+  | "durabilityProfitabilityScore"
+  | "upsidePotentialScore"
+  | "downsidePressureScore";
 
 export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ticker",
@@ -227,6 +234,9 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "profitabilityScore",
   "growthScore",
   "technicalFlowScore",
+  "durabilityProfitabilityScore",
+  "upsidePotentialScore",
+  "downsidePressureScore",
 ];
 
 export type SortDir = "asc" | "desc";

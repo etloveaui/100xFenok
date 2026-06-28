@@ -31,6 +31,14 @@ function signalScoreTone(score: number | null): string {
   return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
+function downsideRiskTone(score: number | null): string {
+  if (score === null || score === undefined) return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
+  if (score >= 70) return "border-[var(--down-border)] bg-[var(--c-down-soft)] text-[var(--c-down)]";
+  if (score >= 60) return "border-[var(--warn-border)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
+  if (score >= 50) return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
+  return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
+}
+
 function signalDirectionLabel(direction: string | null | undefined): string {
   if (direction === "positive" || direction === "upside_bias" || direction === "strong" || direction === "constructive") return "상";
   if (direction === "negative" || direction === "downside_bias" || direction === "weak" || direction === "stressed") return "하";
@@ -45,17 +53,25 @@ function fenokTooltip(stock: ScreenerStock): string {
     lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
   };
   push("수익성", stock.profitabilityScore, stock.profitabilityDirection);
+  push("내구 수익성", stock.durabilityProfitabilityScore, null);
   push("성장", stock.growthScore, stock.growthDirection);
   push("기술·자금", stock.technicalFlowScore, stock.technicalFlowDirection);
-  push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
+  push("상방 잠재력", stock.upsidePotentialScore, null);
+  push("하방 압력", stock.downsidePressureScore, null);
   return lines.join("\n");
 }
 
 const LABEL_TO_HELP_KEY: Record<string, FenokSignalHelpKey> = {
   수익성: "profitability",
+  내구: "durabilityProfitability",
+  "내구 수익성": "durabilityProfitability",
   성장: "growth",
   "기술·자금": "technicalFlow",
   "Fenok Edge": "upsideDownside",
+  상방: "upsidePotential",
+  "상방 잠재력": "upsidePotential",
+  하방: "downsidePressure",
+  "하방 압력": "downsidePressure",
 };
 
 export type NumberSeries = MaybeNumber[];
@@ -2057,19 +2073,25 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
             <FenokSignalRadar data={stock} size="sm" />
             <div className="flex flex-wrap gap-1.5">
               {[
-                { label: "수익성", score: stock.profitabilityScore, direction: stock.profitabilityDirection },
-                { label: "성장", score: stock.growthScore, direction: stock.growthDirection },
-                { label: "기술·자금", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection },
-                { label: "Fenok Edge", score: stock.fenokEdgeScore, direction: stock.fenokEdgeDirection },
+                { label: "수익성", score: stock.profitabilityScore, direction: stock.profitabilityDirection, tone: "signal" as const },
+                { label: "내구 수익성", score: stock.durabilityProfitabilityScore, direction: null, tone: "signal" as const, coverage: stock.durabilityProfitabilityCoverage },
+                { label: "성장", score: stock.growthScore, direction: stock.growthDirection, tone: "signal" as const },
+                { label: "기술·자금", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection, tone: "signal" as const },
+                { label: "상방 잠재력", score: stock.upsidePotentialScore, direction: null, tone: "signal" as const },
+                { label: "하방 압력", score: stock.downsidePressureScore, direction: null, tone: "risk" as const },
               ].map((item) => {
                 const score = isFiniteNumber(item.score) ? Math.round(item.score) : null;
+                const coverage = isFiniteNumber(item.coverage) ? item.coverage : null;
                 return (
                   <span
                     key={item.label}
-                    className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-[2px] text-[10px] font-black tabular-nums ${signalScoreTone(score)}`}
+                    className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-[2px] text-[10px] font-black tabular-nums ${item.tone === "risk" ? downsideRiskTone(score) : signalScoreTone(score)}`}
                     title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
                   >
                     <span aria-hidden="true">{item.label}</span>
+                    {item.coverage !== undefined && coverage !== null ? (
+                      <span className="text-[9px] font-bold text-[var(--c-ink-3)]">({Math.round(coverage * 100)}%)</span>
+                    ) : null}
                     <FenokSignalHelpPopover
                       signal={LABEL_TO_HELP_KEY[item.label] ?? "profitability"}
                       score={score}
