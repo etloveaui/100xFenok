@@ -1096,6 +1096,15 @@ export default function ScreenerClient({
     return () => window.cancelAnimationFrame(frame);
   }, [initialColumnPreset]);
 
+  // Ensure Fenok Picks always defaults to conviction desc when no explicit valid sort is set.
+  useEffect(() => {
+    if (preset !== "fenokPicks") return;
+    if (!PRESET_KEYS.fenokPicks.includes(sortKey)) {
+      setSortKey("fenokConvictionScore");
+      setSortDir("desc");
+    }
+  }, [preset, sortKey]);
+
   const activeColumns = useMemo(() => {
     const keys = new Set(PRESET_KEYS[preset]);
     return COLUMNS.filter((c) => keys.has(c.key));
