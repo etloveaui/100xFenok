@@ -6,15 +6,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
-const privateFlowRoot = path.join(repoRoot, "_private", "admin", "fenok-flow");
 
-const FORMULA_VERSION = "fenok-native-signals-v0.2.0-phase-a";
+const FORMULA_VERSION = "fenok-native-signals-v0.2.1-phase-b";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md";
-const PUBLIC_SURFACE_STATUS = "phase_a_v0_2_stock_signal_lens_approved_summary_public";
+const PUBLIC_SURFACE_STATUS = "phase_b_v0_2_stock_signal_lens_approved_summary_public";
 const SOURCE_FILE = "computed/stock_action_index.json";
 const OUTPUT_FILE = "computed/fenok_signals.json";
 const SUMMARY_OUTPUT_FILE = "computed/fenok_signals_summary.json";
 const STOCKANALYSIS_FINANCIALS_DIR = "stockanalysis/financials";
+const OCC_OPTIONS_VOLUME_FILE = "computed/fenok_occ_options_volume.json";
 const NATIVE_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside", "market_similarity"];
 const PHASE_A_SIGNAL_KEYS = ["durability_profitability"];
 const PHASE_B_SIGNAL_KEYS = [
@@ -61,6 +61,12 @@ function readFinancialsByTicker(tickers) {
 function readFlowProxiesByTicker() {
   const flow = readOptionalJson("computed/fenok_flow_proxies.json");
   const rows = Array.isArray(flow?.rows) ? flow.rows : [];
+  return new Map(rows.map((row) => [String(row.ticker ?? "").toUpperCase(), row]));
+}
+
+function readOccOptionsByTicker() {
+  const payload = readOptionalJson(OCC_OPTIONS_VOLUME_FILE);
+  const rows = Array.isArray(payload?.rows) ? payload.rows : [];
   return new Map(rows.map((row) => [String(row.ticker ?? "").toUpperCase(), row]));
 }
 
@@ -748,73 +754,33 @@ function buildShortTermRelativeStrengthSignal(row, spyHistory) {
   };
 }
 
-function buildOptionsActivityProxySignal(row) {
-  const privatePath = path.join(privateFlowRoot, "yf_options", `${row.symbol}.json`);
-  let chains = null;
-  if (fs.existsSync(privatePath)) {
-    try {
-      chains = JSON.parse(fs.readFileSync(privatePath, "utf8"))?.options;
-    } catch {
-      chains = null;
-    }
-  }
-  if (!Array.isArray(chains) || chains.length === 0) {
+function buildOptionsActivityProxySignal(row, occOptionsByTicker) {
+  const occ = occOptionsByTicker.get(String(row.symbol ?? "").toUpperCase()) ?? null;
+  const proxy = occ?.options_activity_proxy ?? null;
+  if (!finite(proxy?.score_0_100)) {
     return {
       score_0_100: null,
       direction: "unavailable",
       coverage_ratio: 0,
       confidence: "low",
-      basis: "private_yf_option_chain_snapshot_missing",
-      caveat: "Options activity proxy requires a private targeted yfinance option-chain snapshot; no raw chains are public.",
+      basis: "occ_listed_options_volume_missing",
+      caveat: "Options activity proxy requires an OCC listed-options volume row; no raw OCC CSV is public.",
     };
   }
-
-  let callVolume = 0;
-  let putVolume = 0;
-  let callOpenInterest = 0;
-  let putOpenInterest = 0;
-  let rowCount = 0;
-  for (const chain of chains) {
-    for (const option of chain.calls ?? []) {
-      callVolume += num(option.volume) ?? 0;
-      callOpenInterest += num(option.openInterest) ?? 0;
-      rowCount += 1;
-    }
-    for (const option of chain.puts ?? []) {
-      putVolume += num(option.volume) ?? 0;
-      putOpenInterest += num(option.openInterest) ?? 0;
-      rowCount += 1;
-    }
-  }
-  if (rowCount === 0 || callVolume + putVolume + callOpenInterest + putOpenInterest === 0) {
-    return {
-      score_0_100: null,
-      direction: "unavailable",
-      coverage_ratio: 0.2,
-      confidence: "low",
-      basis: "private_yf_option_chain_snapshot_empty",
-      caveat: "Options activity proxy has a private snapshot but no usable volume/OI rows.",
-    };
-  }
-
-  const volumeLogRatio = Math.log((callVolume + 1) / (putVolume + 1));
-  const oiLogRatio = Math.log((callOpenInterest + 1) / (putOpenInterest + 1));
-  const raw = (0.55 * volumeLogRatio) + (0.45 * oiLogRatio);
-  const score = round(clamp(50 + (50 * Math.tanh(1.3 * raw))), 2);
   return {
-    score_0_100: score,
-    direction: score >= 60 ? "call_skew_proxy" : score <= 40 ? "put_skew_proxy" : "neutral_proxy",
-    coverage_ratio: 0.7,
-    confidence: confidenceFromCoverage(0.7, row.coverageRatio),
-    basis: "private_yfinance_option_chain_volume_oi_activity_proxy",
-    caveat: "Options activity proxy is derived from delayed/free yfinance chain volume/OI; it is not buyer/seller options flow.",
+    score_0_100: proxy.score_0_100,
+    direction: proxy.direction ?? "unavailable",
+    coverage_ratio: occ.coverage_ratio ?? 0.65,
+    confidence: confidenceFromCoverage(occ.coverage_ratio ?? 0.65, row.coverageRatio),
+    basis: "computed_occ_listed_options_volume_skew_proxy",
+    caveat: proxy.caveat ?? "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction.",
+    source_date: occ.source_date ?? null,
     components: {
-      call_volume: { value: round(callVolume, 0), score: null, peer_group: "private", peer_count: rowCount },
-      put_volume: { value: round(putVolume, 0), score: null, peer_group: "private", peer_count: rowCount },
-      call_open_interest: { value: round(callOpenInterest, 0), score: null, peer_group: "private", peer_count: rowCount },
-      put_open_interest: { value: round(putOpenInterest, 0), score: null, peer_group: "private", peer_count: rowCount },
-      volume_log_ratio: customComponent(volumeLogRatio, scoreRange(volumeLogRatio, -1, 1)),
-      open_interest_log_ratio: customComponent(oiLogRatio, scoreRange(oiLogRatio, -1, 1)),
+      call_volume: { value: proxy.call_volume ?? null, score: null, peer_group: "occ", peer_count: proxy.row_count ?? null },
+      put_volume: { value: proxy.put_volume ?? null, score: null, peer_group: "occ", peer_count: proxy.row_count ?? null },
+      total_volume: { value: proxy.total_volume ?? null, score: null, peer_group: "occ", peer_count: proxy.row_count ?? null },
+      call_share: customComponent(proxy.call_share ?? null, scoreRange(proxy.call_share ?? null, 0.35, 0.65)),
+      put_call_volume_ratio: customComponent(proxy.put_call_volume_ratio ?? null, scoreRange(proxy.put_call_volume_ratio ?? null, 0.5, 1.5)),
     },
   };
 }
@@ -1044,7 +1010,7 @@ function buildFenokSignalsSummary(fenokSignals) {
       shortTermConvictionScore: "Directional short-term mean: technical flow, volume/liquidity trend, relative strength, options-activity proxy, and inverted short-volume pressure when present. Off-exchange activity is excluded because it is non-directional.",
       volumeLiquidityTrendScore: "Local OHLCV volume/liquidity trend proxy, not true order flow.",
       shortTermRelativeStrengthScore: "Local 20d/60d relative-strength proxy versus SPY, not a forecast.",
-      netOptionsProxyScore: "Options activity proxy derived from private yfinance option-chain volume/OI snapshots; not buyer/seller options flow.",
+      netOptionsProxyScore: "OCC listed-options volume skew proxy derived from underlying-level call/put quantities; not real options flow, not OPRA, and not buyer/seller direction.",
       offExchangeActivityProxyScore: "FINRA reported off-exchange activity proxy; not ATS-only dark-pool flow and not directional intent.",
       shortPressureProxyScore: "FINRA reported short-sale volume pressure proxy; not short interest, borrow fee, utilization, or buy/sell direction.",
       directCorpusToneProxyScore: "Private/admin only; never included in this public summary.",
@@ -1106,6 +1072,7 @@ function buildFenokSignals(stockActionIndex) {
   const stats = buildMetricStats(rows);
   const financialsByTicker = readFinancialsByTicker(rows.map((row) => row.symbol).filter(Boolean));
   const flowByTicker = readFlowProxiesByTicker();
+  const occOptionsByTicker = readOccOptionsByTicker();
   const spyHistory = loadPriceHistory("SPY");
   const generatedAt = new Date().toISOString();
   const vectors = new Map();
@@ -1118,7 +1085,7 @@ function buildFenokSignals(stockActionIndex) {
     const upsideDownside = buildUpsideDownsideSignal(stats, row, profitability, growth, technicalFlow);
     const volumeLiquidityTrend = buildVolumeLiquidityTrendSignal(row);
     const shortTermRelativeStrength = buildShortTermRelativeStrengthSignal(row, spyHistory);
-    const netOptionsProxy = buildOptionsActivityProxySignal(row);
+    const netOptionsProxy = buildOptionsActivityProxySignal(row, occOptionsByTicker);
     const offExchangeActivityProxy = buildFlowProxySignal(row, flowByTicker, "off_exchange_activity_proxy");
     const shortPressureProxy = buildFlowProxySignal(row, flowByTicker, "short_pressure_proxy");
     const signals = {
@@ -1158,7 +1125,7 @@ function buildFenokSignals(stockActionIndex) {
         "yf/finance/{TICKER}.json",
         "yf/finance/SPY.json",
         flowByTicker.has(String(row.symbol ?? "").toUpperCase()) ? "computed/fenok_flow_proxies.json" : null,
-        fs.existsSync(path.join(privateFlowRoot, "yf_options", `${row.symbol}.json`)) ? "_private/admin/fenok-flow/yf_options/{TICKER}.json" : null,
+        occOptionsByTicker.has(String(row.symbol ?? "").toUpperCase()) ? OCC_OPTIONS_VOLUME_FILE : null,
       ].filter(Boolean),
       stock_action_context: {
         action_score: num(row.actionScore),
@@ -1201,7 +1168,7 @@ function buildFenokSignals(stockActionIndex) {
       analyst_target_upside: "not_present_in_stock_action_index; upside_downside v0 uses valuation band, forward PE, growth, revision, and momentum proxies",
       true_volume_flow: "not_present_in_stock_action_index; technical_flow and volume_liquidity_trend use local OHLCV proxies, not true order flow",
       short_interest: "not_free_daily; short_pressure_proxy uses FINRA reported short-sale volume share, not short interest",
-      true_options_flow: "not_free_official; net_options_proxy uses private yfinance option-chain volume/OI proxy, not buyer/seller flow",
+      true_options_flow: "not_free_official; net_options_proxy uses OCC listed-options volume skew, not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction",
       dark_pool_ats: "not_free_daily; off_exchange_activity_proxy is FINRA reported off-exchange bucket, not ATS-only dark-pool prints",
       social_news: "directCorpusTone remains private/admin only and is not included in public summary",
     },
