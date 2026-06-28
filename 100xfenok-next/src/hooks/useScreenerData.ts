@@ -19,6 +19,13 @@ function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function convictionCallFromScore(score: number | null | undefined): ScreenerStock["fenokConvictionCall"] {
+  if (score === null || score === undefined) return null;
+  if (score >= 70) return "집중";
+  if (score >= 41) return "혼재";
+  return "희석";
+}
+
 const provider = new StaticStockAnalyzerDataProvider();
 
 async function loadRecords(timeoutMs = FETCH_TIMEOUT_MS): Promise<StockAnalyzerRecord[] | null> {
@@ -169,18 +176,13 @@ export function useScreenerData(): ScreenerDataResult {
           fenokSignalCoverageRatio: fenokSignal?.coverageRatio ?? null,
           fenokSignalAsOf: fenokSignal?.asOf ?? null,
           fenokConvictionScore: fenokSignal?.convictionScore ?? null,
-          fenokConvictionCall:
-            fenokSignal?.convictionCall === "accumulate" || fenokSignal?.convictionCall === "hold" || fenokSignal?.convictionCall === "reduce"
-              ? fenokSignal.convictionCall
-              : null,
+          fenokConvictionCall: convictionCallFromScore(fenokSignal?.convictionScore),
           profitabilityScore: fenokSignal?.profitabilityScore ?? null,
           profitabilityDirection: fenokSignal?.profitabilityDirection ?? null,
           growthScore: fenokSignal?.growthScore ?? null,
           growthDirection: fenokSignal?.growthDirection ?? null,
           technicalFlowScore: fenokSignal?.technicalFlowScore ?? null,
           technicalFlowDirection: fenokSignal?.technicalFlowDirection ?? null,
-          marketSimilarityScore: fenokSignal?.marketSimilarityScore ?? null,
-          marketSimilarityDirection: fenokSignal?.marketSimilarityDirection ?? null,
           confidenceLabel: typeof item.confidenceLabel === "string" ? item.confidenceLabel : null,
           actionLabel: typeof item.actionLabel === "string" ? item.actionLabel : null,
           actionBucket: typeof item.actionBucket === "string" ? item.actionBucket : null,

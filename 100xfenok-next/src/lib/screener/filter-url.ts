@@ -78,7 +78,6 @@ export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
     "growthScore",
     "technicalFlowScore",
     "fenokEdgeScore",
-    "marketSimilarityScore",
     "marketCap",
     "per",
   ],
@@ -127,7 +126,7 @@ export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
   dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
-  fenokPicks: ["fenokConvictionScore", "profitabilityScore", "growthScore", "technicalFlowScore", "fenokEdgeScore", "marketSimilarityScore", "marketCap", "per"],
+  fenokPicks: ["fenokConvictionScore", "profitabilityScore", "growthScore", "technicalFlowScore", "fenokEdgeScore", "marketCap", "per"],
 };
 
 export function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {

@@ -78,7 +78,6 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "profitabilityScore", label: "수익성", align: "right" },
   { key: "growthScore", label: "성장", align: "right" },
   { key: "technicalFlowScore", label: "기술/자금", align: "right" },
-  { key: "marketSimilarityScore", label: "시장유사", align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "Fwd PER", align: "right" },
   { key: "epsForward", label: "Fwd EPS", align: "right" },
@@ -250,17 +249,14 @@ function fenokEdgeTitle(stock: ScreenerStock): string {
 }
 
 function convictionCallLabel(call: ScreenerStock["fenokConvictionCall"]): string {
-  if (call === "accumulate") return "관심";
-  if (call === "hold") return "중립";
-  if (call === "reduce") return "약함";
-  return "미정";
+  return call ?? "미정";
 }
 
 function convictionTone(score: number | null, call: ScreenerStock["fenokConvictionCall"]): string {
   if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
-  if (score >= 70 || call === "accumulate") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (score >= 60 || call === "hold") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (score >= 50 || call === "reduce") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (call === "집중") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (call === "희석") return "border-amber-200 bg-amber-50 text-amber-700";
   return "border-slate-200 bg-slate-50 text-slate-500";
 }
 
@@ -280,7 +276,7 @@ function signalScoreTone(score: number | null): string {
 }
 
 function convictionTooltip(stock: ScreenerStock): string {
-  const lines = ["Fenok 파생 5신호 종합 컨빅션 · NOT 매수권유"];
+  const lines = ["Fenok 4-신호 동등가중 종합 · 매수권유 아님"];
   const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
     const s = typeof score === "number" && Number.isFinite(score) ? Math.round(score) : "—";
     lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
@@ -289,7 +285,6 @@ function convictionTooltip(stock: ScreenerStock): string {
   push("성장", stock.growthScore, stock.growthDirection);
   push("기술/자금", stock.technicalFlowScore, stock.technicalFlowDirection);
   push("Fenok Edge", stock.fenokEdgeScore, stock.fenokEdgeDirection);
-  push("시장유사", stock.marketSimilarityScore, stock.marketSimilarityDirection);
   const coverage = typeof stock.fenokSignalCoverageRatio === "number"
     ? `coverage=${Math.round(stock.fenokSignalCoverageRatio * 100)}%`
     : "coverage=unknown";
@@ -517,8 +512,9 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
         ? Math.round(stock.fenokConvictionScore)
         : null;
       const call = stock.fenokConvictionCall;
+      const isPicks = preset === "fenokPicks";
       return (
-        <span className="inline-flex min-w-[80px] justify-end">
+        <span className={cx("inline-flex flex-col items-end gap-1", isPicks ? "min-w-[140px]" : "min-w-[80px]")}>
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", convictionTone(score, call))}
             title={convictionTooltip(stock)}
@@ -526,20 +522,41 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             <span aria-hidden="true">{convictionCallLabel(call)}</span>
             {score ?? "—"}
           </span>
+          {isPicks ? (
+            <span className="inline-flex flex-wrap justify-end gap-1">
+              {[
+                { label: "수익", score: stock.profitabilityScore, direction: stock.profitabilityDirection },
+                { label: "성장", score: stock.growthScore, direction: stock.growthDirection },
+                { label: "기술", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection },
+                { label: "Edge", score: stock.fenokEdgeScore, direction: stock.fenokEdgeDirection },
+              ].map((item) => {
+                const itemScore = typeof item.score === "number" && Number.isFinite(item.score) ? Math.round(item.score) : null;
+                return (
+                  <span
+                    key={item.label}
+                    className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", signalScoreTone(itemScore))}
+                    title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
+                  >
+                    <span aria-hidden="true">{item.label}</span>
+                    {itemScore ?? "—"}
+                  </span>
+                );
+              })}
+            </span>
+          ) : null}
         </span>
       );
     }
     case "profitabilityScore":
     case "growthScore":
-    case "technicalFlowScore":
-    case "marketSimilarityScore": {
+    case "technicalFlowScore": {
       const score = typeof stock[key] === "number" && Number.isFinite(stock[key]) ? Math.round(stock[key] as number) : null;
-      const direction = key === "profitabilityScore" ? stock.profitabilityDirection : key === "growthScore" ? stock.growthDirection : key === "technicalFlowScore" ? stock.technicalFlowDirection : stock.marketSimilarityDirection;
+      const direction = key === "profitabilityScore" ? stock.profitabilityDirection : key === "growthScore" ? stock.growthDirection : stock.technicalFlowDirection;
       return (
         <span className="inline-flex min-w-[64px] justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
-            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · Fenok 파생 신호 · NOT 매수권유`}
+            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · Fenok 파생 신호 · 매수권유 아님`}
           >
             <span aria-hidden="true">{signalDirectionLabel(direction)}</span>
             {score ?? "—"}
@@ -2222,7 +2239,7 @@ export default function ScreenerClient({
                     value={convictionMin}
                     onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    title="Fenok 파생 5신호 종합 컨빅션 · NOT 매수권유"
+                    title="Fenok 4-신호 동등가중 종합 · 매수권유 아님"
                   >
                     <option value="">전체 컨빅션</option>
                     <option value="70">70 이상</option>
