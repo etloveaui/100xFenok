@@ -7,12 +7,14 @@ const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 
-const FORMULA_VERSION = "fenok-native-signals-v0.1.0";
+const FORMULA_VERSION = "fenok-native-signals-v0.1.1";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_native_signals_v0_1_20260628.md";
 const PUBLIC_SURFACE_STATUS = "phase_a_stock_signal_lens_approved_summary_public";
 const SOURCE_FILE = "computed/stock_action_index.json";
 const OUTPUT_FILE = "computed/fenok_signals.json";
 const SUMMARY_OUTPUT_FILE = "computed/fenok_signals_summary.json";
+const NATIVE_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside", "market_similarity"];
+const CONVICTION_SIGNAL_KEYS = ["profitability", "growth", "technical_flow", "upside_downside"];
 
 const HORIZON_WEIGHTS = [
   ["fy1", 0.5],
@@ -481,6 +483,19 @@ function compactSignalCoverage(signals) {
   };
 }
 
+function buildConvictionComposite(signals) {
+  const presentScores = CONVICTION_SIGNAL_KEYS
+    .map((key) => signals?.[key]?.score_0_100)
+    .filter(finite);
+  const convictionScore = presentScores.length >= 3
+    ? round(presentScores.reduce((sum, score) => sum + score, 0) / presentScores.length, 2)
+    : null;
+
+  if (convictionScore !== null && convictionScore >= 70) return { convictionScore, convictionCall: "concentrated" };
+  if (convictionScore !== null && convictionScore <= 40) return { convictionScore, convictionCall: "diluted" };
+  return { convictionScore, convictionCall: "mixed" };
+}
+
 function buildFenokSignalsSummary(fenokSignals) {
   const fields = [
     "ticker",
@@ -500,6 +515,8 @@ function buildFenokSignalsSummary(fenokSignals) {
     "upsideDownsideDirection",
     "marketSimilarityScore",
     "marketSimilarityDirection",
+    "convictionScore",
+    "convictionCall",
   ];
 
   return {
@@ -516,25 +533,30 @@ function buildFenokSignalsSummary(fenokSignals) {
       confidence_counts: fenokSignals.coverage.confidence_counts,
       market_scope_counts: fenokSignals.coverage.market_scope_counts,
     },
-    rows: fenokSignals.rows.map((row) => [
-      row.ticker,
-      row.company,
-      row.market_scope,
-      row.canonical_sector,
-      row.as_of,
-      row.confidence,
-      row.coverage_ratio,
-      row.signals.profitability?.score_0_100 ?? null,
-      row.signals.profitability?.direction ?? "unavailable",
-      row.signals.growth?.score_0_100 ?? null,
-      row.signals.growth?.direction ?? "unavailable",
-      row.signals.technical_flow?.score_0_100 ?? null,
-      row.signals.technical_flow?.direction ?? "unavailable",
-      row.signals.upside_downside?.score_0_100 ?? null,
-      row.signals.upside_downside?.direction ?? "unavailable",
-      row.signals.market_similarity?.score_0_100 ?? null,
-      row.signals.market_similarity?.direction ?? "unavailable",
-    ]),
+    rows: fenokSignals.rows.map((row) => {
+      const conviction = buildConvictionComposite(row.signals);
+      return [
+        row.ticker,
+        row.company,
+        row.market_scope,
+        row.canonical_sector,
+        row.as_of,
+        row.confidence,
+        row.coverage_ratio,
+        row.signals.profitability?.score_0_100 ?? null,
+        row.signals.profitability?.direction ?? "unavailable",
+        row.signals.growth?.score_0_100 ?? null,
+        row.signals.growth?.direction ?? "unavailable",
+        row.signals.technical_flow?.score_0_100 ?? null,
+        row.signals.technical_flow?.direction ?? "unavailable",
+        row.signals.upside_downside?.score_0_100 ?? null,
+        row.signals.upside_downside?.direction ?? "unavailable",
+        row.signals.market_similarity?.score_0_100 ?? null,
+        row.signals.market_similarity?.direction ?? "unavailable",
+        conviction.convictionScore,
+        conviction.convictionCall,
+      ];
+    }),
   };
 }
 
@@ -595,7 +617,7 @@ function buildFenokSignals(stockActionIndex) {
     row.confidence = confidenceFromCoverage(row.coverage_ratio, row.stock_action_context.coverage_ratio);
   }
 
-  const signalKeys = ["profitability", "growth", "technical_flow", "upside_downside", "market_similarity"];
+  const signalKeys = NATIVE_SIGNAL_KEYS;
   return {
     schema_version: 1,
     generated_at: generatedAt,
