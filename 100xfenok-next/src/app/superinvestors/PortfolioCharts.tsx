@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, ScatterController } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData, ChartOptions } from "chart.js";
-import { Doughnut, Bar, Line, Chart } from "react-chartjs-2";
+import { Doughnut, Bar, Line, Chart, Scatter } from "react-chartjs-2";
 import { sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { PerformanceSeries, PortfolioRow, PortfolioViewsData } from "@/lib/superinvestors/types";
@@ -25,6 +25,7 @@ ChartJS.register(
   BarElement,
   LineElement,
   PointElement,
+  ScatterController,
   TreemapController,
   TreemapElement,
 );
@@ -455,6 +456,199 @@ export function SectorMixPanel({ currentSectors, history, quarters }: SectorMixP
           />
         )}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// RiskReturnScatter — cross-guru annualized return vs volatility
+// ---------------------------------------------------------------------------
+
+interface ScatterPoint {
+  x: number;
+  y: number;
+  investor: string;
+}
+
+function computeAnnualizedRiskReturn(performance: PerformanceSeries): { annReturn: number; annVol: number } | null {
+  const dates = performance.dates;
+  const values = performance.portfolio;
+  if (!Array.isArray(dates) || !Array.isArray(values) || dates.length !== values.length || values.length < 3) {
+    return null;
+  }
+  const firstValue = values[0];
+  const lastValue = values[values.length - 1];
+  if (!isFiniteNumber(firstValue) || firstValue <= 0 || !isFiniteNumber(lastValue) || lastValue <= 0) {
+    return null;
+  }
+  const firstDate = new Date(dates[0]).getTime();
+  const lastDate = new Date(dates[dates.length - 1]).getTime();
+  if (Number.isNaN(firstDate) || Number.isNaN(lastDate) || lastDate <= firstDate) {
+    return null;
+  }
+  const msPerYear = 365.25 * 24 * 60 * 60 * 1000;
+  const years = (lastDate - firstDate) / msPerYear;
+  if (years <= 0) return null;
+
+  const annReturn = Math.pow(lastValue / firstValue, 1 / years) - 1;
+
+  const periodReturns: number[] = [];
+  for (let i = 1; i < values.length; i++) {
+    const prev = values[i - 1];
+    const cur = values[i];
+    if (isFiniteNumber(prev) && prev > 0 && isFiniteNumber(cur) && cur > 0) {
+      periodReturns.push(cur / prev - 1);
+    }
+  }
+  if (periodReturns.length < 2) return null;
+  const mean = periodReturns.reduce((a, b) => a + b, 0) / periodReturns.length;
+  const variance = periodReturns.reduce((sum, r) => sum + (r - mean) * (r - mean), 0) / (periodReturns.length - 1);
+  const annVol = Math.sqrt(variance) * Math.sqrt(periodReturns.length / years);
+
+  if (!Number.isFinite(annReturn) || !Number.isFinite(annVol)) return null;
+  return { annReturn, annVol };
+}
+
+interface RiskReturnScatterProps {
+  data: PortfolioViewsData;
+}
+
+export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
+  const chartTheme = useMarketChartTheme();
+
+  const { investorPoints, spyPoint } = useMemo(() => {
+    const points: ScatterPoint[] = [];
+    for (const [id, view] of Object.entries(data.investors)) {
+      if (!view.performance) continue;
+      const calc = computeAnnualizedRiskReturn(view.performance);
+      if (!calc) continue;
+      points.push({
+        x: calc.annVol,
+        y: calc.annReturn,
+        investor: view.name || id,
+      });
+    }
+    points.sort((a, b) => b.y - a.y);
+
+    let spy: ScatterPoint | null = null;
+    for (const view of Object.values(data.investors)) {
+      const perf = view.performance;
+      const spySeries = perf?.spy;
+      if (!perf || !spySeries || !Array.isArray(spySeries) || spySeries.length === 0) continue;
+      const calc = computeAnnualizedRiskReturn({
+        dates: perf.dates,
+        portfolio: spySeries,
+        spy: null,
+        coverage: [],
+      });
+      if (calc) {
+        spy = { x: calc.annVol, y: calc.annReturn, investor: "SPY" };
+        break;
+      }
+    }
+    return { investorPoints: points, spyPoint: spy };
+  }, [data]);
+
+  const chartData = useMemo<ChartData<"scatter">>(() => {
+    const datasets: ChartData<"scatter">["datasets"] = [
+      {
+        label: "투자자",
+        data: investorPoints as unknown as ChartData<"scatter">["datasets"][0]["data"],
+        backgroundColor: chartTheme.token("brand"),
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      },
+    ];
+    if (spyPoint) {
+      datasets.push({
+        label: "SPY",
+        data: [spyPoint] as unknown as ChartData<"scatter">["datasets"][0]["data"],
+        backgroundColor: chartTheme.token("neutral"),
+        pointRadius: 7,
+        pointHoverRadius: 9,
+        pointStyle: "rectRot" as const,
+      });
+    }
+    return { datasets };
+  }, [investorPoints, spyPoint, chartTheme]);
+
+  const options = useMemo<ChartOptions<"scatter">>(() => {
+    const pctAxis = {
+      callback: (value: string | number) => `${(Number(value) * 100).toFixed(0)}%`,
+      color: chartTheme.token("ink3"),
+      font: { size: 10 },
+    };
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "point", intersect: false },
+      plugins: {
+        legend: {
+          position: "top",
+          align: "end",
+          labels: {
+            color: chartTheme.token("ink2"),
+            font: { size: 11, weight: "bold" as const },
+            usePointStyle: true,
+            pointStyleWidth: 8,
+            boxHeight: 6,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const p = ctx.raw as ScatterPoint;
+              const ret = p.y * 100;
+              const vol = p.x * 100;
+              return `${p.investor}: 연수익률 ${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%, 연변동성 ${vol.toFixed(1)}%`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "연변동성 (annualized volatility)",
+            color: chartTheme.token("ink3"),
+            font: { size: 11, weight: "bold" as const },
+          },
+          ticks: pctAxis,
+        },
+        y: {
+          title: {
+            display: true,
+            text: "연수익률 (annualized return)",
+            color: chartTheme.token("ink3"),
+            font: { size: 11, weight: "bold" as const },
+          },
+          ticks: pctAxis,
+        },
+      },
+    };
+  }, [chartTheme]);
+
+  if (investorPoints.length === 0) {
+    return (
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+        리스크-수익 데이터가 없습니다
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="relative h-[300px] sm:h-[420px]">
+        <Scatter
+          data={chartData}
+          options={options}
+          role="img"
+          aria-label="투자자별 연수익률 대비 연변동성 산점도"
+        />
+      </div>
+      <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+        좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준
+      </p>
     </div>
   );
 }

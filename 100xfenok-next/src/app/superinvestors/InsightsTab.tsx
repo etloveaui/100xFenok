@@ -12,7 +12,9 @@ import type {
   BuyingPressureRow,
   ConvictionPosition,
   TradesRankingData,
+  PortfolioViewsData,
 } from "@/lib/superinvestors/types";
+import { loadPortfolioViews, RiskReturnScatter } from "./PortfolioCharts";
 
 // ---------------------------------------------------------------------------
 // Module-level caches
@@ -502,16 +504,17 @@ export default function InsightsTab() {
   const [hhi, setHhi] = useState<HhiData | null>(null);
   const [cv, setCv] = useState<ConvictionData | null>(null);
   const [ce, setCe] = useState<ConvictionEntriesData | null>(null);
+  const [pv, setPv] = useState<PortfolioViewsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction(), loadConvictionEntries()]).then(([bpR, trR, npR, hhiR, cvR, ceR]) => {
+    Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction(), loadConvictionEntries(), loadPortfolioViews()]).then(([bpR, trR, npR, hhiR, cvR, ceR, pvR]) => {
       if (cancelled) return;
-      const anyData = bpR || trR || npR || hhiR || cvR || ceR;
+      const anyData = bpR || trR || npR || hhiR || cvR || ceR || pvR;
       if (!anyData) { setFailed(true); }
-      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR); setCe(ceR);
+      setBp(bpR); setTr(trR); setNp(npR); setHhi(hhiR); setCv(cvR); setCe(ceR); setPv(pvR);
       setLoading(false);
     });
     return () => { cancelled = true; };
@@ -552,6 +555,13 @@ export default function InsightsTab() {
         </div>
       ) : (
         <div className="space-y-4">
+          {/* 0. 리스크-수익 분포 */}
+          <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
+            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">리스크-수익 분포</h3>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">거장 포트폴리오의 연수익률 대비 연변동성 — SPY와 비교</p>
+            {pv ? <RiskReturnScatter data={pv} /> : <SkeletonCard />}
+          </div>
+
           {/* 1. 매수 압력 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
