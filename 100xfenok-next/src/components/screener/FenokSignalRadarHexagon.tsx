@@ -37,6 +37,7 @@ export interface FenokSignalRadarHexagonProps {
   title: string;
   axes: FenokSignalRadarHexagonAxis[];
   size?: "md" | "lg";
+  emptyLabel?: string;
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -80,7 +81,7 @@ const FONT_SIZE = {
   lg: 11,
 } as const;
 
-export function FenokSignalRadarHexagon({ title, axes, size = "lg" }: FenokSignalRadarHexagonProps) {
+export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }: FenokSignalRadarHexagonProps) {
   const theme = useMarketChartTheme();
 
   const safeAxes = useMemo(
@@ -165,12 +166,16 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg" }: FenokSigna
         </div>
       ) : (
         <div
-          className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[10px] font-bold text-[var(--c-ink-3)]`}
+          className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-center text-[10px] font-bold text-[var(--c-ink-3)]`}
           title="신호 데이터 없음"
         >
-          신호
-          <br />
-          없음
+          {emptyLabel ?? (
+            <>
+              신호
+              <br />
+              없음
+            </>
+          )}
         </div>
       )}
     </div>

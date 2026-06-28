@@ -45,6 +45,10 @@ export interface ScreenerStock {
   fenokSignalAsOf?: string | null;
   fenokConvictionScore?: number | null;
   fenokConvictionCall?: "집중" | "혼재" | "희석" | null;
+  fenokShortTermScore?: number | null;
+  fenokLongTermScore?: number | null;
+  fenokLongTermConvictionScore?: number | null;
+  fenokLongTermConvictionCall?: "집중" | "혼재" | "희석" | null;
   profitabilityScore?: number | null;
   profitabilityDirection?: string | null;
   growthScore?: number | null;
@@ -55,6 +59,9 @@ export interface ScreenerStock {
   durabilityProfitabilityCoverage?: number | null;
   upsidePotentialScore?: number | null;
   downsidePressureScore?: number | null;
+  marketSimilarityScore?: number | null;
+  marketSimilarityDirection?: string | null;
+  sp500TrackingSimilarityScore?: number | null;
   confidenceLabel?: string | null;
   actionLabel?: string | null;
   actionBucket?: string | null;
@@ -170,12 +177,17 @@ export type ScreenerSortKey =
   | "peg"
   | "connectionCount"
   | "fenokConvictionScore"
+  | "fenokShortTermScore"
+  | "fenokLongTermScore"
+  | "fenokLongTermConvictionScore"
   | "profitabilityScore"
   | "growthScore"
   | "technicalFlowScore"
   | "durabilityProfitabilityScore"
   | "upsidePotentialScore"
-  | "downsidePressureScore";
+  | "downsidePressureScore"
+  | "marketSimilarityScore"
+  | "sp500TrackingSimilarityScore";
 
 export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ticker",
@@ -231,12 +243,17 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "peg",
   "connectionCount",
   "fenokConvictionScore",
+  "fenokShortTermScore",
+  "fenokLongTermScore",
+  "fenokLongTermConvictionScore",
   "profitabilityScore",
   "growthScore",
   "technicalFlowScore",
   "durabilityProfitabilityScore",
   "upsidePotentialScore",
   "downsidePressureScore",
+  "marketSimilarityScore",
+  "sp500TrackingSimilarityScore",
 ];
 
 export type SortDir = "asc" | "desc";

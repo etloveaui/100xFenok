@@ -6,6 +6,7 @@ export type FenokSignalHelpKey =
   | "durabilityProfitability"
   | "upsidePotential"
   | "downsidePressure"
+  | "marketSimilarity"
   | "sp500TrackingSimilarity"
   | "technicalIndicatorProxy"
   | "netOptionsProxy"
@@ -82,14 +83,14 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   ),
   upsidePotential: makeDefaultEntry(
     "upsidePotential",
-    "상방 잠재력",
-    "Fenok 파생 신호로 산출한 상대적 상방 기대치예요.",
+    "상승 잠재력",
+    "Fenok 파생 신호로 산출한 상대적 상승 잠재력이에요.",
   ),
   downsidePressure: {
     key: "downsidePressure",
-    label: "하방 압력",
+    label: "하락 압력",
     interpretation:
-      "Fenok 파생 신호로 산출한 상대적 하방 위험 축이에요. 점수가 높을수록 위험이 커요.",
+      "Fenok 파생 신호로 산출한 상대적 하락 압력 축이에요. 점수가 높을수록 위험이 커요.",
     bands: [
       { min: 81, max: 100, label: "위험 높음", tone: "down" },
       { min: 61, max: 80, label: "위험 다소", tone: "warn" },
@@ -97,10 +98,15 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       { min: 0, max: 40, label: "안정", tone: "up" },
     ],
   },
+  marketSimilarity: makeDefaultEntry(
+    "marketSimilarity",
+    "동종군 유사도",
+    "동종 섹터/산업군의 대표 종목들과 움직임이 얼마나 비슷한지 산출한 Fenok 파생 축이에요.",
+  ),
   sp500TrackingSimilarity: makeDefaultEntry(
     "sp500TrackingSimilarity",
-    "SPY 추적",
-    "1년 일별 수익률 기준으로 SPY 움직임과 얼마나 비슷하게 움직였는지 산출한 Fenok 파생 축이에요.",
+    "S&P500 추종 유사도",
+    "1년 일별 수익률 기준으로 S&P500 움직임과 얼마나 비슷하게 움직였는지 산출한 Fenok 파생 축이에요.",
   ),
   technicalIndicatorProxy: makeDefaultEntry(
     "technicalIndicatorProxy",

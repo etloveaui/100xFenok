@@ -37,6 +37,8 @@ export interface FenokSignalsSummaryRecord {
   lensCoverageRatio?: number | null;
   longTermScore?: number | null;
   shortTermScore?: number | null;
+  longTermConvictionScore?: number | null;
+  longTermConvictionCall?: "concentrated" | "mixed" | "diluted" | null;
   peerSimilarityScore?: number | null;
   sp500TrackingSimilarityScore?: number | null;
   technicalIndicatorProxyScore?: number | null;
@@ -95,8 +97,12 @@ function numberValue(row: JsonRecord | unknown[], fields: string[], key: string)
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function convictionCallValue(row: JsonRecord | unknown[], fields: string[]): FenokSignalsSummaryRecord["convictionCall"] {
-  const value = stringValue(row, fields, "convictionCall");
+function convictionCallValue(
+  row: JsonRecord | unknown[],
+  fields: string[],
+  key = "convictionCall",
+): "concentrated" | "mixed" | "diluted" | null {
+  const value = stringValue(row, fields, key);
   if (value === "concentrated" || value === "mixed" || value === "diluted") return value;
   return null;
 }
@@ -136,6 +142,8 @@ export function normalizeFenokSignalsSummaryRecord(
     lensCoverageRatio: numberValue(row, fields, "lensCoverageRatio"),
     longTermScore: numberValue(row, fields, "longTermScore"),
     shortTermScore: numberValue(row, fields, "shortTermScore"),
+    longTermConvictionScore: numberValue(row, fields, "longTermConvictionScore"),
+    longTermConvictionCall: convictionCallValue(row, fields, "longTermConvictionCall"),
     peerSimilarityScore: numberValue(row, fields, "peerSimilarityScore"),
     sp500TrackingSimilarityScore: numberValue(row, fields, "sp500TrackingSimilarityScore"),
     technicalIndicatorProxyScore: numberValue(row, fields, "technicalIndicatorProxyScore"),

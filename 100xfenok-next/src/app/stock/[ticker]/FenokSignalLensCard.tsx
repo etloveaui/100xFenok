@@ -1,7 +1,9 @@
 import type { FenokSignalsSummaryRecord } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
 import { FenokSignalRadar, type FenokSignalRadarAxis } from "@/components/screener/FenokSignalRadar";
+import { FenokSignalRadarHexagon, type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
 import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
-import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
+import type { FenokSignalHelpKey, FenokSignalTone } from "@/lib/fenok-signals/signal-help-config";
+import { getSignalHelpEntry, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 
 interface FenokSignalLensCardProps {
   record: FenokSignalsSummaryRecord | null | undefined;
@@ -406,6 +408,11 @@ function hasLensUiData(record: FenokSignalsSummaryRecord): boolean {
     record.lensCoverageRatio,
     record.longTermScore,
     record.shortTermScore,
+    record.profitabilityScore,
+    record.growthScore,
+    record.upsidePotentialScore,
+    record.downsidePressureScore,
+    record.marketSimilarityScore,
     record.sp500TrackingSimilarityScore,
     record.technicalIndicatorProxyScore,
     record.netOptionsProxyScore,
@@ -540,6 +547,135 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
   );
 }
 
+interface LongTermAxisConfig {
+  key: string;
+  label: string;
+  scoreKey: keyof FenokSignalsSummaryRecord;
+  directionKey?: keyof FenokSignalsSummaryRecord;
+  helpKey: FenokSignalHelpKey;
+}
+
+interface LongTermAxis extends FenokSignalRadarHexagonAxis {
+  key: string;
+  helpKey: FenokSignalHelpKey;
+  meta: {
+    tier: string | null;
+    tone: "up" | "warn" | "down" | "neutral";
+  };
+}
+
+const LONG_TERM_AXIS_CONFIG: LongTermAxisConfig[] = [
+  {
+    key: "profitability",
+    label: "수익성",
+    scoreKey: "profitabilityScore",
+    directionKey: "profitabilityDirection",
+    helpKey: "profitability",
+  },
+  {
+    key: "growth",
+    label: "성장성",
+    scoreKey: "growthScore",
+    directionKey: "growthDirection",
+    helpKey: "growth",
+  },
+  {
+    key: "upsidePotential",
+    label: "상승 잠재력",
+    scoreKey: "upsidePotentialScore",
+    helpKey: "upsidePotential",
+  },
+  {
+    key: "downsidePressure",
+    label: "하락 압력",
+    scoreKey: "downsidePressureScore",
+    helpKey: "downsidePressure",
+  },
+  {
+    key: "marketSimilarity",
+    label: "동종군 유사도",
+    scoreKey: "marketSimilarityScore",
+    helpKey: "marketSimilarity",
+  },
+  {
+    key: "sp500TrackingSimilarity",
+    label: "S&P500 추종 유사도",
+    scoreKey: "sp500TrackingSimilarityScore",
+    helpKey: "sp500TrackingSimilarity",
+  },
+];
+
+function deriveAxisMeta(
+  score: number | null,
+  helpKey: FenokSignalHelpKey,
+): { tier: string | null; tone: LongTermAxis["meta"]["tone"]; direction: string | null } {
+  const entry = getSignalHelpEntry(helpKey);
+  const band = lookupBand(entry, score);
+  const tier = band?.label ?? null;
+  const tone = band?.tone ?? "neutral";
+  let direction: string | null = null;
+  if (tone === "up") direction = "constructive";
+  if (tone === "warn") direction = "neutral";
+  if (tone === "down") direction = "weak";
+  return { tier, tone, direction };
+}
+
+function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
+  return LONG_TERM_AXIS_CONFIG.map((config) => {
+    const rawScore = record[config.scoreKey];
+    const score = isFiniteNumber(rawScore) ? rawScore : null;
+    const rawDirection = config.directionKey ? record[config.directionKey] : null;
+    const explicitDirection =
+      typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
+    const meta = deriveAxisMeta(score, config.helpKey);
+    return {
+      key: config.key,
+      label: config.label,
+      score,
+      direction: explicitDirection ?? meta.direction,
+      tier: meta.tier,
+      helpKey: config.helpKey,
+      meta,
+    };
+  });
+}
+
+function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
+  const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2">
+      <span className="min-w-0 flex-1 truncate text-[11px] font-black text-[var(--c-ink)]">
+        {axis.label}
+      </span>
+      <FenokSignalHelpPopover signal={axis.helpKey} score={axis.score} direction={axis.direction} />
+      {axis.meta.tier && axis.score !== null ? (
+        <span
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-black ${toneClass(axis.meta.tone)}`}
+        >
+          {axis.meta.tier}
+        </span>
+      ) : null}
+      <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
+        {formatScore(axis.score)}
+      </span>
+      <div className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-[var(--c-surface-2)] sm:block">
+        <div
+          className={`h-full rounded-full ${
+            axis.meta.tone === "up"
+              ? "bg-[var(--c-up)]"
+              : axis.meta.tone === "warn"
+                ? "bg-[var(--c-warn)]"
+                : axis.meta.tone === "down"
+                  ? "bg-[var(--c-down)]"
+                  : "bg-[var(--c-line)]"
+          }`}
+          style={{ width: `${width}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps) {
   if (!record) return null;
 
@@ -547,21 +683,16 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
     return <LegacyFenokSignalLensCard record={record} />;
   }
 
-  const groups = SIGNAL_GROUPS.map((group) => {
-    const metrics = group.signals.map((signal) => metricFromConfig(record, signal));
-    return {
-      ...group,
-      metrics,
-      groupScore: aggregateScore(metrics, record[group.scoreKey]),
-    };
-  });
-  const hasSignal = groups.some((group) => group.metrics.some((metric) => metric.score !== null));
-  if (!hasSignal) return null;
-
-  const confidence = record.confidence ?? null;
-  const convictionScore = isFiniteNumber(record.convictionScore) ? Math.round(record.convictionScore) : null;
-  const convictionCall = record.convictionCall ?? null;
+  const longTermAxes = buildLongTermAxes(record);
+  const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
   const coverage = record.lensCoverageRatio ?? record.coverageRatio;
+  const rawLongTermCall = record.longTermConvictionCall ?? record.convictionCall;
+  const longTermScore = isFiniteNumber(record.longTermConvictionScore)
+    ? Math.round(record.longTermConvictionScore)
+    : isFiniteNumber(record.convictionScore)
+      ? Math.round(record.convictionScore)
+      : null;
+  const longTermCall = rawLongTermCall ?? null;
 
   return (
     <section className="panel overflow-hidden border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
@@ -571,11 +702,11 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
             <h2 className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
               Fenok Signal Lens
             </h2>
-            <span className="rounded-full bg-[var(--c-surface-2)] px-2 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
-              {confidenceKo(confidence)}
-            </span>
             <span className="rounded-full bg-[var(--c-brand-soft)] px-2 py-0.5 text-[9px] font-black text-[var(--c-brand)]">
-              장기·단기 축
+              장기 6축
+            </span>
+            <span className="rounded-full bg-[var(--c-surface-2)] px-2 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
+              단기 Phase B 대기
             </span>
           </div>
           <span className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
@@ -585,29 +716,43 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
       </div>
 
       <div className="space-y-4 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-black tabular-nums ${convictionTone(convictionCall)}`}
-              title="Fenok 기존 4-신호 동등가중 종합 점수"
-            >
-              <span aria-hidden="true">{convictionCallKo(convictionCall)}</span>
-              {convictionScore ?? "—"}
+        <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-6 py-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+              장기 Conviction
             </span>
-            <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-              공개 파생 점수 · raw 비공개
+            <span
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-lg font-black tabular-nums ${convictionTone(longTermCall)}`}
+              title="Fenok 장기 6축 종합 점수"
+            >
+              <span>{convictionCallKo(longTermCall)}</span>
+              {longTermScore ?? "—"}
             </span>
           </div>
-          <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-            as_of {formatAsOf(record.asOf)} · coverage {formatCoverage(coverage)}
-          </span>
         </div>
 
-        <div className="grid gap-4">
-          {groups.map((group) => (
-            <SignalGroupPanel key={group.key} group={group} metrics={group.metrics} groupScore={group.groupScore} />
-          ))}
+        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-center">
+          <FenokSignalRadarHexagon
+            title="Short-term"
+            axes={[]}
+            size="lg"
+            emptyLabel="Phase B 대기"
+          />
+          <FenokSignalRadarHexagon title="Long-term" axes={longTermAxes} size="lg" />
         </div>
+
+        {hasLongTermSignal ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {longTermAxes.map((axis) => (
+              <LongTermAxisLegend key={axis.key} axis={axis} />
+            ))}
+          </div>
+        ) : null}
+
+        <p className="text-[10px] font-bold text-[var(--c-ink-3)]">
+          Fenok 파생 신호 · 매수권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+          {formatCoverage(coverage)}
+        </p>
       </div>
 
       <p className="border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-4 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">

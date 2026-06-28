@@ -524,19 +524,30 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
       );
     }
     case "fenokConvictionScore": {
-      const score = typeof stock.fenokConvictionScore === "number" && Number.isFinite(stock.fenokConvictionScore)
-        ? Math.round(stock.fenokConvictionScore)
+      const shortScore = typeof stock.fenokShortTermScore === "number" && Number.isFinite(stock.fenokShortTermScore)
+        ? Math.round(stock.fenokShortTermScore)
         : null;
-      const call = stock.fenokConvictionCall;
+      const longScore = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
+        ? Math.round(stock.fenokLongTermScore)
+        : null;
       const isPicks = preset === "fenokPicks";
       return (
         <span className={cx("inline-flex flex-col items-end gap-1", isPicks ? "min-w-[140px]" : "min-w-[80px]")}>
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", convictionTone(score, call))}
-            title={convictionTooltip(stock)}
-          >
-            <span aria-hidden="true">{convictionCallLabel(call)}</span>
-            {score ?? "—"}
+          <span className="inline-flex flex-wrap justify-end gap-1">
+            <span
+              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
+              title="단기 Fenok 점수 · 매수권유 아님"
+            >
+              <span aria-hidden="true">단기</span>
+              {shortScore ?? "—"}
+            </span>
+            <span
+              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(longScore))}
+              title="장기 Fenok 점수 · 매수권유 아님"
+            >
+              <span aria-hidden="true">장기</span>
+              {longScore ?? "—"}
+            </span>
           </span>
           {isPicks ? (
             <span className="inline-flex flex-wrap justify-end gap-1">
