@@ -3,9 +3,11 @@
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
-import { FenokSignalRadar } from "@/components/screener/FenokSignalRadar";
+import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
+import { FenokSignalRadarHexagonPair } from "@/components/screener/FenokSignalRadarHexagonPair";
 import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
+import { getSignalHelpEntry, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
@@ -319,6 +321,132 @@ interface MarketFactsData {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+interface DetailLongTermAxis extends FenokSignalRadarHexagonAxis {
+  key: string;
+  helpKey: FenokSignalHelpKey;
+  meta: { tier: string | null; tone: "up" | "warn" | "down" | "neutral" };
+}
+
+interface DetailLongTermAxisConfig {
+  key: string;
+  label: string;
+  scoreKey: keyof ScreenerStock;
+  directionKey?: keyof ScreenerStock;
+  helpKey: FenokSignalHelpKey;
+}
+
+const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
+  {
+    key: "profitability",
+    label: "수익성",
+    scoreKey: "profitabilityScore",
+    directionKey: "profitabilityDirection",
+    helpKey: "profitability",
+  },
+  {
+    key: "growth",
+    label: "성장성",
+    scoreKey: "growthScore",
+    directionKey: "growthDirection",
+    helpKey: "growth",
+  },
+  {
+    key: "upsidePotential",
+    label: "상승 잠재력",
+    scoreKey: "upsidePotentialScore",
+    helpKey: "upsidePotential",
+  },
+  {
+    key: "downsidePressure",
+    label: "하락 압력",
+    scoreKey: "downsidePressureScore",
+    helpKey: "downsidePressure",
+  },
+  {
+    key: "marketSimilarity",
+    label: "동종군 유사도",
+    scoreKey: "marketSimilarityScore",
+    helpKey: "marketSimilarity",
+  },
+  {
+    key: "sp500TrackingSimilarity",
+    label: "S&P500 추종 유사도",
+    scoreKey: "sp500TrackingSimilarityScore",
+    helpKey: "sp500TrackingSimilarity",
+  },
+];
+
+function deriveDetailAxisMeta(
+  score: number | null,
+  helpKey: FenokSignalHelpKey,
+): DetailLongTermAxis["meta"] & { direction: string | null } {
+  const entry = getSignalHelpEntry(helpKey);
+  const band = lookupBand(entry, score);
+  const tier = band?.label ?? null;
+  const tone = band?.tone ?? "neutral";
+  let direction: string | null = null;
+  if (tone === "up") direction = "constructive";
+  if (tone === "warn") direction = "neutral";
+  if (tone === "down") direction = "weak";
+  return { tier, tone, direction };
+}
+
+function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
+  return DETAIL_LONG_TERM_AXIS_CONFIG.map((config) => {
+    const rawScore = stock[config.scoreKey as keyof ScreenerStock];
+    const score = isFiniteNumber(rawScore) ? rawScore : null;
+    const rawDirection = config.directionKey
+      ? stock[config.directionKey as keyof ScreenerStock]
+      : null;
+    const explicitDirection =
+      typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
+    const meta = deriveDetailAxisMeta(score, config.helpKey);
+    return {
+      key: config.key,
+      label: config.label,
+      score,
+      direction: explicitDirection ?? meta.direction,
+      tier: meta.tier,
+      helpKey: config.helpKey,
+      meta,
+    };
+  });
+}
+
+function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
+  const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2">
+      <span className="min-w-0 flex-1 truncate text-[11px] font-black text-[var(--c-ink)]">
+        {axis.label}
+      </span>
+      <FenokSignalHelpPopover signal={axis.helpKey} score={axis.score} direction={axis.direction} />
+      {axis.meta.tier && axis.score !== null ? (
+        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-black ${toneClass(axis.meta.tone)}`}>
+          {axis.meta.tier}
+        </span>
+      ) : null}
+      <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
+        {axis.score === null ? "—" : Math.round(axis.score).toString()}
+      </span>
+      <div className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-[var(--c-surface-2)] sm:block">
+        <div
+          className={`h-full rounded-full ${
+            axis.meta.tone === "up"
+              ? "bg-[var(--c-up)]"
+              : axis.meta.tone === "warn"
+                ? "bg-[var(--c-warn)]"
+                : axis.meta.tone === "down"
+                  ? "bg-[var(--c-down)]"
+                  : "bg-[var(--c-line)]"
+          }`}
+          style={{ width: `${width}%` }}
+        />
+      </div>
+    </div>
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -2050,8 +2178,12 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
     );
   }
 
-  const convictionScore = isFiniteNumber(stock?.fenokConvictionScore) ? Math.round(stock.fenokConvictionScore) : null;
+  const convictionScore = isFiniteNumber(stock?.fenokConvictionScore)
+    ? Math.round(stock.fenokConvictionScore)
+    : null;
   const convictionCall = stock?.fenokConvictionCall ?? null;
+  const longTermAxes = stock ? buildDetailLongTermAxes(stock) : [];
+  const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
 
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 p-4">
@@ -2069,39 +2201,22 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
               {convictionScore ?? "—"}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <FenokSignalRadar data={stock} size="sm" />
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { label: "수익성", score: stock.profitabilityScore, direction: stock.profitabilityDirection, tone: "signal" as const },
-                { label: "내구 수익성", score: stock.durabilityProfitabilityScore, direction: null, tone: "signal" as const, coverage: stock.durabilityProfitabilityCoverage },
-                { label: "성장", score: stock.growthScore, direction: stock.growthDirection, tone: "signal" as const },
-                { label: "기술·자금", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection, tone: "signal" as const },
-                { label: "상방 잠재력", score: stock.upsidePotentialScore, direction: null, tone: "signal" as const },
-                { label: "하방 압력", score: stock.downsidePressureScore, direction: null, tone: "risk" as const },
-              ].map((item) => {
-                const score = isFiniteNumber(item.score) ? Math.round(item.score) : null;
-                const coverage = isFiniteNumber(item.coverage) ? item.coverage : null;
-                return (
-                  <span
-                    key={item.label}
-                    className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-[2px] text-[10px] font-black tabular-nums ${item.tone === "risk" ? downsideRiskTone(score) : signalScoreTone(score)}`}
-                    title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
-                  >
-                    <span aria-hidden="true">{item.label}</span>
-                    {item.coverage !== undefined && coverage !== null ? (
-                      <span className="text-[9px] font-bold text-[var(--c-ink-3)]">({Math.round(coverage * 100)}%)</span>
-                    ) : null}
-                    <FenokSignalHelpPopover
-                      signal={LABEL_TO_HELP_KEY[item.label] ?? "profitability"}
-                      score={score}
-                      direction={item.direction}
-                    />
-                    {score ?? "—"}
-                  </span>
-                );
-              })}
-            </div>
+          <div className="space-y-4">
+            <FenokSignalRadarHexagonPair
+              leftTitle="Short-term"
+              rightTitle="Long-term"
+              leftAxes={[]}
+              rightAxes={longTermAxes}
+              leftEmptyLabel="Phase B 대기"
+              size="lg"
+            />
+            {hasLongTermSignal ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {longTermAxes.map((axis) => (
+                  <DetailAxisLegend key={axis.key} axis={axis} />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       )}
