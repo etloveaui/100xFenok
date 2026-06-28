@@ -67,7 +67,7 @@ function directionLabel(value: string | null | undefined): string {
 }
 
 const SIZE_CLASS = {
-  sm: "h-[80px] w-[80px]",
+  sm: "h-[80px] w-[104px]",
   md: "h-[160px] w-[160px]",
 } as const;
 
@@ -104,6 +104,12 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: {
+          left: size === "md" ? 12 : 8,
+          right: size === "md" ? 12 : 8,
+        },
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -127,6 +133,7 @@ export function FenokSignalRadar({ data, size = "sm" }: FenokSignalRadarProps) {
           pointLabels: {
             color: theme.token("ink2"),
             font: { size: size === "md" ? 11 : 9, weight: "bold" as const },
+            padding: size === "md" ? 6 : 4,
           },
           ticks: { display: false },
         },
