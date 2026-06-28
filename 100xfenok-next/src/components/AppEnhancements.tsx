@@ -38,8 +38,8 @@ const dockItems = [
     label: EXPLORE_NAV_LABEL,
     icon: '◇',
     isActive: (pathname: string) =>
-      pathname === ROUTES.home ||
       pathname === ROUTES.explore ||
+      pathname === ROUTES.workbench ||
       pathname === ROUTES.sectors ||
       isRouteOrChild(pathname, ROUTES.etfs) ||
       pathname === ROUTES.screener ||

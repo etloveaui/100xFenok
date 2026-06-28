@@ -40,6 +40,7 @@ export default function Navbar() {
     pathname === ROUTES.radar ||
     isRouteOrChild(pathname, ROUTES.posts) ||
     pathname === ROUTES.explore ||
+    pathname === ROUTES.workbench ||
     pathname === ROUTES.sectors ||
     pathname === ROUTES.screener ||
     pathname === ROUTES.superinvestors ||
