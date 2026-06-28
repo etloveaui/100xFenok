@@ -25,8 +25,10 @@ import {
   coerceActionFilter,
   coerceConnectionFilter,
   coerceFenokEdgeFilter,
+  parseFilterNumber,
   PRESET_KEYS,
   PRESET_LABEL,
+  MOBILE_PRESET_KEYS,
   type ActionFilter,
   type ConnectionFilter,
   type FenokEdgeFilter,
@@ -544,39 +546,6 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
       return "—";
   }
 }
-
-const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  basic: ["marketCap", "per", "pbr", "dividendYield", "return12m", "roe", "opm", "eps"],
-  action: ["actionScore", "fenokEdgeScore", "marketCap", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "connectionCount"],
-  connected: ["connectionCount", "guruHolders", "forwardPeFy1", "return12m", "marketCap", "perBandCurrent", "dividendYield", "ret1y"],
-  value: ["per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
-  estimate: [
-    "forwardPeFy1",
-    "forwardPeFy2",
-    "forwardPeFy3",
-    "forwardEpsFy1",
-    "forwardEpsFy2",
-    "forwardEpsFy3",
-    "revenueGrowthFy1",
-    "revenueGrowthFy2",
-    "revenueGrowthFy3",
-    "epsGrowthFy1",
-    "epsGrowthFy2",
-    "epsGrowthFy3",
-    "roeFy1",
-    "roeFy2",
-    "roeFy3",
-    "operatingMarginFy1",
-    "operatingMarginFy2",
-    "operatingMarginFy3",
-    "grossMarginFy1",
-    "grossMarginFy2",
-    "grossMarginFy3",
-  ],
-  momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
-  dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
-  guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
-};
 
 function columnLabel(key: ScreenerSortKey): string {
   return COLUMNS.find((column) => column.key === key)?.label ?? key;
@@ -1106,43 +1075,25 @@ export default function ScreenerClient({
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const perMinValue = perMin.trim() === "" ? null : Number(perMin);
-    const perMinValid = perMinValue !== null && !Number.isNaN(perMinValue);
-    const perMaxValue = perMax.trim() === "" ? null : Number(perMax);
-    const perMaxValid = perMaxValue !== null && !Number.isNaN(perMaxValue);
-    const forwardPerMaxValue = forwardPerMax.trim() === "" ? null : Number(forwardPerMax);
-    const forwardPerMaxValid = forwardPerMaxValue !== null && !Number.isNaN(forwardPerMaxValue);
-    const revenueGrowthMinValue = revenueGrowthMin.trim() === "" ? null : Number(revenueGrowthMin);
-    const revenueGrowthMinValid = revenueGrowthMinValue !== null && !Number.isNaN(revenueGrowthMinValue);
-    const epsGrowthMinValue = epsGrowthMin.trim() === "" ? null : Number(epsGrowthMin);
-    const epsGrowthMinValid = epsGrowthMinValue !== null && !Number.isNaN(epsGrowthMinValue);
-    const dividendYieldMinValue = dividendYieldMin.trim() === "" ? null : Number(dividendYieldMin);
-    const dividendYieldMinValid = dividendYieldMinValue !== null && !Number.isNaN(dividendYieldMinValue);
-    const dividendYieldMaxValue = dividendYieldMax.trim() === "" ? null : Number(dividendYieldMax);
-    const dividendYieldMaxValid = dividendYieldMaxValue !== null && !Number.isNaN(dividendYieldMaxValue);
-    const roeFy1MinValue = roeFy1Min.trim() === "" ? null : Number(roeFy1Min);
-    const roeFy1MinValid = roeFy1MinValue !== null && !Number.isNaN(roeFy1MinValue);
-    const ret3yMinValue = ret3yMin.trim() === "" ? null : Number(ret3yMin);
-    const ret3yMinValid = ret3yMinValue !== null && !Number.isNaN(ret3yMinValue);
-    const ret5yMinValue = ret5yMin.trim() === "" ? null : Number(ret5yMin);
-    const ret5yMinValid = ret5yMinValue !== null && !Number.isNaN(ret5yMinValue);
-    const marketCapMinValue = marketCapMin.trim() === "" ? null : Number(marketCapMin);
-    const marketCapMinValid = marketCapMinValue !== null && !Number.isNaN(marketCapMinValue);
-    const marketCapMaxValue = marketCapMax.trim() === "" ? null : Number(marketCapMax);
-    const marketCapMaxValid = marketCapMaxValue !== null && !Number.isNaN(marketCapMaxValue);
-    const pbrMinValue = pbrMin.trim() === "" ? null : Number(pbrMin);
-    const pbrMinValid = pbrMinValue !== null && !Number.isNaN(pbrMinValue);
-    const pbrMaxValue = pbrMax.trim() === "" ? null : Number(pbrMax);
-    const pbrMaxValid = pbrMaxValue !== null && !Number.isNaN(pbrMaxValue);
-    const pegMaxValue = pegMax.trim() === "" ? null : Number(pegMax);
-    const pegMaxValid = pegMaxValue !== null && !Number.isNaN(pegMaxValue);
-    const roeMinValue = roeMin.trim() === "" ? null : Number(roeMin);
-    const roeMinValid = roeMinValue !== null && !Number.isNaN(roeMinValue);
-    const opmMinValue = opmMin.trim() === "" ? null : Number(opmMin);
-    const opmMinValid = opmMinValue !== null && !Number.isNaN(opmMinValue);
-    const return12mMinValue = return12mMin.trim() === "" ? null : Number(return12mMin);
-    const return12mMinValid = return12mMinValue !== null && !Number.isNaN(return12mMinValue);
-    const fenokEdgeMinValue = fenokEdgeMin === "" ? null : Number(fenokEdgeMin);
+    const perMinValue = parseFilterNumber(perMin);
+    const perMaxValue = parseFilterNumber(perMax);
+    const forwardPerMaxValue = parseFilterNumber(forwardPerMax);
+    const revenueGrowthMinValue = parseFilterNumber(revenueGrowthMin);
+    const epsGrowthMinValue = parseFilterNumber(epsGrowthMin);
+    const dividendYieldMinValue = parseFilterNumber(dividendYieldMin);
+    const dividendYieldMaxValue = parseFilterNumber(dividendYieldMax);
+    const roeFy1MinValue = parseFilterNumber(roeFy1Min);
+    const ret3yMinValue = parseFilterNumber(ret3yMin);
+    const ret5yMinValue = parseFilterNumber(ret5yMin);
+    const marketCapMinValue = parseFilterNumber(marketCapMin);
+    const marketCapMaxValue = parseFilterNumber(marketCapMax);
+    const pbrMinValue = parseFilterNumber(pbrMin);
+    const pbrMaxValue = parseFilterNumber(pbrMax);
+    const pegMaxValue = parseFilterNumber(pegMax);
+    const roeMinValue = parseFilterNumber(roeMin);
+    const opmMinValue = parseFilterNumber(opmMin);
+    const return12mMinValue = parseFilterNumber(return12mMin);
+    const fenokEdgeMinValue = parseFilterNumber(fenokEdgeMin);
 
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
@@ -1158,24 +1109,24 @@ export default function ScreenerClient({
       }
       if (fenokEdgeMinValue !== null && (stock.fenokEdgeScore === null || stock.fenokEdgeScore === undefined || stock.fenokEdgeScore < fenokEdgeMinValue)) return false;
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
-      if (perMinValid && (stock.per === null || stock.per < (perMinValue as number))) return false;
-      if (perMaxValid && (stock.per === null || stock.per <= 0 || stock.per > (perMaxValue as number))) return false;
-      if (forwardPerMaxValid && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > (forwardPerMaxValue as number))) return false;
-      if (revenueGrowthMinValid && ((stock.revenueGrowthFy1 ?? null) === null || (stock.revenueGrowthFy1 as number) < (revenueGrowthMinValue as number))) return false;
-      if (epsGrowthMinValid && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < (epsGrowthMinValue as number))) return false;
-      if (dividendYieldMinValid && (stock.dividendYield === null || (stock.dividendYield * 100) < (dividendYieldMinValue as number))) return false;
-      if (dividendYieldMaxValid && (stock.dividendYield === null || (stock.dividendYield * 100) > (dividendYieldMaxValue as number))) return false;
-      if (roeFy1MinValid && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < (roeFy1MinValue as number))) return false;
-      if (ret3yMinValid && (stock.ret3y === null || (stock.ret3y * 100) < (ret3yMinValue as number))) return false;
-      if (ret5yMinValid && (stock.ret5y === null || (stock.ret5y * 100) < (ret5yMinValue as number))) return false;
-      if (marketCapMinValid && (stock.marketCap === null || stock.marketCap < (marketCapMinValue as number) * 1000)) return false;
-      if (marketCapMaxValid && (stock.marketCap === null || stock.marketCap > (marketCapMaxValue as number) * 1000)) return false;
-      if (pbrMinValid && (stock.pbr === null || stock.pbr < (pbrMinValue as number))) return false;
-      if (pbrMaxValid && (stock.pbr === null || stock.pbr > (pbrMaxValue as number))) return false;
-      if (pegMaxValid && (stock.peg === null || stock.peg > (pegMaxValue as number))) return false;
-      if (roeMinValid && (stock.roe === null || stock.roe * 100 < (roeMinValue as number))) return false;
-      if (opmMinValid && (stock.opm === null || stock.opm * 100 < (opmMinValue as number))) return false;
-      if (return12mMinValid && (stock.return12m === null || stock.return12m * 100 < (return12mMinValue as number))) return false;
+      if (perMinValue !== null && (stock.per === null || stock.per < perMinValue)) return false;
+      if (perMaxValue !== null && (stock.per === null || stock.per <= 0 || stock.per > perMaxValue)) return false;
+      if (forwardPerMaxValue !== null && ((stock.forwardPeFy1 ?? null) === null || (stock.forwardPeFy1 as number) <= 0 || (stock.forwardPeFy1 as number) > forwardPerMaxValue)) return false;
+      if (revenueGrowthMinValue !== null && ((stock.revenueGrowthFy1 ?? null) === null || (stock.revenueGrowthFy1 as number) < revenueGrowthMinValue)) return false;
+      if (epsGrowthMinValue !== null && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < epsGrowthMinValue)) return false;
+      if (dividendYieldMinValue !== null && (stock.dividendYield === null || (stock.dividendYield * 100) < dividendYieldMinValue)) return false;
+      if (dividendYieldMaxValue !== null && (stock.dividendYield === null || (stock.dividendYield * 100) > dividendYieldMaxValue)) return false;
+      if (roeFy1MinValue !== null && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < roeFy1MinValue)) return false;
+      if (ret3yMinValue !== null && (stock.ret3y === null || (stock.ret3y * 100) < ret3yMinValue)) return false;
+      if (ret5yMinValue !== null && (stock.ret5y === null || (stock.ret5y * 100) < ret5yMinValue)) return false;
+      if (marketCapMinValue !== null && (stock.marketCap === null || stock.marketCap < marketCapMinValue * 1000)) return false;
+      if (marketCapMaxValue !== null && (stock.marketCap === null || stock.marketCap > marketCapMaxValue * 1000)) return false;
+      if (pbrMinValue !== null && (stock.pbr === null || stock.pbr < pbrMinValue)) return false;
+      if (pbrMaxValue !== null && (stock.pbr === null || stock.pbr > pbrMaxValue)) return false;
+      if (pegMaxValue !== null && (stock.peg === null || stock.peg > pegMaxValue)) return false;
+      if (roeMinValue !== null && (stock.roe === null || stock.roe * 100 < roeMinValue)) return false;
+      if (opmMinValue !== null && (stock.opm === null || stock.opm * 100 < opmMinValue)) return false;
+      if (return12mMinValue !== null && (stock.return12m === null || stock.return12m * 100 < return12mMinValue)) return false;
 
       if (bandFilter) {
         const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);

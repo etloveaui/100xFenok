@@ -80,6 +80,39 @@ export const PRESET_LABEL: Record<ColumnPreset, string> = {
   guru: "대가 관심",
 };
 
+export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
+  basic: ["marketCap", "per", "pbr", "dividendYield", "return12m", "roe", "opm", "eps"],
+  action: ["actionScore", "fenokEdgeScore", "marketCap", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "connectionCount"],
+  connected: ["connectionCount", "guruHolders", "forwardPeFy1", "return12m", "marketCap", "perBandCurrent", "dividendYield", "ret1y"],
+  value: ["per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
+  estimate: [
+    "forwardPeFy1",
+    "forwardPeFy2",
+    "forwardPeFy3",
+    "forwardEpsFy1",
+    "forwardEpsFy2",
+    "forwardEpsFy3",
+    "revenueGrowthFy1",
+    "revenueGrowthFy2",
+    "revenueGrowthFy3",
+    "epsGrowthFy1",
+    "epsGrowthFy2",
+    "epsGrowthFy3",
+    "roeFy1",
+    "roeFy2",
+    "roeFy3",
+    "operatingMarginFy1",
+    "operatingMarginFy2",
+    "operatingMarginFy3",
+    "grossMarginFy1",
+    "grossMarginFy2",
+    "grossMarginFy3",
+  ],
+  momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
+  dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
+  guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
+};
+
 export function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {
   return value && value in PRESET_KEYS ? (value as ColumnPreset) : null;
 }
@@ -109,6 +142,13 @@ export function coerceConnectionFilter(value: string | null | undefined): Connec
 export function coerceFenokEdgeFilter(value: string | null | undefined): FenokEdgeFilter {
   if (value === "70" || value === "60" || value === "50") return value;
   return "";
+}
+
+export function parseFilterNumber(raw: string): number | null {
+  const value = raw.trim();
+  if (value === "") return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
 }
 
 function firstParam(value: string | string[] | undefined): string {
