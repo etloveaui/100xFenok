@@ -41,7 +41,7 @@ Current local snapshot:
 | --- | --- | --- | --- | --- |
 | S0 active stock scoring | PUBLIC, not DAILY/GATED | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; strict `qa:fenok-s0-daily-gated` remains red | `active_stock_scoring_current.requirements.daily=false`, `gated=false` |
 | S1 stock candidates | NORMALIZED / JOINED_READY staging, not scored | YF scheduled branch processes one rolling shard per run, capped at 140; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates, 1,066 scored/public stocks, 112 promotion-audit gap; current joined gate is 108 joined-ready and 4 blocked | not scored/public/daily/gated as expanded stock coverage; remaining joined blockers are DAY, HOLX, MMC, STRC |
-| S3 ETF lane | PUBLIC, not DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; StockAnalysis history report shows 12 required-history gaps, 1 fetchable, 11 inception-limited | `daily=false`, `gated=false`; the fetchable required-history gap must clear before paid-ready ETF wording |
+| S3 ETF lane | PUBLIC + DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; StockAnalysis history report shows 12 required-history gaps, 0 fetchable, 12 inception-limited after QNDX reclassification | `daily=true`, `gated=true`; current required-history gaps are inception-limited and do not block ETF paid-ready wording by themselves |
 
 Operational command:
 
@@ -49,20 +49,20 @@ Operational command:
 npm --prefix 100xfenok-next run qa:fenok-daily-accumulation
 ```
 
-The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. If ETF public-surface proof exists, it reports S3 as `PUBLIC` and still blocks any `done` wording until DAILY/GATED readiness is true.
+The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. ETF `done` wording is allowed only when the compact public surface, freshness gate, and no-fetchable-required-history gate are true together.
 
 Operator readout rule:
 - Each S0/S1/S3 row prints `status: sources=[...] blocking_gates=... done_claim_allowed=...`.
 - Treat `sources=[...]` as the latest available derived source dates/timestamps, not as paid-ready proof.
 - If `blocking_gates` is non-empty or `done_claim_allowed=false`, do not call that layer PUBLIC + DAILY + GATED.
 - `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip.
-- `ETF evidence` separates public surface proof from `daily`/`gated`; current blocker is the remaining fetchable required-history gap.
+- `ETF evidence` separates public surface proof from `daily`/`gated`; current required-history gaps are all inception-limited, so there is no fetchable required-history blocker.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it is expected to stay red until the S0 `daily` and `gated` requirements become true.
 
 ## Resource Controls
 
 - YF daily schedule is shard-limited and history-gap-limited.
-- YF daily ETF initial fill is expected to take multiple scheduled runs because each run processes one rolling shard capped at 140 candidates; large history-gap sets require repeated shard cycles before clearing. After gaps shrink, `history_gaps_only` and `max_age_hours` keep runs bounded.
+- YF daily ETF initial fill is expected to take multiple scheduled runs because each run processes one rolling shard capped at 140 candidates; large history-gap sets require repeated shard cycles before clearing. After gaps shrink, `history_gaps_only` and `max_age_hours` keep runs bounded; newly launched ETFs can remain inception-limited without blocking the ETF lane.
 - S1 stock candidates are data-fill candidates only. `stock_action_index`, `fenok_signals`, and public stock scoring remain S0-only until a separate promotion/scoring-chain contract lands.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --scoring-contract-report --check` is the first S1 scoring-chain contract artifact. It is stdout-only, non-public, non-daily, non-gated, keeps all score outputs null, and does not mutate `stock_action_index`, `fenok_signals`, or public mirrors.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --score-preview-report --check` adds the next non-public S1 preview step. It uses the shared S0 scoring core, emits only stdout preview rows for joined-ready S1 stocks, keeps missing/unsupported axes explicit as `null` / `미확인`, and still does not mutate public S0, `stock_action_index`, `fenok_signals`, or public mirrors.

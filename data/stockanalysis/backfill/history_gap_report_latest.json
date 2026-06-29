@@ -1,6 +1,6 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-06-29T14:54:15.810Z",
+  "generated_at": "2026-06-29T17:50:12.154Z",
   "required_history_periods": [
     "monthly_3y",
     "monthly_5y"
@@ -8,20 +8,20 @@
   "primary_stockanalysis_detail_files": 4584,
   "complete_required_history": 4572,
   "missing_required_history": 12,
-  "fetchable_required_history": 1,
-  "inception_limited_required_history": 11,
+  "fetchable_required_history": 0,
+  "inception_limited_required_history": 12,
   "coverage_pct": 99.74,
   "missing_by_period": {
     "monthly_3y": 12,
     "monthly_5y": 12
   },
   "fetchable_by_period": {
-    "monthly_3y": 1,
-    "monthly_5y": 1
+    "monthly_3y": 0,
+    "monthly_5y": 0
   },
   "inception_limited_by_period": {
-    "monthly_3y": 11,
-    "monthly_5y": 11
+    "monthly_3y": 12,
+    "monthly_5y": 12
   },
   "samples": {
     "missing": [
@@ -148,29 +148,15 @@
           "monthly_3y",
           "monthly_5y"
         ],
-        "fetchable_missing": [
+        "fetchable_missing": [],
+        "inception_limited_missing": [
           "monthly_3y",
           "monthly_5y"
         ],
-        "inception_limited_missing": [],
-        "inception_date": null
+        "inception_date": "2026-06-23"
       }
     ],
-    "fetchable": [
-      {
-        "ticker": "QNDX",
-        "missing": [
-          "monthly_3y",
-          "monthly_5y"
-        ],
-        "fetchable_missing": [
-          "monthly_3y",
-          "monthly_5y"
-        ],
-        "inception_limited_missing": [],
-        "inception_date": null
-      }
-    ],
+    "fetchable": [],
     "inception_limited": [
       {
         "ticker": "BITA",
@@ -290,7 +276,7 @@
         "inception_date": "2025-08-13"
       },
       {
-        "ticker": "SCLS",
+        "ticker": "QNDX",
         "missing": [
           "monthly_3y",
           "monthly_5y"
@@ -300,7 +286,7 @@
           "monthly_3y",
           "monthly_5y"
         ],
-        "inception_date": "2025-11-03"
+        "inception_date": "2026-06-23"
       }
     ],
     "complete": [
@@ -342,7 +328,7 @@
     ]
   },
   "incremental_plan": {
-    "generated_at": "2026-06-29T14:53:59Z",
+    "generated_at": "2026-06-29T17:49:58Z",
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
@@ -351,17 +337,15 @@
       "monthly_5y"
     ],
     "counts": {
-      "etfs_planned": 1,
-      "incremental_selected": 1,
-      "incremental_candidates": 1,
-      "history_gap": 1,
-      "inception_limited_history_gap": 3,
+      "etfs_planned": 0,
+      "incremental_selected": 0,
+      "incremental_candidates": 0,
+      "history_gap": 0,
+      "inception_limited_history_gap": 4,
       "total_history_gap": 4,
       "cooldown_skipped": 0
     },
-    "first5": [
-      "QNDX"
-    ],
+    "first5": [],
     "matches_current_gap": true,
     "matches_total_gap": false,
     "matches_inception_limited": false,
@@ -391,13 +375,9 @@
     "stockanalysis_universe_denominator": 5333
   },
   "recommended_dispatch": {
-    "status": "owner_gated",
+    "status": "not_recommended",
     "workflow": "fetch-stockanalysis.yml",
-    "inputs": {
-      "history_gaps_only": "true",
-      "required_history_periods": "monthly_3y,monthly_5y",
-      "incremental_etf_limit": "120"
-    },
-    "note": "External StockAnalysis calls; run only after explicit approval."
+    "inputs": null,
+    "note": "All current gaps are inception-limited; a live fetch is expected to be futile until the funds age into the requested windows."
   }
 }

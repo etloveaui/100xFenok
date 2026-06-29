@@ -12,8 +12,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - Current local scored denominator: 4,484 eligible vanilla ETFs out of 5,333 StockAnalysis ETF records.
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
-- The coverage index still holds `daily=false` and `gated=false` while a fetchable required-history gap remains.
-- This is still not a paid-ready ETF product claim until PUBLIC + DAILY + GATED are proven together.
+- The coverage index now holds `daily=true` and `gated=true` after the last fetchable required-history gap (`QNDX`) was reclassified as inception-limited.
+- This is a paid-ready ETF lane claim only for the separate `asset_type=etf` scoring lane, after PUBLIC + DAILY + GATED are proven together.
 
 ## Signal Families
 
@@ -65,7 +65,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - requires no ETF row leakage into the stock signal lens
 - `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`
   - includes the ETF gate
-  - still does not claim ETF is PUBLIC + DAILY + GATED
+  - fails closed if the ETF public surface, freshness evidence, or fetchable required-history gate regresses
 
 ## Readiness Flip Criteria
 
@@ -73,7 +73,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `daily=true` only after coverage index consumes ETF freshness evidence, including ETF signal timestamp/history-gap status and a bounded max-age rule.
 - `gated=true` only after `qa:fenok-etf-signal-gate` and the ETF freshness gate are both wired into the same fail-closed readiness track.
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
-- Current status is PUBLIC, not DAILY/GATED. The remaining fetchable required-history gap keeps `daily=false`, `gated=false`, and `public_done_claim_allowed=false`.
+- Current status is PUBLIC + DAILY/GATED. QNDX moved from fetchable required-history gap to inception-limited, leaving `fetchable_required_history=0`, `daily=true`, `gated=true`, and `public_done_claim_allowed=true`.
 
 ## Daily Data Prerequisite
 
@@ -85,10 +85,10 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - one rolling shard per schedule, currently capped at 140 tickers per run
 - This is a bounded rotating shard, not a true all-ETF daily refresh.
 
-## Remaining Blockers
+## Remaining Work
 
-1. Clear the remaining fetchable ETF required-history gap, currently `QNDX`.
-2. Prove a daily all-ETF or eligible-ETF price/history refresh path.
+1. Keep the scheduled ETF freshness loop running so new ETFs move from fetchable gaps to complete or inception-limited status.
+2. Prove a daily all-ETF or eligible-ETF price/history refresh path beyond the current bounded rotating shard.
 3. Keep the ETF lane separate from stock scoring and denominator claims.
-4. Wire ETF freshness evidence into fail-closed gated readiness after the daily gap clears.
+4. Keep ETF freshness evidence wired into fail-closed gated readiness.
 5. Keep `PUBLIC + DAILY + GATED` as the only paid-ready completion claim.
