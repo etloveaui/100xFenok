@@ -1,0 +1,327 @@
+{
+  "schema_version": "fenok-s1-public-mutation-enable-readiness/v0.1",
+  "generated_at": "2026-06-29T21:28:21.536Z",
+  "purpose": "Admin-only S1 public mutation enable-readiness manifest; no enabled public write is executed.",
+  "contract_doc": "docs/planning/CONTRACT_fenok_s1_stock_promotion_scoring_v0_1_20260630.md",
+  "source_guard_command": "node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check --enable-public-mutation --no-write --json",
+  "source_guard_schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
+  "public_mutation_executed": false,
+  "default_fail_closed": true,
+  "enable_flag_required": "--enable-public-mutation",
+  "counts": {
+    "public_s0_before": 1066,
+    "promotion_rows": 108,
+    "excluded_blocked_rows": 4,
+    "public_s0_after_if_enabled": 1174,
+    "s0_overlap_rows": 0,
+    "etf_rows": 0,
+    "non_stock_rows": 0,
+    "fake_score_rows": 0,
+    "files_written": 1,
+    "public_files_written": 0,
+    "would_change_target_files": 4
+  },
+  "target_set": [
+    {
+      "path": "data/computed/stock_action_index.json",
+      "would_change": true,
+      "public_file": false,
+      "before_rows": 1066,
+      "after_rows_if_enabled": 1174,
+      "row_delta_if_enabled": 108,
+      "generated_by": "scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs",
+      "rollback_required": true
+    },
+    {
+      "path": "data/computed/fenok_signals.json",
+      "would_change": true,
+      "public_file": false,
+      "before_rows": 1066,
+      "after_rows_if_enabled": 1174,
+      "row_delta_if_enabled": 108,
+      "generated_by": "scripts/build-fenok-signals.mjs",
+      "rollback_required": true
+    },
+    {
+      "path": "data/computed/fenok_signals_summary.json",
+      "would_change": true,
+      "public_file": false,
+      "before_rows": 1066,
+      "after_rows_if_enabled": 1174,
+      "row_delta_if_enabled": 108,
+      "generated_by": "scripts/build-fenok-signals.mjs",
+      "rollback_required": true
+    },
+    {
+      "path": "100xfenok-next/public/data/computed/fenok_signals_summary.json",
+      "would_change": true,
+      "public_file": true,
+      "before_rows": 1066,
+      "after_rows_if_enabled": 1174,
+      "row_delta_if_enabled": 108,
+      "generated_by": "scripts/build-fenok-signals.mjs",
+      "rollback_required": true
+    }
+  ],
+  "forbidden_targets": [
+    "100xfenok-next/public/data/computed/fenok_signals.json"
+  ],
+  "rollback_plan": {
+    "all_or_none": true,
+    "restore_previous_payloads": true,
+    "rollback_targets": [
+      "data/computed/stock_action_index.json",
+      "data/computed/fenok_signals.json",
+      "data/computed/fenok_signals_summary.json",
+      "100xfenok-next/public/data/computed/fenok_signals_summary.json"
+    ],
+    "partial_keep_promoted_rows_allowed": false
+  },
+  "ticker_delta": {
+    "additions_count": 108,
+    "removals_count": 0,
+    "duplicate_current_symbols_count": 0,
+    "additions": [
+      "ACGL",
+      "AES",
+      "AIZ",
+      "AMCR",
+      "APA",
+      "APO",
+      "ARE",
+      "ARES",
+      "AVB",
+      "AVY",
+      "AXON",
+      "BEN",
+      "BF.B",
+      "BG",
+      "BK",
+      "BR",
+      "BRO",
+      "BXP",
+      "CAG",
+      "CBOE",
+      "CCEP",
+      "CF",
+      "CFG",
+      "CINF",
+      "CPAY",
+      "CPB",
+      "CPT",
+      "CRL",
+      "CTAS",
+      "CTRA",
+      "DOC",
+      "DVA",
+      "EFX",
+      "EG",
+      "EPAM",
+      "EQR",
+      "ERIE",
+      "ESS",
+      "ETR",
+      "EXR",
+      "FDS",
+      "FDXF",
+      "FISV",
+      "FITB",
+      "FRT",
+      "GL",
+      "GPN",
+      "HAS",
+      "HBAN",
+      "HIG",
+      "HII",
+      "HSIC",
+      "HST",
+      "HWM",
+      "IBKR",
+      "INVH",
+      "IP",
+      "IRM",
+      "IVZ",
+      "J",
+      "KEY",
+      "L",
+      "LH",
+      "LW",
+      "MAA",
+      "MGM",
+      "MOH",
+      "MOS",
+      "MRSH",
+      "MSTR",
+      "MTB",
+      "MTCH",
+      "NCLH",
+      "NDAQ",
+      "NTRS",
+      "NWS",
+      "PAYC",
+      "PDD",
+      "PFG",
+      "PKG",
+      "PSKY",
+      "Q",
+      "REG",
+      "RF",
+      "RJF",
+      "ROL",
+      "SATS",
+      "SNA",
+      "SW",
+      "SYF",
+      "TAP",
+      "TDG",
+      "TECH",
+      "TEL",
+      "TKO",
+      "TXT",
+      "UAL",
+      "UDR",
+      "URI",
+      "VICI",
+      "VLTO",
+      "VRSN",
+      "VRT",
+      "WRB",
+      "WTW",
+      "WY",
+      "WYNN",
+      "ZBH"
+    ],
+    "removals": [],
+    "duplicate_current_symbols": [],
+    "blocked_excluded": [
+      "DAY",
+      "HOLX",
+      "MMC",
+      "STRC"
+    ]
+  },
+  "score_field_policy": {
+    "score_source": "scripts/stock-action-score-core.mjs",
+    "score_contract_version": "action-score-v0.3.1",
+    "source_preview_fields": [
+      "action_score",
+      "signal_score",
+      "coverage_ratio",
+      "confidence_label",
+      "action_bucket",
+      "action_label",
+      "action_reasons",
+      "families"
+    ],
+    "stock_action_output_field_map": {
+      "action_score": "actionScore",
+      "signal_score": "signalScore",
+      "coverage_ratio": "coverageRatio",
+      "confidence_label": "confidenceLabel",
+      "action_bucket": "actionBucket",
+      "action_label": "actionLabel",
+      "action_reasons": "actionReasons",
+      "families": "families"
+    },
+    "excluded_or_null_axes": {
+      "missing": {
+        "global_scouter_core_row": 108,
+        "global_scouter_detail_file": 108,
+        "revision_movers": 108,
+        "sec13f_enhanced_consensus": 42,
+        "sec13f_guru_holders": 34,
+        "slickcharts_dividends": 7,
+        "slickcharts_returns": 7,
+        "stockanalysis_financials_file": 105,
+        "yf_quarter_closes": 24
+      },
+      "unsupported": {
+        "conviction_entries": 108,
+        "per_band": 108,
+        "sector_smart_money": 108
+      }
+    },
+    "score_family_counts": {
+      "income": {
+        "eligible": 107,
+        "present": 107
+      },
+      "index_structure": {
+        "eligible": 108,
+        "present": 102
+      },
+      "momentum_revision": {
+        "eligible": 108,
+        "present": 108
+      },
+      "sector_smart_money": {
+        "eligible": 0,
+        "present": 0
+      },
+      "smart_money": {
+        "eligible": 108,
+        "present": 74
+      },
+      "valuation": {
+        "eligible": 106,
+        "present": 106
+      }
+    },
+    "missing_value_policy": "Missing or unsupported axes stay null / unavailable; no placeholder, inferred, or copied score fields."
+  },
+  "write_plan": {
+    "command": "node scripts/write-fenok-s1-public-mutation-enable-readiness.mjs --check",
+    "output_file": "data/admin/fenok-s1-public-mutation-enable-readiness.json",
+    "files_written": [
+      "data/admin/fenok-s1-public-mutation-enable-readiness.json"
+    ],
+    "public_files_written": []
+  },
+  "acceptance_checks": [
+    {
+      "id": "enable_readiness_source_guard_passed",
+      "ok": true,
+      "detail": "source_checks=15"
+    },
+    {
+      "id": "enable_readiness_no_actual_public_mutation",
+      "ok": true,
+      "detail": "files_written=0, public_files_written=0"
+    },
+    {
+      "id": "enable_readiness_exact_target_set",
+      "ok": true,
+      "detail": "[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"]"
+    },
+    {
+      "id": "enable_readiness_full_public_signal_forbidden",
+      "ok": true,
+      "detail": "[\"100xfenok-next/public/data/computed/fenok_signals.json\"]"
+    },
+    {
+      "id": "enable_readiness_ticker_delta_matches_counts",
+      "ok": true,
+      "detail": "add=108, remove=0, duplicate=0, blocked=4"
+    },
+    {
+      "id": "enable_readiness_no_etf_or_non_stock",
+      "ok": true,
+      "detail": "etf_rows=0, non_stock_rows=0"
+    },
+    {
+      "id": "enable_readiness_no_fake_scores",
+      "ok": true,
+      "detail": "fake_score_rows=0"
+    },
+    {
+      "id": "enable_readiness_missing_axes_remain_null",
+      "ok": true,
+      "detail": "{\"missing\":{\"global_scouter_core_row\":108,\"global_scouter_detail_file\":108,\"revision_movers\":108,\"sec13f_enhanced_consensus\":42,\"sec13f_guru_holders\":34,\"slickcharts_dividends\":7,\"slickcharts_returns\":7,\"stockanalysis_financials_file\":105,\"yf_quarter_closes\":24},\"unsupported\":{\"conviction_entries\":108,\"per_band\":108,\"sector_smart_money\":108}}"
+    },
+    {
+      "id": "enable_readiness_rollback_targets_exact",
+      "ok": true,
+      "detail": "[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"]"
+    }
+  ]
+}

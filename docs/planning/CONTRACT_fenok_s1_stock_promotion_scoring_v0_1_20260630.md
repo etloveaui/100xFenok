@@ -113,6 +113,12 @@ Explicit-enable no-write guard command:
 npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-guard
 ```
 
+Enable-readiness review command:
+
+```bash
+npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-readiness
+```
+
 Required top-level fields:
 
 - `schema_version`
@@ -194,16 +200,37 @@ same clean worktree:
 14. `100xfenok-next/public/data/computed/fenok_signals.json` remains forbidden.
 15. The rollback target set must exactly match the allowed mutation targets.
 
+## Enable-Readiness Manifest
+
+Before any owner release of `--enable-public-mutation`, the implementation must
+write an admin-only review artifact:
+
+`data/admin/fenok-s1-public-mutation-enable-readiness.json`
+
+The artifact must be generated without executing the enabled public write path.
+It must make these surfaces reviewable:
+
+- exact target files and forbidden public full-signal target;
+- per-target row deltas if the enable flag is later released;
+- full ticker additions/removals and blocked exclusions;
+- score fields included in stock-action rows versus axes that stay null;
+- no ETF/non-stock rows, no S0 overlap, no fake scores;
+- exact rollback target set and all-or-none rollback policy.
+
+Its QA command must keep `public_files_written = 0`.
+
 Minimum QA before any public mutation:
 
 ```bash
 node --check scripts/stock-action-score-core.mjs
 node --check scripts/audit-fenok-stock-promotion-candidates.mjs
 node --check scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs
+node --check scripts/write-fenok-s1-public-mutation-enable-readiness.mjs
 npm --prefix 100xfenok-next run qa:fenok-stock-promotion-audit
 npm --prefix 100xfenok-next run qa:fenok-s1-promotion-gate
 npm --prefix 100xfenok-next run qa:fenok-s1-public-promotion-dry-run
 npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-guard
+npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-readiness
 npm --prefix 100xfenok-next run qa:fenok-public-guard
 npm --prefix 100xfenok-next run qa:fenok-signal-lens
 npm --prefix 100xfenok-next run qa:fenok-edge-readiness
