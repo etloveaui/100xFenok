@@ -156,6 +156,25 @@ function classifyOccGap(row) {
   return "plain_us_collection_or_no_options_policy_required";
 }
 
+function occAttemptStatusByTicker(payload) {
+  const byTicker = new Map();
+  for (const attempt of asArray(payload?.attempts)) {
+    const ticker = normTicker(attempt?.ticker);
+    if (!ticker) continue;
+    const status = String(attempt?.status ?? "").trim();
+    if (status === "no_record" || (status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))) {
+      byTicker.set(ticker, "no_record");
+    } else if (status === "partial_no_record_or_form_gap") {
+      byTicker.set(ticker, "partial_no_record_or_form_gap");
+    } else if (status === "transient_failed") {
+      byTicker.set(ticker, "transient_failed");
+    } else if (status) {
+      byTicker.set(ticker, "failed");
+    }
+  }
+  return byTicker;
+}
+
 function finraMetricReady(row) {
   return Boolean(row)
     && row.confidence === "high"
@@ -268,11 +287,13 @@ function buildAudit({ full }) {
   const occPlainMissing = occMissing.filter(plainUsOccEligible);
   const occClassShareMissing = occMissing.filter(classShareTicker);
   const finraPlainMissing = finraMissing.filter((row) => !hasNonPlainOrForeignSuffix(row));
-  const noRecordAttempts = new Set(asArray(occOptions?.attempts)
-    .filter((attempt) => attempt?.status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))
-    .map((attempt) => normTicker(attempt?.ticker)));
-  const occPlainMissingNoRecord = occPlainMissing.filter((row) => noRecordAttempts.has(rowTicker(row)));
-  const occPlainMissingUnattempted = occPlainMissing.filter((row) => !noRecordAttempts.has(rowTicker(row)));
+  const occAttemptStatuses = occAttemptStatusByTicker(occOptions);
+  const occPlainMissingAttempted = occPlainMissing.filter((row) => occAttemptStatuses.has(rowTicker(row)));
+  const occPlainMissingNoRecord = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "no_record");
+  const occPlainMissingPartialNoRecord = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "partial_no_record_or_form_gap");
+  const occPlainMissingTransientFailed = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "transient_failed");
+  const occPlainMissingFailed = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "failed");
+  const occPlainMissingUnattempted = occPlainMissing.filter((row) => !occAttemptStatuses.has(rowTicker(row)));
 
   const activeTrack = getActiveTrack(coverageIndex);
   const finraSource = getSourceRow(coverageIndex, "us_finra_flow_proxy");
@@ -403,10 +424,14 @@ function buildAudit({ full }) {
         source: "OCC",
         current_gap_count: occMissing.length,
         collectable_plain_us_count: occPlainMissing.length,
+        attempted_unresolved_count: occPlainMissingAttempted.length,
         no_record_attempt_count: occPlainMissingNoRecord.length,
+        partial_no_record_or_form_gap_count: occPlainMissingPartialNoRecord.length,
+        transient_failed_attempt_count: occPlainMissingTransientFailed.length,
+        failed_attempt_count: occPlainMissingFailed.length,
         unattempted_plain_us_count: occPlainMissingUnattempted.length,
         mapping_or_denominator_policy_count: occMissing.length - occPlainMissing.length,
-        next_action: "Run bounded OCC batches for plain US rows or introduce explicit no-listed-options evidence before clearing occ_full_us_source_ready.",
+        next_action: "Do not broad-fetch. Resolve attempted plain-US rows by zero-side partial-row policy or explicit both-side no-listed-options evidence before clearing occ_full_us_source_ready.",
       },
       {
         id: "occ_non_plain_mapping_policy",
@@ -431,7 +456,9 @@ function buildAudit({ full }) {
       finra_placeholder_low_confidence_rows: sampleRows(finraPlaceholderRows, (row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row)))),
       occ_missing: sampleRows(occMissing, classifyOccGap),
       occ_plain_us_collection_or_no_options_policy_required: sampleRows(occPlainMissing, classifyOccGap),
+      occ_plain_attempted_unresolved: sampleRows(occPlainMissingAttempted, classifyOccGap),
       occ_plain_no_record_attempts: sampleRows(occPlainMissingNoRecord, classifyOccGap),
+      occ_plain_partial_no_record_or_form_gap: sampleRows(occPlainMissingPartialNoRecord, classifyOccGap),
       occ_plain_unattempted: sampleRows(occPlainMissingUnattempted, classifyOccGap),
       occ_class_share_symbol_normalization_or_source_gap: sampleRows(occClassShareMissing, classifyOccGap),
       both_finra_and_occ_missing: sampleRows(bothMissing, (row) => `${classifyFinraGap(row)} + ${classifyOccGap(row)}`),

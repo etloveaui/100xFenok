@@ -163,6 +163,25 @@ function classifyOccGap(row) {
   return "plain_us_collection_or_no_options_policy_required";
 }
 
+function occAttemptStatusByTicker(payload) {
+  const byTicker = new Map();
+  for (const attempt of Array.isArray(payload?.attempts) ? payload.attempts : []) {
+    const ticker = normTicker(attempt?.ticker);
+    if (!ticker) continue;
+    const status = String(attempt?.status ?? "").trim();
+    if (status === "no_record" || (status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))) {
+      byTicker.set(ticker, "no_record");
+    } else if (status === "partial_no_record_or_form_gap") {
+      byTicker.set(ticker, "partial_no_record_or_form_gap");
+    } else if (status === "transient_failed") {
+      byTicker.set(ticker, "transient_failed");
+    } else if (status) {
+      byTicker.set(ticker, "failed");
+    }
+  }
+  return byTicker;
+}
+
 function sourceDateFromRows(payload) {
   const rows = Array.isArray(payload?.rows) ? payload.rows : [];
   const dates = unique(rows.map((row) => toIsoDate(row.source_date ?? row.as_of)));
@@ -440,11 +459,13 @@ const finraPlaceholderRows = usRows.filter((row) => {
 const occMissingRows = usRows.filter((row) => !occSet.has(rowTicker(row)));
 const occPlainMissingRows = occMissingRows.filter(plainUsOccEligible);
 const occClassShareMissingRows = occMissingRows.filter(classShareTicker);
-const occNoRecordAttempts = new Set((Array.isArray(occ.attempts) ? occ.attempts : [])
-  .filter((attempt) => attempt?.status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))
-  .map((attempt) => normTicker(attempt?.ticker)));
-const occPlainNoRecordRows = occPlainMissingRows.filter((row) => occNoRecordAttempts.has(rowTicker(row)));
-const occPlainUnattemptedRows = occPlainMissingRows.filter((row) => !occNoRecordAttempts.has(rowTicker(row)));
+const occAttemptStatuses = occAttemptStatusByTicker(occ);
+const occPlainAttemptedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.has(rowTicker(row)));
+const occPlainNoRecordRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "no_record");
+const occPlainPartialNoRecordRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "partial_no_record_or_form_gap");
+const occPlainTransientFailedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "transient_failed");
+const occPlainFailedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "failed");
+const occPlainUnattemptedRows = occPlainMissingRows.filter((row) => !occAttemptStatuses.has(rowTicker(row)));
 
 function computeEtfReadinessEvidence() {
   const maxAgeHours = 48;
@@ -594,12 +615,20 @@ function activeS0BlockingEvidence() {
       derived_gap_breakdown: {
         missing_categories: {
           ...occBreakdown,
+          plain_us_attempted_unresolved_count: occPlainAttemptedRows.length,
           plain_us_no_record_attempt_count: occPlainNoRecordRows.length,
+          plain_us_partial_no_record_or_form_gap_count: occPlainPartialNoRecordRows.length,
+          plain_us_transient_failed_attempt_count: occPlainTransientFailedRows.length,
+          plain_us_failed_attempt_count: occPlainFailedRows.length,
           plain_us_unattempted_count: occPlainUnattemptedRows.length,
         },
         plain_us_collection_or_no_options_policy_required: {
           count: occPlainMissingRows.length,
+          attempted_unresolved_count: occPlainAttemptedRows.length,
           no_record_attempt_count: occPlainNoRecordRows.length,
+          partial_no_record_or_form_gap_count: occPlainPartialNoRecordRows.length,
+          transient_failed_attempt_count: occPlainTransientFailedRows.length,
+          failed_attempt_count: occPlainFailedRows.length,
           unattempted_count: occPlainUnattemptedRows.length,
         },
         non_plain_or_foreign_suffix_requires_universe_mapping: {
@@ -609,7 +638,7 @@ function activeS0BlockingEvidence() {
           count: occClassShareMissingRows.length,
         },
       },
-      next_action: "Run bounded OCC batches or no-options proof for plain US gaps; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms.",
+      next_action: "Do not broad-fetch. Resolve plain-US attempted-unresolved rows by zero-side partial-row policy or durable both-side no-listed-options proof; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms.",
     },
     {
       id: "no_asia_ex_taiwan_gap",

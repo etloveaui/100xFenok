@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T21:42:02.430Z",
+  "generated_at": "2026-06-29T21:51:52.309Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -89,14 +89,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-29T15:35:23.637Z",
-          "age_hours": 6.11,
+          "age_hours": 6.27,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-06-29T18:34:55.089Z",
-          "age_hours": 3.12,
+          "age_hours": 3.28,
           "max_age_hours": 48
         },
         {
@@ -352,13 +352,21 @@
                   "class_share_symbol_normalization_or_source_gap": 2,
                   "non_plain_or_foreign_suffix_requires_universe_mapping": 56,
                   "plain_us_collection_or_no_options_policy_required": 19,
-                  "plain_us_no_record_attempt_count": 0,
-                  "plain_us_unattempted_count": 19
+                  "plain_us_attempted_unresolved_count": 19,
+                  "plain_us_no_record_attempt_count": 6,
+                  "plain_us_partial_no_record_or_form_gap_count": 13,
+                  "plain_us_transient_failed_attempt_count": 0,
+                  "plain_us_failed_attempt_count": 0,
+                  "plain_us_unattempted_count": 0
                 },
                 "plain_us_collection_or_no_options_policy_required": {
                   "count": 19,
-                  "no_record_attempt_count": 0,
-                  "unattempted_count": 19
+                  "attempted_unresolved_count": 19,
+                  "no_record_attempt_count": 6,
+                  "partial_no_record_or_form_gap_count": 13,
+                  "transient_failed_attempt_count": 0,
+                  "failed_attempt_count": 0,
+                  "unattempted_count": 0
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
                   "count": 56
@@ -367,7 +375,7 @@
                   "count": 2
                 }
               },
-              "next_action": "Run bounded OCC batches or no-options proof for plain US gaps; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
+              "next_action": "Do not broad-fetch. Resolve plain-US attempted-unresolved rows by zero-side partial-row policy or durable both-side no-listed-options proof; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
             },
             {
               "id": "no_asia_ex_taiwan_gap",
@@ -410,13 +418,21 @@
                   "class_share_symbol_normalization_or_source_gap": 2,
                   "non_plain_or_foreign_suffix_requires_universe_mapping": 56,
                   "plain_us_collection_or_no_options_policy_required": 19,
-                  "plain_us_no_record_attempt_count": 0,
-                  "plain_us_unattempted_count": 19
+                  "plain_us_attempted_unresolved_count": 19,
+                  "plain_us_no_record_attempt_count": 6,
+                  "plain_us_partial_no_record_or_form_gap_count": 13,
+                  "plain_us_transient_failed_attempt_count": 0,
+                  "plain_us_failed_attempt_count": 0,
+                  "plain_us_unattempted_count": 0
                 },
                 "plain_us_collection_or_no_options_policy_required": {
                   "count": 19,
-                  "no_record_attempt_count": 0,
-                  "unattempted_count": 19
+                  "attempted_unresolved_count": 19,
+                  "no_record_attempt_count": 6,
+                  "partial_no_record_or_form_gap_count": 13,
+                  "transient_failed_attempt_count": 0,
+                  "failed_attempt_count": 0,
+                  "unattempted_count": 0
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
                   "count": 56
@@ -425,7 +441,7 @@
                   "count": 2
                 }
               },
-              "next_action": "Run bounded OCC batches or no-options proof for plain US gaps; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
+              "next_action": "Do not broad-fetch. Resolve plain-US attempted-unresolved rows by zero-side partial-row policy or durable both-side no-listed-options proof; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
             }
           ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
@@ -490,14 +506,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-29T15:35:23.637Z",
-              "age_hours": 6.11,
+              "age_hours": 6.27,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-06-29T18:34:55.089Z",
-              "age_hours": 3.12,
+              "age_hours": 3.28,
               "max_age_hours": 48
             },
             {
@@ -558,7 +574,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T21:42:02.430Z"
+        "generated_at": "2026-06-29T21:51:52.309Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -601,14 +617,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-29T15:35:23.637Z",
-        "age_hours": 6.11,
+        "age_hours": 6.27,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-06-29T18:34:55.089Z",
-        "age_hours": 3.12,
+        "age_hours": 3.28,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 12,
