@@ -284,7 +284,7 @@ function inferCountryScope(identity) {
   return null;
 }
 
-function evidenceFamiliesForTicker(item, row, {
+function evidenceFamilyFlagsForTicker(item, row, {
   yfSet,
   secSet,
   slickUniverseSet,
@@ -293,13 +293,28 @@ function evidenceFamiliesForTicker(item, row, {
   rawMasterSet,
 }) {
   const sources = row?.sources ?? {};
+  return {
+    yf: sources.yf === true || yfSet.has(item),
+    stockanalysis: sources.stockanalysis === true
+      || sources.stockanalysis_yf_fallback === true
+      || stockanalysisSurfaceSet.has(item),
+    slickcharts: sources.slickcharts === true
+      || slickUniverseSet.has(item)
+      || slickStockFileSet.has(item),
+    sec13f: secSet.has(item),
+    raw_company_master: rawMasterSet.has(item),
+  };
+}
+
+function evidenceFamiliesForTicker(item, row, context) {
+  const flags = evidenceFamilyFlagsForTicker(item, row, context);
   const families = [];
 
-  if (sources.yf === true || yfSet.has(item)) families.push("yf");
-  if (sources.stockanalysis === true || sources.stockanalysis_yf_fallback === true || stockanalysisSurfaceSet.has(item)) families.push("stockanalysis");
-  if (sources.slickcharts === true || slickUniverseSet.has(item) || slickStockFileSet.has(item)) families.push("slickcharts");
-  if (secSet.has(item)) families.push("sec13f");
-  if (rawMasterSet.has(item)) families.push("raw_company_master");
+  if (flags.yf) families.push("yf");
+  if (flags.stockanalysis) families.push("stockanalysis");
+  if (flags.slickcharts) families.push("slickcharts");
+  if (flags.sec13f) families.push("sec13f");
+  if (flags.raw_company_master) families.push("raw_company_master");
 
   return [...new Set(families)].sort((a, b) => a.localeCompare(b));
 }
@@ -1037,6 +1052,14 @@ function factDiagnostic(detail, key) {
 function localSourceFilesFor(item, row, detail, context) {
   const detailSources = detail?.sources ?? {};
   const indexSources = row?.sources ?? {};
+  const acceptedFamilyFlags = evidenceFamilyFlagsForTicker(item, row, {
+    yfSet: context.yfSet,
+    secSet: context.secSet,
+    slickUniverseSet: context.slickUniverseSet,
+    slickStockFileSet: context.slickStockFileSet,
+    stockanalysisSurfaceSet: context.stockanalysisSurfaceSet,
+    rawMasterSet: context.rawMasterSet,
+  });
   return {
     market_facts_detail: Boolean(detail),
     yf_finance_file: context.yfSet.has(item),
@@ -1052,6 +1075,7 @@ function localSourceFilesFor(item, row, detail, context) {
         || indexSources.stockanalysis_yf_fallback === true,
       slickcharts: detailSources.slickcharts === true || indexSources.slickcharts === true,
     },
+    accepted_family_flags: acceptedFamilyFlags,
   };
 }
 
@@ -2168,7 +2192,9 @@ function printHuman(result) {
 }
 
 export {
+  evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
+  localSourceFilesFor,
   stockanalysisSurfaceTickers,
 };
 
