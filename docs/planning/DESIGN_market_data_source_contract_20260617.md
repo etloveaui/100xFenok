@@ -129,7 +129,10 @@ External sources
     multi-year monthly history after the ETF detail backfill refreshes those
     `history_periods` keys;
   - mirrors the normalized facts to `100xfenok-next/public/data/computed/market_facts/`
-    by default; use `--no-public-mirror` for private/canonical repair rebuilds.
+    by default; use `--no-public-mirror` for private/canonical repair rebuilds;
+  - supports `--tickers TICKER,...` for bounded repair rebuilds that update only
+    selected ticker detail files while merging the repaired rows back into the
+    existing full `data/computed/market_facts/index.json`.
 - `scripts/audit-market-data.py`
   - read-only audit for ETF universe backfill progress, failure classes,
     market-facts coverage, resolver candidate preservation, policy-source

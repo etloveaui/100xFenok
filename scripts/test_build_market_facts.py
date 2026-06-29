@@ -251,6 +251,27 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(result["generated_at"], "2026-06-18T00:00:00Z")
         self.assertEqual(result["facts"]["return_3y_avg"]["value"], -18.49677368804874)
 
+    def test_slickcharts_empty_current_uses_latest_metrics_history(self) -> None:
+        slick_payload = {
+            "company": "Hologic, Inc.",
+            "updated": "2026-06-18T00:00:00Z",
+            "current": {},
+            "metrics_history": [
+                {"date": "2026-03-01", "price": 70.0, "market_cap_billions": 15.5},
+                {"date": "2026-04-01", "price": 75.67, "market_cap_billions": 16.89},
+            ],
+        }
+
+        result = self.mod.build_one("HOLX", None, None, slick_payload)
+        facts = result["facts"]
+
+        self.assertEqual(facts["price"]["source"], "slickcharts")
+        self.assertEqual(facts["price"]["as_of"], "2026-04-01")
+        self.assertEqual(facts["price"]["value"], 75.67)
+        self.assertEqual(facts["market_cap"]["source"], "slickcharts")
+        self.assertEqual(facts["market_cap"]["as_of"], "2026-04-01")
+        self.assertEqual(facts["market_cap"]["value"], 16_890_000_000.0)
+
     def test_generated_at_advances_when_payload_content_changes(self) -> None:
         existing = {
             "ticker": "DIFF",
@@ -360,6 +381,63 @@ class BuildMarketFactsTest(unittest.TestCase):
             self.assertTrue((data_root / "computed" / "market_facts" / "index.json").exists())
             self.assertTrue((data_root / "computed" / "market_facts" / "tickers" / "PRIV.json").exists())
             self.assertFalse((root / "public").exists())
+
+    def test_main_targeted_tickers_preserve_full_index_and_skip_public_output(self) -> None:
+        original_data = self.mod.DATA
+        original_out = self.mod.OUT
+        original_public_out = self.mod.PUBLIC_OUT
+        original_now_iso = self.mod.now_iso
+
+        def yf_payload(ticker, price):
+            return {
+                "fetched_at": "2026-06-19T00:00:00Z",
+                "data": {
+                    "info": {
+                        "quoteType": "EQUITY",
+                        "shortName": f"{ticker} Inc.",
+                        "currency": "USD",
+                        "currentPrice": price,
+                    }
+                },
+            }
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_root = root / "data"
+            yf_dir = data_root / "yf" / "finance"
+            yf_dir.mkdir(parents=True)
+            self.mod.DATA = data_root
+            self.mod.OUT = data_root / "computed" / "market_facts"
+            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
+
+            aaa_path = yf_dir / "AAA.json"
+            aaa_path.write_text(json.dumps(yf_payload("AAA", 10.0)), encoding="utf-8")
+            (yf_dir / "BBB.json").write_text(json.dumps(yf_payload("BBB", 20.0)), encoding="utf-8")
+
+            try:
+                self.mod.now_iso = lambda: "2026-06-19T01:00:00Z"
+                self.mod.main([])
+                public_aaa_before = self.mod.load_json(self.mod.PUBLIC_OUT / "tickers" / "AAA.json")
+
+                aaa_path.write_text(json.dumps(yf_payload("AAA", 11.0)), encoding="utf-8")
+                self.mod.now_iso = lambda: "2026-06-19T02:00:00Z"
+                self.mod.main(["--tickers", "AAA", "--no-public-mirror"])
+
+                index = self.mod.load_json(self.mod.OUT / "index.json")
+                canonical_aaa = self.mod.load_json(self.mod.OUT / "tickers" / "AAA.json")
+                canonical_bbb = self.mod.load_json(self.mod.OUT / "tickers" / "BBB.json")
+                public_aaa_after = self.mod.load_json(self.mod.PUBLIC_OUT / "tickers" / "AAA.json")
+            finally:
+                self.mod.DATA = original_data
+                self.mod.OUT = original_out
+                self.mod.PUBLIC_OUT = original_public_out
+                self.mod.now_iso = original_now_iso
+
+        self.assertEqual(index["count"], 2)
+        self.assertEqual([row["ticker"] for row in index["rows"]], ["AAA", "BBB"])
+        self.assertEqual(canonical_aaa["facts"]["price"]["value"], 11.0)
+        self.assertEqual(canonical_bbb["facts"]["price"]["value"], 20.0)
+        self.assertEqual(public_aaa_before, public_aaa_after)
 
     def test_market_facts_contract_accepts_valid_generated_payload(self) -> None:
         payload = self.mod.build_one(

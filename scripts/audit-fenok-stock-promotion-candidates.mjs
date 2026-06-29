@@ -1135,7 +1135,7 @@ function buildS1BlockedUnblockDiagnosticsArtifact(statuses, context) {
   const diagnosticRows = blockedStatuses.map((status) => blockedUnblockDiagnosticRow(status, context));
   const expectedBlockedRows = [
     ["DAY", ["evidence_families_min3", "market_currency_country_scope"]],
-    ["HOLX", ["market_currency_country_scope", "price_or_market_cap"]],
+    ["HOLX", ["market_currency_country_scope"]],
     ["MMC", ["market_currency_country_scope"]],
     ["STRC", ["evidence_families_min3"]],
   ];
@@ -1269,7 +1269,7 @@ function buildS1PromotionGatePlanArtifact(statuses, context) {
   };
   const expectedBlockedRows = [
     ["DAY", ["evidence_families_min3", "market_currency_country_scope"]],
-    ["HOLX", ["market_currency_country_scope", "price_or_market_cap"]],
+    ["HOLX", ["market_currency_country_scope"]],
     ["MMC", ["market_currency_country_scope"]],
     ["STRC", ["evidence_families_min3"]],
   ];

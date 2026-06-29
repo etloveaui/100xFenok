@@ -107,6 +107,15 @@ STOCKANALYSIS_PERFORMANCE_FIELD_MAP = {
     "return_10y_avg": "cagr10y",
     "return_max_avg": "cagrMAX",
 }
+INDEX_SOURCE_FILES = [
+    "yf/finance/*.json",
+    "stockanalysis/etfs/*.json",
+    "stockanalysis/stocks/*.json",
+    "stockanalysis/financials/*.json",
+    "stockanalysis/etf_universe.json",
+    "stockanalysis/surfaces/etf_screener.json",
+    "slickcharts/stocks/*.json",
+]
 
 
 def now_iso() -> str:
@@ -537,16 +546,30 @@ def stockanalysis_performance_fact(payload, field, source):
     )
 
 
+def slick_current_or_latest_metrics(slick_payload):
+    current = (slick_payload or {}).get("current")
+    if isinstance(current, dict) and current:
+        return current, (slick_payload or {}).get("updated")
+
+    metrics_history = (slick_payload or {}).get("metrics_history") or []
+    rows = [row for row in metrics_history if isinstance(row, dict)]
+    if not rows:
+        return {}, (slick_payload or {}).get("updated")
+
+    latest = sorted(rows, key=lambda row: str(row.get("date") or ""), reverse=True)[0]
+    return latest, latest.get("date") or (slick_payload or {}).get("updated")
+
+
 def slick_fact(slick_payload, key, unit=None):
-    current = (slick_payload or {}).get("current") or {}
-    return fact(current.get(key), "slickcharts", as_of=(slick_payload or {}).get("updated"), unit=unit)
+    current, as_of = slick_current_or_latest_metrics(slick_payload)
+    return fact(current.get(key), "slickcharts", as_of=as_of, unit=unit)
 
 
 def slick_market_cap_fact(slick_payload):
-    current = (slick_payload or {}).get("current") or {}
+    current, as_of = slick_current_or_latest_metrics(slick_payload)
     parsed = number(current.get("market_cap_billions"))
     value = parsed * 1_000_000_000 if parsed is not None else None
-    return fact(value, "slickcharts", as_of=(slick_payload or {}).get("updated"))
+    return fact(value, "slickcharts", as_of=as_of)
 
 
 def build_one(ticker, yf_payload, sa_payload, slick_payload, sa_catalog_payload=None):
@@ -710,6 +733,13 @@ def clean_ticker(value):
     return str(value or "").replace("$", "").strip().upper()
 
 
+def parse_ticker_list(value):
+    if value is None:
+        return None
+    tickers = {clean_ticker(item) for item in str(value).split(",")}
+    return {ticker for ticker in tickers if ticker}
+
+
 def etf_catalog_rows(payload):
     rows = []
     if isinstance((payload or {}).get("records"), list):
@@ -745,6 +775,10 @@ def build_etf_catalog_map() -> dict[str, dict]:
 def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--tickers",
+        help="Comma-separated ticker allowlist. Updates those ticker files and merges them into the existing full index.",
+    )
+    parser.add_argument(
         "--no-public-mirror",
         action="store_true",
         help="Write only data/computed/market_facts; skip the Next public mirror.",
@@ -755,6 +789,9 @@ def parse_args(argv=None) -> argparse.Namespace:
 def main(argv=None) -> None:
     args = parse_args([] if argv is None else argv)
     mirror_public = not args.no_public_mirror
+    target_tickers = parse_ticker_list(args.tickers)
+    if args.tickers is not None and not target_tickers:
+        raise SystemExit("--tickers requires at least one ticker")
 
     yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
     sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
@@ -762,9 +799,27 @@ def main(argv=None) -> None:
     sa_financial_files = {p.stem: p for p in (DATA / "stockanalysis" / "financials").glob("*.json")}
     slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
     sa_catalog_rows = build_etf_catalog_map()
-    tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows))
+    all_tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows))
+    available_tickers = set(all_tickers)
+    if target_tickers:
+        missing = sorted(target_tickers - available_tickers)
+        if missing:
+            raise SystemExit(f"--tickers includes tickers without source payloads: {', '.join(missing)}")
+        existing_index = load_json(OUT / "index.json")
+        if not isinstance(existing_index, dict) or not isinstance(existing_index.get("rows"), list):
+            raise SystemExit("--tickers requires an existing data/computed/market_facts/index.json to preserve full coverage")
+        tickers = sorted(target_tickers)
+        rows_by_ticker = {
+            clean_ticker(row.get("ticker")): row
+            for row in existing_index.get("rows") or []
+            if isinstance(row, dict) and clean_ticker(row.get("ticker"))
+        }
+    else:
+        existing_index = None
+        tickers = all_tickers
+        rows_by_ticker = {}
 
-    rows = []
+    updated_rows = []
     generated_at = now_iso()
     for ticker in tickers:
         yf_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
@@ -792,37 +847,34 @@ def main(argv=None) -> None:
         write_json(OUT / rel, payload)
         if mirror_public:
             write_json(PUBLIC_OUT / rel, payload)
-        rows.append({
+        row = {
             "ticker": ticker,
             "asset_type": payload["asset_type"],
             "sources": payload["sources"],
             "fact_count": len(payload["facts"]),
-        })
+        }
+        updated_rows.append(row)
+        if target_tickers:
+            rows_by_ticker[ticker] = row
+
+    rows = [rows_by_ticker[ticker] for ticker in sorted(rows_by_ticker)] if target_tickers else updated_rows
 
     index = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
         "count": len(rows),
-        "source_files": [
-            "yf/finance/*.json",
-            "stockanalysis/etfs/*.json",
-            "stockanalysis/stocks/*.json",
-            "stockanalysis/financials/*.json",
-            "stockanalysis/etf_universe.json",
-            "stockanalysis/surfaces/etf_screener.json",
-            "slickcharts/stocks/*.json",
-        ],
+        "source_files": INDEX_SOURCE_FILES,
         "resolver": {
             "version": "market-facts-resolver/v1",
             "field_source_policy": FIELD_SOURCE_POLICY,
         },
         "coverage": {
-            "yf": sum(1 for row in rows if row["sources"]["yf"]),
-            "stockanalysis": sum(1 for row in rows if row["sources"]["stockanalysis"]),
+            "yf": sum(1 for row in rows if row["sources"].get("yf")),
+            "stockanalysis": sum(1 for row in rows if row["sources"].get("stockanalysis")),
             "stockanalysis_yf_fallback": sum(1 for row in rows if row["sources"].get("stockanalysis_yf_fallback")),
             "stockanalysis_financials": sum(1 for row in rows if row["sources"].get("stockanalysis_financials")),
             "stockanalysis_etf_catalog": len(sa_catalog_rows),
-            "slickcharts": sum(1 for row in rows if row["sources"]["slickcharts"]),
+            "slickcharts": sum(1 for row in rows if row["sources"].get("slickcharts")),
             "etf": sum(1 for row in rows if row["asset_type"] == "etf"),
             "stock": sum(1 for row in rows if row["asset_type"] == "stock"),
         },
