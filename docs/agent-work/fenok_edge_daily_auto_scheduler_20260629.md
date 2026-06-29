@@ -39,7 +39,7 @@ Current local snapshot:
 
 | Layer | Current stage | Scheduled cadence | Current backlog / next-run exposure | Remaining blocker |
 | --- | --- | --- | --- | --- |
-| S0 active stock scoring | PUBLIC, not DAILY/GATED | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; strict `qa:fenok-s0-daily-gated` remains red | `active_stock_scoring_current.requirements.daily=false`, `gated=false` |
+| S0 active stock scoring | PUBLIC, not DAILY/GATED | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; KRX 338/338, FINRA 587/637, OCC 228/637, Asia ex-Taiwan 91 outside current daily-source workstream; strict `qa:fenok-s0-daily-gated` remains red | `finra_full_us_source_ready`, `occ_full_us_source_ready`, `no_asia_ex_taiwan_gap`, `daily_ready` |
 | S1 stock candidates | NORMALIZED / JOINED_READY staging, not scored | YF scheduled branch processes one rolling shard per run, capped at 140; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates, 1,066 scored/public stocks, 112 promotion-audit gap; current joined gate is 108 joined-ready and 4 blocked; blocker counts are `market_currency_country_scope=3`, `evidence_families_min3=1` | not scored/public/daily/gated as expanded stock coverage; remaining joined blockers are DAY, HOLX, MMC, STRC |
 | S3 ETF lane | PUBLIC surface, not DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; current ETF detail continuity evidence is `daily_1y_fetchable=584`, `inception_limited=534` | `daily=false`, `gated=false`, `public_done_claim_allowed=false`; fetchable 1Y continuity gaps still block ETF paid-ready wording |
 
@@ -56,6 +56,7 @@ Operator readout rule:
 - Treat `sources=[...]` as the latest available derived source dates/timestamps, not as paid-ready proof.
 - If `blocking_gates` is non-empty or `done_claim_allowed=false`, do not call that layer PUBLIC + DAILY + GATED.
 - `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip.
+- The active S0 coverage index now carries derived blocker evidence directly under `public_scoring_readiness.tracks[].blocking_evidence`, so operators can see the FINRA/OCC/Asia gap counts without reading raw/private manifests.
 - `ETF evidence` separates public surface proof from `daily`/`gated`; current 1Y continuity evidence still has fetchable gaps, so ETF paid-ready wording stays blocked even though the compact public surface is present.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it is expected to stay red until the S0 `daily` and `gated` requirements become true.
 

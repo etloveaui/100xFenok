@@ -453,6 +453,41 @@ function readinessTrack({ id, label, denominator, stage, booleans, caveat, extra
   };
 }
 
+function activeS0BlockingEvidence() {
+  return {
+    evidence_origin: "derived_counts_only",
+    daily_ready: false,
+    gated_ready: false,
+    blockers: [
+      {
+        id: "finra_full_us_source_ready",
+        covered_count: flowIntersection.length,
+        denominator: usRows.length,
+        missing_count: Math.max(0, usRows.length - flowIntersection.length),
+        source_date: flowSourceDate,
+        next_action: "Continue bounded FINRA daily accumulation until covered_count equals the active US denominator.",
+      },
+      {
+        id: "occ_full_us_source_ready",
+        covered_count: occIntersection.length,
+        denominator: usRows.length,
+        missing_count: Math.max(0, usRows.length - occIntersection.length),
+        source_date: occSourceDate,
+        next_action: "Continue rolling OCC batch accumulation until covered_count equals the active US denominator.",
+      },
+      {
+        id: "no_asia_ex_taiwan_gap",
+        covered_count: 0,
+        denominator: asiaExTwRows.length,
+        missing_count: asiaExTwRows.length,
+        markets: marketCounts(asiaExTwRows),
+        next_action: "Add or explicitly exclude HKEX/SSE/SZSE daily-source workstream before S0 daily can be true.",
+      },
+    ],
+    caveat: "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims.",
+  };
+}
+
 const generatedAt = new Date().toISOString();
 const index = {
   schema_version: "fenok-edge-coverage-index/v0.2",
@@ -671,6 +706,9 @@ const index = {
           gated: false,
         },
         caveat: "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
+        extra: {
+          blocking_evidence: activeS0BlockingEvidence(),
+        },
       }),
       readinessTrack({
         id: "expanded_stock_candidates",
