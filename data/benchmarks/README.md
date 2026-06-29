@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-06-21 (15+ years, 860 S&P 500 data points)
+> **Period**: 2010-01-01 ~ 2026-06-28 (15+ years, 861 S&P 500 data points)
 > **Version**: 3.8.0
-> **Last Update**: 2026-06-22
+> **Last Update**: 2026-06-29
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-06-29 | Weekly data update (2026-06-26 source): 31,595 records (+37), 2010-01-01 ~ 2026-06-28, 37 sections, 861 S&P 500 data points; source_summaries 2,353 non-null + 52 null preserved; dup_section_weeks=0. |
 | 3.8.0 | 2026-06-22 | Weekly update (2026-06-19 source) + DEC-275 history-preservation merge: 31,558 records, 2010-01-01 ~ 2026-06-21, 37 sections, 860 S&P 500 data points. Restored the pre-window floor to 2010-01-01 (source had trimmed to 2010-08-06) via source-wins + floor-only + ISO-week grid guard; dup_section_weeks=0. |
 | 3.8.0 | 2026-06-15 | Weekly data update (2026-06-12 source): 31,521 records (+1,080), 2010-01-01 ~ 2026-06-14, 37 sections, 859 S&P 500 data points |
 | 3.8.0 | 2026-06-08 | Weekly data update (2026-06-05 source): 30,441 records (+1), 2010-07-23 ~ 2026-06-05, 37 sections, 829 S&P 500 data points |
