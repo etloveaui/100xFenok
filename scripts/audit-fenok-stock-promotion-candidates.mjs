@@ -12,6 +12,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  actionFrom,
+  marketScopeFromMarket,
+  normalizeTicker,
+  num,
+} from "./stock-action-score-core.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -19,6 +25,8 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.3";
 const PROMOTION_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-artifact/v0.1";
 const SCORING_CONTRACT_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-scoring-contract-artifact/v0.1";
+const SCORE_PREVIEW_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-score-preview-artifact/v0.1";
+const SCORE_CORE_SOURCE = "scripts/stock-action-score-core.mjs";
 const DEFAULT_EXAMPLE_LIMIT = 12;
 const JOINED_MIN_EVIDENCE_FAMILIES = 3;
 const PROMOTION_FACT_KEYS = [
@@ -75,6 +83,7 @@ function parseArgs(argv) {
     check: false,
     promotionReport: false,
     scoringContractReport: false,
+    scorePreviewReport: false,
     examples: DEFAULT_EXAMPLE_LIMIT,
   };
 
@@ -85,6 +94,7 @@ function parseArgs(argv) {
     else if (arg === "--check") args.check = true;
     else if (arg === "--promotion-report") args.promotionReport = true;
     else if (arg === "--scoring-contract-report") args.scoringContractReport = true;
+    else if (arg === "--score-preview-report") args.scorePreviewReport = true;
     else if (arg === "--examples") {
       const value = Number(argv[++i]);
       if (!Number.isInteger(value) || value < 0) {
@@ -96,8 +106,10 @@ function parseArgs(argv) {
     }
   }
 
-  if (args.promotionReport && args.scoringContractReport) {
-    throw new Error("Use only one of --promotion-report or --scoring-contract-report");
+  const reportModeCount = [args.promotionReport, args.scoringContractReport, args.scorePreviewReport]
+    .filter(Boolean).length;
+  if (reportModeCount > 1) {
+    throw new Error("Use only one of --promotion-report, --scoring-contract-report, or --score-preview-report");
   }
 
   return args;
@@ -537,6 +549,377 @@ function buildS1ScoringContractArtifact(statuses, context) {
   };
 }
 
+function percentPointToRatio(value) {
+  const numeric = num(value);
+  return numeric === null ? null : numeric / 100;
+}
+
+function dividendYieldToRatio(value) {
+  const numeric = num(value);
+  if (numeric === null) return null;
+  return numeric >= 0.5 && numeric <= 100 ? numeric / 100 : numeric;
+}
+
+function mapBySymbol(rows, mapper) {
+  const map = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const symbol = ticker(row?.symbol ?? row?.ticker);
+    if (!symbol) continue;
+    map.set(symbol, mapper(row));
+  }
+  return map;
+}
+
+function slickUniverseMap(payload) {
+  return mapBySymbol(payload?.stocks, (row) => ({
+    indices: Array.isArray(row.indices) ? row.indices : [],
+    indexCount: num(row.indexCount),
+  }));
+}
+
+function indexWeightMap() {
+  const defs = [
+    ["sp500", "data/slickcharts/sp500-analysis.json"],
+    ["nasdaq100", "data/slickcharts/nasdaq100-analysis.json"],
+    ["dowjones", "data/slickcharts/dowjones-analysis.json"],
+  ];
+  const map = new Map();
+  for (const [index, relPath] of defs) {
+    const doc = readJsonOrNull(relPath);
+    const rows = Array.isArray(doc?.analysis) ? doc.analysis : [];
+    for (const row of rows) {
+      const symbol = ticker(row?.symbol);
+      if (!symbol) continue;
+      if (!map.has(symbol)) map.set(symbol, []);
+      map.get(symbol).push({
+        index,
+        rank: num(row.rank),
+        weight: num(row.weight),
+        cumulativeWeight: num(row.cumulativeWeight),
+      });
+    }
+  }
+  return map;
+}
+
+function dividendHistoryMap(payload) {
+  return mapBySymbol(payload?.stocks, (row) => {
+    const dividends = Array.isArray(row.dividends) ? row.dividends : [];
+    const latest = dividends[0] ?? null;
+    const ttm = dividends.slice(0, 4).reduce((sum, item) => {
+      const amount = num(item?.amount);
+      return sum + (amount ?? 0);
+    }, 0);
+    return {
+      latestAmount: num(latest?.amount),
+      latestExDate: typeof latest?.exDate === "string" ? latest.exDate : null,
+      ttm: dividends.length > 0 ? Number(ttm.toFixed(4)) : null,
+      historyCount: dividends.length,
+    };
+  });
+}
+
+function quarterCloseHistoryMap(payload) {
+  const rows = payload?.tickers && typeof payload.tickers === "object" ? payload.tickers : {};
+  const map = new Map();
+  for (const [symbolRaw, row] of Object.entries(rows)) {
+    const symbol = ticker(symbolRaw);
+    const points = Object.entries(row ?? {})
+      .filter(([date, value]) => date !== "latest" && num(value) !== null)
+      .sort(([a], [b]) => a.localeCompare(b));
+    const last = points[points.length - 1];
+    const latest = row?.latest && typeof row.latest === "object" ? row.latest : null;
+    map.set(symbol, {
+      points: points.length,
+      latestDate: typeof latest?.date === "string" ? latest.date : last?.[0] ?? null,
+      latestClose: num(latest?.close) ?? num(last?.[1]),
+    });
+  }
+  return map;
+}
+
+function revisionMapByTicker(payload) {
+  const map = new Map();
+  for (const [direction, rows] of [
+    ["up", payload?.up],
+    ["down", payload?.down],
+  ]) {
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const symbol = ticker(row?.ticker);
+      if (!symbol) continue;
+      map.set(symbol, {
+        direction,
+        change1w: num(row.change_1w),
+        epsFy1: num(row.eps_fy1),
+        asOf: typeof row.as_of === "string" ? row.as_of : null,
+      });
+    }
+  }
+  return map;
+}
+
+function previewStockFromBase(base) {
+  const facts = base.observed_facts ?? {};
+  return {
+    symbol: base.ticker,
+    companyName: base.identity?.name ?? base.ticker,
+    price: num(facts.price?.value),
+    marketCap: num(facts.market_cap?.value),
+    per: num(facts.trailing_pe?.value),
+    peForward: num(facts.forward_pe?.value),
+    dividendYield: dividendYieldToRatio(facts.dividend_yield?.value),
+    return12m: percentPointToRatio(facts.return_1y?.value),
+    momentum3m: percentPointToRatio(facts.return_3m?.value),
+    epsForward: null,
+  };
+}
+
+function scoreInputMapping(base, context) {
+  const facts = base.observed_facts ?? {};
+  const tickerKey = base.ticker;
+  const dividendHistory = context.dividendHistoryMap.get(tickerKey) ?? null;
+  const universe = context.slickUniverseMap.get(tickerKey) ?? { indices: [], indexCount: null };
+  const weights = context.indexWeightsMap.get(tickerKey) ?? [];
+  const consensus = context.enhancedConsensus?.enhanced_consensus?.[tickerKey] ?? null;
+  return {
+    valuation: {
+      trailing_pe: num(facts.trailing_pe?.value),
+      forward_pe: num(facts.forward_pe?.value),
+      per_band: null,
+    },
+    momentum_revision: {
+      return_1y_ratio: percentPointToRatio(facts.return_1y?.value),
+      return_3m_ratio: percentPointToRatio(facts.return_3m?.value),
+      revision: context.revisionMap.get(tickerKey) ?? null,
+    },
+    income: {
+      dividend_yield_ratio: dividendYieldToRatio(facts.dividend_yield?.value),
+      dividend_yield_raw: num(facts.dividend_yield?.value),
+      dividend_history: dividendHistory,
+    },
+    index_structure: {
+      indices: universe.indices,
+      weights,
+    },
+    smart_money: {
+      guru_holders: num(context.guruHolders?.holders?.[tickerKey]),
+      consensus,
+      conviction: null,
+    },
+    sector_smart_money: {
+      canonical_sector: "Other",
+      sector_smart_money: null,
+    },
+  };
+}
+
+function unsupportedScoringAxes(base) {
+  const axes = [
+    {
+      key: "per_band",
+      label: "PER band",
+      value: null,
+      display: "미확인",
+      reason: "S1 market_facts does not carry Global Scouter PER-band min/current/max.",
+    },
+    {
+      key: "sector_smart_money",
+      label: "sector smart money",
+      value: null,
+      display: "미확인",
+      reason: "S1 market_facts identity sector is not yet bridged to the stock_action canonical sector map.",
+    },
+    {
+      key: "conviction_entries",
+      label: "13F conviction entries",
+      value: null,
+      display: "미확인",
+      reason: "S1 score preview keeps conviction unmapped until the ticker-level source join is explicit.",
+    },
+  ];
+  if (base.score_input_presence?.global_scouter_core_row) {
+    return axes.filter((axis) => axis.key !== "per_band");
+  }
+  return axes;
+}
+
+function buildS1ScorePreviewRow(status, context) {
+  const base = buildS1ScoringContractRow(status, context);
+  const normalized = normalizeTicker(base.ticker);
+  const marketScope = marketScopeFromMarket(normalized.market);
+  const previewContext = {
+    marketScope,
+    canonicalSector: "Other",
+    universe: context.slickUniverseMap.get(base.ticker) ?? { indices: [], indexCount: null },
+    weights: context.indexWeightsMap.get(base.ticker) ?? [],
+    guruHolders: num(context.guruHolders?.holders?.[base.ticker]),
+    consensus: context.enhancedConsensus?.enhanced_consensus?.[base.ticker] ?? null,
+    conviction: null,
+    convictionNameOnly: false,
+    returnHistory: null,
+    dividendHistory: context.dividendHistoryMap.get(base.ticker) ?? null,
+    quarterClose: context.quarterCloseMap.get(base.ticker) ?? null,
+    revision: context.revisionMap.get(base.ticker) ?? null,
+    sectorSmartMoney: null,
+  };
+  const action = actionFrom(previewStockFromBase(base), previewContext);
+  const scorePreview = {
+    action_score: action.actionScore,
+    signal_score: action.signalScore,
+    coverage_ratio: action.coverageRatio,
+    confidence_label: action.confidenceLabel,
+    action_bucket: action.actionBucket,
+    action_label: action.actionLabel,
+    action_reasons: action.actionReasons,
+    families: action.families,
+  };
+
+  return {
+    ticker: base.ticker,
+    asset_type: base.asset_type,
+    preview_status: "s1_score_preview_ready_non_public",
+    source_stage: base.source_stage,
+    claim_scope: "Non-public S1 score-preview artifact only; not S0, not public, not daily, not gated.",
+    eligibility: base.eligibility,
+    identity: base.identity,
+    score_input_presence: base.score_input_presence,
+    missing_scoring_axes: base.missing_scoring_axes,
+    unsupported_scoring_axes: unsupportedScoringAxes(base),
+    scoring_contract_reference: {
+      ...base.scoring_contract_reference,
+      score_source: SCORE_CORE_SOURCE,
+      preview_only: true,
+    },
+    score_input_mapping: scoreInputMapping(base, context),
+    score_preview: scorePreview,
+    score_quality_flags: action.scoreQualityFlags,
+    normalized_ticker: normalized,
+    market_scope: marketScope,
+  };
+}
+
+function buildS1ScorePreviewArtifact(statuses, context) {
+  const readyStatuses = statuses.filter((status) => status.status === "joined_ready");
+  const blockedStatuses = statuses.filter((status) => status.status === "joined_not_ready");
+  const previewRows = readyStatuses.map((status) => buildS1ScorePreviewRow(status, context));
+  const etfRows = previewRows.filter((row) => row.asset_type === "etf").length;
+  const nonStockRows = previewRows.filter((row) => row.asset_type !== "stock").length;
+  const s0OverlapRows = previewRows.filter((row) => context.s0Set.has(row.ticker)).length;
+  const scoredPreviewRows = previewRows.filter((row) => typeof row.score_preview.action_score === "number").length;
+  const fakeScoreRows = previewRows.filter((row) => (
+    typeof row.score_preview.action_score === "number"
+    && row.scoring_contract_reference.score_source !== SCORE_CORE_SOURCE
+  )).length;
+  const missingAxesNull = previewRows.every((row) => [
+    ...(row.missing_scoring_axes ?? []),
+    ...(row.unsupported_scoring_axes ?? []),
+  ].every((axis) => axis.value === null && axis.display === "미확인"));
+  const disallowedClaims = {
+    scored_public_s0: false,
+    public: false,
+    daily: false,
+    gated: false,
+    etf_lane: false,
+  };
+  const counts = {
+    public_s0_before: context.s0Set.size,
+    public_s0_after_this_artifact: context.s0Set.size,
+    s1_gap_total: statuses.length,
+    joined_ready_preview_rows: previewRows.length,
+    joined_not_ready_excluded: blockedStatuses.length,
+    etf_rows: etfRows,
+    non_stock_rows: nonStockRows,
+    s0_overlap_rows: s0OverlapRows,
+    scored_preview_rows: scoredPreviewRows,
+    fake_score_rows: fakeScoreRows,
+    rows_with_missing_axes: previewRows.filter((row) => row.missing_scoring_axes.length > 0).length,
+    rows_with_unsupported_axes: previewRows.filter((row) => row.unsupported_scoring_axes.length > 0).length,
+    files_written: 0,
+    public_files_written: 0,
+  };
+  const acceptanceChecks = [
+    {
+      id: "s1_score_preview_counts_match_gate",
+      ok: counts.joined_ready_preview_rows === readyStatuses.length
+        && counts.joined_not_ready_excluded === blockedStatuses.length,
+      detail: `${counts.joined_ready_preview_rows}+${counts.joined_not_ready_excluded} vs ${readyStatuses.length}+${blockedStatuses.length}`,
+    },
+    {
+      id: "s1_score_preview_preserves_s0_count",
+      ok: counts.public_s0_before === context.s0Set.size
+        && counts.public_s0_after_this_artifact === context.s0Set.size
+        && counts.s0_overlap_rows === 0,
+      detail: `${counts.public_s0_before}->${counts.public_s0_after_this_artifact}, s0_overlap_rows=${counts.s0_overlap_rows}`,
+    },
+    {
+      id: "s1_score_preview_no_etf_or_non_stock_rows",
+      ok: counts.etf_rows === 0 && counts.non_stock_rows === 0,
+      detail: `etf_rows=${counts.etf_rows}, non_stock_rows=${counts.non_stock_rows}`,
+    },
+    {
+      id: "s1_score_preview_no_fake_scores",
+      ok: counts.fake_score_rows === 0 && counts.scored_preview_rows === previewRows.length,
+      detail: `fake_score_rows=${counts.fake_score_rows}, scored_preview_rows=${counts.scored_preview_rows}`,
+    },
+    {
+      id: "s1_score_preview_no_public_daily_gated_claim",
+      ok: Object.values(disallowedClaims).every((value) => value === false),
+      detail: JSON.stringify(disallowedClaims),
+    },
+    {
+      id: "s1_score_preview_missing_axes_null_explicit",
+      ok: missingAxesNull,
+      detail: `rows_with_missing_axes=${counts.rows_with_missing_axes}, rows_with_unsupported_axes=${counts.rows_with_unsupported_axes}`,
+    },
+    {
+      id: "s1_score_preview_stdout_only_no_writes",
+      ok: counts.files_written === 0 && counts.public_files_written === 0,
+      detail: `files_written=${counts.files_written}, public_files_written=${counts.public_files_written}`,
+    },
+  ];
+
+  return {
+    schema_version: SCORE_PREVIEW_ARTIFACT_SCHEMA_VERSION,
+    generated_at: new Date().toISOString(),
+    source_audit_schema_version: SCHEMA_VERSION,
+    purpose: "Emit an opt-in, non-public S1 stock score preview for JOINED_READY candidates using the shared S0 scoring core without mutating S0/public rows.",
+    file_plan: {
+      implementation_files: [
+        SCORE_CORE_SOURCE,
+        "scripts/build-phase2-closeout-indexes.mjs",
+        "scripts/audit-fenok-stock-promotion-candidates.mjs",
+      ],
+      artifact_delivery: "stdout_only",
+      command: "node scripts/audit-fenok-stock-promotion-candidates.mjs --score-preview-report --check",
+      files_written: [],
+      public_files_written: [],
+      excluded_paths: [
+        "data/computed/stock_action_index.json",
+        "data/computed/fenok_signals.json",
+        "100xfenok-next/public/data/computed/fenok_signals.json",
+        "100xfenok-next/public/data/computed/fenok_signals_summary.json",
+      ],
+    },
+    contract: {
+      source_gate: "s1_stock_promotion_candidates.joined_gate",
+      include_rows: "joined_ready only; joined_not_ready rows are blocker-only exclusions.",
+      scoring_enabled: true,
+      public_s0_mutation: false,
+      output_mode: "non_public_score_preview_artifact",
+      score_source: SCORE_CORE_SOURCE,
+      source_score_contract_version: context.stockActionIndex?.score_contract?.version ?? null,
+      source_score_contract_doc: context.stockActionIndex?.score_contract?.doc ?? null,
+      missing_value_policy: "Keep absent or unsupported axes null / 미확인. Numeric preview values must come from the shared S0 scoring core.",
+      disallowed_claims: disallowedClaims,
+    },
+    counts,
+    blocker_counts: countBlockers(statuses),
+    acceptance_checks: acceptanceChecks,
+    preview_rows: previewRows,
+    excluded_blocked_rows: blockedStatuses.map(joinedStatusSummary),
+  };
+}
+
 function buildS1JoinedGate({
   gapTickers,
   marketByTicker,
@@ -549,6 +932,7 @@ function buildS1JoinedGate({
   rawMasterSet,
   promotionContext = null,
   scoringContractContext = null,
+  scorePreviewContext = null,
   examples,
   full,
 }) {
@@ -634,6 +1018,9 @@ function buildS1JoinedGate({
   if (scoringContractContext) {
     result.scoring_contract_artifact = buildS1ScoringContractArtifact(statuses, scoringContractContext);
   }
+  if (scorePreviewContext) {
+    result.score_preview_artifact = buildS1ScorePreviewArtifact(statuses, scorePreviewContext);
+  }
 
   return result;
 }
@@ -643,9 +1030,12 @@ function buildAudit({
   full = false,
   promotionReport = false,
   scoringContractReport = false,
+  scorePreviewReport = false,
 } = {}) {
   const signals = readJson("data/computed/fenok_signals.json");
-  const stockActionIndex = scoringContractReport ? readJson("data/computed/stock_action_index.json") : null;
+  const stockActionIndex = scoringContractReport || scorePreviewReport
+    ? readJson("data/computed/stock_action_index.json")
+    : null;
   const marketFacts = readJson("data/computed/market_facts/index.json");
   const coverageIndex = readJsonOrNull("data/admin/fenok-edge-coverage-index.json");
   const slickUniverse = readJson("data/slickcharts/universe.json");
@@ -693,6 +1083,11 @@ function buildAudit({
   const slickDividendsSet = rowTickerSet(slickDividends?.stocks ?? [], "symbol");
   const guruHoldersSet = objectTickerSet(guruHolders, "holders");
   const enhancedConsensusSet = objectTickerSet(enhancedConsensus, "enhanced_consensus");
+  const previewSlickUniverseMap = scorePreviewReport ? slickUniverseMap(slickUniverse) : null;
+  const previewIndexWeightsMap = scorePreviewReport ? indexWeightMap() : null;
+  const previewDividendHistoryMap = scorePreviewReport ? dividendHistoryMap(slickDividends) : null;
+  const previewQuarterCloseMap = scorePreviewReport ? quarterCloseHistoryMap(quarterCloses) : null;
+  const previewRevisionMap = scorePreviewReport ? revisionMapByTicker(revisions) : null;
 
   const gapWithYf = gapTickers.filter((item) => yfSet.has(item));
   const gapWithSec = gapTickers.filter((item) => secSet.has(item));
@@ -757,6 +1152,29 @@ function buildAudit({
           slickDividendsSet,
           guruHoldersSet,
           enhancedConsensusSet,
+        }
+      : null,
+    scorePreviewContext: scorePreviewReport
+      ? {
+          marketByTicker,
+          s0Set,
+          stockActionIndex,
+          globalScouterCoreSet,
+          globalScouterDetailSet,
+          stockanalysisFinancialsSet,
+          revisionSet,
+          quarterCloseSet,
+          slickReturnsSet,
+          slickDividendsSet,
+          guruHoldersSet,
+          enhancedConsensusSet,
+          slickUniverseMap: previewSlickUniverseMap,
+          indexWeightsMap: previewIndexWeightsMap,
+          dividendHistoryMap: previewDividendHistoryMap,
+          quarterCloseMap: previewQuarterCloseMap,
+          revisionMap: previewRevisionMap,
+          guruHolders,
+          enhancedConsensus,
         }
       : null,
     examples,
@@ -862,6 +1280,50 @@ function buildAudit({
       },
       {
         id: "s1_scoring_contract_stdout_only_no_writes",
+        ok: artifact?.counts?.files_written === 0 && artifact?.counts?.public_files_written === 0,
+        detail: `files_written=${artifact?.counts?.files_written}, public_files_written=${artifact?.counts?.public_files_written}`,
+      },
+    );
+  }
+  if (scorePreviewReport) {
+    const artifact = s1JoinedGate.score_preview_artifact;
+    hardChecks.push(
+      {
+        id: "s1_score_preview_counts_match_gate",
+        ok: artifact?.counts?.joined_ready_preview_rows === s1JoinedGate.counts.joined_ready
+          && artifact?.counts?.joined_not_ready_excluded === s1JoinedGate.counts.joined_not_ready,
+        detail: `${artifact?.counts?.joined_ready_preview_rows}+${artifact?.counts?.joined_not_ready_excluded} vs ${s1JoinedGate.counts.joined_ready}+${s1JoinedGate.counts.joined_not_ready}`,
+      },
+      {
+        id: "s1_score_preview_no_etf_rows",
+        ok: artifact?.counts?.etf_rows === 0 && artifact?.counts?.non_stock_rows === 0,
+        detail: `etf_rows=${artifact?.counts?.etf_rows}, non_stock_rows=${artifact?.counts?.non_stock_rows}`,
+      },
+      {
+        id: "s1_score_preview_no_fake_scores",
+        ok: artifact?.counts?.fake_score_rows === 0
+          && artifact?.preview_rows?.every((row) => row.scoring_contract_reference?.score_source === SCORE_CORE_SOURCE) === true,
+        detail: `fake_score_rows=${artifact?.counts?.fake_score_rows}, score_source=${SCORE_CORE_SOURCE}`,
+      },
+      {
+        id: "s1_score_preview_preserves_s0_count",
+        ok: artifact?.counts?.public_s0_before === s0Tickers.length
+          && artifact?.counts?.public_s0_after_this_artifact === s0Tickers.length
+          && artifact?.counts?.s0_overlap_rows === 0,
+        detail: `${artifact?.counts?.public_s0_before}->${artifact?.counts?.public_s0_after_this_artifact}, s0_overlap_rows=${artifact?.counts?.s0_overlap_rows}`,
+      },
+      {
+        id: "s1_score_preview_no_public_daily_gated_claim",
+        ok: artifact?.acceptance_checks?.find((check) => check.id === "s1_score_preview_no_public_daily_gated_claim")?.ok === true,
+        detail: JSON.stringify(artifact?.contract?.disallowed_claims ?? null),
+      },
+      {
+        id: "s1_score_preview_missing_axes_null_explicit",
+        ok: artifact?.acceptance_checks?.find((check) => check.id === "s1_score_preview_missing_axes_null_explicit")?.ok === true,
+        detail: `rows_with_missing_axes=${artifact?.counts?.rows_with_missing_axes}, rows_with_unsupported_axes=${artifact?.counts?.rows_with_unsupported_axes}`,
+      },
+      {
+        id: "s1_score_preview_stdout_only_no_writes",
         ok: artifact?.counts?.files_written === 0 && artifact?.counts?.public_files_written === 0,
         detail: `files_written=${artifact?.counts?.files_written}, public_files_written=${artifact?.counts?.public_files_written}`,
       },
@@ -1048,6 +1510,9 @@ function printHuman(result) {
   if (result.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact) {
     console.log(`S1 scoring contract report counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact.counts)}`);
   }
+  if (result.s1_stock_promotion_candidates.joined_gate.score_preview_artifact) {
+    console.log(`S1 score preview report counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.score_preview_artifact.counts)}`);
+  }
   console.log(
     `S2 fuel: YF=${result.s2_stock_expansion_fuel.yf.ticker_payloads_excluding_summary}, `
     + `SEC13F=${result.s2_stock_expansion_fuel.sec13f.by_ticker_keys}, `
@@ -1072,7 +1537,9 @@ function printHuman(result) {
 
 const args = parseArgs(process.argv.slice(2));
 const audit = buildAudit(args);
-if (args.scoringContractReport) {
+if (args.scorePreviewReport) {
+  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.score_preview_artifact, null, 2)}\n`);
+} else if (args.scoringContractReport) {
   process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact, null, 2)}\n`);
 } else if (args.promotionReport) {
   process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_artifact, null, 2)}\n`);
