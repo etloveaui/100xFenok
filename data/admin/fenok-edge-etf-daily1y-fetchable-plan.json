@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-06-29T23:19:07.798Z",
+  "generated_at": "2026-06-29T23:38:43.913Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -25,10 +25,10 @@
   },
   "counts": {
     "scored_etf_count": 4484,
-    "complete": 3432,
-    "fetchable": 518,
-    "inception_limited": 534,
-    "missing": 1052,
+    "complete": 3507,
+    "fetchable": 441,
+    "inception_limited": 536,
+    "missing": 977,
     "equation_ok": true,
     "matches_history_gap_report": true,
     "matches_coverage_index": true,
@@ -96,7 +96,7 @@
   "bounded_batches": {
     "can_drive_bounded_ticker_batches": true,
     "default_batch_size": 120,
-    "batch_count": 5,
+    "batch_count": 4,
     "command_template": "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
     "first_batch_tickers": [
       "AAAD",
@@ -342,126 +342,49 @@
     "DVXV",
     "DVXY",
     "DWWN",
-    "EALT",
-    "EAPR",
-    "EBUF",
     "EDGQ",
     "EDGX",
-    "EETH",
     "EHCC",
-    "EJAN",
-    "EMCS",
     "EMEM",
     "EMJN",
     "EMSC",
-    "EOCT",
     "ESUM",
-    "ETH",
-    "ETHA",
     "ETHB",
-    "ETHE",
-    "ETHV",
-    "ETHW",
-    "EVMT",
-    "EZBC",
-    "EZET",
     "EZMO",
-    "FBTC",
-    "FEBU",
-    "FETH",
-    "FGDL",
     "FHIL",
     "FITZ",
-    "FLAO",
-    "FLJJ",
     "FOTO",
     "FPAA",
     "FREI",
     "FSOL",
     "FSTB",
-    "FXA",
-    "FXB",
-    "FXC",
-    "FXE",
-    "FXF",
-    "FXY",
-    "GASZ",
     "GAVA",
-    "GBTC",
-    "GCC",
     "GCSH",
-    "GDLC",
     "GDOG",
     "GDT",
     "GDXW",
     "GEQ",
     "GISC",
-    "GLD",
-    "GLDM",
     "GLDW",
-    "GLNK",
-    "GLTR",
-    "GMMA",
-    "GOOW",
-    "GOP",
-    "GPT",
-    "GSOL",
     "GSUI",
-    "GTOH",
     "HBMX",
     "HBR",
-    "HIGH",
     "HJUN",
-    "HODL",
-    "HOOW",
     "HRSK",
-    "HULL",
     "HYPG",
-    "HYSA",
-    "HYTI",
-    "HYTR",
-    "IAPR",
-    "IAU",
-    "IAUG",
-    "IAUM",
     "IBCB",
     "IBGM",
     "IBHM",
-    "IBIC",
-    "IBIH",
-    "IBIJ",
-    "IBIK",
-    "IBIL",
     "IBIM",
-    "IBIT",
     "IBTR",
-    "IBUF",
-    "IDEC",
     "IDEQ",
     "IDJN",
     "IDMY",
-    "IFEB",
-    "IGLD",
     "IINC",
-    "IJAN",
-    "IJUL",
-    "IJUN",
-    "IMAR",
-    "IMAY",
-    "INOV",
     "INYY",
-    "IOCT",
-    "ISEP",
-    "IVVW",
-    "IWMW",
     "JADB",
-    "JAJL",
     "JANI",
-    "JANT",
-    "JANU",
-    "JANW",
     "JELM",
-    "JNEU",
     "JOJO",
     "JPO",
     "JUDB",
@@ -1973,39 +1896,6 @@
       "yf_history_rows": 19
     },
     {
-      "ticker": "EALT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "EAPR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "EBUF",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "EDGQ",
       "actual_rows": 0,
       "missing_file": true,
@@ -2018,74 +1908,30 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "EETH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "EHCC",
-      "actual_rows": 0,
+      "actual_rows": 60,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 53
-    },
-    {
-      "ticker": "EJAN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "EMCS",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 60
     },
     {
       "ticker": "EMEM",
-      "actual_rows": 0,
+      "actual_rows": 27,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 20
+      "yf_history_rows": 27
     },
     {
       "ticker": "EMJN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 12
-    },
-    {
-      "ticker": "EMSC",
-      "actual_rows": 0,
+      "actual_rows": 19,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
@@ -2095,15 +1941,15 @@
       "yf_history_rows": 19
     },
     {
-      "ticker": "EOCT",
-      "actual_rows": 0,
+      "ticker": "EMSC",
+      "actual_rows": 26,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 26
     },
     {
       "ticker": "ESUM",
@@ -2112,169 +1958,37 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "ETH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "ETHA",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "ETHB",
-      "actual_rows": 0,
+      "actual_rows": 75,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 68
-    },
-    {
-      "ticker": "ETHE",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "ETHV",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "ETHW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "EVMT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "EZBC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "EZET",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 75
     },
     {
       "ticker": "EZMO",
-      "actual_rows": 0,
+      "actual_rows": 175,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 168
-    },
-    {
-      "ticker": "FBTC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FEBU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FETH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FGDL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 175
     },
     {
       "ticker": "FHIL",
-      "actual_rows": 6,
+      "actual_rows": 7,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 6
+      "yf_history_rows": 7
     },
     {
       "ticker": "FITZ",
@@ -2288,48 +2002,26 @@
       "yf_history_rows": 16
     },
     {
-      "ticker": "FLAO",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FLJJ",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "FOTO",
-      "actual_rows": 0,
+      "actual_rows": 21,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 14
+      "yf_history_rows": 21
     },
     {
       "ticker": "FPAA",
-      "actual_rows": 0,
+      "actual_rows": 15,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 9
+      "yf_history_rows": 15
     },
     {
       "ticker": "FREI",
@@ -2355,124 +2047,25 @@
     },
     {
       "ticker": "FSTB",
-      "actual_rows": 5,
+      "actual_rows": 7,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 5
-    },
-    {
-      "ticker": "FXA",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FXB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FXC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FXE",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FXF",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "FXY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GASZ",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 30
+      "yf_history_rows": 7
     },
     {
       "ticker": "GAVA",
-      "actual_rows": 0,
+      "actual_rows": 75,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 68
-    },
-    {
-      "ticker": "GBTC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GCC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 75
     },
     {
       "ticker": "GCSH",
@@ -2481,48 +2074,37 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "GDLC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "GDOG",
-      "actual_rows": 0,
+      "actual_rows": 148,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 141
+      "yf_history_rows": 148
     },
     {
       "ticker": "GDT",
-      "actual_rows": 0,
+      "actual_rows": 109,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 102
+      "yf_history_rows": 109
     },
     {
       "ticker": "GDXW",
-      "actual_rows": 0,
+      "actual_rows": 165,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 158
+      "yf_history_rows": 165
     },
     {
       "ticker": "GEQ",
@@ -2542,202 +2124,59 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "GLD",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GLDM",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "GLDW",
-      "actual_rows": 0,
+      "actual_rows": 165,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 158
-    },
-    {
-      "ticker": "GLNK",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GLTR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GMMA",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GOOW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 227
-    },
-    {
-      "ticker": "GOP",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GPT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "GSOL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 165
     },
     {
       "ticker": "GSUI",
-      "actual_rows": 0,
+      "actual_rows": 95,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 88
-    },
-    {
-      "ticker": "GTOH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 95
     },
     {
       "ticker": "HBMX",
-      "actual_rows": 0,
+      "actual_rows": 19,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 13
+      "yf_history_rows": 19
     },
     {
       "ticker": "HBR",
-      "actual_rows": 0,
+      "actual_rows": 167,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 160
-    },
-    {
-      "ticker": "HIGH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 167
     },
     {
       "ticker": "HJUN",
-      "actual_rows": 0,
+      "actual_rows": 18,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
-    },
-    {
-      "ticker": "HODL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "HOOW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 18
     },
     {
       "ticker": "HRSK",
@@ -2746,107 +2185,19 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "HULL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 30
-    },
-    {
       "ticker": "HYPG",
-      "actual_rows": 0,
+      "actual_rows": 18,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
-    },
-    {
-      "ticker": "HYSA",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "HYTI",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "HYTR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IAPR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IAU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IAUG",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IAUM",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 18
     },
     {
       "ticker": "IBCB",
-      "actual_rows": 58,
+      "actual_rows": 63,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
@@ -2857,18 +2208,18 @@
     },
     {
       "ticker": "IBGM",
-      "actual_rows": 0,
+      "actual_rows": 65,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 58
+      "yf_history_rows": 65
     },
     {
       "ticker": "IBHM",
-      "actual_rows": 58,
+      "actual_rows": 63,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
@@ -2876,61 +2227,6 @@
       "inception_limited_missing": [],
       "inception_date": null,
       "yf_history_rows": null
-    },
-    {
-      "ticker": "IBIC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IBIH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IBIJ",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IBIK",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IBIL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
     },
     {
       "ticker": "IBIM",
@@ -2944,19 +2240,8 @@
       "yf_history_rows": 59
     },
     {
-      "ticker": "IBIT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "IBTR",
-      "actual_rows": 58,
+      "actual_rows": 64,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
@@ -2964,28 +2249,6 @@
       "inception_limited_missing": [],
       "inception_date": null,
       "yf_history_rows": null
-    },
-    {
-      "ticker": "IBUF",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IDEC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
     },
     {
       "ticker": "IDEQ",
@@ -2995,47 +2258,25 @@
     },
     {
       "ticker": "IDJN",
-      "actual_rows": 0,
+      "actual_rows": 19,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
+      "yf_history_rows": 19
     },
     {
       "ticker": "IDMY",
-      "actual_rows": 0,
+      "actual_rows": 36,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 30
-    },
-    {
-      "ticker": "IFEB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IGLD",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 36
     },
     {
       "ticker": "IINC",
@@ -3044,208 +2285,43 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "IJAN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IJUL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IJUN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IMAR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IMAY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "INOV",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "INYY",
       "actual_rows": 0,
       "missing_file": true,
       "yf_history_rows": null
     },
     {
-      "ticker": "IOCT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "ISEP",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IVVW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "IWMW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "JADB",
-      "actual_rows": 0,
+      "actual_rows": 37,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 30
-    },
-    {
-      "ticker": "JAJL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 37
     },
     {
       "ticker": "JANI",
-      "actual_rows": 0,
+      "actual_rows": 102,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 96
-    },
-    {
-      "ticker": "JANT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "JANU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "JANW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 102
     },
     {
       "ticker": "JELM",
-      "actual_rows": 0,
+      "actual_rows": 47,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 41
-    },
-    {
-      "ticker": "JNEU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 47
     },
     {
       "ticker": "JOJO",

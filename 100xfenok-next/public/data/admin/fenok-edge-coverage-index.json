@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T23:16:46.028Z",
+  "generated_at": "2026-06-29T23:38:41.378Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -89,14 +89,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-29T15:35:23.637Z",
-          "age_hours": 7.69,
+          "age_hours": 8.05,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-06-29T23:16:37.418Z",
-          "age_hours": 0,
+          "generated_at": "2026-06-29T23:36:28.672Z",
+          "age_hours": 0.04,
           "max_age_hours": 48
         },
         {
@@ -110,8 +110,8 @@
         {
           "id": "etf_no_fetchable_daily_1y_gap",
           "ok": false,
-          "fetchable_daily_1y_gap": 518,
-          "inception_limited_daily_1y_gap": 534,
+          "fetchable_daily_1y_gap": 441,
+          "inception_limited_daily_1y_gap": 536,
           "caveat": "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed."
         }
       ],
@@ -127,8 +127,8 @@
         "internal_summary_rows": 4484,
         "fetchable_required_history": 2,
         "inception_limited_required_history": 6,
-        "fetchable_daily_1y_gap": 518,
-        "inception_limited_daily_1y_gap": 534
+        "fetchable_daily_1y_gap": 441,
+        "inception_limited_daily_1y_gap": 536
       }
     },
     "caveat": "ETF scoring is a separate asset_type=etf lane. Public surface proof is separate from DAILY/GATED readiness and does not permit a paid-ready done claim."
@@ -523,14 +523,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-29T15:35:23.637Z",
-              "age_hours": 7.69,
+              "age_hours": 8.05,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-06-29T23:16:37.418Z",
-              "age_hours": 0,
+              "generated_at": "2026-06-29T23:36:28.672Z",
+              "age_hours": 0.04,
               "max_age_hours": 48
             },
             {
@@ -544,8 +544,8 @@
             {
               "id": "etf_no_fetchable_daily_1y_gap",
               "ok": false,
-              "fetchable_daily_1y_gap": 518,
-              "inception_limited_daily_1y_gap": 534,
+              "fetchable_daily_1y_gap": 441,
+              "inception_limited_daily_1y_gap": 536,
               "caveat": "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed."
             }
           ],
@@ -561,8 +561,8 @@
             "internal_summary_rows": 4484,
             "fetchable_required_history": 2,
             "inception_limited_required_history": 6,
-            "fetchable_daily_1y_gap": 518,
-            "inception_limited_daily_1y_gap": 534
+            "fetchable_daily_1y_gap": 441,
+            "inception_limited_daily_1y_gap": 536
           }
         }
       },
@@ -592,7 +592,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T23:16:46.028Z"
+        "generated_at": "2026-06-29T23:38:41.378Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -635,14 +635,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-29T15:35:23.637Z",
-        "age_hours": 7.69,
+        "age_hours": 8.05,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-06-29T23:16:37.418Z",
-        "age_hours": 0,
+        "generated_at": "2026-06-29T23:36:28.672Z",
+        "age_hours": 0.04,
         "max_age_hours": 48,
         "fetchable_required_history": 2,
         "inception_limited_required_history": 6,
@@ -651,9 +651,9 @@
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-06-29T23:16:37.418Z",
-        "fetchable_daily_1y_gap": 518,
-        "inception_limited_daily_1y_gap": 534,
+        "generated_at": "2026-06-29T23:36:28.672Z",
+        "fetchable_daily_1y_gap": 441,
+        "inception_limited_daily_1y_gap": 536,
         "status": "blocked_fetchable_daily_gap",
         "caveat": "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed."
       },

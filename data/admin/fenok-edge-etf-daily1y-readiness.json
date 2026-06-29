@@ -1,7 +1,7 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-06-29T23:19:07.798Z",
+  "generated_at": "2026-06-29T23:38:43.913Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -22,11 +22,11 @@
   },
   "daily_1y_readiness": {
     "denominator": 4484,
-    "daily_1y_complete": 3432,
-    "daily_1y_missing": 1052,
-    "daily_1y_fetchable": 518,
-    "inception_limited_daily_1y_gap": 534,
-    "etf_no_fetchable_daily_1y_gap": 518,
+    "daily_1y_complete": 3507,
+    "daily_1y_missing": 977,
+    "daily_1y_fetchable": 441,
+    "inception_limited_daily_1y_gap": 536,
+    "etf_no_fetchable_daily_1y_gap": 441,
     "count_equation": "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap == denominator",
     "count_equation_ok": true,
     "no_fetchable_daily_1y_gap": false,
@@ -43,8 +43,8 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 518,
-    "coverage_index_inception_limited_daily_1y_gap": 534
+    "coverage_index_fetchable_daily_1y_gap": 441,
+    "coverage_index_inception_limited_daily_1y_gap": 536
   },
   "samples": {
     "fetchable": [
@@ -206,10 +206,10 @@
   },
   "exact_fetchable_plan": {
     "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "fetchable_count": 518,
-    "ticker_count": 518,
+    "fetchable_count": 441,
+    "ticker_count": 441,
     "can_drive_bounded_ticker_batches": true,
-    "batch_count": 5,
+    "batch_count": 4,
     "default_batch_size": 120,
     "yf_local_crosscheck_gap_count": 4113,
     "yf_local_crosscheck_matches": false,
