@@ -4,14 +4,18 @@ import assert from "node:assert/strict";
 import {
   applyTickerBatch,
   build,
+  buildAvailabilitySnapshot,
   buildRowsForTest,
   candidateDates,
   estimateMaxLiveRequests,
+  loadS0OccMissingUniverse,
+  mergeAvailabilitySnapshot,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   parseArgs,
   scoreOptionsVolume,
+  summarizeTickerAvailability,
 } from "./fetch-fenok-occ-options-volume.mjs";
 
 const callCsv = [
@@ -124,5 +128,74 @@ const overBudgetPlan = await build(parseArgs([
 assert.equal(overBudgetPlan.selected_tickers, 51);
 assert.equal(overBudgetPlan.request_budget.estimated_max_live_requests, 102);
 assert.equal(overBudgetPlan.request_budget.status, "blocked_over_budget");
+
+const s0OccMissing = loadS0OccMissingUniverse();
+assert.equal(s0OccMissing.length, 351);
+assert.ok(s0OccMissing.includes("GOOG"));
+assert.ok(!s0OccMissing.includes("BRK-A"));
+
+const s0OccMissingPlan = await build(parseArgs(["--s0-occ-missing", "--plan-only"]));
+assert.equal(s0OccMissingPlan.collection_mode, "s0_occ_missing_plain_us_batched");
+assert.equal(s0OccMissingPlan.eligible_count, 351);
+assert.equal(s0OccMissingPlan.selected_tickers, 50);
+assert.equal(s0OccMissingPlan.request_budget.estimated_max_live_requests, 100);
+assert.equal(s0OccMissingPlan.request_budget.status, "within_budget");
+
+const s0OccMissingOverBudget = await build(parseArgs([
+  "--s0-occ-missing",
+  "--batch-size",
+  "51",
+  "--max-requests",
+  "100",
+  "--plan-only",
+]));
+assert.equal(s0OccMissingOverBudget.selected_tickers, 51);
+assert.equal(s0OccMissingOverBudget.request_budget.status, "blocked_over_budget");
+
+const noRecordSummary = summarizeTickerAvailability({
+  ticker: "FTV",
+  ymd: "20260626",
+  sideAttempts: [
+    { ticker: "FTV", source_date: "20260626", side: "C", attempted_form: "FTV", status: "no_record" },
+    { ticker: "FTV", source_date: "20260626", side: "P", attempted_form: "FTV", status: "no_record" },
+  ],
+});
+assert.equal(noRecordSummary.status, "no_record");
+assert.equal(noRecordSummary.accepted_form, null);
+
+const availabilitySnapshot = buildAvailabilitySnapshot({
+  ymd: "20260626",
+  generatedAt: "2026-06-29T00:00:00.000Z",
+  universe: { mode: "s0_occ_missing_plain_us_batched", tickers: ["FTV"], eligible_count: 351 },
+  sideAttempts: [
+    { ticker: "FTV", source_date: "20260626", side: "C", attempted_form: "FTV", status: "no_record" },
+    { ticker: "FTV", source_date: "20260626", side: "P", attempted_form: "FTV", status: "no_record" },
+  ],
+  tickerAvailability: [noRecordSummary],
+  requestBudget: { estimated_max_live_requests: 2, max_requests: 100 },
+});
+assert.equal(availabilitySnapshot.rows[0].status, "no_record");
+assert.equal(availabilitySnapshot.raw_policy.private_artifact_paths_included, false);
+
+const mergedAvailability = mergeAvailabilitySnapshot(
+  { generated_at: "2026-06-28T00:00:00.000Z", rows: [], side_attempts: [] },
+  availabilitySnapshot,
+);
+assert.equal(mergedAvailability.rows.length, 1);
+assert.equal(mergedAvailability.side_attempts.length, 2);
+
+const noFetchNoWrite = await build(parseArgs([
+  "--tickers",
+  "ZZZTEST",
+  "--date",
+  "20260626",
+  "--max-walkback-days",
+  "0",
+  "--no-fetch",
+  "--no-write",
+]));
+assert.equal(noFetchNoWrite.no_usable_rows, true);
+assert.equal(noFetchNoWrite.wrote, false);
+assert.equal(noFetchNoWrite.availability_summary.latest_status_counts.cache_missing_no_fetch, 1);
 
 console.log("test-fetch-fenok-occ-options-volume: ok");

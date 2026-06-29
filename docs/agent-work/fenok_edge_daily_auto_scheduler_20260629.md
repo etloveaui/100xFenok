@@ -32,6 +32,7 @@ Make daily market-source refreshes accumulate without turning missing or stale d
 - YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
 - `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
 - `qa:fenok-edge-readiness` also includes `qa:fenok-s0-source-gaps`, a no-fetch S0 source-gap audit that classifies FINRA/OCC missing rows into collection candidates vs universe-mapping policy work.
+- `qa:fenok-edge-readiness` includes `qa:fenok-occ-options`, a no-fetch unit/plan test for OCC selector, request budget, and no-record availability evidence handling.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
 
 ## Daily Truth Table
@@ -48,6 +49,7 @@ Operational command:
 
 ```bash
 npm --prefix 100xfenok-next run qa:fenok-daily-accumulation
+npm --prefix 100xfenok-next run qa:fenok-occ-options
 npm --prefix 100xfenok-next run qa:fenok-s0-source-gaps
 ```
 
@@ -78,6 +80,9 @@ Operator readout rule:
 - Blocked diagnostics and promotion plans also expose StockAnalysis corporate-action/alias policy evidence for DAY/HOLX/MMC. Acquired, delisted, or old-symbol rows remain diagnostics-only until an explicit terminal/alias policy exists; the audit must not copy MRSH identity into old ticker MMC or promote these rows by inference.
 - StockAnalysis daily schedule is incremental-only for ETF detail plus core surfaces.
 - Fenok Edge OCC daily schedule is batch-limited, request-limited, failure-thresholded, and sleep-throttled.
+- `scripts/fetch-fenok-occ-options-volume.mjs --s0-occ-missing --batch-size 50 --batch-index 0 --date 20260626 --max-requests 100 --plan-only` selects only the current 351 active plain-US OCC gaps. It is a plan-only command and does not fetch/write.
+- OCC no-record and all-empty batches now have a derived evidence path: `data/computed/fenok_occ_options_availability.json`. This file must contain no raw CSV rows and no private cache paths; it is not enough by itself to mark permanent no-listed-options until both C/P sides and accepted-form policy are verified.
+- Live OCC gap filling remains approval-gated. Current bounded budget is 351 tickers * 2 sides = 702 side requests: seven 50-ticker batches at 100 side requests plus one 1-ticker final batch at 2 side requests.
 - Fenok Edge KRX daily schedule is one-day by default, max-call-limited, concurrency-limited, sleep-throttled, and fails closed on failed files or empty KOSPI/KOSDAQ issuer daily rows unless manually overridden.
 - Fenok Edge skips GDELT/news by default in the daily workflow.
 - Manual workflow dispatch exposes `plan_only`, `no_fetch`, KRX date/day/request controls, FINRA date overrides, and OCC batch/request controls.

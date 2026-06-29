@@ -20,6 +20,7 @@ const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_flow_sources_20260628.md";
 const OCC_CACHE_DIR = path.join(privateRoot, "occ_options_volume");
 const OUTPUT_FILE = "computed/fenok_occ_options_volume.json";
 const HISTORY_FILE = "computed/fenok_occ_options_volume_history.json";
+const AVAILABILITY_FILE = "computed/fenok_occ_options_availability.json";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
 const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 100;
@@ -59,6 +60,7 @@ function parseArgs(argv) {
     noWrite: false,
     planOnly: false,
     referenceOnly: false,
+    s0OccMissing: false,
     sleepMs: 250,
     startAfter: "",
   };
@@ -67,6 +69,7 @@ function parseArgs(argv) {
     const arg = argv[i];
     const next = () => argv[++i] ?? "";
     if (arg === "--all-eligible") args.allEligible = true;
+    else if (arg === "--s0-occ-missing") args.s0OccMissing = true;
     else if (arg === "--batch-index") args.batchIndex = Number(next()) || 0;
     else if (arg === "--batch-size") args.batchSize = Number(next()) || 0;
     else if (arg === "--date") args.date = next();
@@ -88,7 +91,7 @@ function parseArgs(argv) {
     else if (arg === "--reference-only") args.referenceOnly = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
-  if (args.allEligible) {
+  if (args.allEligible || args.s0OccMissing) {
     if (!maxWalkbackDaysExplicit) args.maxWalkbackDays = 0;
     if (args.batchSize <= 0) args.batchSize = DEFAULT_ALL_ELIGIBLE_BATCH_SIZE;
     if (args.maxRequests <= 0) args.maxRequests = DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS;
@@ -133,6 +136,14 @@ function normalizeTicker(ticker) {
   return String(ticker ?? "").trim().toUpperCase();
 }
 
+function normalizeSignalsTicker(ticker) {
+  return normalizeTicker(ticker).replaceAll(".", "-");
+}
+
+function plainOccUnderlying(ticker) {
+  return /^[A-Z][A-Z0-9]{0,11}$/.test(normalizeTicker(ticker));
+}
+
 function readEligibleManifest(relOrAbsPath) {
   if (!relOrAbsPath) return null;
   const absPath = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.join(repoRoot, relOrAbsPath);
@@ -161,6 +172,22 @@ function loadAllEligibleUniverse({ eligibleManifest = "", limit = 0 } = {}) {
   out = [...new Set(out.map(normalizeTicker))]
     .filter((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker))
     .sort();
+  if (limit > 0) out = out.slice(0, limit);
+  return out;
+}
+
+function loadS0OccMissingUniverse({ limit = 0 } = {}) {
+  const fenokSignals = readJson("computed/fenok_signals.json", {});
+  const occOptions = readJson(OUTPUT_FILE, {});
+  const occTickers = new Set((Array.isArray(occOptions.rows) ? occOptions.rows : [])
+    .map((row) => normalizeSignalsTicker(row.ticker_normalized ?? row.ticker))
+    .filter(Boolean));
+  const rows = Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
+  let out = rows
+    .filter((row) => row.market === "US")
+    .map((row) => normalizeSignalsTicker(row.ticker_normalized ?? row.ticker))
+    .filter((ticker) => ticker && plainOccUnderlying(ticker) && !occTickers.has(ticker));
+  out = [...new Set(out)].sort();
   if (limit > 0) out = out.slice(0, limit);
   return out;
 }
@@ -194,6 +221,19 @@ function loadTickerUniverse({ tickers, referenceOnly, limit }) {
 }
 
 function resolveTickerUniverse(args) {
+  if (args.s0OccMissing) {
+    const eligibleTickers = loadS0OccMissingUniverse({ limit: args.limit });
+    return {
+      mode: "s0_occ_missing_plain_us_batched",
+      eligible_count: eligibleTickers.length,
+      excluded_note: "active S0 market=US plain underlyings missing from computed OCC rows; US_CLASS/non-plain rows require mapping policy",
+      tickers: applyTickerBatch(eligibleTickers, {
+        batchIndex: args.batchIndex,
+        batchSize: args.batchSize,
+        startAfter: args.startAfter,
+      }),
+    };
+  }
   if (args.allEligible) {
     const eligibleTickers = loadAllEligibleUniverse({
       eligibleManifest: args.eligibleManifest,
@@ -325,6 +365,13 @@ function parseOccCsv(text) {
   });
 }
 
+function classifyOccError(error) {
+  const message = String(error?.message ?? error ?? "");
+  if (/No record\(s\) found/i.test(message)) return "no_record";
+  if (/timeout|HTTP 5\d\d|ECONNRESET|ETIMEDOUT/i.test(message)) return "transient_failed";
+  return "failed";
+}
+
 async function loadOccCsv({ ymd, ticker, side, noFetch }) {
   const cachePath = path.join(OCC_CACHE_DIR, ymd, `${ticker}_${side}.csv`);
   if (fs.existsSync(cachePath)) {
@@ -354,6 +401,66 @@ async function loadOccCsv({ ymd, ticker, side, noFetch }) {
     cache_path: path.relative(repoRoot, cachePath),
     cache_hit: false,
   };
+}
+
+async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch }) {
+  try {
+    const load = await loadOccCsv({ ymd, ticker, side, noFetch });
+    const base = {
+      ticker,
+      source_date: ymd,
+      side,
+      attempted_form: ticker,
+      cache_hit: load.cache_hit === true,
+      no_fetch: noFetch === true,
+    };
+    if (load.missing_no_fetch) {
+      return {
+        load,
+        evidence: {
+          ...base,
+          status: "cache_missing_no_fetch",
+          error_class: "cache_missing_no_fetch",
+        },
+      };
+    }
+    try {
+      parseOccCsv(load.text);
+      return {
+        load,
+        evidence: {
+          ...base,
+          status: "loaded",
+          error_class: null,
+        },
+      };
+    } catch (error) {
+      return {
+        load,
+        evidence: {
+          ...base,
+          status: classifyOccError(error),
+          error_class: classifyOccError(error),
+          error: String(error.message ?? error).slice(0, 240),
+        },
+      };
+    }
+  } catch (error) {
+    return {
+      load: null,
+      evidence: {
+        ticker,
+        source_date: ymd,
+        side,
+        attempted_form: ticker,
+        cache_hit: false,
+        no_fetch: noFetch === true,
+        status: classifyOccError(error),
+        error_class: classifyOccError(error),
+        error: String(error.message ?? error).slice(0, 240),
+      },
+    };
+  }
 }
 
 function clamp(value, min = 0, max = 100) {
@@ -416,26 +523,55 @@ function buildTickerRow({ ticker, ymd, callLoad, putLoad }) {
 async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }) {
   const rows = [];
   const attempts = [];
+  const sideAttempts = [];
+  const tickerAvailability = [];
   for (const ticker of tickers) {
-    try {
-      const callLoad = await loadOccCsv({ ymd, ticker, side: "C", noFetch });
-      if (sleepMs > 0 && !callLoad.cache_hit) await sleep(sleepMs);
-      const putLoad = await loadOccCsv({ ymd, ticker, side: "P", noFetch });
-      if (sleepMs > 0 && !putLoad.cache_hit) await sleep(sleepMs);
-      if (callLoad.missing_no_fetch || putLoad.missing_no_fetch) {
-        attempts.push({ ticker, status: "cache_missing_no_fetch" });
-        continue;
-      }
-      rows.push(buildTickerRow({ ticker, ymd, callLoad, putLoad }));
-    } catch (err) {
-      attempts.push({ ticker, status: "failed", error: err.message });
-      if (failThreshold > 0 && attempts.filter((attempt) => attempt.status === "failed").length >= failThreshold) {
+    const call = await loadOccSideWithEvidence({ ymd, ticker, side: "C", noFetch });
+    if (sleepMs > 0 && call.load && !call.load.cache_hit) await sleep(sleepMs);
+    const put = await loadOccSideWithEvidence({ ymd, ticker, side: "P", noFetch });
+    if (sleepMs > 0 && put.load && !put.load.cache_hit) await sleep(sleepMs);
+    sideAttempts.push(call.evidence, put.evidence);
+    const summary = summarizeTickerAvailability({ ticker, ymd, sideAttempts: [call.evidence, put.evidence] });
+    tickerAvailability.push(summary);
+    if (call.evidence.status === "loaded" && put.evidence.status === "loaded") {
+      rows.push(buildTickerRow({ ticker, ymd, callLoad: call.load, putLoad: put.load }));
+      continue;
+    }
+    attempts.push({
+      ticker,
+      status: summary.status,
+      side_statuses: summary.side_statuses,
+      accepted_form: summary.accepted_form,
+      attempted_forms: summary.attempted_forms,
+    });
+    if (failThreshold > 0 && attempts.filter((attempt) => ["failed", "transient_failed"].includes(attempt.status)).length >= failThreshold) {
         attempts.push({ ticker, status: "stopped_fail_threshold", fail_threshold: failThreshold });
         break;
-      }
     }
   }
-  return { ymd, rows, attempts };
+  return { ymd, rows, attempts, side_attempts: sideAttempts, ticker_availability: tickerAvailability };
+}
+
+function summarizeTickerAvailability({ ticker, ymd, sideAttempts }) {
+  const sideStatuses = Object.fromEntries(sideAttempts.map((attempt) => [attempt.side, attempt.status]));
+  let status = "unavailable";
+  if (sideAttempts.every((attempt) => attempt.status === "loaded")) status = "options_activity_available";
+  else if (sideAttempts.every((attempt) => attempt.status === "no_record")) status = "no_record";
+  else if (sideAttempts.some((attempt) => attempt.status === "cache_missing_no_fetch")) status = "cache_missing_no_fetch";
+  else if (sideAttempts.some((attempt) => attempt.status === "transient_failed")) status = "transient_failed";
+  else if (sideAttempts.some((attempt) => attempt.status === "no_record")) status = "partial_no_record_or_form_gap";
+  else if (sideAttempts.some((attempt) => attempt.status === "failed")) status = "failed";
+  return {
+    ticker,
+    source_date: ymd,
+    attempted_forms: [ticker],
+    accepted_form: status === "options_activity_available" ? ticker : null,
+    status,
+    side_statuses: sideStatuses,
+    evidence_policy: status === "no_record"
+      ? "Both C and P sides returned OCC no-record for the attempted form/date; this is not a permanent no-listed-options proof without accepted-form policy."
+      : null,
+  };
 }
 
 function buildCoverage(rows, attempts = []) {
@@ -490,6 +626,55 @@ function buildSnapshot({ rows, ymd, generatedAt, attempts, maxWalkbackDays, slee
       netOptionsProxyScore: "Higher means higher OCC listed-options call-volume share versus put-volume share for the underlying on the source date. This is a volume-skew proxy, not real options flow, OPRA, or buyer/seller direction.",
     },
     attempts,
+    rows,
+  };
+}
+
+function buildAvailabilitySnapshot({ ymd, generatedAt, universe, sideAttempts, tickerAvailability, requestBudget }) {
+  return {
+    schema_version: "fenok-occ-options-availability/v0.1",
+    generated_at: generatedAt,
+    formula_version: FORMULA_VERSION,
+    purpose: "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
+    raw_policy: {
+      raw_cache_public: false,
+      raw_rows_included: false,
+      private_artifact_paths_included: false,
+    },
+    source_date: ymd,
+    collection_mode: universe.mode,
+    selected_tickers: universe.tickers.length,
+    eligible_count: universe.eligible_count,
+    request_budget: requestBudget,
+    side_attempts: sideAttempts,
+    rows: tickerAvailability,
+  };
+}
+
+function mergeAvailabilitySnapshot(previous, snapshot) {
+  const existingRows = Array.isArray(previous?.rows) ? previous.rows : [];
+  const incomingKeys = new Set(snapshot.rows.map((row) => `${row.ticker}|${row.source_date}|${row.attempted_forms.join("+")}`));
+  const keptRows = existingRows.filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}|${(row.attempted_forms ?? []).join("+")}`));
+  const existingSideAttempts = Array.isArray(previous?.side_attempts) ? previous.side_attempts : [];
+  const incomingSideKeys = new Set(snapshot.side_attempts.map((row) => `${row.ticker}|${row.source_date}|${row.side}|${row.attempted_form}`));
+  const keptSideAttempts = existingSideAttempts.filter((row) => !incomingSideKeys.has(`${row.ticker}|${row.source_date}|${row.side}|${row.attempted_form}`));
+  const rows = [...keptRows, ...snapshot.rows].sort((a, b) => (
+    String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
+  ));
+  return {
+    ...snapshot,
+    previous_generated_at: previous?.generated_at ?? null,
+    upsert_policy: {
+      key: ["ticker", "source_date", "attempted_forms"],
+      replaced_rows: existingRows.length - keptRows.length,
+      added_rows: snapshot.rows.length,
+      cumulative_rows: rows.length,
+    },
+    side_attempts: [...keptSideAttempts, ...snapshot.side_attempts].sort((a, b) => (
+      String(a.ticker).localeCompare(String(b.ticker))
+      || String(a.source_date).localeCompare(String(b.source_date))
+      || String(a.side).localeCompare(String(b.side))
+    )),
     rows,
   };
 }
@@ -581,6 +766,7 @@ async function build(args) {
       raw_cache_dir: path.relative(repoRoot, OCC_CACHE_DIR),
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
+      availability_file: `data/${AVAILABILITY_FILE}`,
       availability_policy: OCC_AVAILABILITY_POLICY,
       collection_retry_policy: {
         max_walkback_days: args.maxWalkbackDays,
@@ -606,8 +792,51 @@ async function build(args) {
       failThreshold: args.failThreshold,
     });
     dateAttempts.push({ ymd, rows: result.rows.length, failed_attempts: result.attempts.length });
+    const availabilitySnapshot = buildAvailabilitySnapshot({
+      ymd,
+      generatedAt: isoNow(),
+      universe,
+      sideAttempts: result.side_attempts,
+      tickerAvailability: result.ticker_availability,
+      requestBudget: {
+        estimated_max_live_requests: estimatedMaxLiveRequests,
+        max_requests: args.maxRequests || null,
+      },
+    });
+    const availability = mergeAvailabilitySnapshot(readJson(AVAILABILITY_FILE, null), availabilitySnapshot);
+    if (!args.noWrite && (result.side_attempts.length > 0 || result.ticker_availability.length > 0)) {
+      writeJson(AVAILABILITY_FILE, availability);
+    }
     const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
-    if (usableRows.length === 0) continue;
+    if (usableRows.length === 0) {
+      if (args.maxWalkbackDays === 0 || ymd === dates.at(-1)) {
+        return {
+          output_file: `data/${OUTPUT_FILE}`,
+          history_file: `data/${HISTORY_FILE}`,
+          availability_file: `data/${AVAILABILITY_FILE}`,
+          wrote: !args.noWrite,
+          no_usable_rows: true,
+          occ_source_date: ymd,
+          availability_policy: OCC_AVAILABILITY_POLICY,
+          coverage: buildCoverage([], result.attempts),
+          collection_mode: universe.mode,
+          selected_tickers: tickers.length,
+          request_budget: {
+            estimated_max_live_requests: estimatedMaxLiveRequests,
+            max_requests: args.maxRequests || null,
+          },
+          date_attempts: dateAttempts,
+          availability_summary: {
+            rows: availability.rows.length,
+            latest_status_counts: availability.rows.reduce((acc, row) => {
+              acc[row.status] = (acc[row.status] ?? 0) + 1;
+              return acc;
+            }, {}),
+          },
+        };
+      }
+      continue;
+    }
     const snapshot = buildSnapshot({
       rows: result.rows,
       ymd,
@@ -625,6 +854,7 @@ async function build(args) {
     return {
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
+      availability_file: `data/${AVAILABILITY_FILE}`,
       wrote: !args.noWrite,
       occ_source_date: ymd,
       availability_policy: OCC_AVAILABILITY_POLICY,
@@ -660,16 +890,20 @@ export {
   applyTickerBatch,
   build,
   buildCoverage,
+  buildAvailabilitySnapshot,
   buildRowsForTest,
   candidateDates,
   directionFromOptionsVolume,
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
+  loadS0OccMissingUniverse,
+  mergeAvailabilitySnapshot,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   parseArgs,
   scoreOptionsVolume,
+  summarizeTickerAvailability,
 };
 
 function buildRowsForTest({ ticker, ymd, callCsv, putCsv }) {
