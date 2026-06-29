@@ -906,7 +906,14 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0">
                 <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
-                <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">{item.name ?? "—"}</th>
+                <th scope="row" className="px-2 py-2 text-left min-w-0">
+                  {item.symbol ? (
+                    <span className="orbitron text-xs font-black text-[var(--c-ink)]">{item.symbol}</span>
+                  ) : null}
+                  <span className="block truncate max-w-[14rem] text-[11px] font-semibold text-[var(--c-ink-4)]" title={item.name ?? undefined}>
+                    {item.name ?? "—"}
+                  </span>
+                </th>
                 <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-[var(--c-ink-3)]">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
                 <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>

@@ -1262,8 +1262,10 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
           <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">통합 데이터</h4>
-          <p className="mt-0.5 min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]">
-            {data.identity?.name ?? data.ticker ?? ticker} · {data.asset_type === "etf" ? "ETF" : "주식"}
+          <p className="mt-0.5 min-w-0 text-[11px] font-bold text-[var(--c-ink-4)]">
+            <span className="orbitron font-black">{data.ticker ?? ticker}</span>
+            {data.identity?.name ? <span className="truncate" title={data.identity.name}> · {data.identity.name}</span> : null}
+            <span> · {data.asset_type === "etf" ? "ETF" : "주식"}</span>
           </p>
         </div>
         <span className="min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-4)]">
@@ -1315,9 +1317,17 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
               <tbody>
                 {topHoldings.map((row, index) => (
                   <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
-                    <td className="px-2 py-1.5 font-bold text-[var(--c-ink-2)]">
-                      <span className="block max-w-[14rem] truncate">{row.name ?? "—"}</span>
-                      {row.symbol ? <span className="orbitron text-[10px] font-black text-[var(--c-ink-4)]">{row.symbol}</span> : null}
+                    <td className="px-2 py-1.5 min-w-0">
+                      {row.symbol ? (
+                        <span className="orbitron text-xs font-black text-[var(--c-ink)]">{row.symbol}</span>
+                      ) : null}
+                      {row.name ? (
+                        <span className="block max-w-[14rem] truncate text-[11px] font-semibold text-[var(--c-ink-4)]" title={row.name}>
+                          {row.name}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-[var(--c-ink-4)]">—</span>
+                      )}
                     </td>
                     <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
                       {isFiniteNumber(row.weight_pct) ? `${row.weight_pct.toFixed(2)}%` : "—"}
