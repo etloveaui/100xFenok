@@ -138,6 +138,21 @@ interface MarketFactsPayload {
   } | null;
 }
 
+interface EtfSignalRow {
+  ticker?: string;
+  company?: string | null;
+  category?: string | null;
+  scores?: Record<string, number | null | undefined>;
+  scored_signal_count?: number | null;
+}
+
+interface EtfSignalsPayload {
+  generated_at?: string | null;
+  formula_version?: string | null;
+  caveat?: string | null;
+  row?: EtfSignalRow | null;
+}
+
 type DetailEtfUniverseRecord = EtfUniverseRecord & {
   provider_page?: string | null;
   source_page?: number | null;
@@ -169,8 +184,20 @@ type LoadResult<T> =
 
 const etfCache: Record<string, Promise<LoadResult<EtfPayload>> | EtfPayload | undefined> = {};
 const factsCache: Record<string, Promise<LoadResult<MarketFactsPayload>> | MarketFactsPayload | undefined> = {};
+const signalsCache: Record<string, Promise<LoadResult<EtfSignalsPayload>> | EtfSignalsPayload | undefined> = {};
 let etfUniverseCache: EtfUniversePayload | undefined;
 let etfUniversePending: Promise<LoadResult<EtfUniversePayload>> | null = null;
+
+const ETF_SIGNAL_SCORE_FIELDS = [
+  { key: "cost_efficiency", label: "비용 효율" },
+  { key: "liquidity", label: "유동성" },
+  { key: "tracking_quality", label: "추종 품질" },
+  { key: "momentum_trend", label: "추세" },
+  { key: "risk_adjusted_momentum", label: "위험조정 추세" },
+  { key: "income", label: "인컴" },
+  { key: "diversification", label: "분산" },
+  { key: "classification_risk", label: "분류 안전성" },
+] as const;
 
 const ISSUER_SLUG_LABELS: Record<string, string> = {
   "blackrock": "iShares",
@@ -226,6 +253,7 @@ function clearEtfRuntimeCache(ticker: string) {
   if (!symbol) return;
   delete etfCache[symbol];
   delete factsCache[symbol];
+  delete signalsCache[symbol];
 }
 
 function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
@@ -293,6 +321,40 @@ function loadMarketFacts(ticker: string): Promise<LoadResult<MarketFactsPayload>
       return failedResult<MarketFactsPayload>();
     });
   factsCache[symbol] = request;
+  return request;
+}
+
+function loadEtfSignalPayload(ticker: string): Promise<LoadResult<EtfSignalsPayload>> {
+  const symbol = cleanSymbol(ticker);
+  if (!symbol) return Promise.resolve(missingResult());
+  const cached = signalsCache[symbol];
+  if (cached instanceof Promise) return cached;
+  if (cached !== undefined) return Promise.resolve(okResult(cached));
+
+  const request = fetch(`/api/data/fenok-etf-signals/${encodeURIComponent(symbol)}/`, { cache: "no-store" })
+    .then((res) => {
+      if (res.ok) return res.json();
+      return res.status === 404 ? missingResult<EtfSignalsPayload>() : failedResult<EtfSignalsPayload>();
+    })
+    .then((payload) => {
+      if (isLoadResult<EtfSignalsPayload>(payload)) {
+        delete signalsCache[symbol];
+        return payload;
+      }
+      const parsed = asRecord(payload) ? payload as EtfSignalsPayload : null;
+      if (parsed) {
+        signalsCache[symbol] = parsed;
+        return okResult(parsed);
+      } else {
+        delete signalsCache[symbol];
+        return missingResult<EtfSignalsPayload>();
+      }
+    })
+    .catch(() => {
+      delete signalsCache[symbol];
+      return failedResult<EtfSignalsPayload>();
+    });
+  signalsCache[symbol] = request;
   return request;
 }
 
@@ -411,6 +473,14 @@ function fmtSignedPercentPoints(value: MaybeNumber) {
 
 function fmtCompactSignedPercent(value: MaybeNumber) {
   return isFiniteNumber(value) ? formatSignedPercent(value, { digits: Math.abs(value) >= 100 ? 1 : 2, fraction: false }) : "—";
+}
+
+function fmtEtfSignalScore(value: MaybeNumber) {
+  if (!isFiniteNumber(value)) return "—";
+  return value.toLocaleString("ko-KR", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+    maximumFractionDigits: 1,
+  });
 }
 
 function fmtShares(value: unknown): string {
@@ -1204,7 +1274,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     reloadKey: number;
     etfResult: LoadResult<EtfPayload> | undefined;
     factsResult: LoadResult<MarketFactsPayload> | undefined;
-  }>({ symbol, reloadKey: 0, etfResult: undefined, factsResult: undefined });
+    signalsResult: LoadResult<EtfSignalsPayload> | undefined;
+  }>({ symbol, reloadKey: 0, etfResult: undefined, factsResult: undefined, signalsResult: undefined });
   const [universeState, setUniverseState] = useState<{
     loaded: boolean;
     failed: boolean;
@@ -1214,9 +1285,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadEtfPayload(symbol), loadMarketFacts(symbol)]).then(([nextEtf, nextFacts]) => {
+    Promise.all([loadEtfPayload(symbol), loadMarketFacts(symbol), loadEtfSignalPayload(symbol)]).then(([nextEtf, nextFacts, nextSignals]) => {
       if (!cancelled) {
-        setState({ symbol, reloadKey, etfResult: nextEtf, factsResult: nextFacts });
+        setState({ symbol, reloadKey, etfResult: nextEtf, factsResult: nextFacts, signalsResult: nextSignals });
       }
     });
     return () => {
@@ -1250,8 +1321,10 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const currentState = state.symbol === symbol && state.reloadKey === reloadKey;
   const etfResult = currentState ? state.etfResult : undefined;
   const factsResult = currentState ? state.factsResult : undefined;
+  const signalsResult = currentState ? state.signalsResult : undefined;
   const etfData = etfResult?.status === "ok" ? etfResult.data : etfResult === undefined ? undefined : null;
   const marketFacts = factsResult?.status === "ok" ? factsResult.data : factsResult === undefined ? undefined : null;
+  const etfSignals = signalsResult?.status === "ok" ? signalsResult.data : signalsResult === undefined ? undefined : null;
   const etfLoadFailed = etfResult?.status === "failed";
   const factsLoadFailed = factsResult?.status === "failed";
   const hasLoadFailure = etfLoadFailed || factsLoadFailed;
@@ -1365,6 +1438,13 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((metric) => metric.value !== "—");
+  const etfSignalScores = etfSignals?.row?.scores ?? {};
+  const etfSignalCount = etfSignals?.row?.scored_signal_count;
+  const etfSignalDetails = [
+    etfSignals?.generated_at ? `생성 ${fmtDateish(etfSignals.generated_at)}` : null,
+    etfSignals?.formula_version ? `공식 ${etfSignals.formula_version}` : null,
+    isFiniteNumber(etfSignalCount) ? `${etfSignalCount}개 항목` : null,
+  ].filter((item): item is string => Boolean(item));
   const peerCollections = buildEtfPeerCollections({
     symbol,
     provider,
@@ -1530,6 +1610,38 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 운용사 웹사이트
               </a>
             ) : null}
+          </SectionCard>
+
+          <SectionCard title="Fenok Edge ETF 시그널" desc="별도 ETF 레인 · SCORED, not DAILY/GATED">
+            {signalsResult === undefined ? (
+              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+                ETF 전용 시그널 확인 중
+              </div>
+            ) : etfSignals?.row ? (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {ETF_SIGNAL_SCORE_FIELDS.map((field) => (
+                    <MetricCard
+                      key={field.key}
+                      label={field.label}
+                      value={fmtEtfSignalScore(etfSignalScores[field.key])}
+                      note="0-100 · ETF 전용"
+                    />
+                  ))}
+                </div>
+                <DataProvenanceNote
+                  title="ETF 별도 레인"
+                  details={etfSignalDetails}
+                  className="mt-3 border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
+                >
+                  주식 conviction/hexagon과 합산하지 않습니다. 현재 상태는 SCORED이며 PUBLIC/DAILY/GATED 완료 표시는 아닙니다.
+                </DataProvenanceNote>
+              </>
+            ) : (
+              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+                이 ETF의 별도 시그널 행이 아직 없습니다. 주식 점수로 대체하지 않습니다.
+              </div>
+            )}
           </SectionCard>
 
           <EtfPeerCollectionsSection
