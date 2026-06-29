@@ -22,6 +22,23 @@ const OUTPUT_FILE = "computed/fenok_occ_options_volume.json";
 const HISTORY_FILE = "computed/fenok_occ_options_volume_history.json";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 const OCC_ENDPOINT = "https://marketdata.theocc.com/volume-query";
+const OCC_AVAILABILITY_POLICY = {
+  source_id: "occ_volume_query",
+  availability_status: "not_verified",
+  public_docs_evidence: "https://www.theocc.com/market-data/market-data-reports/other-market-data-info/batch-processing/volume-query-batch-processing",
+  exact_volume_query_release_time: null,
+  caveat: "OCC volume-query endpoint and batch parameters are observed, but exact daily volume availability time is not confirmed from the public batch page. Product/Series approximate release times must not be treated as volume-query proof.",
+  scheduler_guidance: {
+    initial_daily_run_kst: "08:30",
+    rationale: "Run in KST morning after FINRA's known worst-case KST availability, then let source-specific retries/polling discover OCC readiness until empirical polling replaces this placeholder.",
+    do_not_default_to: ["23:45 ET", "12:45 KST"],
+  },
+  poll_window_kst: {
+    start: "08:00",
+    end: "10:30",
+    status: "initial_unverified_window_pending_empirical_polling",
+  },
+};
 
 function parseArgs(argv) {
   const args = {
@@ -313,7 +330,7 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs }) {
   return { ymd, rows, attempts };
 }
 
-function buildSnapshot({ rows, ymd, generatedAt, attempts }) {
+function buildSnapshot({ rows, ymd, generatedAt, attempts, maxWalkbackDays, sleepMs }) {
   return {
     schema_version: 1,
     generated_at: generatedAt,
@@ -338,6 +355,13 @@ function buildSnapshot({ rows, ymd, generatedAt, attempts }) {
       productKind: "OSTK",
       accountType: "omitted_all_accounts",
       porc: "C_or_P",
+    },
+    availability_policy: OCC_AVAILABILITY_POLICY,
+    collection_retry_policy: {
+      max_walkback_days: maxWalkbackDays,
+      sleep_ms_between_side_queries: sleepMs,
+      exact_release_time_verified: false,
+      empirical_polling_required: true,
     },
     coverage: {
       row_count: rows.length,
@@ -408,6 +432,13 @@ async function build(args) {
       raw_cache_dir: path.relative(repoRoot, OCC_CACHE_DIR),
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
+      availability_policy: OCC_AVAILABILITY_POLICY,
+      collection_retry_policy: {
+        max_walkback_days: args.maxWalkbackDays,
+        sleep_ms_between_side_queries: args.sleepMs,
+        exact_release_time_verified: false,
+        empirical_polling_required: true,
+      },
       public_mirror: false,
     };
   }
@@ -423,6 +454,8 @@ async function build(args) {
       ymd,
       generatedAt: isoNow(),
       attempts: result.attempts,
+      maxWalkbackDays: args.maxWalkbackDays,
+      sleepMs: args.sleepMs,
     });
     const history = mergeHistory(snapshot);
     if (!args.noWrite) {
@@ -434,6 +467,7 @@ async function build(args) {
       history_file: `data/${HISTORY_FILE}`,
       wrote: !args.noWrite,
       occ_source_date: ymd,
+      availability_policy: OCC_AVAILABILITY_POLICY,
       coverage: snapshot.coverage,
       date_attempts: dateAttempts,
       reference_rows: snapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
@@ -459,6 +493,7 @@ export {
   buildRowsForTest,
   candidateDates,
   directionFromOptionsVolume,
+  OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   scoreOptionsVolume,
 };

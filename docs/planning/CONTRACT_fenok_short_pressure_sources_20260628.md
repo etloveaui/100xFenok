@@ -24,6 +24,9 @@ Scope: FINRA short-pressure sources for #324
 - `redistribution_policy`: `derived_only_raw_admin_only`
 - `cadence`: daily
 - `lag`: FINRA states daily files are posted by 6:00 p.m. ET on the trade date; rare subsequent updates are possible.
+- `availability_window_kst`: next-day 07:00 during EDT, next-day 08:00 during EST
+- `initial_scheduler_guidance`: KST morning after the known FINRA window; do not default to 23:45 ET / 12:45 KST without empirical need.
+- `poll_window_kst`: 07:05-09:30 initial window, with retries encoded in the collector manifest
 - `rate_limit`: not found in the public static-file page
 - `raw_public`: false
 - `public_derived_path`: future `data/computed/short_pressure.json`

@@ -46,6 +46,10 @@ for (const relativePath of [
   "public/data/computed/fenok_signal_lens_proxies.json",
   "public/data/computed/fenok_signal_lens_proxies_history.json",
   "public/data/computed/fenok_signal_lens_proxies_summary.json",
+  "public/data/computed/fenok_social_attention_proxy.json",
+  "public/data/computed/fenok_social_attention_proxy_history.json",
+  "public/data/computed/fenok_apewisdom_attention_proxy.json",
+  "public/data/computed/fenok_apewisdom_attention_proxy_history.json",
 ]) {
   removeGeneratedPublicMirror(relativePath);
 }

@@ -3,6 +3,7 @@
  * Update Fenok Signal Lens proxy data in the intended order.
  *
  * Default posture:
+ * - private/admin FINRA source/backfill registry for regsho-daily only
  * - full-universe FINRA flow proxy
  * - targeted OCC listed-options volume skew proxy for the reference tickers
  * - targeted GDELT headline sample with a conservative rate-limit sleep
@@ -24,11 +25,22 @@ function parseArgs(argv) {
     dryRun: false,
     tickers: "",
     referenceOnly: false,
+    skipFinraCollector: false,
     skipFlow: false,
     skipOptions: false,
     skipNews: false,
     skipLens: false,
     noFetch: false,
+    finraDataset: "regsho-daily",
+    finraDate: "",
+    finraFrom: "",
+    finraTo: "",
+    finraInputFile: "",
+    finraNoWrite: false,
+    finraPlanOnly: false,
+    finraRetries: "2",
+    finraRetryBackoffMs: "2000",
+    finraSleepMs: "0",
     flowMaxWalkbackDays: "14",
     optionsMaxWalkbackDays: "7",
     optionsSleepMs: "250",
@@ -44,11 +56,22 @@ function parseArgs(argv) {
     if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--tickers") args.tickers = next();
     else if (arg === "--reference-only") args.referenceOnly = true;
+    else if (arg === "--skip-finra-collector") args.skipFinraCollector = true;
     else if (arg === "--skip-flow") args.skipFlow = true;
     else if (arg === "--skip-options") args.skipOptions = true;
     else if (arg === "--skip-news") args.skipNews = true;
     else if (arg === "--skip-lens") args.skipLens = true;
     else if (arg === "--no-fetch") args.noFetch = true;
+    else if (arg === "--finra-dataset") args.finraDataset = next();
+    else if (arg === "--finra-date") args.finraDate = next();
+    else if (arg === "--finra-from") args.finraFrom = next();
+    else if (arg === "--finra-to") args.finraTo = next();
+    else if (arg === "--finra-input-file") args.finraInputFile = next();
+    else if (arg === "--finra-no-write") args.finraNoWrite = true;
+    else if (arg === "--finra-plan-only") args.finraPlanOnly = true;
+    else if (arg === "--finra-retries") args.finraRetries = next();
+    else if (arg === "--finra-retry-backoff-ms") args.finraRetryBackoffMs = next();
+    else if (arg === "--finra-sleep-ms") args.finraSleepMs = next();
     else if (arg === "--flow-max-walkback-days") args.flowMaxWalkbackDays = next();
     else if (arg === "--options-max-walkback-days") args.optionsMaxWalkbackDays = next();
     else if (arg === "--options-sleep-ms") args.optionsSleepMs = next();
@@ -85,6 +108,25 @@ function runStep({ label, command, args, dryRun }) {
 function buildPlan(args) {
   const plan = [];
   if (!args.skipFlow) {
+    if (!args.skipFinraCollector) {
+      const finraArgs = [
+        "scripts/fetch-fenok-finra-daily-private.mjs",
+        "--dataset",
+        args.finraDataset,
+      ];
+      if (args.finraDate) finraArgs.push("--date", args.finraDate);
+      if (args.finraFrom) finraArgs.push("--from", args.finraFrom);
+      if (args.finraTo) finraArgs.push("--to", args.finraTo);
+      if (args.finraInputFile) finraArgs.push("--input-file", args.finraInputFile);
+      if (args.noFetch) finraArgs.push("--no-fetch");
+      if (args.finraNoWrite) finraArgs.push("--no-write");
+      if (args.finraPlanOnly) finraArgs.push("--plan-only");
+      finraArgs.push("--retries", args.finraRetries);
+      finraArgs.push("--retry-backoff-ms", args.finraRetryBackoffMs);
+      finraArgs.push("--sleep-ms", args.finraSleepMs);
+      plan.push({ label: "FINRA private source/backfill registry", command: process.execPath, args: finraArgs });
+    }
+
     const flowArgs = [
       "scripts/build-fenok-flow-proxies.mjs",
       "--max-walkback-days",

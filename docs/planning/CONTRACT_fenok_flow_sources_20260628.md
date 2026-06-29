@@ -77,17 +77,20 @@ Boundary:
 
 - `source_id`: `occ_volume_query`
 - `provider`: OCC
-- `endpoint`: `https://marketdata.theocc.com/volume-query?reportDate=YYYYMMDD&format=csv&volumeQueryType=O&symbolType=O&symbol={TICKER}&reportType=D&accountType=C&productKind=OSTK&porc={C|P}`
+- `endpoint`: `https://marketdata.theocc.com/volume-query?reportDate=YYYYMMDD&format=csv&volumeQueryType=O&symbolType=U&symbol={TICKER}&reportType=D&productKind=OSTK&porc={C|P}`
 - `access_type`: `free_public_endpoint_observed`
 - `terms_status`: `needs_owner_review`
 - `redistribution_policy`: `derived_only_raw_admin_only`
 - `cadence`: daily query by report date
 - `lag`: date availability window not fully verified
+- `availability_status`: [not verified] exact daily volume-query release time is not confirmed from the public batch-processing page
+- `initial_scheduler_guidance`: KST morning after FINRA's known worst-case window, with source-specific polling/retries; do not default to 23:45 ET / 12:45 KST unless empirical polling proves it is needed
+- `poll_window_kst`: 08:00-10:30 initial unverified window pending empirical polling
 - `rate_limit`: not found
 - `raw_public`: false
-- `public_derived_path`: future ticker option-volume proxy
-- `fallback`: existing YF targeted option-chain snapshots
-- `verification_status`: NVDA call-volume CSV sample verified on 2026-06-28; OCC terms require owner review before automation/service use
+- `public_derived_path`: `computed/fenok_occ_options_volume.json` feeds the approved public summary score
+- `fallback`: none for the public score; yfinance option-chain snapshots are admin-only PoC if kept
+- `verification_status`: NVDA/MU 20260626 call/put CSV sample verified; public score formula `clamp(50 + 18*ln(calls/puts), 0, 100)`
 - `evidence`: https://marketdata.theocc.com/volume-query
 - `docs_evidence`: https://www.theocc.com/market-data/market-data-reports/other-market-data-info/batch-processing/volume-query-batch-processing
 - `terms_evidence`: https://www.theocc.com/specialpages/legal/terms-and-conditions
@@ -104,8 +107,8 @@ Observed sample fields:
 
 Boundary:
 
-- Use as ticker call/put volume proxy only.
-- Do not infer buyer/seller initiation, sweeps, blocks, or premium flow.
+- Use as listed-options call/put volume skew proxy only.
+- Do not infer buyer/seller initiation, OPRA flow, greeks, sweeps, blocks, or premium flow.
 - Do not automate beyond a bounded owner-approved collector; OCC terms research
   flags automated systems and commercial exploitation constraints.
 
