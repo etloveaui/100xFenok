@@ -1,0 +1,165 @@
+# Fenok Edge daily derived proxy refresh.
+# Raw FINRA/OCC caches stay under _private/; commits are limited to public-safe
+# derived data, coverage indexes, and generated route metadata.
+
+name: Fenok Edge Daily Data
+
+on:
+  schedule:
+    # KST Tue-Sat 09:30, after the prior US session's FINRA/OCC windows.
+    - cron: '30 0 * * 2-6'
+  workflow_dispatch:
+    inputs:
+      plan_only:
+        description: 'Print the resolved plan without network fetches or writes'
+        required: false
+        default: 'false'
+      no_fetch:
+        description: 'Use cached/private inputs only; do not fetch remote sources'
+        required: false
+        default: 'false'
+      finra_from:
+        description: 'Optional FINRA start date override, YYYYMMDD'
+        required: false
+        default: ''
+      finra_to:
+        description: 'Optional FINRA end date override, YYYYMMDD'
+        required: false
+        default: ''
+      occ_batch_size:
+        description: 'OCC eligible ticker batch size'
+        required: false
+        default: '50'
+      occ_batch_count:
+        description: 'OCC rolling batch count used with run_number'
+        required: false
+        default: '13'
+      occ_batch_index:
+        description: 'Optional OCC batch index override'
+        required: false
+        default: ''
+      occ_max_requests:
+        description: 'Maximum OCC HTTP requests per run'
+        required: false
+        default: '100'
+      occ_fail_threshold:
+        description: 'Maximum OCC hard failures before aborting'
+        required: false
+        default: '5'
+      occ_sleep_ms:
+        description: 'Milliseconds between OCC requests'
+        required: false
+        default: '250'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fenok-edge-daily-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh-fenok-edge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Resolve bounded window
+        id: window
+        env:
+          INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
+          INPUT_NO_FETCH: ${{ github.event.inputs.no_fetch || 'false' }}
+          INPUT_FINRA_FROM: ${{ github.event.inputs.finra_from || '' }}
+          INPUT_FINRA_TO: ${{ github.event.inputs.finra_to || '' }}
+          INPUT_OCC_BATCH_SIZE: ${{ github.event.inputs.occ_batch_size || '50' }}
+          INPUT_OCC_BATCH_COUNT: ${{ github.event.inputs.occ_batch_count || '13' }}
+          INPUT_OCC_BATCH_INDEX: ${{ github.event.inputs.occ_batch_index || '' }}
+          INPUT_OCC_MAX_REQUESTS: ${{ github.event.inputs.occ_max_requests || '100' }}
+          INPUT_OCC_FAIL_THRESHOLD: ${{ github.event.inputs.occ_fail_threshold || '5' }}
+          INPUT_OCC_SLEEP_MS: ${{ github.event.inputs.occ_sleep_ms || '250' }}
+        shell: bash
+        run: |
+          RUN_NUMBER_SAFE="${GITHUB_RUN_NUMBER:-0}"
+          OCC_BATCH_SIZE="${INPUT_OCC_BATCH_SIZE:-50}"
+          OCC_BATCH_COUNT="${INPUT_OCC_BATCH_COUNT:-13}"
+          if [ -n "$INPUT_OCC_BATCH_INDEX" ]; then
+            OCC_BATCH_INDEX="$INPUT_OCC_BATCH_INDEX"
+          else
+            OCC_BATCH_INDEX=$(( RUN_NUMBER_SAFE % OCC_BATCH_COUNT ))
+          fi
+          FINRA_FROM="${INPUT_FINRA_FROM:-$(date -u -d '7 days ago' +%Y%m%d)}"
+          FINRA_TO="${INPUT_FINRA_TO:-$(date -u -d 'yesterday' +%Y%m%d)}"
+          {
+            echo "finra_from=$FINRA_FROM"
+            echo "finra_to=$FINRA_TO"
+            echo "occ_batch_size=$OCC_BATCH_SIZE"
+            echo "occ_batch_index=$OCC_BATCH_INDEX"
+            echo "occ_max_requests=${INPUT_OCC_MAX_REQUESTS:-100}"
+            echo "occ_fail_threshold=${INPUT_OCC_FAIL_THRESHOLD:-5}"
+            echo "occ_sleep_ms=${INPUT_OCC_SLEEP_MS:-250}"
+          } >> "$GITHUB_OUTPUT"
+          echo "FENOK_EDGE_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
+          echo "FENOK_EDGE_NO_FETCH=${INPUT_NO_FETCH:-false}" >> "$GITHUB_ENV"
+
+      - name: Refresh FINRA and OCC derived proxies
+        shell: bash
+        run: |
+          ARGS=(
+            "--skip-news"
+            "--finra-from" "${{ steps.window.outputs.finra_from }}"
+            "--finra-to" "${{ steps.window.outputs.finra_to }}"
+            "--finra-sleep-ms" "250"
+            "--flow-max-walkback-days" "14"
+            "--options-all-eligible"
+            "--options-batch-size" "${{ steps.window.outputs.occ_batch_size }}"
+            "--options-batch-index" "${{ steps.window.outputs.occ_batch_index }}"
+            "--options-max-requests" "${{ steps.window.outputs.occ_max_requests }}"
+            "--options-fail-threshold" "${{ steps.window.outputs.occ_fail_threshold }}"
+            "--options-sleep-ms" "${{ steps.window.outputs.occ_sleep_ms }}"
+            "--options-max-walkback-days" "3"
+          )
+          if [ "${FENOK_EDGE_PLAN_ONLY:-false}" = "true" ]; then ARGS+=("--dry-run"); fi
+          if [ "${FENOK_EDGE_NO_FETCH:-false}" = "true" ]; then ARGS+=("--no-fetch"); fi
+          node scripts/update-fenok-signal-lens-proxies.mjs "${ARGS[@]}"
+
+      - name: Rebuild Fenok Edge public-safe derivatives
+        if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}
+        run: |
+          node scripts/build-fenok-edge-coverage-index.mjs
+          npm --prefix 100xfenok-next run sync-static
+          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
+
+      - name: Commit and push derived artifacts
+        if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/computed/fenok_flow_proxies*.json \
+            data/computed/fenok_occ_options_volume*.json \
+            data/computed/fenok_signal_lens_proxies*.json \
+            data/computed/fenok_signals*.json \
+            data/computed/fenok_etf_signals*.json \
+            data/admin/fenok-edge-coverage-index.json \
+            data/admin/product-surface-coverage.json \
+            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
+            100xfenok-next/public/data/admin/product-surface-coverage.json \
+            100xfenok-next/src/generated/static-route-manifest.ts
+          git diff --staged --quiet || git commit -m "chore: update fenok edge daily data"
+          for attempt in $(seq 1 5); do
+            git pull --rebase origin main
+            if git push; then
+              exit 0
+            fi
+            echo "git push race on attempt ${attempt}; retrying after rebase"
+            sleep 3
+          done
+          echo "git push failed after retrying concurrent main updates"
+          exit 1

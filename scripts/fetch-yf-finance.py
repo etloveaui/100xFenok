@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-yf Finance Engine v2 — field-selected batch fetch for the global-scouter universe.
+yf Finance Engine v2 — field-selected batch fetch for the Fenok stock/ETF universe.
 
 Capacity strategy: keep the existing compact statement core, then add bounded
 Yahoo-only depth in `--profile full` so Stock Lens can expose everything useful
@@ -8,7 +8,7 @@ without making a weekly 1,100-ticker batch unbounded. Options chains stay behind
 an explicit flag because they are expiry-heavy and rate-limit sensitive.
 
 Usage:
-  python3 scripts/fetch-yf-finance.py                  # full universe, full profile
+  python3 scripts/fetch-yf-finance.py                  # default stock/ETF universe, full profile
   python3 scripts/fetch-yf-finance.py --profile core   # legacy compact profile
   python3 scripts/fetch-yf-finance.py --limit 30       # first 30
   python3 scripts/fetch-yf-finance.py --shard 0/4      # shard i of n
@@ -35,6 +35,7 @@ STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
 STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
 STOCKANALYSIS_ETF_SCREENER = ROOT / "data" / "stockanalysis" / "surfaces" / "etf_screener.json"
+MARKET_FACTS_INDEX = ROOT / "data" / "computed" / "market_facts" / "index.json"
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
@@ -607,8 +608,25 @@ def load_portfolio_symbols():
     return {m.group(1).upper() for m in re.finditer(r"ticker:\s*\"([^\"]+)\"", text)}
 
 
+def load_market_facts_stocks():
+    try:
+        payload = json.loads(MARKET_FACTS_INDEX.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+    rows = payload.get("rows") if isinstance(payload.get("rows"), list) else []
+    symbols = set()
+    for row in rows:
+        if not isinstance(row, dict) or row.get("asset_type") != "stock":
+            continue
+        symbol = str(row.get("ticker") or "").strip().upper()
+        if SYMBOL_RE.match(symbol):
+            symbols.add(symbol)
+    return symbols
+
+
 def load_universe(stocks_only=False, stockanalysis_etfs=False):
     tickers = {p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}
+    tickers |= load_market_facts_stocks()
     if not stocks_only:
         tickers |= load_scouter_etfs()
         tickers |= load_dashboard_etfs()
@@ -714,7 +732,7 @@ def main():
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
-    parser.add_argument("--stocks-only", action="store_true", help="legacy mode: global-scouter stock detail only")
+    parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")

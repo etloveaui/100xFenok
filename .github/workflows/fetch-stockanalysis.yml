@@ -5,6 +5,8 @@ name: Fetch StockAnalysis Data
 
 on:
   schedule:
+    # Weekday bounded ETF/surface catch-up after US close (KST Tue-Sat 08:50).
+    - cron: '50 23 * * 1-5'
     # 매주 일요일 23:20 UTC (한국 월요일 08:20) — Yahoo weekly refresh afterglow
     - cron: '20 23 * * 0'
   workflow_dispatch:
@@ -122,7 +124,21 @@ jobs:
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            INPUT_FETCH_FINANCIALS="false"
+            INPUT_DISCOVER_UNIVERSE="false"
+            INPUT_UNIVERSE_BACKFILL="false"
+            INPUT_INCREMENTAL_ETF_BACKFILL="true"
+            INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"
+            INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY_MAX_AGE_HOURS:-168}"
+            INPUT_YF_ETF_FALLBACK="true"
+            INPUT_FETCH_SURFACES="true"
+            INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
+            INPUT_SLEEP="${STOCKANALYSIS_DAILY_SLEEP:-0.5}"
+            INPUT_MAX_UNIVERSE_PAGES="${STOCKANALYSIS_DAILY_MAX_UNIVERSE_PAGES:-5}"
+          fi
           if [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"
             PLAN_LIMIT="${INPUT_INCREMENTAL_ETF_LIMIT:-0}"
