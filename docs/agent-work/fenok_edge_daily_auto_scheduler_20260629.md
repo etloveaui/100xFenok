@@ -53,10 +53,10 @@ npm --prefix 100xfenok-next run qa:fenok-daily-accumulation
 The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. If ETF score artifacts exist, it reports them as `SCORED` and still blocks any `done` wording until DAILY/GATED readiness is true.
 
 Operator readout rule:
-
 - Each S0/S1/S3 row prints `status: sources=[...] blocking_gates=... done_claim_allowed=...`.
 - Treat `sources=[...]` as the latest available derived source dates/timestamps, not as paid-ready proof.
 - If `blocking_gates` is non-empty or `done_claim_allowed=false`, do not call that layer PUBLIC + DAILY + GATED.
+- `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it is expected to stay red until the S0 `daily` and `gated` requirements become true.
 
 ## Resource Controls

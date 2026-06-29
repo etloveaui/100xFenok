@@ -14,10 +14,26 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const INDEX_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-edge-coverage-index.json");
+const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
+const PUBLIC_INDEX_PATH = path.join(PUBLIC_DATA_ROOT, "admin", "fenok-edge-coverage-index.json");
 const JSON_MODE = process.argv.includes("--json");
 const REQUIRE_ACTIVE_S0_DAILY_GATED = process.argv.includes("--require-active-s0-daily-gated");
 const EXPECTED_ACTIVE_S0_STOCK_COUNT = 1066;
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
+const PUBLIC_FORBIDDEN_PATTERNS = [
+  /^computed\/fenok_signals\.json$/,
+  /^computed\/fenok_etf_signals\.json$/,
+  /^computed\/fenok_flow_proxies.*\.json$/,
+  /^computed\/fenok_occ_options_volume.*\.json$/,
+  /^computed\/fenok_news_tone_proxy.*\.json$/,
+  /^computed\/fenok_signal_lens_proxies.*\.json$/,
+  /^computed\/fenok_social_attention_proxy.*\.json$/,
+  /^computed\/fenok_apewisdom.*\.json$/,
+];
+const PUBLIC_FORBIDDEN_RAW_PATTERNS = [
+  /\.(csv|txt)$/i,
+  /(^|\/)(finra|occ|apewisdom|gdelt|reddit|social)(\/|_)/i,
+];
 
 function readJson(absPath) {
   try {
@@ -45,6 +61,40 @@ function sumCounts(rows, key = "count") {
   return asArray(rows).reduce((sum, row) => sum + (Number(row?.[key]) || 0), 0);
 }
 
+function findById(rows, id) {
+  return asArray(rows).find((row) => row?.id === id) ?? null;
+}
+
+function walkFiles(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const abs = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walkFiles(abs));
+    else if (entry.isFile()) out.push(abs);
+  }
+  return out;
+}
+
+function publicRel(absPath) {
+  return path.relative(PUBLIC_DATA_ROOT, absPath).split(path.sep).join("/");
+}
+
+function check(id, ok, detail = {}) {
+  return { id, ok: Boolean(ok), ...detail };
+}
+
+function freshnessReady(checks, id) {
+  return findById(checks, id)?.status === "ready";
+}
+
+function fullSourceCoverage(row) {
+  return Boolean(row)
+    && row.availability_status === "ready"
+    && Number(row.denominator) > 0
+    && Number(row.covered_count) === Number(row.denominator);
+}
+
 function requirementsReady(requirements) {
   return Boolean(requirements?.public && requirements?.daily && requirements?.gated)
     && Object.values(requirements ?? {}).every(Boolean);
@@ -57,6 +107,92 @@ function activeS0DailyGatedReady(track, activeCount) {
     && track.readiness_status === "ready"
     && track.public_done_claim_allowed === true
     && requirementsReady(track.requirements);
+}
+
+function publicMirrorEvidence(index, activeTotal) {
+  let mirror = null;
+  let read_error = null;
+  const exists = fs.existsSync(PUBLIC_INDEX_PATH);
+  if (exists) {
+    try {
+      mirror = JSON.parse(fs.readFileSync(PUBLIC_INDEX_PATH, "utf8"));
+    } catch (error) {
+      read_error = error.message;
+    }
+  }
+  const forbidden_public_files = walkFiles(PUBLIC_DATA_ROOT)
+    .map(publicRel)
+    .filter((rel) => (
+      PUBLIC_FORBIDDEN_PATTERNS.some((pattern) => pattern.test(rel))
+      || PUBLIC_FORBIDDEN_RAW_PATTERNS.some((pattern) => pattern.test(rel))
+    ));
+  const generated_at_matches = Boolean(mirror) && mirror.generated_at === index.generated_at;
+  const active_total_matches = Boolean(mirror) && Number(mirror.active_scoring_universe?.total) === activeTotal;
+  return {
+    public_index_path: path.relative(REPO_ROOT, PUBLIC_INDEX_PATH),
+    exists,
+    read_error,
+    generated_at_matches,
+    active_total_matches,
+    forbidden_public_files: forbidden_public_files.slice(0, 12),
+    forbidden_public_file_count: forbidden_public_files.length,
+    ready: exists
+      && !read_error
+      && generated_at_matches
+      && active_total_matches
+      && forbidden_public_files.length === 0,
+  };
+}
+
+function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, composites, freshnessChecks) {
+  const krx = findById(sourceRows, "krx_issuer_daily_latest_full_proof");
+  const finra = findById(sourceRows, "us_finra_flow_proxy");
+  const occ = findById(sourceRows, "us_occ_options_proxy");
+  const asiaGap = composites.remaining_asia_ex_taiwan ?? {};
+  const mirror = publicMirrorEvidence(index, activeTotal);
+  const daily_checks = [
+    check("krx_full_daily_source_ready", fullSourceCoverage(krx) && freshnessReady(freshnessChecks, "korea_counted_source_date"), {
+      covered_count: krx?.covered_count ?? null,
+      denominator: krx?.denominator ?? null,
+      source_date: krx?.source_date ?? null,
+    }),
+    check("finra_full_us_source_ready", fullSourceCoverage(finra) && freshnessReady(freshnessChecks, "us_flow_source_date"), {
+      covered_count: finra?.covered_count ?? null,
+      denominator: finra?.denominator ?? null,
+      source_date: finra?.source_date ?? null,
+    }),
+    check("occ_full_us_source_ready", fullSourceCoverage(occ) && freshnessReady(freshnessChecks, "us_occ_source_date"), {
+      covered_count: occ?.covered_count ?? null,
+      denominator: occ?.denominator ?? null,
+      source_date: occ?.source_date ?? null,
+    }),
+    check("no_asia_ex_taiwan_gap", Number(asiaGap.count) === 0, {
+      count: Number(asiaGap.count) || 0,
+      denominator: asiaGap.denominator ?? activeTotal,
+    }),
+    check("counted_sources_fresh", ["coverage_index_generated", "korea_counted_source_date", "us_flow_source_date", "us_occ_source_date"]
+      .every((id) => freshnessReady(freshnessChecks, id))),
+  ];
+  const daily_ready = daily_checks.every((item) => item.ok);
+  const gated_checks = [
+    check("daily_ready", daily_ready),
+    check("raw_policy_private_only", index.raw_policy?.raw_public === false && index.raw_policy?.raw_rows_included === false),
+    check("source_rows_not_public_scoring", index.source_availability?.not_public_scoring === true
+      && sourceRows.every((row) => row?.not_public_scoring === true)),
+    check("public_mirror_ready", mirror.ready, mirror),
+  ];
+  const gated_ready = gated_checks.every((item) => item.ok);
+  return {
+    track_id: ACTIVE_S0_TRACK_ID,
+    track_stage: activeTrack?.stage ?? null,
+    active_stock_count: activeTotal,
+    track_denominator: activeTrack?.denominator ?? null,
+    daily_ready,
+    gated_ready,
+    blockers: [...daily_checks, ...gated_checks].filter((item) => !item.ok).map((item) => item.id),
+    daily_checks,
+    gated_checks,
+  };
 }
 
 const index = readJson(INDEX_PATH);
@@ -85,6 +221,7 @@ const readiness = index.public_scoring_readiness ?? {};
 const readinessTracks = asArray(readiness.tracks);
 const activeS0ReadinessTrack = readinessTracks.find((track) => track?.id === ACTIVE_S0_TRACK_ID);
 const freshnessChecks = asArray(index.freshness_gate?.checks);
+const activeS0Evidence = buildActiveS0Evidence(index, activeTotal, activeS0ReadinessTrack, sourceRows, composites, freshnessChecks);
 
 if (!activeTotal) add(errors, "active_scoring_universe.total must be derived and non-zero");
 if (activeMarketTotal && activeMarketTotal !== activeTotal) {
@@ -151,6 +288,19 @@ for (const track of readinessTracks) {
   }
 }
 
+if (activeS0ReadinessTrack?.requirements?.daily === true && activeS0Evidence.daily_ready !== true) {
+  add(errors, `${ACTIVE_S0_TRACK_ID}: requirements.daily=true requires active_s0_daily_gated_evidence.daily_ready=true`);
+}
+if (activeS0ReadinessTrack?.requirements?.gated === true && activeS0Evidence.gated_ready !== true) {
+  add(errors, `${ACTIVE_S0_TRACK_ID}: requirements.gated=true requires active_s0_daily_gated_evidence.gated_ready=true`);
+}
+if (activeS0ReadinessTrack?.readiness_status === "ready" && activeS0Evidence.gated_ready !== true) {
+  add(errors, `${ACTIVE_S0_TRACK_ID}: readiness_status=ready requires active_s0_daily_gated_evidence.gated_ready=true`);
+}
+if (activeS0ReadinessTrack?.public_done_claim_allowed === true && activeS0Evidence.gated_ready !== true) {
+  add(errors, `${ACTIVE_S0_TRACK_ID}: public_done_claim_allowed=true requires active_s0_daily_gated_evidence.gated_ready=true`);
+}
+
 if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
   if (activeTotal !== EXPECTED_ACTIVE_S0_STOCK_COUNT) {
     add(errors, `strict S0 gate requires active_scoring_universe.total=${EXPECTED_ACTIVE_S0_STOCK_COUNT}; got ${activeTotal}`);
@@ -214,6 +364,7 @@ const result = {
     public_done_claim_allowed: activeS0ReadinessTrack?.public_done_claim_allowed === true,
     requirements: activeS0ReadinessTrack?.requirements ?? null,
   } : null,
+  active_s0_daily_gated_evidence: activeS0Evidence,
   checks: freshnessChecks.map((check) => ({
     id: check.id,
     status: check.status,
@@ -244,6 +395,7 @@ if (JSON_MODE) {
   for (const check of result.checks) {
     console.log(`- ${check.result} ${check.id}${check.source_date ? ` source_date=${check.source_date}` : ""}${check.age_days != null ? ` age_days=${check.age_days}` : ""}`);
   }
+  console.log(`active S0 evidence: daily_ready=${activeS0Evidence.daily_ready} gated_ready=${activeS0Evidence.gated_ready} blockers=${activeS0Evidence.blockers.join(",") || "none"}`);
   for (const warning of warnings) console.log(`WARN: ${warning.message}`);
   for (const error of errors) console.error(`ERROR: ${error.message}`);
 }
