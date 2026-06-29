@@ -7,6 +7,7 @@ import {
   ETF_TYPE_PARAM,
   asOfDate,
   cleanCategory,
+  etfClassificationLabels,
   expenseRatioValue,
   formatAum,
   formatNumber,
@@ -24,6 +25,7 @@ import {
 export type { EtfClassification, EtfTypeFilter, EtfUniverseRecord } from "./etfUniverseUtils";
 export {
   asOfDate,
+  etfClassificationLabels,
   formatNumber,
   isInverseEtf,
   isLeveragedEtf,
@@ -99,6 +101,23 @@ const ETF_EXPENSE_PARAM: Record<EtfExpenseFilter, string | null> = {
   "1.00% 이상": "high",
   "보수 미표시": "unknown",
 };
+
+function EtfClassificationBadges({ row }: { row: EtfUniverseRecord }) {
+  const labels = etfClassificationLabels(row);
+  if (labels.length === 0) return null;
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {labels.map((label) => (
+        <span
+          key={label}
+          className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]"
+        >
+          {label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 function aumFilterFromParam(value: string | null | undefined): EtfAumFilter {
   if (value === "mega") return "1,000억 달러 이상";
@@ -633,11 +652,15 @@ export default function EtfUniverseCard({
         ) : filteredRows.length > 0 ? (
           visibleRows.map((row) => {
             const ticker = row.ticker ?? "";
+            const name = row.name && row.name !== ticker ? row.name : null;
             return (
               <TransitionLink key={ticker} href={`/etfs/${encodeURIComponent(ticker)}`} className="mv-row">
                 <span className="co">
-                  <div className="n">{row.name ?? ticker}</div>
-                  <div className="tk">{formatTypeHint(row)}</div>
+                  <div className="n">{ticker}</div>
+                  <div className="tk">
+                    {name ? `${name} · ${formatTypeHint(row, { includeTicker: false })}` : formatTypeHint(row, { includeTicker: false })}
+                  </div>
+                  <EtfClassificationBadges row={row} />
                 </span>
                 <span className="pc num neutral">
                   {formatAum(row)}

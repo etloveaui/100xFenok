@@ -480,9 +480,9 @@ export default function NewEtfsList({
             {filteredRows.length > 0 ? filteredRows.map((row) => (
               <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
                 <span className="co">
-                  <div className="n">{row.n}</div>
+                  <div className="n">{row.s}</div>
                   <div className="tk">
-                    {row.s} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)} · {row.issuer} · {row.typeTags.join(" / ")} · {detailStatusHint(row.detailStatus)}
+                    {row.n} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)} · {row.issuer} · {row.typeTags.join(" / ")} · {detailStatusHint(row.detailStatus)}
                   </div>
                 </span>
                 <span className="flex min-w-[92px] flex-col items-end gap-1">

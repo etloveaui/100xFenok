@@ -204,12 +204,6 @@ function compactShownTotalLabel(shown: number, total: number | null | undefined)
   return fmtNumber(shown);
 }
 
-function short(value: string | null | undefined, max = 34): string {
-  const text = typeof value === "string" ? value.trim() : "";
-  if (!text || text === "-") return "-";
-  return text.length > max ? `${text.slice(0, max - 1)}...` : text;
-}
-
 function asOf(...values: Array<string | null | undefined>): string {
   const hit = values.find((value) => typeof value === "string" && value.length >= 10);
   return hit ? hit.slice(0, 10) : "-";
@@ -299,8 +293,8 @@ function EtfLink({
   const body = (
     <>
       <span className="co">
-        <div className="n">{short(name || symbol)}</div>
-        <div className="tk">{symbol || "-"} · {detail || "-"}</div>
+        <div className="n">{symbol || "-"}</div>
+        <div className="tk">{name || "-"} · {detail || "-"}</div>
       </span>
       <span className={`pc num ${String(value || "").startsWith("-") ? "down" : "up"}`}>{value || "-"}</span>
     </>

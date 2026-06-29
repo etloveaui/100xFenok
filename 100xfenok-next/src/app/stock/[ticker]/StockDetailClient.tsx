@@ -1084,10 +1084,12 @@ export default function StockDetailClient({
               <span className="stock-logo">{symbol.slice(0, 1)}</span>
               <div className="stock-id">
                 <div className="stock-name">
-                  <h1>{displayAssetName}</h1>
+                  <h1>{symbol}</h1>
                   <WatchStar ticker={symbol} className="stock-star" />
                 </div>
                 <div className="stock-meta">
+                  <span>{displayAssetName}</span>
+                  <span className="x">·</span>
                   <span className="num">{symbol}</span>
                   {isEtfAsset || marketFacts?.asset_type ? (
                     <>

@@ -222,10 +222,13 @@ export function isInverseEtf(row: EtfUniverseRecord): boolean {
   return /\b(?:inverse|bear)\b/i.test(text) || /\bproshares\s+ultrashort\b/i.test(text);
 }
 
-export function formatTypeHint(row: EtfUniverseRecord): string {
+export function formatTypeHint(
+  row: EtfUniverseRecord,
+  { includeTicker = true }: { includeTicker?: boolean } = {},
+): string {
   const classification = rowClassification(row);
   const category = row.category ?? row.assetClass;
-  const parts = [row.ticker, category];
+  const parts = includeTicker ? [row.ticker, category] : [category];
   if (row.issuer && row.issuer !== "미분류") {
     parts.push(row.issuer);
   }
@@ -259,4 +262,24 @@ export function formatTypeHint(row: EtfUniverseRecord): string {
     parts.push(`보유 ${formatNumber(row.holdings)}`);
   }
   return parts.filter(Boolean).join(" · ");
+}
+
+export function etfClassificationLabels(row: EtfUniverseRecord): string[] {
+  const classification = rowClassification(row);
+  if (!classification) return [];
+  const labels: string[] = [];
+  if (classification.is_leveraged) {
+    labels.push(
+      typeof classification.leverage_factor === "number" && Number.isFinite(classification.leverage_factor)
+        ? `${classification.leverage_factor}x 레버리지`
+        : "레버리지",
+    );
+  }
+  if (classification.is_inverse) labels.push("인버스");
+  if (classification.is_single_stock) {
+    labels.push(classification.underlying ? `단일종목 레버리지 ${classification.underlying}` : "단일종목 레버리지");
+  } else if (classification.underlying) {
+    labels.push(`기초 ${classification.underlying}`);
+  }
+  return labels;
 }
