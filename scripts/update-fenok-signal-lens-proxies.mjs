@@ -41,6 +41,13 @@ function parseArgs(argv) {
     finraRetries: "2",
     finraRetryBackoffMs: "2000",
     finraSleepMs: "0",
+    optionsAllEligible: false,
+    optionsEligibleManifest: "",
+    optionsBatchSize: "",
+    optionsBatchIndex: "",
+    optionsStartAfter: "",
+    optionsMaxRequests: "",
+    optionsFailThreshold: "",
     flowMaxWalkbackDays: "14",
     optionsMaxWalkbackDays: "7",
     optionsSleepMs: "250",
@@ -50,6 +57,7 @@ function parseArgs(argv) {
     newsRetryBackoffMs: "6500",
     lensReferenceOnly: false,
   };
+  let optionsMaxWalkbackDaysExplicit = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     const next = () => argv[++i] ?? "";
@@ -72,8 +80,18 @@ function parseArgs(argv) {
     else if (arg === "--finra-retries") args.finraRetries = next();
     else if (arg === "--finra-retry-backoff-ms") args.finraRetryBackoffMs = next();
     else if (arg === "--finra-sleep-ms") args.finraSleepMs = next();
+    else if (arg === "--options-all-eligible") args.optionsAllEligible = true;
+    else if (arg === "--options-eligible-manifest") args.optionsEligibleManifest = next();
+    else if (arg === "--options-batch-size") args.optionsBatchSize = next();
+    else if (arg === "--options-batch-index") args.optionsBatchIndex = next();
+    else if (arg === "--options-start-after") args.optionsStartAfter = next();
+    else if (arg === "--options-max-requests") args.optionsMaxRequests = next();
+    else if (arg === "--options-fail-threshold") args.optionsFailThreshold = next();
     else if (arg === "--flow-max-walkback-days") args.flowMaxWalkbackDays = next();
-    else if (arg === "--options-max-walkback-days") args.optionsMaxWalkbackDays = next();
+    else if (arg === "--options-max-walkback-days") {
+      args.optionsMaxWalkbackDays = next();
+      optionsMaxWalkbackDaysExplicit = true;
+    }
     else if (arg === "--options-sleep-ms") args.optionsSleepMs = next();
     else if (arg === "--news-max-records") args.newsMaxRecords = next();
     else if (arg === "--news-sleep-ms") args.newsSleepMs = next();
@@ -82,10 +100,14 @@ function parseArgs(argv) {
     else if (arg === "--lens-reference-only") args.lensReferenceOnly = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
+  if (args.optionsAllEligible && !optionsMaxWalkbackDaysExplicit) {
+    args.optionsMaxWalkbackDays = "0";
+  }
   return args;
 }
 
 function tickerArgs(args) {
+  if (args.optionsAllEligible) return ["--all-eligible"];
   if (args.tickers) return ["--tickers", args.tickers];
   return ["--reference-only"];
 }
@@ -147,6 +169,12 @@ function buildPlan(args) {
       "--sleep-ms",
       args.optionsSleepMs,
     ];
+    if (args.optionsEligibleManifest) optionArgs.push("--eligible-manifest", args.optionsEligibleManifest);
+    if (args.optionsBatchSize) optionArgs.push("--batch-size", args.optionsBatchSize);
+    if (args.optionsBatchIndex) optionArgs.push("--batch-index", args.optionsBatchIndex);
+    if (args.optionsStartAfter) optionArgs.push("--start-after", args.optionsStartAfter);
+    if (args.optionsMaxRequests) optionArgs.push("--max-requests", args.optionsMaxRequests);
+    if (args.optionsFailThreshold) optionArgs.push("--fail-threshold", args.optionsFailThreshold);
     if (args.noFetch) optionArgs.push("--no-fetch");
     plan.push({ label: "OCC listed-options volume skew proxy", command: process.execPath, args: optionArgs });
   }

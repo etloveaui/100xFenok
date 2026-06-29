@@ -1,0 +1,550 @@
+#!/usr/bin/env node
+/**
+ * Build a derived admin-only coverage index for Fenok Edge daily sources.
+ *
+ * This script does not fetch external data. It reads existing computed/admin
+ * payloads plus private manifests and writes derived counts only.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(__dirname, "..");
+const DATA_ROOT = path.join(REPO_ROOT, "data");
+const OUT_PATH = path.join(DATA_ROOT, "admin", "fenok-edge-coverage-index.json");
+
+function readJson(relPath, fallback = null) {
+  const absPath = path.join(REPO_ROOT, relPath);
+  try {
+    return JSON.parse(fs.readFileSync(absPath, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+function repoRelPath(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const marker = "source/100xFenok/";
+  if (text.startsWith(marker)) return text.slice(marker.length);
+  if (path.isAbsolute(text)) return path.relative(REPO_ROOT, text);
+  return text;
+}
+
+function readJsonFirst(paths, fallback = null) {
+  for (const candidate of paths.map(repoRelPath).filter(Boolean)) {
+    const payload = readJson(candidate, null);
+    if (payload) return payload;
+  }
+  return fallback;
+}
+
+function writeJson(absPath, payload) {
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  fs.writeFileSync(absPath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function pct(count, total) {
+  if (!Number(total)) return null;
+  return Number(((Number(count) / Number(total)) * 100).toFixed(2));
+}
+
+function normTicker(value) {
+  return String(value ?? "").trim().toUpperCase().replaceAll(".", "-");
+}
+
+function krCode(value) {
+  return String(value ?? "").replace(/[^0-9A-Z]/gi, "").slice(0, 6).toUpperCase();
+}
+
+function toIsoDate(value) {
+  const text = String(value ?? "").trim();
+  if (/^\d{8}$/.test(text)) return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[1]}-${match[2]}-${match[3]}` : null;
+}
+
+function ymd(value) {
+  return toIsoDate(value)?.replaceAll("-", "") ?? null;
+}
+
+function unique(values) {
+  return [...new Set(values.filter(Boolean))].sort();
+}
+
+function rowTickerSet(payload) {
+  return new Set((Array.isArray(payload?.rows) ? payload.rows : []).map((row) => normTicker(row.ticker_normalized ?? row.ticker)).filter(Boolean));
+}
+
+function sourceDateFromRows(payload) {
+  const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+  const dates = unique(rows.map((row) => toIsoDate(row.source_date ?? row.as_of)));
+  return dates.at(-1) ?? null;
+}
+
+function ageDays(date, now = Date.now()) {
+  const iso = toIsoDate(date);
+  if (!iso) return null;
+  const time = new Date(`${iso}T00:00:00Z`).getTime();
+  if (!Number.isFinite(time)) return null;
+  return Math.max(0, Math.floor((now - time) / 86400000));
+}
+
+function marketCounts(rows) {
+  const counts = {};
+  for (const row of rows) counts[row.market] = (counts[row.market] || 0) + 1;
+  return Object.entries(counts)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([market, count]) => ({ market, count }));
+}
+
+function coverageRow({ id, label, count, denominator, sourceDate, status, caveat, claimScope, denominatorLabel, activeTotal, extra = {} }) {
+  return {
+    id,
+    label,
+    covered_count: count,
+    denominator,
+    denominator_label: denominatorLabel,
+    coverage_pct: pct(count, denominator),
+    active_scoring_coverage_pct: pct(count, activeTotal),
+    source_date: sourceDate,
+    availability_status: status,
+    claim_scope: claimScope,
+    not_public_scoring: true,
+    caveat,
+    ...extra,
+  };
+}
+
+const signals = readJson("data/computed/fenok_signals.json", {});
+const marketFacts = readJson("data/computed/market_facts/index.json", {});
+const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
+const activeScoringTotal = universeRows.length;
+const usRows = universeRows.filter((row) => row.market === "US" || row.market === "US_CLASS");
+const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
+const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
+const explicitTaiwanRows = universeRows.filter((row) => /^(TW|TAIWAN|TPE|TPEX)$/i.test(String(row.market ?? "")) || /taiwan/i.test(String(row.market_scope ?? "")));
+const taiwanTickerAnomalies = universeRows
+  .filter((row) => /\.(TW|TWO)$/i.test(String(row.ticker ?? "")) || /-(TW|TWO)$/i.test(String(row.ticker_normalized ?? "")))
+  .filter((row) => !explicitTaiwanRows.includes(row))
+  .map((row) => ({
+    ticker: row.ticker,
+    ticker_normalized: row.ticker_normalized,
+    market: row.market,
+    market_scope: row.market_scope,
+    company: row.company,
+  }));
+
+const usUniverse = new Set(usRows.map((row) => normTicker(row.ticker_normalized ?? row.ticker)));
+const krUniverseCodes = new Set(koreaRows.map((row) => krCode(row.ticker_normalized ?? row.ticker)).filter(Boolean));
+
+const flow = readJson("data/computed/fenok_flow_proxies.json", {});
+const flowSet = rowTickerSet(flow);
+const flowIntersection = [...flowSet].filter((ticker) => usUniverse.has(ticker));
+const flowSourceDate = sourceDateFromRows(flow) ?? toIsoDate(flow.source_files?.finra_daily_short_sale_volume?.match(/CNMSshvol(\d{8})/)?.[1]);
+
+const occ = readJson("data/computed/fenok_occ_options_volume.json", {});
+const occSet = rowTickerSet(occ);
+const occIntersection = [...occSet].filter((ticker) => usUniverse.has(ticker));
+const occSourceDate = sourceDateFromRows(occ) ?? toIsoDate(occ.query_contract?.reportDate);
+
+const usBridge = readJson("data/admin/fenok-flow-backfill-index.json", {});
+const latestUsRun = usBridge.latest_us_daily_run ?? usBridge.latest_us_daily_smoke ?? {};
+const latestUsManifest = readJson(latestUsRun.private_manifest_file ?? "", {});
+const latestUsTargetUniverse = latestUsRun.target_universe ?? latestUsManifest.target_universe ?? null;
+const latestUsTickers = new Set((latestUsTargetUniverse?.tickers ?? []).map(normTicker));
+const latestUsIntersection = [...latestUsTickers].filter((ticker) => usUniverse.has(ticker));
+const latestUsSourceDate = toIsoDate(latestUsRun.dates?.at(-1) ?? latestUsRun.end_date);
+const usFull252FirstBatch = readJson("_private/admin/fenok-flow/backfill/20260629-full252/manifests/us_daily_backfill_smoke_5d_20250702.json", {});
+
+const koreaBridge = readJson("data/admin/fenok-edge-korea-krx-daily-index.json", {});
+const koreaLatestRun = koreaBridge.latest_run ?? {};
+const koreaProofManifestPath = repoRelPath(koreaBridge.private_artifacts?.top_manifest_path)
+  ?? "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/manifest.json";
+const koreaProofManifest = readJson(koreaProofManifestPath, {});
+const koreaLatestCalendarManifest = readJson("_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_20260629/manifest.json", {});
+const koreaProofDates = unique((koreaProofManifest.files ?? [])
+  .filter((file) => Number(file.row_count) > 0)
+  .map((file) => toIsoDate(file.source_date ?? file.date ?? file.basDd)));
+const koreaCountedSourceDate = koreaProofDates.at(-1) ?? null;
+const koreaLatestCalendarDailyHistoryRows = (koreaLatestCalendarManifest.files ?? [])
+  .filter((file) => file.endpoint_class === "daily-history")
+  .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
+const koreaProofRoot = repoRelPath(koreaProofManifest.runtime?.output_root ?? koreaBridge.private_artifacts?.output_root);
+const koreaStk = readJsonFirst([
+  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/stk_bydd_trd/20260626.json` : null,
+  "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/raw/core_stock_index/stk_bydd_trd/20260626.json",
+], {});
+const koreaKsq = readJsonFirst([
+  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/ksq_bydd_trd/20260626.json` : null,
+  "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/raw/core_stock_index/ksq_bydd_trd/20260626.json",
+], {});
+const koreaIssueCodes = new Set([
+  ...(Array.isArray(koreaStk.OutBlock_1) ? koreaStk.OutBlock_1 : []),
+  ...(Array.isArray(koreaKsq.OutBlock_1) ? koreaKsq.OutBlock_1 : []),
+].map((row) => krCode(row.ISU_CD)).filter(Boolean));
+const koreaIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.has(code));
+
+const taiwanBridge = readJson("data/admin/taiwan-data-bridge-index.json", readJson("data/computed/taiwan-data-bridge-index.json", {}));
+const taiwanHistorical = readJson("_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json", {});
+
+const combinedKrUsFlow = koreaIntersection.length + flowIntersection.length;
+const combinedKrUsOcc = koreaIntersection.length + occIntersection.length;
+const combinedKrUsLatestBounded = koreaIntersection.length + latestUsIntersection.length;
+const marketFactsCoverage = marketFacts.coverage ?? {};
+
+function readinessTrack({ id, label, denominator, stage, booleans, caveat }) {
+  const requirements = {
+    source_available: false,
+    normalized: false,
+    joined_to_target_universe: false,
+    scored: false,
+    public: false,
+    daily: false,
+    gated: false,
+    ...booleans,
+  };
+  const ready = Object.values(requirements).every(Boolean);
+  return {
+    id,
+    label,
+    denominator,
+    stage,
+    readiness_status: ready ? "ready" : "not_ready",
+    public_done_claim_allowed: ready,
+    requirements,
+    caveat,
+  };
+}
+
+const generatedAt = new Date().toISOString();
+const index = {
+  schema_version: "fenok-edge-coverage-index/v0.2",
+  generated_at: generatedAt,
+  purpose: "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
+  raw_policy: {
+    raw_public: false,
+    raw_rows_included: false,
+    private_manifest_pointer_only: true,
+  },
+  feno_data_read: {
+    category: "admin",
+    file: "fenok-edge-coverage-index.json",
+    jq_example: "jq '{generated_at, active_scoring_universe, expanded_stock_candidate_universe, etf_universe, source_availability, public_scoring_readiness}' \"$DATA_ROOT/admin/fenok-edge-coverage-index.json\"",
+  },
+  active_scoring_universe: {
+    source_file: "data/computed/fenok_signals.json",
+    generated_at: signals.generated_at ?? null,
+    current_only: true,
+    total: activeScoringTotal,
+    by_market: marketCounts(universeRows),
+    buckets: {
+      us: usRows.length,
+      korea: koreaRows.length,
+      asia_ex_taiwan: asiaExTwRows.length,
+      explicit_taiwan: explicitTaiwanRows.length,
+    },
+    taiwan_ticker_anomalies: taiwanTickerAnomalies,
+  },
+  expanded_stock_candidate_universe: {
+    source_file: "data/computed/market_facts/index.json",
+    generated_at: marketFacts.generated_at ?? null,
+    collected_asset_total: Number(marketFacts.count) || null,
+    collected_stock_candidates: Number(marketFactsCoverage.stock) || null,
+    scored_public_stock: activeScoringTotal,
+    stock_promotion_audit_gap: Number(marketFactsCoverage.stock) ? Math.max(0, Number(marketFactsCoverage.stock) - activeScoringTotal) : null,
+    stage: "NORMALIZED",
+    public_done_claim_allowed: false,
+    caveat: "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated.",
+  },
+  etf_universe: {
+    source_file: "data/computed/market_facts/index.json",
+    stockanalysis_index_file: "data/stockanalysis/index.json",
+    collected_etf_candidates: Number(marketFactsCoverage.etf) || null,
+    stage: "NORMALIZED",
+    scored_public_etf: 0,
+    public_done_claim_allowed: false,
+    caveat: "ETF data exists but ETF scoring is a separate asset_type=etf lane and is not proven in fenok_signals or public screener scoring.",
+  },
+  source_availability: {
+    not_public_scoring: true,
+    caveat: "These rows prove source/proxy/run-health availability only. They are not paid-service readiness and must not be reported as final public scoring coverage.",
+    sources: [
+    coverageRow({
+      id: "krx_issuer_daily_latest_full_proof",
+      label: "Korea KRX issuer daily coverage, latest fully populated proof",
+      count: koreaIntersection.length,
+      denominator: koreaRows.length,
+      denominatorLabel: "active_scoring_universe.korea",
+      sourceDate: koreaCountedSourceDate,
+      status: koreaIntersection.length === koreaRows.length ? "ready" : "partial",
+      claimScope: "source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "Counted from 20260626 KRX daily stock/KOSDAQ raw files. The 20260629 run is mostly empty and is not counted as issuer daily coverage.",
+      extra: {
+        private_manifest_file: koreaProofManifestPath,
+        counted_batch: {
+          run_id: koreaLatestRun.run_id ?? null,
+          as_of: koreaBridge.as_of ?? null,
+          summary: koreaLatestRun.summary ?? null,
+          date_count: koreaProofManifest.date_range?.date_count ?? koreaBridge.freshness?.date_count ?? null,
+          attempted_call_count: koreaLatestRun.attempted_call_count ?? koreaProofManifest.attempted_call_count ?? null,
+        },
+        latest_calendar_run_20260629: {
+          run_id: koreaLatestCalendarManifest.run_id ?? null,
+          as_of: "2026-06-29",
+          summary: koreaLatestCalendarManifest.summary ?? null,
+          daily_history_rows: koreaLatestCalendarDailyHistoryRows,
+          countable_for_issuer_daily: koreaLatestCalendarDailyHistoryRows > 0,
+        },
+      },
+    }),
+    coverageRow({
+      id: "us_finra_flow_proxy",
+      label: "US FINRA flow proxy coverage",
+      count: flowIntersection.length,
+      denominator: usRows.length,
+      denominatorLabel: "active_scoring_universe.us",
+      sourceDate: flowSourceDate,
+      status: flowIntersection.length > 0 ? "ready" : "missing",
+      claimScope: "proxy_source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "FINRA short-sale/off-exchange proxy coverage only; not full all-axis scoring and not directional flow.",
+      extra: {
+        source_file: "data/computed/fenok_flow_proxies.json",
+        rows: Array.isArray(flow.rows) ? flow.rows.length : 0,
+      },
+    }),
+    coverageRow({
+      id: "us_occ_options_proxy",
+      label: "US OCC listed-options proxy coverage",
+      count: occIntersection.length,
+      denominator: usRows.length,
+      denominatorLabel: "active_scoring_universe.us",
+      sourceDate: occSourceDate,
+      status: occIntersection.length > 0 ? "ready" : "missing",
+      claimScope: "proxy_source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "OCC listed-options volume proxy only; not OPRA, premium, greeks, or buyer/seller direction.",
+      extra: {
+        source_file: "data/computed/fenok_occ_options_volume.json",
+        rows: Array.isArray(occ.rows) ? occ.rows.length : 0,
+      },
+    }),
+    coverageRow({
+      id: "us_latest_bounded_backfill_run",
+      label: "US latest bounded backfill run coverage",
+      count: latestUsIntersection.length,
+      denominator: usRows.length,
+      denominatorLabel: "active_scoring_universe.us",
+      sourceDate: latestUsSourceDate,
+      status: latestUsIntersection.length > 0 ? "ready" : "missing",
+      claimScope: "run_health",
+      activeTotal: activeScoringTotal,
+      caveat: "The latest bounded run covers the explicit reference ticker set only; it is a run-health proof, not full US coverage.",
+      extra: {
+        private_manifest_file: latestUsRun.private_manifest_file ?? null,
+        target_universe: latestUsTargetUniverse,
+        status_counts: latestUsRun.status_counts ?? null,
+      },
+    }),
+    coverageRow({
+      id: "taiwan_current_universe",
+      label: "Taiwan current active-universe numerator",
+      count: explicitTaiwanRows.length,
+      denominator: activeScoringTotal,
+      denominatorLabel: "active_scoring_universe.total",
+      sourceDate: toIsoDate(taiwanBridge.latest_source_date),
+      status: explicitTaiwanRows.length > 0 ? "ready" : "not_in_universe",
+      claimScope: "not_current_numerator",
+      activeTotal: activeScoringTotal,
+      caveat: "Taiwan source collection is active, but the current active scoring universe has no explicit Taiwan bucket. It does not increase the current numerator until universe mapping is fixed.",
+      extra: {
+        bridge_file: "data/admin/taiwan-data-bridge-index.json",
+        bridge_version: taiwanBridge.bridge_version ?? null,
+        historical_limitation: taiwanBridge.historical_limitation ?? null,
+        historical_smoke: {
+          manifest_file: "_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json",
+          dates_attempted: taiwanHistorical.dates_attempted ?? [],
+          endpoint_count: taiwanHistorical.endpoint_count ?? null,
+          summary: taiwanHistorical.summary ?? null,
+        },
+      },
+    }),
+    ],
+  },
+  source_availability_composites: {
+    not_public_scoring: true,
+    caveat: "Composite counts are useful for source availability progress only. They are not public scoring coverage.",
+    latest_available_kr_plus_us_flow: {
+      covered_count: combinedKrUsFlow,
+      denominator: activeScoringTotal,
+      denominator_label: "active_scoring_universe.total",
+      coverage_pct: pct(combinedKrUsFlow, activeScoringTotal),
+      claim_scope: "source_availability_composite",
+      not_public_scoring: true,
+      formula: "KRX latest fully populated issuer daily proof + US FINRA flow proxy",
+    },
+    latest_available_kr_plus_us_occ: {
+      covered_count: combinedKrUsOcc,
+      denominator: activeScoringTotal,
+      denominator_label: "active_scoring_universe.total",
+      coverage_pct: pct(combinedKrUsOcc, activeScoringTotal),
+      claim_scope: "source_availability_composite",
+      not_public_scoring: true,
+      formula: "KRX latest fully populated issuer daily proof + US OCC options proxy",
+    },
+    strict_new_bounded_run_plus_kr: {
+      covered_count: combinedKrUsLatestBounded,
+      denominator: activeScoringTotal,
+      denominator_label: "active_scoring_universe.total",
+      coverage_pct: pct(combinedKrUsLatestBounded, activeScoringTotal),
+      claim_scope: "run_health_composite",
+      not_public_scoring: true,
+      formula: "KRX latest fully populated issuer daily proof + latest US bounded reference-ticker run",
+    },
+    remaining_asia_ex_taiwan: {
+      count: asiaExTwRows.length,
+      denominator: activeScoringTotal,
+      denominator_label: "active_scoring_universe.total",
+      pct: pct(asiaExTwRows.length, activeScoringTotal),
+      claim_scope: "outside_current_daily_source_workstream",
+      not_public_scoring: true,
+      caveat: "HKEX/SSE/SZSE rows remain outside the Korea/US/Taiwan daily-source workstream.",
+    },
+  },
+  public_scoring_readiness: {
+    completion_ladder: ["COLLECTED", "NORMALIZED", "JOINED", "SCORED", "PUBLIC", "DAILY", "GATED"],
+    done_rule: "Only PUBLIC + DAILY + GATED can be called done. Source/admin/smoke rows are not done.",
+    tracks: [
+      readinessTrack({
+        id: "active_stock_scoring_current",
+        label: "Current active stock scoring chain",
+        denominator: activeScoringTotal,
+        stage: "PUBLIC",
+        booleans: {
+          source_available: true,
+          normalized: true,
+          joined_to_target_universe: true,
+          scored: true,
+          public: true,
+          daily: false,
+          gated: false,
+        },
+        caveat: "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
+      }),
+      readinessTrack({
+        id: "expanded_stock_candidates",
+        label: "Expanded stock candidate promotion",
+        denominator: Number(marketFactsCoverage.stock) || null,
+        stage: "NORMALIZED",
+        booleans: {
+          source_available: Boolean(marketFactsCoverage.stock),
+          normalized: Boolean(marketFactsCoverage.stock),
+        },
+        caveat: "112 stock candidates need promotion audit before they can increase scored/public stock coverage.",
+      }),
+      readinessTrack({
+        id: "etf_scoring_lane",
+        label: "ETF scoring lane",
+        denominator: Number(marketFactsCoverage.etf) || null,
+        stage: "NORMALIZED",
+        booleans: {
+          source_available: Boolean(marketFactsCoverage.etf),
+          normalized: Boolean(marketFactsCoverage.etf),
+        },
+        caveat: "ETF source data is normalized but not joined/scored/published as Fenok Edge ETF scores.",
+      }),
+      readinessTrack({
+        id: "taiwan_current_numerator",
+        label: "Taiwan current active-universe numerator",
+        denominator: activeScoringTotal,
+        stage: explicitTaiwanRows.length > 0 ? "JOINED" : "COLLECTED",
+        booleans: {
+          source_available: Boolean(taiwanHistorical.summary?.success_files || taiwanBridge.bridge_version),
+          normalized: Boolean(taiwanBridge.bridge_version),
+          joined_to_target_universe: explicitTaiwanRows.length > 0,
+        },
+        caveat: "Taiwan source work cannot improve the current numerator until Taiwan symbols are in the active scoring universe.",
+      }),
+    ],
+  },
+  supervised_backfill_progress: {
+    korea_252_queue: {
+      status: koreaLatestRun.run_id === "krx_backfill_20d_20260626" ? "started_bounded_supervised" : "not_started",
+      completed_trading_dates: koreaLatestRun.run_id === "krx_backfill_20d_20260626" ? 20 : 0,
+      total_trading_dates: 252,
+      completed_endpoint_calls: Number(koreaLatestRun.attempted_call_count) || 0,
+      estimated_full_endpoint_calls: Number(koreaBridge.request_budget?.estimated_full_252_calls) || 7812,
+      latest_batch_manifest: koreaProofManifestPath,
+      latest_batch_dates: koreaProofManifest.date_range?.dates ?? [],
+      latest_batch_summary: koreaLatestRun.summary ?? null,
+      caveat: "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date.",
+    },
+    us_252_reference_ticker_queue: {
+      status: usFull252FirstBatch.run_id ? "started_bounded_supervised" : "not_started",
+      completed_batches: usFull252FirstBatch.run_id ? 1 : 0,
+      total_batches: 51,
+      completed_trading_dates: Number(usFull252FirstBatch.date_count) || 0,
+      total_trading_dates: 252,
+      completed_finra_requests: Number(usFull252FirstBatch.date_count) || 0,
+      total_finra_requests: 252,
+      completed_occ_side_requests: Number(usFull252FirstBatch.sources?.find((source) => source.source_id === "occ_listed_options_volume")?.side_request_count) || 0,
+      total_occ_side_requests: 4032,
+      latest_batch_manifest: usFull252FirstBatch.outputs?.manifest_file ?? null,
+      latest_batch_dates: usFull252FirstBatch.dates ?? [],
+      latest_batch_status_counts: usFull252FirstBatch.status_counts ?? null,
+      caveat: "This is 252-history progress for the 8 reference tickers only. It does not expand current active coverage beyond the existing computed US rows.",
+    },
+  },
+  freshness_gate: {
+    max_calendar_age_days_for_counted_daily_sources: 4,
+    checks: [
+      {
+        id: "coverage_index_generated",
+        status: "ready",
+        generated_at: generatedAt,
+      },
+      {
+        id: "korea_counted_source_date",
+        source_date: koreaCountedSourceDate,
+        age_days: ageDays(koreaCountedSourceDate),
+        status: ageDays(koreaCountedSourceDate) <= 4 ? "ready" : "stale",
+        caveat: "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date.",
+      },
+      {
+        id: "us_flow_source_date",
+        source_date: flowSourceDate,
+        age_days: ageDays(flowSourceDate),
+        status: ageDays(flowSourceDate) <= 4 ? "ready" : "stale",
+      },
+      {
+        id: "us_occ_source_date",
+        source_date: occSourceDate,
+        age_days: ageDays(occSourceDate),
+        status: ageDays(occSourceDate) <= 4 ? "ready" : "stale",
+      },
+      {
+        id: "taiwan_universe_mapping",
+        status: explicitTaiwanRows.length > 0 ? "ready" : "blocked_for_numerator",
+        explicit_taiwan_count: explicitTaiwanRows.length,
+        anomaly_count: taiwanTickerAnomalies.length,
+        caveat: "Source readiness is separate from current active-universe numerator coverage.",
+      },
+    ],
+  },
+};
+
+writeJson(OUT_PATH, index);
+console.log(JSON.stringify({
+  wrote: path.relative(REPO_ROOT, OUT_PATH),
+  generated_at: index.generated_at,
+  active_scoring_universe_total: index.active_scoring_universe.total,
+  expanded_stock_candidate_universe: index.expanded_stock_candidate_universe,
+  etf_universe: index.etf_universe,
+  latest_available_kr_plus_us_flow: index.source_availability_composites.latest_available_kr_plus_us_flow,
+  taiwan_explicit_count: explicitTaiwanRows.length,
+  taiwan_anomaly_count: taiwanTickerAnomalies.length,
+}, null, 2));

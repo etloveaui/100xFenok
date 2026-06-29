@@ -21,6 +21,9 @@ const OCC_CACHE_DIR = path.join(privateRoot, "occ_options_volume");
 const OUTPUT_FILE = "computed/fenok_occ_options_volume.json";
 const HISTORY_FILE = "computed/fenok_occ_options_volume_history.json";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
+const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
+const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 100;
+const DEFAULT_ALL_ELIGIBLE_FAIL_THRESHOLD = 5;
 const OCC_ENDPOINT = "https://marketdata.theocc.com/volume-query";
 const OCC_AVAILABILITY_POLICY = {
   source_id: "occ_volume_query",
@@ -42,29 +45,54 @@ const OCC_AVAILABILITY_POLICY = {
 
 function parseArgs(argv) {
   const args = {
+    allEligible: false,
+    batchIndex: 0,
+    batchSize: 0,
     date: "",
+    eligibleManifest: "",
+    failThreshold: 0,
     tickers: "",
     limit: 0,
     maxWalkbackDays: 7,
+    maxRequests: 0,
     noFetch: false,
     noWrite: false,
     planOnly: false,
     referenceOnly: false,
     sleepMs: 250,
+    startAfter: "",
   };
+  let maxWalkbackDaysExplicit = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     const next = () => argv[++i] ?? "";
-    if (arg === "--date") args.date = next();
+    if (arg === "--all-eligible") args.allEligible = true;
+    else if (arg === "--batch-index") args.batchIndex = Number(next()) || 0;
+    else if (arg === "--batch-size") args.batchSize = Number(next()) || 0;
+    else if (arg === "--date") args.date = next();
+    else if (arg === "--eligible-manifest") args.eligibleManifest = next();
+    else if (arg === "--fail-threshold") args.failThreshold = Number(next()) || 0;
     else if (arg === "--tickers") args.tickers = next();
     else if (arg === "--limit") args.limit = Number(next()) || 0;
-    else if (arg === "--max-walkback-days") args.maxWalkbackDays = Number(next()) || args.maxWalkbackDays;
+    else if (arg === "--max-walkback-days") {
+      const parsed = Number(next());
+      args.maxWalkbackDays = Number.isFinite(parsed) && parsed >= 0 ? parsed : args.maxWalkbackDays;
+      maxWalkbackDaysExplicit = true;
+    }
+    else if (arg === "--max-requests") args.maxRequests = Number(next()) || 0;
     else if (arg === "--sleep-ms") args.sleepMs = Number(next()) || 0;
+    else if (arg === "--start-after") args.startAfter = next();
     else if (arg === "--no-fetch") args.noFetch = true;
     else if (arg === "--no-write") args.noWrite = true;
     else if (arg === "--plan-only") args.planOnly = true;
     else if (arg === "--reference-only") args.referenceOnly = true;
     else throw new Error(`Unknown argument: ${arg}`);
+  }
+  if (args.allEligible) {
+    if (!maxWalkbackDaysExplicit) args.maxWalkbackDays = 0;
+    if (args.batchSize <= 0) args.batchSize = DEFAULT_ALL_ELIGIBLE_BATCH_SIZE;
+    if (args.maxRequests <= 0) args.maxRequests = DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS;
+    if (args.failThreshold <= 0) args.failThreshold = DEFAULT_ALL_ELIGIBLE_FAIL_THRESHOLD;
   }
   return args;
 }
@@ -105,6 +133,52 @@ function normalizeTicker(ticker) {
   return String(ticker ?? "").trim().toUpperCase();
 }
 
+function readEligibleManifest(relOrAbsPath) {
+  if (!relOrAbsPath) return null;
+  const absPath = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.join(repoRoot, relOrAbsPath);
+  const payload = JSON.parse(fs.readFileSync(absPath, "utf8"));
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.tickers)) return payload.tickers;
+  if (Array.isArray(payload.rows)) {
+    return payload.rows.map((row) => row.ticker ?? row.symbol ?? row.underlying).filter(Boolean);
+  }
+  throw new Error(`Unsupported eligible manifest shape: ${relOrAbsPath}`);
+}
+
+function loadAllEligibleUniverse({ eligibleManifest = "", limit = 0 } = {}) {
+  let out = readEligibleManifest(eligibleManifest);
+  if (!out) {
+    const fenokSignals = readJson("computed/fenok_signals.json", {});
+    const rows = Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
+    out = rows
+      .filter((row) => row.market_scope === "us")
+      .map((row) => normalizeTicker(row.ticker))
+      .filter(Boolean);
+  }
+  // OCC listed-options endpoint uses plain US underlyings. Exclude foreign
+  // suffixes and share-class punctuation unless an owner-reviewed manifest
+  // maps them explicitly later.
+  out = [...new Set(out.map(normalizeTicker))]
+    .filter((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker))
+    .sort();
+  if (limit > 0) out = out.slice(0, limit);
+  return out;
+}
+
+function applyTickerBatch(tickers, { batchIndex = 0, batchSize = 0, startAfter = "" } = {}) {
+  let out = [...tickers];
+  const cursor = normalizeTicker(startAfter);
+  if (cursor) {
+    const idx = out.indexOf(cursor);
+    if (idx >= 0) out = out.slice(idx + 1);
+  }
+  if (batchSize > 0) {
+    const start = Math.max(0, batchIndex) * batchSize;
+    out = out.slice(start, start + batchSize);
+  }
+  return out;
+}
+
 function loadTickerUniverse({ tickers, referenceOnly, limit }) {
   let out = [];
   if (tickers) {
@@ -117,6 +191,36 @@ function loadTickerUniverse({ tickers, referenceOnly, limit }) {
   out = [...new Set(out)].filter((ticker) => /^[A-Z][A-Z0-9.\-]{0,11}$/.test(ticker));
   if (limit > 0) out = out.slice(0, limit);
   return out;
+}
+
+function resolveTickerUniverse(args) {
+  if (args.allEligible) {
+    const eligibleTickers = loadAllEligibleUniverse({
+      eligibleManifest: args.eligibleManifest,
+      limit: args.limit,
+    });
+    return {
+      mode: "all_eligible_batched",
+      eligible_count: eligibleTickers.length,
+      excluded_note: "plain OCC underlyings only; dotted/foreign suffixes require owner-reviewed mapping",
+      tickers: applyTickerBatch(eligibleTickers, {
+        batchIndex: args.batchIndex,
+        batchSize: args.batchSize,
+        startAfter: args.startAfter,
+      }),
+    };
+  }
+  const selected = loadTickerUniverse(args);
+  return {
+    mode: args.referenceOnly ? "reference_only" : "explicit_tickers",
+    eligible_count: selected.length,
+    excluded_note: null,
+    tickers: selected,
+  };
+}
+
+function estimateMaxLiveRequests({ tickers, dates }) {
+  return tickers.length * dates.length * 2;
 }
 
 function ensureDir(absPath) {
@@ -309,7 +413,7 @@ function buildTickerRow({ ticker, ymd, callLoad, putLoad }) {
   };
 }
 
-async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs }) {
+async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }) {
   const rows = [];
   const attempts = [];
   for (const ticker of tickers) {
@@ -325,9 +429,27 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs }) {
       rows.push(buildTickerRow({ ticker, ymd, callLoad, putLoad }));
     } catch (err) {
       attempts.push({ ticker, status: "failed", error: err.message });
+      if (failThreshold > 0 && attempts.filter((attempt) => attempt.status === "failed").length >= failThreshold) {
+        attempts.push({ ticker, status: "stopped_fail_threshold", fail_threshold: failThreshold });
+        break;
+      }
     }
   }
   return { ymd, rows, attempts };
+}
+
+function buildCoverage(rows, attempts = []) {
+  return {
+    row_count: rows.length,
+    with_options_activity_score: rows.filter((row) => row.options_activity_proxy.score_0_100 != null).length,
+    total_call_volume: round(rows.reduce((sum, row) => sum + (row.options_activity_proxy.call_volume ?? 0), 0), 0),
+    total_put_volume: round(rows.reduce((sum, row) => sum + (row.options_activity_proxy.put_volume ?? 0), 0), 0),
+    confidence_counts: rows.reduce((acc, row) => {
+      acc[row.confidence] = (acc[row.confidence] ?? 0) + 1;
+      return acc;
+    }, {}),
+    failed_attempts: attempts.length,
+  };
 }
 
 function buildSnapshot({ rows, ymd, generatedAt, attempts, maxWalkbackDays, sleepMs }) {
@@ -363,21 +485,34 @@ function buildSnapshot({ rows, ymd, generatedAt, attempts, maxWalkbackDays, slee
       exact_release_time_verified: false,
       empirical_polling_required: true,
     },
-    coverage: {
-      row_count: rows.length,
-      with_options_activity_score: rows.filter((row) => row.options_activity_proxy.score_0_100 != null).length,
-      total_call_volume: round(rows.reduce((sum, row) => sum + (row.options_activity_proxy.call_volume ?? 0), 0), 0),
-      total_put_volume: round(rows.reduce((sum, row) => sum + (row.options_activity_proxy.put_volume ?? 0), 0), 0),
-      confidence_counts: rows.reduce((acc, row) => {
-        acc[row.confidence] = (acc[row.confidence] ?? 0) + 1;
-        return acc;
-      }, {}),
-      failed_attempts: attempts.length,
-    },
+    coverage: buildCoverage(rows, attempts),
     semantics: {
       netOptionsProxyScore: "Higher means higher OCC listed-options call-volume share versus put-volume share for the underlying on the source date. This is a volume-skew proxy, not real options flow, OPRA, or buyer/seller direction.",
     },
     attempts,
+    rows,
+  };
+}
+
+function mergeOutputSnapshot(previous, snapshot) {
+  const existingRows = Array.isArray(previous?.rows) ? previous.rows : [];
+  if (existingRows.length === 0) return snapshot;
+  const incomingKeys = new Set(snapshot.rows.map((row) => `${row.ticker}|${row.source_date}`));
+  const kept = existingRows.filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}`));
+  const rows = [...kept, ...snapshot.rows].sort((a, b) => (
+    String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
+  ));
+  return {
+    ...snapshot,
+    batch_coverage: snapshot.coverage,
+    previous_output_generated_at: previous?.generated_at ?? null,
+    upsert_policy: {
+      key: ["ticker", "source_date"],
+      replaced_rows: existingRows.length - kept.length,
+      added_rows: snapshot.rows.length - (existingRows.length - kept.length),
+      cumulative_rows: rows.length,
+    },
+    coverage: buildCoverage(rows, snapshot.attempts),
     rows,
   };
 }
@@ -419,16 +554,30 @@ function mergeHistory(snapshot) {
 }
 
 async function build(args) {
-  const tickers = loadTickerUniverse(args);
+  const universe = resolveTickerUniverse(args);
+  const tickers = universe.tickers;
   const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
+  const estimatedMaxLiveRequests = estimateMaxLiveRequests({ tickers, dates });
   if (args.planOnly) {
     return {
       plan_only: true,
       schema_version: SCHEMA_VERSION,
       formula_version: FORMULA_VERSION,
-      tickers: tickers.length,
+      collection_mode: universe.mode,
+      eligible_count: universe.eligible_count,
+      selected_tickers: tickers.length,
       sample: tickers.slice(0, 20),
       candidate_dates: dates,
+      batch: {
+        batch_index: args.batchIndex,
+        batch_size: args.batchSize,
+        start_after: args.startAfter || null,
+      },
+      request_budget: {
+        estimated_max_live_requests: estimatedMaxLiveRequests,
+        max_requests: args.maxRequests || null,
+        status: args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests ? "blocked_over_budget" : "within_budget",
+      },
       raw_cache_dir: path.relative(repoRoot, OCC_CACHE_DIR),
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
@@ -443,9 +592,19 @@ async function build(args) {
     };
   }
 
+  if (!args.noFetch && args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests) {
+    throw new Error(`OCC request budget exceeded: estimated ${estimatedMaxLiveRequests}, max ${args.maxRequests}. Use --plan-only, smaller --batch-size, or explicit approval.`);
+  }
+
   const dateAttempts = [];
   for (const ymd of dates) {
-    const result = await loadRowsForDate({ ymd, tickers, noFetch: args.noFetch, sleepMs: args.sleepMs });
+    const result = await loadRowsForDate({
+      ymd,
+      tickers,
+      noFetch: args.noFetch,
+      sleepMs: args.sleepMs,
+      failThreshold: args.failThreshold,
+    });
     dateAttempts.push({ ymd, rows: result.rows.length, failed_attempts: result.attempts.length });
     const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
     if (usableRows.length === 0) continue;
@@ -457,9 +616,10 @@ async function build(args) {
       maxWalkbackDays: args.maxWalkbackDays,
       sleepMs: args.sleepMs,
     });
-    const history = mergeHistory(snapshot);
+    const outputSnapshot = mergeOutputSnapshot(readJson(OUTPUT_FILE, null), snapshot);
+    const history = mergeHistory(outputSnapshot);
     if (!args.noWrite) {
-      writeJson(OUTPUT_FILE, snapshot);
+      writeJson(OUTPUT_FILE, outputSnapshot);
       writeJson(HISTORY_FILE, history);
     }
     return {
@@ -468,9 +628,16 @@ async function build(args) {
       wrote: !args.noWrite,
       occ_source_date: ymd,
       availability_policy: OCC_AVAILABILITY_POLICY,
-      coverage: snapshot.coverage,
+      coverage: outputSnapshot.coverage,
+      batch_coverage: snapshot.coverage,
+      collection_mode: universe.mode,
+      selected_tickers: tickers.length,
+      request_budget: {
+        estimated_max_live_requests: estimatedMaxLiveRequests,
+        max_requests: args.maxRequests || null,
+      },
       date_attempts: dateAttempts,
-      reference_rows: snapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
+      reference_rows: outputSnapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
     };
   }
   throw new Error(`No OCC option volume rows available in requested window: ${JSON.stringify(dateAttempts)}`);
@@ -490,11 +657,18 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  applyTickerBatch,
+  build,
+  buildCoverage,
   buildRowsForTest,
   candidateDates,
   directionFromOptionsVolume,
+  estimateMaxLiveRequests,
+  loadAllEligibleUniverse,
+  mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,
+  parseArgs,
   scoreOptionsVolume,
 };
 

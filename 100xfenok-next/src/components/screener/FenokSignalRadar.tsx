@@ -96,10 +96,14 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
   );
 
   const hasAnyScore = resolvedAxes.some((axis) => isFiniteNumber(axis.score));
+  const visibleAxes = useMemo(
+    () => resolvedAxes.filter((axis) => isFiniteNumber(axis.score)),
+    [resolvedAxes],
+  );
 
   const values = useMemo(
-    () => resolvedAxes.map((axis) => (isFiniteNumber(axis.score) ? axis.score : 0)),
-    [resolvedAxes],
+    () => visibleAxes.map((axis) => axis.score as number),
+    [visibleAxes],
   );
 
   const chartData = useMemo<ChartData<"radar">>(
@@ -107,7 +111,7 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
       // In the condensed (sm) radar the long "Fenok Edge" axis label clips at the
       // narrow canvas edge. Render it on two lines there so the full Fenok brand
       // stays visible without widening the card. md keeps the single-line label.
-      labels: resolvedAxes.map((axis) =>
+      labels: visibleAxes.map((axis) =>
         size === "sm" && axis.label === "Fenok Edge" ? ["Fenok", "Edge"] : axis.label,
       ),
       datasets: [
@@ -123,7 +127,7 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
         },
       ],
     }),
-    [resolvedAxes, values, theme, size],
+    [visibleAxes, values, theme, size],
   );
 
   const options = useMemo<ChartOptions<"radar">>(
@@ -141,7 +145,7 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
         tooltip: {
           callbacks: {
             label: (ctx) => {
-              const axis = resolvedAxes[ctx.dataIndex];
+              const axis = visibleAxes[ctx.dataIndex];
               const rawScore = axis?.score;
               const score = isFiniteNumber(rawScore) ? Math.round(rawScore).toString() : "—";
               const direction = directionLabel(axis?.direction);
@@ -165,10 +169,10 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
         },
       },
     }),
-    [resolvedAxes, theme, size],
+    [visibleAxes, theme, size],
   );
 
-  if (!hasAnyScore) {
+  if (!hasAnyScore || visibleAxes.length === 0) {
     return (
       <div
         className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[9px] font-bold text-[var(--c-ink-3)]`}

@@ -93,4 +93,37 @@ import {
   ]);
 }
 
+{
+  const args = parseArgs([
+    "--options-all-eligible",
+    "--options-batch-size",
+    "50",
+    "--options-batch-index",
+    "2",
+    "--options-max-requests",
+    "100",
+    "--options-fail-threshold",
+    "5",
+    "--no-fetch",
+    "--skip-news",
+    "--skip-lens",
+  ]);
+  const plan = buildPlan(args);
+  const optionStep = plan.find((step) => step.label === "OCC listed-options volume skew proxy");
+  assert.ok(optionStep);
+  assert.ok(optionStep.args.includes("--all-eligible"));
+  assert.ok(optionStep.args.includes("--max-walkback-days"));
+  assert.ok(optionStep.args.includes("0"));
+  assert.ok(optionStep.args.includes("--batch-size"));
+  assert.ok(optionStep.args.includes("50"));
+  assert.ok(optionStep.args.includes("--batch-index"));
+  assert.ok(optionStep.args.includes("2"));
+  assert.ok(optionStep.args.includes("--max-requests"));
+  assert.ok(optionStep.args.includes("100"));
+  assert.ok(optionStep.args.includes("--fail-threshold"));
+  assert.ok(optionStep.args.includes("5"));
+  assert.ok(optionStep.args.includes("--no-fetch"));
+  assert.ok(!optionStep.args.includes("--reference-only"));
+}
+
 console.log("test-update-fenok-signal-lens-proxies: ok");

@@ -109,6 +109,9 @@ Boundary:
 
 - Use as listed-options call/put volume skew proxy only.
 - Do not infer buyer/seller initiation, OPRA flow, greeks, sweeps, blocks, or premium flow.
+- All-eligible expansion must stay batched and request-budgeted. The default
+  `--all-eligible` mode is a 50-ticker batch with a 100-request max budget,
+  one report date by default, and a fail threshold. Use `--plan-only` first.
 - Do not automate beyond a bounded owner-approved collector; OCC terms research
   flags automated systems and commercial exploitation constraints.
 
