@@ -358,6 +358,11 @@ function buildAudit({ full }) {
   checkEqual(errors, "finra_row_existence_count_matches_source_row", finraPresent.length, finraSource?.row_existence_count);
   checkEqual(errors, "finra_strict_metric_ready_count_matches_source_row", finraStrictPresent.length, finraSource?.strict_metric_ready_count);
   checkEqual(errors, "finra_low_confidence_placeholder_count_matches_source_row", finraPlaceholderRows.length, finraSource?.low_confidence_placeholder_count);
+  const occPlainPolicyEvidence = occEvidence?.derived_gap_breakdown?.plain_us_collection_or_no_options_policy_required;
+  checkEqual(errors, "occ_plain_attempted_unresolved_matches_blocking_evidence", occPlainMissingAttempted.length, occPlainPolicyEvidence?.attempted_unresolved_count);
+  checkEqual(errors, "occ_plain_no_record_matches_blocking_evidence", occPlainMissingNoRecord.length, occPlainPolicyEvidence?.no_record_attempt_count);
+  checkEqual(errors, "occ_plain_partial_no_record_matches_blocking_evidence", occPlainMissingPartialNoRecord.length, occPlainPolicyEvidence?.partial_no_record_or_form_gap_count);
+  checkEqual(errors, "occ_plain_unattempted_matches_blocking_evidence", occPlainMissingUnattempted.length, occPlainPolicyEvidence?.unattempted_count);
 
   const warnings = [];
   if (finraPlainMissing.length > 0) {
@@ -464,12 +469,19 @@ function buildAudit({ full }) {
         collectable_plain_us_count: occPlainMissing.length,
         attempted_unresolved_count: occPlainMissingAttempted.length,
         no_record_attempt_count: occPlainMissingNoRecord.length,
+        no_listed_options_policy_pending_count: occPlainMissingNoRecord.length,
         partial_no_record_or_form_gap_count: occPlainMissingPartialNoRecord.length,
         transient_failed_attempt_count: occPlainMissingTransientFailed.length,
         failed_attempt_count: occPlainMissingFailed.length,
         unattempted_plain_us_count: occPlainMissingUnattempted.length,
         mapping_or_denominator_policy_count: occMissing.length - occPlainMissing.length,
-        next_action: "Do not broad-fetch. Resolve attempted plain-US rows by zero-side partial-row policy or explicit both-side no-listed-options evidence before clearing occ_full_us_source_ready.",
+        accepted_form_policy: {
+          partial_zero_side_row_policy: "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
+          no_listed_options_policy: "not_accepted_for_readiness; both-side no_record remains evidence-only",
+          current_partial_rows_without_output_row_count: occPlainMissingPartialNoRecord.length,
+          current_no_record_evidence_only_count: occPlainMissingNoRecord.length,
+        },
+        next_action: "Do not broad-fetch. Re-run only unresolved partial rows if raw loaded-side cache is absent; keep both-side no-record evidence blocked until durable no-listed-options policy is owner-accepted.",
       },
       {
         id: "occ_non_plain_mapping_policy",

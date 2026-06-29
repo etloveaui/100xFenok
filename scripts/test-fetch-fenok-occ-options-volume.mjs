@@ -74,6 +74,23 @@ assert.equal(row.options_activity_proxy.score_0_100, 56.97);
 assert.equal(row.options_activity_proxy.call_volume, 4045792);
 assert.equal(row.options_activity_proxy.put_volume, 2746518);
 assert.equal(row.options_activity_proxy.direction, "balanced_volume_proxy");
+assert.equal(row.accepted_form_policy, "both_sides_loaded");
+
+const partialNoRecordRow = buildRowsForTest({
+  ticker: "ATO",
+  ymd: "20260626",
+  callCsv,
+  putCsv: "No record(s) found",
+  putStatus: "no_record",
+});
+assert.equal(partialNoRecordRow.accepted_form, "ATO");
+assert.equal(partialNoRecordRow.accepted_form_policy, "one_side_loaded_one_side_no_record_zero_volume_side");
+assert.deepEqual(partialNoRecordRow.side_statuses, { C: "loaded", P: "no_record" });
+assert.deepEqual(partialNoRecordRow.zero_volume_sides, ["P"]);
+assert.equal(partialNoRecordRow.options_activity_proxy.call_volume, 4045792);
+assert.equal(partialNoRecordRow.options_activity_proxy.put_volume, 0);
+assert.equal(partialNoRecordRow.options_activity_proxy.total_volume, 4045792);
+assert.equal(partialNoRecordRow.coverage_ratio, 0.5);
 
 const existingOutputRow = {
   ...row,
@@ -164,6 +181,25 @@ const noRecordSummary = summarizeTickerAvailability({
 });
 assert.equal(noRecordSummary.status, "no_record");
 assert.equal(noRecordSummary.accepted_form, null);
+assert.equal(noRecordSummary.accepted_form_policy, null);
+assert.equal(noRecordSummary.scoring_row_eligible, false);
+assert.equal(noRecordSummary.coverage_row_eligible, false);
+assert.equal(noRecordSummary.no_listed_options_policy_status, "pending_owner_acceptance");
+
+const partialNoRecordSummary = summarizeTickerAvailability({
+  ticker: "ATO",
+  ymd: "20260626",
+  sideAttempts: [
+    { ticker: "ATO", source_date: "20260626", side: "C", attempted_form: "ATO", status: "loaded" },
+    { ticker: "ATO", source_date: "20260626", side: "P", attempted_form: "ATO", status: "no_record" },
+  ],
+});
+assert.equal(partialNoRecordSummary.status, "partial_no_record_or_form_gap");
+assert.equal(partialNoRecordSummary.accepted_form, "ATO");
+assert.equal(partialNoRecordSummary.accepted_form_policy, "one_side_loaded_one_side_no_record_zero_volume_side");
+assert.equal(partialNoRecordSummary.scoring_row_eligible, true);
+assert.equal(partialNoRecordSummary.coverage_row_eligible, true);
+assert.equal(partialNoRecordSummary.no_listed_options_policy_status, null);
 
 const availabilitySnapshot = buildAvailabilitySnapshot({
   ymd: "20260626",

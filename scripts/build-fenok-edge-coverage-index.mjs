@@ -419,6 +419,7 @@ const flowSourceDate = sourceDateFromRows(flow) ?? toIsoDate(flow.source_files?.
 
 const occ = readJson("data/computed/fenok_occ_options_volume.json", {});
 const occAvailability = readJson("data/computed/fenok_occ_options_availability.json", {});
+const occRows = Array.isArray(occ.rows) ? occ.rows : [];
 const occSet = rowTickerSet(occ);
 const occIntersection = [...occSet].filter((ticker) => usUniverse.has(ticker));
 const occSourceDate = sourceDateFromRows(occ) ?? toIsoDate(occ.query_contract?.reportDate);
@@ -496,6 +497,8 @@ const occPlainPartialNoRecordRows = occPlainMissingRows.filter((row) => occAttem
 const occPlainTransientFailedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "transient_failed");
 const occPlainFailedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "failed");
 const occPlainUnattemptedRows = occPlainMissingRows.filter((row) => !occAttemptStatuses.has(rowTicker(row)));
+const occPartialZeroSideRows = occRows.filter((row) => row?.accepted_form_policy === "one_side_loaded_one_side_no_record_zero_volume_side");
+const occBothSidesLoadedOrLegacyRows = occRows.filter((row) => row?.accepted_form_policy !== "one_side_loaded_one_side_no_record_zero_volume_side");
 
 function computeEtfReadinessEvidence() {
   const maxAgeHours = 48;
@@ -647,6 +650,7 @@ function activeS0BlockingEvidence() {
           ...occBreakdown,
           plain_us_attempted_unresolved_count: occPlainAttemptedRows.length,
           plain_us_no_record_attempt_count: occPlainNoRecordRows.length,
+          plain_us_no_listed_options_policy_pending_count: occPlainNoRecordRows.length,
           plain_us_partial_no_record_or_form_gap_count: occPlainPartialNoRecordRows.length,
           plain_us_transient_failed_attempt_count: occPlainTransientFailedRows.length,
           plain_us_failed_attempt_count: occPlainFailedRows.length,
@@ -656,10 +660,17 @@ function activeS0BlockingEvidence() {
           count: occPlainMissingRows.length,
           attempted_unresolved_count: occPlainAttemptedRows.length,
           no_record_attempt_count: occPlainNoRecordRows.length,
+          no_listed_options_policy_pending_count: occPlainNoRecordRows.length,
           partial_no_record_or_form_gap_count: occPlainPartialNoRecordRows.length,
           transient_failed_attempt_count: occPlainTransientFailedRows.length,
           failed_attempt_count: occPlainFailedRows.length,
           unattempted_count: occPlainUnattemptedRows.length,
+          accepted_form_policy: {
+            partial_zero_side_row_policy: "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
+            no_listed_options_policy: "not_accepted_for_readiness; both-side no_record remains evidence-only",
+            current_partial_rows_without_output_row_count: occPlainPartialNoRecordRows.length,
+            current_no_record_evidence_only_count: occPlainNoRecordRows.length,
+          },
         },
         non_plain_or_foreign_suffix_requires_universe_mapping: {
           count: occBreakdown.non_plain_or_foreign_suffix_requires_universe_mapping ?? 0,
@@ -668,7 +679,7 @@ function activeS0BlockingEvidence() {
           count: occClassShareMissingRows.length,
         },
       },
-      next_action: "Do not broad-fetch. Resolve plain-US attempted-unresolved rows by zero-side partial-row policy or durable both-side no-listed-options proof; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms.",
+      next_action: "Do not broad-fetch. Re-run only unresolved partial rows if raw loaded-side cache is absent; keep both-side no-record evidence blocked until durable no-listed-options policy is owner-accepted; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms.",
     },
     {
       id: "no_asia_ex_taiwan_gap",
@@ -820,13 +831,20 @@ const index = {
       denominator: usRows.length,
       denominatorLabel: "active_scoring_universe.us",
       sourceDate: occSourceDate,
-      status: occIntersection.length > 0 ? "ready" : "missing",
+      status: occIntersection.length === usRows.length ? "ready" : occIntersection.length > 0 ? "partial" : "missing",
       claimScope: "proxy_source_available",
       activeTotal: activeScoringTotal,
       caveat: "OCC listed-options volume proxy only; not OPRA, premium, greeks, or buyer/seller direction.",
       extra: {
         source_file: "data/computed/fenok_occ_options_volume.json",
-        rows: Array.isArray(occ.rows) ? occ.rows.length : 0,
+        rows: occRows.length,
+        accepted_form_policy: {
+          counted_present_rows: occIntersection.length,
+          both_sides_loaded_or_legacy_rows: occBothSidesLoadedOrLegacyRows.length,
+          partial_zero_side_rows: occPartialZeroSideRows.length,
+          partial_zero_side_rule: "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
+          no_listed_options_rule: "Both-side no_record is evidence-only and does not count as OCC source-ready until an owner-accepted no-listed-options policy exists.",
+        },
       },
     }),
     coverageRow({

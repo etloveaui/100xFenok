@@ -106,6 +106,10 @@ function buildReport() {
   const s0Track = findTrack(coverageIndex, "active_stock_scoring_current");
   const s1Track = findTrack(coverageIndex, "expanded_stock_candidates");
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
+  const s0BlockingEvidenceIds = [
+    ...asArray(s0Track?.blocking_evidence?.checks),
+    ...asArray(s0Track?.blocking_evidence?.blockers),
+  ].map((row) => row?.id).filter(Boolean);
   const s0 = coverageIndex.active_scoring_universe ?? {};
   const s1 = coverageIndex.expanded_stock_candidate_universe ?? {};
   const s3 = coverageIndex.etf_universe ?? {};
@@ -131,6 +135,7 @@ function buildReport() {
         truth: "S0 is public-scored, but active_stock_scoring_current.requirements.daily/gated are still false.",
       },
       remaining_blockers: missingRequirements(s0Track?.requirements),
+      blocking_evidence_ids: s0BlockingEvidenceIds,
       caveat: s0Track?.caveat ?? null,
       operator_status: {
         last_sources: {
@@ -140,6 +145,7 @@ function buildReport() {
           signals_generated_at: signals?.generated_at ?? null,
         },
         blocking_gates: missingRequirements(s0Track?.requirements),
+        blocking_evidence_ids: s0BlockingEvidenceIds,
         done_claim_allowed: s0Track?.public_done_claim_allowed === true,
       },
     },

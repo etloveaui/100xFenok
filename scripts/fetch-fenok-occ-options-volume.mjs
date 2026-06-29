@@ -487,23 +487,41 @@ function directionFromOptionsVolume(score) {
   return "balanced_volume_proxy";
 }
 
-function buildTickerRow({ ticker, ymd, callLoad, putLoad }) {
-  const callRows = parseOccCsv(callLoad.text);
-  const putRows = parseOccCsv(putLoad.text);
+function rowsForAcceptedOccSide({ load, evidence }) {
+  if (evidence?.status === "loaded") return parseOccCsv(load.text);
+  if (evidence?.status === "no_record") return [];
+  throw new Error(`Cannot build OCC row from side status=${evidence?.status ?? "unknown"}`);
+}
+
+function buildTickerRow({ ticker, ymd, callLoad, putLoad, callEvidence = { status: "loaded" }, putEvidence = { status: "loaded" } }) {
+  const callRows = rowsForAcceptedOccSide({ load: callLoad, evidence: callEvidence });
+  const putRows = rowsForAcceptedOccSide({ load: putLoad, evidence: putEvidence });
   const callVolume = callRows.reduce((sum, row) => sum + row.quantity, 0);
   const putVolume = putRows.reduce((sum, row) => sum + row.quantity, 0);
   const totalVolume = callVolume + putVolume;
   const score = scoreOptionsVolume(callVolume, putVolume);
   const exchanges = [...new Set([...callRows, ...putRows].map((row) => row.exchange).filter(Boolean))].sort();
   const actdate = callRows[0]?.actdate ?? putRows[0]?.actdate ?? null;
+  const sideStatuses = { C: callEvidence.status, P: putEvidence.status };
+  const noRecordSides = Object.entries(sideStatuses)
+    .filter(([, status]) => status === "no_record")
+    .map(([side]) => side)
+    .sort();
+  const acceptedFormPolicy = noRecordSides.length > 0
+    ? "one_side_loaded_one_side_no_record_zero_volume_side"
+    : "both_sides_loaded";
   return {
     ticker,
     as_of: isoFromYmd(ymd),
     source_date: ymd,
     confidence: score == null ? "low" : "medium",
-    coverage_ratio: totalVolume > 0 ? 0.65 : 0,
+    coverage_ratio: totalVolume > 0 ? (noRecordSides.length > 0 ? 0.5 : 0.65) : 0,
+    accepted_form: ticker,
+    accepted_form_policy: acceptedFormPolicy,
+    side_statuses: sideStatuses,
+    zero_volume_sides: noRecordSides,
     source_families: ["OCC Volume Query"],
-    raw_cache_paths: [callLoad.cache_path, putLoad.cache_path].filter(Boolean),
+    raw_cache_paths: [callLoad?.cache_path, putLoad?.cache_path].filter(Boolean),
     options_activity_proxy: {
       score_0_100: score,
       direction: directionFromOptionsVolume(score),
@@ -533,8 +551,15 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }
     sideAttempts.push(call.evidence, put.evidence);
     const summary = summarizeTickerAvailability({ ticker, ymd, sideAttempts: [call.evidence, put.evidence] });
     tickerAvailability.push(summary);
-    if (call.evidence.status === "loaded" && put.evidence.status === "loaded") {
-      rows.push(buildTickerRow({ ticker, ymd, callLoad: call.load, putLoad: put.load }));
+    if (summary.accepted_form) {
+      rows.push(buildTickerRow({
+        ticker,
+        ymd,
+        callLoad: call.load,
+        putLoad: put.load,
+        callEvidence: call.evidence,
+        putEvidence: put.evidence,
+      }));
       continue;
     }
     attempts.push({
@@ -542,6 +567,10 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }
       status: summary.status,
       side_statuses: summary.side_statuses,
       accepted_form: summary.accepted_form,
+      accepted_form_policy: summary.accepted_form_policy,
+      scoring_row_eligible: summary.scoring_row_eligible,
+      coverage_row_eligible: summary.coverage_row_eligible,
+      no_listed_options_policy_status: summary.no_listed_options_policy_status,
       attempted_forms: summary.attempted_forms,
     });
     if (failThreshold > 0 && attempts.filter((attempt) => ["failed", "transient_failed"].includes(attempt.status)).length >= failThreshold) {
@@ -554,6 +583,8 @@ async function loadRowsForDate({ ymd, tickers, noFetch, sleepMs, failThreshold }
 
 function summarizeTickerAvailability({ ticker, ymd, sideAttempts }) {
   const sideStatuses = Object.fromEntries(sideAttempts.map((attempt) => [attempt.side, attempt.status]));
+  const hasLoaded = sideAttempts.some((attempt) => attempt.status === "loaded");
+  const hasNoRecord = sideAttempts.some((attempt) => attempt.status === "no_record");
   let status = "unavailable";
   if (sideAttempts.every((attempt) => attempt.status === "loaded")) status = "options_activity_available";
   else if (sideAttempts.every((attempt) => attempt.status === "no_record")) status = "no_record";
@@ -561,15 +592,29 @@ function summarizeTickerAvailability({ ticker, ymd, sideAttempts }) {
   else if (sideAttempts.some((attempt) => attempt.status === "transient_failed")) status = "transient_failed";
   else if (sideAttempts.some((attempt) => attempt.status === "no_record")) status = "partial_no_record_or_form_gap";
   else if (sideAttempts.some((attempt) => attempt.status === "failed")) status = "failed";
+  const acceptedForm = status === "options_activity_available" || (status === "partial_no_record_or_form_gap" && hasLoaded && hasNoRecord)
+    ? ticker
+    : null;
+  const acceptedFormPolicy = status === "options_activity_available"
+    ? "both_sides_loaded"
+    : status === "partial_no_record_or_form_gap" && acceptedForm
+      ? "one_side_loaded_one_side_no_record_zero_volume_side"
+      : null;
   return {
     ticker,
     source_date: ymd,
     attempted_forms: [ticker],
-    accepted_form: status === "options_activity_available" ? ticker : null,
+    accepted_form: acceptedForm,
+    accepted_form_policy: acceptedFormPolicy,
+    scoring_row_eligible: Boolean(acceptedForm),
+    coverage_row_eligible: Boolean(acceptedForm),
+    no_listed_options_policy_status: status === "no_record" ? "pending_owner_acceptance" : null,
     status,
     side_statuses: sideStatuses,
     evidence_policy: status === "no_record"
       ? "Both C and P sides returned OCC no-record for the attempted form/date; this is not a permanent no-listed-options proof without accepted-form policy."
+      : status === "partial_no_record_or_form_gap" && acceptedForm
+        ? "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
       : null,
   };
 }
@@ -906,11 +951,13 @@ export {
   summarizeTickerAvailability,
 };
 
-function buildRowsForTest({ ticker, ymd, callCsv, putCsv }) {
+function buildRowsForTest({ ticker, ymd, callCsv, putCsv, callStatus = "loaded", putStatus = "loaded" }) {
   return buildTickerRow({
     ticker,
     ymd,
     callLoad: { text: callCsv, cache_path: "_private/test/C.csv" },
     putLoad: { text: putCsv, cache_path: "_private/test/P.csv" },
+    callEvidence: { status: callStatus },
+    putEvidence: { status: putStatus },
   });
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T21:56:42.944Z",
+  "generated_at": "2026-06-29T22:10:26.883Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -132,14 +132,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-29T15:35:23.637Z",
-          "age_hours": 6.36,
+          "age_hours": 6.58,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-06-29T18:34:55.089Z",
-          "age_hours": 3.36,
+          "age_hours": 3.59,
           "max_age_hours": 48
         },
         {
@@ -252,12 +252,19 @@
         "coverage_pct": 87.91,
         "active_scoring_coverage_pct": 52.53,
         "source_date": "2026-06-26",
-        "availability_status": "ready",
+        "availability_status": "partial",
         "claim_scope": "proxy_source_available",
         "not_public_scoring": true,
         "caveat": "OCC listed-options volume proxy only; not OPRA, premium, greeks, or buyer/seller direction.",
         "source_file": "data/computed/fenok_occ_options_volume.json",
-        "rows": 560
+        "rows": 560,
+        "accepted_form_policy": {
+          "counted_present_rows": 560,
+          "both_sides_loaded_or_legacy_rows": 560,
+          "partial_zero_side_rows": 0,
+          "partial_zero_side_rule": "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
+          "no_listed_options_rule": "Both-side no_record is evidence-only and does not count as OCC source-ready until an owner-accepted no-listed-options policy exists."
+        }
       },
       {
         "id": "us_latest_bounded_backfill_run",
@@ -472,6 +479,7 @@
                   "plain_us_collection_or_no_options_policy_required": 19,
                   "plain_us_attempted_unresolved_count": 19,
                   "plain_us_no_record_attempt_count": 6,
+                  "plain_us_no_listed_options_policy_pending_count": 6,
                   "plain_us_partial_no_record_or_form_gap_count": 13,
                   "plain_us_transient_failed_attempt_count": 0,
                   "plain_us_failed_attempt_count": 0,
@@ -481,10 +489,17 @@
                   "count": 19,
                   "attempted_unresolved_count": 19,
                   "no_record_attempt_count": 6,
+                  "no_listed_options_policy_pending_count": 6,
                   "partial_no_record_or_form_gap_count": 13,
                   "transient_failed_attempt_count": 0,
                   "failed_attempt_count": 0,
-                  "unattempted_count": 0
+                  "unattempted_count": 0,
+                  "accepted_form_policy": {
+                    "partial_zero_side_row_policy": "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
+                    "no_listed_options_policy": "not_accepted_for_readiness; both-side no_record remains evidence-only",
+                    "current_partial_rows_without_output_row_count": 13,
+                    "current_no_record_evidence_only_count": 6
+                  }
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
                   "count": 56
@@ -493,7 +508,7 @@
                   "count": 2
                 }
               },
-              "next_action": "Do not broad-fetch. Resolve plain-US attempted-unresolved rows by zero-side partial-row policy or durable both-side no-listed-options proof; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
+              "next_action": "Do not broad-fetch. Re-run only unresolved partial rows if raw loaded-side cache is absent; keep both-side no-record evidence blocked until durable no-listed-options policy is owner-accepted; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
             },
             {
               "id": "no_asia_ex_taiwan_gap",
@@ -538,6 +553,7 @@
                   "plain_us_collection_or_no_options_policy_required": 19,
                   "plain_us_attempted_unresolved_count": 19,
                   "plain_us_no_record_attempt_count": 6,
+                  "plain_us_no_listed_options_policy_pending_count": 6,
                   "plain_us_partial_no_record_or_form_gap_count": 13,
                   "plain_us_transient_failed_attempt_count": 0,
                   "plain_us_failed_attempt_count": 0,
@@ -547,10 +563,17 @@
                   "count": 19,
                   "attempted_unresolved_count": 19,
                   "no_record_attempt_count": 6,
+                  "no_listed_options_policy_pending_count": 6,
                   "partial_no_record_or_form_gap_count": 13,
                   "transient_failed_attempt_count": 0,
                   "failed_attempt_count": 0,
-                  "unattempted_count": 0
+                  "unattempted_count": 0,
+                  "accepted_form_policy": {
+                    "partial_zero_side_row_policy": "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
+                    "no_listed_options_policy": "not_accepted_for_readiness; both-side no_record remains evidence-only",
+                    "current_partial_rows_without_output_row_count": 13,
+                    "current_no_record_evidence_only_count": 6
+                  }
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
                   "count": 56
@@ -559,7 +582,7 @@
                   "count": 2
                 }
               },
-              "next_action": "Do not broad-fetch. Resolve plain-US attempted-unresolved rows by zero-side partial-row policy or durable both-side no-listed-options proof; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
+              "next_action": "Do not broad-fetch. Re-run only unresolved partial rows if raw loaded-side cache is absent; keep both-side no-record evidence blocked until durable no-listed-options policy is owner-accepted; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
             }
           ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
@@ -624,14 +647,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-29T15:35:23.637Z",
-              "age_hours": 6.36,
+              "age_hours": 6.58,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-06-29T18:34:55.089Z",
-              "age_hours": 3.36,
+              "age_hours": 3.59,
               "max_age_hours": 48
             },
             {
@@ -727,7 +750,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T21:56:42.944Z"
+        "generated_at": "2026-06-29T22:10:26.883Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -770,14 +793,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-29T15:35:23.637Z",
-        "age_hours": 6.36,
+        "age_hours": 6.58,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-06-29T18:34:55.089Z",
-        "age_hours": 3.36,
+        "age_hours": 3.59,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 12,
