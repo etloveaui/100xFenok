@@ -1264,7 +1264,11 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
           <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">통합 데이터</h4>
           <p className="mt-0.5 min-w-0 text-[11px] font-bold text-[var(--c-ink-4)]">
             <span className="orbitron font-black">{data.ticker ?? ticker}</span>
-            {data.identity?.name ? <span className="truncate" title={data.identity.name}> · {data.identity.name}</span> : null}
+            {data.identity?.name ? (
+              <span className="block max-w-[14rem] truncate" title={data.identity.name}>
+                {data.identity.name}
+              </span>
+            ) : null}
             <span> · {data.asset_type === "etf" ? "ETF" : "주식"}</span>
           </p>
         </div>

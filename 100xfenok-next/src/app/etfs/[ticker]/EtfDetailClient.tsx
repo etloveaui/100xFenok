@@ -894,7 +894,6 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
           <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
             <th scope="col" className="px-2 py-2 text-right">#</th>
             <th scope="col" className="px-2 py-2 text-left">종목/계약</th>
-            <th scope="col" className="px-2 py-2 text-left">티커</th>
             <th scope="col" className="px-2 py-2 text-right">비중</th>
             <th scope="col" className="px-2 py-2 text-right">수량</th>
           </tr>
@@ -914,7 +913,6 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
                     {item.name ?? "—"}
                   </span>
                 </th>
-                <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-[var(--c-ink-3)]">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
                 <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
               </tr>
