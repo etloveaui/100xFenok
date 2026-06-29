@@ -87,9 +87,9 @@ Operator readout rule:
 - Blocked diagnostics and promotion plans also expose StockAnalysis corporate-action/alias policy evidence for DAY/HOLX/MMC. Acquired, delisted, or old-symbol rows remain diagnostics-only until an explicit terminal/alias policy exists; the audit must not copy MRSH identity into old ticker MMC or promote these rows by inference.
 - StockAnalysis daily schedule is incremental-only for ETF detail plus core surfaces.
 - Fenok Edge OCC daily schedule is batch-limited, request-limited, failure-thresholded, and sleep-throttled.
-- `scripts/fetch-fenok-occ-options-volume.mjs --s0-occ-missing --batch-size 50 --batch-index 0 --date 20260626 --max-requests 100 --plan-only` selects only the current 299 active plain-US OCC gaps after the 2026-06-30 bounded OCC slice. It is a plan-only command and does not fetch/write.
+- `scripts/fetch-fenok-occ-options-volume.mjs --s0-occ-missing --batch-size 50 --batch-index 0 --date 20260626 --max-requests 100 --plan-only` selects only the current 248 active plain-US OCC gaps after the 2026-06-30 second bounded OCC slice. It is a plan-only command and does not fetch/write.
 - OCC no-record and all-empty batches now have a derived evidence path: `data/computed/fenok_occ_options_availability.json`. This file must contain no raw CSV rows and no private cache paths; it is not enough by itself to mark permanent no-listed-options until both C/P sides and accepted-form policy are verified.
-- Live OCC gap filling remains approval-gated. Current bounded budget is 299 tickers * 2 sides = 598 side requests: five 50-ticker batches at 100 side requests plus one 49-ticker final batch at 98 side requests.
+- Live OCC gap filling remains approval-gated. Current bounded budget is 248 tickers * 2 sides = 496 side requests: four 50-ticker batches at 100 side requests plus one 48-ticker final batch at 96 side requests.
 - Fenok Edge KRX daily schedule is one-day by default, max-call-limited, concurrency-limited, sleep-throttled, and fails closed on failed files or empty KOSPI/KOSDAQ issuer daily rows unless manually overridden.
 - Fenok Edge skips GDELT/news by default in the daily workflow.
 - Manual workflow dispatch exposes `plan_only`, `no_fetch`, KRX date/day/request controls, FINRA date overrides, and OCC batch/request controls.
