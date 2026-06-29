@@ -9,6 +9,7 @@ import {
   candidateDates,
   estimateMaxLiveRequests,
   loadS0OccMissingUniverse,
+  loadS0OccPartialMissingUniverse,
   mergeAvailabilitySnapshot,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
@@ -151,12 +152,44 @@ const s0OccDefaultBatchSize = Math.min(50, s0OccMissing.length);
 assert.ok(s0OccMissing.every((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker)));
 assert.ok(!s0OccMissing.includes("BRK-A"));
 
+const s0OccPartialMissing = loadS0OccPartialMissingUniverse();
+assert.deepEqual(s0OccPartialMissing, [
+  "ATO",
+  "COLM",
+  "FTS",
+  "FTV",
+  "GIB",
+  "GIII",
+  "LII",
+  "PAG",
+  "PBA",
+  "RPM",
+  "RS",
+  "STE",
+  "WLK",
+]);
+assert.ok(!s0OccPartialMissing.includes("ELS"));
+assert.ok(!s0OccPartialMissing.includes("NVR"));
+
 const s0OccMissingPlan = await build(parseArgs(["--s0-occ-missing", "--plan-only"]));
 assert.equal(s0OccMissingPlan.collection_mode, "s0_occ_missing_plain_us_batched");
 assert.equal(s0OccMissingPlan.eligible_count, s0OccMissing.length);
 assert.equal(s0OccMissingPlan.selected_tickers, s0OccDefaultBatchSize);
 assert.equal(s0OccMissingPlan.request_budget.estimated_max_live_requests, s0OccDefaultBatchSize * 2);
 assert.equal(s0OccMissingPlan.request_budget.status, "within_budget");
+
+const s0OccPartialMissingPlan = await build(parseArgs([
+  "--s0-occ-partial-missing",
+  "--batch-size",
+  "100",
+  "--plan-only",
+]));
+assert.equal(s0OccPartialMissingPlan.collection_mode, "s0_occ_partial_no_record_plain_us_batched");
+assert.equal(s0OccPartialMissingPlan.eligible_count, s0OccPartialMissing.length);
+assert.equal(s0OccPartialMissingPlan.selected_tickers, s0OccPartialMissing.length);
+assert.deepEqual(s0OccPartialMissingPlan.sample, s0OccPartialMissing);
+assert.equal(s0OccPartialMissingPlan.request_budget.estimated_max_live_requests, s0OccPartialMissing.length * 2);
+assert.equal(s0OccPartialMissingPlan.request_budget.status, "within_budget");
 
 if (s0OccMissing.length >= 51) {
   const s0OccMissingOverBudget = await build(parseArgs([

@@ -61,6 +61,7 @@ function parseArgs(argv) {
     planOnly: false,
     referenceOnly: false,
     s0OccMissing: false,
+    s0OccPartialMissing: false,
     sleepMs: 250,
     startAfter: "",
   };
@@ -70,6 +71,7 @@ function parseArgs(argv) {
     const next = () => argv[++i] ?? "";
     if (arg === "--all-eligible") args.allEligible = true;
     else if (arg === "--s0-occ-missing") args.s0OccMissing = true;
+    else if (arg === "--s0-occ-partial-missing") args.s0OccPartialMissing = true;
     else if (arg === "--batch-index") args.batchIndex = Number(next()) || 0;
     else if (arg === "--batch-size") args.batchSize = Number(next()) || 0;
     else if (arg === "--date") args.date = next();
@@ -91,7 +93,9 @@ function parseArgs(argv) {
     else if (arg === "--reference-only") args.referenceOnly = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
-  if (args.allEligible || args.s0OccMissing) {
+  const batchModeCount = [args.allEligible, args.s0OccMissing, args.s0OccPartialMissing].filter(Boolean).length;
+  if (batchModeCount > 1) throw new Error("Choose only one of --all-eligible, --s0-occ-missing, or --s0-occ-partial-missing");
+  if (args.allEligible || args.s0OccMissing || args.s0OccPartialMissing) {
     if (!maxWalkbackDaysExplicit) args.maxWalkbackDays = 0;
     if (args.batchSize <= 0) args.batchSize = DEFAULT_ALL_ELIGIBLE_BATCH_SIZE;
     if (args.maxRequests <= 0) args.maxRequests = DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS;
@@ -176,20 +180,42 @@ function loadAllEligibleUniverse({ eligibleManifest = "", limit = 0 } = {}) {
   return out;
 }
 
-function loadS0OccMissingUniverse({ limit = 0 } = {}) {
+function occAvailabilityStatusByTicker() {
+  const availability = readJson(AVAILABILITY_FILE, {});
+  const byTicker = new Map();
+  for (const row of Array.isArray(availability.rows) ? availability.rows : []) {
+    const ticker = normalizeSignalsTicker(row?.ticker);
+    const status = String(row?.status ?? "").trim();
+    if (!ticker || !status) continue;
+    byTicker.set(ticker, status);
+  }
+  return byTicker;
+}
+
+function loadS0OccMissingUniverse({ limit = 0, priorStatuses = [] } = {}) {
   const fenokSignals = readJson("computed/fenok_signals.json", {});
   const occOptions = readJson(OUTPUT_FILE, {});
   const occTickers = new Set((Array.isArray(occOptions.rows) ? occOptions.rows : [])
     .map((row) => normalizeSignalsTicker(row.ticker_normalized ?? row.ticker))
     .filter(Boolean));
+  const priorStatusSet = new Set(priorStatuses);
+  const priorStatusByTicker = priorStatusSet.size > 0 ? occAvailabilityStatusByTicker() : null;
   const rows = Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
   let out = rows
     .filter((row) => row.market === "US")
     .map((row) => normalizeSignalsTicker(row.ticker_normalized ?? row.ticker))
-    .filter((ticker) => ticker && plainOccUnderlying(ticker) && !occTickers.has(ticker));
+    .filter((ticker) => ticker && plainOccUnderlying(ticker) && !occTickers.has(ticker))
+    .filter((ticker) => !priorStatusSet.size || priorStatusSet.has(priorStatusByTicker.get(ticker)));
   out = [...new Set(out)].sort();
   if (limit > 0) out = out.slice(0, limit);
   return out;
+}
+
+function loadS0OccPartialMissingUniverse({ limit = 0 } = {}) {
+  return loadS0OccMissingUniverse({
+    limit,
+    priorStatuses: ["partial_no_record_or_form_gap"],
+  });
 }
 
 function applyTickerBatch(tickers, { batchIndex = 0, batchSize = 0, startAfter = "" } = {}) {
@@ -221,6 +247,20 @@ function loadTickerUniverse({ tickers, referenceOnly, limit }) {
 }
 
 function resolveTickerUniverse(args) {
+  if (args.s0OccPartialMissing) {
+    const eligibleTickers = loadS0OccPartialMissingUniverse({ limit: args.limit });
+    return {
+      mode: "s0_occ_partial_no_record_plain_us_batched",
+      eligible_count: eligibleTickers.length,
+      excluded_note: "active S0 plain-US OCC gaps previously attempted with one loaded side and one no_record side; both-side no_record remains evidence-only",
+      prior_status_filter: ["partial_no_record_or_form_gap"],
+      tickers: applyTickerBatch(eligibleTickers, {
+        batchIndex: args.batchIndex,
+        batchSize: args.batchSize,
+        startAfter: args.startAfter,
+      }),
+    };
+  }
   if (args.s0OccMissing) {
     const eligibleTickers = loadS0OccMissingUniverse({ limit: args.limit });
     return {
@@ -942,6 +982,7 @@ export {
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
   loadS0OccMissingUniverse,
+  loadS0OccPartialMissingUniverse,
   mergeAvailabilitySnapshot,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
