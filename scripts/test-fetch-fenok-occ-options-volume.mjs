@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildRowsForTest,
   candidateDates,
+  OCC_AVAILABILITY_POLICY,
   parseOccCsv,
   scoreOptionsVolume,
 } from "./fetch-fenok-occ-options-volume.mjs";
@@ -33,6 +34,10 @@ assert.deepEqual(
   candidateDates({ requestedDate: "20260619", maxWalkbackDays: 2 }),
   ["20260619", "20260618", "20260617"],
 );
+assert.equal(OCC_AVAILABILITY_POLICY.availability_status, "not_verified");
+assert.equal(OCC_AVAILABILITY_POLICY.exact_volume_query_release_time, null);
+assert.equal(OCC_AVAILABILITY_POLICY.scheduler_guidance.initial_daily_run_kst, "08:30");
+assert.ok(OCC_AVAILABILITY_POLICY.scheduler_guidance.do_not_default_to.includes("12:45 KST"));
 
 assert.equal(scoreOptionsVolume(4045792, 2746518), 56.97);
 
