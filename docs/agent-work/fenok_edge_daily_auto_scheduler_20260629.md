@@ -31,6 +31,7 @@ Make daily market-source refreshes accumulate without turning missing or stale d
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`.
 - YF daily, Fenok Edge daily, and Fenok Edge KRX daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
 - `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
+- `qa:fenok-edge-readiness` also includes `qa:fenok-s0-source-gaps`, a no-fetch S0 source-gap audit that classifies FINRA/OCC missing rows into collection candidates vs universe-mapping policy work.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
 
 ## Daily Truth Table
@@ -47,6 +48,7 @@ Operational command:
 
 ```bash
 npm --prefix 100xfenok-next run qa:fenok-daily-accumulation
+npm --prefix 100xfenok-next run qa:fenok-s0-source-gaps
 ```
 
 The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. ETF `done` wording is allowed only when the compact public surface, freshness gate, and no-fetchable-required-history gate are true together.
@@ -57,6 +59,8 @@ Operator readout rule:
 - If `blocking_gates` is non-empty or `done_claim_allowed=false`, do not call that layer PUBLIC + DAILY + GATED.
 - `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip.
 - The active S0 coverage index now carries derived blocker evidence directly under `public_scoring_readiness.tracks[].blocking_evidence`, so operators can see the FINRA/OCC/Asia gap counts without reading raw/private manifests.
+- The S0 source-gap audit is the action splitter for those blockers: current FINRA missing 50 are all `US_CLASS` foreign-suffix rows, so they are mapping/denominator work rather than FINRA fetch work. Current FINRA row-existence coverage is 587/637, but strict metric-ready coverage is 579/637 because eight rows are low-confidence placeholders; the owner must choose and encode which criterion clears `finra_full_us_source_ready`.
+- Current OCC missing 409 splits into 351 plain US underlyings that still need bounded OCC collection or explicit no-listed-options evidence, 56 non-US suffix `US_CLASS` rows that need mapping/denominator policy, and 2 Berkshire class-share symbols that need OCC symbol-form testing before being marked unavailable.
 - `ETF evidence` separates public surface proof from `daily`/`gated`; current 1Y continuity evidence still has fetchable gaps, so ETF paid-ready wording stays blocked even though the compact public surface is present.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it is expected to stay red until the S0 `daily` and `gated` requirements become true.
 
