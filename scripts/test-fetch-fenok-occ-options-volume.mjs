@@ -130,27 +130,29 @@ assert.equal(overBudgetPlan.request_budget.estimated_max_live_requests, 102);
 assert.equal(overBudgetPlan.request_budget.status, "blocked_over_budget");
 
 const s0OccMissing = loadS0OccMissingUniverse();
-assert.equal(s0OccMissing.length, 351);
-assert.ok(s0OccMissing.includes("GOOG"));
+const s0OccDefaultBatchSize = Math.min(50, s0OccMissing.length);
+assert.ok(s0OccMissing.every((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker)));
 assert.ok(!s0OccMissing.includes("BRK-A"));
 
 const s0OccMissingPlan = await build(parseArgs(["--s0-occ-missing", "--plan-only"]));
 assert.equal(s0OccMissingPlan.collection_mode, "s0_occ_missing_plain_us_batched");
-assert.equal(s0OccMissingPlan.eligible_count, 351);
-assert.equal(s0OccMissingPlan.selected_tickers, 50);
-assert.equal(s0OccMissingPlan.request_budget.estimated_max_live_requests, 100);
+assert.equal(s0OccMissingPlan.eligible_count, s0OccMissing.length);
+assert.equal(s0OccMissingPlan.selected_tickers, s0OccDefaultBatchSize);
+assert.equal(s0OccMissingPlan.request_budget.estimated_max_live_requests, s0OccDefaultBatchSize * 2);
 assert.equal(s0OccMissingPlan.request_budget.status, "within_budget");
 
-const s0OccMissingOverBudget = await build(parseArgs([
-  "--s0-occ-missing",
-  "--batch-size",
-  "51",
-  "--max-requests",
-  "100",
-  "--plan-only",
-]));
-assert.equal(s0OccMissingOverBudget.selected_tickers, 51);
-assert.equal(s0OccMissingOverBudget.request_budget.status, "blocked_over_budget");
+if (s0OccMissing.length >= 51) {
+  const s0OccMissingOverBudget = await build(parseArgs([
+    "--s0-occ-missing",
+    "--batch-size",
+    "51",
+    "--max-requests",
+    "100",
+    "--plan-only",
+  ]));
+  assert.equal(s0OccMissingOverBudget.selected_tickers, 51);
+  assert.equal(s0OccMissingOverBudget.request_budget.status, "blocked_over_budget");
+}
 
 const noRecordSummary = summarizeTickerAvailability({
   ticker: "FTV",
@@ -166,7 +168,7 @@ assert.equal(noRecordSummary.accepted_form, null);
 const availabilitySnapshot = buildAvailabilitySnapshot({
   ymd: "20260626",
   generatedAt: "2026-06-29T00:00:00.000Z",
-  universe: { mode: "s0_occ_missing_plain_us_batched", tickers: ["FTV"], eligible_count: 351 },
+  universe: { mode: "s0_occ_missing_plain_us_batched", tickers: ["FTV"], eligible_count: s0OccMissing.length },
   sideAttempts: [
     { ticker: "FTV", source_date: "20260626", side: "C", attempted_form: "FTV", status: "no_record" },
     { ticker: "FTV", source_date: "20260626", side: "P", attempted_form: "FTV", status: "no_record" },
