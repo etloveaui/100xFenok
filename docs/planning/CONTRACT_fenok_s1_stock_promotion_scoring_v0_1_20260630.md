@@ -95,6 +95,18 @@ artifact. Proposed path:
 
 `data/admin/fenok-s1-stock-public-promotion-dry-run.json`
 
+Writer command:
+
+```bash
+node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
+```
+
+No-write QA command:
+
+```bash
+npm --prefix 100xfenok-next run qa:fenok-s1-public-promotion-dry-run
+```
+
 Required top-level fields:
 
 - `schema_version`
@@ -169,8 +181,10 @@ Minimum QA before any public mutation:
 ```bash
 node --check scripts/stock-action-score-core.mjs
 node --check scripts/audit-fenok-stock-promotion-candidates.mjs
+node --check scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs
 npm --prefix 100xfenok-next run qa:fenok-stock-promotion-audit
 npm --prefix 100xfenok-next run qa:fenok-s1-promotion-gate
+npm --prefix 100xfenok-next run qa:fenok-s1-public-promotion-dry-run
 npm --prefix 100xfenok-next run qa:fenok-public-guard
 npm --prefix 100xfenok-next run qa:fenok-signal-lens
 npm --prefix 100xfenok-next run qa:fenok-edge-readiness
