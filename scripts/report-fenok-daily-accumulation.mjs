@@ -114,6 +114,7 @@ function buildReport() {
   const computedEtfScored = asNumber(etfSignals?.coverage?.scored_public_etf, coverageIndexEtfScored);
   const summaryEtfScored = asNumber(etfSummary?.coverage?.scored_public_etf, computedEtfScored);
   const actualEtfScored = Math.max(coverageIndexEtfScored, computedEtfScored, summaryEtfScored);
+  const s3Evidence = s3Track?.evidence_based_readiness ?? s3.evidence_based_readiness ?? null;
 
   const tracks = {
     s0_active_stock_scoring: {
@@ -173,12 +174,15 @@ function buildReport() {
     s3_etf_lane: {
       layer: "S3",
       stage: s3Track?.stage ?? s3.stage ?? null,
-      computed_stage: actualEtfScored > 0 ? "SCORED_ARTIFACT_PRESENT" : "NORMALIZED_ONLY",
+      computed_stage: s3Evidence?.public_ready
+        ? "PUBLIC_SURFACE_VERIFIED"
+        : actualEtfScored > 0 ? "SCORED_ARTIFACT_PRESENT" : "NORMALIZED_ONLY",
       readiness_status: s3Track?.readiness_status ?? null,
       public_done_claim_allowed: s3Track?.public_done_claim_allowed === true,
       public_daily_gated: requirementsDone(s3Track?.requirements),
       denominator: asNumber(s3.collected_etf_candidates, asNumber(marketFacts?.coverage?.etf)),
       scored_public_etf: actualEtfScored,
+      evidence_based_readiness: s3Evidence,
       scored_public_etf_sources: {
         coverage_index: coverageIndexEtfScored,
         fenok_etf_signals: computedEtfScored,
@@ -209,7 +213,7 @@ function buildReport() {
         yf_finance: "scheduled branch processes ETF history gaps through one rolling shard per run, cap 140",
         stockanalysis: "scheduled branch uses incremental ETF detail backfill, cap 40 per run",
         truth: actualEtfScored > 0
-          ? "ETF scores exist in the separate ETF artifact, but PUBLIC+DAILY+GATED readiness is not done."
+          ? "ETF scores exist in the separate ETF artifact. Public surface proof is separate from DAILY+GATED readiness."
           : "ETF inputs are normalized and accumulated separately, but ETF scoring/public/daily gate is not done.",
       },
       remaining_blockers: missingRequirements(s3Track?.requirements),
@@ -220,6 +224,7 @@ function buildReport() {
           etf_signals_generated_at: etfSignals?.generated_at ?? etfSummary?.generated_at ?? null,
           history_gap_report_generated_at: historyGap?.generated_at ?? null,
           history_gap_plan_generated_at: historyGap?.incremental_plan?.generated_at ?? incrementalPlan?.generated_at ?? null,
+          public_surface: s3Evidence?.public_ready ? "ready" : s3Evidence ? "blocked" : null,
         },
         blocking_gates: missingRequirements(s3Track?.requirements),
         done_claim_allowed: s3Track?.public_done_claim_allowed === true,
@@ -244,7 +249,10 @@ function buildReport() {
     });
   }
   if (tracks.s3_etf_lane.scored_public_etf > 0 && !tracks.s3_etf_lane.public_daily_gated) {
-    add(warnings, `S3 ETF scored artifact is present (${tracks.s3_etf_lane.scored_public_etf}) but PUBLIC+DAILY+GATED readiness is still false; report as scored/not-done only.`);
+    add(warnings, `S3 ETF scored artifact is present (${tracks.s3_etf_lane.scored_public_etf}) but DAILY+GATED readiness is still false; report as public-surfaced/not-done only when public proof is true.`);
+  }
+  if (tracks.s3_etf_lane.stage === "PUBLIC" && tracks.s3_etf_lane.evidence_based_readiness?.public_ready !== true) {
+    add(errors, "S3 ETF stage=PUBLIC requires evidence_based_readiness.public_ready=true");
   }
   if (
     tracks.s3_etf_lane.scored_public_etf_sources.coverage_index !== tracks.s3_etf_lane.scored_public_etf_sources.fenok_etf_signals
@@ -291,7 +299,10 @@ function printHuman(report) {
     : "history_gap_report=missing";
   const scoredSources = s3.scored_public_etf_sources;
   const sourceText = `coverage_index=${scoredSources.coverage_index},artifact=${scoredSources.fenok_etf_signals},summary=${scoredSources.fenok_etf_signals_summary}`;
-  console.log(`- S3 ETF lane: stage=${s3.stage} computed_stage=${s3.computed_stage} denominator=${s3.denominator} scored_public_etf=${s3.scored_public_etf} scored_sources=[${sourceText}] ${historyText} public_daily_gated=${s3.public_daily_gated} cadence="YF one shard/140; StockAnalysis incremental 40/run" blockers=${s3.remaining_blockers.join(",") || "none"}`);
+  const s3EvidenceText = s3.evidence_based_readiness
+    ? ` evidence_ready={public:${s3.evidence_based_readiness.public_ready},daily:${s3.evidence_based_readiness.daily_ready},gated:${s3.evidence_based_readiness.gated_ready}}`
+    : "";
+  console.log(`- S3 ETF lane: stage=${s3.stage} computed_stage=${s3.computed_stage} denominator=${s3.denominator} scored_public_etf=${s3.scored_public_etf} scored_sources=[${sourceText}] ${historyText} public_daily_gated=${s3.public_daily_gated}${s3EvidenceText} cadence="YF one shard/140; StockAnalysis incremental 40/run" blockers=${s3.remaining_blockers.join(",") || "none"}`);
   console.log(`  status: sources=[${compactSources(s3.operator_status.last_sources)}] blocking_gates=${s3.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s3.operator_status.done_claim_allowed}`);
   for (const warning of report.warnings) console.log(`WARN: ${warning.message}`);
   for (const error of report.errors) console.error(`ERROR: ${error.message}`);

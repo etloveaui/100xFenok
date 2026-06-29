@@ -49,7 +49,7 @@ function add(list, message, extra = {}) {
 
 function fmt(status) {
   if (status === "ready") return "OK";
-  if (status === "blocked_for_numerator" || status === "not_in_universe") return "WARN";
+  if (String(status ?? "").startsWith("blocked") || status === "not_in_universe") return "WARN";
   return "FAIL";
 }
 
@@ -220,6 +220,8 @@ const composites = index.source_availability_composites ?? {};
 const readiness = index.public_scoring_readiness ?? {};
 const readinessTracks = asArray(readiness.tracks);
 const activeS0ReadinessTrack = readinessTracks.find((track) => track?.id === ACTIVE_S0_TRACK_ID);
+const etfReadinessTrack = readinessTracks.find((track) => track?.id === "etf_scoring_lane");
+const etfEvidence = etfReadinessTrack?.evidence_based_readiness ?? index.etf_universe?.evidence_based_readiness ?? null;
 const freshnessChecks = asArray(index.freshness_gate?.checks);
 const activeS0Evidence = buildActiveS0Evidence(index, activeTotal, activeS0ReadinessTrack, sourceRows, composites, freshnessChecks);
 
@@ -301,6 +303,25 @@ if (activeS0ReadinessTrack?.public_done_claim_allowed === true && activeS0Eviden
   add(errors, `${ACTIVE_S0_TRACK_ID}: public_done_claim_allowed=true requires active_s0_daily_gated_evidence.gated_ready=true`);
 }
 
+if (etfReadinessTrack?.requirements?.public === true && etfEvidence?.public_ready !== true) {
+  add(errors, "etf_scoring_lane: requirements.public=true requires evidence_based_readiness.public_ready=true");
+}
+if (etfReadinessTrack?.stage === "PUBLIC" && etfEvidence?.public_ready !== true) {
+  add(errors, "etf_scoring_lane: stage=PUBLIC requires evidence_based_readiness.public_ready=true");
+}
+if (etfReadinessTrack?.requirements?.daily === true && etfEvidence?.daily_ready !== true) {
+  add(errors, "etf_scoring_lane: requirements.daily=true requires evidence_based_readiness.daily_ready=true");
+}
+if (etfReadinessTrack?.requirements?.gated === true && etfEvidence?.gated_ready !== true) {
+  add(errors, "etf_scoring_lane: requirements.gated=true requires evidence_based_readiness.gated_ready=true");
+}
+if (etfReadinessTrack?.readiness_status === "ready" && etfEvidence?.gated_ready !== true) {
+  add(errors, "etf_scoring_lane: readiness_status=ready requires evidence_based_readiness.gated_ready=true");
+}
+if (etfReadinessTrack?.public_done_claim_allowed === true && etfEvidence?.gated_ready !== true) {
+  add(errors, "etf_scoring_lane: public_done_claim_allowed=true requires evidence_based_readiness.gated_ready=true");
+}
+
 if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
   if (activeTotal !== EXPECTED_ACTIVE_S0_STOCK_COUNT) {
     add(errors, `strict S0 gate requires active_scoring_universe.total=${EXPECTED_ACTIVE_S0_STOCK_COUNT}; got ${activeTotal}`);
@@ -365,6 +386,7 @@ const result = {
     requirements: activeS0ReadinessTrack?.requirements ?? null,
   } : null,
   active_s0_daily_gated_evidence: activeS0Evidence,
+  etf_scoring_lane_evidence: etfEvidence,
   checks: freshnessChecks.map((check) => ({
     id: check.id,
     status: check.status,
@@ -396,6 +418,9 @@ if (JSON_MODE) {
     console.log(`- ${check.result} ${check.id}${check.source_date ? ` source_date=${check.source_date}` : ""}${check.age_days != null ? ` age_days=${check.age_days}` : ""}`);
   }
   console.log(`active S0 evidence: daily_ready=${activeS0Evidence.daily_ready} gated_ready=${activeS0Evidence.gated_ready} blockers=${activeS0Evidence.blockers.join(",") || "none"}`);
+  if (etfEvidence) {
+    console.log(`ETF evidence: public_ready=${etfEvidence.public_ready} daily_ready=${etfEvidence.daily_ready} gated_ready=${etfEvidence.gated_ready} blockers=${asArray(etfEvidence.blockers).join(",") || "none"}`);
+  }
   for (const warning of warnings) console.log(`WARN: ${warning.message}`);
   for (const error of errors) console.error(`ERROR: ${error.message}`);
 }

@@ -11,7 +11,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `coverage.scored_public_etf` is now non-zero for eligible vanilla ETFs.
 - Current local scored denominator: 4,484 eligible vanilla ETFs out of 5,333 StockAnalysis ETF records.
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
-- UI/API consumption and a public summary mirror exist, but the coverage index still intentionally holds `public=false`, `daily=false`, and `gated=false`.
+- UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
+- The coverage index still holds `daily=false` and `gated=false` while a fetchable required-history gap remains.
 - This is still not a paid-ready ETF product claim until PUBLIC + DAILY + GATED are proven together.
 
 ## Signal Families
@@ -56,6 +57,9 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 - `npm --prefix 100xfenok-next run qa:fenok-etf-signal-gate`
   - requires ETF payload/summary counts to match `coverage.scored_public_etf`
+  - requires the compact public summary mirror to match the internal summary counts
+  - requires the ETF signal API route and ETF detail UI card to exist
+  - rejects a public full ETF signal payload mirror
   - requires every ETF row to carry `asset_type=etf`
   - rejects excluded leveraged/inverse/single-stock leakage into the vanilla score rows
   - requires no ETF row leakage into the stock signal lens
@@ -65,11 +69,11 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 ## Readiness Flip Criteria
 
-- `public=true` only after the ETF route/card, compact public summary, and public mirror are all verified by a named gate; file presence alone is not enough.
+- `public=true` after the ETF route/card, compact public summary, and public mirror are all verified by `qa:fenok-etf-signal-gate`; file presence alone is not enough.
 - `daily=true` only after coverage index consumes ETF freshness evidence, including ETF signal timestamp/history-gap status and a bounded max-age rule.
 - `gated=true` only after `qa:fenok-etf-signal-gate` and the ETF freshness gate are both wired into the same fail-closed readiness track.
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
-- Until those booleans flip through code-backed checks, the ETF lane status is SCORED, not PUBLIC/DAILY/GATED.
+- Current status is PUBLIC, not DAILY/GATED. The remaining fetchable required-history gap keeps `daily=false`, `gated=false`, and `public_done_claim_allowed=false`.
 
 ## Daily Data Prerequisite
 
@@ -83,8 +87,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 ## Remaining Blockers
 
-1. Wire ETF public proof to the readiness track without treating file presence as paid-ready.
+1. Clear the remaining fetchable ETF required-history gap, currently `QNDX`.
 2. Prove a daily all-ETF or eligible-ETF price/history refresh path.
 3. Keep the ETF lane separate from stock scoring and denominator claims.
-4. Wire `qa:fenok-etf-signal-gate` plus ETF freshness evidence into fail-closed gated readiness.
+4. Wire ETF freshness evidence into fail-closed gated readiness after the daily gap clears.
 5. Keep `PUBLIC + DAILY + GATED` as the only paid-ready completion claim.

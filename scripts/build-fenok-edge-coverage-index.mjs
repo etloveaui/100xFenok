@@ -9,6 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -92,6 +93,14 @@ function ageDays(date, now = Date.now()) {
   return Math.max(0, Math.floor((now - time) / 86400000));
 }
 
+function ageHours(timestamp, now = Date.now()) {
+  const text = String(timestamp ?? "").trim();
+  if (!text) return null;
+  const time = new Date(text).getTime();
+  if (!Number.isFinite(time)) return null;
+  return Math.max(0, Number(((now - time) / 3600000).toFixed(2)));
+}
+
 function marketCounts(rows) {
   const counts = {};
   for (const row of rows) counts[row.market] = (counts[row.market] || 0) + 1;
@@ -121,6 +130,7 @@ function coverageRow({ id, label, count, denominator, sourceDate, status, caveat
 const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
 const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
+const etfHistoryGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", {});
 const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
 const activeScoringTotal = universeRows.length;
 const etfScoredPublic = Number(etfSignals?.coverage?.scored_public_etf) || 0;
@@ -202,8 +212,71 @@ const combinedKrUsFlow = koreaIntersection.length + flowIntersection.length;
 const combinedKrUsOcc = koreaIntersection.length + occIntersection.length;
 const combinedKrUsLatestBounded = koreaIntersection.length + latestUsIntersection.length;
 const marketFactsCoverage = marketFacts.coverage ?? {};
+const etfSignalGate = runEtfSignalGateChecks({ repoRoot: REPO_ROOT });
 
-function readinessTrack({ id, label, denominator, stage, booleans, caveat }) {
+function computeEtfReadinessEvidence() {
+  const maxAgeHours = 48;
+  const signalAgeHours = ageHours(etfSignals.generated_at);
+  const historyGapAgeHours = ageHours(etfHistoryGap.generated_at);
+  const fetchableGap = Number(etfHistoryGap.fetchable_required_history) || 0;
+  const missingGap = Number(etfHistoryGap.missing_required_history) || 0;
+  const inceptionLimitedGap = Number(etfHistoryGap.inception_limited_required_history) || 0;
+  const publicReady = Boolean(etfSignalGate.public_surface_proof?.ready && etfScoredPublic > 0);
+  const dailyChecks = [
+    {
+      id: "etf_signal_summary_fresh",
+      ok: signalAgeHours != null && signalAgeHours <= maxAgeHours,
+      generated_at: etfSignals.generated_at ?? null,
+      age_hours: signalAgeHours,
+      max_age_hours: maxAgeHours,
+    },
+    {
+      id: "etf_history_gap_report_fresh",
+      ok: historyGapAgeHours != null && historyGapAgeHours <= maxAgeHours,
+      generated_at: etfHistoryGap.generated_at ?? null,
+      age_hours: historyGapAgeHours,
+      max_age_hours: maxAgeHours,
+    },
+    {
+      id: "etf_no_fetchable_required_history_gap",
+      ok: fetchableGap === 0,
+      fetchable_required_history: fetchableGap,
+      missing_required_history: missingGap,
+      inception_limited_required_history: inceptionLimitedGap,
+      caveat: "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false.",
+    },
+  ];
+  const dailyReady = dailyChecks.every((check) => check.ok);
+  const gatedReady = publicReady && dailyReady && etfSignalGate.ok;
+  return {
+    public_ready: publicReady,
+    daily_ready: dailyReady,
+    gated_ready: gatedReady,
+    gate_ok: etfSignalGate.ok,
+    public_surface_proof: etfSignalGate.public_surface_proof ?? null,
+    public_surface_errors: etfSignalGate.errors ?? [],
+    daily_checks: dailyChecks,
+    blockers: [
+      ...(!publicReady ? ["public_surface_proof"] : []),
+      ...dailyChecks.filter((check) => !check.ok).map((check) => check.id),
+      ...(!etfSignalGate.ok ? ["qa_fenok_etf_signal_gate"] : []),
+      ...(!gatedReady ? ["gated_ready"] : []),
+    ],
+    counts: {
+      scored_public_etf: etfScoredPublic,
+      eligible_etf_count: etfEligible,
+      public_summary_rows: etfSignalGate.counts?.public_summary?.rows ?? null,
+      internal_summary_rows: etfSignalGate.counts?.internal_summary?.rows ?? null,
+      fetchable_required_history: fetchableGap,
+      inception_limited_required_history: inceptionLimitedGap,
+    },
+  };
+}
+
+const etfReadinessEvidence = computeEtfReadinessEvidence();
+const etfReadinessStage = etfReadinessEvidence.public_ready ? "PUBLIC" : etfScoredPublic > 0 ? "SCORED" : "NORMALIZED";
+
+function readinessTrack({ id, label, denominator, stage, booleans, caveat, extra = {} }) {
   const requirements = {
     source_available: false,
     normalized: false,
@@ -224,6 +297,7 @@ function readinessTrack({ id, label, denominator, stage, booleans, caveat }) {
     public_done_claim_allowed: ready,
     requirements,
     caveat,
+    ...extra,
   };
 }
 
@@ -273,10 +347,11 @@ const index = {
     etf_signals_summary_file: "data/computed/fenok_etf_signals_summary.json",
     collected_etf_candidates: Number(marketFactsCoverage.etf) || null,
     eligible_etf_count: etfEligible || null,
-    stage: etfScoredPublic > 0 ? "SCORED" : "NORMALIZED",
+    stage: etfReadinessStage,
     scored_public_etf: etfScoredPublic,
     public_done_claim_allowed: false,
-    caveat: "ETF scoring is a separate asset_type=etf lane. Scores are computed but not yet public-daily-gated as Fenok Edge ETF coverage.",
+    evidence_based_readiness: etfReadinessEvidence,
+    caveat: "ETF scoring is a separate asset_type=etf lane. Public surface proof is separate from DAILY/GATED readiness and does not permit a paid-ready done claim.",
   },
   source_availability: {
     not_public_scoring: true,
@@ -460,17 +535,20 @@ const index = {
         id: "etf_scoring_lane",
         label: "ETF scoring lane",
         denominator: etfEligible || Number(marketFactsCoverage.etf) || null,
-        stage: etfScoredPublic > 0 ? "SCORED" : "NORMALIZED",
+        stage: etfReadinessStage,
         booleans: {
           source_available: Boolean(marketFactsCoverage.etf),
           normalized: Boolean(marketFactsCoverage.etf),
           joined_to_target_universe: etfEligible > 0,
           scored: etfScoredPublic > 0,
-          public: false,
-          daily: false,
-          gated: false,
+          public: etfReadinessEvidence.public_ready,
+          daily: etfReadinessEvidence.daily_ready,
+          gated: etfReadinessEvidence.gated_ready,
         },
-        caveat: "ETF scores are computed in the separate ETF lane artifact, but UI/API consumption plus daily accumulation and fail-closed readiness gates are not fully proven yet.",
+        caveat: "ETF scores are public-surfaced only when the named ETF gate proves the compact mirror, API route, and detail UI card. DAILY/GATED remain false until all eligible ETF history gaps and freshness gates clear.",
+        extra: {
+          evidence_based_readiness: etfReadinessEvidence,
+        },
       }),
       readinessTrack({
         id: "taiwan_current_numerator",
@@ -542,6 +620,30 @@ const index = {
         status: ageDays(occSourceDate) <= 4 ? "ready" : "stale",
       },
       {
+        id: "etf_public_surface",
+        status: etfReadinessEvidence.public_ready ? "ready" : "blocked",
+        scored_public_etf: etfScoredPublic,
+        proof: etfReadinessEvidence.public_surface_proof,
+        caveat: "Requires compact public summary mirror, no public full ETF signal payload, API route, and ETF detail UI card.",
+      },
+      {
+        id: "etf_signal_summary_freshness",
+        generated_at: etfSignals.generated_at ?? null,
+        age_hours: ageHours(etfSignals.generated_at),
+        max_age_hours: 48,
+        status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_signal_summary_fresh")?.ok ? "ready" : "stale",
+      },
+      {
+        id: "etf_required_history_gap",
+        generated_at: etfHistoryGap.generated_at ?? null,
+        age_hours: ageHours(etfHistoryGap.generated_at),
+        max_age_hours: 48,
+        fetchable_required_history: Number(etfHistoryGap.fetchable_required_history) || 0,
+        inception_limited_required_history: Number(etfHistoryGap.inception_limited_required_history) || 0,
+        status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_required_history_gap")?.ok ? "ready" : "blocked_fetchable_gap",
+        caveat: "Fetchable required-history gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block daily readiness by themselves.",
+      },
+      {
         id: "taiwan_universe_mapping",
         status: explicitTaiwanRows.length > 0 ? "ready" : "blocked_for_numerator",
         explicit_taiwan_count: explicitTaiwanRows.length,
@@ -559,6 +661,7 @@ console.log(JSON.stringify({
   active_scoring_universe_total: index.active_scoring_universe.total,
   expanded_stock_candidate_universe: index.expanded_stock_candidate_universe,
   etf_universe: index.etf_universe,
+  etf_readiness_evidence: etfReadinessEvidence,
   latest_available_kr_plus_us_flow: index.source_availability_composites.latest_available_kr_plus_us_flow,
   taiwan_explicit_count: explicitTaiwanRows.length,
   taiwan_anomaly_count: taiwanTickerAnomalies.length,

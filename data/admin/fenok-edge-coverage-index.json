@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T15:35:30.868Z",
+  "generated_at": "2026-06-29T17:37:02.173Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -14,7 +14,7 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-06-29T15:23:27.035Z",
+    "generated_at": "2026-06-29T14:26:40.183Z",
     "current_only": true,
     "total": 1066,
     "by_market": [
@@ -65,7 +65,7 @@
   },
   "expanded_stock_candidate_universe": {
     "source_file": "data/computed/market_facts/index.json",
-    "generated_at": "2026-06-29T14:51:33Z",
+    "generated_at": "2026-06-29T15:51:47Z",
     "collected_asset_total": 6479,
     "collected_stock_candidates": 1178,
     "scored_public_stock": 1066,
@@ -80,10 +80,66 @@
     "etf_signals_summary_file": "data/computed/fenok_etf_signals_summary.json",
     "collected_etf_candidates": 5301,
     "eligible_etf_count": 4484,
-    "stage": "SCORED",
+    "stage": "PUBLIC",
     "scored_public_etf": 4484,
     "public_done_claim_allowed": false,
-    "caveat": "ETF scoring is a separate asset_type=etf lane. Scores are computed but not yet public-daily-gated as Fenok Edge ETF coverage."
+    "evidence_based_readiness": {
+      "public_ready": true,
+      "daily_ready": false,
+      "gated_ready": false,
+      "gate_ok": true,
+      "public_surface_proof": {
+        "ready": true,
+        "public_mirror_exists": true,
+        "public_full_payload_absent": true,
+        "public_mirror_matches_internal_summary": true,
+        "api_route_ready": true,
+        "detail_ui_card_ready": true,
+        "files": {
+          "public_summary": "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
+          "api_route": "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts",
+          "detail_ui": "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx"
+        }
+      },
+      "public_surface_errors": [],
+      "daily_checks": [
+        {
+          "id": "etf_signal_summary_fresh",
+          "ok": true,
+          "generated_at": "2026-06-29T15:35:23.637Z",
+          "age_hours": 2.03,
+          "max_age_hours": 48
+        },
+        {
+          "id": "etf_history_gap_report_fresh",
+          "ok": true,
+          "generated_at": "2026-06-29T14:54:15.810Z",
+          "age_hours": 2.71,
+          "max_age_hours": 48
+        },
+        {
+          "id": "etf_no_fetchable_required_history_gap",
+          "ok": false,
+          "fetchable_required_history": 1,
+          "missing_required_history": 12,
+          "inception_limited_required_history": 11,
+          "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
+        }
+      ],
+      "blockers": [
+        "etf_no_fetchable_required_history_gap",
+        "gated_ready"
+      ],
+      "counts": {
+        "scored_public_etf": 4484,
+        "eligible_etf_count": 4484,
+        "public_summary_rows": 4484,
+        "internal_summary_rows": 4484,
+        "fetchable_required_history": 1,
+        "inception_limited_required_history": 11
+      }
+    },
+    "caveat": "ETF scoring is a separate asset_type=etf lane. Public surface proof is separate from DAILY/GATED readiness and does not permit a paid-ready done claim."
   },
   "source_availability": {
     "not_public_scoring": true,
@@ -101,7 +157,7 @@
         "availability_status": "ready",
         "claim_scope": "source_available",
         "not_public_scoring": true,
-        "caveat": "Counted from 20260626 KRX daily stock/KOSDAQ raw files. The 20260629 run is mostly empty and is not counted as issuer daily coverage.",
+        "caveat": "Counted from the latest KRX daily stock/KOSDAQ raw files with non-empty rows. Empty calendar runs are not counted as issuer daily coverage.",
         "private_manifest_file": "_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/manifest.json",
         "counted_batch": {
           "run_id": "krx_backfill_20d_20260626",
@@ -117,7 +173,7 @@
           "date_count": 20,
           "attempted_call_count": 620
         },
-        "latest_calendar_run_20260629": {
+        "latest_calendar_run": {
           "run_id": "krx_daily_20260629",
           "as_of": "2026-06-29",
           "summary": {
@@ -324,7 +380,7 @@
         "id": "etf_scoring_lane",
         "label": "ETF scoring lane",
         "denominator": 4484,
-        "stage": "SCORED",
+        "stage": "PUBLIC",
         "readiness_status": "not_ready",
         "public_done_claim_allowed": false,
         "requirements": {
@@ -332,11 +388,67 @@
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
-          "public": false,
+          "public": true,
           "daily": false,
           "gated": false
         },
-        "caveat": "ETF scores are computed in the separate ETF lane artifact, but UI/API consumption plus daily accumulation and fail-closed readiness gates are not fully proven yet."
+        "caveat": "ETF scores are public-surfaced only when the named ETF gate proves the compact mirror, API route, and detail UI card. DAILY/GATED remain false until all eligible ETF history gaps and freshness gates clear.",
+        "evidence_based_readiness": {
+          "public_ready": true,
+          "daily_ready": false,
+          "gated_ready": false,
+          "gate_ok": true,
+          "public_surface_proof": {
+            "ready": true,
+            "public_mirror_exists": true,
+            "public_full_payload_absent": true,
+            "public_mirror_matches_internal_summary": true,
+            "api_route_ready": true,
+            "detail_ui_card_ready": true,
+            "files": {
+              "public_summary": "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
+              "api_route": "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts",
+              "detail_ui": "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx"
+            }
+          },
+          "public_surface_errors": [],
+          "daily_checks": [
+            {
+              "id": "etf_signal_summary_fresh",
+              "ok": true,
+              "generated_at": "2026-06-29T15:35:23.637Z",
+              "age_hours": 2.03,
+              "max_age_hours": 48
+            },
+            {
+              "id": "etf_history_gap_report_fresh",
+              "ok": true,
+              "generated_at": "2026-06-29T14:54:15.810Z",
+              "age_hours": 2.71,
+              "max_age_hours": 48
+            },
+            {
+              "id": "etf_no_fetchable_required_history_gap",
+              "ok": false,
+              "fetchable_required_history": 1,
+              "missing_required_history": 12,
+              "inception_limited_required_history": 11,
+              "caveat": "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false."
+            }
+          ],
+          "blockers": [
+            "etf_no_fetchable_required_history_gap",
+            "gated_ready"
+          ],
+          "counts": {
+            "scored_public_etf": 4484,
+            "eligible_etf_count": 4484,
+            "public_summary_rows": 4484,
+            "internal_summary_rows": 4484,
+            "fetchable_required_history": 1,
+            "inception_limited_required_history": 11
+          }
+        }
       },
       {
         "id": "taiwan_current_numerator",
@@ -430,7 +542,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T15:35:30.868Z"
+        "generated_at": "2026-06-29T17:37:02.173Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -450,6 +562,42 @@
         "source_date": "2026-06-26",
         "age_days": 3,
         "status": "ready"
+      },
+      {
+        "id": "etf_public_surface",
+        "status": "ready",
+        "scored_public_etf": 4484,
+        "proof": {
+          "ready": true,
+          "public_mirror_exists": true,
+          "public_full_payload_absent": true,
+          "public_mirror_matches_internal_summary": true,
+          "api_route_ready": true,
+          "detail_ui_card_ready": true,
+          "files": {
+            "public_summary": "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
+            "api_route": "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts",
+            "detail_ui": "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx"
+          }
+        },
+        "caveat": "Requires compact public summary mirror, no public full ETF signal payload, API route, and ETF detail UI card."
+      },
+      {
+        "id": "etf_signal_summary_freshness",
+        "generated_at": "2026-06-29T15:35:23.637Z",
+        "age_hours": 2.03,
+        "max_age_hours": 48,
+        "status": "ready"
+      },
+      {
+        "id": "etf_required_history_gap",
+        "generated_at": "2026-06-29T14:54:15.810Z",
+        "age_hours": 2.71,
+        "max_age_hours": 48,
+        "fetchable_required_history": 1,
+        "inception_limited_required_history": 11,
+        "status": "blocked_fetchable_gap",
+        "caveat": "Fetchable required-history gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block daily readiness by themselves."
       },
       {
         "id": "taiwan_universe_mapping",
