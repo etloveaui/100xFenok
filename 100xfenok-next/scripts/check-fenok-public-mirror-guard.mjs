@@ -43,6 +43,33 @@ const violations = files.filter((rel) => (
   forbiddenPatterns.some((pattern) => pattern.test(rel)) ||
   forbiddenRawPatterns.some((pattern) => pattern.test(rel))
 ));
+const edgeCoverageMirrorPath = path.join(publicDataRoot, "admin", "fenok-edge-coverage-index.json");
+
+if (fs.existsSync(edgeCoverageMirrorPath)) {
+  const mirrorText = fs.readFileSync(edgeCoverageMirrorPath, "utf8");
+  const mirror = JSON.parse(mirrorText);
+  const unsafeTokens = [
+    "_private/",
+    "\"private_manifest_file\"",
+    "\"manifest_file\"",
+    "\"target_universe\"",
+    "\"tickers\"",
+    "\"source_file\"",
+  ].filter((token) => mirrorText.includes(token));
+  if (mirror.schema_version !== "fenok-edge-coverage-index-public/v0.1") {
+    violations.push("admin/fenok-edge-coverage-index.json: unsafe schema");
+  }
+  if (
+    mirror.raw_policy?.raw_public !== false ||
+    mirror.raw_policy?.raw_rows_included !== false ||
+    mirror.raw_policy?.private_artifact_paths_included !== false
+  ) {
+    violations.push("admin/fenok-edge-coverage-index.json: unsafe raw_policy");
+  }
+  for (const token of unsafeTokens) {
+    violations.push(`admin/fenok-edge-coverage-index.json: unsafe token ${token}`);
+  }
+}
 
 if (violations.length > 0) {
   console.error("[fenok-public-mirror-guard] forbidden public files:");

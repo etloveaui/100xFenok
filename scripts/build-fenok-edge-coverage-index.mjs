@@ -15,6 +15,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DATA_ROOT = path.join(REPO_ROOT, "data");
 const OUT_PATH = path.join(DATA_ROOT, "admin", "fenok-edge-coverage-index.json");
+const PUBLIC_OUT_PATH = path.join(
+  REPO_ROOT,
+  "100xfenok-next",
+  "public",
+  "data",
+  "admin",
+  "fenok-edge-coverage-index.json",
+);
 
 function readJson(relPath, fallback = null) {
   const absPath = path.join(REPO_ROOT, relPath);
@@ -143,6 +151,72 @@ function replaceById(rows, id, replacement) {
 
 function hasManifestPayload(value) {
   return value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0;
+}
+
+function compactPublicSourceRow(row) {
+  return {
+    id: row.id,
+    label: row.label,
+    covered_count: row.covered_count,
+    denominator: row.denominator,
+    denominator_label: row.denominator_label,
+    coverage_pct: row.coverage_pct,
+    active_scoring_coverage_pct: row.active_scoring_coverage_pct,
+    source_date: row.source_date,
+    availability_status: row.availability_status,
+    claim_scope: row.claim_scope,
+    not_public_scoring: row.not_public_scoring === true,
+    caveat: row.caveat,
+  };
+}
+
+function compactPublicCoverageIndex(index) {
+  return {
+    schema_version: "fenok-edge-coverage-index-public/v0.1",
+    source_schema_version: index.schema_version,
+    generated_at: index.generated_at,
+    purpose: "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
+    raw_policy: {
+      raw_public: index.raw_policy?.raw_public === true,
+      raw_rows_included: index.raw_policy?.raw_rows_included === true,
+      private_artifact_paths_included: false,
+    },
+    active_scoring_universe: {
+      generated_at: index.active_scoring_universe?.generated_at ?? null,
+      current_only: index.active_scoring_universe?.current_only === true,
+      total: index.active_scoring_universe?.total ?? null,
+      by_market: index.active_scoring_universe?.by_market ?? [],
+      buckets: index.active_scoring_universe?.buckets ?? {},
+    },
+    expanded_stock_candidate_universe: {
+      generated_at: index.expanded_stock_candidate_universe?.generated_at ?? null,
+      collected_asset_total: index.expanded_stock_candidate_universe?.collected_asset_total ?? null,
+      collected_stock_candidates: index.expanded_stock_candidate_universe?.collected_stock_candidates ?? null,
+      scored_public_stock: index.expanded_stock_candidate_universe?.scored_public_stock ?? null,
+      stock_promotion_audit_gap: index.expanded_stock_candidate_universe?.stock_promotion_audit_gap ?? null,
+      stage: index.expanded_stock_candidate_universe?.stage ?? null,
+      public_done_claim_allowed: index.expanded_stock_candidate_universe?.public_done_claim_allowed === true,
+      caveat: index.expanded_stock_candidate_universe?.caveat ?? null,
+    },
+    etf_universe: {
+      collected_etf_candidates: index.etf_universe?.collected_etf_candidates ?? null,
+      eligible_etf_count: index.etf_universe?.eligible_etf_count ?? null,
+      stage: index.etf_universe?.stage ?? null,
+      scored_public_etf: index.etf_universe?.scored_public_etf ?? null,
+      public_done_claim_allowed: index.etf_universe?.public_done_claim_allowed === true,
+      evidence_based_readiness: index.etf_universe?.evidence_based_readiness ?? null,
+      caveat: index.etf_universe?.caveat ?? null,
+    },
+    source_availability: {
+      not_public_scoring: index.source_availability?.not_public_scoring === true,
+      caveat: index.source_availability?.caveat ?? null,
+      source_count: (index.source_availability?.sources ?? []).length,
+      sources: (index.source_availability?.sources ?? []).map(compactPublicSourceRow),
+    },
+    source_availability_composites: index.source_availability_composites ?? null,
+    public_scoring_readiness: index.public_scoring_readiness ?? null,
+    freshness_gate: index.freshness_gate ?? null,
+  };
 }
 
 function recomputeSourceComposites(index) {
@@ -746,9 +820,12 @@ preservePriorPrivateBackedEvidence(index, priorIndex, {
   taiwanHistoricalMissing,
 });
 
+const publicIndex = compactPublicCoverageIndex(index);
 writeJson(OUT_PATH, index);
+writeJson(PUBLIC_OUT_PATH, publicIndex);
 console.log(JSON.stringify({
   wrote: path.relative(REPO_ROOT, OUT_PATH),
+  public_wrote: path.relative(REPO_ROOT, PUBLIC_OUT_PATH),
   generated_at: index.generated_at,
   active_scoring_universe_total: index.active_scoring_universe.total,
   expanded_stock_candidate_universe: index.expanded_stock_candidate_universe,

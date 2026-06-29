@@ -35,6 +35,90 @@ function removeGeneratedPublicMirror(relativePath) {
   console.log(`[sync-static-overrides] removed private-only public mirror ${relativePath}`);
 }
 
+function writeJson(relativePath, payload) {
+  const filePath = path.join(rootDir, relativePath);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+function compactFenokEdgeSourceRow(row) {
+  return {
+    id: row.id,
+    label: row.label,
+    covered_count: row.covered_count,
+    denominator: row.denominator,
+    denominator_label: row.denominator_label,
+    coverage_pct: row.coverage_pct,
+    active_scoring_coverage_pct: row.active_scoring_coverage_pct,
+    source_date: row.source_date,
+    availability_status: row.availability_status,
+    claim_scope: row.claim_scope,
+    not_public_scoring: row.not_public_scoring === true,
+    caveat: row.caveat,
+  };
+}
+
+function compactFenokEdgePublicMirror() {
+  const relativePath = "public/data/admin/fenok-edge-coverage-index.json";
+  const filePath = path.join(rootDir, relativePath);
+  if (!fs.existsSync(filePath)) return;
+
+  const index = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  if (index.schema_version === "fenok-edge-coverage-index-public/v0.1") return;
+  if (index.schema_version !== "fenok-edge-coverage-index/v0.2") {
+    console.warn(`[sync-static-overrides] unexpected ${relativePath} schema; skipped compact mirror`);
+    return;
+  }
+
+  writeJson(relativePath, {
+    schema_version: "fenok-edge-coverage-index-public/v0.1",
+    source_schema_version: index.schema_version,
+    generated_at: index.generated_at,
+    purpose: "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
+    raw_policy: {
+      raw_public: index.raw_policy?.raw_public === true,
+      raw_rows_included: index.raw_policy?.raw_rows_included === true,
+      private_artifact_paths_included: false,
+    },
+    active_scoring_universe: {
+      generated_at: index.active_scoring_universe?.generated_at ?? null,
+      current_only: index.active_scoring_universe?.current_only === true,
+      total: index.active_scoring_universe?.total ?? null,
+      by_market: index.active_scoring_universe?.by_market ?? [],
+      buckets: index.active_scoring_universe?.buckets ?? {},
+    },
+    expanded_stock_candidate_universe: {
+      generated_at: index.expanded_stock_candidate_universe?.generated_at ?? null,
+      collected_asset_total: index.expanded_stock_candidate_universe?.collected_asset_total ?? null,
+      collected_stock_candidates: index.expanded_stock_candidate_universe?.collected_stock_candidates ?? null,
+      scored_public_stock: index.expanded_stock_candidate_universe?.scored_public_stock ?? null,
+      stock_promotion_audit_gap: index.expanded_stock_candidate_universe?.stock_promotion_audit_gap ?? null,
+      stage: index.expanded_stock_candidate_universe?.stage ?? null,
+      public_done_claim_allowed: index.expanded_stock_candidate_universe?.public_done_claim_allowed === true,
+      caveat: index.expanded_stock_candidate_universe?.caveat ?? null,
+    },
+    etf_universe: {
+      collected_etf_candidates: index.etf_universe?.collected_etf_candidates ?? null,
+      eligible_etf_count: index.etf_universe?.eligible_etf_count ?? null,
+      stage: index.etf_universe?.stage ?? null,
+      scored_public_etf: index.etf_universe?.scored_public_etf ?? null,
+      public_done_claim_allowed: index.etf_universe?.public_done_claim_allowed === true,
+      evidence_based_readiness: index.etf_universe?.evidence_based_readiness ?? null,
+      caveat: index.etf_universe?.caveat ?? null,
+    },
+    source_availability: {
+      not_public_scoring: index.source_availability?.not_public_scoring === true,
+      caveat: index.source_availability?.caveat ?? null,
+      source_count: (index.source_availability?.sources ?? []).length,
+      sources: (index.source_availability?.sources ?? []).map(compactFenokEdgeSourceRow),
+    },
+    source_availability_composites: index.source_availability_composites ?? null,
+    public_scoring_readiness: index.public_scoring_readiness ?? null,
+    freshness_gate: index.freshness_gate ?? null,
+  });
+  console.log(`[sync-static-overrides] compacted ${relativePath}`);
+}
+
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 for (const relativePath of [
@@ -54,6 +138,7 @@ for (const relativePath of [
 ]) {
   removeGeneratedPublicMirror(relativePath);
 }
+compactFenokEdgePublicMirror();
 
 applyReplacements("public/tools/stock_analyzer/stock_analyzer.html", [
   [

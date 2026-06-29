@@ -111,11 +111,13 @@ function activeS0DailyGatedReady(track, activeCount) {
 
 function publicMirrorEvidence(index, activeTotal) {
   let mirror = null;
+  let mirror_text = null;
   let read_error = null;
   const exists = fs.existsSync(PUBLIC_INDEX_PATH);
   if (exists) {
     try {
-      mirror = JSON.parse(fs.readFileSync(PUBLIC_INDEX_PATH, "utf8"));
+      mirror_text = fs.readFileSync(PUBLIC_INDEX_PATH, "utf8");
+      mirror = JSON.parse(mirror_text);
     } catch (error) {
       read_error = error.message;
     }
@@ -126,20 +128,41 @@ function publicMirrorEvidence(index, activeTotal) {
       PUBLIC_FORBIDDEN_PATTERNS.some((pattern) => pattern.test(rel))
       || PUBLIC_FORBIDDEN_RAW_PATTERNS.some((pattern) => pattern.test(rel))
     ));
+  const unsafe_public_index_tokens = mirror_text ? [
+    "_private/",
+    "\"private_manifest_file\"",
+    "\"manifest_file\"",
+    "\"target_universe\"",
+    "\"tickers\"",
+    "\"source_file\"",
+  ].filter((token) => mirror_text.includes(token)) : [];
+  const schema_ok = Boolean(mirror)
+    && mirror.schema_version === "fenok-edge-coverage-index-public/v0.1"
+    && mirror.source_schema_version === index.schema_version;
+  const raw_policy_safe = Boolean(mirror)
+    && mirror.raw_policy?.raw_public === false
+    && mirror.raw_policy?.raw_rows_included === false
+    && mirror.raw_policy?.private_artifact_paths_included === false;
   const generated_at_matches = Boolean(mirror) && mirror.generated_at === index.generated_at;
   const active_total_matches = Boolean(mirror) && Number(mirror.active_scoring_universe?.total) === activeTotal;
   return {
     public_index_path: path.relative(REPO_ROOT, PUBLIC_INDEX_PATH),
     exists,
     read_error,
+    schema_ok,
+    raw_policy_safe,
     generated_at_matches,
     active_total_matches,
+    unsafe_public_index_tokens,
     forbidden_public_files: forbidden_public_files.slice(0, 12),
     forbidden_public_file_count: forbidden_public_files.length,
     ready: exists
       && !read_error
+      && schema_ok
+      && raw_policy_safe
       && generated_at_matches
       && active_total_matches
+      && unsafe_public_index_tokens.length === 0
       && forbidden_public_files.length === 0,
   };
 }
