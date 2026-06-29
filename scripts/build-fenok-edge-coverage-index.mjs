@@ -346,6 +346,7 @@ const etfEligible = Number(etfSignals?.coverage?.eligible_etf_count) || Number(m
 const usRows = universeRows.filter((row) => row.market === "US" || row.market === "US_CLASS");
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
+const s0DailyEligibleRows = [...usRows, ...koreaRows];
 const explicitTaiwanRows = universeRows.filter((row) => /^(TW|TAIWAN|TPE|TPEX)$/i.test(String(row.market ?? "")) || /taiwan/i.test(String(row.market_scope ?? "")));
 const finraEligibleRows = usRows.filter((row) => row.market === "US");
 const taiwanTickerAnomalies = universeRows
@@ -612,12 +613,17 @@ function activeS0BlockingEvidence() {
     },
     {
       id: "no_asia_ex_taiwan_gap",
-      status: asiaExTwRows.length === 0 ? "ready" : "blocked",
+      status: "ready",
       covered_count: 0,
       denominator: asiaExTwRows.length,
-      missing_count: asiaExTwRows.length,
+      missing_count: 0,
+      excluded_count: asiaExTwRows.length,
       markets: marketCounts(asiaExTwRows),
-      next_action: "Add or explicitly exclude HKEX/SSE/SZSE daily-source workstream before S0 daily can be true.",
+      claim_scope: "explicit_s0_daily_scope_exclusion",
+      blocks_daily_ready: false,
+      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_policy: "Current S0 daily/gated source scope is Korea + US only; HKEX/SSE/SZSE need a separate Asia daily-source workstream before an all-1066 daily/gated claim.",
+      next_action: "Build HKEX/SSE/SZSE daily-source workstream before claiming all active 1066 stocks as daily/gated.",
     },
   ];
   return {
@@ -656,6 +662,18 @@ const index = {
       korea: koreaRows.length,
       asia_ex_taiwan: asiaExTwRows.length,
       explicit_taiwan: explicitTaiwanRows.length,
+    },
+    s0_daily_gated_scope: {
+      policy: "korea_plus_us_current_daily_sources",
+      eligible_count: s0DailyEligibleRows.length,
+      eligible_buckets: {
+        us: usRows.length,
+        korea: koreaRows.length,
+      },
+      excluded_count: asiaExTwRows.length,
+      excluded_markets: marketCounts(asiaExTwRows),
+      excluded_reason: "HKEX/SSE/SZSE rows are active/public scored rows, but they are outside the current Korea+US daily-source workstream.",
+      public_scoring_total_remains: activeScoringTotal,
     },
     taiwan_ticker_anomalies: taiwanTickerAnomalies,
   },
@@ -829,9 +847,14 @@ const index = {
       denominator: activeScoringTotal,
       denominator_label: "active_scoring_universe.total",
       pct: pct(asiaExTwRows.length, activeScoringTotal),
-      claim_scope: "outside_current_daily_source_workstream",
+      claim_scope: "explicit_s0_daily_scope_exclusion",
       not_public_scoring: true,
-      caveat: "HKEX/SSE/SZSE rows remain outside the Korea/US/Taiwan daily-source workstream.",
+      excluded_from_s0_daily_gated_scope: true,
+      blocks_daily_ready: false,
+      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_label: "active_scoring_universe.us + active_scoring_universe.korea",
+      excluded_markets: marketCounts(asiaExTwRows),
+      caveat: "HKEX/SSE/SZSE rows remain active/public scored rows, but are explicitly excluded from the current Korea+US S0 daily/gated source scope until a separate Asia daily-source workstream exists.",
     },
   },
   public_scoring_readiness: {

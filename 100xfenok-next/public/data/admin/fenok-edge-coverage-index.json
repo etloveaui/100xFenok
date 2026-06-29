@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T19:27:38.978Z",
+  "generated_at": "2026-06-29T19:42:12.107Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -89,14 +89,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-29T15:35:23.637Z",
-          "age_hours": 3.87,
+          "age_hours": 4.11,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-06-29T18:34:55.089Z",
-          "age_hours": 0.88,
+          "age_hours": 1.12,
           "max_age_hours": 48
         },
         {
@@ -244,9 +244,27 @@
       "denominator": 1066,
       "denominator_label": "active_scoring_universe.total",
       "pct": 8.54,
-      "claim_scope": "outside_current_daily_source_workstream",
+      "claim_scope": "explicit_s0_daily_scope_exclusion",
       "not_public_scoring": true,
-      "caveat": "HKEX/SSE/SZSE rows remain outside the Korea/US/Taiwan daily-source workstream."
+      "excluded_from_s0_daily_gated_scope": true,
+      "blocks_daily_ready": false,
+      "daily_gated_scope_denominator": 975,
+      "daily_gated_scope_label": "active_scoring_universe.us + active_scoring_universe.korea",
+      "excluded_markets": [
+        {
+          "market": "HKEX",
+          "count": 34
+        },
+        {
+          "market": "SSE",
+          "count": 38
+        },
+        {
+          "market": "SZSE",
+          "count": 19
+        }
+      ],
+      "caveat": "HKEX/SSE/SZSE rows remain active/public scored rows, but are explicitly excluded from the current Korea+US S0 daily/gated source scope until a separate Asia daily-source workstream exists."
     }
   },
   "public_scoring_readiness": {
@@ -353,10 +371,11 @@
             },
             {
               "id": "no_asia_ex_taiwan_gap",
-              "status": "blocked",
+              "status": "ready",
               "covered_count": 0,
               "denominator": 91,
-              "missing_count": 91,
+              "missing_count": 0,
+              "excluded_count": 91,
               "markets": [
                 {
                   "market": "HKEX",
@@ -371,7 +390,11 @@
                   "count": 19
                 }
               ],
-              "next_action": "Add or explicitly exclude HKEX/SSE/SZSE daily-source workstream before S0 daily can be true."
+              "claim_scope": "explicit_s0_daily_scope_exclusion",
+              "blocks_daily_ready": false,
+              "daily_gated_scope_denominator": 975,
+              "daily_gated_scope_policy": "Current S0 daily/gated source scope is Korea + US only; HKEX/SSE/SZSE need a separate Asia daily-source workstream before an all-1066 daily/gated claim.",
+              "next_action": "Build HKEX/SSE/SZSE daily-source workstream before claiming all active 1066 stocks as daily/gated."
             }
           ],
           "blockers": [
@@ -403,28 +426,6 @@
                 }
               },
               "next_action": "Run bounded OCC batches or no-options proof for plain US gaps; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms."
-            },
-            {
-              "id": "no_asia_ex_taiwan_gap",
-              "status": "blocked",
-              "covered_count": 0,
-              "denominator": 91,
-              "missing_count": 91,
-              "markets": [
-                {
-                  "market": "HKEX",
-                  "count": 34
-                },
-                {
-                  "market": "SSE",
-                  "count": 38
-                },
-                {
-                  "market": "SZSE",
-                  "count": 19
-                }
-              ],
-              "next_action": "Add or explicitly exclude HKEX/SSE/SZSE daily-source workstream before S0 daily can be true."
             }
           ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
@@ -489,14 +490,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-29T15:35:23.637Z",
-              "age_hours": 3.87,
+              "age_hours": 4.11,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-06-29T18:34:55.089Z",
-              "age_hours": 0.88,
+              "age_hours": 1.12,
               "max_age_hours": 48
             },
             {
@@ -557,7 +558,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T19:27:38.978Z"
+        "generated_at": "2026-06-29T19:42:12.107Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -600,14 +601,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-29T15:35:23.637Z",
-        "age_hours": 3.87,
+        "age_hours": 4.11,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-06-29T18:34:55.089Z",
-        "age_hours": 0.88,
+        "age_hours": 1.12,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 12,

@@ -167,12 +167,22 @@ function publicMirrorEvidence(index, activeTotal) {
   };
 }
 
+function asiaExTaiwanExplicitlyExcluded(asiaGap) {
+  const count = Number(asiaGap?.count) || 0;
+  if (count <= 0) return false;
+  return asiaGap?.excluded_from_s0_daily_gated_scope === true
+    || asiaGap?.blocks_daily_ready === false
+    || asiaGap?.claim_scope === "explicit_s0_daily_scope_exclusion";
+}
+
 function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, composites, freshnessChecks) {
   const krx = findById(sourceRows, "krx_issuer_daily_latest_full_proof");
   const finra = findById(sourceRows, "us_finra_flow_proxy");
   const occ = findById(sourceRows, "us_occ_options_proxy");
   const asiaGap = composites.remaining_asia_ex_taiwan ?? {};
   const mirror = publicMirrorEvidence(index, activeTotal);
+  const asiaGapCount = Number(asiaGap.count) || 0;
+  const asiaExplicitlyExcluded = asiaExTaiwanExplicitlyExcluded(asiaGap);
   const daily_checks = [
     check("krx_full_daily_source_ready", fullSourceCoverage(krx) && freshnessReady(freshnessChecks, "korea_counted_source_date"), {
       covered_count: krx?.covered_count ?? null,
@@ -189,9 +199,13 @@ function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, comp
       denominator: occ?.denominator ?? null,
       source_date: occ?.source_date ?? null,
     }),
-    check("no_asia_ex_taiwan_gap", Number(asiaGap.count) === 0, {
-      count: Number(asiaGap.count) || 0,
+    check("no_asia_ex_taiwan_gap", asiaGapCount === 0 || asiaExplicitlyExcluded, {
+      count: asiaGapCount,
       denominator: asiaGap.denominator ?? activeTotal,
+      excluded_from_s0_daily_gated_scope: asiaExplicitlyExcluded,
+      blocks_daily_ready: asiaExplicitlyExcluded ? false : asiaGapCount > 0,
+      daily_gated_scope_denominator: asiaGap.daily_gated_scope_denominator ?? null,
+      claim_scope: asiaGap.claim_scope ?? null,
     }),
     check("counted_sources_fresh", ["coverage_index_generated", "korea_counted_source_date", "us_flow_source_date", "us_occ_source_date"]
       .every((id) => freshnessReady(freshnessChecks, id))),
