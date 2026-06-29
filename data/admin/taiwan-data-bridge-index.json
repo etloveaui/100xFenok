@@ -1,0 +1,79 @@
+{
+  "market": "Taiwan",
+  "operational_status": "active_forward_accumulation",
+  "staged_at": "2026-06-29T21:18:00Z",
+  "last_freshness_check": "2026-06-29T21:32:00Z",
+  "latest_market_date_partition": "20260629",
+  "latest_source_date": "2026-06-26",
+  "bridge_version": "v1.0.3",
+  "active_daily_endpoints": 12,
+  "system_load_notes": {
+    "daily_frequency": "1 run per day",
+    "endpoint_calls": 12,
+    "delay_between_calls_ms": 500,
+    "total_run_duration_sec": 6,
+    "system_overhead": "negligible/zero-impact"
+  },
+  "private_storage_ref": "source/100xFenok/_private/admin/fenok-edge-taiwan/backfill/20260629/",
+  "historical_limitation": "TAIFEX OpenAPI endpoints do not support historical backfill queries and remain limited/blocked. TWSE web historical date endpoints support query-by-date (smoke test verified). Bounded historical accumulation is planned via TWSE web endpoints.",
+  "historical_smoke_manifest": {
+    "path": "source/100xFenok/_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json",
+    "dates_attempted": [
+      "20260626",
+      "20260625",
+      "20260624"
+    ],
+    "endpoint_count": 3,
+    "total_attempted": 9,
+    "success_files": 9,
+    "failed_files": 0,
+    "twse_web_endpoints_verified": [
+      "mi_index",
+      "mi_margn",
+      "bwibbu_all"
+    ]
+  },
+  "normalized_score_candidates": [
+    {
+      "axis": "Upside / Valuation",
+      "source_dataset": "bwibbu_all",
+      "caveat": "TWSE web historical date query smoke verified for 20260624-20260626. Still T+1/EOD style data, not intraday."
+    },
+    {
+      "axis": "Short Pressure / Margin",
+      "source_dataset": "mi_margn",
+      "caveat": "TWSE web historical date query smoke verified for 20260624-20260626. Margin source is daily/EOD, not intraday."
+    },
+    {
+      "axis": "Short Pressure / Lending",
+      "source_dataset": "sbl_twt96u",
+      "caveat": "Lag T+1 EOD snapshot, no historical date query supported."
+    },
+    {
+      "axis": "Price / Index",
+      "source_dataset": "mi_index",
+      "caveat": "TWSE web historical date query smoke verified for 20260624-20260626. Price/index source is daily/EOD, not intraday."
+    },
+    {
+      "axis": "Foreign Flow",
+      "source_dataset": "mi_qfiis_sort_20",
+      "caveat": "Lag T+1 EOD snapshot, no historical date query supported. Social attention substitute."
+    },
+    {
+      "axis": "Options / Futures",
+      "source_dataset": "taifex_delta",
+      "caveat": "Lag T+1 EOD snapshot, no historical date query supported."
+    }
+  ],
+  "first_safe_batch_plan": {
+    "requires_user_approval": true,
+    "target_dates_per_day": 50,
+    "max_requests_cap": 150,
+    "cron_install_required": false,
+    "scope": "TWSE web historical endpoints only (mi_index, mi_margn, bwibbu_all). TAIFEX remains excluded.",
+    "estimated_requests_per_batch": 150,
+    "estimated_runtime": "roughly 2-5 minutes depending on TWSE latency with conservative delay/retry policy",
+    "verified_smoke_manifest": "source/100xFenok/_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json",
+    "command_note": "A custom runner script with dynamic command line arguments (e.g. date range / count limiting) is currently missing; only the hardcoded 3-day test script is available. Running a full 50-day backfill batch requires implementing a dynamic command-line runner."
+  }
+}

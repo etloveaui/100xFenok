@@ -1,0 +1,461 @@
+{
+  "schema_version": "fenok-edge-coverage-index/v0.2",
+  "generated_at": "2026-06-29T13:44:00.137Z",
+  "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
+  "raw_policy": {
+    "raw_public": false,
+    "raw_rows_included": false,
+    "private_manifest_pointer_only": true
+  },
+  "feno_data_read": {
+    "category": "admin",
+    "file": "fenok-edge-coverage-index.json",
+    "jq_example": "jq '{generated_at, active_scoring_universe, expanded_stock_candidate_universe, etf_universe, source_availability, public_scoring_readiness}' \"$DATA_ROOT/admin/fenok-edge-coverage-index.json\""
+  },
+  "active_scoring_universe": {
+    "source_file": "data/computed/fenok_signals.json",
+    "generated_at": "2026-06-29T06:41:43.012Z",
+    "current_only": true,
+    "total": 1066,
+    "by_market": [
+      {
+        "market": "HKEX",
+        "count": 34
+      },
+      {
+        "market": "KOSDAQ",
+        "count": 102
+      },
+      {
+        "market": "KRX",
+        "count": 236
+      },
+      {
+        "market": "SSE",
+        "count": 38
+      },
+      {
+        "market": "SZSE",
+        "count": 19
+      },
+      {
+        "market": "US",
+        "count": 579
+      },
+      {
+        "market": "US_CLASS",
+        "count": 58
+      }
+    ],
+    "buckets": {
+      "us": 637,
+      "korea": 338,
+      "asia_ex_taiwan": 91,
+      "explicit_taiwan": 0
+    },
+    "taiwan_ticker_anomalies": [
+      {
+        "ticker": "2454.TW",
+        "ticker_normalized": "2454-TW",
+        "market": "US_CLASS",
+        "market_scope": "us",
+        "company": "Mediatek"
+      }
+    ]
+  },
+  "expanded_stock_candidate_universe": {
+    "source_file": "data/computed/market_facts/index.json",
+    "generated_at": "2026-06-28T00:24:10Z",
+    "collected_asset_total": 6479,
+    "collected_stock_candidates": 1178,
+    "scored_public_stock": 1066,
+    "stock_promotion_audit_gap": 112,
+    "stage": "NORMALIZED",
+    "public_done_claim_allowed": false,
+    "caveat": "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated."
+  },
+  "etf_universe": {
+    "source_file": "data/computed/market_facts/index.json",
+    "stockanalysis_index_file": "data/stockanalysis/index.json",
+    "collected_etf_candidates": 5301,
+    "stage": "NORMALIZED",
+    "scored_public_etf": 0,
+    "public_done_claim_allowed": false,
+    "caveat": "ETF data exists but ETF scoring is a separate asset_type=etf lane and is not proven in fenok_signals or public screener scoring."
+  },
+  "source_availability": {
+    "not_public_scoring": true,
+    "caveat": "These rows prove source/proxy/run-health availability only. They are not paid-service readiness and must not be reported as final public scoring coverage.",
+    "sources": [
+      {
+        "id": "krx_issuer_daily_latest_full_proof",
+        "label": "Korea KRX issuer daily coverage, latest fully populated proof",
+        "covered_count": 338,
+        "denominator": 338,
+        "denominator_label": "active_scoring_universe.korea",
+        "coverage_pct": 100,
+        "active_scoring_coverage_pct": 31.71,
+        "source_date": "2026-06-26",
+        "availability_status": "ready",
+        "claim_scope": "source_available",
+        "not_public_scoring": true,
+        "caveat": "Counted from 20260626 KRX daily stock/KOSDAQ raw files. The 20260629 run is mostly empty and is not counted as issuer daily coverage.",
+        "private_manifest_file": "_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/manifest.json",
+        "counted_batch": {
+          "run_id": "krx_backfill_20d_20260626",
+          "as_of": "2026-06-26",
+          "summary": {
+            "total_files": 620,
+            "success_files": 590,
+            "empty_files": 30,
+            "failed_files": 0,
+            "total_rows": 939278,
+            "failed_reasons": {}
+          },
+          "date_count": 20,
+          "attempted_call_count": 620
+        },
+        "latest_calendar_run_20260629": {
+          "run_id": "krx_daily_20260629",
+          "as_of": "2026-06-29",
+          "summary": {
+            "total_files": 31,
+            "success_files": 2,
+            "empty_files": 29,
+            "failed_files": 0,
+            "total_rows": 19,
+            "failed_reasons": {}
+          },
+          "daily_history_rows": 0,
+          "countable_for_issuer_daily": false
+        }
+      },
+      {
+        "id": "us_finra_flow_proxy",
+        "label": "US FINRA flow proxy coverage",
+        "covered_count": 587,
+        "denominator": 637,
+        "denominator_label": "active_scoring_universe.us",
+        "coverage_pct": 92.15,
+        "active_scoring_coverage_pct": 55.07,
+        "source_date": "2026-06-26",
+        "availability_status": "ready",
+        "claim_scope": "proxy_source_available",
+        "not_public_scoring": true,
+        "caveat": "FINRA short-sale/off-exchange proxy coverage only; not full all-axis scoring and not directional flow.",
+        "source_file": "data/computed/fenok_flow_proxies.json",
+        "rows": 587
+      },
+      {
+        "id": "us_occ_options_proxy",
+        "label": "US OCC listed-options proxy coverage",
+        "covered_count": 228,
+        "denominator": 637,
+        "denominator_label": "active_scoring_universe.us",
+        "coverage_pct": 35.79,
+        "active_scoring_coverage_pct": 21.39,
+        "source_date": "2026-06-26",
+        "availability_status": "ready",
+        "claim_scope": "proxy_source_available",
+        "not_public_scoring": true,
+        "caveat": "OCC listed-options volume proxy only; not OPRA, premium, greeks, or buyer/seller direction.",
+        "source_file": "data/computed/fenok_occ_options_volume.json",
+        "rows": 228
+      },
+      {
+        "id": "us_latest_bounded_backfill_run",
+        "label": "US latest bounded backfill run coverage",
+        "covered_count": 8,
+        "denominator": 637,
+        "denominator_label": "active_scoring_universe.us",
+        "coverage_pct": 1.26,
+        "active_scoring_coverage_pct": 0.75,
+        "source_date": "2026-06-26",
+        "availability_status": "ready",
+        "claim_scope": "run_health",
+        "not_public_scoring": true,
+        "caveat": "The latest bounded run covers the explicit reference ticker set only; it is a run-health proof, not full US coverage.",
+        "private_manifest_file": "_private/admin/fenok-flow/backfill/20260629-latest/manifests/us_daily_backfill_smoke_1d_20260626.json",
+        "target_universe": {
+          "mode": "explicit_reference_tickers",
+          "ticker_count": 8,
+          "tickers": [
+            "COIN",
+            "DASH",
+            "MU",
+            "NVDA",
+            "PLTR",
+            "PYPL",
+            "RDDT",
+            "UNH"
+          ],
+          "caveat": "Plain OCC underlyings only; dotted/foreign suffixes require owner-reviewed mapping before full universe expansion."
+        },
+        "status_counts": {
+          "success": 2,
+          "partial_or_failed": 0,
+          "empty": 0
+        }
+      },
+      {
+        "id": "taiwan_current_universe",
+        "label": "Taiwan current active-universe numerator",
+        "covered_count": 0,
+        "denominator": 1066,
+        "denominator_label": "active_scoring_universe.total",
+        "coverage_pct": 0,
+        "active_scoring_coverage_pct": 0,
+        "source_date": "2026-06-26",
+        "availability_status": "not_in_universe",
+        "claim_scope": "not_current_numerator",
+        "not_public_scoring": true,
+        "caveat": "Taiwan source collection is active, but the current active scoring universe has no explicit Taiwan bucket. It does not increase the current numerator until universe mapping is fixed.",
+        "bridge_file": "data/admin/taiwan-data-bridge-index.json",
+        "bridge_version": "v1.0.3",
+        "historical_limitation": "TAIFEX OpenAPI endpoints do not support historical backfill queries and remain limited/blocked. TWSE web historical date endpoints support query-by-date (smoke test verified). Bounded historical accumulation is planned via TWSE web endpoints.",
+        "historical_smoke": {
+          "manifest_file": "_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json",
+          "dates_attempted": [
+            "20260626",
+            "20260625",
+            "20260624"
+          ],
+          "endpoint_count": 3,
+          "summary": {
+            "total_attempted": 9,
+            "success_files": 9,
+            "failed_files": 0
+          }
+        }
+      }
+    ]
+  },
+  "source_availability_composites": {
+    "not_public_scoring": true,
+    "caveat": "Composite counts are useful for source availability progress only. They are not public scoring coverage.",
+    "latest_available_kr_plus_us_flow": {
+      "covered_count": 925,
+      "denominator": 1066,
+      "denominator_label": "active_scoring_universe.total",
+      "coverage_pct": 86.77,
+      "claim_scope": "source_availability_composite",
+      "not_public_scoring": true,
+      "formula": "KRX latest fully populated issuer daily proof + US FINRA flow proxy"
+    },
+    "latest_available_kr_plus_us_occ": {
+      "covered_count": 566,
+      "denominator": 1066,
+      "denominator_label": "active_scoring_universe.total",
+      "coverage_pct": 53.1,
+      "claim_scope": "source_availability_composite",
+      "not_public_scoring": true,
+      "formula": "KRX latest fully populated issuer daily proof + US OCC options proxy"
+    },
+    "strict_new_bounded_run_plus_kr": {
+      "covered_count": 346,
+      "denominator": 1066,
+      "denominator_label": "active_scoring_universe.total",
+      "coverage_pct": 32.46,
+      "claim_scope": "run_health_composite",
+      "not_public_scoring": true,
+      "formula": "KRX latest fully populated issuer daily proof + latest US bounded reference-ticker run"
+    },
+    "remaining_asia_ex_taiwan": {
+      "count": 91,
+      "denominator": 1066,
+      "denominator_label": "active_scoring_universe.total",
+      "pct": 8.54,
+      "claim_scope": "outside_current_daily_source_workstream",
+      "not_public_scoring": true,
+      "caveat": "HKEX/SSE/SZSE rows remain outside the Korea/US/Taiwan daily-source workstream."
+    }
+  },
+  "public_scoring_readiness": {
+    "completion_ladder": [
+      "COLLECTED",
+      "NORMALIZED",
+      "JOINED",
+      "SCORED",
+      "PUBLIC",
+      "DAILY",
+      "GATED"
+    ],
+    "done_rule": "Only PUBLIC + DAILY + GATED can be called done. Source/admin/smoke rows are not done.",
+    "tracks": [
+      {
+        "id": "active_stock_scoring_current",
+        "label": "Current active stock scoring chain",
+        "denominator": 1066,
+        "stage": "PUBLIC",
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
+        "requirements": {
+          "source_available": true,
+          "normalized": true,
+          "joined_to_target_universe": true,
+          "scored": true,
+          "public": true,
+          "daily": false,
+          "gated": false
+        },
+        "caveat": "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index."
+      },
+      {
+        "id": "expanded_stock_candidates",
+        "label": "Expanded stock candidate promotion",
+        "denominator": 1178,
+        "stage": "NORMALIZED",
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
+        "requirements": {
+          "source_available": true,
+          "normalized": true,
+          "joined_to_target_universe": false,
+          "scored": false,
+          "public": false,
+          "daily": false,
+          "gated": false
+        },
+        "caveat": "112 stock candidates need promotion audit before they can increase scored/public stock coverage."
+      },
+      {
+        "id": "etf_scoring_lane",
+        "label": "ETF scoring lane",
+        "denominator": 5301,
+        "stage": "NORMALIZED",
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
+        "requirements": {
+          "source_available": true,
+          "normalized": true,
+          "joined_to_target_universe": false,
+          "scored": false,
+          "public": false,
+          "daily": false,
+          "gated": false
+        },
+        "caveat": "ETF source data is normalized but not joined/scored/published as Fenok Edge ETF scores."
+      },
+      {
+        "id": "taiwan_current_numerator",
+        "label": "Taiwan current active-universe numerator",
+        "denominator": 1066,
+        "stage": "COLLECTED",
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
+        "requirements": {
+          "source_available": true,
+          "normalized": true,
+          "joined_to_target_universe": false,
+          "scored": false,
+          "public": false,
+          "daily": false,
+          "gated": false
+        },
+        "caveat": "Taiwan source work cannot improve the current numerator until Taiwan symbols are in the active scoring universe."
+      }
+    ]
+  },
+  "supervised_backfill_progress": {
+    "korea_252_queue": {
+      "status": "started_bounded_supervised",
+      "completed_trading_dates": 20,
+      "total_trading_dates": 252,
+      "completed_endpoint_calls": 620,
+      "estimated_full_endpoint_calls": 7812,
+      "latest_batch_manifest": "_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/manifest.json",
+      "latest_batch_dates": [
+        "2026-06-01",
+        "2026-06-02",
+        "2026-06-03",
+        "2026-06-04",
+        "2026-06-05",
+        "2026-06-08",
+        "2026-06-09",
+        "2026-06-10",
+        "2026-06-11",
+        "2026-06-12",
+        "2026-06-15",
+        "2026-06-16",
+        "2026-06-17",
+        "2026-06-18",
+        "2026-06-19",
+        "2026-06-22",
+        "2026-06-23",
+        "2026-06-24",
+        "2026-06-25",
+        "2026-06-26"
+      ],
+      "latest_batch_summary": {
+        "total_files": 620,
+        "success_files": 590,
+        "empty_files": 30,
+        "failed_files": 0,
+        "total_rows": 939278,
+        "failed_reasons": {}
+      },
+      "caveat": "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date."
+    },
+    "us_252_reference_ticker_queue": {
+      "status": "started_bounded_supervised",
+      "completed_batches": 1,
+      "total_batches": 51,
+      "completed_trading_dates": 5,
+      "total_trading_dates": 252,
+      "completed_finra_requests": 5,
+      "total_finra_requests": 252,
+      "completed_occ_side_requests": 80,
+      "total_occ_side_requests": 4032,
+      "latest_batch_manifest": "_private/admin/fenok-flow/backfill/20260629-full252/manifests/us_daily_backfill_smoke_5d_20250702.json",
+      "latest_batch_dates": [
+        "20250626",
+        "20250627",
+        "20250630",
+        "20250701",
+        "20250702"
+      ],
+      "latest_batch_status_counts": {
+        "success": 10,
+        "partial_or_failed": 0,
+        "empty": 0
+      },
+      "caveat": "This is 252-history progress for the 8 reference tickers only. It does not expand current active coverage beyond the existing computed US rows."
+    }
+  },
+  "freshness_gate": {
+    "max_calendar_age_days_for_counted_daily_sources": 4,
+    "checks": [
+      {
+        "id": "coverage_index_generated",
+        "status": "ready",
+        "generated_at": "2026-06-29T13:44:00.137Z"
+      },
+      {
+        "id": "korea_counted_source_date",
+        "source_date": "2026-06-26",
+        "age_days": 3,
+        "status": "ready",
+        "caveat": "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date."
+      },
+      {
+        "id": "us_flow_source_date",
+        "source_date": "2026-06-26",
+        "age_days": 3,
+        "status": "ready"
+      },
+      {
+        "id": "us_occ_source_date",
+        "source_date": "2026-06-26",
+        "age_days": 3,
+        "status": "ready"
+      },
+      {
+        "id": "taiwan_universe_mapping",
+        "status": "blocked_for_numerator",
+        "explicit_taiwan_count": 0,
+        "anomaly_count": 1,
+        "caveat": "Source readiness is separate from current active-universe numerator coverage."
+      }
+    ]
+  }
+}
