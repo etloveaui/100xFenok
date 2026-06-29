@@ -26,8 +26,8 @@ const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.3";
 const PROMOTION_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-artifact/v0.1";
 const SCORING_CONTRACT_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-scoring-contract-artifact/v0.1";
 const SCORE_PREVIEW_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-score-preview-artifact/v0.1";
-const PROMOTION_GATE_PLAN_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-gate-plan/v0.1";
-const BLOCKED_UNBLOCK_DIAGNOSTICS_SCHEMA_VERSION = "fenok-s1-stock-blocked-unblock-diagnostics/v0.1";
+const PROMOTION_GATE_PLAN_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-gate-plan/v0.2";
+const BLOCKED_UNBLOCK_DIAGNOSTICS_SCHEMA_VERSION = "fenok-s1-stock-blocked-unblock-diagnostics/v0.2";
 const SCORE_CORE_SOURCE = "scripts/stock-action-score-core.mjs";
 const DEFAULT_EXAMPLE_LIMIT = 12;
 const JOINED_MIN_EVIDENCE_FAMILIES = 3;
@@ -224,6 +224,60 @@ function stockanalysisSurfaceTickers(payload) {
     ticker(String(row?.symbol ?? "").replace(/^\$/u, "")),
     ticker(row?.other === "N/A" ? "" : row?.other),
   ]));
+}
+
+function stockanalysisCorporateActionsByTicker(payload) {
+  const rows = Array.isArray(payload?.records) ? payload.records : [];
+  const byTicker = new Map();
+  for (const row of rows) {
+    const symbolTicker = ticker(String(row?.symbol ?? "").replace(/^\$/u, ""));
+    const otherTicker = ticker(row?.other === "N/A" ? "" : row?.other);
+    const affectedTickers = unique([symbolTicker, otherTicker]);
+    const type = String(row?.type ?? row?.action ?? "").trim();
+    const terminal = ["Acquisition", "Delisted"].includes(type);
+    const symbolChange = type === "Symbol Change";
+    for (const item of affectedTickers) {
+      if (!item) continue;
+      const entry = {
+        type: type || null,
+        date: row?.date ?? null,
+        symbol: symbolTicker || null,
+        other: otherTicker || null,
+        text: row?.text ?? null,
+        terminal,
+        alias_target: symbolChange && item === otherTicker && symbolTicker !== otherTicker ? symbolTicker : null,
+        alias_source: symbolChange && item === symbolTicker && otherTicker !== symbolTicker ? otherTicker : null,
+      };
+      if (!byTicker.has(item)) byTicker.set(item, []);
+      byTicker.get(item).push(entry);
+    }
+  }
+  return byTicker;
+}
+
+function corporateActionEvidenceFor(item, context) {
+  return (context?.stockanalysisCorporateActionMap?.get(item) ?? []).map((row) => ({
+    type: row.type,
+    date: row.date,
+    symbol: row.symbol,
+    other: row.other,
+    text: row.text,
+    terminal: row.terminal,
+    alias_target: row.alias_target,
+    alias_source: row.alias_source,
+  }));
+}
+
+function corporateActionPolicyStatusFor(item, context) {
+  const evidence = corporateActionEvidenceFor(item, context);
+  const policyRows = evidence.filter((row) => row.terminal || row.alias_target);
+  return {
+    status: policyRows.length > 0 ? "policy_required_before_promotion" : "none",
+    reason: policyRows.length > 0
+      ? "StockAnalysis corporate-action surface indicates an acquired/delisted or old-symbol row; do not synthesize identity or promote without an explicit terminal/alias policy."
+      : null,
+    evidence,
+  };
 }
 
 function marketFactAssetSet(rows, assetType) {
@@ -1020,17 +1074,21 @@ function blockerActionFor(blocker) {
   };
 }
 
-function promotionBlockedPlanRow(status) {
+function promotionBlockedPlanRow(status, context) {
+  const corporateActionPolicy = corporateActionPolicyStatusFor(status.ticker, context);
   return {
     ticker: status.ticker,
     source_stage: status.stage,
     target_stage: "S1_PROMOTION_BLOCKED",
-    promotion_action: "repair_blockers_before_shadow_candidate",
+    promotion_action: corporateActionPolicy.status === "policy_required_before_promotion"
+      ? "corporate_action_policy_required_before_shadow_candidate"
+      : "repair_blockers_before_shadow_candidate",
     claim_scope: "Blocked S1 stock candidate plan only; do not score, publish, or include in S0.",
     blockers: status.blockers,
     evidence_family_count: status.evidence_family_count,
     evidence_families: status.evidence_families,
     country_scope: status.country_scope,
+    corporate_action_policy: corporateActionPolicy,
     blocker_actions: status.blockers.map(blockerActionFor),
   };
 }
@@ -1084,7 +1142,9 @@ function blockerDiagnosticFor(blocker, status, detail, row, context) {
   const identity = detail?.identity ?? {};
   const base = blockerActionFor(blocker);
   const localSources = localSourceFilesFor(item, row, detail, context);
+  const corporateActionPolicy = corporateActionPolicyStatusFor(item, context);
   if (blocker === "market_currency_country_scope") {
+    const policyRequired = corporateActionPolicy.status === "policy_required_before_promotion";
     return {
       ...base,
       current_evidence: {
@@ -1092,9 +1152,12 @@ function blockerDiagnosticFor(blocker, status, detail, row, context) {
         currency: identity.currency ?? null,
         explicit_country: identity.country ?? identity.country_code ?? identity.countryCode ?? identity.market_country ?? null,
         inferred_country_scope: status.country_scope,
+        corporate_action_policy: corporateActionPolicy,
       },
       unblock_target: "market_facts identity must carry exchange, currency, and a country scope inferable by the joined gate.",
-      next_non_public_slice: "repair market_facts identity normalization, then rerun the joined gate before any public scoring write.",
+      next_non_public_slice: policyRequired
+        ? "define terminal/alias policy for this corporate-action row before synthesizing identity or promoting it."
+        : "repair market_facts identity normalization, then rerun the joined gate before any public scoring write.",
     };
   }
   if (blocker === "price_or_market_cap") {
@@ -1135,6 +1198,7 @@ function blockedUnblockDiagnosticRow(status, context) {
   const row = context.marketByTicker.get(status.ticker);
   const detail = readJsonOrNull(path.join("data/computed/market_facts/tickers", `${status.ticker}.json`));
   const identity = detail?.identity ?? {};
+  const corporateActionPolicy = corporateActionPolicyStatusFor(status.ticker, context);
   return {
     ticker: status.ticker,
     asset_type: row?.asset_type ?? null,
@@ -1160,6 +1224,7 @@ function blockedUnblockDiagnosticRow(status, context) {
       present_fact_keys: Object.keys(detail?.facts ?? {}).sort(),
     },
     local_source_files: localSourceFilesFor(status.ticker, row, detail, context),
+    corporate_action_policy: corporateActionPolicy,
     blocker_diagnostics: status.blockers.map((blocker) => blockerDiagnosticFor(blocker, status, detail, row, context)),
   };
 }
@@ -1282,7 +1347,7 @@ function buildS1PromotionGatePlanArtifact(statuses, context) {
   const promotionRows = previewArtifact.preview_rows.map(promotionGateRowFromPreview);
   const blockedPlanRows = statuses
     .filter((status) => status.status === "joined_not_ready")
-    .map(promotionBlockedPlanRow);
+    .map((status) => promotionBlockedPlanRow(status, context));
   const etfRows = promotionRows.filter((row) => row.asset_type === "etf").length;
   const nonStockRows = promotionRows.filter((row) => row.asset_type !== "stock").length;
   const s0OverlapRows = promotionRows.filter((row) => context.s0Set.has(row.ticker)).length;
@@ -1595,6 +1660,7 @@ function buildAudit({
   const slickStockFileSet = new Set(slickStockFileTickers);
   const stockanalysisSurfaceTickerList = stockanalysisSurfaceTickers(stockanalysisActionsRecent);
   const stockanalysisSurfaceSet = new Set(stockanalysisSurfaceTickerList);
+  const stockanalysisCorporateActionMap = stockanalysisCorporateActionsByTicker(stockanalysisActionsRecent);
   const rawMasterTickerList = rawMasterTickers(rawMaster);
   const rawMasterSet = new Set(rawMasterTickerList);
   const stockAssetSet = marketFactAssetSet(marketRows, "stock");
@@ -1724,6 +1790,7 @@ function buildAudit({
           revisionMap: previewRevisionMap,
           guruHolders,
           enhancedConsensus,
+          stockanalysisCorporateActionMap,
         }
       : null,
     blockedUnblockDiagnosticsContext: blockedUnblockDiagnosticsReport
@@ -1735,6 +1802,7 @@ function buildAudit({
           slickUniverseSet,
           slickStockFileSet,
           stockanalysisSurfaceSet,
+          stockanalysisCorporateActionMap,
           rawMasterSet,
           stockanalysisFinancialsSet,
         }
@@ -2194,7 +2262,9 @@ function printHuman(result) {
 export {
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
+  corporateActionEvidenceFor,
   localSourceFilesFor,
+  stockanalysisCorporateActionsByTicker,
   stockanalysisSurfaceTickers,
 };
 

@@ -2,22 +2,45 @@
 import assert from "node:assert/strict";
 
 import {
+  corporateActionEvidenceFor,
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
   localSourceFilesFor,
+  stockanalysisCorporateActionsByTicker,
   stockanalysisSurfaceTickers,
 } from "./audit-fenok-stock-promotion-candidates.mjs";
 
 const surfacePayload = {
   records: [
     { symbol: "$DAY", other: "DAY", type: "Acquisition" },
+    { symbol: "$HOLX", other: "N/A", type: "Delisted" },
+    { symbol: "$MRSH", other: "MMC", type: "Symbol Change" },
     { symbol: "$STRC", other: "STRC", type: "Listed" },
     { symbol: "$IGNORED", other: "N/A", type: "Delisted" },
   ],
 };
 
 const surfaceTickers = stockanalysisSurfaceTickers(surfacePayload);
-assert.deepEqual(surfaceTickers, ["DAY", "IGNORED", "STRC"]);
+assert.deepEqual(surfaceTickers, ["DAY", "HOLX", "IGNORED", "MMC", "MRSH", "STRC"]);
+
+const corporateActionsByTicker = stockanalysisCorporateActionsByTicker(surfacePayload);
+assert.equal(corporateActionsByTicker.get("DAY")[0].terminal, true);
+assert.equal(corporateActionsByTicker.get("HOLX")[0].terminal, true);
+assert.equal(corporateActionsByTicker.get("MMC")[0].alias_target, "MRSH");
+assert.equal(corporateActionsByTicker.get("MRSH")[0].alias_source, "MMC");
+assert.deepEqual(
+  corporateActionEvidenceFor("MMC", { stockanalysisCorporateActionMap: corporateActionsByTicker })[0],
+  {
+    type: "Symbol Change",
+    date: null,
+    symbol: "MRSH",
+    other: "MMC",
+    text: null,
+    terminal: false,
+    alias_target: "MRSH",
+    alias_source: null,
+  },
+);
 
 const commonSets = {
   yfSet: new Set(["DAY", "STRC"]),

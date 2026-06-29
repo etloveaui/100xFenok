@@ -41,7 +41,7 @@ Current local snapshot:
 | --- | --- | --- | --- | --- |
 | S0 active stock scoring | PUBLIC, not DAILY/GATED | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; strict `qa:fenok-s0-daily-gated` remains red | `active_stock_scoring_current.requirements.daily=false`, `gated=false` |
 | S1 stock candidates | NORMALIZED / JOINED_READY staging, not scored | YF scheduled branch processes one rolling shard per run, capped at 140; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates, 1,066 scored/public stocks, 112 promotion-audit gap; current joined gate is 108 joined-ready and 4 blocked; blocker counts are `market_currency_country_scope=3`, `evidence_families_min3=1` | not scored/public/daily/gated as expanded stock coverage; remaining joined blockers are DAY, HOLX, MMC, STRC |
-| S3 ETF lane | PUBLIC + DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; StockAnalysis history report shows 12 required-history gaps, 0 fetchable, 12 inception-limited after QNDX reclassification | `daily=true`, `gated=true`; current required-history gaps are inception-limited and do not block ETF paid-ready wording by themselves |
+| S3 ETF lane | PUBLIC surface, not DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; current ETF detail continuity evidence is `daily_1y_fetchable=584`, `inception_limited=534` | `daily=false`, `gated=false`, `public_done_claim_allowed=false`; fetchable 1Y continuity gaps still block ETF paid-ready wording |
 
 Operational command:
 
@@ -56,7 +56,7 @@ Operator readout rule:
 - Treat `sources=[...]` as the latest available derived source dates/timestamps, not as paid-ready proof.
 - If `blocking_gates` is non-empty or `done_claim_allowed=false`, do not call that layer PUBLIC + DAILY + GATED.
 - `active S0 evidence` shows the fail-closed blockers that must clear before `daily` or `gated` can flip.
-- `ETF evidence` separates public surface proof from `daily`/`gated`; current required-history gaps are all inception-limited, so there is no fetchable required-history blocker.
+- `ETF evidence` separates public surface proof from `daily`/`gated`; current 1Y continuity evidence still has fetchable gaps, so ETF paid-ready wording stays blocked even though the compact public surface is present.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it is expected to stay red until the S0 `daily` and `gated` requirements become true.
 
 ## Resource Controls
@@ -70,6 +70,7 @@ Operator readout rule:
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --blocked-unblock-diagnostics-report --check` keeps DAY/HOLX/MMC/STRC as blocker-only diagnostics with local source evidence and next repair targets; it still writes no `stock_action_index`, `fenok_signals`, or public mirror output.
 - The S1 joined gate counts tickers present in the StockAnalysis corporate-action surface as the existing `stockanalysis` evidence family, deduped with StockAnalysis detail files. This removes DAY's evidence-family blocker but does not resolve DAY/HOLX/MMC identity scope.
 - Blocked diagnostics expose `accepted_family_flags` separately from raw `source_flags`, so surface-only StockAnalysis evidence is visible without pretending the market_facts detail already has a StockAnalysis source flag.
+- Blocked diagnostics and promotion plans also expose StockAnalysis corporate-action/alias policy evidence for DAY/HOLX/MMC. Acquired, delisted, or old-symbol rows remain diagnostics-only until an explicit terminal/alias policy exists; the audit must not copy MRSH identity into old ticker MMC or promote these rows by inference.
 - StockAnalysis daily schedule is incremental-only for ETF detail plus core surfaces.
 - Fenok Edge OCC daily schedule is batch-limited, request-limited, failure-thresholded, and sleep-throttled.
 - Fenok Edge KRX daily schedule is one-day by default, max-call-limited, concurrency-limited, sleep-throttled, and fails closed on failed files or empty KOSPI/KOSDAQ issuer daily rows unless manually overridden.
