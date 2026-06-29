@@ -12,8 +12,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - Current local scored denominator: 4,484 eligible vanilla ETFs out of 5,333 StockAnalysis ETF records.
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
-- The coverage index now holds `daily=true` and `gated=true` after the last fetchable required-history gap (`QNDX`) was reclassified as inception-limited.
-- This is a paid-ready ETF lane claim only for the separate `asset_type=etf` scoring lane, after PUBLIC + DAILY + GATED are proven together.
+- The coverage index still holds `daily=false` and `gated=false`: QNDX moved from fetchable required-history gap to inception-limited, but 584 fetchable daily 1Y continuity gaps remain.
+- This is not a paid-ready ETF lane claim. Paid-ready requires PUBLIC + DAILY + GATED to be proven together for the separate `asset_type=etf` scoring lane.
 
 ## Signal Families
 
