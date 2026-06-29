@@ -1,0 +1,1024 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-28T15:52:59.343Z",
+  "formula_version": "fenok-signal-lens-proxies-v0.1",
+  "source_files": [
+    "computed/fenok_signals.json",
+    "computed/fenok_flow_proxies.json",
+    "yf/finance/{TICKER}.json",
+    "yf/finance/SPY.json"
+  ],
+  "public_surface_status": "private_admin_derived_only_not_public",
+  "raw_policy": {
+    "third_party_raw_public": false,
+    "full_public_mirror": false,
+    "copied_third_party_score_public": false,
+    "public_payload": null
+  },
+  "coverage": {
+    "row_count": 8,
+    "axis_counts": {
+      "profitability": 8,
+      "durability_profitability": 8,
+      "growth": 8,
+      "upside_potential": 8,
+      "downside_pressure": 8,
+      "peer_similarity": 8,
+      "sp500_tracking_similarity": 8,
+      "technical_flow": 8,
+      "technical_indicator_proxy": 8,
+      "net_options_proxy": 8,
+      "off_exchange_activity_proxy": 8,
+      "short_pressure_proxy": 8,
+      "direct_news_tone_proxy": 3
+    }
+  },
+  "rows": [
+    {
+      "ticker": "DASH",
+      "company": "DoorDash Class A",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 19.31,
+        "durabilityProfitabilityScore": 47,
+        "growthScore": 66.74,
+        "upsidePotentialScore": 62.14,
+        "downsidePressureScore": 51,
+        "peerSimilarityScore": 84.58,
+        "sp500TrackingSimilarityScore": 69.21,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 69.21,
+          "direction": "mixed",
+          "correlation_1y": 0.3843,
+          "beta_1y": 1.4252,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 45.35,
+        "technicalIndicatorProxyScore": 78.26,
+        "technicalIndicatorProxy": {
+          "score_0_100": 78.26,
+          "direction": "constructive",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 183.09,
+            "ma20": 163.7785,
+            "ma50": 165.7848,
+            "ma200": 200.5477,
+            "rsi14": 69.64,
+            "latest_volume": 7398700,
+            "avg_volume_20d": 5326620,
+            "components": {
+              "return_20d": 90.97,
+              "return_60d": 78.23,
+              "ma20_position": 80,
+              "ma50_position": 80,
+              "ma200_position": 30,
+              "rsi14": 99.1,
+              "volume_surge": 59.27
+            }
+          }
+        },
+        "netOptionsProxyScore": 67.24,
+        "netOptionsProxy": {
+          "score_0_100": 67.24,
+          "direction": "call_volume_skew_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 13138,
+          "put_volume": 5042,
+          "total_volume": 18180,
+          "put_call_volume_ratio": 0.383772,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 61.46,
+        "offExchangeActivityProxy": {
+          "score_0_100": 61.46,
+          "direction": "elevated_activity",
+          "off_exchange_share": 0.284385,
+          "finra_total_volume": 2104077.0723,
+          "consolidated_volume": 7398700,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 85.44,
+        "shortPressureProxy": {
+          "score_0_100": 85.44,
+          "direction": "elevated_two_sided",
+          "short_volume_ratio": 0.649028,
+          "short_exempt_ratio": 0.004122,
+          "short_volume": 1365604.5307,
+          "short_exempt_volume": 8674,
+          "total_volume": 2104077.0723,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": null,
+        "directNewsToneProxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 0,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 0,
+          "article_count": 0,
+          "attention_score_0_100": null,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": [
+          "direct_news_tone_proxy_requires_source_or_rate_limit_retry"
+        ]
+      }
+    },
+    {
+      "ticker": "UNH",
+      "company": "UnitedHealth Group",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 22.98,
+        "durabilityProfitabilityScore": 59.61,
+        "growthScore": 39.82,
+        "upsidePotentialScore": 44.69,
+        "downsidePressureScore": 51.71,
+        "peerSimilarityScore": 83.16,
+        "sp500TrackingSimilarityScore": 59.08,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 59.08,
+          "direction": "mixed",
+          "correlation_1y": 0.1817,
+          "beta_1y": 0.586,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 52.96,
+        "technicalIndicatorProxyScore": 81.86,
+        "technicalIndicatorProxy": {
+          "score_0_100": 81.86,
+          "direction": "constructive",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 427.89,
+            "ma20": 400.5872,
+            "ma50": 381.1641,
+            "ma200": 331.7893,
+            "rsi14": 70.34,
+            "latest_volume": 10585900,
+            "avg_volume_20d": 7534215,
+            "components": {
+              "return_20d": 78.56,
+              "return_60d": 100,
+              "ma20_position": 80,
+              "ma50_position": 80,
+              "ma200_position": 80,
+              "rsi14": 72,
+              "volume_surge": 60.34
+            }
+          }
+        },
+        "netOptionsProxyScore": 61.62,
+        "netOptionsProxy": {
+          "score_0_100": 61.62,
+          "direction": "call_volume_skew_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 164592,
+          "put_volume": 86322,
+          "total_volume": 250914,
+          "put_call_volume_ratio": 0.52446,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 89.99,
+        "offExchangeActivityProxy": {
+          "score_0_100": 89.99,
+          "direction": "high_activity",
+          "off_exchange_share": 0.369972,
+          "finra_total_volume": 3916489.919,
+          "consolidated_volume": 10585900,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 83.11,
+        "shortPressureProxy": {
+          "score_0_100": 83.11,
+          "direction": "elevated_two_sided",
+          "short_volume_ratio": 0.640896,
+          "short_exempt_ratio": 0.000003,
+          "short_volume": 2510061.2019,
+          "short_exempt_volume": 11,
+          "total_volume": 3916489.919,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": null,
+        "directNewsToneProxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 0,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 0,
+          "article_count": 0,
+          "attention_score_0_100": null,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": [
+          "direct_news_tone_proxy_requires_source_or_rate_limit_retry"
+        ]
+      }
+    },
+    {
+      "ticker": "PYPL",
+      "company": "PayPal Holdings",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 61.83,
+        "durabilityProfitabilityScore": 64.42,
+        "growthScore": 16.42,
+        "upsidePotentialScore": 58.89,
+        "downsidePressureScore": 32.23,
+        "peerSimilarityScore": 81.98,
+        "sp500TrackingSimilarityScore": 70.36,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 70.36,
+          "direction": "mixed",
+          "correlation_1y": 0.4072,
+          "beta_1y": 1.2774,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 4.94,
+        "technicalIndicatorProxyScore": 51.49,
+        "technicalIndicatorProxy": {
+          "score_0_100": 51.49,
+          "direction": "neutral",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 44.29,
+            "ma20": 42.5324,
+            "ma50": 45.2951,
+            "ma200": 53.9087,
+            "rsi14": 65.72,
+            "latest_volume": 33226800,
+            "avg_volume_20d": 17578690,
+            "components": {
+              "return_20d": 42.7,
+              "return_60d": 38.74,
+              "ma20_position": 80,
+              "ma50_position": 30,
+              "ma200_position": 30,
+              "rsi14": 89.31,
+              "volume_surge": 92.68
+            }
+          }
+        },
+        "netOptionsProxyScore": 66.64,
+        "netOptionsProxy": {
+          "score_0_100": 66.64,
+          "direction": "call_volume_skew_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 172256,
+          "put_volume": 68356,
+          "total_volume": 240612,
+          "put_call_volume_ratio": 0.396828,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 27.87,
+        "offExchangeActivityProxy": {
+          "score_0_100": 27.87,
+          "direction": "normal_activity",
+          "off_exchange_share": 0.183615,
+          "finra_total_volume": 6100936.4733,
+          "consolidated_volume": 33226800,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 37.97,
+        "shortPressureProxy": {
+          "score_0_100": 37.97,
+          "direction": "normal",
+          "short_volume_ratio": 0.482898,
+          "short_exempt_ratio": 0.003231,
+          "short_volume": 2946128.9949,
+          "short_exempt_volume": 19715,
+          "total_volume": 6100936.4733,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": 61.86,
+        "directNewsToneProxy": {
+          "score_0_100": 61.86,
+          "direction": "positive_headline_tilt",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 5,
+          "negative_cue_count": 2,
+          "cue_bearing_article_count": 6,
+          "article_count": 10,
+          "attention_score_0_100": 40,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": []
+      }
+    },
+    {
+      "ticker": "RDDT",
+      "company": "Reddit Class A",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 69.44,
+        "durabilityProfitabilityScore": 67.89,
+        "growthScore": 73.48,
+        "upsidePotentialScore": 53.32,
+        "downsidePressureScore": 51.63,
+        "peerSimilarityScore": 86.57,
+        "sp500TrackingSimilarityScore": 67.77,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 67.77,
+          "direction": "mixed",
+          "correlation_1y": 0.3553,
+          "beta_1y": 1.9049,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 51.32,
+        "technicalIndicatorProxyScore": 53.12,
+        "technicalIndicatorProxy": {
+          "score_0_100": 53.12,
+          "direction": "neutral",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 166.94,
+            "ma20": 171.3285,
+            "ma50": 162.8818,
+            "ma200": 186.0174,
+            "rsi14": 46.68,
+            "latest_volume": 6323100,
+            "avg_volume_20d": 4792870,
+            "components": {
+              "return_20d": 41.58,
+              "return_60d": 81.63,
+              "ma20_position": 30,
+              "ma50_position": 80,
+              "ma200_position": 30,
+              "rsi14": 41.7,
+              "volume_surge": 54.62
+            }
+          }
+        },
+        "netOptionsProxyScore": 65.56,
+        "netOptionsProxy": {
+          "score_0_100": 65.56,
+          "direction": "call_volume_skew_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 59150,
+          "put_volume": 24918,
+          "total_volume": 84068,
+          "put_call_volume_ratio": 0.421268,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 100,
+        "offExchangeActivityProxy": {
+          "score_0_100": 100,
+          "direction": "high_activity",
+          "off_exchange_share": 0.411549,
+          "finra_total_volume": 2602265.0975,
+          "consolidated_volume": 6323100,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 72.77,
+        "shortPressureProxy": {
+          "score_0_100": 72.77,
+          "direction": "watch",
+          "short_volume_ratio": 0.604703,
+          "short_exempt_ratio": 0.000108,
+          "short_volume": 1573598.339,
+          "short_exempt_volume": 282,
+          "total_volume": 2602265.0975,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": 57.91,
+        "directNewsToneProxy": {
+          "score_0_100": 57.91,
+          "direction": "neutral_headline_tilt",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 2,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 2,
+          "article_count": 10,
+          "attention_score_0_100": 40,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": []
+      }
+    },
+    {
+      "ticker": "COIN",
+      "company": "Coinbase Global Class A",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 30.69,
+        "durabilityProfitabilityScore": 50.19,
+        "growthScore": 56.85,
+        "upsidePotentialScore": 53.77,
+        "downsidePressureScore": 55.48,
+        "peerSimilarityScore": 85.8,
+        "sp500TrackingSimilarityScore": 78.97,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 78.97,
+          "direction": "mixed",
+          "correlation_1y": 0.5793,
+          "beta_1y": 3.1339,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 30.55,
+        "technicalIndicatorProxyScore": 22.12,
+        "technicalIndicatorProxy": {
+          "score_0_100": 22.12,
+          "direction": "stressed",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 149.06,
+            "ma20": 162.4475,
+            "ma50": 182.6646,
+            "ma200": 234.3009,
+            "rsi14": 47.67,
+            "latest_volume": 10480600,
+            "avg_volume_20d": 8932535,
+            "components": {
+              "return_20d": 0,
+              "return_60d": 17.28,
+              "ma20_position": 30,
+              "ma50_position": 30,
+              "ma200_position": 30,
+              "rsi14": 44.17,
+              "volume_surge": 44.89
+            }
+          }
+        },
+        "netOptionsProxyScore": 47.62,
+        "netOptionsProxy": {
+          "score_0_100": 47.62,
+          "direction": "balanced_volume_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 136094,
+          "put_volume": 155342,
+          "total_volume": 291436,
+          "put_call_volume_ratio": 1.141432,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 63.69,
+        "offExchangeActivityProxy": {
+          "score_0_100": 63.69,
+          "direction": "elevated_activity",
+          "off_exchange_share": 0.291078,
+          "finra_total_volume": 3050668.204,
+          "consolidated_volume": 10480600,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 49.86,
+        "shortPressureProxy": {
+          "score_0_100": 49.86,
+          "direction": "normal",
+          "short_volume_ratio": 0.524502,
+          "short_exempt_ratio": 0.000413,
+          "short_volume": 1600080.102,
+          "short_exempt_volume": 1259,
+          "total_volume": 3050668.204,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": null,
+        "directNewsToneProxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 0,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 0,
+          "article_count": 0,
+          "attention_score_0_100": null,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": [
+          "direct_news_tone_proxy_requires_source_or_rate_limit_retry"
+        ]
+      }
+    },
+    {
+      "ticker": "MU",
+      "company": "Micron Technology",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 93.88,
+        "durabilityProfitabilityScore": 73.62,
+        "growthScore": 93.54,
+        "upsidePotentialScore": 78.55,
+        "downsidePressureScore": 21.44,
+        "peerSimilarityScore": 82.03,
+        "sp500TrackingSimilarityScore": 76.67,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 76.67,
+          "direction": "mixed",
+          "correlation_1y": 0.5334,
+          "beta_1y": 3.1939,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 96.21,
+        "technicalIndicatorProxyScore": 88.51,
+        "technicalIndicatorProxy": {
+          "score_0_100": 88.51,
+          "direction": "constructive",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 1132.33,
+            "ma20": 1035.4095,
+            "ma50": 802.1392,
+            "ma200": 425.7093,
+            "rsi14": 62.97,
+            "latest_volume": 86115000,
+            "avg_volume_20d": 58121295,
+            "components": {
+              "return_20d": 100,
+              "return_60d": 100,
+              "ma20_position": 80,
+              "ma50_position": 80,
+              "ma200_position": 80,
+              "rsi14": 82.43,
+              "volume_surge": 65.44
+            }
+          }
+        },
+        "netOptionsProxyScore": 50.29,
+        "netOptionsProxy": {
+          "score_0_100": 50.29,
+          "direction": "balanced_volume_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 1257900,
+          "put_volume": 1237978,
+          "total_volume": 2495878,
+          "put_call_volume_ratio": 0.984162,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 75.89,
+        "offExchangeActivityProxy": {
+          "score_0_100": 75.89,
+          "direction": "high_activity",
+          "off_exchange_share": 0.327661,
+          "finra_total_volume": 28216540.6704,
+          "consolidated_volume": 86115000,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 56.37,
+        "shortPressureProxy": {
+          "score_0_100": 56.37,
+          "direction": "watch",
+          "short_volume_ratio": 0.547288,
+          "short_exempt_ratio": 0.00132,
+          "short_volume": 15442573.8538,
+          "short_exempt_volume": 37251,
+          "total_volume": 28216540.6704,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": null,
+        "directNewsToneProxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 0,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 0,
+          "article_count": 0,
+          "attention_score_0_100": null,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": [
+          "direct_news_tone_proxy_requires_source_or_rate_limit_retry"
+        ]
+      }
+    },
+    {
+      "ticker": "PLTR",
+      "company": "Palantir Technologies Class A",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 86.25,
+        "durabilityProfitabilityScore": 81.43,
+        "growthScore": 83.54,
+        "upsidePotentialScore": 49.4,
+        "downsidePressureScore": 58.58,
+        "peerSimilarityScore": 80.65,
+        "sp500TrackingSimilarityScore": 71.71,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 71.71,
+          "direction": "mixed",
+          "correlation_1y": 0.4342,
+          "beta_1y": 1.7878,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 51.69,
+        "technicalIndicatorProxyScore": 18.38,
+        "technicalIndicatorProxy": {
+          "score_0_100": 18.38,
+          "direction": "stressed",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 112.93,
+            "ma20": 132.1785,
+            "ma50": 136.4565,
+            "ma200": 158.8465,
+            "rsi14": 27.83,
+            "latest_volume": 61176800,
+            "avg_volume_20d": 45165930,
+            "components": {
+              "return_20d": 0,
+              "return_60d": 3.67,
+              "ma20_position": 30,
+              "ma50_position": 30,
+              "ma200_position": 30,
+              "rsi14": 28,
+              "volume_surge": 56.97
+            }
+          }
+        },
+        "netOptionsProxyScore": 57.31,
+        "netOptionsProxy": {
+          "score_0_100": 57.31,
+          "direction": "balanced_volume_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 1040790,
+          "put_volume": 693598,
+          "total_volume": 1734388,
+          "put_call_volume_ratio": 0.666415,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 100,
+        "offExchangeActivityProxy": {
+          "score_0_100": 100,
+          "direction": "high_activity",
+          "off_exchange_share": 0.412837,
+          "finra_total_volume": 25256020.5021,
+          "consolidated_volume": 61176800,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 0,
+        "shortPressureProxy": {
+          "score_0_100": 0,
+          "direction": "muted",
+          "short_volume_ratio": 0.301912,
+          "short_exempt_ratio": 0.001231,
+          "short_volume": 7625101.3146,
+          "short_exempt_volume": 31086,
+          "total_volume": 25256020.5021,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": null,
+        "directNewsToneProxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 0,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 0,
+          "article_count": 0,
+          "attention_score_0_100": null,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": [
+          "direct_news_tone_proxy_requires_source_or_rate_limit_retry"
+        ]
+      }
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "as_of": "2026-06-28T11:19:16.227Z",
+      "market_scope": "us",
+      "source_families": [
+        "computed/fenok_signals.json",
+        "data/yf/finance/{TICKER}.json",
+        "data/yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
+      ],
+      "long_term": {
+        "profitabilityScore": 88.23,
+        "durabilityProfitabilityScore": 92.86,
+        "growthScore": 75.19,
+        "upsidePotentialScore": 62.62,
+        "downsidePressureScore": 37.44,
+        "peerSimilarityScore": 84.11,
+        "sp500TrackingSimilarityScore": 82.99,
+        "sp500TrackingSimilarity": {
+          "score_0_100": 82.99,
+          "direction": "tracks_sp500",
+          "correlation_1y": 0.6599,
+          "beta_1y": 1.8694,
+          "overlap_days": 250,
+          "basis": "daily_return_correlation_vs_spy_1y"
+        }
+      },
+      "short_term": {
+        "technicalFlowScore": 56.96,
+        "technicalIndicatorProxyScore": 36.42,
+        "technicalIndicatorProxy": {
+          "score_0_100": 36.42,
+          "direction": "neutral",
+          "coverage_ratio": 1,
+          "basis": "local_1y_ohlcv_rsi_ma_momentum_volume_proxy",
+          "indicators": {
+            "latest_close": 192.53,
+            "ma20": 207.7142,
+            "ma50": 209.9179,
+            "ma200": 190.428,
+            "rsi14": 38.73,
+            "latest_volume": 178906300,
+            "avg_volume_20d": 169900335,
+            "components": {
+              "return_20d": 14.19,
+              "return_60d": 59.21,
+              "ma20_position": 30,
+              "ma50_position": 30,
+              "ma200_position": 80,
+              "rsi14": 21.84,
+              "volume_surge": 36.87
+            }
+          }
+        },
+        "netOptionsProxyScore": 56.97,
+        "netOptionsProxy": {
+          "score_0_100": 56.97,
+          "direction": "balanced_volume_proxy",
+          "coverage_ratio": 0.65,
+          "basis": "occ_listed_options_volume_skew_proxy",
+          "source_date": "20260626",
+          "call_volume": 4045792,
+          "put_volume": 2746518,
+          "total_volume": 6792310,
+          "put_call_volume_ratio": 0.678858,
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+        },
+        "offExchangeActivityProxyScore": 58.05,
+        "offExchangeActivityProxy": {
+          "score_0_100": 58.05,
+          "direction": "elevated_activity",
+          "off_exchange_share": 0.274154,
+          "finra_total_volume": 49047927.1274,
+          "consolidated_volume": 178906300,
+          "consolidated_volume_date": "2026-06-26",
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+        },
+        "shortPressureProxyScore": 3.14,
+        "shortPressureProxy": {
+          "score_0_100": 3.14,
+          "direction": "muted",
+          "short_volume_ratio": 0.360977,
+          "short_exempt_ratio": 0.002718,
+          "short_volume": 17705180.7952,
+          "short_exempt_volume": 133288,
+          "total_volume": 49047927.1274,
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+        },
+        "directNewsToneProxyScore": 50,
+        "directNewsToneProxy": {
+          "score_0_100": 50,
+          "direction": "neutral_headline_tilt",
+          "basis": "private_gdelt_headline_lexical_proxy",
+          "positive_cue_count": 0,
+          "negative_cue_count": 0,
+          "cue_bearing_article_count": 0,
+          "article_count": 5,
+          "attention_score_0_100": 20,
+          "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
+        }
+      },
+      "methodology_status": {
+        "copied_third_party_score": false,
+        "all_axes_represented": true,
+        "implemented_axes": [
+          "profitability",
+          "durability_profitability",
+          "growth",
+          "upside_potential",
+          "downside_pressure",
+          "peer_similarity",
+          "sp500_tracking_similarity",
+          "technical_indicator_proxy",
+          "off_exchange_activity_proxy",
+          "short_pressure_proxy",
+          "net_options_proxy"
+        ],
+        "pending_axes": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+<h2>Fenok per-signal help popover — design v0.1</h2>
+<p class="subtitle">Anchored popover card for the /stock detail card and screener expanded row</p>
+
+<div class="section">
+  <h3>1. In-context mockup: /stock detail card</h3>
+  <div class="mockup" style="max-width:720px;">
+    <div class="mockup-header">Fenok 신호 분석 · 신뢰 높음 · 매수권유 아님</div>
+    <div class="mockup-body" style="padding:16px;position:relative;">
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:120px;height:120px;border:1px dashed #ccc;border-radius:8px;display:grid;place-items:center;font-size:11px;color:#666;">레이더</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-weight:800;font-size:13px;">수익성</span>
+              <span style="font-size:10px;color:#666;">기업의 이익 창출 능력과 자본 효율성</span>
+              <span style="font-size:10px;font-weight:800;border:1px solid #999;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">?</span>
+            </div>
+            <span style="font-family:monospace;font-weight:800;font-size:13px;">72 <span style="font-size:10px;color:#666;">우호</span></span>
+          </div>
+          <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-bottom:10px;"><div style="width:72%;height:100%;background:#22c55e;"></div></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-weight:800;font-size:13px;">성장</span>
+              <span style="font-size:10px;color:#666;">향후 매출·이익 성장 잠재력</span>
+            </div>
+            <span style="font-family:monospace;font-weight:800;font-size:13px;">58 <span style="font-size:10px;color:#666;">중립</span></span>
+          </div>
+          <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden;"><div style="width:58%;height:100%;background:#f59e0b;"></div></div>
+        </div>
+      </div>
+
+      <!-- Popover -->
+      <div style="position:absolute;left:260px;top:78px;width:240px;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:12px;z-index:10;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <strong style="font-size:12px;">수익성</strong>
+          <span style="font-size:10px;color:#666;">score 72 · 우호</span>
+        </div>
+        <p style="font-size:11px;line-height:1.5;margin-bottom:10px;color:#333;">
+          기업의 이익 창출 능력과 자본 효율성을 종합한 Fenok 파생 신호예요.
+        </p>
+        <table style="width:100%;font-size:10px;border-collapse:collapse;margin-bottom:10px;">
+          <tr style="background:#f0fdf4;"><td style="padding:4px 6px;border:1px solid #eee;">81–100</td><td style="padding:4px 6px;border:1px solid #eee;">강함</td></tr>
+          <tr style="background:#ecfdf5;"><td style="padding:4px 6px;border:1px solid #eee;">61–80</td><td style="padding:4px 6px;border:1px solid #eee;">우호</td></tr>
+          <tr style="background:#fffbeb;"><td style="padding:4px 6px;border:1px solid #eee;">41–60</td><td style="padding:4px 6px;border:1px solid #eee;">중립</td></tr>
+          <tr style="background:#fef2f2;"><td style="padding:4px 6px;border:1px solid #eee;">0–40</td><td style="padding:4px 6px;border:1px solid #eee;">위약</td></tr>
+        </table>
+        <p style="font-size:9px;color:#666;margin:0;">Fenok 파생 신호 · 매수권유 아님</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. Component surface</h3>
+  <pre style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:6px;font-size:11px;overflow:auto;">&lt;SignalHelpPopover
+  signal="profitability"        // keyof FenokSignalsSummaryRecord
+  trigger={"icon" | "label"}    // icon button or whole label row
+  placement={"auto" | "top" | "bottom"}
+/&gt;</pre>
+  <ul style="font-size:11px;line-height:1.7;margin-top:8px;">
+    <li><strong>Trigger:</strong> small circular “?” icon next to the signal label (same pattern as MetricHelp, but tokenized).</li>
+    <li><strong>Anchor:</strong> popover is positioned relative to the trigger; auto-flips if it would overflow viewport.</li>
+    <li><strong>Content:</strong> signal label + current score/direction, one-sentence interpretation, 4-band 0–100 scale table, disclaimer footer.</li>
+    <li><strong>Scale copy:</strong> 0–40 위약, 41–60 중립, 61–80 우호, 81–100 강함 (signal-specific labels configurable).</li>
+    <li><strong>Accessibility:</strong> <code>aria-expanded</code>, <code>aria-controls</code>, focus trap, Escape to close, click-outside to close, return focus to trigger.</li>
+    <li><strong>Token rule:</strong> only <code>--c-*</code> CSS vars; no named Tailwind colors in W2-scoped files.</li>
+    <li><strong>Extension:</strong> config-driven signal registry makes adding v0.2 axes a data change, not markup change.</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>3. Files / data flow</h3>
+  <ul style="font-size:11px;line-height:1.7;">
+    <li><code>src/components/screener/FenokSignalHelpPopover.tsx</code> — popover component + positioning hook.</li>
+    <li><code>src/lib/fenok-signals/signal-help-config.ts</code> — registry of signal metadata (label, interpretation, scale labels, direction map).</li>
+    <li>Wired from <code>FenokSignalLensCard</code> (full detail) and <code>StockDetailPanel</code> (screener expanded row) via the existing <code>FenokSignalsSummaryRecord</code>.</li>
+  </ul>
+</div>

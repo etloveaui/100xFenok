@@ -1,0 +1,64 @@
+<h2>Fenok per-signal educational popup: 3 approaches</h2>
+<p class="subtitle">Which interaction model fits the screener + /stock detail tiers best?</p>
+
+<div class="options">
+  <div class="option" data-choice="tooltip" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Hover tooltip (MetricHelp style)</h3>
+      <div class="mockup" style="margin: 0.75rem 0;">
+        <div class="mockup-header">수익성 <span style="float:right">?</span></div>
+        <div class="mockup-body" style="position:relative;min-height:80px;">
+          <div style="position:absolute;top:28px;left:12px;width:160px;border:1px solid #ccc;background:#fff;padding:6px;border-radius:4px;font-size:10px;">
+            <strong>수익성</strong><br/>
+            기업의 이익 창출 능력과 자본 효율성<br/>
+            0-40 위약 / 41-60 중립 / 61-80 우호 / 81-100 강함
+          </div>
+        </div>
+      </div>
+      <p>Pros: trivial reuse of existing MetricHelp pattern, no click state.<br/>Cons: cramped for 4-10 signals, mobile hover is awkward, hard to include scale + disclaimer.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="drawer" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Slide-over drawer / bottom sheet</h3>
+      <div class="mockup" style="margin: 0.75rem 0;position:relative;overflow:hidden;">
+        <div class="mockup-body" style="min-height:80px;">
+          <div style="position:absolute;right:0;top:0;bottom:0;width:55%;border-left:1px solid #ccc;background:#fafafa;padding:8px;font-size:10px;">
+            <strong>수익성</strong><br/>
+            · 0-40 위약<br/>
+            · 41-60 중립<br/>
+            · 61-80 우호<br/>
+            · 81-100 강함<br/>
+            Fenok 파생 신호 · 매수권유 아님
+          </div>
+        </div>
+      </div>
+      <p>Pros: room for long copy, scales to many signals, clean mobile UX.<br/>Cons: disconnects from the signal that opened it, heavier transition, may feel like a new page.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="popover" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Anchored popover card (recommended)</h3>
+      <div class="mockup" style="margin: 0.75rem 0;position:relative;overflow:visible;">
+        <div class="mockup-header">Fenok 신호 분석</div>
+        <div class="mockup-body" style="min-height:80px;">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;">
+            <span>수익성</span>
+            <span style="font-size:9px;border:1px solid #999;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;">?</span>
+          </div>
+          <div style="position:absolute;left:48px;top:42px;width:180px;border:1px solid #ccc;background:#fff;padding:8px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.12);font-size:10px;z-index:10;">
+            <strong>수익성</strong><br/>
+            0-40 위약 / 41-60 중립 / 61-80 우호 / 81-100 강함<br/>
+            <span style="color:#666;">Fenok 파생 신호 · 매수권유 아님</span>
+          </div>
+        </div>
+      </div>
+      <p>Pros: visually anchored to trigger, rich content, scales to 6-10 signals, works on click for mobile, easy Escape/click-out dismiss.<br/>Cons: needs small positioning utility; must avoid viewport overflow.</p>
+    </div>
+  </div>
+</div>
