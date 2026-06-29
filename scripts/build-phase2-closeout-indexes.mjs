@@ -955,6 +955,7 @@ function buildStockActionIndex() {
       const quality_flags = Array.from(new Set([...qualityFlags(stock, context), ...action.scoreQualityFlags])).sort();
       delete action.scoreQualityFlags;
       return {
+        asset_type: "stock",
         symbol,
         ...normalized,
         marketScope,

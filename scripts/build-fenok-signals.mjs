@@ -1068,7 +1068,9 @@ function buildFenokSignalsSummary(fenokSignals) {
 }
 
 function buildFenokSignals(stockActionIndex) {
-  const rows = Array.isArray(stockActionIndex.rows) ? stockActionIndex.rows : [];
+  const rows = (Array.isArray(stockActionIndex.rows) ? stockActionIndex.rows : []).filter(
+    (row) => (row.asset_type ?? "stock") === "stock",
+  );
   const stats = buildMetricStats(rows);
   const financialsByTicker = readFinancialsByTicker(rows.map((row) => row.symbol).filter(Boolean));
   const flowByTicker = readFlowProxiesByTicker();

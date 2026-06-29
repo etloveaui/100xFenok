@@ -15,6 +15,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const INDEX_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-edge-coverage-index.json");
 const JSON_MODE = process.argv.includes("--json");
+const REQUIRE_ACTIVE_S0_DAILY_GATED = process.argv.includes("--require-active-s0-daily-gated");
+const EXPECTED_ACTIVE_S0_STOCK_COUNT = 1066;
+const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
 
 function readJson(absPath) {
   try {
@@ -47,6 +50,15 @@ function requirementsReady(requirements) {
     && Object.values(requirements ?? {}).every(Boolean);
 }
 
+function activeS0DailyGatedReady(track, activeCount) {
+  return Boolean(track)
+    && activeCount === EXPECTED_ACTIVE_S0_STOCK_COUNT
+    && Number(track.denominator) === activeCount
+    && track.readiness_status === "ready"
+    && track.public_done_claim_allowed === true
+    && requirementsReady(track.requirements);
+}
+
 const index = readJson(INDEX_PATH);
 const errors = [];
 const warnings = [];
@@ -71,6 +83,7 @@ const sourceRows = asArray(sourceAvailability.sources);
 const composites = index.source_availability_composites ?? {};
 const readiness = index.public_scoring_readiness ?? {};
 const readinessTracks = asArray(readiness.tracks);
+const activeS0ReadinessTrack = readinessTracks.find((track) => track?.id === ACTIVE_S0_TRACK_ID);
 const freshnessChecks = asArray(index.freshness_gate?.checks);
 
 if (!activeTotal) add(errors, "active_scoring_universe.total must be derived and non-zero");
@@ -138,6 +151,30 @@ for (const track of readinessTracks) {
   }
 }
 
+if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
+  if (activeTotal !== EXPECTED_ACTIVE_S0_STOCK_COUNT) {
+    add(errors, `strict S0 gate requires active_scoring_universe.total=${EXPECTED_ACTIVE_S0_STOCK_COUNT}; got ${activeTotal}`);
+  }
+  if (!activeS0ReadinessTrack) {
+    add(errors, `strict S0 gate requires public_scoring_readiness track '${ACTIVE_S0_TRACK_ID}'`);
+  } else {
+    if (Number(activeS0ReadinessTrack.denominator) !== activeTotal) {
+      add(errors, `${ACTIVE_S0_TRACK_ID}: denominator ${activeS0ReadinessTrack.denominator} must equal active S0 total ${activeTotal}`);
+    }
+    for (const requirement of ["source_available", "normalized", "joined_to_target_universe", "scored", "public", "daily", "gated"]) {
+      if (activeS0ReadinessTrack.requirements?.[requirement] !== true) {
+        add(errors, `${ACTIVE_S0_TRACK_ID}: strict S0 DAILY/GATED requires requirements.${requirement}=true`);
+      }
+    }
+    if (activeS0ReadinessTrack.readiness_status !== "ready") {
+      add(errors, `${ACTIVE_S0_TRACK_ID}: strict S0 DAILY/GATED requires readiness_status=ready`);
+    }
+    if (activeS0ReadinessTrack.public_done_claim_allowed !== true) {
+      add(errors, `${ACTIVE_S0_TRACK_ID}: strict S0 DAILY/GATED requires public_done_claim_allowed=true`);
+    }
+  }
+}
+
 for (const check of freshnessChecks) {
   if (check.status === "stale" || check.status === "missing") {
     add(errors, `${check.id}: ${check.status}`, check);
@@ -165,6 +202,18 @@ const result = {
     public_done_claim_allowed: track.public_done_claim_allowed === true,
     public_daily_gated: requirementsReady(track.requirements),
   })),
+  strict_s0_daily_gated: REQUIRE_ACTIVE_S0_DAILY_GATED ? {
+    required: true,
+    expected_active_stock_count: EXPECTED_ACTIVE_S0_STOCK_COUNT,
+    active_stock_count: activeTotal,
+    track_id: ACTIVE_S0_TRACK_ID,
+    track_found: Boolean(activeS0ReadinessTrack),
+    ok: activeS0DailyGatedReady(activeS0ReadinessTrack, activeTotal),
+    stage: activeS0ReadinessTrack?.stage ?? null,
+    readiness_status: activeS0ReadinessTrack?.readiness_status ?? null,
+    public_done_claim_allowed: activeS0ReadinessTrack?.public_done_claim_allowed === true,
+    requirements: activeS0ReadinessTrack?.requirements ?? null,
+  } : null,
   checks: freshnessChecks.map((check) => ({
     id: check.id,
     status: check.status,
@@ -187,6 +236,10 @@ if (JSON_MODE) {
   console.log(`source availability rows: ${sourceRows.length} (not public scoring)`);
   for (const track of result.public_scoring_readiness) {
     console.log(`- ${track.public_done_claim_allowed ? "OK" : "WARN"} ${track.id} stage=${track.stage} public_done=${track.public_done_claim_allowed}`);
+  }
+  if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
+    const strict = result.strict_s0_daily_gated;
+    console.log(`strict S0 DAILY/GATED: ${strict.ok ? "PASS" : "FAIL"} track=${strict.track_id} active=${strict.active_stock_count}/${strict.expected_active_stock_count}`);
   }
   for (const check of result.checks) {
     console.log(`- ${check.result} ${check.id}${check.source_date ? ` source_date=${check.source_date}` : ""}${check.age_days != null ? ` age_days=${check.age_days}` : ""}`);

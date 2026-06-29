@@ -16,8 +16,21 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 
-const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.1";
+const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.2";
 const DEFAULT_EXAMPLE_LIMIT = 12;
+const JOINED_MIN_EVIDENCE_FAMILIES = 3;
+const JOINED_US_EXCHANGES = new Set([
+  "AMEX",
+  "ASE",
+  "BTS",
+  "NCM",
+  "NGM",
+  "NMS",
+  "NASDAQ",
+  "NYQ",
+  "NYSE",
+  "PCX",
+]);
 
 function parseArgs(argv) {
   const args = {
@@ -148,6 +161,146 @@ function existingTickerFiles(tickers, relDir) {
   return tickers.filter((item) => fs.existsSync(abs(path.join(relDir, `${item}.json`))));
 }
 
+function numericFact(detail, key) {
+  const value = detail?.facts?.[key]?.value;
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function inferCountryScope(identity) {
+  const explicitCountry = identity?.country ?? identity?.country_code ?? identity?.countryCode ?? identity?.market_country;
+  if (explicitCountry) return String(explicitCountry).trim().toUpperCase();
+
+  const exchange = String(identity?.exchange ?? "").trim().toUpperCase();
+  const currency = String(identity?.currency ?? "").trim().toUpperCase();
+  if (currency === "USD" && JOINED_US_EXCHANGES.has(exchange)) return "US";
+
+  return null;
+}
+
+function evidenceFamiliesForTicker(item, row, {
+  yfSet,
+  secSet,
+  slickUniverseSet,
+  slickStockFileSet,
+  rawMasterSet,
+}) {
+  const sources = row?.sources ?? {};
+  const families = [];
+
+  if (sources.yf === true || yfSet.has(item)) families.push("yf");
+  if (sources.stockanalysis === true || sources.stockanalysis_yf_fallback === true) families.push("stockanalysis");
+  if (sources.slickcharts === true || slickUniverseSet.has(item) || slickStockFileSet.has(item)) families.push("slickcharts");
+  if (secSet.has(item)) families.push("sec13f");
+  if (rawMasterSet.has(item)) families.push("raw_company_master");
+
+  return [...new Set(families)].sort((a, b) => a.localeCompare(b));
+}
+
+function countBlockers(statuses) {
+  return countBy(statuses.flatMap((status) => status.blockers), (blocker) => blocker);
+}
+
+function joinedStatusSummary(status) {
+  return {
+    ticker: status.ticker,
+    stage: status.stage,
+    blockers: status.blockers,
+    evidence_family_count: status.evidence_family_count,
+    evidence_families: status.evidence_families,
+    country_scope: status.country_scope,
+  };
+}
+
+function buildS1JoinedGate({
+  gapTickers,
+  marketByTicker,
+  s0Set,
+  etfAssetSet,
+  yfSet,
+  secSet,
+  slickUniverseSet,
+  slickStockFileSet,
+  rawMasterSet,
+  examples,
+  full,
+}) {
+  const statuses = gapTickers.map((item) => {
+    const row = marketByTicker.get(item);
+    const detail = readJsonOrNull(path.join("data/computed/market_facts/tickers", `${item}.json`));
+    const identity = detail?.identity ?? {};
+    const countryScope = inferCountryScope(identity);
+    const evidenceFamilies = evidenceFamiliesForTicker(item, row, {
+      yfSet,
+      secSet,
+      slickUniverseSet,
+      slickStockFileSet,
+      rawMasterSet,
+    });
+    const checks = {
+      asset_type_stock: row?.asset_type === "stock",
+      outside_s0: !s0Set.has(item),
+      etf_lane_excluded: !etfAssetSet.has(item),
+      exact_ticker_contract: ticker(row?.ticker) === item,
+      market_currency_country_scope: Boolean(identity.exchange && identity.currency && countryScope),
+      price_or_market_cap: numericFact(detail, "price") || numericFact(detail, "market_cap"),
+      evidence_families_min3: evidenceFamilies.length >= JOINED_MIN_EVIDENCE_FAMILIES,
+    };
+    const blockers = Object.entries(checks)
+      .filter(([, ok]) => !ok)
+      .map(([key]) => key)
+      .sort();
+    const stage = blockers.length === 0 ? "JOINED_READY_NOT_SCORED" : "NORMALIZED_NOT_JOINED";
+
+    return {
+      ticker: item,
+      status: blockers.length === 0 ? "joined_ready" : "joined_not_ready",
+      stage,
+      evidence_family_count: evidenceFamilies.length,
+      evidence_families: evidenceFamilies,
+      country_scope: countryScope,
+      checks,
+      blockers,
+    };
+  });
+
+  const ready = statuses.filter((status) => status.status === "joined_ready");
+  const notReady = statuses.filter((status) => status.status === "joined_not_ready");
+  const etfLeaks = statuses.filter((status) => !status.checks.etf_lane_excluded);
+  const classTickerStatuses = statuses.filter((status) => status.ticker.includes("."));
+
+  return {
+    stage_ceiling: "JOINED_READY_NOT_SCORED",
+    contract: {
+      claim_scope: "S1 normalized stock candidates only; this gate does not score, publish, fetch, or write data.",
+      ready_requires_all_checks: [
+        "asset_type_stock",
+        "outside_s0",
+        "etf_lane_excluded",
+        "exact_ticker_contract",
+        "market_currency_country_scope",
+        "price_or_market_cap",
+        "evidence_families_min3",
+      ],
+      minimum_evidence_families: JOINED_MIN_EVIDENCE_FAMILIES,
+      country_scope_note: "Explicit country is used when present; otherwise USD plus a known US exchange infers US.",
+    },
+    counts: {
+      total: statuses.length,
+      joined_ready: ready.length,
+      joined_not_ready: notReady.length,
+      etf_lane_leaks: etfLeaks.length,
+      class_tickers_checked: classTickerStatuses.length,
+    },
+    blocker_counts: countBlockers(statuses),
+    examples: {
+      joined_ready: sample(ready.map(joinedStatusSummary), examples),
+      joined_not_ready: sample(notReady.map(joinedStatusSummary), examples),
+      class_tickers: classTickerStatuses.map(joinedStatusSummary),
+    },
+    candidate_statuses: full ? statuses : undefined,
+  };
+}
+
 function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
   const signals = readJson("data/computed/fenok_signals.json");
   const marketFacts = readJson("data/computed/market_facts/index.json");
@@ -206,6 +359,19 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
   const rawMasterOverlapS0 = setIntersectionCount(rawMasterTickerList, s0Set);
   const rawMasterOnlyNotNormalized = rawMasterTickerList
     .filter((item) => !s0Set.has(item) && !stockAssetSet.has(item) && !etfAssetSet.has(item));
+  const s1JoinedGate = buildS1JoinedGate({
+    gapTickers,
+    marketByTicker,
+    s0Set,
+    etfAssetSet,
+    yfSet,
+    secSet,
+    slickUniverseSet,
+    slickStockFileSet,
+    rawMasterSet,
+    examples,
+    full,
+  });
 
   const hardChecks = [
     {
@@ -227,6 +393,22 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
       id: "class_ticker_exact_match_guard",
       ok: !gapTickers.includes("BRK.B") && classTickerGap.includes("BF.B"),
       detail: "Use ticker, not ticker_normalized, when comparing S0 to market_facts",
+    },
+    {
+      id: "s1_joined_gate_classifies_all_gap",
+      ok: s1JoinedGate.counts.total === gapTickers.length
+        && s1JoinedGate.counts.joined_ready + s1JoinedGate.counts.joined_not_ready === gapTickers.length,
+      detail: `${s1JoinedGate.counts.joined_ready}+${s1JoinedGate.counts.joined_not_ready} vs ${gapTickers.length}`,
+    },
+    {
+      id: "s1_joined_gate_no_etf_leakage",
+      ok: s1JoinedGate.counts.etf_lane_leaks === 0,
+      detail: `${s1JoinedGate.counts.etf_lane_leaks} ETF rows in S1 JOINED gate`,
+    },
+    {
+      id: "s1_joined_gate_preserves_class_tickers",
+      ok: (s1JoinedGate.examples.class_tickers ?? []).every((status) => status.ticker === "BF.B"),
+      detail: `class tickers checked=${s1JoinedGate.counts.class_tickers_checked}`,
     },
   ];
 
@@ -303,6 +485,7 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
         unresolved_identity: "source ticker is not mapped to stock or ETF in market_facts.",
         etf_lane_excluded: "asset_type=etf belongs to S3 and must not increase S1 stock coverage.",
       },
+      joined_gate: s1JoinedGate,
       gap_tickers: full ? gapTickers : undefined,
       examples: {
         gap: sample(gapTickers, examples),
@@ -401,6 +584,8 @@ function printHuman(result) {
   console.log(`S1 gap source mix: ${JSON.stringify(result.s1_stock_promotion_candidates.source_mix_for_gap)}`);
   console.log(`S1 reason counts: ${JSON.stringify(result.s1_stock_promotion_candidates.reason_counts)}`);
   console.log(`S1 gap overlaps: ${JSON.stringify(result.s1_stock_promotion_candidates.gap_overlap_counts)}`);
+  console.log(`S1 JOINED gate counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.counts)}`);
+  console.log(`S1 JOINED blockers: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.blocker_counts)}`);
   console.log(
     `S2 fuel: YF=${result.s2_stock_expansion_fuel.yf.ticker_payloads_excluding_summary}, `
     + `SEC13F=${result.s2_stock_expansion_fuel.sec13f.by_ticker_keys}, `
@@ -425,7 +610,7 @@ function printHuman(result) {
 
 const args = parseArgs(process.argv.slice(2));
 const audit = buildAudit(args);
-if (args.json) console.log(JSON.stringify(audit, null, 2));
+if (args.json) process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
 else printHuman(audit);
 
-process.exit(args.check && !audit.ok ? 1 : 0);
+process.exitCode = args.check && !audit.ok ? 1 : 0;
