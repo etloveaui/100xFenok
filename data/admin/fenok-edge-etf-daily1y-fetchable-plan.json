@@ -1,0 +1,7049 @@
+{
+  "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
+  "generated_at": "2026-06-29T22:57:01.417Z",
+  "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
+  "source_files": {
+    "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
+    "stockanalysis_detail_dir": "data/stockanalysis/etfs",
+    "yf_finance_dir": "data/yf/finance",
+    "history_gap_report": "data/stockanalysis/backfill/history_gap_report_latest.json",
+    "coverage_index": "data/admin/fenok-edge-coverage-index.json",
+    "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
+  },
+  "selector_policy": {
+    "network": "none",
+    "writes_raw": false,
+    "min_daily_1y_rows": 200,
+    "universe": "scored ETFs from fenok_etf_signals_summary.json",
+    "dispatch_target": "fetch-stockanalysis.yml",
+    "dispatch_inputs": {
+      "history_gaps_only": "true",
+      "required_history_periods": "daily_1y",
+      "incremental_etf_limit": "120"
+    },
+    "caveat": "The exact 584 readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
+  },
+  "counts": {
+    "scored_etf_count": 4484,
+    "complete": 3366,
+    "fetchable": 584,
+    "inception_limited": 534,
+    "missing": 1118,
+    "equation_ok": true,
+    "matches_history_gap_report": true,
+    "matches_coverage_index": true,
+    "matches_coverage_index_daily_check": true
+  },
+  "yf_local_crosscheck": {
+    "complete": 371,
+    "missing_or_lt_min_rows": 4113,
+    "min_daily_1y_rows": 200,
+    "matches_exact_fetchable_selector": false,
+    "sample": [
+      {
+        "ticker": "AAA",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAAA",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAAC",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAAD",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAAP",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AADR",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAEQ",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAPY",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAUA",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      },
+      {
+        "ticker": "AAUM",
+        "yf_history_rows": null,
+        "yf_missing_file_or_history": true
+      }
+    ],
+    "caveat": "Do not use the local YF-only count as the ETF readiness blocker unless the product contract changes; it currently over-selects versus the 584 StockAnalysis continuity blocker."
+  },
+  "bounded_batches": {
+    "can_drive_bounded_ticker_batches": true,
+    "default_batch_size": 120,
+    "batch_count": 5,
+    "command_template": "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
+    "first_batch_tickers": [
+      "AAAD",
+      "AAAP",
+      "AAAU",
+      "AAPR",
+      "AAPW",
+      "ABXB",
+      "ACGO",
+      "ACGR",
+      "ACII",
+      "ACLC",
+      "ACVU",
+      "ACYQ",
+      "ADDS",
+      "AETH",
+      "AFGR",
+      "AIOO",
+      "AJAN",
+      "AJUL",
+      "AKAF",
+      "AMDW",
+      "AMEI",
+      "AMEM",
+      "AMGR",
+      "AMHI",
+      "AMUN",
+      "AMZW",
+      "APDB",
+      "APOC",
+      "APRH",
+      "APRJ",
+      "APRT",
+      "APRW",
+      "AQLG",
+      "ARKB",
+      "ARLI",
+      "ARLU",
+      "ARMW",
+      "ARMY",
+      "ASCI",
+      "ASD",
+      "ASEC",
+      "AUGU",
+      "AVGW",
+      "AVNV",
+      "BABW",
+      "BALT",
+      "BAPR",
+      "BAR",
+      "BAUG",
+      "BAVA",
+      "BBB",
+      "BCCC",
+      "BCEM",
+      "BD",
+      "BDEC",
+      "BETE",
+      "BETH",
+      "BFEB",
+      "BGCG",
+      "BGEG",
+      "BGGG",
+      "BGIA",
+      "BGLD",
+      "BHYP",
+      "BITB",
+      "BITC",
+      "BITO",
+      "BITS",
+      "BJAN",
+      "BJUL",
+      "BJUN",
+      "BKLG",
+      "BLST",
+      "BLTD",
+      "BMAR",
+      "BMAY",
+      "BNDW",
+      "BNDY",
+      "BNOV",
+      "BOCT",
+      "BRCE",
+      "BREE",
+      "BRIE",
+      "BRKW",
+      "BROL",
+      "BRRR",
+      "BRSM",
+      "BSCA",
+      "BSEP",
+      "BSGR",
+      "BSGT",
+      "BSJY",
+      "BSOL",
+      "BSTP",
+      "BSTS",
+      "BSTU",
+      "BSTV",
+      "BTC",
+      "BTCK",
+      "BTCO",
+      "BTCW",
+      "BTRN",
+      "BUCK",
+      "BWOW",
+      "CBOJ",
+      "CBOO",
+      "CBOY",
+      "CBTJ",
+      "CBTO",
+      "CBTY",
+      "CBXO",
+      "CBXY",
+      "CERY",
+      "CEW",
+      "CGOV",
+      "CHNL",
+      "CHYG",
+      "CIEI",
+      "CIVG",
+      "CJUN"
+    ]
+  },
+  "tickers": [
+    "AAAD",
+    "AAAP",
+    "AAAU",
+    "AAPR",
+    "AAPW",
+    "ABXB",
+    "ACGO",
+    "ACGR",
+    "ACII",
+    "ACLC",
+    "ACVU",
+    "ACYQ",
+    "ADDS",
+    "AETH",
+    "AFGR",
+    "AIOO",
+    "AJAN",
+    "AJUL",
+    "AKAF",
+    "AMDW",
+    "AMEI",
+    "AMEM",
+    "AMGR",
+    "AMHI",
+    "AMUN",
+    "AMZW",
+    "APDB",
+    "APOC",
+    "APRH",
+    "APRJ",
+    "APRT",
+    "APRW",
+    "AQLG",
+    "ARKB",
+    "ARLI",
+    "ARLU",
+    "ARMW",
+    "ARMY",
+    "ASCI",
+    "ASD",
+    "ASEC",
+    "AUGU",
+    "AVGW",
+    "AVNV",
+    "BABW",
+    "BALT",
+    "BAPR",
+    "BAR",
+    "BAUG",
+    "BAVA",
+    "BBB",
+    "BCCC",
+    "BCEM",
+    "BD",
+    "BDEC",
+    "BETE",
+    "BETH",
+    "BFEB",
+    "BGCG",
+    "BGEG",
+    "BGGG",
+    "BGIA",
+    "BGLD",
+    "BHYP",
+    "BITB",
+    "BITC",
+    "BITO",
+    "BITS",
+    "BJAN",
+    "BJUL",
+    "BJUN",
+    "BKLG",
+    "BLST",
+    "BLTD",
+    "BMAR",
+    "BMAY",
+    "BNDW",
+    "BNDY",
+    "BNOV",
+    "BOCT",
+    "BRCE",
+    "BREE",
+    "BRIE",
+    "BRKW",
+    "BROL",
+    "BRRR",
+    "BRSM",
+    "BSCA",
+    "BSEP",
+    "BSGR",
+    "BSGT",
+    "BSJY",
+    "BSOL",
+    "BSTP",
+    "BSTS",
+    "BSTU",
+    "BSTV",
+    "BTC",
+    "BTCK",
+    "BTCO",
+    "BTCW",
+    "BTRN",
+    "BUCK",
+    "BWOW",
+    "CBOJ",
+    "CBOO",
+    "CBOY",
+    "CBTJ",
+    "CBTO",
+    "CBTY",
+    "CBXO",
+    "CBXY",
+    "CERY",
+    "CEW",
+    "CGOV",
+    "CHNL",
+    "CHYG",
+    "CIEI",
+    "CIVG",
+    "CJUN",
+    "CLNK",
+    "CLOO",
+    "CMAY",
+    "COIW",
+    "COM",
+    "COMD",
+    "COSW",
+    "CPAG",
+    "CPHY",
+    "CPNJ",
+    "CPNM",
+    "CPNQ",
+    "CPNS",
+    "CPRA",
+    "CPRJ",
+    "CPRO",
+    "CPRY",
+    "CPSA",
+    "CPSD",
+    "CPSF",
+    "CPSJ",
+    "CPSM",
+    "CPSN",
+    "CPSO",
+    "CPSP",
+    "CPSR",
+    "CPST",
+    "CPSU",
+    "CPSY",
+    "CRDD",
+    "CRIB",
+    "CRUX",
+    "CSEN",
+    "CTJN",
+    "CUSD",
+    "DDFY",
+    "DDFZ",
+    "DDSQ",
+    "DDTY",
+    "DDTZ",
+    "DDX",
+    "DECU",
+    "DEFI",
+    "DFAL",
+    "DHLX",
+    "DHSB",
+    "DLMY",
+    "DOJE",
+    "DQJN",
+    "DRMP",
+    "DRUP",
+    "DUSG",
+    "DVIN",
+    "DVQQ",
+    "DVRE",
+    "DVSP",
+    "DVUT",
+    "DVXB",
+    "DVXC",
+    "DVXE",
+    "DVXF",
+    "DVXK",
+    "DVXP",
+    "DVXV",
+    "DVXY",
+    "DWWN",
+    "EALT",
+    "EAPR",
+    "EBUF",
+    "EDGQ",
+    "EDGX",
+    "EETH",
+    "EHCC",
+    "EJAN",
+    "EMCS",
+    "EMEM",
+    "EMJN",
+    "EMSC",
+    "EOCT",
+    "ESUM",
+    "ETH",
+    "ETHA",
+    "ETHB",
+    "ETHE",
+    "ETHV",
+    "ETHW",
+    "EVMT",
+    "EZBC",
+    "EZET",
+    "EZMO",
+    "FBTC",
+    "FEBU",
+    "FETH",
+    "FGDL",
+    "FHIL",
+    "FITZ",
+    "FLAO",
+    "FLJJ",
+    "FOTO",
+    "FPAA",
+    "FREI",
+    "FSOL",
+    "FSTB",
+    "FXA",
+    "FXB",
+    "FXC",
+    "FXE",
+    "FXF",
+    "FXY",
+    "GASZ",
+    "GAVA",
+    "GBTC",
+    "GCC",
+    "GCSH",
+    "GDLC",
+    "GDOG",
+    "GDT",
+    "GDXW",
+    "GEQ",
+    "GISC",
+    "GLD",
+    "GLDM",
+    "GLDW",
+    "GLNK",
+    "GLTR",
+    "GMMA",
+    "GOOW",
+    "GOP",
+    "GPT",
+    "GSOL",
+    "GSUI",
+    "GTOH",
+    "HBMX",
+    "HBR",
+    "HIGH",
+    "HJUN",
+    "HODL",
+    "HOOW",
+    "HRSK",
+    "HULL",
+    "HYPG",
+    "HYSA",
+    "HYTI",
+    "HYTR",
+    "IAPR",
+    "IAU",
+    "IAUG",
+    "IAUM",
+    "IBCB",
+    "IBGM",
+    "IBHM",
+    "IBIC",
+    "IBIH",
+    "IBIJ",
+    "IBIK",
+    "IBIL",
+    "IBIM",
+    "IBIT",
+    "IBTR",
+    "IBUF",
+    "IDEC",
+    "IDEQ",
+    "IDJN",
+    "IDMY",
+    "IFEB",
+    "IGLD",
+    "IINC",
+    "IJAN",
+    "IJUL",
+    "IJUN",
+    "IMAR",
+    "IMAY",
+    "INOV",
+    "INYY",
+    "IOCT",
+    "ISEP",
+    "IVVW",
+    "IWMW",
+    "JADB",
+    "JAJL",
+    "JANI",
+    "JANT",
+    "JANU",
+    "JANW",
+    "JELM",
+    "JNEU",
+    "JOJO",
+    "JPO",
+    "JUDB",
+    "JULH",
+    "JULJ",
+    "JULT",
+    "JULU",
+    "JULW",
+    "JUNC",
+    "KAUG",
+    "KBUF",
+    "KCCA",
+    "KDEC",
+    "KFEB",
+    "KJAN",
+    "KJUL",
+    "KJUN",
+    "KMAR",
+    "KMAY",
+    "KNOV",
+    "KOCT",
+    "KPRO",
+    "KRYP",
+    "KSEP",
+    "KSPY",
+    "LAPR",
+    "LFEQ",
+    "LGCF",
+    "LJUL",
+    "LQTI",
+    "LSTB",
+    "LTCC",
+    "LTTI",
+    "LVIG",
+    "MAGY",
+    "MARU",
+    "MAUG",
+    "MAYC",
+    "MAYU",
+    "MBCE",
+    "MDCR",
+    "METW",
+    "MFEB",
+    "MIGO",
+    "MIVL",
+    "MJUN",
+    "MLPD",
+    "MMAR",
+    "MMAY",
+    "MMID",
+    "MNVR",
+    "MRA",
+    "MSBT",
+    "MSEP",
+    "MSFW",
+    "MSTB",
+    "MSTQ",
+    "MSTW",
+    "NAPR",
+    "NAUG",
+    "NDEC",
+    "NFEB",
+    "NFLW",
+    "NGIF",
+    "NISM",
+    "NJAN",
+    "NJUL",
+    "NJUN",
+    "NMAR",
+    "NMAY",
+    "NNOV",
+    "NOCT",
+    "NSEP",
+    "NTRL",
+    "NUDG",
+    "NUIF",
+    "NVBU",
+    "NVDW",
+    "NVPS",
+    "OCDB",
+    "OCTT",
+    "OCTU",
+    "OCTW",
+    "OILK",
+    "OPER",
+    "OPPJ",
+    "ORO",
+    "OUNZ",
+    "OWN",
+    "PALL",
+    "PAPR",
+    "PAUG",
+    "PBSC",
+    "PCEB",
+    "PCLC",
+    "PCPP",
+    "PCSG",
+    "PDBA",
+    "PDBC",
+    "PDEC",
+    "PFEB",
+    "PHYS",
+    "PJAN",
+    "PJUL",
+    "PJUN",
+    "PJUS",
+    "PLTM",
+    "PLTW",
+    "PMAR",
+    "PMAY",
+    "PNOV",
+    "POCT",
+    "PPLT",
+    "PRIZ",
+    "PSEP",
+    "PSLV",
+    "PSTP",
+    "PWRD",
+    "QBF",
+    "QBUF",
+    "QETH",
+    "QJN",
+    "QQJN",
+    "QQMY",
+    "QSOL",
+    "QTAP",
+    "QTJA",
+    "QTOC",
+    "QTUP",
+    "RAAR",
+    "RAAY",
+    "RACK",
+    "RBUF",
+    "RCLR",
+    "RCLY",
+    "RDTE",
+    "REGS",
+    "RIZE",
+    "RMHY",
+    "ROMO",
+    "RONB",
+    "RSJN",
+    "RWEM",
+    "RWLC",
+    "RYLG",
+    "SCA",
+    "SCJN",
+    "SEPU",
+    "SFGV",
+    "SGOL",
+    "SHRD",
+    "SIVR",
+    "SLV",
+    "SLWS",
+    "SMHC",
+    "SOEZ",
+    "SOLC",
+    "SPBC",
+    "SPDF",
+    "SPPP",
+    "SPUC",
+    "STXF",
+    "SUIS",
+    "SYZ",
+    "TAGS",
+    "TBIL",
+    "TBJL",
+    "TBLL",
+    "TCAI",
+    "TCAN",
+    "TDOG",
+    "TDOT",
+    "TEMR",
+    "TETH",
+    "TFGZ",
+    "TFJL",
+    "THIR",
+    "THY",
+    "THYP",
+    "TILC",
+    "TISC",
+    "TJAN",
+    "TJUL",
+    "TLDR",
+    "TLG",
+    "TNGY",
+    "TOCT",
+    "TOT",
+    "TOXR",
+    "TPAY",
+    "TPUT",
+    "TRUI",
+    "TRUO",
+    "TSLW",
+    "TSOL",
+    "TSPY",
+    "TSUI",
+    "TSYW",
+    "TYA",
+    "UBEW",
+    "UFIV",
+    "UFOX",
+    "UNHW",
+    "USDU",
+    "USE",
+    "USFR",
+    "USG",
+    "USVN",
+    "UTEN",
+    "UTHY",
+    "UTWY",
+    "UUPP",
+    "UX",
+    "VAVX",
+    "VBNB",
+    "VCHY",
+    "VDG",
+    "VDI",
+    "VDV",
+    "VIXM",
+    "VIXY",
+    "VOXP",
+    "VSOL",
+    "VUS",
+    "WAGN",
+    "WAMA",
+    "WDE",
+    "WDIG",
+    "WDRN",
+    "WELD",
+    "WRTH",
+    "WTIB",
+    "WTPI",
+    "XBIL",
+    "XDIV",
+    "XDQQ",
+    "XDSQ",
+    "XIGV",
+    "XLBI",
+    "XLCI",
+    "XLEI",
+    "XLFI",
+    "XLII",
+    "XLRI",
+    "XLSI",
+    "XLVI",
+    "XLYI",
+    "XRP",
+    "XRPC",
+    "XRPI",
+    "XRPR",
+    "XRPZ",
+    "XSHP",
+    "XSPC",
+    "XTJA",
+    "XTJL",
+    "XTOC",
+    "YBTC",
+    "YCLO",
+    "YETH",
+    "ZALT",
+    "ZAPR",
+    "ZAUG",
+    "ZDEK",
+    "ZFEB",
+    "ZHOG",
+    "ZINC",
+    "ZJAN",
+    "ZJUL",
+    "ZJUN",
+    "ZMAY",
+    "ZNOV",
+    "ZOCT",
+    "ZSB",
+    "ZSC",
+    "ZSEP",
+    "ZTAX",
+    "ZVOL"
+  ],
+  "rows": [
+    {
+      "ticker": "AAAD",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AAAP",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AAAU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AAPW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ABXB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ACGO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "ACGR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ACII",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ACLC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ACVU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ACYQ",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ADDS",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AFGR",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AIOO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 244
+    },
+    {
+      "ticker": "AJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AKAF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 247
+    },
+    {
+      "ticker": "AMDW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "AMEI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AMEM",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AMGR",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AMHI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AMUN",
+      "actual_rows": 166,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1986-03-17",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "AMZW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "APDB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 31
+    },
+    {
+      "ticker": "APOC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "APRH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "APRJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "APRT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "APRW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AQLG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 8
+    },
+    {
+      "ticker": "ARKB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ARLI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 55
+    },
+    {
+      "ticker": "ARLU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ARMW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 164
+    },
+    {
+      "ticker": "ARMY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 184
+    },
+    {
+      "ticker": "ASCI",
+      "actual_rows": 166,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1996-09-30",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ASD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "ASEC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 15
+    },
+    {
+      "ticker": "AUGU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "AVGW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "AVNV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BABW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 164
+    },
+    {
+      "ticker": "BALT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BAVA",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "BBB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BCCC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BCEM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 50
+    },
+    {
+      "ticker": "BD",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "BDEC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BETE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "BGCG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 14
+    },
+    {
+      "ticker": "BGEG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "BGGG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "BGIA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "BGLD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BHYP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 23
+    },
+    {
+      "ticker": "BITB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BITC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BITO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BITS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BKLG",
+      "actual_rows": 3,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 3
+    },
+    {
+      "ticker": "BLST",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 249
+    },
+    {
+      "ticker": "BLTD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 249
+    },
+    {
+      "ticker": "BMAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BNDW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BNDY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 241
+    },
+    {
+      "ticker": "BNOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BRCE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 164
+    },
+    {
+      "ticker": "BREE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 73
+    },
+    {
+      "ticker": "BRIE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 164
+    },
+    {
+      "ticker": "BRKW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BROL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 16
+    },
+    {
+      "ticker": "BRRR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BRSM",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "BSCA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "BSEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BSGR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "BSGT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 7
+    },
+    {
+      "ticker": "BSJY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "BSOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 160
+    },
+    {
+      "ticker": "BSTP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BSTS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "BSTU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "BSTV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "BTC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BTCK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "BTCO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BTCW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BTRN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BUCK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "BWOW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 139
+    },
+    {
+      "ticker": "CBOJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CBOO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 175
+    },
+    {
+      "ticker": "CBOY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 239
+    },
+    {
+      "ticker": "CBTJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CBTO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 175
+    },
+    {
+      "ticker": "CBTY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 239
+    },
+    {
+      "ticker": "CBXO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 175
+    },
+    {
+      "ticker": "CBXY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 239
+    },
+    {
+      "ticker": "CERY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CEW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CGOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "CHNL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 54
+    },
+    {
+      "ticker": "CHYG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "CIEI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "CIVG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "CJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "CLNK",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "CLOO",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "CMAY",
+      "actual_rows": 33,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "COIW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "COM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "COMD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 88
+    },
+    {
+      "ticker": "COSW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 163
+    },
+    {
+      "ticker": "CPAG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 214
+    },
+    {
+      "ticker": "CPHY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 214
+    },
+    {
+      "ticker": "CPNJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPNM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPNQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPNS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPRA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPRJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPRO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPRY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPST",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CPSY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "CRDD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 54
+    },
+    {
+      "ticker": "CRIB",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "CRUX",
+      "actual_rows": 66,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1986-01-09",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "CSEN",
+      "actual_rows": 8,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 8
+    },
+    {
+      "ticker": "CTJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "CUSD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DDFY",
+      "actual_rows": 33,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "DDFZ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "DDSQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 115
+    },
+    {
+      "ticker": "DDTY",
+      "actual_rows": 32,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "DDTZ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "DDX",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DECU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DEFI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DFAL",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "DHLX",
+      "actual_rows": 181,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2021-02-26",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "DHSB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DLMY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 22
+    },
+    {
+      "ticker": "DOJE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 188
+    },
+    {
+      "ticker": "DQJN",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "DRMP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "DRUP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DUSG",
+      "actual_rows": 29,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2012-12-20",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "DVIN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVQQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DVRE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVSP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "DVUT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 227
+    },
+    {
+      "ticker": "DVXV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DVXY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "DWWN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 19
+    },
+    {
+      "ticker": "EALT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EBUF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EDGQ",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "EDGX",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "EETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EHCC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 53
+    },
+    {
+      "ticker": "EJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EMCS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EMEM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 20
+    },
+    {
+      "ticker": "EMJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "EMSC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 19
+    },
+    {
+      "ticker": "EOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "ESUM",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "ETHA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "ETHB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 68
+    },
+    {
+      "ticker": "ETHE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "ETHV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "ETHW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EVMT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EZBC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EZET",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "EZMO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 168
+    },
+    {
+      "ticker": "FBTC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FEBU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FGDL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FHIL",
+      "actual_rows": 6,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "FITZ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 16
+    },
+    {
+      "ticker": "FLAO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FLJJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FOTO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 14
+    },
+    {
+      "ticker": "FPAA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 9
+    },
+    {
+      "ticker": "FREI",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "FSOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 145
+    },
+    {
+      "ticker": "FSTB",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "FXA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FXB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FXC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FXE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FXF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "FXY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GASZ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 30
+    },
+    {
+      "ticker": "GAVA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 68
+    },
+    {
+      "ticker": "GBTC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GCC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GCSH",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "GDLC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GDOG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 141
+    },
+    {
+      "ticker": "GDT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 102
+    },
+    {
+      "ticker": "GDXW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 158
+    },
+    {
+      "ticker": "GEQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 7
+    },
+    {
+      "ticker": "GISC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "GLD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GLDM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GLDW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 158
+    },
+    {
+      "ticker": "GLNK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GLTR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GMMA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GOOW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 227
+    },
+    {
+      "ticker": "GOP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GPT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GSOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "GSUI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 88
+    },
+    {
+      "ticker": "GTOH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "HBMX",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "HBR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 160
+    },
+    {
+      "ticker": "HIGH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "HJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "HODL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "HOOW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "HRSK",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "HULL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 30
+    },
+    {
+      "ticker": "HYPG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "HYSA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "HYTI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "HYTR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IAU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IAUM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBCB",
+      "actual_rows": 58,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "IBGM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 58
+    },
+    {
+      "ticker": "IBHM",
+      "actual_rows": 58,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "IBIC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBIH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBIJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBIK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBIL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBIM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 59
+    },
+    {
+      "ticker": "IBIT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IBTR",
+      "actual_rows": 58,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "IBUF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IDEC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IDEQ",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "IDJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "IDMY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 30
+    },
+    {
+      "ticker": "IFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IGLD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IINC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "IJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IMAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "INOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "INYY",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "IOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "ISEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IVVW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "IWMW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "JADB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 30
+    },
+    {
+      "ticker": "JAJL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JANI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 96
+    },
+    {
+      "ticker": "JANT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JANU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JANW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JELM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 41
+    },
+    {
+      "ticker": "JNEU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JOJO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JPO",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "JUDB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 31
+    },
+    {
+      "ticker": "JULH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JULJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JULT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JULU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JULW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "JUNC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "KAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KBUF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KCCA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KDEC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KMAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KNOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KPRO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KRYP",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "KSEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "KSPY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "LAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "LFEQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "LGCF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "LJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "LQTI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "LSTB",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "LTCC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 160
+    },
+    {
+      "ticker": "LTTI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "LVIG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 71
+    },
+    {
+      "ticker": "MAGY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MARU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 34
+    },
+    {
+      "ticker": "MAYC",
+      "actual_rows": 33,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "MAYU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MBCE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MDCR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "METW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 34
+    },
+    {
+      "ticker": "MIGO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 80
+    },
+    {
+      "ticker": "MIVL",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "MJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "MLPD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MMAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "MMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 34
+    },
+    {
+      "ticker": "MMID",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 185
+    },
+    {
+      "ticker": "MNVR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 34
+    },
+    {
+      "ticker": "MRA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 16
+    },
+    {
+      "ticker": "MSBT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 52
+    },
+    {
+      "ticker": "MSEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 9
+    },
+    {
+      "ticker": "MSFW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "MSTB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MSTQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "MSTW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 228
+    },
+    {
+      "ticker": "NAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NDEC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NFLW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NGIF",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "NISM",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "NJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NMAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NNOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NSEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NTRL",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "NUDG",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "NUIF",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "NVBU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NVDW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "NVPS",
+      "actual_rows": 5,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 5
+    },
+    {
+      "ticker": "OCDB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 31
+    },
+    {
+      "ticker": "OCTT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "OCTU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "OCTW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "OILK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "OPER",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "OPPJ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ORO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 168
+    },
+    {
+      "ticker": "OUNZ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "OWN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 12
+    },
+    {
+      "ticker": "PALL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PBSC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "PCEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 31
+    },
+    {
+      "ticker": "PCLC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 23
+    },
+    {
+      "ticker": "PCPP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 10
+    },
+    {
+      "ticker": "PCSG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 23
+    },
+    {
+      "ticker": "PDBA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PDBC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PDEC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PHYS",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "PJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PJUS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 20
+    },
+    {
+      "ticker": "PLTM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PLTW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PMAR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PNOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "POCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PPLT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PRIZ",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "PSEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PSLV",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "PSTP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "PWRD",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QBF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QBUF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "QQJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "QQMY",
+      "actual_rows": 32,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "QSOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 128
+    },
+    {
+      "ticker": "QTAP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QTJA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QTOC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "QTUP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 8
+    },
+    {
+      "ticker": "RAAR",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RAAY",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RACK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "RBUF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "RCLR",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RCLY",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RDTE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "REGS",
+      "actual_rows": 66,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "1992-11-20",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RIZE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 20
+    },
+    {
+      "ticker": "RMHY",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ROMO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "RONB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 128
+    },
+    {
+      "ticker": "RSJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "RWEM",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RWLC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "RYLG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "SCA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 16
+    },
+    {
+      "ticker": "SCJN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 13
+    },
+    {
+      "ticker": "SEPU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "SFGV",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "SGOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "SHRD",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "SIVR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "SLV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "SLWS",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "SMHC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "SOEZ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 136
+    },
+    {
+      "ticker": "SOLC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 146
+    },
+    {
+      "ticker": "SPBC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "SPDF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 46
+    },
+    {
+      "ticker": "SPPP",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "SPUC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "STXF",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "SUIS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 85
+    },
+    {
+      "ticker": "SYZ",
+      "actual_rows": 191,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2021-10-29",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TAGS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TBIL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TBJL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TBLL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TCAI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 220
+    },
+    {
+      "ticker": "TCAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 30
+    },
+    {
+      "ticker": "TDOG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 103
+    },
+    {
+      "ticker": "TDOT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 73
+    },
+    {
+      "ticker": "TEMR",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TFGZ",
+      "actual_rows": 54,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2000-12-27",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TFJL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "THIR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "THY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "THYP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 27
+    },
+    {
+      "ticker": "TILC",
+      "actual_rows": 8,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 8
+    },
+    {
+      "ticker": "TISC",
+      "actual_rows": 8,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 8
+    },
+    {
+      "ticker": "TJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TLDR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 104
+    },
+    {
+      "ticker": "TLG",
+      "actual_rows": 65,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2009-08-28",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TNGY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 180
+    },
+    {
+      "ticker": "TOT",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TOXR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 130
+    },
+    {
+      "ticker": "TPAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 85
+    },
+    {
+      "ticker": "TPUT",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TRUI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "TRUO",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "TSLW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TSOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 145
+    },
+    {
+      "ticker": "TSPY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "TSUI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 81
+    },
+    {
+      "ticker": "TSYW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 149
+    },
+    {
+      "ticker": "TYA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "UBEW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 164
+    },
+    {
+      "ticker": "UFIV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "UFOX",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "UNHW",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 136
+    },
+    {
+      "ticker": "USDU",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "USE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "USFR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "USG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "USVN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "UTEN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "UTHY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "UTWY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 251
+    },
+    {
+      "ticker": "UUPP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 20
+    },
+    {
+      "ticker": "UX",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "VAVX",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 101
+    },
+    {
+      "ticker": "VBNB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 15
+    },
+    {
+      "ticker": "VCHY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 11
+    },
+    {
+      "ticker": "VDG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 45
+    },
+    {
+      "ticker": "VDI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 136
+    },
+    {
+      "ticker": "VDV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 45
+    },
+    {
+      "ticker": "VIXM",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "VIXY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "VOXP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "VSOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 147
+    },
+    {
+      "ticker": "VUS",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 136
+    },
+    {
+      "ticker": "WAGN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 91
+    },
+    {
+      "ticker": "WAMA",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "WDE",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 20
+    },
+    {
+      "ticker": "WDIG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 30
+    },
+    {
+      "ticker": "WDRN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 25
+    },
+    {
+      "ticker": "WELD",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "WRTH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 37
+    },
+    {
+      "ticker": "WTIB",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "WTPI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XBIL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XDIV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 238
+    },
+    {
+      "ticker": "XDQQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XDSQ",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XIGV",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XLBI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 224
+    },
+    {
+      "ticker": "XLCI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XLEI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 224
+    },
+    {
+      "ticker": "XLFI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XLII",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XLRI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XLSI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 224
+    },
+    {
+      "ticker": "XLVI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XLYI",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XRP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 144
+    },
+    {
+      "ticker": "XRPC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 149
+    },
+    {
+      "ticker": "XRPI",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XRPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 189
+    },
+    {
+      "ticker": "XRPZ",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "XSHP",
+      "actual_rows": 6,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 6
+    },
+    {
+      "ticker": "XSPC",
+      "actual_rows": 7,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 7
+    },
+    {
+      "ticker": "XTJA",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XTJL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "XTOC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "YBTC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "YCLO",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "YETH",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZALT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZAPR",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZAUG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZDEK",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZFEB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZHOG",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZINC",
+      "actual_rows": 0,
+      "missing_file": true,
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ZJAN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZJUL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZJUN",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZMAY",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZNOV",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZOCT",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZSB",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZSC",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZSEP",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    },
+    {
+      "ticker": "ZTAX",
+      "actual_rows": 195,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": "2023-05-19",
+      "yf_history_rows": null
+    },
+    {
+      "ticker": "ZVOL",
+      "actual_rows": 0,
+      "missing_file": false,
+      "fetchable_missing": [
+        "daily_1y"
+      ],
+      "inception_limited_missing": [],
+      "inception_date": null,
+      "yf_history_rows": 252
+    }
+  ],
+  "samples": {
+    "fetchable": [
+      {
+        "ticker": "AAAD",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAAP",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAAU",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAPR",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAPW",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "ABXB",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "ACGO",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "ACGR",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "ACII",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "ACLC",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null
+      }
+    ],
+    "inception_limited": [
+      {
+        "ticker": "AAAC",
+        "actual_rows": 129,
+        "missing_file": false,
+        "inception_date": "2025-12-11"
+      },
+      {
+        "ticker": "AAEQ",
+        "actual_rows": 130,
+        "missing_file": false,
+        "inception_date": "2025-12-09"
+      },
+      {
+        "ticker": "AAUA",
+        "actual_rows": 63,
+        "missing_file": false,
+        "inception_date": "2026-03-18"
+      },
+      {
+        "ticker": "AAUM",
+        "actual_rows": 179,
+        "missing_file": false,
+        "inception_date": "2025-10-01"
+      },
+      {
+        "ticker": "ABUF",
+        "actual_rows": 54,
+        "missing_file": false,
+        "inception_date": "2026-03-31"
+      },
+      {
+        "ticker": "ACEI",
+        "actual_rows": 183,
+        "missing_file": false,
+        "inception_date": "2025-09-24"
+      },
+      {
+        "ticker": "ACEP",
+        "actual_rows": 142,
+        "missing_file": false,
+        "inception_date": "2025-11-20"
+      },
+      {
+        "ticker": "ACKY",
+        "actual_rows": 195,
+        "missing_file": false,
+        "inception_date": "2025-09-09"
+      },
+      {
+        "ticker": "ACSG",
+        "actual_rows": 168,
+        "missing_file": false,
+        "inception_date": "2025-10-16"
+      },
+      {
+        "ticker": "ACSV",
+        "actual_rows": 168,
+        "missing_file": false,
+        "inception_date": "2025-10-16"
+      }
+    ],
+    "complete": [
+      {
+        "ticker": "AAA",
+        "actual_rows": 252,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAAA",
+        "actual_rows": 233,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "AADR",
+        "actual_rows": 252,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAPY",
+        "actual_rows": 252,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
+        "ticker": "AAUS",
+        "actual_rows": 228,
+        "missing_file": false,
+        "inception_date": null
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-06-29T20:13:09.091Z",
+  "generated_at": "2026-06-29T22:57:01.417Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -17,7 +17,8 @@
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
     "history_gap_report": "data/stockanalysis/backfill/history_gap_report_latest.json",
     "coverage_index": "data/admin/fenok-edge-coverage-index.json",
-    "output": "data/admin/fenok-edge-etf-daily1y-readiness.json"
+    "output": "data/admin/fenok-edge-etf-daily1y-readiness.json",
+    "fetchable_plan_output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
   },
   "daily_1y_readiness": {
     "denominator": 4484,
@@ -202,6 +203,17 @@
         "inception_date": null
       }
     ]
+  },
+  "exact_fetchable_plan": {
+    "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+    "fetchable_count": 584,
+    "ticker_count": 584,
+    "can_drive_bounded_ticker_batches": true,
+    "batch_count": 5,
+    "default_batch_size": 120,
+    "yf_local_crosscheck_gap_count": 4113,
+    "yf_local_crosscheck_matches": false,
+    "caveat": "The exact 584 readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
   },
   "recommended_dispatch": {
     "status": "owner_gated",
