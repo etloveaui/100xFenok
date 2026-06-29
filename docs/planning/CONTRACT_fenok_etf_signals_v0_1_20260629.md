@@ -11,7 +11,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `coverage.scored_public_etf` is now non-zero for eligible vanilla ETFs.
 - Current local scored denominator: 4,484 eligible vanilla ETFs out of 5,333 StockAnalysis ETF records.
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
-- This is still not a paid-ready ETF product claim until DAILY + GATED are proven.
+- UI/API consumption and a public summary mirror exist, but the coverage index still intentionally holds `public=false`, `daily=false`, and `gated=false`.
+- This is still not a paid-ready ETF product claim until PUBLIC + DAILY + GATED are proven together.
 
 ## Signal Families
 
@@ -62,6 +63,14 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - includes the ETF gate
   - still does not claim ETF is PUBLIC + DAILY + GATED
 
+## Readiness Flip Criteria
+
+- `public=true` only after the ETF route/card, compact public summary, and public mirror are all verified by a named gate; file presence alone is not enough.
+- `daily=true` only after coverage index consumes ETF freshness evidence, including ETF signal timestamp/history-gap status and a bounded max-age rule.
+- `gated=true` only after `qa:fenok-etf-signal-gate` and the ETF freshness gate are both wired into the same fail-closed readiness track.
+- `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
+- Until those booleans flip through code-backed checks, the ETF lane status is SCORED, not PUBLIC/DAILY/GATED.
+
 ## Daily Data Prerequisite
 
 - StockAnalysis detail coverage supplies slower ETF fields such as expense ratio, AUM, dividend yield, holdings, classification, and fund metadata.
@@ -74,7 +83,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 ## Remaining Blockers
 
-1. Prove a daily all-ETF or eligible-ETF price/history refresh path.
-2. Keep the ETF lane separate from stock scoring and denominator claims.
-3. Add UI consumption for ETF signals without implying stock-equivalent scores.
-4. Keep `PUBLIC + DAILY + GATED` as the only paid-ready completion claim.
+1. Wire ETF public proof to the readiness track without treating file presence as paid-ready.
+2. Prove a daily all-ETF or eligible-ETF price/history refresh path.
+3. Keep the ETF lane separate from stock scoring and denominator claims.
+4. Wire `qa:fenok-etf-signal-gate` plus ETF freshness evidence into fail-closed gated readiness.
+5. Keep `PUBLIC + DAILY + GATED` as the only paid-ready completion claim.

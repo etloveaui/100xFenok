@@ -27,6 +27,7 @@ const PROMOTION_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-artifact/v0.
 const SCORING_CONTRACT_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-scoring-contract-artifact/v0.1";
 const SCORE_PREVIEW_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-score-preview-artifact/v0.1";
 const PROMOTION_GATE_PLAN_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-gate-plan/v0.1";
+const BLOCKED_UNBLOCK_DIAGNOSTICS_SCHEMA_VERSION = "fenok-s1-stock-blocked-unblock-diagnostics/v0.1";
 const SCORE_CORE_SOURCE = "scripts/stock-action-score-core.mjs";
 const DEFAULT_EXAMPLE_LIMIT = 12;
 const JOINED_MIN_EVIDENCE_FAMILIES = 3;
@@ -86,6 +87,7 @@ function parseArgs(argv) {
     scoringContractReport: false,
     scorePreviewReport: false,
     promotionGatePlanReport: false,
+    blockedUnblockDiagnosticsReport: false,
     examples: DEFAULT_EXAMPLE_LIMIT,
   };
 
@@ -98,6 +100,7 @@ function parseArgs(argv) {
     else if (arg === "--scoring-contract-report") args.scoringContractReport = true;
     else if (arg === "--score-preview-report") args.scorePreviewReport = true;
     else if (arg === "--promotion-gate-plan-report") args.promotionGatePlanReport = true;
+    else if (arg === "--blocked-unblock-diagnostics-report") args.blockedUnblockDiagnosticsReport = true;
     else if (arg === "--examples") {
       const value = Number(argv[++i]);
       if (!Number.isInteger(value) || value < 0) {
@@ -114,10 +117,11 @@ function parseArgs(argv) {
     args.scoringContractReport,
     args.scorePreviewReport,
     args.promotionGatePlanReport,
+    args.blockedUnblockDiagnosticsReport,
   ]
     .filter(Boolean).length;
   if (reportModeCount > 1) {
-    throw new Error("Use only one of --promotion-report, --scoring-contract-report, --score-preview-report, or --promotion-gate-plan-report");
+    throw new Error("Use only one of --promotion-report, --scoring-contract-report, --score-preview-report, --promotion-gate-plan-report, or --blocked-unblock-diagnostics-report");
   }
 
   return args;
@@ -1007,6 +1011,238 @@ function promotionBlockedPlanRow(status) {
   };
 }
 
+function factDiagnostic(detail, key) {
+  const fact = detail?.facts?.[key] ?? null;
+  const value = fact?.value;
+  return {
+    key,
+    present: typeof value === "number" && Number.isFinite(value),
+    value: value ?? null,
+    source: fact?.source ?? null,
+    as_of: fact?.as_of ?? null,
+    fetched_at: fact?.fetched_at ?? null,
+    candidate_count: fact?.candidate_count ?? 0,
+  };
+}
+
+function localSourceFilesFor(item, row, detail, context) {
+  const detailSources = detail?.sources ?? {};
+  const indexSources = row?.sources ?? {};
+  return {
+    market_facts_detail: Boolean(detail),
+    yf_finance_file: context.yfSet.has(item),
+    slickcharts_stock_file: context.slickStockFileSet.has(item),
+    stockanalysis_financials_file: context.stockanalysisFinancialsSet.has(item),
+    sec13f_by_ticker: context.secSet.has(item),
+    raw_company_master: context.rawMasterSet.has(item),
+    source_flags: {
+      yf: detailSources.yf === true || indexSources.yf === true,
+      stockanalysis: detailSources.stockanalysis === true || indexSources.stockanalysis === true,
+      stockanalysis_yf_fallback: detailSources.stockanalysis_yf_fallback === true
+        || indexSources.stockanalysis_yf_fallback === true,
+      slickcharts: detailSources.slickcharts === true || indexSources.slickcharts === true,
+    },
+  };
+}
+
+function blockerDiagnosticFor(blocker, status, detail, row, context) {
+  const item = status.ticker;
+  const identity = detail?.identity ?? {};
+  const base = blockerActionFor(blocker);
+  const localSources = localSourceFilesFor(item, row, detail, context);
+  if (blocker === "market_currency_country_scope") {
+    return {
+      ...base,
+      current_evidence: {
+        exchange: identity.exchange ?? null,
+        currency: identity.currency ?? null,
+        explicit_country: identity.country ?? identity.country_code ?? identity.countryCode ?? identity.market_country ?? null,
+        inferred_country_scope: status.country_scope,
+      },
+      unblock_target: "market_facts identity must carry exchange, currency, and a country scope inferable by the joined gate.",
+      next_non_public_slice: "repair market_facts identity normalization, then rerun the joined gate before any public scoring write.",
+    };
+  }
+  if (blocker === "price_or_market_cap") {
+    return {
+      ...base,
+      current_evidence: {
+        price: factDiagnostic(detail, "price"),
+        market_cap: factDiagnostic(detail, "market_cap"),
+      },
+      unblock_target: "market_facts detail must expose numeric price or market_cap.",
+      next_non_public_slice: "refresh YF/StockAnalysis numeric facts, rebuild market_facts, then rerun this diagnostics report.",
+    };
+  }
+  if (blocker === "evidence_families_min3") {
+    return {
+      ...base,
+      current_evidence: {
+        evidence_family_count: status.evidence_family_count,
+        evidence_families: status.evidence_families,
+        local_source_files: localSources,
+        accepted_family_rule: "yf, stockanalysis, slickcharts, sec13f, and raw_company_master are the current joined-gate families.",
+      },
+      unblock_target: `raise accepted evidence families from ${status.evidence_family_count} to at least ${JOINED_MIN_EVIDENCE_FAMILIES}.`,
+      next_non_public_slice: "add or normalize an accepted evidence family; do not count extra files unless evidenceFamiliesForTicker recognizes them.",
+    };
+  }
+  return {
+    ...base,
+    current_evidence: {
+      checks: status.checks,
+    },
+    unblock_target: "all joined-gate checks must pass.",
+    next_non_public_slice: "repair the failing joined-gate check and rerun diagnostics.",
+  };
+}
+
+function blockedUnblockDiagnosticRow(status, context) {
+  const row = context.marketByTicker.get(status.ticker);
+  const detail = readJsonOrNull(path.join("data/computed/market_facts/tickers", `${status.ticker}.json`));
+  const identity = detail?.identity ?? {};
+  return {
+    ticker: status.ticker,
+    asset_type: row?.asset_type ?? null,
+    source_stage: status.stage,
+    target_stage: "S1_JOINED_UNBLOCK_DIAGNOSTICS_ONLY",
+    claim_scope: "Blocked S1 diagnostics only; no score, no public, no daily, no gated claim.",
+    blockers: status.blockers,
+    checks: status.checks,
+    evidence_family_count: status.evidence_family_count,
+    evidence_families: status.evidence_families,
+    country_scope: status.country_scope,
+    local_identity: {
+      name: identity.name ?? row?.name ?? null,
+      exchange: identity.exchange ?? null,
+      currency: identity.currency ?? null,
+      sector: identity.sector ?? null,
+      industry: identity.industry ?? null,
+      explicit_country: identity.country ?? identity.country_code ?? identity.countryCode ?? identity.market_country ?? null,
+    },
+    local_fact_status: {
+      price: factDiagnostic(detail, "price"),
+      market_cap: factDiagnostic(detail, "market_cap"),
+      present_fact_keys: Object.keys(detail?.facts ?? {}).sort(),
+    },
+    local_source_files: localSourceFilesFor(status.ticker, row, detail, context),
+    blocker_diagnostics: status.blockers.map((blocker) => blockerDiagnosticFor(blocker, status, detail, row, context)),
+  };
+}
+
+function buildS1BlockedUnblockDiagnosticsArtifact(statuses, context) {
+  const blockedStatuses = statuses.filter((status) => status.status === "joined_not_ready");
+  const diagnosticRows = blockedStatuses.map((status) => blockedUnblockDiagnosticRow(status, context));
+  const expectedBlockedRows = [
+    ["DAY", ["evidence_families_min3", "market_currency_country_scope"]],
+    ["HOLX", ["market_currency_country_scope", "price_or_market_cap"]],
+    ["MMC", ["market_currency_country_scope"]],
+    ["STRC", ["evidence_families_min3"]],
+  ];
+  const actualBlockedRows = diagnosticRows
+    .map((row) => [row.ticker, row.blockers])
+    .sort(([a], [b]) => a.localeCompare(b));
+  const blockerSetsMatch = actualBlockedRows.length === expectedBlockedRows.length
+    && actualBlockedRows.every(([tickerValue, blockers], index) => (
+      tickerValue === expectedBlockedRows[index][0]
+      && arraysEqual(blockers, expectedBlockedRows[index][1])
+    ));
+  const disallowedClaims = {
+    scored_public_s0: false,
+    public: false,
+    daily: false,
+    gated: false,
+    etf_lane: false,
+  };
+  const counts = {
+    public_s0_before: context.s0Set.size,
+    public_s0_after_this_artifact: context.s0Set.size,
+    s1_candidates: context.s0Set.size + statuses.length,
+    s1_gap_total: statuses.length,
+    joined_ready_rows: statuses.length - blockedStatuses.length,
+    blocked_diagnostic_rows: diagnosticRows.length,
+    etf_rows: diagnosticRows.filter((row) => row.asset_type === "etf").length,
+    non_stock_rows: diagnosticRows.filter((row) => row.asset_type !== "stock").length,
+    s0_overlap_rows: diagnosticRows.filter((row) => context.s0Set.has(row.ticker)).length,
+    files_written: 0,
+    public_files_written: 0,
+  };
+  const acceptanceChecks = [
+    {
+      id: "s1_blocked_unblock_diagnostics_counts_match_gate",
+      ok: counts.joined_ready_rows + counts.blocked_diagnostic_rows === statuses.length,
+      detail: `${counts.joined_ready_rows}+${counts.blocked_diagnostic_rows} vs ${statuses.length}`,
+    },
+    {
+      id: "s1_blocked_unblock_diagnostics_blockers_exact_current_set",
+      ok: blockerSetsMatch,
+      detail: JSON.stringify(actualBlockedRows),
+    },
+    {
+      id: "s1_blocked_unblock_diagnostics_no_etf_or_non_stock_rows",
+      ok: counts.etf_rows === 0 && counts.non_stock_rows === 0,
+      detail: `etf_rows=${counts.etf_rows}, non_stock_rows=${counts.non_stock_rows}`,
+    },
+    {
+      id: "s1_blocked_unblock_diagnostics_preserves_s0_count",
+      ok: counts.public_s0_before === context.s0Set.size
+        && counts.public_s0_after_this_artifact === context.s0Set.size
+        && counts.s0_overlap_rows === 0,
+      detail: `${counts.public_s0_before}->${counts.public_s0_after_this_artifact}, s0_overlap_rows=${counts.s0_overlap_rows}`,
+    },
+    {
+      id: "s1_blocked_unblock_diagnostics_no_public_daily_gated_claim",
+      ok: Object.values(disallowedClaims).every((value) => value === false),
+      detail: JSON.stringify(disallowedClaims),
+    },
+    {
+      id: "s1_blocked_unblock_diagnostics_stdout_only_no_writes",
+      ok: counts.files_written === 0 && counts.public_files_written === 0,
+      detail: `files_written=${counts.files_written}, public_files_written=${counts.public_files_written}`,
+    },
+  ];
+
+  return {
+    schema_version: BLOCKED_UNBLOCK_DIAGNOSTICS_SCHEMA_VERSION,
+    generated_at: new Date().toISOString(),
+    source_audit_schema_version: SCHEMA_VERSION,
+    purpose: "Diagnose the exact local blockers for S1 joined-not-ready stock rows without fetching, scoring, publishing, or writing data.",
+    file_plan: {
+      implementation_file: "scripts/audit-fenok-stock-promotion-candidates.mjs",
+      artifact_delivery: "stdout_only",
+      command: "node scripts/audit-fenok-stock-promotion-candidates.mjs --blocked-unblock-diagnostics-report --check",
+      files_written: [],
+      public_files_written: [],
+      excluded_paths: [
+        "data/computed/stock_action_index.json",
+        "data/computed/fenok_signals.json",
+        "100xfenok-next/public/data/computed/fenok_signals.json",
+        "100xfenok-next/public/data/computed/fenok_signals_summary.json",
+      ],
+    },
+    contract: {
+      source_gate: "s1_stock_promotion_candidates.joined_gate",
+      include_rows: "joined_not_ready only; joined_ready rows are intentionally excluded from this blocker diagnostics artifact.",
+      scoring_enabled: false,
+      public_s0_mutation: false,
+      output_mode: "non_public_blocked_unblock_diagnostics_artifact",
+      target_stage: "S1_JOINED_UNBLOCK_DIAGNOSTICS_ONLY",
+      disallowed_claims: disallowedClaims,
+    },
+    implementation_targets_for_future_unblock: [
+      "scripts/build-market-facts.py",
+      "scripts/fetch-yf-finance.py",
+      "scripts/fetch-stockanalysis.py",
+      "scripts/probe-stockanalysis-financials.py",
+      "scripts/audit-fenok-stock-promotion-candidates.mjs",
+    ],
+    counts,
+    blocker_counts: countBlockers(blockedStatuses),
+    acceptance_checks: acceptanceChecks,
+    blocked_diagnostic_rows: diagnosticRows,
+  };
+}
+
 function buildS1PromotionGatePlanArtifact(statuses, context) {
   const previewArtifact = buildS1ScorePreviewArtifact(statuses, context);
   const promotionRows = previewArtifact.preview_rows.map(promotionGateRowFromPreview);
@@ -1173,6 +1409,7 @@ function buildS1JoinedGate({
   scoringContractContext = null,
   scorePreviewContext = null,
   promotionGatePlanContext = null,
+  blockedUnblockDiagnosticsContext = null,
   examples,
   full,
 }) {
@@ -1264,6 +1501,9 @@ function buildS1JoinedGate({
   if (promotionGatePlanContext) {
     result.promotion_gate_plan_artifact = buildS1PromotionGatePlanArtifact(statuses, promotionGatePlanContext);
   }
+  if (blockedUnblockDiagnosticsContext) {
+    result.blocked_unblock_diagnostics_artifact = buildS1BlockedUnblockDiagnosticsArtifact(statuses, blockedUnblockDiagnosticsContext);
+  }
 
   return result;
 }
@@ -1275,6 +1515,7 @@ function buildAudit({
   scoringContractReport = false,
   scorePreviewReport = false,
   promotionGatePlanReport = false,
+  blockedUnblockDiagnosticsReport = false,
 } = {}) {
   const signals = readJson("data/computed/fenok_signals.json");
   const stockActionIndex = scoringContractReport || scorePreviewReport || promotionGatePlanReport
@@ -1443,6 +1684,18 @@ function buildAudit({
           revisionMap: previewRevisionMap,
           guruHolders,
           enhancedConsensus,
+        }
+      : null,
+    blockedUnblockDiagnosticsContext: blockedUnblockDiagnosticsReport
+      ? {
+          marketByTicker,
+          s0Set,
+          yfSet,
+          secSet,
+          slickUniverseSet,
+          slickStockFileSet,
+          rawMasterSet,
+          stockanalysisFinancialsSet,
         }
       : null,
     examples,
@@ -1647,6 +1900,44 @@ function buildAudit({
       },
     );
   }
+  if (blockedUnblockDiagnosticsReport) {
+    const artifact = s1JoinedGate.blocked_unblock_diagnostics_artifact;
+    hardChecks.push(
+      {
+        id: "s1_blocked_unblock_diagnostics_counts_match_gate",
+        ok: artifact?.counts?.joined_ready_rows === s1JoinedGate.counts.joined_ready
+          && artifact?.counts?.blocked_diagnostic_rows === s1JoinedGate.counts.joined_not_ready,
+        detail: `${artifact?.counts?.joined_ready_rows}+${artifact?.counts?.blocked_diagnostic_rows} vs ${s1JoinedGate.counts.joined_ready}+${s1JoinedGate.counts.joined_not_ready}`,
+      },
+      {
+        id: "s1_blocked_unblock_diagnostics_no_etf_rows",
+        ok: artifact?.counts?.etf_rows === 0 && artifact?.counts?.non_stock_rows === 0,
+        detail: `etf_rows=${artifact?.counts?.etf_rows}, non_stock_rows=${artifact?.counts?.non_stock_rows}`,
+      },
+      {
+        id: "s1_blocked_unblock_diagnostics_preserves_s0_count",
+        ok: artifact?.counts?.public_s0_before === s0Tickers.length
+          && artifact?.counts?.public_s0_after_this_artifact === s0Tickers.length
+          && artifact?.counts?.s0_overlap_rows === 0,
+        detail: `${artifact?.counts?.public_s0_before}->${artifact?.counts?.public_s0_after_this_artifact}, s0_overlap_rows=${artifact?.counts?.s0_overlap_rows}`,
+      },
+      {
+        id: "s1_blocked_unblock_diagnostics_blockers_exact_current_set",
+        ok: artifact?.acceptance_checks?.find((check) => check.id === "s1_blocked_unblock_diagnostics_blockers_exact_current_set")?.ok === true,
+        detail: JSON.stringify(artifact?.blocked_diagnostic_rows?.map((row) => [row.ticker, row.blockers]) ?? []),
+      },
+      {
+        id: "s1_blocked_unblock_diagnostics_no_public_daily_gated_claim",
+        ok: artifact?.acceptance_checks?.find((check) => check.id === "s1_blocked_unblock_diagnostics_no_public_daily_gated_claim")?.ok === true,
+        detail: JSON.stringify(artifact?.contract?.disallowed_claims ?? null),
+      },
+      {
+        id: "s1_blocked_unblock_diagnostics_stdout_only_no_writes",
+        ok: artifact?.counts?.files_written === 0 && artifact?.counts?.public_files_written === 0,
+        detail: `files_written=${artifact?.counts?.files_written}, public_files_written=${artifact?.counts?.public_files_written}`,
+      },
+    );
+  }
 
   const warnings = [];
   if (marketFacts.coverage?.stock !== stockRows.length) {
@@ -1834,6 +2125,9 @@ function printHuman(result) {
   if (result.s1_stock_promotion_candidates.joined_gate.promotion_gate_plan_artifact) {
     console.log(`S1 promotion gate plan counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.promotion_gate_plan_artifact.counts)}`);
   }
+  if (result.s1_stock_promotion_candidates.joined_gate.blocked_unblock_diagnostics_artifact) {
+    console.log(`S1 blocked unblock diagnostics counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.blocked_unblock_diagnostics_artifact.counts)}`);
+  }
   console.log(
     `S2 fuel: YF=${result.s2_stock_expansion_fuel.yf.ticker_payloads_excluding_summary}, `
     + `SEC13F=${result.s2_stock_expansion_fuel.sec13f.by_ticker_keys}, `
@@ -1862,6 +2156,8 @@ if (args.scorePreviewReport) {
   process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.score_preview_artifact, null, 2)}\n`);
 } else if (args.promotionGatePlanReport) {
   process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_gate_plan_artifact, null, 2)}\n`);
+} else if (args.blockedUnblockDiagnosticsReport) {
+  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.blocked_unblock_diagnostics_artifact, null, 2)}\n`);
 } else if (args.scoringContractReport) {
   process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact, null, 2)}\n`);
 } else if (args.promotionReport) {
