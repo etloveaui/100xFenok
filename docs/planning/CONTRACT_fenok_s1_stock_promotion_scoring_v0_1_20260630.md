@@ -1,15 +1,15 @@
 # CONTRACT: Fenok S1 Stock Promotion Scoring v0.1
 
 Date: 2026-06-30
-Status: draft contract for owner review; no public output enabled in this slice
+Status: default-off implementation contract; public mutation requires explicit enable flag
 Scope: S1 joined-ready stock candidates -> future opt-in stock scoring promotion
 
 ## Purpose
 
 This contract defines the missing gate between S1 normalized stock candidates and
-the public S0 stock scoring surface. It is a decision document only: it does not
-enable public scoring, mutate `stock_action_index.json`, mutate
-`fenok_signals.json`, or write any public mirror.
+the public S0 stock scoring surface. The default command still does not enable
+public scoring, mutate `stock_action_index.json`, mutate `fenok_signals.json`,
+or write any public mirror.
 
 S1 promotion must remain fail-closed until an owner-approved implementation uses
 this contract and proves the dry-run/admin preview before any public mutation.
@@ -107,6 +107,12 @@ No-write QA command:
 npm --prefix 100xfenok-next run qa:fenok-s1-public-promotion-dry-run
 ```
 
+Explicit-enable no-write guard command:
+
+```bash
+npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-guard
+```
+
 Required top-level fields:
 
 - `schema_version`
@@ -137,6 +143,10 @@ Required `counts` fields:
 - `rows_with_unsupported_axes`
 - `files_written`
 - `public_files_written`
+
+When `--enable-public-mutation --no-write` is used, the artifact may set
+`public_mutation_enabled: true` to validate the exact mutation path, but
+`files_written` and `public_files_written` must remain `0`.
 
 Required `promotion_rows[]` fields:
 
@@ -171,10 +181,18 @@ same clean worktree:
 8. `raw_policy.raw_public = false`.
 9. `raw_policy.third_party_raw_public = false`.
 10. `public_files_written = 0` during dry run.
-11. Public mutation is controlled by an explicit non-default flag or separate
-    owner-approved command; no default command may write public S1 outputs.
+11. Public mutation is controlled by the explicit non-default
+    `--enable-public-mutation` flag; no default command may write public S1
+    outputs.
 12. `stock_action_index.json`, `fenok_signals.json`, and public mirrors are
     generated from the same promoted ticker set if public mutation is enabled.
+13. The exact allowed mutation targets are:
+    `data/computed/stock_action_index.json`,
+    `data/computed/fenok_signals.json`,
+    `data/computed/fenok_signals_summary.json`, and
+    `100xfenok-next/public/data/computed/fenok_signals_summary.json`.
+14. `100xfenok-next/public/data/computed/fenok_signals.json` remains forbidden.
+15. The rollback target set must exactly match the allowed mutation targets.
 
 Minimum QA before any public mutation:
 
@@ -185,6 +203,7 @@ node --check scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs
 npm --prefix 100xfenok-next run qa:fenok-stock-promotion-audit
 npm --prefix 100xfenok-next run qa:fenok-s1-promotion-gate
 npm --prefix 100xfenok-next run qa:fenok-s1-public-promotion-dry-run
+npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-guard
 npm --prefix 100xfenok-next run qa:fenok-public-guard
 npm --prefix 100xfenok-next run qa:fenok-signal-lens
 npm --prefix 100xfenok-next run qa:fenok-edge-readiness
@@ -192,12 +211,13 @@ npm --prefix 100xfenok-next run qa:fenok-edge-readiness
 
 ## Write Sequence If Approved Later
 
-The eventual implementation must use this sequence:
+The explicit-enable implementation must use this sequence:
 
 1. Regenerate S1 audit/gate evidence.
 2. Produce the admin dry-run artifact with `public_mutation_enabled=false`.
 3. Compare counts and row identities against the gate artifact.
-4. Only after owner approval, run the explicit public mutation path.
+4. Only after owner approval, run the explicit public mutation path with
+   `--enable-public-mutation`.
 5. Rebuild `stock_action_index.json`.
 6. Rebuild `fenok_signals.json` and the slim public summary.
 7. Verify the public mirror guard rejects private/full signal leakage.
