@@ -213,11 +213,12 @@ function StockRowLink({
 }) {
   const ticker = cleanTicker(symbol);
   const valuation = hasPerBandValues(perBand) ? perBand : null;
+  const detailText = `${ticker || "—"}${detail ? ` · ${detail}` : ""}`;
   const body = (
     <>
       <span className="co">
         <div className="n">{shortName(name || ticker)}</div>
-        <div className="tk">{ticker ? <TickerChip ticker={ticker} variant="inline" /> : "—"}{detail ? ` · ${detail}` : ""}</div>
+        <div className="tk" title={detailText}>{ticker ? <TickerChip ticker={ticker} variant="inline" /> : "—"}{detail ? ` · ${detail}` : ""}</div>
         {valuation ? (
           <div className="mt-1 max-w-[250px] pr-1">
             <PerBandBar

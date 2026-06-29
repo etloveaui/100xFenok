@@ -1513,7 +1513,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               <WatchStar ticker={symbol} className="stock-star" />
             </div>
             <div className="stock-meta">
-              <span>{displayName}</span>
+              <span className="entity-name" title={displayName}>{displayName}</span>
               <span className="x">·</span>
               <span className="num">{symbol}</span>
               <span className="x">·</span>

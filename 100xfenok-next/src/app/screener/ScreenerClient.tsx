@@ -956,7 +956,7 @@ function MobileStockCard({
             </span>
             {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
           </span>
-          <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700">{stock.name}</span>
+          <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
           <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
             {stock.sector || "섹터 미정"}
             {stock.actionReasons?.[0] ? ` · ${stock.actionReasons[0]}` : ""}

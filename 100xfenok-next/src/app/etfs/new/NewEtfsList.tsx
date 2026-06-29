@@ -477,22 +477,25 @@ export default function NewEtfsList({
           </div>
 
           <div className="mv-col">
-            {filteredRows.length > 0 ? filteredRows.map((row) => (
-              <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
-                <span className="co">
-                  <div className="n">{row.s}</div>
-                  <div className="tk">
-                    {row.n} · 상장일 {fmtDate(row.inceptionDate)} · 가격 {fmtPrice(row.price)} · {row.issuer} · {row.typeTags.join(" / ")} · {detailStatusHint(row.detailStatus)}
-                  </div>
-                </span>
-                <span className="flex min-w-[92px] flex-col items-end gap-1">
-                  <span className={`pc num ${changeClass(row.change)}`}>{fmtChange(row.change)}</span>
-                  <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
-                    {detailStatusLabel(row.detailStatus)}
+            {filteredRows.length > 0 ? filteredRows.map((row) => {
+              const detailText = `${row.n} · 상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${detailStatusHint(row.detailStatus)}`;
+              return (
+                <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
+                  <span className="co">
+                    <div className="n">{row.s}</div>
+                    <div className="tk" title={detailText}>
+                      {detailText}
+                    </div>
                   </span>
-                </span>
-              </TransitionLink>
-            )) : (
+                  <span className="flex min-w-[92px] flex-col items-end gap-1">
+                    <span className={`pc num ${changeClass(row.change)}`}>{fmtChange(row.change)}</span>
+                    <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
+                      {detailStatusLabel(row.detailStatus)}
+                    </span>
+                  </span>
+                </TransitionLink>
+              );
+            }) : (
               <div className="mv-row">
                 <span className="co">
                   <div className="n">조건에 맞는 신규 ETF 없음</div>

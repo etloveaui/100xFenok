@@ -653,12 +653,14 @@ export default function EtfUniverseCard({
           visibleRows.map((row) => {
             const ticker = row.ticker ?? "";
             const name = row.name && row.name !== ticker ? row.name : null;
+            const typeHint = formatTypeHint(row, { includeTicker: false });
+            const detailText = name ? `${name} · ${typeHint}` : typeHint;
             return (
               <TransitionLink key={ticker} href={`/etfs/${encodeURIComponent(ticker)}`} className="mv-row">
                 <span className="co">
                   <div className="n">{ticker}</div>
-                  <div className="tk">
-                    {name ? `${name} · ${formatTypeHint(row, { includeTicker: false })}` : formatTypeHint(row, { includeTicker: false })}
+                  <div className="tk" title={detailText}>
+                    {detailText}
                   </div>
                   <EtfClassificationBadges row={row} />
                 </span>

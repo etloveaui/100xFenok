@@ -1088,7 +1088,7 @@ export default function StockDetailClient({
                   <WatchStar ticker={symbol} className="stock-star" />
                 </div>
                 <div className="stock-meta">
-                  <span>{displayAssetName}</span>
+                  <span className="entity-name" title={displayAssetName}>{displayAssetName}</span>
                   <span className="x">·</span>
                   <span className="num">{symbol}</span>
                   {isEtfAsset || marketFacts?.asset_type ? (
@@ -1389,7 +1389,7 @@ export default function StockDetailClient({
               <WatchStar ticker={symbol} className="stock-star" />
             </div>
             <div className="stock-meta">
-              <span>{displayName}</span>
+              <span className="entity-name" title={displayName}>{displayName}</span>
               {canonical ? (
                 <>
                   <span className="x">·</span>
