@@ -163,21 +163,50 @@ function classifyOccGap(row) {
   return "plain_us_collection_or_no_options_policy_required";
 }
 
-function occAttemptStatusByTicker(payload) {
+function normalizeOccAttemptStatus(status, error = "") {
+  const text = String(status ?? "").trim();
+  if (text === "no_record" || (text === "failed" && /No record\(s\) found/i.test(String(error ?? "")))) {
+    return "no_record";
+  }
+  if (text === "partial_no_record_or_form_gap") return "partial_no_record_or_form_gap";
+  if (text === "transient_failed") return "transient_failed";
+  if (text && text !== "options_activity_available") return "failed";
+  return null;
+}
+
+function occAttemptStatusByTickerFromAttempts(payload) {
   const byTicker = new Map();
   for (const attempt of Array.isArray(payload?.attempts) ? payload.attempts : []) {
     const ticker = normTicker(attempt?.ticker);
     if (!ticker) continue;
-    const status = String(attempt?.status ?? "").trim();
-    if (status === "no_record" || (status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))) {
-      byTicker.set(ticker, "no_record");
-    } else if (status === "partial_no_record_or_form_gap") {
-      byTicker.set(ticker, "partial_no_record_or_form_gap");
-    } else if (status === "transient_failed") {
-      byTicker.set(ticker, "transient_failed");
-    } else if (status) {
-      byTicker.set(ticker, "failed");
+    const status = normalizeOccAttemptStatus(attempt?.status, attempt?.error);
+    if (status) byTicker.set(ticker, status);
+  }
+  return byTicker;
+}
+
+function occAttemptStatusByTickerFromAvailability(payload, sourceDate) {
+  const targetDate = ymd(sourceDate);
+  const latestRows = new Map();
+  for (const row of Array.isArray(payload?.rows) ? payload.rows : []) {
+    const ticker = normTicker(row?.ticker);
+    if (!ticker) continue;
+    const rowDate = ymd(row?.source_date);
+    if (targetDate && rowDate && rowDate !== targetDate) continue;
+    const normalizedStatus = normalizeOccAttemptStatus(row?.status);
+    if (!normalizedStatus) continue;
+    const previous = latestRows.get(ticker);
+    if (!previous || String(rowDate ?? "").localeCompare(String(previous.rowDate ?? "")) >= 0) {
+      latestRows.set(ticker, { rowDate, status: normalizedStatus });
     }
+  }
+  return new Map([...latestRows].map(([ticker, row]) => [ticker, row.status]));
+}
+
+function occAttemptStatusByTicker({ occ, availability, sourceDate }) {
+  const byTicker = occAttemptStatusByTickerFromAttempts(occ);
+  for (const [ticker, status] of occAttemptStatusByTickerFromAvailability(availability, sourceDate)) {
+    byTicker.set(ticker, status);
   }
   return byTicker;
 }
@@ -389,6 +418,7 @@ const flowIntersection = [...flowSet].filter((ticker) => usUniverse.has(ticker))
 const flowSourceDate = sourceDateFromRows(flow) ?? toIsoDate(flow.source_files?.finra_daily_short_sale_volume?.match(/CNMSshvol(\d{8})/)?.[1]);
 
 const occ = readJson("data/computed/fenok_occ_options_volume.json", {});
+const occAvailability = readJson("data/computed/fenok_occ_options_availability.json", {});
 const occSet = rowTickerSet(occ);
 const occIntersection = [...occSet].filter((ticker) => usUniverse.has(ticker));
 const occSourceDate = sourceDateFromRows(occ) ?? toIsoDate(occ.query_contract?.reportDate);
@@ -459,7 +489,7 @@ const finraPlaceholderRows = usRows.filter((row) => {
 const occMissingRows = usRows.filter((row) => !occSet.has(rowTicker(row)));
 const occPlainMissingRows = occMissingRows.filter(plainUsOccEligible);
 const occClassShareMissingRows = occMissingRows.filter(classShareTicker);
-const occAttemptStatuses = occAttemptStatusByTicker(occ);
+const occAttemptStatuses = occAttemptStatusByTicker({ occ, availability: occAvailability, sourceDate: occSourceDate });
 const occPlainAttemptedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.has(rowTicker(row)));
 const occPlainNoRecordRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "no_record");
 const occPlainPartialNoRecordRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "partial_no_record_or_form_gap");

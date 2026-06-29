@@ -85,6 +85,13 @@ function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort();
 }
 
+function dateKey(value) {
+  const text = String(value ?? "").trim();
+  if (/^\d{8}$/.test(text)) return text;
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[1]}${match[2]}${match[3]}` : null;
+}
+
 function sourceDateFromRows(payload) {
   const dates = uniqueSorted(asArray(payload?.rows).map((row) => row?.source_date ?? row?.as_of));
   return dates.at(-1) ?? null;
@@ -156,21 +163,50 @@ function classifyOccGap(row) {
   return "plain_us_collection_or_no_options_policy_required";
 }
 
-function occAttemptStatusByTicker(payload) {
+function normalizeOccAttemptStatus(status, error = "") {
+  const text = String(status ?? "").trim();
+  if (text === "no_record" || (text === "failed" && /No record\(s\) found/i.test(String(error ?? "")))) {
+    return "no_record";
+  }
+  if (text === "partial_no_record_or_form_gap") return "partial_no_record_or_form_gap";
+  if (text === "transient_failed") return "transient_failed";
+  if (text && text !== "options_activity_available") return "failed";
+  return null;
+}
+
+function occAttemptStatusByTickerFromAttempts(payload) {
   const byTicker = new Map();
   for (const attempt of asArray(payload?.attempts)) {
     const ticker = normTicker(attempt?.ticker);
     if (!ticker) continue;
-    const status = String(attempt?.status ?? "").trim();
-    if (status === "no_record" || (status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))) {
-      byTicker.set(ticker, "no_record");
-    } else if (status === "partial_no_record_or_form_gap") {
-      byTicker.set(ticker, "partial_no_record_or_form_gap");
-    } else if (status === "transient_failed") {
-      byTicker.set(ticker, "transient_failed");
-    } else if (status) {
-      byTicker.set(ticker, "failed");
+    const status = normalizeOccAttemptStatus(attempt?.status, attempt?.error);
+    if (status) byTicker.set(ticker, status);
+  }
+  return byTicker;
+}
+
+function occAttemptStatusByTickerFromAvailability(payload, sourceDate) {
+  const targetDate = dateKey(sourceDate);
+  const latestRows = new Map();
+  for (const row of asArray(payload?.rows)) {
+    const ticker = normTicker(row?.ticker);
+    if (!ticker) continue;
+    const rowDate = dateKey(row?.source_date);
+    if (targetDate && rowDate && rowDate !== targetDate) continue;
+    const status = normalizeOccAttemptStatus(row?.status);
+    if (!status) continue;
+    const previous = latestRows.get(ticker);
+    if (!previous || String(rowDate ?? "").localeCompare(String(previous.rowDate ?? "")) >= 0) {
+      latestRows.set(ticker, { rowDate, status });
     }
+  }
+  return new Map([...latestRows].map(([ticker, row]) => [ticker, row.status]));
+}
+
+function occAttemptStatusByTicker({ occOptions, occAvailability, sourceDate }) {
+  const byTicker = occAttemptStatusByTickerFromAttempts(occOptions);
+  for (const [ticker, status] of occAttemptStatusByTickerFromAvailability(occAvailability, sourceDate)) {
+    byTicker.set(ticker, status);
   }
   return byTicker;
 }
@@ -259,8 +295,10 @@ function buildAudit({ full }) {
   const signals = readJson("data/computed/fenok_signals.json");
   const flowProxies = readJson("data/computed/fenok_flow_proxies.json");
   const occOptions = readJson("data/computed/fenok_occ_options_volume.json");
+  const occAvailability = readJsonOrNull("data/computed/fenok_occ_options_availability.json");
   const coverageIndex = readJson("data/admin/fenok-edge-coverage-index.json");
   const backfillIndex = readJsonOrNull("data/admin/fenok-flow-backfill-index.json");
+  const occSourceDate = sourceDateFromRows(occOptions);
 
   const activeUsRows = asArray(signals?.rows)
     .filter((row) => row?.market === "US" || row?.market === "US_CLASS")
@@ -287,7 +325,7 @@ function buildAudit({ full }) {
   const occPlainMissing = occMissing.filter(plainUsOccEligible);
   const occClassShareMissing = occMissing.filter(classShareTicker);
   const finraPlainMissing = finraMissing.filter((row) => !hasNonPlainOrForeignSuffix(row));
-  const occAttemptStatuses = occAttemptStatusByTicker(occOptions);
+  const occAttemptStatuses = occAttemptStatusByTicker({ occOptions, occAvailability, sourceDate: occSourceDate });
   const occPlainMissingAttempted = occPlainMissing.filter((row) => occAttemptStatuses.has(rowTicker(row)));
   const occPlainMissingNoRecord = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "no_record");
   const occPlainMissingPartialNoRecord = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "partial_no_record_or_form_gap");
