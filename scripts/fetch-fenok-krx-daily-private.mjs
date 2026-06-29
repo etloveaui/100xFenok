@@ -1,0 +1,809 @@
+#!/usr/bin/env node
+/**
+ * Private/admin Korea KRX daily fetcher.
+ *
+ * Raw KRX Open API payloads stay under _private/admin. The tracked bridge index
+ * contains only counts, private path references, and readiness caveats.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(__dirname, "..");
+const MARKET = "Korea";
+const SOURCE = "KRX_OPEN_API";
+const BASE_URL = "https://data-dbg.krx.co.kr/svc/apis";
+const SCRIPT_PATH = "scripts/fetch-fenok-krx-daily-private.mjs";
+const BRIDGE_INDEX_DEFAULT = "data/admin/fenok-edge-korea-krx-daily-index.json";
+const DEFAULT_OUTPUT_PARENT = "_private/admin/fenok-edge-korea/daily";
+const DEFAULT_DAYS = 1;
+const FULL_TARGET_TRADING_DAYS = 252;
+const DEFAULT_CONCURRENCY = 2;
+const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
+const DEFAULT_SLEEP_MS = 250;
+const DEFAULT_MAX_CALLS = 40;
+const DEFAULT_FAIL_THRESHOLD = 0;
+const LICENSE_OR_TERMS_NOTE =
+  "KRX Open API raw capture kept private/admin only; verify KRX terms before redistribution or public publication.";
+const SNAPSHOT_ENDPOINTS = new Set(["sri_bond_info", "esg_index_info", "esg_etp_info"]);
+const REQUIRED_DAILY_ISSUER_ENDPOINTS = new Set(["stk_bydd_trd", "ksq_bydd_trd"]);
+
+const ENDPOINT_GROUPS = [
+  {
+    group: "core_stock_index",
+    normalized_score_axis: "price_volume_index_liquidity",
+    endpoints: [
+      { api_id: "krx_dd_trd", category: "idx", source_role: "KRX all-market index daily" },
+      { api_id: "kospi_dd_trd", category: "idx", source_role: "KOSPI index daily" },
+      { api_id: "kosdaq_dd_trd", category: "idx", source_role: "KOSDAQ index daily" },
+      { api_id: "stk_bydd_trd", category: "sto", source_role: "KOSPI stock daily trade" },
+      { api_id: "ksq_bydd_trd", category: "sto", source_role: "KOSDAQ stock daily trade" },
+      { api_id: "stk_isu_base_info", category: "sto", source_role: "KOSPI issuer master" },
+      { api_id: "ksq_isu_base_info", category: "sto", source_role: "KOSDAQ issuer master" },
+      { api_id: "knx_bydd_trd", category: "sto", source_role: "KONEX stock daily trade" },
+      { api_id: "knx_isu_base_info", category: "sto", source_role: "KONEX issuer master" },
+    ],
+  },
+  {
+    group: "derivatives_products",
+    normalized_score_axis: "derivatives_etp_risk_appetite",
+    endpoints: [
+      { api_id: "etf_bydd_trd", category: "etp", source_role: "ETF daily trade" },
+      { api_id: "etn_bydd_trd", category: "etp", source_role: "ETN daily trade" },
+      { api_id: "elw_bydd_trd", category: "etp", source_role: "ELW daily trade" },
+      { api_id: "fut_bydd_trd", category: "drv", source_role: "index futures daily trade" },
+      { api_id: "eqsfu_stk_bydd_trd", category: "drv", source_role: "single-stock futures daily trade" },
+      { api_id: "eqkfu_ksq_bydd_trd", category: "drv", source_role: "KOSDAQ futures daily trade" },
+      { api_id: "opt_bydd_trd", category: "drv", source_role: "index options daily trade" },
+      { api_id: "eqsop_bydd_trd", category: "drv", source_role: "single-stock options daily trade" },
+      { api_id: "eqkop_bydd_trd", category: "drv", source_role: "KOSDAQ options daily trade" },
+      { api_id: "drvprod_dd_trd", category: "idx", source_role: "derivatives product index daily" },
+    ],
+  },
+  {
+    group: "bond_commodity_esg",
+    normalized_score_axis: "rates_credit_commodity_esg_overlay",
+    endpoints: [
+      { api_id: "bon_dd_trd", category: "idx", source_role: "bond index daily" },
+      { api_id: "kts_bydd_trd", category: "bon", source_role: "KTS bond daily trade" },
+      { api_id: "bnd_bydd_trd", category: "bon", source_role: "bond daily trade" },
+      { api_id: "smb_bydd_trd", category: "bon", source_role: "small bond daily trade" },
+      { api_id: "sri_bond_info", category: "esg", source_role: "SRI bond info snapshot" },
+      { api_id: "sw_bydd_trd", category: "sto", source_role: "warrant daily trade" },
+      { api_id: "sr_bydd_trd", category: "sto", source_role: "subscription right daily trade" },
+      { api_id: "oil_bydd_trd", category: "gen", source_role: "oil daily trade" },
+      { api_id: "gold_bydd_trd", category: "gen", source_role: "gold daily trade" },
+      { api_id: "ets_bydd_trd", category: "gen", source_role: "ETS daily trade" },
+      { api_id: "esg_index_info", category: "esg", source_role: "ESG index info snapshot" },
+      { api_id: "esg_etp_info", category: "esg", source_role: "ESG ETP info snapshot" },
+    ],
+  },
+];
+
+function usage() {
+  return [
+    "Usage: node scripts/fetch-fenok-krx-daily-private.mjs [options]",
+    "",
+    "Options:",
+    "  --end-date YYYYMMDD              KRX basDd end date. Default: latest KST weekday.",
+    "  --days N                         Weekday count. Default: 1.",
+    "  --run-id ID                      Run id. Default: krx_daily_<end-date>.",
+    "  --output-root PATH               Private output root. Default: _private/admin/fenok-edge-korea/daily/<run-id>.",
+    "  --bridge-index PATH              Tracked bridge index path. Default: data/admin/fenok-edge-korea-krx-daily-index.json.",
+    "  --concurrency N                  Bounded request concurrency. Default: 2.",
+    "  --timeout-ms N                   Per request timeout. Default: 30000.",
+    "  --sleep-ms N                     Sleep after each request attempt. Default: 250.",
+    "  --max-calls N                    Hard call budget. Default: 40.",
+    "  --fail-threshold N               Allowed failed files. Default: 0.",
+    "  --plan-only                      Print plan only; no credential, network, or writes.",
+    "  --no-fetch                       Use existing private raw files only.",
+    "  --no-write                       Do not write raw/manifests/bridge index.",
+    "  --allow-large-run                Allow calls above --max-calls.",
+    "  --allow-empty-daily              Do not fail on empty KOSPI/KOSDAQ daily issuer rows.",
+    "  --scheduled-run                  Mark bridge index as cron-installed.",
+  ].join("\n");
+}
+
+function parseBooleanEnv(name, fallback = false) {
+  const value = process.env[name];
+  if (value == null) return fallback;
+  return /^(1|true|yes)$/i.test(value);
+}
+
+function readFlag(argv, i) {
+  const arg = argv[i];
+  const key = arg.slice(2);
+  const value = argv[i + 1];
+  if (!value || value.startsWith("--")) throw new Error(`Missing value for ${arg}`);
+  return [key, value, i + 1];
+}
+
+function parseArgs(argv) {
+  const args = {
+    allowEmptyDaily: parseBooleanEnv("KRX_ALLOW_EMPTY_DAILY", false),
+    allowLargeRun: parseBooleanEnv("KRX_ALLOW_LARGE_RUN", false),
+    bridgeIndex: process.env.KRX_BRIDGE_INDEX || BRIDGE_INDEX_DEFAULT,
+    concurrency: Number.parseInt(process.env.KRX_CONCURRENCY || String(DEFAULT_CONCURRENCY), 10),
+    days: Number.parseInt(process.env.KRX_DAYS || String(DEFAULT_DAYS), 10),
+    endDate: process.env.KRX_END_DATE || "",
+    failThreshold: Number.parseInt(process.env.KRX_FAIL_THRESHOLD || String(DEFAULT_FAIL_THRESHOLD), 10),
+    maxCalls: Number.parseInt(process.env.KRX_MAX_CALLS || String(DEFAULT_MAX_CALLS), 10),
+    noFetch: parseBooleanEnv("KRX_NO_FETCH", false),
+    noWrite: parseBooleanEnv("KRX_NO_WRITE", false),
+    outputRoot: process.env.KRX_OUTPUT_ROOT || "",
+    planOnly: parseBooleanEnv("KRX_PLAN_ONLY", false),
+    runId: process.env.KRX_RUN_ID || "",
+    scheduledRun: parseBooleanEnv("KRX_SCHEDULED_RUN", false),
+    sleepMs: Number.parseInt(process.env.KRX_SLEEP_MS || String(DEFAULT_SLEEP_MS), 10),
+    timeoutMs: Number.parseInt(process.env.KRX_TIMEOUT_MS || String(DEFAULT_REQUEST_TIMEOUT_MS), 10),
+  };
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--help" || arg === "-h") {
+      console.log(usage());
+      process.exit(0);
+    }
+    if (arg === "--allow-empty-daily") args.allowEmptyDaily = true;
+    else if (arg === "--allow-large-run") args.allowLargeRun = true;
+    else if (arg === "--no-fetch") args.noFetch = true;
+    else if (arg === "--no-write") args.noWrite = true;
+    else if (arg === "--plan-only") args.planOnly = true;
+    else if (arg === "--scheduled-run") args.scheduledRun = true;
+    else if (arg.startsWith("--")) {
+      const [key, value, nextIndex] = readFlag(argv, i);
+      i = nextIndex;
+      if (key === "bridge-index") args.bridgeIndex = value;
+      else if (key === "concurrency") args.concurrency = Number.parseInt(value, 10);
+      else if (key === "days") args.days = Number.parseInt(value, 10);
+      else if (key === "end-date") args.endDate = value;
+      else if (key === "fail-threshold") args.failThreshold = Number.parseInt(value, 10);
+      else if (key === "max-calls") args.maxCalls = Number.parseInt(value, 10);
+      else if (key === "output-root") args.outputRoot = value;
+      else if (key === "run-id") args.runId = value;
+      else if (key === "sleep-ms") args.sleepMs = Number.parseInt(value, 10);
+      else if (key === "timeout-ms") args.timeoutMs = Number.parseInt(value, 10);
+      else throw new Error(`Unknown argument: ${arg}`);
+    } else {
+      throw new Error(`Unknown positional argument: ${arg}`);
+    }
+  }
+
+  return args;
+}
+
+function ensureDir(dirPath) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function assertBasDd(value, label) {
+  if (!/^\d{8}$/.test(String(value ?? ""))) throw new Error(`${label} must be YYYYMMDD: ${value}`);
+}
+
+function normalizeBasDd(value, label = "date") {
+  const raw = String(value ?? "").trim().replaceAll("-", "");
+  assertBasDd(raw, label);
+  return raw;
+}
+
+function addDaysBasDd(basDd, deltaDays) {
+  assertBasDd(basDd, "basDd");
+  const date = new Date(Date.UTC(Number(basDd.slice(0, 4)), Number(basDd.slice(4, 6)) - 1, Number(basDd.slice(6, 8))));
+  date.setUTCDate(date.getUTCDate() + deltaDays);
+  return `${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, "0")}${String(date.getUTCDate()).padStart(2, "0")}`;
+}
+
+function isWeekdayBasDd(basDd) {
+  const date = new Date(Date.UTC(Number(basDd.slice(0, 4)), Number(basDd.slice(4, 6)) - 1, Number(basDd.slice(6, 8))));
+  const day = date.getUTCDay();
+  return day !== 0 && day !== 6;
+}
+
+function latestKstWeekday(now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  let cursor = fmt.format(now).replaceAll("-", "");
+  while (!isWeekdayBasDd(cursor)) cursor = addDaysBasDd(cursor, -1);
+  return cursor;
+}
+
+function generateWeekdayDates(endDate, days) {
+  const normalizedEnd = normalizeBasDd(endDate, "end-date");
+  if (!Number.isInteger(days) || days < 1) throw new Error(`days must be a positive integer: ${days}`);
+  const dates = [];
+  let cursor = normalizedEnd;
+  while (dates.length < days) {
+    if (isWeekdayBasDd(cursor)) dates.push(cursor);
+    cursor = addDaysBasDd(cursor, -1);
+  }
+  return dates.reverse();
+}
+
+function isoDate(basDd) {
+  return `${basDd.slice(0, 4)}-${basDd.slice(4, 6)}-${basDd.slice(6, 8)}`;
+}
+
+function resolveRepoPath(value) {
+  if (path.isAbsolute(value)) return value;
+  return path.resolve(REPO_ROOT, value);
+}
+
+function repoRel(value) {
+  const abs = path.isAbsolute(value) ? value : path.resolve(REPO_ROOT, value);
+  return path.relative(REPO_ROOT, abs).split(path.sep).join("/");
+}
+
+function endpointClass(apiId) {
+  if (apiId.endsWith("_isu_base_info") || SNAPSHOT_ENDPOINTS.has(apiId)) return "snapshot";
+  return "daily-history";
+}
+
+function endpointList() {
+  return ENDPOINT_GROUPS.flatMap((group) =>
+    group.endpoints.map((endpoint) => ({
+      ...endpoint,
+      endpoint_class: endpointClass(endpoint.api_id),
+      group: group.group,
+      normalized_score_axis: group.normalized_score_axis,
+    })),
+  );
+}
+
+function buildTasks(dates) {
+  return endpointList().flatMap((endpoint) => dates.map((basDd) => ({ basDd, endpoint })));
+}
+
+function sanitizedUrl(endpoint, basDd) {
+  return `${BASE_URL}/${endpoint.category}/${endpoint.api_id}?basDd=${basDd}`;
+}
+
+function getRowCount(data) {
+  if (Array.isArray(data)) return data.length;
+  if (!data || typeof data !== "object") return 0;
+  return Object.values(data).reduce((maxRows, value) => (Array.isArray(value) ? Math.max(maxRows, value.length) : maxRows), 0);
+}
+
+function hasKrErrorPayload(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  return Object.prototype.hasOwnProperty.call(data, "respCode") || Object.prototype.hasOwnProperty.call(data, "respMsg");
+}
+
+function shortErrorMessage(error) {
+  return String(error && error.message ? error.message : error).slice(0, 240);
+}
+
+function buildConfig(rawArgs) {
+  const endDate = normalizeBasDd(rawArgs.endDate || latestKstWeekday(), "end-date");
+  const runId = rawArgs.runId || `krx_daily_${endDate}`;
+  const outputRoot = resolveRepoPath(rawArgs.outputRoot || path.join(DEFAULT_OUTPUT_PARENT, runId));
+  const bridgeIndexPath = resolveRepoPath(rawArgs.bridgeIndex || BRIDGE_INDEX_DEFAULT);
+  const dates = generateWeekdayDates(endDate, rawArgs.days);
+  const endpoints = endpointList();
+  const estimatedCalls = dates.length * endpoints.length;
+  const requestBudget = {
+    estimated_daily_calls: endpoints.length,
+    estimated_calls: estimatedCalls,
+    estimated_full_252_calls: FULL_TARGET_TRADING_DAYS * endpoints.length,
+    max_calls_per_run: rawArgs.maxCalls,
+    status: rawArgs.allowLargeRun || estimatedCalls <= rawArgs.maxCalls ? "within_budget" : "blocked_over_budget",
+    concurrency_default: DEFAULT_CONCURRENCY,
+    concurrency_used: rawArgs.concurrency,
+    sleep_ms_between_attempts: rawArgs.sleepMs,
+    timeout_ms_default: DEFAULT_REQUEST_TIMEOUT_MS,
+    timeout_ms_used: rawArgs.timeoutMs,
+    credential_source: "KRX_OPEN_API_AUTH_KEY env only",
+  };
+
+  if (!Number.isInteger(rawArgs.concurrency) || rawArgs.concurrency < 1) throw new Error(`concurrency must be a positive integer: ${rawArgs.concurrency}`);
+  if (!Number.isInteger(rawArgs.timeoutMs) || rawArgs.timeoutMs < 1000) throw new Error(`timeout-ms must be >= 1000: ${rawArgs.timeoutMs}`);
+  if (!Number.isInteger(rawArgs.sleepMs) || rawArgs.sleepMs < 0) throw new Error(`sleep-ms must be >= 0: ${rawArgs.sleepMs}`);
+  if (!Number.isInteger(rawArgs.maxCalls) || rawArgs.maxCalls < 1) throw new Error(`max-calls must be >= 1: ${rawArgs.maxCalls}`);
+  if (!Number.isInteger(rawArgs.failThreshold) || rawArgs.failThreshold < 0) throw new Error(`fail-threshold must be >= 0: ${rawArgs.failThreshold}`);
+
+  return {
+    ...rawArgs,
+    bridgeIndexPath,
+    dates,
+    endDate,
+    endpoints,
+    estimatedCalls,
+    outputRoot,
+    requestBudget,
+    runId,
+  };
+}
+
+function dailyCommandTemplate() {
+  return [
+    "KRX_END_DATE=YYYYMMDD",
+    "KRX_DAYS=1",
+    "KRX_RUN_ID=krx_daily_YYYYMMDD",
+    `KRX_BRIDGE_INDEX=${BRIDGE_INDEX_DEFAULT}`,
+    `node ${SCRIPT_PATH}`,
+  ].join(" ");
+}
+
+function batchCommandTemplate({ endDate = "YYYYMMDD", days = 20, runId = "krx_backfill_20d_YYYYMMDD" } = {}) {
+  return [
+    `KRX_END_DATE=${endDate}`,
+    `KRX_DAYS=${days}`,
+    `KRX_RUN_ID=${runId}`,
+    `KRX_OUTPUT_ROOT=${path.join(DEFAULT_OUTPUT_PARENT, runId)}`,
+    `KRX_BRIDGE_INDEX=${BRIDGE_INDEX_DEFAULT}`,
+    `node ${SCRIPT_PATH}`,
+  ].join(" ");
+}
+
+function dataAdminBridgeRef(bridgeIndexPath) {
+  const rel = repoRel(bridgeIndexPath);
+  if (!rel.startsWith("data/")) {
+    return {
+      category: null,
+      file: null,
+      note: "Bridge index is outside data/; read by explicit path.",
+    };
+  }
+  const [, category, ...rest] = rel.split("/");
+  return {
+    category,
+    file: rest.join("/"),
+    jq_example: `jq '{as_of, freshness, latest_run, normalized_score_candidates}' \"$DATA_ROOT/${category}/${rest.join("/")}\"`,
+  };
+}
+
+async function fetchJson(endpoint, basDd, authKey, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(sanitizedUrl(endpoint, basDd), {
+      method: "GET",
+      signal: controller.signal,
+      headers: {
+        AUTH_KEY: authKey,
+        "User-Agent": "Mozilla/5.0 fenok-krx-private-fetcher/1.0",
+      },
+    });
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { parse_error: "non_json_response", body_preview: text.slice(0, 200) };
+    }
+    if (!response.ok) {
+      return { data, error: `HTTP ${response.status}`, http_status: response.status, row_count: 0, status: "failed" };
+    }
+    if (hasKrErrorPayload(data)) {
+      return { data, error: "KRX error payload", http_status: response.status, row_count: 0, status: "failed" };
+    }
+    const rowCount = getRowCount(data);
+    return { data, http_status: response.status, row_count: rowCount, status: rowCount > 0 ? "success" : "empty" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function readCachedRaw(filePath) {
+  try {
+    const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const rowCount = getRowCount(data);
+    return { data, http_status: null, row_count: rowCount, source_kind: "private_raw_cache", status: rowCount > 0 ? "success" : "empty" };
+  } catch (error) {
+    return {
+      data: { error: `raw cache missing under --no-fetch: ${repoRel(filePath)}` },
+      error: shortErrorMessage(error),
+      http_status: null,
+      row_count: 0,
+      source_kind: "cache_missing_no_fetch",
+      status: "failed",
+    };
+  }
+}
+
+async function runLimited(tasks, limit, sleepMs, worker) {
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+    while (nextIndex < tasks.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      await worker(tasks[currentIndex], currentIndex);
+      if (sleepMs > 0) await sleep(sleepMs);
+    }
+  });
+  await Promise.all(workers);
+}
+
+function emptySummary() {
+  return {
+    total_files: 0,
+    success_files: 0,
+    empty_files: 0,
+    failed_files: 0,
+    total_rows: 0,
+    failed_reasons: {},
+  };
+}
+
+function addSummary(summary, result) {
+  summary.total_files += 1;
+  summary[`${result.status}_files`] += 1;
+  summary.total_rows += result.row_count || 0;
+  if (result.status === "failed") {
+    const key = result.error || "unknown";
+    summary.failed_reasons[key] = (summary.failed_reasons[key] || 0) + 1;
+  }
+}
+
+function countEndpointClasses(files) {
+  return files.reduce((acc, file) => {
+    const key = file.endpoint_class || "unknown";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function normalizedScoreCandidates() {
+  return ENDPOINT_GROUPS.map((group) => ({
+    axis: group.normalized_score_axis,
+    source: `${SOURCE}:${group.group}`,
+    endpoint_count: group.endpoints.length,
+    caveat:
+      group.group === "core_stock_index"
+        ? "Daily price/index rows are strong scoring inputs; issuer-master endpoints are snapshots and need as-of handling."
+        : group.group === "derivatives_products"
+          ? "Derivatives and ETP flow can support risk-appetite overlays; option series granularity requires aggregation before scoring."
+          : "Bond, commodity, warrant, rights, and ESG snapshots are overlays; some endpoints are low-row or reference-like and should not be treated as full daily issuer panels.",
+  }));
+}
+
+function endpointClassMap() {
+  return endpointList().map((endpoint) => ({
+    group: endpoint.group,
+    api_id: endpoint.api_id,
+    category: endpoint.category,
+    axis: endpoint.normalized_score_axis,
+    source_role: endpoint.source_role,
+    endpoint_class: endpoint.endpoint_class,
+    url_shape: `${BASE_URL}/${endpoint.category}/${endpoint.api_id}?basDd={YYYYMMDD}`,
+  }));
+}
+
+function buildBridgeIndex(manifest, groupManifests, config) {
+  const groupSummaries = Object.fromEntries(
+    Object.entries(groupManifests).map(([group, groupManifest]) => [
+      group,
+      {
+        manifest_path: repoRel(path.join(config.outputRoot, group, "manifest.json")),
+        endpoint_count: groupManifest.endpoint_count,
+        date_count: groupManifest.date_count,
+        summary: groupManifest.summary,
+        endpoint_class_counts: countEndpointClasses(groupManifest.files),
+      },
+    ]),
+  );
+
+  return {
+    schema_version: "fenok-edge-korea-krx-bridge/v1",
+    generated_at: new Date().toISOString(),
+    market: MARKET,
+    source: SOURCE,
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+    bridge_scope: "stats_only_private_path_refs_no_raw_rows",
+    as_of: manifest.date_range.end_date,
+    freshness: {
+      as_of: manifest.date_range.end_date,
+      source_date_min: manifest.date_range.dates[0],
+      source_date_max: manifest.date_range.dates[manifest.date_range.dates.length - 1],
+      date_count: manifest.date_range.date_count,
+      fetched_at: manifest.fetched_at,
+      completed_at: manifest.completed_at,
+    },
+    feno_data_read: dataAdminBridgeRef(config.bridgeIndexPath),
+    private_artifacts: {
+      output_root: repoRel(config.outputRoot),
+      top_manifest_path: repoRel(path.join(config.outputRoot, "manifest.json")),
+      raw_root: repoRel(path.join(config.outputRoot, "raw")),
+      group_manifests: Object.fromEntries(
+        Object.keys(groupManifests).map((group) => [group, repoRel(path.join(config.outputRoot, group, "manifest.json"))]),
+      ),
+    },
+    latest_run: {
+      run_id: config.runId,
+      backfill_type: manifest.backfill_type,
+      full_252_status: manifest.full_252_status,
+      planned_full_trading_day_count: manifest.date_range.planned_full_trading_day_count,
+      endpoint_count: manifest.endpoint_count,
+      attempted_call_count: manifest.attempted_call_count,
+      summary: manifest.summary,
+      endpoint_class_counts: countEndpointClasses(manifest.files),
+      group_summaries: groupSummaries,
+    },
+    normalized_score_candidates: manifest.normalized_score_candidates,
+    request_budget: manifest.request_budget,
+    daily_command: dailyCommandTemplate(),
+    daily_accumulation: {
+      automatic_cron_installed: config.scheduledRun,
+      latest_daily_manifest_path: repoRel(path.join(config.outputRoot, "manifest.json")),
+      latest_run_id: config.runId,
+      raw_storage_policy: "_private/admin only",
+      bridge_index_path: repoRel(config.bridgeIndexPath),
+      fail_closed_policy: {
+        max_calls_per_run: config.maxCalls,
+        fail_threshold: config.failThreshold,
+        required_non_empty_daily_issuer_endpoints: [...REQUIRED_DAILY_ISSUER_ENDPOINTS].sort(),
+        allow_empty_daily: config.allowEmptyDaily,
+      },
+    },
+    first_safe_batch_plan: {
+      requires_user_approval: true,
+      end_date: "YYYYMMDD",
+      trading_days: 20,
+      estimated_calls: 20 * manifest.endpoint_count,
+      command: batchCommandTemplate(),
+    },
+  };
+}
+
+function buildPlan(config) {
+  return {
+    ok: config.requestBudget.status === "within_budget",
+    mode: "plan_only",
+    market: MARKET,
+    source: SOURCE,
+    raw_public: false,
+    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+    dates: config.dates,
+    run_id: config.runId,
+    output_root: repoRel(config.outputRoot),
+    bridge_index: repoRel(config.bridgeIndexPath),
+    endpoint_count: config.endpoints.length,
+    endpoint_class_counts: countEndpointClasses(config.endpoints),
+    request_budget: config.requestBudget,
+    no_fetch: config.noFetch,
+    no_write: config.noWrite,
+    scheduled_run: config.scheduledRun,
+    daily_command: dailyCommandTemplate(),
+  };
+}
+
+function buildManifest(config, startedAt) {
+  return {
+    market: MARKET,
+    source: SOURCE,
+    run_id: config.runId,
+    backfill_type: config.days === 1 ? "krx-daily-scheduled-accumulation" : "krx-daily-accumulation-runner",
+    full_252_status: config.days >= FULL_TARGET_TRADING_DAYS ? "run_requested" : "not_run_heavy",
+    full_252_reason:
+      config.days >= FULL_TARGET_TRADING_DAYS
+        ? "Runner was invoked with days >= planned 252 trading-day target."
+        : "Daily scheduler is bounded by --max-calls; larger historical runs require explicit allow-large-run.",
+    fetched_at: startedAt,
+    date_range: {
+      end_date: isoDate(config.endDate),
+      dates: config.dates.map(isoDate),
+      date_count: config.dates.length,
+      planned_full_trading_day_count: FULL_TARGET_TRADING_DAYS,
+      trading_day_generation_note: "Generated as weekdays only; exchange holiday calendar is not applied by this runner.",
+    },
+    endpoint_count: config.endpoints.length,
+    attempted_call_count: config.estimatedCalls,
+    estimated_full_252_calls: FULL_TARGET_TRADING_DAYS * config.endpoints.length,
+    request_budget: config.requestBudget,
+    daily_accumulation: {
+      automatic_cron_installed: config.scheduledRun,
+      raw_storage_policy: "_private/admin only",
+      bridge_index_path: repoRel(config.bridgeIndexPath),
+    },
+    request_contract: {
+      host: "https://data-dbg.krx.co.kr",
+      path_shape: "/svc/apis/{category}/{api_id}",
+      auth_location: "request header AUTH_KEY",
+      date_param: "basDd",
+      secret_safe: "AUTH_KEY value is read from env only and is not written to outputs.",
+    },
+    runtime: {
+      concurrency: config.concurrency,
+      request_timeout_ms: config.timeoutMs,
+      sleep_ms_between_attempts: config.sleepMs,
+      node_version: process.version,
+      output_root: repoRel(config.outputRoot),
+      bridge_index_path: repoRel(config.bridgeIndexPath),
+      no_fetch: config.noFetch,
+      no_write: config.noWrite,
+    },
+    summary: emptySummary(),
+    normalized_score_candidates: normalizedScoreCandidates(),
+    endpoint_class_map: endpointClassMap(),
+    files: [],
+  };
+}
+
+function buildGroupManifests(config, startedAt) {
+  return Object.fromEntries(
+    ENDPOINT_GROUPS.map((group) => [
+      group.group,
+      {
+        market: MARKET,
+        source: SOURCE,
+        group: group.group,
+        axis: group.normalized_score_axis,
+        fetched_at: startedAt,
+        date_count: config.dates.length,
+        endpoint_count: group.endpoints.length,
+        summary: emptySummary(),
+        files: [],
+      },
+    ]),
+  );
+}
+
+function validateRun(manifest, config) {
+  const errors = [];
+  if (config.requestBudget.status !== "within_budget") {
+    errors.push(`request budget blocked: estimated_calls=${config.estimatedCalls} max_calls=${config.maxCalls}`);
+  }
+  if (manifest.summary.failed_files > config.failThreshold) {
+    errors.push(`failed_files=${manifest.summary.failed_files} exceeds fail_threshold=${config.failThreshold}`);
+  }
+  if (!config.allowEmptyDaily) {
+    for (const date of config.dates.map(isoDate)) {
+      const requiredRows = manifest.files
+        .filter((file) => file.date === date && REQUIRED_DAILY_ISSUER_ENDPOINTS.has(file.api_id))
+        .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
+      if (requiredRows <= 0) {
+        errors.push(`required KRX issuer daily rows are empty for ${date}`);
+      }
+    }
+  }
+  return errors;
+}
+
+async function run(argv = process.argv.slice(2)) {
+  const config = buildConfig(parseArgs(argv));
+  if (config.planOnly) return buildPlan(config);
+  if (config.requestBudget.status !== "within_budget") throw new Error(`KRX request budget blocked: ${JSON.stringify(config.requestBudget)}`);
+
+  const authKey = process.env.KRX_OPEN_API_AUTH_KEY;
+  if (!config.noFetch && !authKey) throw new Error("KRX_OPEN_API_AUTH_KEY environment variable is not defined.");
+  if (!config.noWrite) ensureDir(config.outputRoot);
+
+  const startedAt = new Date().toISOString();
+  const manifest = buildManifest(config, startedAt);
+  const groupManifests = buildGroupManifests(config, startedAt);
+  const tasks = buildTasks(config.dates);
+
+  console.log(`Starting ${MARKET} KRX daily fetch: ${tasks.length} calls, output=${repoRel(config.outputRoot)}`);
+
+  await runLimited(tasks, config.concurrency, config.sleepMs, async (task, index) => {
+    const rawDir = path.join(config.outputRoot, "raw", task.endpoint.group, task.endpoint.api_id);
+    const fileName = `${task.basDd}.json`;
+    const filePath = path.join(rawDir, fileName);
+    const baseRecord = {
+      axis: task.endpoint.normalized_score_axis,
+      basDd: task.basDd,
+      category: task.endpoint.category,
+      date: isoDate(task.basDd),
+      endpoint_class: task.endpoint.endpoint_class,
+      fetched_at: startedAt,
+      group: task.endpoint.group,
+      api_id: task.endpoint.api_id,
+      license_or_terms_note: LICENSE_OR_TERMS_NOTE,
+      market_date: isoDate(task.basDd),
+      raw_public: false,
+      source_date: isoDate(task.basDd),
+      source_url: sanitizedUrl(task.endpoint, task.basDd),
+      url_sanitized: sanitizedUrl(task.endpoint, task.basDd),
+    };
+
+    let result;
+    if (config.noFetch) {
+      result = readCachedRaw(filePath);
+    } else {
+      try {
+        result = await fetchJson(task.endpoint, task.basDd, authKey, config.timeoutMs);
+      } catch (error) {
+        result = {
+          data: { error: shortErrorMessage(error) },
+          error: shortErrorMessage(error),
+          http_status: null,
+          row_count: 0,
+          status: "failed",
+        };
+      }
+    }
+
+    const serialized = `${JSON.stringify(result.data, null, 2)}\n`;
+    if (!config.noWrite) {
+      ensureDir(rawDir);
+      fs.writeFileSync(filePath, serialized, "utf8");
+    }
+    const fileRecord = {
+      ...baseRecord,
+      name: fileName,
+      path: repoRel(filePath),
+      http_status: result.http_status,
+      row_count: result.row_count || 0,
+      size_bytes: config.noWrite ? Buffer.byteLength(serialized) : fs.statSync(filePath).size,
+      source_kind: result.source_kind || (config.noFetch ? "private_raw_cache" : "remote_fetch"),
+      status: result.status,
+      failed_reason: result.status === "failed" ? result.error || "unknown" : null,
+      ...(result.error ? { error: result.error } : {}),
+    };
+
+    manifest.files.push(fileRecord);
+    groupManifests[task.endpoint.group].files.push(fileRecord);
+    addSummary(manifest.summary, result);
+    addSummary(groupManifests[task.endpoint.group].summary, result);
+
+    const count = index + 1;
+    if (count === 1 || count % 10 === 0 || count === tasks.length) console.log(`Progress ${count}/${tasks.length}`);
+  });
+
+  manifest.files.sort((a, b) => `${a.group}:${a.basDd}:${a.api_id}`.localeCompare(`${b.group}:${b.basDd}:${b.api_id}`));
+  for (const groupManifest of Object.values(groupManifests)) {
+    groupManifest.files.sort((a, b) => `${a.date}:${a.api_id}`.localeCompare(`${b.date}:${b.api_id}`));
+  }
+  manifest.completed_at = new Date().toISOString();
+  manifest.validation_errors = validateRun(manifest, config);
+  manifest.ok = manifest.validation_errors.length === 0;
+
+  if (!config.noWrite) {
+    for (const [group, groupManifest] of Object.entries(groupManifests)) {
+      const groupDir = path.join(config.outputRoot, group);
+      ensureDir(groupDir);
+      fs.writeFileSync(path.join(groupDir, "manifest.json"), `${JSON.stringify(groupManifest, null, 2)}\n`, "utf8");
+    }
+    fs.writeFileSync(path.join(config.outputRoot, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+    const bridgeIndex = buildBridgeIndex(manifest, groupManifests, config);
+    ensureDir(path.dirname(config.bridgeIndexPath));
+    fs.writeFileSync(config.bridgeIndexPath, `${JSON.stringify(bridgeIndex, null, 2)}\n`, "utf8");
+  }
+
+  const result = {
+    ok: manifest.ok,
+    run_id: config.runId,
+    dates: config.dates,
+    output_root: repoRel(config.outputRoot),
+    bridge_index: repoRel(config.bridgeIndexPath),
+    summary: manifest.summary,
+    validation_errors: manifest.validation_errors,
+    wrote: !config.noWrite,
+  };
+
+  console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  run().then((result) => {
+    if (result?.mode === "plan_only") console.log(JSON.stringify(result, null, 2));
+    if (result?.ok === false) process.exitCode = 1;
+  }).catch((error) => {
+    console.error(shortErrorMessage(error));
+    process.exit(1);
+  });
+}
+
+export {
+  buildBridgeIndex,
+  buildConfig,
+  buildPlan,
+  endpointClass,
+  generateWeekdayDates,
+  getRowCount,
+  latestKstWeekday,
+  parseArgs,
+  run,
+};

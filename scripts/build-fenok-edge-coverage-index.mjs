@@ -167,21 +167,26 @@ const koreaLatestRun = koreaBridge.latest_run ?? {};
 const koreaProofManifestPath = repoRelPath(koreaBridge.private_artifacts?.top_manifest_path)
   ?? "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/manifest.json";
 const koreaProofManifest = readJson(koreaProofManifestPath, {});
-const koreaLatestCalendarManifest = readJson("_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_20260629/manifest.json", {});
+const koreaLatestCalendarManifest = readJson(
+  repoRelPath(koreaBridge.daily_accumulation?.latest_daily_manifest_path)
+    ?? "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_20260629/manifest.json",
+  {},
+);
 const koreaProofDates = unique((koreaProofManifest.files ?? [])
   .filter((file) => Number(file.row_count) > 0)
   .map((file) => toIsoDate(file.source_date ?? file.date ?? file.basDd)));
 const koreaCountedSourceDate = koreaProofDates.at(-1) ?? null;
+const koreaCountedSourceYmd = ymd(koreaCountedSourceDate) ?? "20260626";
 const koreaLatestCalendarDailyHistoryRows = (koreaLatestCalendarManifest.files ?? [])
   .filter((file) => file.endpoint_class === "daily-history")
   .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
 const koreaProofRoot = repoRelPath(koreaProofManifest.runtime?.output_root ?? koreaBridge.private_artifacts?.output_root);
 const koreaStk = readJsonFirst([
-  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/stk_bydd_trd/20260626.json` : null,
+  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/stk_bydd_trd/${koreaCountedSourceYmd}.json` : null,
   "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/raw/core_stock_index/stk_bydd_trd/20260626.json",
 ], {});
 const koreaKsq = readJsonFirst([
-  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/ksq_bydd_trd/20260626.json` : null,
+  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/ksq_bydd_trd/${koreaCountedSourceYmd}.json` : null,
   "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/raw/core_stock_index/ksq_bydd_trd/20260626.json",
 ], {});
 const koreaIssueCodes = new Set([
@@ -287,7 +292,7 @@ const index = {
       status: koreaIntersection.length === koreaRows.length ? "ready" : "partial",
       claimScope: "source_available",
       activeTotal: activeScoringTotal,
-      caveat: "Counted from 20260626 KRX daily stock/KOSDAQ raw files. The 20260629 run is mostly empty and is not counted as issuer daily coverage.",
+      caveat: "Counted from the latest KRX daily stock/KOSDAQ raw files with non-empty rows. Empty calendar runs are not counted as issuer daily coverage.",
       extra: {
         private_manifest_file: koreaProofManifestPath,
         counted_batch: {
@@ -297,9 +302,9 @@ const index = {
           date_count: koreaProofManifest.date_range?.date_count ?? koreaBridge.freshness?.date_count ?? null,
           attempted_call_count: koreaLatestRun.attempted_call_count ?? koreaProofManifest.attempted_call_count ?? null,
         },
-        latest_calendar_run_20260629: {
+        latest_calendar_run: {
           run_id: koreaLatestCalendarManifest.run_id ?? null,
-          as_of: "2026-06-29",
+          as_of: koreaLatestCalendarManifest.date_range?.end_date ?? koreaBridge.as_of ?? null,
           summary: koreaLatestCalendarManifest.summary ?? null,
           daily_history_rows: koreaLatestCalendarDailyHistoryRows,
           countable_for_issuer_daily: koreaLatestCalendarDailyHistoryRows > 0,
