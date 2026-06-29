@@ -8,6 +8,7 @@ import {
   buildRowsForTest,
   candidateDates,
   estimateMaxLiveRequests,
+  loadS0OccClassShareUniverse,
   loadS0OccMissingUniverse,
   loadS0OccPartialMissingUniverse,
   mergeAvailabilitySnapshot,
@@ -152,6 +153,9 @@ const s0OccDefaultBatchSize = Math.min(50, s0OccMissing.length);
 assert.ok(s0OccMissing.every((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker)));
 assert.ok(!s0OccMissing.includes("BRK-A"));
 
+const s0OccClassShare = loadS0OccClassShareUniverse();
+assert.deepEqual(s0OccClassShare, ["BRK.A", "BRK.B"]);
+
 const s0OccPartialMissing = loadS0OccPartialMissingUniverse();
 assert.deepEqual(s0OccPartialMissing, [
   "ATO",
@@ -177,6 +181,21 @@ assert.equal(s0OccMissingPlan.eligible_count, s0OccMissing.length);
 assert.equal(s0OccMissingPlan.selected_tickers, s0OccDefaultBatchSize);
 assert.equal(s0OccMissingPlan.request_budget.estimated_max_live_requests, s0OccDefaultBatchSize * 2);
 assert.equal(s0OccMissingPlan.request_budget.status, "within_budget");
+
+const s0OccClassSharePlan = await build(parseArgs([
+  "--s0-occ-class-share",
+  "--date",
+  "20260626",
+  "--max-requests",
+  "4",
+  "--plan-only",
+]));
+assert.equal(s0OccClassSharePlan.collection_mode, "s0_occ_class_share_accepted_form_batched");
+assert.equal(s0OccClassSharePlan.eligible_count, s0OccClassShare.length);
+assert.equal(s0OccClassSharePlan.selected_tickers, s0OccClassShare.length);
+assert.deepEqual(s0OccClassSharePlan.sample, s0OccClassShare);
+assert.equal(s0OccClassSharePlan.request_budget.estimated_max_live_requests, 4);
+assert.equal(s0OccClassSharePlan.request_budget.status, "within_budget");
 
 const s0OccPartialMissingPlan = await build(parseArgs([
   "--s0-occ-partial-missing",

@@ -60,6 +60,7 @@ function parseArgs(argv) {
     noWrite: false,
     planOnly: false,
     referenceOnly: false,
+    s0OccClassShare: false,
     s0OccMissing: false,
     s0OccPartialMissing: false,
     sleepMs: 250,
@@ -70,6 +71,7 @@ function parseArgs(argv) {
     const arg = argv[i];
     const next = () => argv[++i] ?? "";
     if (arg === "--all-eligible") args.allEligible = true;
+    else if (arg === "--s0-occ-class-share") args.s0OccClassShare = true;
     else if (arg === "--s0-occ-missing") args.s0OccMissing = true;
     else if (arg === "--s0-occ-partial-missing") args.s0OccPartialMissing = true;
     else if (arg === "--batch-index") args.batchIndex = Number(next()) || 0;
@@ -93,9 +95,9 @@ function parseArgs(argv) {
     else if (arg === "--reference-only") args.referenceOnly = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
-  const batchModeCount = [args.allEligible, args.s0OccMissing, args.s0OccPartialMissing].filter(Boolean).length;
-  if (batchModeCount > 1) throw new Error("Choose only one of --all-eligible, --s0-occ-missing, or --s0-occ-partial-missing");
-  if (args.allEligible || args.s0OccMissing || args.s0OccPartialMissing) {
+  const batchModeCount = [args.allEligible, args.s0OccClassShare, args.s0OccMissing, args.s0OccPartialMissing].filter(Boolean).length;
+  if (batchModeCount > 1) throw new Error("Choose only one of --all-eligible, --s0-occ-class-share, --s0-occ-missing, or --s0-occ-partial-missing");
+  if (args.allEligible || args.s0OccClassShare || args.s0OccMissing || args.s0OccPartialMissing) {
     if (!maxWalkbackDaysExplicit) args.maxWalkbackDays = 0;
     if (args.batchSize <= 0) args.batchSize = DEFAULT_ALL_ELIGIBLE_BATCH_SIZE;
     if (args.maxRequests <= 0) args.maxRequests = DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS;
@@ -146,6 +148,13 @@ function normalizeSignalsTicker(ticker) {
 
 function plainOccUnderlying(ticker) {
   return /^[A-Z][A-Z0-9]{0,11}$/.test(normalizeTicker(ticker));
+}
+
+function brkClassShareAcceptedForm(ticker) {
+  const normalized = normalizeSignalsTicker(ticker);
+  if (normalized === "BRK-A") return "BRK.A";
+  if (normalized === "BRK-B") return "BRK.B";
+  return null;
 }
 
 function readEligibleManifest(relOrAbsPath) {
@@ -218,6 +227,24 @@ function loadS0OccPartialMissingUniverse({ limit = 0 } = {}) {
   });
 }
 
+function loadS0OccClassShareUniverse({ limit = 0 } = {}) {
+  const fenokSignals = readJson("computed/fenok_signals.json", {});
+  const occOptions = readJson(OUTPUT_FILE, {});
+  const occTickers = new Set((Array.isArray(occOptions.rows) ? occOptions.rows : [])
+    .map((row) => normalizeSignalsTicker(row.ticker_normalized ?? row.ticker))
+    .filter(Boolean));
+  const rows = Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
+  let out = rows
+    .filter((row) => row.market === "US_CLASS")
+    .map((row) => normalizeSignalsTicker(row.ticker_normalized ?? row.ticker))
+    .filter((ticker) => /^BRK-[AB]$/.test(ticker) && !occTickers.has(ticker))
+    .map(brkClassShareAcceptedForm)
+    .filter(Boolean);
+  out = [...new Set(out)].sort();
+  if (limit > 0) out = out.slice(0, limit);
+  return out;
+}
+
 function applyTickerBatch(tickers, { batchIndex = 0, batchSize = 0, startAfter = "" } = {}) {
   let out = [...tickers];
   const cursor = normalizeTicker(startAfter);
@@ -247,6 +274,20 @@ function loadTickerUniverse({ tickers, referenceOnly, limit }) {
 }
 
 function resolveTickerUniverse(args) {
+  if (args.s0OccClassShare) {
+    const eligibleTickers = loadS0OccClassShareUniverse({ limit: args.limit });
+    return {
+      mode: "s0_occ_class_share_accepted_form_batched",
+      eligible_count: eligibleTickers.length,
+      excluded_note: "active S0 BRK class-share OCC gaps only; accepted forms use dotted underlyings BRK.A/BRK.B and do not include foreign suffix rows",
+      accepted_form_policy: "owner_review_required_before_promotion; plan-only first, then bounded explicit class-share smoke",
+      tickers: applyTickerBatch(eligibleTickers, {
+        batchIndex: args.batchIndex,
+        batchSize: args.batchSize,
+        startAfter: args.startAfter,
+      }),
+    };
+  }
   if (args.s0OccPartialMissing) {
     const eligibleTickers = loadS0OccPartialMissingUniverse({ limit: args.limit });
     return {
@@ -981,6 +1022,7 @@ export {
   directionFromOptionsVolume,
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
+  loadS0OccClassShareUniverse,
   loadS0OccMissingUniverse,
   loadS0OccPartialMissingUniverse,
   mergeAvailabilitySnapshot,
