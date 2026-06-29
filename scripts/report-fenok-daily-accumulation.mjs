@@ -207,13 +207,14 @@ function buildReport() {
             fetchable_by_period: historyGap.fetchable_by_period ?? {},
             incremental_plan_counts: historyPlan?.counts ?? incrementalPlan?.counts ?? null,
             next_fetchable_first5: asArray(historyPlan?.first5 ?? incrementalPlan?.etfs).slice(0, 5),
+            daily_1y_gap: historyGap.daily_1y_gap?.scored_etfs ?? historyGap.daily_1y_gap ?? null,
           }
         : null,
       cadence: {
         yf_finance: "scheduled branch processes ETF history gaps through one rolling shard per run, cap 140",
         stockanalysis: "scheduled branch uses incremental ETF detail backfill, cap 40 per run",
         truth: actualEtfScored > 0
-          ? "ETF scores exist in the separate ETF artifact. Public surface proof is separate from DAILY+GATED readiness."
+          ? "ETF scores exist in the separate ETF artifact. Daily readiness now also requires StockAnalysis ETF detail daily 1Y continuity (no fetchable gaps)."
           : "ETF inputs are normalized and accumulated separately, but ETF scoring/public/daily gate is not done.",
       },
       remaining_blockers: missingRequirements(s3Track?.requirements),
@@ -294,8 +295,11 @@ function printHuman(report) {
   console.log(`- S1 stock candidates: stage=${s1.stage} denominator=${s1.denominator} promotion_gap=${s1.backlog.stock_promotion_audit_gap} public_daily_gated=${s1.public_daily_gated} cadence="YF one shard/140 per scheduled run; no scheduled stock-financial promotion" blockers=${s1.remaining_blockers.join(",") || "none"}`);
   console.log(`  status: sources=[${compactSources(s1.operator_status.last_sources)}] blocking_gates=${s1.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s1.operator_status.done_claim_allowed}`);
   const gap = s3.history_gap;
+  const daily1yText = gap?.daily_1y_gap
+    ? ` daily_1y_fetchable=${gap.daily_1y_gap.fetchable} daily_1y_inception_limited=${gap.daily_1y_gap.inception_limited}`
+    : "";
   const historyText = gap
-    ? `history_missing=${gap.missing_required_history} fetchable=${gap.fetchable_required_history} inception_limited=${gap.inception_limited_required_history}`
+    ? `history_missing=${gap.missing_required_history} fetchable=${gap.fetchable_required_history} inception_limited=${gap.inception_limited_required_history}${daily1yText}`
     : "history_gap_report=missing";
   const scoredSources = s3.scored_public_etf_sources;
   const sourceText = `coverage_index=${scoredSources.coverage_index},artifact=${scoredSources.fenok_etf_signals},summary=${scoredSources.fenok_etf_signals_summary}`;

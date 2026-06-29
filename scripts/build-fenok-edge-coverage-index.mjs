@@ -75,6 +75,10 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))].sort();
 }
 
+function asObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
 function rowTickerSet(payload) {
   return new Set((Array.isArray(payload?.rows) ? payload.rows : []).map((row) => normTicker(row.ticker_normalized ?? row.ticker)).filter(Boolean));
 }
@@ -127,10 +131,68 @@ function coverageRow({ id, label, count, denominator, sourceDate, status, caveat
   };
 }
 
+function findById(rows, id) {
+  return Array.isArray(rows) ? rows.find((row) => row?.id === id) ?? null : null;
+}
+
+function replaceById(rows, id, replacement) {
+  if (!Array.isArray(rows) || !replacement) return;
+  const index = rows.findIndex((row) => row?.id === id);
+  if (index >= 0) rows[index] = replacement;
+}
+
+function hasManifestPayload(value) {
+  return value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0;
+}
+
+function recomputeSourceComposites(index) {
+  const sources = index.source_availability?.sources ?? [];
+  const activeTotal = Number(index.active_scoring_universe?.total) || 0;
+  const krxCount = Number(findById(sources, "krx_issuer_daily_latest_full_proof")?.covered_count) || 0;
+  const finraCount = Number(findById(sources, "us_finra_flow_proxy")?.covered_count) || 0;
+  const occCount = Number(findById(sources, "us_occ_options_proxy")?.covered_count) || 0;
+  const latestUsCount = Number(findById(sources, "us_latest_bounded_backfill_run")?.covered_count) || 0;
+  const composites = index.source_availability_composites ?? {};
+
+  if (composites.latest_available_kr_plus_us_flow) {
+    composites.latest_available_kr_plus_us_flow.covered_count = krxCount + finraCount;
+    composites.latest_available_kr_plus_us_flow.coverage_pct = pct(krxCount + finraCount, activeTotal);
+  }
+  if (composites.latest_available_kr_plus_us_occ) {
+    composites.latest_available_kr_plus_us_occ.covered_count = krxCount + occCount;
+    composites.latest_available_kr_plus_us_occ.coverage_pct = pct(krxCount + occCount, activeTotal);
+  }
+  if (composites.strict_new_bounded_run_plus_kr) {
+    composites.strict_new_bounded_run_plus_kr.covered_count = krxCount + latestUsCount;
+    composites.strict_new_bounded_run_plus_kr.coverage_pct = pct(krxCount + latestUsCount, activeTotal);
+  }
+}
+
+function preservePriorPrivateBackedEvidence(index, priorIndex, conditions) {
+  const priorSources = priorIndex.source_availability?.sources ?? [];
+  const currentSources = index.source_availability?.sources ?? [];
+  const priorFreshnessChecks = priorIndex.freshness_gate?.checks ?? [];
+  const currentFreshnessChecks = index.freshness_gate?.checks ?? [];
+
+  if (conditions.koreaProofMissing) {
+    replaceById(currentSources, "krx_issuer_daily_latest_full_proof", findById(priorSources, "krx_issuer_daily_latest_full_proof"));
+    replaceById(currentFreshnessChecks, "korea_counted_source_date", findById(priorFreshnessChecks, "korea_counted_source_date"));
+  }
+  if (conditions.latestUsRunMissing) {
+    replaceById(currentSources, "us_latest_bounded_backfill_run", findById(priorSources, "us_latest_bounded_backfill_run"));
+  }
+  if (conditions.taiwanHistoricalMissing) {
+    replaceById(currentSources, "taiwan_current_universe", findById(priorSources, "taiwan_current_universe"));
+  }
+
+  recomputeSourceComposites(index);
+}
+
 const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
 const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
 const etfHistoryGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", {});
+const priorIndex = readJson("data/admin/fenok-edge-coverage-index.json", {});
 const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
 const activeScoringTotal = universeRows.length;
 const etfScoredPublic = Number(etfSignals?.coverage?.scored_public_etf) || 0;
@@ -207,6 +269,9 @@ const koreaIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.
 
 const taiwanBridge = readJson("data/admin/taiwan-data-bridge-index.json", readJson("data/computed/taiwan-data-bridge-index.json", {}));
 const taiwanHistorical = readJson("_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json", {});
+const koreaProofMissing = koreaIntersection.length === 0 && koreaProofDates.length === 0 && !hasManifestPayload(koreaProofManifest);
+const latestUsRunMissing = latestUsIntersection.length === 0 && !latestUsTargetUniverse && !hasManifestPayload(latestUsManifest);
+const taiwanHistoricalMissing = !hasManifestPayload(taiwanHistorical);
 
 const combinedKrUsFlow = koreaIntersection.length + flowIntersection.length;
 const combinedKrUsOcc = koreaIntersection.length + occIntersection.length;
@@ -221,6 +286,10 @@ function computeEtfReadinessEvidence() {
   const fetchableGap = Number(etfHistoryGap.fetchable_required_history) || 0;
   const missingGap = Number(etfHistoryGap.missing_required_history) || 0;
   const inceptionLimitedGap = Number(etfHistoryGap.inception_limited_required_history) || 0;
+  const daily1yGap = asObject(etfHistoryGap.daily_1y_gap);
+  const scoredDaily1yGap = asObject(daily1yGap.scored_etfs);
+  const fetchableDaily1yGap = Number(scoredDaily1yGap.fetchable) || 0;
+  const inceptionLimitedDaily1yGap = Number(scoredDaily1yGap.inception_limited) || 0;
   const publicReady = Boolean(etfSignalGate.public_surface_proof?.ready && etfScoredPublic > 0);
   const dailyChecks = [
     {
@@ -244,6 +313,13 @@ function computeEtfReadinessEvidence() {
       missing_required_history: missingGap,
       inception_limited_required_history: inceptionLimitedGap,
       caveat: "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false.",
+    },
+    {
+      id: "etf_no_fetchable_daily_1y_gap",
+      ok: fetchableDaily1yGap === 0,
+      fetchable_daily_1y_gap: fetchableDaily1yGap,
+      inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
+      caveat: "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed.",
     },
   ];
   const dailyReady = dailyChecks.every((check) => check.ok);
@@ -269,6 +345,8 @@ function computeEtfReadinessEvidence() {
       internal_summary_rows: etfSignalGate.counts?.internal_summary?.rows ?? null,
       fetchable_required_history: fetchableGap,
       inception_limited_required_history: inceptionLimitedGap,
+      fetchable_daily_1y_gap: fetchableDaily1yGap,
+      inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
     },
   };
 }
@@ -545,7 +623,7 @@ const index = {
           daily: etfReadinessEvidence.daily_ready,
           gated: etfReadinessEvidence.gated_ready,
         },
-        caveat: "ETF scores are public-surfaced only when the named ETF gate proves the compact mirror, API route, and detail UI card. DAILY/GATED remain false until all eligible ETF history gaps and freshness gates clear.",
+        caveat: "ETF scores are public-surfaced only when the named ETF gate proves the compact mirror, API route, and detail UI card. DAILY/GATED remain false until required-history gaps, StockAnalysis ETF detail daily 1Y continuity, and freshness gates all clear.",
         extra: {
           evidence_based_readiness: etfReadinessEvidence,
         },
@@ -644,6 +722,14 @@ const index = {
         caveat: "Fetchable required-history gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block daily readiness by themselves.",
       },
       {
+        id: "etf_daily_1y_gap",
+        generated_at: etfHistoryGap.generated_at ?? null,
+        fetchable_daily_1y_gap: Number(etfHistoryGap.daily_1y_gap?.scored_etfs?.fetchable) || 0,
+        inception_limited_daily_1y_gap: Number(etfHistoryGap.daily_1y_gap?.scored_etfs?.inception_limited) || 0,
+        status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_daily_1y_gap")?.ok ? "ready" : "blocked_fetchable_daily_gap",
+        caveat: "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed.",
+      },
+      {
         id: "taiwan_universe_mapping",
         status: explicitTaiwanRows.length > 0 ? "ready" : "blocked_for_numerator",
         explicit_taiwan_count: explicitTaiwanRows.length,
@@ -653,6 +739,12 @@ const index = {
     ],
   },
 };
+
+preservePriorPrivateBackedEvidence(index, priorIndex, {
+  koreaProofMissing,
+  latestUsRunMissing,
+  taiwanHistoricalMissing,
+});
 
 writeJson(OUT_PATH, index);
 console.log(JSON.stringify({

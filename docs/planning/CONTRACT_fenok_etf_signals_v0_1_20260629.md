@@ -65,15 +65,15 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - requires no ETF row leakage into the stock signal lens
 - `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`
   - includes the ETF gate
-  - fails closed if the ETF public surface, freshness evidence, or fetchable required-history gate regresses
+  - fails closed if the ETF public surface, freshness evidence, fetchable required-history gate, or fetchable daily 1Y history-continuity gate regresses
 
 ## Readiness Flip Criteria
 
 - `public=true` after the ETF route/card, compact public summary, and public mirror are all verified by `qa:fenok-etf-signal-gate`; file presence alone is not enough.
-- `daily=true` only after coverage index consumes ETF freshness evidence, including ETF signal timestamp/history-gap status and a bounded max-age rule.
+- `daily=true` only after coverage index consumes ETF freshness evidence, including ETF signal timestamp/history-gap status, a bounded max-age rule, and zero fetchable daily 1Y history gaps among scored ETFs.
 - `gated=true` only after `qa:fenok-etf-signal-gate` and the ETF freshness gate are both wired into the same fail-closed readiness track.
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
-- Current status is PUBLIC + DAILY/GATED. QNDX moved from fetchable required-history gap to inception-limited, leaving `fetchable_required_history=0`, `daily=true`, `gated=true`, and `public_done_claim_allowed=true`.
+- Current status is PUBLIC surface only, not DAILY/GATED. QNDX moved from fetchable required-history gap to inception-limited, leaving `fetchable_required_history=0`; however the scored ETF lane still has fetchable daily 1Y continuity gaps, so `daily=false`, `gated=false`, and `public_done_claim_allowed=false`.
 
 ## Daily Data Prerequisite
 
@@ -83,6 +83,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - `stockanalysis_etfs=true`
   - `history_gaps_only=true`
   - one rolling shard per schedule, currently capped at 140 tickers per run
+- The `etf_no_fetchable_daily_1y_gap` gate counts scored ETFs with fewer than 200 daily history rows, excluding inception-limited funds. Until this count is zero, `daily=false`.
 - This is a bounded rotating shard, not a true all-ETF daily refresh.
 
 ## Remaining Work
