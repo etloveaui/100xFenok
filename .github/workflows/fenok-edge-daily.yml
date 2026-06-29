@@ -132,6 +132,7 @@ jobs:
         if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}
         run: |
           node scripts/build-fenok-edge-coverage-index.mjs
+          node scripts/write-fenok-etf-daily1y-readiness.mjs --check
           npm --prefix 100xfenok-next run sync-static
           npm --prefix 100xfenok-next run qa:fenok-edge-readiness
 
@@ -148,6 +149,7 @@ jobs:
             data/computed/fenok_signals*.json \
             data/computed/fenok_etf_signals*.json \
             data/admin/fenok-edge-coverage-index.json \
+            data/admin/fenok-edge-etf-daily1y-readiness.json \
             data/admin/product-surface-coverage.json \
             100xfenok-next/public/data/admin/fenok-edge-coverage-index.json \
             100xfenok-next/public/data/admin/product-surface-coverage.json \
