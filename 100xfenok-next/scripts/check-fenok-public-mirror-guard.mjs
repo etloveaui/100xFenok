@@ -9,6 +9,7 @@ const publicDataRoot = path.join(appRoot, "public", "data");
 
 const forbiddenPatterns = [
   /^computed\/fenok_signals\.json$/,
+  /^computed\/fenok_etf_signals\.json$/,
   /^computed\/fenok_flow_proxies.*\.json$/,
   /^computed\/fenok_occ_options_volume.*\.json$/,
   /^computed\/fenok_news_tone_proxy.*\.json$/,

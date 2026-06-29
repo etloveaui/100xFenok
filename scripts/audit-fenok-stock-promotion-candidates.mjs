@@ -16,9 +16,34 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 
-const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.2";
+const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.3";
+const PROMOTION_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-artifact/v0.1";
 const DEFAULT_EXAMPLE_LIMIT = 12;
 const JOINED_MIN_EVIDENCE_FAMILIES = 3;
+const PROMOTION_FACT_KEYS = [
+  "price",
+  "previous_close",
+  "market_cap",
+  "trailing_pe",
+  "forward_pe",
+  "dividend_yield",
+  "beta",
+  "return_1m",
+  "return_3m",
+  "return_ytd",
+  "return_1y",
+];
+const SCORING_INPUT_LABELS = {
+  global_scouter_core_row: "global-scouter core stock row",
+  global_scouter_detail_file: "global-scouter detail estimates",
+  stockanalysis_financials_file: "StockAnalysis financials",
+  revision_movers: "revision movers",
+  yf_quarter_closes: "YF quarter closes",
+  slickcharts_returns: "SlickCharts returns",
+  slickcharts_dividends: "SlickCharts dividends",
+  sec13f_guru_holders: "13F guru holders",
+  sec13f_enhanced_consensus: "13F enhanced consensus",
+};
 const JOINED_US_EXCHANGES = new Set([
   "AMEX",
   "ASE",
@@ -37,6 +62,7 @@ function parseArgs(argv) {
     json: false,
     full: false,
     check: false,
+    promotionReport: false,
     examples: DEFAULT_EXAMPLE_LIMIT,
   };
 
@@ -45,6 +71,7 @@ function parseArgs(argv) {
     if (arg === "--json") args.json = true;
     else if (arg === "--full") args.full = true;
     else if (arg === "--check") args.check = true;
+    else if (arg === "--promotion-report") args.promotionReport = true;
     else if (arg === "--examples") {
       const value = Number(argv[++i]);
       if (!Number.isInteger(value) || value < 0) {
@@ -157,6 +184,37 @@ function marketFactAssetSet(rows, assetType) {
     .filter(Boolean));
 }
 
+function rowTickerSet(rows, field = "ticker") {
+  return new Set((Array.isArray(rows) ? rows : [])
+    .map((row) => ticker(row?.[field]))
+    .filter(Boolean));
+}
+
+function objectTickerSet(payload, key) {
+  const block = key ? payload?.[key] : payload;
+  if (!block || typeof block !== "object" || Array.isArray(block)) return new Set();
+  return new Set(Object.keys(block).map(ticker).filter(Boolean));
+}
+
+function revisionTickerSet(payload) {
+  return rowTickerSet([...(payload?.up ?? []), ...(payload?.down ?? [])]);
+}
+
+function factSnapshot(detail, key) {
+  const fact = detail?.facts?.[key];
+  return {
+    value: fact?.value ?? null,
+    source: fact?.source ?? null,
+    as_of: fact?.as_of ?? null,
+    fetched_at: fact?.fetched_at ?? null,
+    confidence: fact?.confidence ?? null,
+  };
+}
+
+function factSnapshots(detail) {
+  return Object.fromEntries(PROMOTION_FACT_KEYS.map((key) => [key, factSnapshot(detail, key)]));
+}
+
 function existingTickerFiles(tickers, relDir) {
   return tickers.filter((item) => fs.existsSync(abs(path.join(relDir, `${item}.json`))));
 }
@@ -211,6 +269,123 @@ function joinedStatusSummary(status) {
   };
 }
 
+function scoringInputPresence(item, context) {
+  return {
+    global_scouter_core_row: context.globalScouterCoreSet.has(item),
+    global_scouter_detail_file: context.globalScouterDetailSet.has(item),
+    stockanalysis_financials_file: context.stockanalysisFinancialsSet.has(item),
+    revision_movers: context.revisionSet.has(item),
+    yf_quarter_closes: context.quarterCloseSet.has(item),
+    slickcharts_returns: context.slickReturnsSet.has(item),
+    slickcharts_dividends: context.slickDividendsSet.has(item),
+    sec13f_guru_holders: context.guruHoldersSet.has(item),
+    sec13f_enhanced_consensus: context.enhancedConsensusSet.has(item),
+  };
+}
+
+function missingScoringAxes(inputs) {
+  return Object.entries(inputs)
+    .filter(([, present]) => !present)
+    .map(([key]) => ({
+      key,
+      label: SCORING_INPUT_LABELS[key] ?? key,
+      value: null,
+      display: "미확인",
+    }));
+}
+
+function promotionCandidateRow(status, context) {
+  const item = status.ticker;
+  const row = context.marketByTicker.get(item);
+  const detail = readJsonOrNull(path.join("data/computed/market_facts/tickers", `${item}.json`));
+  const identity = detail?.identity ?? {};
+  const scoreInputs = scoringInputPresence(item, context);
+  const missingAxes = missingScoringAxes(scoreInputs);
+  const joinedReady = status.status === "joined_ready";
+
+  return {
+    ticker: item,
+    asset_type: row?.asset_type ?? null,
+    promotion_status: joinedReady ? "s1_joined_ready_staging" : "blocked_before_joined",
+    stage: status.stage,
+    claim_scope: joinedReady
+      ? "S1 JOINED_READY staging only; not S0 scored/public/daily/gated."
+      : "Blocked before S1 JOINED_READY; do not score or promote.",
+    can_enter_s1_promotion_artifact: joinedReady,
+    can_enter_scored_public_s0: false,
+    blockers: status.blockers,
+    evidence_family_count: status.evidence_family_count,
+    evidence_families: status.evidence_families,
+    identity: {
+      name: identity.name ?? row?.name ?? item,
+      exchange: identity.exchange ?? null,
+      currency: identity.currency ?? null,
+      country_scope: status.country_scope ?? null,
+      sector: identity.sector ?? null,
+      industry: identity.industry ?? null,
+    },
+    observed_facts: factSnapshots(detail),
+    source_files: detail?.source_files ?? {},
+    score_input_presence: scoreInputs,
+    missing_scoring_axes: missingAxes,
+    score_preview: {
+      action_score: null,
+      signal_score: null,
+      coverage_ratio: null,
+      action_bucket: null,
+      action_label: "미확인",
+      reason: joinedReady
+        ? "Joined-ready evidence is present, but the S0 stock_action scoring contract has not been expanded for this row."
+        : "Joined gate blockers must be cleared before scoring input work.",
+    },
+  };
+}
+
+function buildS1PromotionArtifact(statuses, context) {
+  const readyStatuses = statuses.filter((status) => status.status === "joined_ready");
+  const blockedStatuses = statuses.filter((status) => status.status === "joined_not_ready");
+  const readyRows = readyStatuses.map((status) => promotionCandidateRow(status, context));
+  const blockedRows = blockedStatuses.map((status) => promotionCandidateRow(status, context));
+  const allRows = [...readyRows, ...blockedRows];
+  const fakeScoreRows = allRows.filter((row) => Object.values(row.score_preview).some((value) => typeof value === "number")).length;
+  const etfRows = allRows.filter((row) => row.asset_type === "etf").length;
+  const nonStockRows = allRows.filter((row) => row.asset_type !== "stock").length;
+
+  return {
+    schema_version: PROMOTION_ARTIFACT_SCHEMA_VERSION,
+    generated_at: new Date().toISOString(),
+    source_audit_schema_version: SCHEMA_VERSION,
+    purpose: "Stage JOINED_READY S1 stock candidates for explicit future scoring-contract work without mutating S0 public rows.",
+    contract: {
+      source_gate: "s1_stock_promotion_candidates.joined_gate",
+      include_rows: "joined_ready only for ready_rows; joined_not_ready retained separately with blockers.",
+      excluded_rows: "ETF asset_type rows and S0 existing rows.",
+      public_s0_mutation: false,
+      scoring_enabled: false,
+      missing_value_policy: "No placeholders. Missing scoring axes remain null / 미확인.",
+    },
+    counts: {
+      public_s0_before: context.s0Set.size,
+      public_s0_after_this_artifact: context.s0Set.size,
+      staged_if_ready_rows_are_later_promoted: context.s0Set.size + readyRows.length,
+      s1_gap_total: statuses.length,
+      joined_ready: readyRows.length,
+      joined_not_ready: blockedRows.length,
+      etf_rows: etfRows,
+      non_stock_rows: nonStockRows,
+      fake_score_rows: fakeScoreRows,
+    },
+    blocker_counts: countBlockers(statuses),
+    next_required_for_scored_public_promotion: [
+      "Define an explicit S1 scoring contract instead of injecting market_facts rows into stock_action_index by default.",
+      "Backfill or map missing global-scouter/financial/revision axes per ticker; keep absent values null.",
+      "Run opt-in scoring in a non-public lane first, then compare S0 row counts before enabling public output.",
+    ],
+    ready_rows: readyRows,
+    blocked_rows: blockedRows,
+  };
+}
+
 function buildS1JoinedGate({
   gapTickers,
   marketByTicker,
@@ -221,6 +396,7 @@ function buildS1JoinedGate({
   slickUniverseSet,
   slickStockFileSet,
   rawMasterSet,
+  promotionContext = null,
   examples,
   full,
 }) {
@@ -268,7 +444,7 @@ function buildS1JoinedGate({
   const etfLeaks = statuses.filter((status) => !status.checks.etf_lane_excluded);
   const classTickerStatuses = statuses.filter((status) => status.ticker.includes("."));
 
-  return {
+  const result = {
     stage_ceiling: "JOINED_READY_NOT_SCORED",
     contract: {
       claim_scope: "S1 normalized stock candidates only; this gate does not score, publish, fetch, or write data.",
@@ -299,9 +475,15 @@ function buildS1JoinedGate({
     },
     candidate_statuses: full ? statuses : undefined,
   };
+
+  if (promotionContext) {
+    result.promotion_artifact = buildS1PromotionArtifact(statuses, promotionContext);
+  }
+
+  return result;
 }
 
-function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
+function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false, promotionReport = false } = {}) {
   const signals = readJson("data/computed/fenok_signals.json");
   const marketFacts = readJson("data/computed/market_facts/index.json");
   const coverageIndex = readJsonOrNull("data/admin/fenok-edge-coverage-index.json");
@@ -309,12 +491,20 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
   const sec13f = readJson("data/sec-13f/by_ticker.json");
   const rawMaster = readJson("data/global-scouter/raw/company_master_m_company.json");
   const stockanalysisIndex = readJsonOrNull("data/stockanalysis/index.json");
+  const globalScouterStocks = readJsonOrNull("data/global-scouter/core/stocks_analyzer.json");
+  const revisions = readJsonOrNull("data/global-scouter/core/revision_movers.json");
+  const quarterCloses = readJsonOrNull("data/yf/quarter_closes.json");
+  const slickReturns = readJsonOrNull("data/slickcharts/stocks-returns.json");
+  const slickDividends = readJsonOrNull("data/slickcharts/stocks-dividends.json");
+  const guruHolders = readJsonOrNull("data/sec-13f/analytics/guru_holders_index.json");
+  const enhancedConsensus = readJsonOrNull("data/sec-13f/analytics/enhanced_consensus.json");
 
   const signalRows = Array.isArray(signals.rows) ? signals.rows : [];
   const marketRows = Array.isArray(marketFacts.rows) ? marketFacts.rows : [];
   const marketByTicker = byTickerRows(marketRows);
   const s0Tickers = unique(signalRows.map((row) => ticker(row.ticker)));
   const s0Set = new Set(s0Tickers);
+  const globalScouterCoreSet = rowTickerSet(globalScouterStocks?.data ?? [], "symbol");
   const stockRows = marketRows.filter((row) => row.asset_type === "stock");
   const etfRows = marketRows.filter((row) => row.asset_type === "etf");
   const stockCandidateTickers = unique(stockRows.map((row) => ticker(row.ticker)));
@@ -334,6 +524,14 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
   const rawMasterSet = new Set(rawMasterTickerList);
   const stockAssetSet = marketFactAssetSet(marketRows, "stock");
   const etfAssetSet = marketFactAssetSet(marketRows, "etf");
+  const globalScouterDetailSet = new Set(listJsonTickers("data/global-scouter/stocks/detail"));
+  const stockanalysisFinancialsSet = new Set(listJsonTickers("data/stockanalysis/financials"));
+  const revisionSet = revisionTickerSet(revisions);
+  const quarterCloseSet = objectTickerSet(quarterCloses, "tickers");
+  const slickReturnsSet = rowTickerSet(slickReturns?.stocks ?? [], "symbol");
+  const slickDividendsSet = rowTickerSet(slickDividends?.stocks ?? [], "symbol");
+  const guruHoldersSet = objectTickerSet(guruHolders, "holders");
+  const enhancedConsensusSet = objectTickerSet(enhancedConsensus, "enhanced_consensus");
 
   const gapWithYf = gapTickers.filter((item) => yfSet.has(item));
   const gapWithSec = gapTickers.filter((item) => secSet.has(item));
@@ -369,6 +567,21 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
     slickUniverseSet,
     slickStockFileSet,
     rawMasterSet,
+    promotionContext: promotionReport
+      ? {
+          marketByTicker,
+          s0Set,
+          globalScouterCoreSet,
+          globalScouterDetailSet,
+          stockanalysisFinancialsSet,
+          revisionSet,
+          quarterCloseSet,
+          slickReturnsSet,
+          slickDividendsSet,
+          guruHoldersSet,
+          enhancedConsensusSet,
+        }
+      : null,
     examples,
     full,
   });
@@ -411,6 +624,34 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
       detail: `class tickers checked=${s1JoinedGate.counts.class_tickers_checked}`,
     },
   ];
+
+  if (promotionReport) {
+    const artifact = s1JoinedGate.promotion_artifact;
+    hardChecks.push(
+      {
+        id: "s1_promotion_artifact_counts_match_gate",
+        ok: artifact?.counts?.joined_ready === s1JoinedGate.counts.joined_ready
+          && artifact?.counts?.joined_not_ready === s1JoinedGate.counts.joined_not_ready,
+        detail: `${artifact?.counts?.joined_ready}+${artifact?.counts?.joined_not_ready} vs ${s1JoinedGate.counts.joined_ready}+${s1JoinedGate.counts.joined_not_ready}`,
+      },
+      {
+        id: "s1_promotion_artifact_no_etf_rows",
+        ok: artifact?.counts?.etf_rows === 0 && artifact?.counts?.non_stock_rows === 0,
+        detail: `etf_rows=${artifact?.counts?.etf_rows}, non_stock_rows=${artifact?.counts?.non_stock_rows}`,
+      },
+      {
+        id: "s1_promotion_artifact_no_fake_scores",
+        ok: artifact?.counts?.fake_score_rows === 0,
+        detail: `fake_score_rows=${artifact?.counts?.fake_score_rows}`,
+      },
+      {
+        id: "s1_promotion_artifact_preserves_s0_count",
+        ok: artifact?.counts?.public_s0_before === s0Tickers.length
+          && artifact?.counts?.public_s0_after_this_artifact === s0Tickers.length,
+        detail: `${artifact?.counts?.public_s0_before}->${artifact?.counts?.public_s0_after_this_artifact}, s0=${s0Tickers.length}`,
+      },
+    );
+  }
 
   const warnings = [];
   if (marketFacts.coverage?.stock !== stockRows.length) {
@@ -586,6 +827,9 @@ function printHuman(result) {
   console.log(`S1 gap overlaps: ${JSON.stringify(result.s1_stock_promotion_candidates.gap_overlap_counts)}`);
   console.log(`S1 JOINED gate counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.counts)}`);
   console.log(`S1 JOINED blockers: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.blocker_counts)}`);
+  if (result.s1_stock_promotion_candidates.joined_gate.promotion_artifact) {
+    console.log(`S1 promotion report counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.promotion_artifact.counts)}`);
+  }
   console.log(
     `S2 fuel: YF=${result.s2_stock_expansion_fuel.yf.ticker_payloads_excluding_summary}, `
     + `SEC13F=${result.s2_stock_expansion_fuel.sec13f.by_ticker_keys}, `
@@ -610,7 +854,9 @@ function printHuman(result) {
 
 const args = parseArgs(process.argv.slice(2));
 const audit = buildAudit(args);
-if (args.json) process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
+if (args.promotionReport) {
+  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_artifact, null, 2)}\n`);
+} else if (args.json) process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
 else printHuman(audit);
 
 process.exitCode = args.check && !audit.ok ? 1 : 0;
