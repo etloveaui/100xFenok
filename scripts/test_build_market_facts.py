@@ -320,6 +320,47 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(second["generated_at"], "2026-06-19T01:00:00Z")
         self.assertEqual(third["generated_at"], "2026-06-19T03:00:00Z")
 
+    def test_main_no_public_mirror_skips_public_output(self) -> None:
+        original_data = self.mod.DATA
+        original_out = self.mod.OUT
+        original_public_out = self.mod.PUBLIC_OUT
+        original_now_iso = self.mod.now_iso
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_root = root / "data"
+            yf_dir = data_root / "yf" / "finance"
+            yf_dir.mkdir(parents=True)
+            self.mod.DATA = data_root
+            self.mod.OUT = data_root / "computed" / "market_facts"
+            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
+
+            source_payload = {
+                "fetched_at": "2026-06-19T00:00:00Z",
+                "data": {
+                    "info": {
+                        "quoteType": "EQUITY",
+                        "shortName": "Private Inc.",
+                        "currency": "USD",
+                        "currentPrice": 25.0,
+                    }
+                },
+            }
+            (yf_dir / "PRIV.json").write_text(json.dumps(source_payload), encoding="utf-8")
+
+            try:
+                self.mod.now_iso = lambda: "2026-06-19T01:00:00Z"
+                self.mod.main(["--no-public-mirror"])
+            finally:
+                self.mod.DATA = original_data
+                self.mod.OUT = original_out
+                self.mod.PUBLIC_OUT = original_public_out
+                self.mod.now_iso = original_now_iso
+
+            self.assertTrue((data_root / "computed" / "market_facts" / "index.json").exists())
+            self.assertTrue((data_root / "computed" / "market_facts" / "tickers" / "PRIV.json").exists())
+            self.assertFalse((root / "public").exists())
+
     def test_market_facts_contract_accepts_valid_generated_payload(self) -> None:
         payload = self.mod.build_one(
             "VALID",

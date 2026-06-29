@@ -128,7 +128,8 @@ External sources
     history is missing, and can derive ETF 3Y CAGR from StockAnalysis
     multi-year monthly history after the ETF detail backfill refreshes those
     `history_periods` keys;
-  - mirrors the normalized facts to `100xfenok-next/public/data/computed/market_facts/`.
+  - mirrors the normalized facts to `100xfenok-next/public/data/computed/market_facts/`
+    by default; use `--no-public-mirror` for private/canonical repair rebuilds.
 - `scripts/audit-market-data.py`
   - read-only audit for ETF universe backfill progress, failure classes,
     market-facts coverage, resolver candidate preservation, policy-source

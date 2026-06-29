@@ -15,9 +15,11 @@ Output:
 
 from __future__ import annotations
 
+import argparse
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import sys
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -740,7 +742,20 @@ def build_etf_catalog_map() -> dict[str, dict]:
     return rows
 
 
-def main() -> None:
+def parse_args(argv=None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--no-public-mirror",
+        action="store_true",
+        help="Write only data/computed/market_facts; skip the Next public mirror.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv=None) -> None:
+    args = parse_args([] if argv is None else argv)
+    mirror_public = not args.no_public_mirror
+
     yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
     sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
     sa_stock_files = {p.stem: p for p in (DATA / "stockanalysis" / "stocks").glob("*.json")}
@@ -775,7 +790,8 @@ def main() -> None:
         payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
         assert_market_facts_payload(payload, ticker=ticker)
         write_json(OUT / rel, payload)
-        write_json(PUBLIC_OUT / rel, payload)
+        if mirror_public:
+            write_json(PUBLIC_OUT / rel, payload)
         rows.append({
             "ticker": ticker,
             "asset_type": payload["asset_type"],
@@ -813,9 +829,11 @@ def main() -> None:
         "rows": rows,
     }
     write_json(OUT / "index.json", index)
-    write_json(PUBLIC_OUT / "index.json", index)
-    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']}")
+    if mirror_public:
+        write_json(PUBLIC_OUT / "index.json", index)
+    mirror_status = "public_mirror=on" if mirror_public else "public_mirror=off"
+    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']} {mirror_status}")
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
