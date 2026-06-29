@@ -18,6 +18,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 
 const SCHEMA_VERSION = "fenok-stock-promotion-candidates-audit/v0.3";
 const PROMOTION_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-promotion-artifact/v0.1";
+const SCORING_CONTRACT_ARTIFACT_SCHEMA_VERSION = "fenok-s1-stock-scoring-contract-artifact/v0.1";
 const DEFAULT_EXAMPLE_LIMIT = 12;
 const JOINED_MIN_EVIDENCE_FAMILIES = 3;
 const PROMOTION_FACT_KEYS = [
@@ -32,6 +33,16 @@ const PROMOTION_FACT_KEYS = [
   "return_3m",
   "return_ytd",
   "return_1y",
+];
+const S1_SCORING_OUTPUT_FIELDS = [
+  "action_score",
+  "signal_score",
+  "coverage_ratio",
+  "confidence_label",
+  "action_bucket",
+  "action_label",
+  "action_reasons",
+  "families",
 ];
 const SCORING_INPUT_LABELS = {
   global_scouter_core_row: "global-scouter core stock row",
@@ -63,6 +74,7 @@ function parseArgs(argv) {
     full: false,
     check: false,
     promotionReport: false,
+    scoringContractReport: false,
     examples: DEFAULT_EXAMPLE_LIMIT,
   };
 
@@ -72,6 +84,7 @@ function parseArgs(argv) {
     else if (arg === "--full") args.full = true;
     else if (arg === "--check") args.check = true;
     else if (arg === "--promotion-report") args.promotionReport = true;
+    else if (arg === "--scoring-contract-report") args.scoringContractReport = true;
     else if (arg === "--examples") {
       const value = Number(argv[++i]);
       if (!Number.isInteger(value) || value < 0) {
@@ -81,6 +94,10 @@ function parseArgs(argv) {
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }
+  }
+
+  if (args.promotionReport && args.scoringContractReport) {
+    throw new Error("Use only one of --promotion-report or --scoring-contract-report");
   }
 
   return args;
@@ -386,6 +403,140 @@ function buildS1PromotionArtifact(statuses, context) {
   };
 }
 
+function buildS1ScoringContractRow(status, context) {
+  const base = promotionCandidateRow(status, context);
+  const sourceContract = context.stockActionIndex?.score_contract ?? {};
+  return {
+    ticker: base.ticker,
+    asset_type: base.asset_type,
+    contract_status: "s1_scoring_contract_ready_not_scored",
+    source_stage: base.stage,
+    claim_scope: "Non-public S1 scoring-contract artifact only; not scored, not S0, not public, not daily, not gated.",
+    eligibility: {
+      joined_ready: true,
+      outside_s0: status.checks?.outside_s0 === true,
+      etf_lane_excluded: status.checks?.etf_lane_excluded === true,
+      exact_ticker_contract: status.checks?.exact_ticker_contract === true,
+      minimum_evidence_families: JOINED_MIN_EVIDENCE_FAMILIES,
+      observed_evidence_family_count: status.evidence_family_count,
+    },
+    identity: base.identity,
+    observed_facts: base.observed_facts,
+    source_files: base.source_files,
+    score_input_presence: base.score_input_presence,
+    missing_scoring_axes: base.missing_scoring_axes,
+    scoring_contract_reference: {
+      source_contract_version: sourceContract.version ?? null,
+      source_contract_doc: sourceContract.doc ?? null,
+      allowed_output_fields: S1_SCORING_OUTPUT_FIELDS,
+      missing_value_policy: "Null only. No placeholder or inferred score values.",
+    },
+    score_outputs: Object.fromEntries(S1_SCORING_OUTPUT_FIELDS.map((field) => [field, null])),
+  };
+}
+
+function buildS1ScoringContractArtifact(statuses, context) {
+  const readyStatuses = statuses.filter((status) => status.status === "joined_ready");
+  const blockedStatuses = statuses.filter((status) => status.status === "joined_not_ready");
+  const contractRows = readyStatuses.map((status) => buildS1ScoringContractRow(status, context));
+  const numericScoreRows = contractRows.filter((row) => Object.values(row.score_outputs).some((value) => typeof value === "number")).length;
+  const etfRows = contractRows.filter((row) => row.asset_type === "etf").length;
+  const nonStockRows = contractRows.filter((row) => row.asset_type !== "stock").length;
+  const s0OverlapRows = contractRows.filter((row) => context.s0Set.has(row.ticker)).length;
+  const disallowedClaims = {
+    scored_public_s0: false,
+    public: false,
+    daily: false,
+    gated: false,
+    etf_lane: false,
+  };
+  const counts = {
+    public_s0_before: context.s0Set.size,
+    public_s0_after_this_artifact: context.s0Set.size,
+    s1_gap_total: statuses.length,
+    joined_ready_contract_rows: contractRows.length,
+    joined_not_ready_excluded: blockedStatuses.length,
+    etf_rows: etfRows,
+    non_stock_rows: nonStockRows,
+    s0_overlap_rows: s0OverlapRows,
+    actual_scored_rows: numericScoreRows,
+    fake_score_rows: numericScoreRows,
+    files_written: 0,
+    public_files_written: 0,
+  };
+  const acceptanceChecks = [
+    {
+      id: "s1_scoring_contract_counts_match_gate",
+      ok: counts.joined_ready_contract_rows === readyStatuses.length
+        && counts.joined_not_ready_excluded === blockedStatuses.length,
+      detail: `${counts.joined_ready_contract_rows}+${counts.joined_not_ready_excluded} vs ${readyStatuses.length}+${blockedStatuses.length}`,
+    },
+    {
+      id: "s1_scoring_contract_preserves_s0_count",
+      ok: counts.public_s0_before === context.s0Set.size
+        && counts.public_s0_after_this_artifact === context.s0Set.size
+        && counts.s0_overlap_rows === 0,
+      detail: `${counts.public_s0_before}->${counts.public_s0_after_this_artifact}, s0_overlap_rows=${counts.s0_overlap_rows}`,
+    },
+    {
+      id: "s1_scoring_contract_no_etf_or_non_stock_rows",
+      ok: counts.etf_rows === 0 && counts.non_stock_rows === 0,
+      detail: `etf_rows=${counts.etf_rows}, non_stock_rows=${counts.non_stock_rows}`,
+    },
+    {
+      id: "s1_scoring_contract_no_fake_scores",
+      ok: counts.fake_score_rows === 0 && counts.actual_scored_rows === 0,
+      detail: `fake_score_rows=${counts.fake_score_rows}, actual_scored_rows=${counts.actual_scored_rows}`,
+    },
+    {
+      id: "s1_scoring_contract_no_public_daily_gated_claim",
+      ok: Object.values(disallowedClaims).every((value) => value === false),
+      detail: JSON.stringify(disallowedClaims),
+    },
+    {
+      id: "s1_scoring_contract_stdout_only_no_writes",
+      ok: counts.files_written === 0 && counts.public_files_written === 0,
+      detail: `files_written=${counts.files_written}, public_files_written=${counts.public_files_written}`,
+    },
+  ];
+
+  return {
+    schema_version: SCORING_CONTRACT_ARTIFACT_SCHEMA_VERSION,
+    generated_at: new Date().toISOString(),
+    source_audit_schema_version: SCHEMA_VERSION,
+    purpose: "Define an opt-in, non-public S1 scoring contract for JOINED_READY stock candidates without computing scores or mutating S0 public rows.",
+    file_plan: {
+      implementation_file: "scripts/audit-fenok-stock-promotion-candidates.mjs",
+      artifact_delivery: "stdout_only",
+      command: "node scripts/audit-fenok-stock-promotion-candidates.mjs --scoring-contract-report --check",
+      files_written: [],
+      public_files_written: [],
+      excluded_paths: [
+        "data/computed/stock_action_index.json",
+        "data/computed/fenok_signals.json",
+        "100xfenok-next/public/data/computed/fenok_signals.json",
+        "100xfenok-next/public/data/computed/fenok_signals_summary.json",
+      ],
+    },
+    contract: {
+      source_gate: "s1_stock_promotion_candidates.joined_gate",
+      include_rows: "joined_ready only; joined_not_ready rows are blocker-only exclusions.",
+      scoring_enabled: false,
+      public_s0_mutation: false,
+      output_mode: "non_public_contract_artifact",
+      source_score_contract_version: context.stockActionIndex?.score_contract?.version ?? null,
+      source_score_contract_doc: context.stockActionIndex?.score_contract?.doc ?? null,
+      missing_value_policy: "Keep absent axes and score outputs null. Do not synthesize scores.",
+      disallowed_claims: disallowedClaims,
+    },
+    counts,
+    blocker_counts: countBlockers(statuses),
+    acceptance_checks: acceptanceChecks,
+    contract_rows: contractRows,
+    excluded_blocked_rows: blockedStatuses.map(joinedStatusSummary),
+  };
+}
+
 function buildS1JoinedGate({
   gapTickers,
   marketByTicker,
@@ -397,6 +548,7 @@ function buildS1JoinedGate({
   slickStockFileSet,
   rawMasterSet,
   promotionContext = null,
+  scoringContractContext = null,
   examples,
   full,
 }) {
@@ -479,12 +631,21 @@ function buildS1JoinedGate({
   if (promotionContext) {
     result.promotion_artifact = buildS1PromotionArtifact(statuses, promotionContext);
   }
+  if (scoringContractContext) {
+    result.scoring_contract_artifact = buildS1ScoringContractArtifact(statuses, scoringContractContext);
+  }
 
   return result;
 }
 
-function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false, promotionReport = false } = {}) {
+function buildAudit({
+  examples = DEFAULT_EXAMPLE_LIMIT,
+  full = false,
+  promotionReport = false,
+  scoringContractReport = false,
+} = {}) {
   const signals = readJson("data/computed/fenok_signals.json");
+  const stockActionIndex = scoringContractReport ? readJson("data/computed/stock_action_index.json") : null;
   const marketFacts = readJson("data/computed/market_facts/index.json");
   const coverageIndex = readJsonOrNull("data/admin/fenok-edge-coverage-index.json");
   const slickUniverse = readJson("data/slickcharts/universe.json");
@@ -582,6 +743,22 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false, promotionR
           enhancedConsensusSet,
         }
       : null,
+    scoringContractContext: scoringContractReport
+      ? {
+          marketByTicker,
+          s0Set,
+          stockActionIndex,
+          globalScouterCoreSet,
+          globalScouterDetailSet,
+          stockanalysisFinancialsSet,
+          revisionSet,
+          quarterCloseSet,
+          slickReturnsSet,
+          slickDividendsSet,
+          guruHoldersSet,
+          enhancedConsensusSet,
+        }
+      : null,
     examples,
     full,
   });
@@ -649,6 +826,44 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false, promotionR
         ok: artifact?.counts?.public_s0_before === s0Tickers.length
           && artifact?.counts?.public_s0_after_this_artifact === s0Tickers.length,
         detail: `${artifact?.counts?.public_s0_before}->${artifact?.counts?.public_s0_after_this_artifact}, s0=${s0Tickers.length}`,
+      },
+    );
+  }
+  if (scoringContractReport) {
+    const artifact = s1JoinedGate.scoring_contract_artifact;
+    hardChecks.push(
+      {
+        id: "s1_scoring_contract_counts_match_gate",
+        ok: artifact?.counts?.joined_ready_contract_rows === s1JoinedGate.counts.joined_ready
+          && artifact?.counts?.joined_not_ready_excluded === s1JoinedGate.counts.joined_not_ready,
+        detail: `${artifact?.counts?.joined_ready_contract_rows}+${artifact?.counts?.joined_not_ready_excluded} vs ${s1JoinedGate.counts.joined_ready}+${s1JoinedGate.counts.joined_not_ready}`,
+      },
+      {
+        id: "s1_scoring_contract_no_etf_rows",
+        ok: artifact?.counts?.etf_rows === 0 && artifact?.counts?.non_stock_rows === 0,
+        detail: `etf_rows=${artifact?.counts?.etf_rows}, non_stock_rows=${artifact?.counts?.non_stock_rows}`,
+      },
+      {
+        id: "s1_scoring_contract_no_fake_scores",
+        ok: artifact?.counts?.fake_score_rows === 0 && artifact?.counts?.actual_scored_rows === 0,
+        detail: `fake_score_rows=${artifact?.counts?.fake_score_rows}, actual_scored_rows=${artifact?.counts?.actual_scored_rows}`,
+      },
+      {
+        id: "s1_scoring_contract_preserves_s0_count",
+        ok: artifact?.counts?.public_s0_before === s0Tickers.length
+          && artifact?.counts?.public_s0_after_this_artifact === s0Tickers.length
+          && artifact?.counts?.s0_overlap_rows === 0,
+        detail: `${artifact?.counts?.public_s0_before}->${artifact?.counts?.public_s0_after_this_artifact}, s0_overlap_rows=${artifact?.counts?.s0_overlap_rows}`,
+      },
+      {
+        id: "s1_scoring_contract_no_public_daily_gated_claim",
+        ok: artifact?.acceptance_checks?.find((check) => check.id === "s1_scoring_contract_no_public_daily_gated_claim")?.ok === true,
+        detail: JSON.stringify(artifact?.contract?.disallowed_claims ?? null),
+      },
+      {
+        id: "s1_scoring_contract_stdout_only_no_writes",
+        ok: artifact?.counts?.files_written === 0 && artifact?.counts?.public_files_written === 0,
+        detail: `files_written=${artifact?.counts?.files_written}, public_files_written=${artifact?.counts?.public_files_written}`,
       },
     );
   }
@@ -830,6 +1045,9 @@ function printHuman(result) {
   if (result.s1_stock_promotion_candidates.joined_gate.promotion_artifact) {
     console.log(`S1 promotion report counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.promotion_artifact.counts)}`);
   }
+  if (result.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact) {
+    console.log(`S1 scoring contract report counts: ${JSON.stringify(result.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact.counts)}`);
+  }
   console.log(
     `S2 fuel: YF=${result.s2_stock_expansion_fuel.yf.ticker_payloads_excluding_summary}, `
     + `SEC13F=${result.s2_stock_expansion_fuel.sec13f.by_ticker_keys}, `
@@ -854,7 +1072,9 @@ function printHuman(result) {
 
 const args = parseArgs(process.argv.slice(2));
 const audit = buildAudit(args);
-if (args.promotionReport) {
+if (args.scoringContractReport) {
+  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact, null, 2)}\n`);
+} else if (args.promotionReport) {
   process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_artifact, null, 2)}\n`);
 } else if (args.json) process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
 else printHuman(audit);
