@@ -91,6 +91,78 @@ function rowTickerSet(payload) {
   return new Set((Array.isArray(payload?.rows) ? payload.rows : []).map((row) => normTicker(row.ticker_normalized ?? row.ticker)).filter(Boolean));
 }
 
+function rowTicker(row) {
+  return normTicker(row?.ticker_normalized ?? row?.ticker);
+}
+
+function rowTickerMap(payload) {
+  return new Map((Array.isArray(payload?.rows) ? payload.rows : [])
+    .map((row) => [rowTicker(row), row])
+    .filter(([ticker]) => ticker));
+}
+
+function countByCategory(rows, classifier) {
+  const counts = {};
+  for (const row of rows) {
+    const category = classifier(row);
+    counts[category] = (counts[category] || 0) + 1;
+  }
+  return Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+function classShareTicker(row) {
+  return /^BRK-[AB]$/.test(rowTicker(row));
+}
+
+function plainUsOccEligible(row) {
+  const ticker = rowTicker(row);
+  return row?.market === "US" && /^[A-Z][A-Z0-9]{0,11}$/.test(ticker);
+}
+
+function hasNonPlainOrForeignSuffix(row) {
+  const ticker = rowTicker(row);
+  return row?.market === "US_CLASS"
+    || ticker.includes("-")
+    || ticker.includes("/")
+    || /\d/.test(ticker[0] ?? "");
+}
+
+function finraMetricReady(row) {
+  return Boolean(row)
+    && row.confidence === "high"
+    && Number(row.coverage_ratio) > 0
+    && row.short_pressure_proxy?.score_0_100 != null
+    && row.off_exchange_activity_proxy?.score_0_100 != null;
+}
+
+function classifyFinraRowGap(row) {
+  if (hasNonPlainOrForeignSuffix(row)) {
+    return "non_plain_or_foreign_suffix_requires_universe_mapping";
+  }
+  return "plain_us_finra_collection_gap";
+}
+
+function classifyFinraStrictGap(row, flowRow) {
+  if (!flowRow) return classifyFinraRowGap(row);
+  if (classShareTicker(row)) {
+    return "class_share_placeholder_requires_finra_symbol_policy";
+  }
+  if (hasNonPlainOrForeignSuffix(row)) {
+    return "non_plain_placeholder_requires_universe_mapping";
+  }
+  return "plain_us_finra_metric_gap";
+}
+
+function classifyOccGap(row) {
+  if (classShareTicker(row)) {
+    return "class_share_symbol_normalization_or_source_gap";
+  }
+  if (!plainUsOccEligible(row)) {
+    return "non_plain_or_foreign_suffix_requires_universe_mapping";
+  }
+  return "plain_us_collection_or_no_options_policy_required";
+}
+
 function sourceDateFromRows(payload) {
   const rows = Array.isArray(payload?.rows) ? payload.rows : [];
   const dates = unique(rows.map((row) => toIsoDate(row.source_date ?? row.as_of)));
@@ -275,6 +347,7 @@ const usRows = universeRows.filter((row) => row.market === "US" || row.market ==
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
 const explicitTaiwanRows = universeRows.filter((row) => /^(TW|TAIWAN|TPE|TPEX)$/i.test(String(row.market ?? "")) || /taiwan/i.test(String(row.market_scope ?? "")));
+const finraEligibleRows = usRows.filter((row) => row.market === "US");
 const taiwanTickerAnomalies = universeRows
   .filter((row) => /\.(TW|TWO)$/i.test(String(row.ticker ?? "")) || /-(TW|TWO)$/i.test(String(row.ticker_normalized ?? "")))
   .filter((row) => !explicitTaiwanRows.includes(row))
@@ -291,6 +364,7 @@ const krUniverseCodes = new Set(koreaRows.map((row) => krCode(row.ticker_normali
 
 const flow = readJson("data/computed/fenok_flow_proxies.json", {});
 const flowSet = rowTickerSet(flow);
+const flowRowsByTicker = rowTickerMap(flow);
 const flowIntersection = [...flowSet].filter((ticker) => usUniverse.has(ticker));
 const flowSourceDate = sourceDateFromRows(flow) ?? toIsoDate(flow.source_files?.finra_daily_short_sale_volume?.match(/CNMSshvol(\d{8})/)?.[1]);
 
@@ -352,6 +426,24 @@ const combinedKrUsOcc = koreaIntersection.length + occIntersection.length;
 const combinedKrUsLatestBounded = koreaIntersection.length + latestUsIntersection.length;
 const marketFactsCoverage = marketFacts.coverage ?? {};
 const etfSignalGate = runEtfSignalGateChecks({ repoRoot: REPO_ROOT });
+
+const finraEligibleMetricReadyRows = finraEligibleRows.filter((row) => finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
+const finraEligibleMetricMissingRows = finraEligibleRows.filter((row) => !finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
+const finraMissingRows = usRows.filter((row) => !flowSet.has(rowTicker(row)));
+const finraStrictMetricReadyRows = usRows.filter((row) => finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
+const finraStrictGapRows = usRows.filter((row) => !finraMetricReady(flowRowsByTicker.get(rowTicker(row))));
+const finraPlaceholderRows = usRows.filter((row) => {
+  const flowRow = flowRowsByTicker.get(rowTicker(row));
+  return Boolean(flowRow) && !finraMetricReady(flowRow);
+});
+const occMissingRows = usRows.filter((row) => !occSet.has(rowTicker(row)));
+const occPlainMissingRows = occMissingRows.filter(plainUsOccEligible);
+const occClassShareMissingRows = occMissingRows.filter(classShareTicker);
+const occNoRecordAttempts = new Set((Array.isArray(occ.attempts) ? occ.attempts : [])
+  .filter((attempt) => attempt?.status === "failed" && /No record\(s\) found/i.test(String(attempt?.error ?? "")))
+  .map((attempt) => normTicker(attempt?.ticker)));
+const occPlainNoRecordRows = occPlainMissingRows.filter((row) => occNoRecordAttempts.has(rowTicker(row)));
+const occPlainUnattemptedRows = occPlainMissingRows.filter((row) => !occNoRecordAttempts.has(rowTicker(row)));
 
 function computeEtfReadinessEvidence() {
   const maxAgeHours = 48;
@@ -454,36 +546,86 @@ function readinessTrack({ id, label, denominator, stage, booleans, caveat, extra
 }
 
 function activeS0BlockingEvidence() {
+  const finraRowBreakdown = countByCategory(finraMissingRows, classifyFinraRowGap);
+  const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
+  const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
+  const checks = [
+    {
+      id: "finra_full_us_source_ready",
+      status: finraEligibleMetricReadyRows.length === finraEligibleRows.length ? "ready" : "blocked",
+      covered_count: finraEligibleMetricReadyRows.length,
+      denominator: finraEligibleRows.length,
+      missing_count: Math.max(0, finraEligibleRows.length - finraEligibleMetricReadyRows.length),
+      source_date: flowSourceDate,
+      eligibility_policy: "active_scoring_universe rows where market=US; US_CLASS foreign/class rows stay in active US bucket but are excluded from FINRA plain-US readiness until mapped or rebucketed.",
+      excluded_us_class_count: usRows.length - finraEligibleRows.length,
+      row_existence_count: flowIntersection.length,
+      strict_metric_ready_count: finraStrictMetricReadyRows.length,
+      strict_metric_missing_or_placeholder_count: finraStrictGapRows.length,
+      low_confidence_placeholder_count: finraPlaceholderRows.length,
+      derived_gap_breakdown: {
+        row_existence_criterion: {
+          covered_count: flowIntersection.length,
+          missing_count: finraMissingRows.length,
+          missing_categories: finraRowBreakdown,
+        },
+        strict_metric_ready_criterion: {
+          covered_count: finraStrictMetricReadyRows.length,
+          missing_or_placeholder_count: finraStrictGapRows.length,
+          missing_or_placeholder_categories: finraStrictBreakdown,
+        },
+        active_plain_us_metric_ready_criterion: {
+          covered_count: finraEligibleMetricReadyRows.length,
+          denominator: finraEligibleRows.length,
+          missing_count: finraEligibleMetricMissingRows.length,
+        },
+      },
+      semantic_warning: "Row-existence FINRA coverage is not the same as metric-ready FINRA coverage when low-confidence placeholders exist.",
+      next_action: "Keep US_CLASS foreign/class rows out of FINRA readiness until mapped or rebucketed; do not refetch FINRA for those rows.",
+    },
+    {
+      id: "occ_full_us_source_ready",
+      status: occIntersection.length === usRows.length ? "ready" : "blocked",
+      covered_count: occIntersection.length,
+      denominator: usRows.length,
+      missing_count: Math.max(0, usRows.length - occIntersection.length),
+      source_date: occSourceDate,
+      derived_gap_breakdown: {
+        missing_categories: {
+          ...occBreakdown,
+          plain_us_no_record_attempt_count: occPlainNoRecordRows.length,
+          plain_us_unattempted_count: occPlainUnattemptedRows.length,
+        },
+        plain_us_collection_or_no_options_policy_required: {
+          count: occPlainMissingRows.length,
+          no_record_attempt_count: occPlainNoRecordRows.length,
+          unattempted_count: occPlainUnattemptedRows.length,
+        },
+        non_plain_or_foreign_suffix_requires_universe_mapping: {
+          count: occBreakdown.non_plain_or_foreign_suffix_requires_universe_mapping ?? 0,
+        },
+        class_share_symbol_normalization_or_source_gap: {
+          count: occClassShareMissingRows.length,
+        },
+      },
+      next_action: "Run bounded OCC batches or no-options proof for plain US gaps; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms.",
+    },
+    {
+      id: "no_asia_ex_taiwan_gap",
+      status: asiaExTwRows.length === 0 ? "ready" : "blocked",
+      covered_count: 0,
+      denominator: asiaExTwRows.length,
+      missing_count: asiaExTwRows.length,
+      markets: marketCounts(asiaExTwRows),
+      next_action: "Add or explicitly exclude HKEX/SSE/SZSE daily-source workstream before S0 daily can be true.",
+    },
+  ];
   return {
     evidence_origin: "derived_counts_only",
-    daily_ready: false,
+    daily_ready: checks.every((check) => check.status === "ready"),
     gated_ready: false,
-    blockers: [
-      {
-        id: "finra_full_us_source_ready",
-        covered_count: flowIntersection.length,
-        denominator: usRows.length,
-        missing_count: Math.max(0, usRows.length - flowIntersection.length),
-        source_date: flowSourceDate,
-        next_action: "Continue bounded FINRA daily accumulation until covered_count equals the active US denominator.",
-      },
-      {
-        id: "occ_full_us_source_ready",
-        covered_count: occIntersection.length,
-        denominator: usRows.length,
-        missing_count: Math.max(0, usRows.length - occIntersection.length),
-        source_date: occSourceDate,
-        next_action: "Continue rolling OCC batch accumulation until covered_count equals the active US denominator.",
-      },
-      {
-        id: "no_asia_ex_taiwan_gap",
-        covered_count: 0,
-        denominator: asiaExTwRows.length,
-        missing_count: asiaExTwRows.length,
-        markets: marketCounts(asiaExTwRows),
-        next_action: "Add or explicitly exclude HKEX/SSE/SZSE daily-source workstream before S0 daily can be true.",
-      },
-    ],
+    checks,
+    blockers: checks.filter((check) => check.status !== "ready"),
     caveat: "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims.",
   };
 }
@@ -575,18 +717,23 @@ const index = {
     }),
     coverageRow({
       id: "us_finra_flow_proxy",
-      label: "US FINRA flow proxy coverage",
-      count: flowIntersection.length,
-      denominator: usRows.length,
-      denominatorLabel: "active_scoring_universe.us",
+      label: "US FINRA flow proxy coverage, active plain-US metric-ready",
+      count: finraEligibleMetricReadyRows.length,
+      denominator: finraEligibleRows.length,
+      denominatorLabel: "active_scoring_universe.us where market=US",
       sourceDate: flowSourceDate,
-      status: flowIntersection.length > 0 ? "ready" : "missing",
+      status: finraEligibleMetricReadyRows.length === finraEligibleRows.length ? "ready" : "partial",
       claimScope: "proxy_source_available",
       activeTotal: activeScoringTotal,
-      caveat: "FINRA short-sale/off-exchange proxy coverage only; not full all-axis scoring and not directional flow.",
+      caveat: "FINRA short-sale/off-exchange metric-ready coverage for active plain-US rows only; not full all-axis scoring and not directional flow. US_CLASS foreign/class rows are tracked as mapping policy work, not FINRA fetch gaps.",
       extra: {
         source_file: "data/computed/fenok_flow_proxies.json",
         rows: Array.isArray(flow.rows) ? flow.rows.length : 0,
+        row_existence_count: flowIntersection.length,
+        strict_metric_ready_count: finraStrictMetricReadyRows.length,
+        low_confidence_placeholder_count: finraPlaceholderRows.length,
+        excluded_us_class_count: usRows.length - finraEligibleRows.length,
+        eligibility_policy: "active rows where market=US and FINRA proxy metrics are high-confidence/non-placeholder",
       },
     }),
     coverageRow({

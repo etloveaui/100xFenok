@@ -116,7 +116,10 @@ function getActiveTrack(index) {
 }
 
 function getBlockingEvidence(activeTrack, blockerId) {
-  return asArray(activeTrack?.blocking_evidence?.blockers).find((blocker) => blocker?.id === blockerId) ?? null;
+  return [
+    ...asArray(activeTrack?.blocking_evidence?.checks),
+    ...asArray(activeTrack?.blocking_evidence?.blockers),
+  ].find((blocker) => blocker?.id === blockerId) ?? null;
 }
 
 function plainUsOccEligible(row) {
@@ -248,6 +251,9 @@ function buildAudit({ full }) {
   const finraRowsByTicker = tickerMap(flowProxies);
   const occTickers = tickerSet(occOptions);
 
+  const finraEligibleRows = activeUsRows.filter((row) => row?.market === "US");
+  const finraEligibleMetricReadyRows = finraEligibleRows.filter((row) => finraMetricReady(finraRowsByTicker.get(rowTicker(row))));
+  const finraEligibleMetricMissingRows = finraEligibleRows.filter((row) => !finraMetricReady(finraRowsByTicker.get(rowTicker(row))));
   const finraPresent = activeUsRows.filter((row) => finraTickers.has(rowTicker(row)));
   const finraMissing = activeUsRows.filter((row) => !finraTickers.has(rowTicker(row)));
   const finraStrictPresent = activeUsRows.filter((row) => finraMetricReady(finraRowsByTicker.get(rowTicker(row))));
@@ -273,18 +279,26 @@ function buildAudit({ full }) {
   const occSource = getSourceRow(coverageIndex, "us_occ_options_proxy");
   const finraEvidence = getBlockingEvidence(activeTrack, "finra_full_us_source_ready");
   const occEvidence = getBlockingEvidence(activeTrack, "occ_full_us_source_ready");
+  const finraIndexUsesMetricReadyEligibility = Boolean(finraSource?.eligibility_policy || finraEvidence?.eligibility_policy);
+  const expectedFinraSourceCovered = finraIndexUsesMetricReadyEligibility ? finraEligibleMetricReadyRows.length : finraPresent.length;
+  const expectedFinraSourceDenominator = finraIndexUsesMetricReadyEligibility ? finraEligibleRows.length : activeUsRows.length;
+  const expectedFinraEvidenceMissing = finraIndexUsesMetricReadyEligibility ? finraEligibleMetricMissingRows.length : finraMissing.length;
   const errors = [];
 
   checkEqual(errors, "active_us_bucket_matches_rows", activeUsRows.length, coverageIndex?.active_scoring_universe?.buckets?.us);
-  checkEqual(errors, "finra_present_matches_source_row", finraPresent.length, finraSource?.covered_count);
+  checkEqual(errors, "finra_present_matches_source_row", expectedFinraSourceCovered, finraSource?.covered_count);
   checkEqual(errors, "finra_strict_present_matches_payload_coverage", finraStrictPresent.length, flowProxies?.coverage?.with_finra);
-  checkEqual(errors, "finra_denominator_matches_source_row", activeUsRows.length, finraSource?.denominator);
+  checkEqual(errors, "finra_denominator_matches_source_row", expectedFinraSourceDenominator, finraSource?.denominator);
   checkEqual(errors, "occ_present_matches_source_row", occPresent.length, occSource?.covered_count);
   checkEqual(errors, "occ_denominator_matches_source_row", activeUsRows.length, occSource?.denominator);
-  checkEqual(errors, "finra_missing_matches_blocking_evidence", finraMissing.length, finraEvidence?.missing_count);
+  checkEqual(errors, "finra_missing_matches_blocking_evidence", expectedFinraEvidenceMissing, finraEvidence?.missing_count);
   checkEqual(errors, "occ_missing_matches_blocking_evidence", occMissing.length, occEvidence?.missing_count);
   checkEqual(errors, "finra_partition_matches_denominator", finraPresent.length + finraMissing.length, activeUsRows.length);
   checkEqual(errors, "occ_partition_matches_denominator", occPresent.length + occMissing.length, activeUsRows.length);
+  checkEqual(errors, "finra_excluded_us_class_count_matches_source_row", activeUsRows.length - finraEligibleRows.length, finraSource?.excluded_us_class_count);
+  checkEqual(errors, "finra_row_existence_count_matches_source_row", finraPresent.length, finraSource?.row_existence_count);
+  checkEqual(errors, "finra_strict_metric_ready_count_matches_source_row", finraStrictPresent.length, finraSource?.strict_metric_ready_count);
+  checkEqual(errors, "finra_low_confidence_placeholder_count_matches_source_row", finraPlaceholderRows.length, finraSource?.low_confidence_placeholder_count);
 
   const warnings = [];
   if (finraPlainMissing.length > 0) {
@@ -345,9 +359,14 @@ function buildAudit({ full }) {
     },
     counts: {
       active_us_total: activeUsRows.length,
+      finra_eligible_denominator: finraEligibleRows.length,
+      finra_excluded_us_class_count: activeUsRows.length - finraEligibleRows.length,
       finra_present: finraPresent.length,
       finra_missing: finraMissing.length,
       finra_coverage_pct: pct(finraPresent.length, activeUsRows.length),
+      finra_eligible_metric_ready_present: finraEligibleMetricReadyRows.length,
+      finra_eligible_metric_missing: finraEligibleMetricMissingRows.length,
+      finra_eligible_metric_ready_coverage_pct: pct(finraEligibleMetricReadyRows.length, finraEligibleRows.length),
       finra_metric_ready_present: finraStrictPresent.length,
       finra_metric_ready_missing_or_placeholder: finraStrictMissing.length,
       finra_metric_ready_coverage_pct: pct(finraStrictPresent.length, activeUsRows.length),
@@ -454,6 +473,7 @@ function renderText(audit) {
     `Fenok S0 source gap audit: ${audit.acceptance_checks.ok ? "PASS" : "FAIL"}`,
     `active US denominator: ${audit.counts.active_us_total} (${Object.entries(audit.denominator.active_us_by_market).map(([market, count]) => `${market}=${count}`).join(", ")})`,
     `FINRA: present=${audit.counts.finra_present} missing=${audit.counts.finra_missing} coverage=${audit.counts.finra_coverage_pct}%`,
+    `FINRA eligible metric-ready: present=${audit.counts.finra_eligible_metric_ready_present}/${audit.counts.finra_eligible_denominator} excluded_us_class=${audit.counts.finra_excluded_us_class_count} coverage=${audit.counts.finra_eligible_metric_ready_coverage_pct}%`,
     `FINRA strict metric-ready: present=${audit.counts.finra_metric_ready_present} missing_or_placeholder=${audit.counts.finra_metric_ready_missing_or_placeholder} coverage=${audit.counts.finra_metric_ready_coverage_pct}%`,
     `FINRA missing classes: ${finraClasses || "none"}`,
     `OCC: present=${audit.counts.occ_present} missing=${audit.counts.occ_missing} coverage=${audit.counts.occ_coverage_pct}%`,
