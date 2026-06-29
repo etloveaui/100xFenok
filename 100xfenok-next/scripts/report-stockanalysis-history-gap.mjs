@@ -42,6 +42,7 @@ const MONTH_NAME_TO_INDEX = new Map([
 const args = parseArgs(process.argv.slice(2));
 const WRITE_REPORT = args.flags.has("--write-report");
 const REQUIRED_PERIODS = parseRequiredPeriods(args.options.get("--required-history-periods") || process.env.INPUT_REQUIRED_HISTORY_PERIODS || "");
+const ENFORCE_INCREMENTAL_PLAN = REQUIRED_PERIODS.join(",") === DEFAULT_REQUIRED_PERIODS.join(",");
 
 function parseArgs(argv) {
   const flags = new Set();
@@ -426,6 +427,12 @@ function main() {
           matches_required_periods: strictCountMatches.required_periods,
           strict_count_matches: strictCountMatches,
           subset_of_full_scan: subsetOfFullScan,
+          enforcement: {
+            enforced: ENFORCE_INCREMENTAL_PLAN,
+            caveat: ENFORCE_INCREMENTAL_PLAN
+              ? "The default required-history report enforces incremental_plan consistency."
+              : "Non-default reports, including daily_1y ETF continuity, keep incremental_plan consistency informational because exact ETF fetchable selection is emitted separately.",
+          },
         }
       : null,
     market_facts_return_3y: {
@@ -474,22 +481,22 @@ function main() {
     console.error(`wrote ${PUBLIC_REPORT_PATH}`);
   }
 
-  if (plan && !report.incremental_plan.strict_count_matches.required_periods) {
+  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.strict_count_matches.required_periods) {
     throw new Error(
       `incremental_plan required_history_periods=${planRequiredPeriods.join(",")} does not match report required_history_periods=${REQUIRED_PERIODS.join(",")}`,
     );
   }
-  if (plan && !report.incremental_plan.subset_of_full_scan.fetchable) {
+  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.subset_of_full_scan.fetchable) {
     throw new Error(
       `incremental_plan selected tickers are not in current fetchable full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.fetchable.join(",")}`,
     );
   }
-  if (plan && !report.incremental_plan.subset_of_full_scan.total) {
+  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.subset_of_full_scan.total) {
     throw new Error(
       `incremental_plan total tickers are not in current missing full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.total.join(",")}`,
     );
   }
-  if (plan && !report.incremental_plan.subset_of_full_scan.inception_limited) {
+  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.subset_of_full_scan.inception_limited) {
     throw new Error(
       `incremental_plan inception-limited tickers are not in current inception-limited full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.inception_limited.join(",")}`,
     );

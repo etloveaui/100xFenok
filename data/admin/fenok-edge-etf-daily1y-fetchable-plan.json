@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-06-29T22:57:01.417Z",
+  "generated_at": "2026-06-29T23:19:07.798Z",
   "purpose": "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -21,14 +21,14 @@
       "required_history_periods": "daily_1y",
       "incremental_etf_limit": "120"
     },
-    "caveat": "The exact 584 readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
+    "caveat": "The exact readiness blocker is StockAnalysis ETF detail daily_1y continuity. Local YF history_1y is reported as a cross-check only because the local YF cache is partial and would select a much broader set."
   },
   "counts": {
     "scored_etf_count": 4484,
-    "complete": 3366,
-    "fetchable": 584,
+    "complete": 3432,
+    "fetchable": 518,
     "inception_limited": 534,
-    "missing": 1118,
+    "missing": 1052,
     "equation_ok": true,
     "matches_history_gap_report": true,
     "matches_coverage_index": true,
@@ -91,7 +91,7 @@
         "yf_missing_file_or_history": true
       }
     ],
-    "caveat": "Do not use the local YF-only count as the ETF readiness blocker unless the product contract changes; it currently over-selects versus the 584 StockAnalysis continuity blocker."
+    "caveat": "Do not use the local YF-only count as the ETF readiness blocker unless the product contract changes; it currently over-selects versus the exact StockAnalysis continuity blocker."
   },
   "bounded_batches": {
     "can_drive_bounded_ticker_batches": true,
@@ -101,241 +101,175 @@
     "first_batch_tickers": [
       "AAAD",
       "AAAP",
-      "AAAU",
-      "AAPR",
-      "AAPW",
-      "ABXB",
       "ACGO",
-      "ACGR",
       "ACII",
-      "ACLC",
-      "ACVU",
       "ACYQ",
       "ADDS",
-      "AETH",
       "AFGR",
-      "AIOO",
-      "AJAN",
-      "AJUL",
-      "AKAF",
-      "AMDW",
       "AMEI",
       "AMEM",
       "AMGR",
       "AMHI",
       "AMUN",
-      "AMZW",
       "APDB",
-      "APOC",
-      "APRH",
-      "APRJ",
-      "APRT",
-      "APRW",
       "AQLG",
-      "ARKB",
       "ARLI",
-      "ARLU",
       "ARMW",
       "ARMY",
       "ASCI",
       "ASD",
       "ASEC",
-      "AUGU",
-      "AVGW",
-      "AVNV",
       "BABW",
-      "BALT",
-      "BAPR",
-      "BAR",
-      "BAUG",
       "BAVA",
-      "BBB",
-      "BCCC",
       "BCEM",
       "BD",
-      "BDEC",
-      "BETE",
-      "BETH",
-      "BFEB",
       "BGCG",
       "BGEG",
       "BGGG",
       "BGIA",
-      "BGLD",
       "BHYP",
-      "BITB",
-      "BITC",
-      "BITO",
-      "BITS",
-      "BJAN",
-      "BJUL",
-      "BJUN",
       "BKLG",
-      "BLST",
-      "BLTD",
-      "BMAR",
-      "BMAY",
-      "BNDW",
-      "BNDY",
-      "BNOV",
-      "BOCT",
       "BRCE",
       "BREE",
       "BRIE",
-      "BRKW",
       "BROL",
-      "BRRR",
       "BRSM",
       "BSCA",
-      "BSEP",
       "BSGR",
       "BSGT",
       "BSJY",
       "BSOL",
-      "BSTP",
       "BSTS",
       "BSTU",
       "BSTV",
-      "BTC",
       "BTCK",
-      "BTCO",
-      "BTCW",
-      "BTRN",
-      "BUCK",
       "BWOW",
-      "CBOJ",
       "CBOO",
-      "CBOY",
-      "CBTJ",
       "CBTO",
-      "CBTY",
       "CBXO",
-      "CBXY",
-      "CERY",
-      "CEW",
       "CGOV",
       "CHNL",
       "CHYG",
       "CIEI",
       "CIVG",
-      "CJUN"
+      "CJUN",
+      "CLNK",
+      "CLOO",
+      "CMAY",
+      "COIW",
+      "COM",
+      "COMD",
+      "COSW",
+      "CPAG",
+      "CPHY",
+      "CPNJ",
+      "CPNM",
+      "CPNQ",
+      "CPNS",
+      "CPRA",
+      "CPRJ",
+      "CPRO",
+      "CPRY",
+      "CPSA",
+      "CPSD",
+      "CPSF",
+      "CPSJ",
+      "CPSM",
+      "CPSN",
+      "CPSO",
+      "CPSP",
+      "CPSR",
+      "CPST",
+      "CPSU",
+      "CPSY",
+      "CRDD",
+      "CRIB",
+      "CRUX",
+      "CSEN",
+      "CTJN",
+      "CUSD",
+      "DDFY",
+      "DDFZ",
+      "DDSQ",
+      "DDTY",
+      "DDTZ",
+      "DDX",
+      "DECU",
+      "DEFI",
+      "DFAL",
+      "DHLX",
+      "DHSB",
+      "DLMY",
+      "DOJE",
+      "DQJN",
+      "DRMP",
+      "DRUP",
+      "DUSG",
+      "DVIN",
+      "DVQQ",
+      "DVRE",
+      "DVSP",
+      "DVUT",
+      "DVXB",
+      "DVXC",
+      "DVXE",
+      "DVXF",
+      "DVXK",
+      "DVXP",
+      "DVXV",
+      "DVXY",
+      "DWWN"
     ]
   },
   "tickers": [
     "AAAD",
     "AAAP",
-    "AAAU",
-    "AAPR",
-    "AAPW",
-    "ABXB",
     "ACGO",
-    "ACGR",
     "ACII",
-    "ACLC",
-    "ACVU",
     "ACYQ",
     "ADDS",
-    "AETH",
     "AFGR",
-    "AIOO",
-    "AJAN",
-    "AJUL",
-    "AKAF",
-    "AMDW",
     "AMEI",
     "AMEM",
     "AMGR",
     "AMHI",
     "AMUN",
-    "AMZW",
     "APDB",
-    "APOC",
-    "APRH",
-    "APRJ",
-    "APRT",
-    "APRW",
     "AQLG",
-    "ARKB",
     "ARLI",
-    "ARLU",
     "ARMW",
     "ARMY",
     "ASCI",
     "ASD",
     "ASEC",
-    "AUGU",
-    "AVGW",
-    "AVNV",
     "BABW",
-    "BALT",
-    "BAPR",
-    "BAR",
-    "BAUG",
     "BAVA",
-    "BBB",
-    "BCCC",
     "BCEM",
     "BD",
-    "BDEC",
-    "BETE",
-    "BETH",
-    "BFEB",
     "BGCG",
     "BGEG",
     "BGGG",
     "BGIA",
-    "BGLD",
     "BHYP",
-    "BITB",
-    "BITC",
-    "BITO",
-    "BITS",
-    "BJAN",
-    "BJUL",
-    "BJUN",
     "BKLG",
-    "BLST",
-    "BLTD",
-    "BMAR",
-    "BMAY",
-    "BNDW",
-    "BNDY",
-    "BNOV",
-    "BOCT",
     "BRCE",
     "BREE",
     "BRIE",
-    "BRKW",
     "BROL",
-    "BRRR",
     "BRSM",
     "BSCA",
-    "BSEP",
     "BSGR",
     "BSGT",
     "BSJY",
     "BSOL",
-    "BSTP",
     "BSTS",
     "BSTU",
     "BSTV",
-    "BTC",
     "BTCK",
-    "BTCO",
-    "BTCW",
-    "BTRN",
-    "BUCK",
     "BWOW",
-    "CBOJ",
     "CBOO",
-    "CBOY",
-    "CBTJ",
     "CBTO",
-    "CBTY",
     "CBXO",
-    "CBXY",
-    "CERY",
-    "CEW",
     "CGOV",
     "CHNL",
     "CHYG",
@@ -821,98 +755,21 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "AAAU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "AAPR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "AAPW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "ABXB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "ACGO",
-      "actual_rows": 0,
+      "actual_rows": 17,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
-    },
-    {
-      "ticker": "ACGR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 17
     },
     {
       "ticker": "ACII",
       "actual_rows": 0,
       "missing_file": true,
       "yf_history_rows": null
-    },
-    {
-      "ticker": "ACLC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "ACVU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
     },
     {
       "ticker": "ACYQ",
@@ -927,76 +784,10 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "AETH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "AFGR",
       "actual_rows": 0,
       "missing_file": true,
       "yf_history_rows": null
-    },
-    {
-      "ticker": "AIOO",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 244
-    },
-    {
-      "ticker": "AJAN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "AJUL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "AKAF",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 247
-    },
-    {
-      "ticker": "AMDW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 228
     },
     {
       "ticker": "AMEI",
@@ -1024,7 +815,7 @@
     },
     {
       "ticker": "AMUN",
-      "actual_rows": 166,
+      "actual_rows": 172,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
@@ -1034,81 +825,15 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "AMZW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "APDB",
-      "actual_rows": 0,
+      "actual_rows": 37,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 31
-    },
-    {
-      "ticker": "APOC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "APRH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "APRJ",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "APRT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "APRW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 37
     },
     {
       "ticker": "AQLG",
@@ -1122,63 +847,41 @@
       "yf_history_rows": 8
     },
     {
-      "ticker": "ARKB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "ARLI",
-      "actual_rows": 0,
+      "actual_rows": 60,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 55
-    },
-    {
-      "ticker": "ARLU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 60
     },
     {
       "ticker": "ARMW",
-      "actual_rows": 0,
+      "actual_rows": 170,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 164
+      "yf_history_rows": 170
     },
     {
       "ticker": "ARMY",
-      "actual_rows": 0,
+      "actual_rows": 190,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 184
+      "yf_history_rows": 190
     },
     {
       "ticker": "ASCI",
-      "actual_rows": 166,
+      "actual_rows": 172,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
@@ -1189,14 +892,14 @@
     },
     {
       "ticker": "ASD",
-      "actual_rows": 0,
+      "actual_rows": 19,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
+      "yf_history_rows": 19
     },
     {
       "ticker": "ASEC",
@@ -1210,92 +913,15 @@
       "yf_history_rows": 15
     },
     {
-      "ticker": "AUGU",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "AVGW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 228
-    },
-    {
-      "ticker": "AVNV",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "BABW",
-      "actual_rows": 0,
+      "actual_rows": 170,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 164
-    },
-    {
-      "ticker": "BALT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BAPR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BAR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BAUG",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
+      "yf_history_rows": 170
     },
     {
       "ticker": "BAVA",
@@ -1304,37 +930,15 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "BBB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BCCC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "BCEM",
-      "actual_rows": 0,
+      "actual_rows": 56,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 50
+      "yf_history_rows": 56
     },
     {
       "ticker": "BD",
@@ -1343,103 +947,48 @@
       "yf_history_rows": null
     },
     {
-      "ticker": "BDEC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BETE",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BETH",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
-      "ticker": "BFEB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 252
-    },
-    {
       "ticker": "BGCG",
-      "actual_rows": 0,
+      "actual_rows": 20,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 14
+      "yf_history_rows": 20
     },
     {
       "ticker": "BGEG",
-      "actual_rows": 0,
+      "actual_rows": 18,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
+      "yf_history_rows": 18
     },
     {
       "ticker": "BGGG",
-      "actual_rows": 0,
+      "actual_rows": 20,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 13
+      "yf_history_rows": 20
     },
     {
       "ticker": "BGIA",
-      "actual_rows": 0,
+      "actual_rows": 18,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
-    },
-    {
-      "ticker": "BGLD",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 18
     },
     {
       "ticker": "BHYP",
@@ -1453,246 +1002,59 @@
       "yf_history_rows": 23
     },
     {
-      "ticker": "BITB",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BITC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BITO",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BITS",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BJAN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BJUL",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BJUN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "BKLG",
-      "actual_rows": 3,
+      "actual_rows": 5,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 3
-    },
-    {
-      "ticker": "BLST",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 249
-    },
-    {
-      "ticker": "BLTD",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 249
-    },
-    {
-      "ticker": "BMAR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BMAY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BNDW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BNDY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 241
-    },
-    {
-      "ticker": "BNOV",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BOCT",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 5
     },
     {
       "ticker": "BRCE",
-      "actual_rows": 0,
+      "actual_rows": 171,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 164
+      "yf_history_rows": 171
     },
     {
       "ticker": "BREE",
-      "actual_rows": 0,
+      "actual_rows": 80,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 73
+      "yf_history_rows": 80
     },
     {
       "ticker": "BRIE",
-      "actual_rows": 0,
+      "actual_rows": 171,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 164
-    },
-    {
-      "ticker": "BRKW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 171
     },
     {
       "ticker": "BROL",
-      "actual_rows": 0,
+      "actual_rows": 23,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 16
-    },
-    {
-      "ticker": "BRRR",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 23
     },
     {
       "ticker": "BRSM",
@@ -1710,17 +1072,6 @@
       "inception_limited_missing": [],
       "inception_date": null,
       "yf_history_rows": 6
-    },
-    {
-      "ticker": "BSEP",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
     },
     {
       "ticker": "BSGR",
@@ -1767,17 +1118,6 @@
       "yf_history_rows": 160
     },
     {
-      "ticker": "BSTP",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "BSTS",
       "actual_rows": 0,
       "missing_file": false,
@@ -1811,257 +1151,125 @@
       "yf_history_rows": 6
     },
     {
-      "ticker": "BTC",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
       "ticker": "BTCK",
-      "actual_rows": 0,
+      "actual_rows": 16,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 11
-    },
-    {
-      "ticker": "BTCO",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BTCW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BTRN",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "BUCK",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 16
     },
     {
       "ticker": "BWOW",
-      "actual_rows": 0,
+      "actual_rows": 145,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 139
-    },
-    {
-      "ticker": "CBOJ",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 145
     },
     {
       "ticker": "CBOO",
-      "actual_rows": 0,
+      "actual_rows": 181,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 175
-    },
-    {
-      "ticker": "CBOY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 239
-    },
-    {
-      "ticker": "CBTJ",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 181
     },
     {
       "ticker": "CBTO",
-      "actual_rows": 0,
+      "actual_rows": 182,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 175
-    },
-    {
-      "ticker": "CBTY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 239
+      "yf_history_rows": 182
     },
     {
       "ticker": "CBXO",
-      "actual_rows": 0,
+      "actual_rows": 182,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 175
-    },
-    {
-      "ticker": "CBXY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 239
-    },
-    {
-      "ticker": "CERY",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
-    },
-    {
-      "ticker": "CEW",
-      "actual_rows": 0,
-      "missing_file": false,
-      "fetchable_missing": [
-        "daily_1y"
-      ],
-      "inception_limited_missing": [],
-      "inception_date": null,
-      "yf_history_rows": 251
+      "yf_history_rows": 182
     },
     {
       "ticker": "CGOV",
-      "actual_rows": 0,
+      "actual_rows": 17,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 11
+      "yf_history_rows": 17
     },
     {
       "ticker": "CHNL",
-      "actual_rows": 0,
+      "actual_rows": 60,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 54
+      "yf_history_rows": 60
     },
     {
       "ticker": "CHYG",
-      "actual_rows": 0,
+      "actual_rows": 16,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 11
+      "yf_history_rows": 16
     },
     {
       "ticker": "CIEI",
-      "actual_rows": 0,
+      "actual_rows": 17,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 11
+      "yf_history_rows": 17
     },
     {
       "ticker": "CIVG",
-      "actual_rows": 0,
+      "actual_rows": 17,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 11
+      "yf_history_rows": 17
     },
     {
       "ticker": "CJUN",
-      "actual_rows": 0,
+      "actual_rows": 18,
       "missing_file": false,
       "fetchable_missing": [
         "daily_1y"
       ],
       "inception_limited_missing": [],
       "inception_date": null,
-      "yf_history_rows": 12
+      "yf_history_rows": 18
     },
     {
       "ticker": "CLNK",
@@ -6903,38 +6111,8 @@
         "inception_date": null
       },
       {
-        "ticker": "AAAU",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null
-      },
-      {
-        "ticker": "AAPR",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null
-      },
-      {
-        "ticker": "AAPW",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null
-      },
-      {
-        "ticker": "ABXB",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null
-      },
-      {
         "ticker": "ACGO",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null
-      },
-      {
-        "ticker": "ACGR",
-        "actual_rows": 0,
+        "actual_rows": 17,
         "missing_file": false,
         "inception_date": null
       },
@@ -6945,9 +6123,39 @@
         "inception_date": null
       },
       {
-        "ticker": "ACLC",
+        "ticker": "ACYQ",
         "actual_rows": 0,
-        "missing_file": false,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "ADDS",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "AFGR",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "AMEI",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "AMEM",
+        "actual_rows": 0,
+        "missing_file": true,
+        "inception_date": null
+      },
+      {
+        "ticker": "AMGR",
+        "actual_rows": 0,
+        "missing_file": true,
         "inception_date": null
       }
     ],
@@ -7027,20 +6235,20 @@
         "inception_date": null
       },
       {
+        "ticker": "AAAU",
+        "actual_rows": 251,
+        "missing_file": false,
+        "inception_date": null
+      },
+      {
         "ticker": "AADR",
         "actual_rows": 252,
         "missing_file": false,
         "inception_date": null
       },
       {
-        "ticker": "AAPY",
-        "actual_rows": 252,
-        "missing_file": false,
-        "inception_date": null
-      },
-      {
-        "ticker": "AAUS",
-        "actual_rows": 228,
+        "ticker": "AAPR",
+        "actual_rows": 251,
         "missing_file": false,
         "inception_date": null
       }
