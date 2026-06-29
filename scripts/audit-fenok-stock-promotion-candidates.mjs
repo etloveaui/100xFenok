@@ -46,10 +46,6 @@ function parseArgs(argv) {
   return args;
 }
 
-function rel(absPath) {
-  return path.relative(REPO_ROOT, absPath);
-}
-
 function abs(relPath) {
   return path.join(REPO_ROOT, relPath);
 }
@@ -69,14 +65,6 @@ function readJsonOrNull(relPath) {
   } catch {
     return null;
   }
-}
-
-function countJsonFiles(relDir, { exclude = new Set() } = {}) {
-  const dir = abs(relDir);
-  if (!fs.existsSync(dir)) return 0;
-  return fs.readdirSync(dir)
-    .filter((name) => name.endsWith(".json") && !exclude.has(name))
-    .length;
 }
 
 function listJsonTickers(relDir, { exclude = new Set() } = {}) {
@@ -214,6 +202,10 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
   const secEtfOutsideS0 = secOutsideS0.filter((item) => etfAssetSet.has(item));
   const secUnresolvedOutsideS0 = secOutsideS0.filter((item) => !stockAssetSet.has(item) && !etfAssetSet.has(item));
   const slickUniverseOutsideS0 = slickUniverseTickers.filter((item) => !s0Set.has(item));
+  const slickUniverseOverlapS0 = setIntersectionCount(slickUniverseTickers, s0Set);
+  const rawMasterOverlapS0 = setIntersectionCount(rawMasterTickerList, s0Set);
+  const rawMasterOnlyNotNormalized = rawMasterTickerList
+    .filter((item) => !s0Set.has(item) && !stockAssetSet.has(item) && !etfAssetSet.has(item));
 
   const hardChecks = [
     {
@@ -233,7 +225,7 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
     },
     {
       id: "class_ticker_exact_match_guard",
-      ok: !gapTickers.includes("BRK.B") && !gapTickers.includes("BF.B") || classTickerGap.includes("BF.B"),
+      ok: !gapTickers.includes("BRK.B") && classTickerGap.includes("BF.B"),
       detail: "Use ticker, not ticker_normalized, when comparing S0 to market_facts",
     },
   ];
@@ -285,6 +277,12 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
       active_s0_stock_count: s0Tickers.length,
       stock_promotion_gap: gapTickers.length,
       source_mix_for_gap: countBy(gapRows, sourceKey),
+      reason_counts: {
+        promotable_stock_gap: gapTickers.length,
+        enrichment_only_existing_s0_stock_candidates: stockCandidateTickers.length - gapTickers.length,
+        unresolved_identity: 0,
+        etf_lane_excluded: etfCandidateTickers.length,
+      },
       gap_overlap_counts: {
         market_facts_detail_files: gapMarketFactsDetails.length,
         global_scouter_detail_files: gapGlobalScouterDetails.length,
@@ -323,6 +321,12 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
         stock_not_s0: yfStockOutsideS0.length,
         etf_not_s0: yfEtfOutsideS0.length,
         unresolved_not_s0: yfOutsideS0.length - yfStockOutsideS0.length - yfEtfOutsideS0.length,
+        reason_counts: {
+          promotable_stock_candidate: yfStockOutsideS0.length,
+          enrichment_only_existing_s0: setIntersectionCount(yfTickers, s0Set),
+          etf_lane_excluded: yfEtfOutsideS0.length,
+          unresolved_identity: yfOutsideS0.length - yfStockOutsideS0.length - yfEtfOutsideS0.length,
+        },
         examples_stock_not_s0: sample(yfStockOutsideS0, examples),
       },
       sec13f: {
@@ -331,6 +335,12 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
         stock_not_s0: secStockOutsideS0.length,
         etf_not_s0: secEtfOutsideS0.length,
         unresolved_identity_not_s0: secUnresolvedOutsideS0.length,
+        reason_counts: {
+          promotable_stock_candidate: secStockOutsideS0.length,
+          enrichment_only_existing_s0: setIntersectionCount(secTickers, s0Set),
+          etf_lane_excluded: secEtfOutsideS0.length,
+          unresolved_identity: secUnresolvedOutsideS0.length,
+        },
         examples_stock_not_s0: sample(secStockOutsideS0, examples),
         examples_unresolved_identity: sample(secUnresolvedOutsideS0, examples),
       },
@@ -338,8 +348,14 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
         index_universe: slickUniverseTickers.length,
         stock_files: slickStockFileTickers.length,
         market_facts_source_coverage: marketFacts.coverage?.slickcharts ?? null,
-        index_universe_overlap_s0: setIntersectionCount(slickUniverseTickers, s0Set),
+        index_universe_overlap_s0: slickUniverseOverlapS0,
         index_universe_stock_not_s0: slickUniverseOutsideS0.filter((item) => stockAssetSet.has(item)).length,
+        reason_counts_for_index_universe: {
+          promotable_stock_candidate: slickUniverseOutsideS0.filter((item) => stockAssetSet.has(item)).length,
+          enrichment_only_existing_s0: slickUniverseOverlapS0,
+          etf_lane_excluded: slickUniverseOutsideS0.filter((item) => etfAssetSet.has(item)).length,
+          unresolved_identity: slickUniverseOutsideS0.filter((item) => !stockAssetSet.has(item) && !etfAssetSet.has(item)).length,
+        },
         stock_files_outside_index_universe: slickStockFilesOutsideUniverse.length,
         index_universe_missing_stock_files: slickUniverseMissingFiles.length,
         examples_stock_files_outside_index_universe: sample(slickStockFilesOutsideUniverse, examples),
@@ -348,14 +364,23 @@ function buildAudit({ examples = DEFAULT_EXAMPLE_LIMIT, full = false } = {}) {
       raw_company_master: {
         records: Number(rawMaster.count) || (rawMaster.records ?? []).length,
         unique_tickers: rawMasterTickerList.length,
-        overlap_s0: setIntersectionCount(rawMasterTickerList, s0Set),
+        overlap_s0: rawMasterOverlapS0,
         stock_gap_overlap: gapWithRawMaster.length,
+        reason_counts: {
+          promotable_stock_candidate_overlap: gapWithRawMaster.length,
+          enrichment_only_existing_s0: rawMasterOverlapS0,
+          raw_only_not_normalized_stock_candidate: rawMasterOnlyNotNormalized.length,
+          etf_lane_excluded: rawMasterTickerList.filter((item) => etfAssetSet.has(item)).length,
+          unresolved_identity: 0,
+        },
+        examples_raw_only_not_normalized: sample(rawMasterOnlyNotNormalized, examples),
         stage: "COLLECTED_FUEL_ONLY",
       },
     },
     s3_etf_lane_excluded_from_stock_promotion: {
       market_facts_etf_candidates: etfCandidateTickers.length,
       stockanalysis_etf_records: stockanalysisIndex?.counts?.etf_universe ?? null,
+      stockanalysis_etf_candidate_total: stockanalysisIndex?.counts?.etf_candidate_total ?? null,
       scored_public_etf: coverageIndex?.etf_universe?.scored_public_etf ?? 0,
       caveat: "ETF data is a separate lane. Do not mix these rows into S1 stock promotion.",
     },
@@ -374,6 +399,7 @@ function printHuman(result) {
   console.log(`S1 market_facts stock candidates: ${result.s1_stock_promotion_candidates.market_facts_stock_candidates}`);
   console.log(`S1 promotion gap: ${result.s1_stock_promotion_candidates.stock_promotion_gap}`);
   console.log(`S1 gap source mix: ${JSON.stringify(result.s1_stock_promotion_candidates.source_mix_for_gap)}`);
+  console.log(`S1 reason counts: ${JSON.stringify(result.s1_stock_promotion_candidates.reason_counts)}`);
   console.log(`S1 gap overlaps: ${JSON.stringify(result.s1_stock_promotion_candidates.gap_overlap_counts)}`);
   console.log(
     `S2 fuel: YF=${result.s2_stock_expansion_fuel.yf.ticker_payloads_excluding_summary}, `
@@ -385,6 +411,7 @@ function printHuman(result) {
   console.log(
     `S3 ETF lane excluded: market_facts_etf=${result.s3_etf_lane_excluded_from_stock_promotion.market_facts_etf_candidates}, `
     + `stockanalysis_records=${result.s3_etf_lane_excluded_from_stock_promotion.stockanalysis_etf_records}, `
+    + `stockanalysis_candidate_total=${result.s3_etf_lane_excluded_from_stock_promotion.stockanalysis_etf_candidate_total}, `
     + `scored_public_etf=${result.s3_etf_lane_excluded_from_stock_promotion.scored_public_etf}`,
   );
   console.log(`Edge class tickers in gap: ${result.s1_stock_promotion_candidates.edge_cases.class_tickers.join(", ") || "none"}`);
