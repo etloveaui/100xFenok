@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-29T21:17:42.098Z",
+  "generated_at": "2026-06-29T21:25:26.222Z",
   "formula_version": "fenok-occ-options-volume-v0.1",
   "contract_doc": "docs/planning/CONTRACT_fenok_flow_sources_20260628.md",
   "public_surface_status": "admin_private_derived_only_public_summary_source",
@@ -50,14 +50,14 @@
     "empirical_polling_required": true
   },
   "coverage": {
-    "row_count": 471,
-    "with_options_activity_score": 471,
-    "total_call_volume": 25712402,
-    "total_put_volume": 16961766,
+    "row_count": 513,
+    "with_options_activity_score": 513,
+    "total_call_volume": 30330870,
+    "total_put_volume": 21317828,
     "confidence_counts": {
-      "medium": 471
+      "medium": 513
     },
-    "failed_attempts": 17
+    "failed_attempts": 18
   },
   "semantics": {
     "netOptionsProxyScore": "Higher means higher OCC listed-options call-volume share versus put-volume share for the underlying on the source date. This is a volume-skew proxy, not real options flow, OPRA, or buyer/seller direction."
@@ -265,6 +265,18 @@
       "accepted_form": null,
       "attempted_forms": [
         "STE"
+      ]
+    },
+    {
+      "ticker": "UI",
+      "status": "no_record",
+      "side_statuses": {
+        "C": "no_record",
+        "P": "no_record"
+      },
+      "accepted_form": null,
+      "attempted_forms": [
+        "UI"
       ]
     }
   ],
@@ -12960,6 +12972,1113 @@
       }
     },
     {
+      "ticker": "SYM",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/SYM_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/SYM_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 63.3,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 3878,
+        "put_volume": 1852,
+        "total_volume": 5730,
+        "call_share": 0.676789,
+        "put_call_volume_ratio": 0.477566,
+        "row_count": 70,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "SYY",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/SYY_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/SYY_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 100,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 4044,
+        "put_volume": 136,
+        "total_volume": 4180,
+        "call_share": 0.967464,
+        "put_call_volume_ratio": 0.03363,
+        "row_count": 54,
+        "exchange_count": 17,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "T",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/T_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/T_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 52.79,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 284568,
+        "put_volume": 243646,
+        "total_volume": 528214,
+        "call_share": 0.538736,
+        "put_call_volume_ratio": 0.856196,
+        "row_count": 110,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TD",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TD_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TD_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 74.31,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 1570,
+        "put_volume": 406,
+        "total_volume": 1976,
+        "call_share": 0.794534,
+        "put_call_volume_ratio": 0.258599,
+        "row_count": 52,
+        "exchange_count": 15,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TDOC",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TDOC_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TDOC_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 96.73,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 49786,
+        "put_volume": 3712,
+        "total_volume": 53498,
+        "call_share": 0.930614,
+        "put_call_volume_ratio": 0.074559,
+        "row_count": 73,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TDY",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TDY_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TDY_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 39.42,
+        "direction": "put_volume_skew_proxy",
+        "call_volume": 4,
+        "put_volume": 8,
+        "total_volume": 12,
+        "call_share": 0.333333,
+        "put_call_volume_ratio": 2,
+        "row_count": 6,
+        "exchange_count": 3,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TEAM",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TEAM_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TEAM_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 64.88,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 9670,
+        "put_volume": 4230,
+        "total_volume": 13900,
+        "call_share": 0.695683,
+        "put_call_volume_ratio": 0.437435,
+        "row_count": 83,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TER",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TER_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TER_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 54.52,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 13094,
+        "put_volume": 10188,
+        "total_volume": 23282,
+        "call_share": 0.562409,
+        "put_call_volume_ratio": 0.778066,
+        "row_count": 111,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TFC",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TFC_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TFC_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 77.1,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 3294,
+        "put_volume": 730,
+        "total_volume": 4024,
+        "call_share": 0.818588,
+        "put_call_volume_ratio": 0.221615,
+        "row_count": 72,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TFII",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TFII_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TFII_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 81.22,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 16,
+        "put_volume": 2,
+        "total_volume": 18,
+        "call_share": 0.888889,
+        "put_call_volume_ratio": 0.125,
+        "row_count": 5,
+        "exchange_count": 3,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TGT",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TGT_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TGT_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 52.64,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 28826,
+        "put_volume": 24896,
+        "total_volume": 53722,
+        "call_share": 0.536577,
+        "put_call_volume_ratio": 0.863665,
+        "row_count": 114,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "THC",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/THC_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/THC_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 61.56,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 590,
+        "put_volume": 310,
+        "total_volume": 900,
+        "call_share": 0.655556,
+        "put_call_volume_ratio": 0.525424,
+        "row_count": 50,
+        "exchange_count": 14,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TJX",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TJX_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TJX_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 49.7,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 6452,
+        "put_volume": 6560,
+        "total_volume": 13012,
+        "call_share": 0.49585,
+        "put_call_volume_ratio": 1.016739,
+        "row_count": 98,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TLN",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TLN_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TLN_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 51.85,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 2680,
+        "put_volume": 2418,
+        "total_volume": 5098,
+        "call_share": 0.525696,
+        "put_call_volume_ratio": 0.902239,
+        "row_count": 100,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TMO",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TMO_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TMO_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 57.05,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 3836,
+        "put_volume": 2592,
+        "total_volume": 6428,
+        "call_share": 0.596764,
+        "put_call_volume_ratio": 0.675704,
+        "row_count": 96,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TMUS",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TMUS_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TMUS_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 100,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 70236,
+        "put_volume": 4320,
+        "total_volume": 74556,
+        "call_share": 0.942057,
+        "put_call_volume_ratio": 0.061507,
+        "row_count": 107,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TOL",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TOL_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TOL_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 57.68,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 782,
+        "put_volume": 510,
+        "total_volume": 1292,
+        "call_share": 0.605263,
+        "put_call_volume_ratio": 0.652174,
+        "row_count": 58,
+        "exchange_count": 16,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TOST",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TOST_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TOST_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 56.98,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 48954,
+        "put_volume": 33226,
+        "total_volume": 82180,
+        "call_share": 0.595692,
+        "put_call_volume_ratio": 0.678719,
+        "row_count": 94,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TPL",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TPL_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TPL_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 65,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 434,
+        "put_volume": 188,
+        "total_volume": 622,
+        "call_share": 0.697749,
+        "put_call_volume_ratio": 0.43318,
+        "row_count": 50,
+        "exchange_count": 15,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TPR",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TPR_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TPR_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 44.46,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 426,
+        "put_volume": 580,
+        "total_volume": 1006,
+        "call_share": 0.423459,
+        "put_call_volume_ratio": 1.361502,
+        "row_count": 69,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TRGP",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRGP_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRGP_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 87.71,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 722,
+        "put_volume": 88,
+        "total_volume": 810,
+        "call_share": 0.891358,
+        "put_call_volume_ratio": 0.121884,
+        "row_count": 40,
+        "exchange_count": 15,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TRI",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRI_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRI_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 77.47,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 390,
+        "put_volume": 84,
+        "total_volume": 474,
+        "call_share": 0.822785,
+        "put_call_volume_ratio": 0.215385,
+        "row_count": 44,
+        "exchange_count": 13,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TRMB",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRMB_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRMB_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 73.35,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 288,
+        "put_volume": 78,
+        "total_volume": 366,
+        "call_share": 0.786885,
+        "put_call_volume_ratio": 0.270833,
+        "row_count": 32,
+        "exchange_count": 11,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TROW",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TROW_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TROW_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 75.9,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 1352,
+        "put_volume": 320,
+        "total_volume": 1672,
+        "call_share": 0.808612,
+        "put_call_volume_ratio": 0.236686,
+        "row_count": 65,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TRP",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRP_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRP_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 66.39,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 444,
+        "put_volume": 178,
+        "total_volume": 622,
+        "call_share": 0.713826,
+        "put_call_volume_ratio": 0.400901,
+        "row_count": 24,
+        "exchange_count": 7,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TRV",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRV_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TRV_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 49.75,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 12380,
+        "put_volume": 12556,
+        "total_volume": 24936,
+        "call_share": 0.496471,
+        "put_call_volume_ratio": 1.014216,
+        "row_count": 84,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TSCO",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSCO_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSCO_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 78.27,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 17178,
+        "put_volume": 3572,
+        "total_volume": 20750,
+        "call_share": 0.827855,
+        "put_call_volume_ratio": 0.20794,
+        "row_count": 105,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TSLA",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSLA_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSLA_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 50.38,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 3471076,
+        "put_volume": 3398734,
+        "total_volume": 6869810,
+        "call_share": 0.505265,
+        "put_call_volume_ratio": 0.979159,
+        "row_count": 120,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TSM",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSM_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSM_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 40.06,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 207364,
+        "put_volume": 360276,
+        "total_volume": 567640,
+        "call_share": 0.365309,
+        "put_call_volume_ratio": 1.737409,
+        "row_count": 116,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TSN",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSN_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TSN_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 93.7,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 2798,
+        "put_volume": 246,
+        "total_volume": 3044,
+        "call_share": 0.919185,
+        "put_call_volume_ratio": 0.08792,
+        "row_count": 58,
+        "exchange_count": 16,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TT",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TT_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TT_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 75.75,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 530,
+        "put_volume": 126,
+        "total_volume": 656,
+        "call_share": 0.807927,
+        "put_call_volume_ratio": 0.237736,
+        "row_count": 46,
+        "exchange_count": 14,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TTD",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TTD_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TTD_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 70.22,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 72018,
+        "put_volume": 23420,
+        "total_volume": 95438,
+        "call_share": 0.754605,
+        "put_call_volume_ratio": 0.325196,
+        "row_count": 106,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TTWO",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TTWO_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TTWO_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 65.71,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 20812,
+        "put_volume": 8694,
+        "total_volume": 29506,
+        "call_share": 0.705348,
+        "put_call_volume_ratio": 0.41774,
+        "row_count": 108,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TWLO",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TWLO_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TWLO_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 58.89,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 2856,
+        "put_volume": 1742,
+        "total_volume": 4598,
+        "call_share": 0.62114,
+        "put_call_volume_ratio": 0.609944,
+        "row_count": 86,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TXN",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TXN_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TXN_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 56.68,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 20752,
+        "put_volume": 14318,
+        "total_volume": 35070,
+        "call_share": 0.591731,
+        "put_call_volume_ratio": 0.689958,
+        "row_count": 107,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TXRH",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TXRH_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TXRH_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 79.87,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 982,
+        "put_volume": 186,
+        "total_volume": 1168,
+        "call_share": 0.840753,
+        "put_call_volume_ratio": 0.189409,
+        "row_count": 54,
+        "exchange_count": 17,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "TYL",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TYL_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/TYL_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 75.71,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 120,
+        "put_volume": 28,
+        "total_volume": 148,
+        "call_share": 0.810811,
+        "put_call_volume_ratio": 0.233333,
+        "row_count": 34,
+        "exchange_count": 11,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "UAA",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UAA_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UAA_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 52.25,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 11286,
+        "put_volume": 9958,
+        "total_volume": 21244,
+        "call_share": 0.531256,
+        "put_call_volume_ratio": 0.882332,
+        "row_count": 52,
+        "exchange_count": 15,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "UBER",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UBER_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UBER_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 54.75,
+        "direction": "balanced_volume_proxy",
+        "call_volume": 229790,
+        "put_volume": 176470,
+        "total_volume": 406260,
+        "call_share": 0.565623,
+        "put_call_volume_ratio": 0.767962,
+        "row_count": 116,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "UHS",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UHS_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UHS_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 78.97,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 124,
+        "put_volume": 24,
+        "total_volume": 148,
+        "call_share": 0.837838,
+        "put_call_volume_ratio": 0.193548,
+        "row_count": 18,
+        "exchange_count": 7,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
+      "ticker": "ULTA",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/ULTA_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/ULTA_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 61.93,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 4214,
+        "put_volume": 2172,
+        "total_volume": 6386,
+        "call_share": 0.659881,
+        "put_call_volume_ratio": 0.515425,
+        "row_count": 99,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
+    },
+    {
       "ticker": "UNH",
       "as_of": "2026-06-26",
       "source_date": "20260626",
@@ -12985,26 +14104,53 @@
         "actdate": "06/26/2026",
         "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
       }
+    },
+    {
+      "ticker": "UNP",
+      "as_of": "2026-06-26",
+      "source_date": "20260626",
+      "confidence": "medium",
+      "coverage_ratio": 0.65,
+      "source_families": [
+        "OCC Volume Query"
+      ],
+      "raw_cache_paths": [
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UNP_C.csv",
+        "_private/admin/fenok-flow/occ_options_volume/20260626/UNP_P.csv"
+      ],
+      "options_activity_proxy": {
+        "score_0_100": 72.24,
+        "direction": "call_volume_skew_proxy",
+        "call_volume": 7852,
+        "put_volume": 2282,
+        "total_volume": 10134,
+        "call_share": 0.774817,
+        "put_call_volume_ratio": 0.290627,
+        "row_count": 109,
+        "exchange_count": 18,
+        "actdate": "06/26/2026",
+        "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction."
+      }
     }
   ],
   "batch_coverage": {
-    "row_count": 43,
-    "with_options_activity_score": 43,
-    "total_call_volume": 1069026,
-    "total_put_volume": 762874,
+    "row_count": 42,
+    "with_options_activity_score": 42,
+    "total_call_volume": 4618468,
+    "total_put_volume": 4356062,
     "confidence_counts": {
-      "medium": 43
+      "medium": 42
     },
-    "failed_attempts": 17
+    "failed_attempts": 18
   },
-  "previous_output_generated_at": "2026-06-29T21:08:22.166Z",
+  "previous_output_generated_at": "2026-06-29T21:17:42.098Z",
   "upsert_policy": {
     "key": [
       "ticker",
       "source_date"
     ],
     "replaced_rows": 0,
-    "added_rows": 43,
-    "cumulative_rows": 471
+    "added_rows": 42,
+    "cumulative_rows": 513
   }
 }

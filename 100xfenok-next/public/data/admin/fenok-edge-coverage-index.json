@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T21:17:47.637Z",
+  "generated_at": "2026-06-29T21:25:33.414Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -9,7 +9,7 @@
     "private_artifact_paths_included": false
   },
   "active_scoring_universe": {
-    "generated_at": "2026-06-29T21:17:46.925Z",
+    "generated_at": "2026-06-29T21:25:32.631Z",
     "current_only": true,
     "total": 1066,
     "by_market": [
@@ -89,14 +89,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-29T15:35:23.637Z",
-          "age_hours": 5.71,
+          "age_hours": 5.84,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-06-29T18:34:55.089Z",
-          "age_hours": 2.71,
+          "age_hours": 2.84,
           "max_age_hours": 48
         },
         {
@@ -168,11 +168,11 @@
       {
         "id": "us_occ_options_proxy",
         "label": "US OCC listed-options proxy coverage",
-        "covered_count": 471,
+        "covered_count": 513,
         "denominator": 637,
         "denominator_label": "active_scoring_universe.us",
-        "coverage_pct": 73.94,
-        "active_scoring_coverage_pct": 44.18,
+        "coverage_pct": 80.53,
+        "active_scoring_coverage_pct": 48.12,
         "source_date": "2026-06-26",
         "availability_status": "ready",
         "claim_scope": "proxy_source_available",
@@ -222,10 +222,10 @@
       "formula": "KRX latest fully populated issuer daily proof + US FINRA flow proxy"
     },
     "latest_available_kr_plus_us_occ": {
-      "covered_count": 809,
+      "covered_count": 851,
       "denominator": 1066,
       "denominator_label": "active_scoring_universe.total",
-      "coverage_pct": 75.89,
+      "coverage_pct": 79.83,
       "claim_scope": "source_availability_composite",
       "not_public_scoring": true,
       "formula": "KRX latest fully populated issuer daily proof + US OCC options proxy"
@@ -343,22 +343,22 @@
             {
               "id": "occ_full_us_source_ready",
               "status": "blocked",
-              "covered_count": 471,
+              "covered_count": 513,
               "denominator": 637,
-              "missing_count": 166,
+              "missing_count": 124,
               "source_date": "2026-06-26",
               "derived_gap_breakdown": {
                 "missing_categories": {
                   "class_share_symbol_normalization_or_source_gap": 2,
                   "non_plain_or_foreign_suffix_requires_universe_mapping": 56,
-                  "plain_us_collection_or_no_options_policy_required": 108,
+                  "plain_us_collection_or_no_options_policy_required": 66,
                   "plain_us_no_record_attempt_count": 0,
-                  "plain_us_unattempted_count": 108
+                  "plain_us_unattempted_count": 66
                 },
                 "plain_us_collection_or_no_options_policy_required": {
-                  "count": 108,
+                  "count": 66,
                   "no_record_attempt_count": 0,
-                  "unattempted_count": 108
+                  "unattempted_count": 66
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
                   "count": 56
@@ -401,22 +401,22 @@
             {
               "id": "occ_full_us_source_ready",
               "status": "blocked",
-              "covered_count": 471,
+              "covered_count": 513,
               "denominator": 637,
-              "missing_count": 166,
+              "missing_count": 124,
               "source_date": "2026-06-26",
               "derived_gap_breakdown": {
                 "missing_categories": {
                   "class_share_symbol_normalization_or_source_gap": 2,
                   "non_plain_or_foreign_suffix_requires_universe_mapping": 56,
-                  "plain_us_collection_or_no_options_policy_required": 108,
+                  "plain_us_collection_or_no_options_policy_required": 66,
                   "plain_us_no_record_attempt_count": 0,
-                  "plain_us_unattempted_count": 108
+                  "plain_us_unattempted_count": 66
                 },
                 "plain_us_collection_or_no_options_policy_required": {
-                  "count": 108,
+                  "count": 66,
                   "no_record_attempt_count": 0,
-                  "unattempted_count": 108
+                  "unattempted_count": 66
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
                   "count": 56
@@ -490,14 +490,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-29T15:35:23.637Z",
-              "age_hours": 5.71,
+              "age_hours": 5.84,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-06-29T18:34:55.089Z",
-              "age_hours": 2.71,
+              "age_hours": 2.84,
               "max_age_hours": 48
             },
             {
@@ -558,7 +558,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T21:17:47.637Z"
+        "generated_at": "2026-06-29T21:25:33.414Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -601,14 +601,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-29T15:35:23.637Z",
-        "age_hours": 5.71,
+        "age_hours": 5.84,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-06-29T18:34:55.089Z",
-        "age_hours": 2.71,
+        "age_hours": 2.84,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 12,
