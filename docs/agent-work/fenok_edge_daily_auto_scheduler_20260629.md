@@ -82,3 +82,8 @@ Operator readout rule:
 ## Remaining Gap
 
 KRX now has a scheduled private daily fetch path, but this still does not make S0 paid-ready by itself. The coverage index counts only the latest non-empty KRX stock/KOSDAQ issuer daily proof, and `qa:fenok-edge-readiness` plus the strict `qa:fenok-s0-daily-gated` gate must remain the source of truth for PUBLIC + DAILY + GATED claims.
+
+- Strict S0 red is a readiness-contract failure, not a denominator failure: active stock count and track denominator are both 1,066, but `active_stock_scoring_current` still has `requirements.daily=false`, `requirements.gated=false`, `readiness_status=not_ready`, and `public_done_claim_allowed=false`.
+- Missing daily proof: source/proxy rows are explicitly `not_public_scoring`; KRX covers 338/338 Korea rows, FINRA covers 587/637 US rows, OCC covers 228/637 US rows, the latest bounded US run covers 8/637 reference tickers, and 91 Asia ex-Taiwan rows remain outside the current daily-source workstream.
+- Missing gated proof: a fail-closed promotion rule still has to turn complete daily evidence into `requirements.daily=true` and `requirements.gated=true` only after stale, missing, empty-source, raw-private, and public-mirror checks pass.
+- Until both proofs land, `qa:fenok-s0-daily-gated` should stay red and any S0 wording must remain "PUBLIC, not DAILY/GATED."
