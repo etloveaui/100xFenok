@@ -120,8 +120,11 @@ function coverageRow({ id, label, count, denominator, sourceDate, status, caveat
 
 const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
+const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
 const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
 const activeScoringTotal = universeRows.length;
+const etfScoredPublic = Number(etfSignals?.coverage?.scored_public_etf) || 0;
+const etfEligible = Number(etfSignals?.coverage?.eligible_etf_count) || Number(marketFacts?.coverage?.etf) || 0;
 const usRows = universeRows.filter((row) => row.market === "US" || row.market === "US_CLASS");
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
@@ -262,11 +265,13 @@ const index = {
   etf_universe: {
     source_file: "data/computed/market_facts/index.json",
     stockanalysis_index_file: "data/stockanalysis/index.json",
+    etf_signals_summary_file: "data/computed/fenok_etf_signals_summary.json",
     collected_etf_candidates: Number(marketFactsCoverage.etf) || null,
-    stage: "NORMALIZED",
-    scored_public_etf: 0,
+    eligible_etf_count: etfEligible || null,
+    stage: etfScoredPublic > 0 ? "SCORED" : "NORMALIZED",
+    scored_public_etf: etfScoredPublic,
     public_done_claim_allowed: false,
-    caveat: "ETF data exists but ETF scoring is a separate asset_type=etf lane and is not proven in fenok_signals or public screener scoring.",
+    caveat: "ETF scoring is a separate asset_type=etf lane. Scores are computed but not yet public-daily-gated as Fenok Edge ETF coverage.",
   },
   source_availability: {
     not_public_scoring: true,
@@ -449,13 +454,18 @@ const index = {
       readinessTrack({
         id: "etf_scoring_lane",
         label: "ETF scoring lane",
-        denominator: Number(marketFactsCoverage.etf) || null,
-        stage: "NORMALIZED",
+        denominator: etfEligible || Number(marketFactsCoverage.etf) || null,
+        stage: etfScoredPublic > 0 ? "SCORED" : "NORMALIZED",
         booleans: {
           source_available: Boolean(marketFactsCoverage.etf),
           normalized: Boolean(marketFactsCoverage.etf),
+          joined_to_target_universe: etfEligible > 0,
+          scored: etfScoredPublic > 0,
+          public: false,
+          daily: false,
+          gated: false,
         },
-        caveat: "ETF source data is normalized but not joined/scored/published as Fenok Edge ETF scores.",
+        caveat: "ETF scores are computed in the separate ETF lane artifact, but UI/API consumption plus daily accumulation and fail-closed readiness gates are not fully proven yet.",
       }),
       readinessTrack({
         id: "taiwan_current_numerator",

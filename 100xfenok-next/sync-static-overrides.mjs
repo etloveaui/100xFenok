@@ -36,6 +36,7 @@ function removeGeneratedPublicMirror(relativePath) {
 }
 
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
+removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 for (const relativePath of [
   "public/data/computed/fenok_flow_proxies.json",
   "public/data/computed/fenok_flow_proxies_history.json",

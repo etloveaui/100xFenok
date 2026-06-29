@@ -26,7 +26,26 @@ Make daily market-source refreshes accumulate without turning missing or stale d
 - Fenok Edge daily rebuilds `data/admin/fenok-edge-coverage-index.json` after FINRA/OCC proxy refresh.
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`.
 - Fenok Edge daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing.
+- `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
+
+## Daily Truth Table
+
+Current local snapshot:
+
+| Layer | Current stage | Scheduled cadence | Current backlog / next-run exposure | Remaining blocker |
+| --- | --- | --- | --- | --- |
+| S0 active stock scoring | PUBLIC, not DAILY/GATED | `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; strict `qa:fenok-s0-daily-gated` remains red | `active_stock_scoring_current.requirements.daily=false`, `gated=false` |
+| S1 stock candidates | NORMALIZED | YF scheduled branch processes one rolling shard per run, capped at 140; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates, 1,066 scored/public stocks, 112 promotion-audit gap | not joined/scored/public/daily/gated as expanded stock coverage |
+| S3 ETF lane | SCORED, not PUBLIC/DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; StockAnalysis history report shows 12 required-history gaps, 1 fetchable, 11 inception-limited | ETF UI/API consumption, public-daily-gated proof, and gated readiness are not complete |
+
+Operational command:
+
+```bash
+npm --prefix 100xfenok-next run qa:fenok-daily-accumulation
+```
+
+The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. If ETF score artifacts exist, it reports them as `SCORED` and still blocks any `done` wording until DAILY/GATED readiness is true.
 
 ## Resource Controls
 

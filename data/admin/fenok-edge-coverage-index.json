@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-29T13:44:00.137Z",
+  "generated_at": "2026-06-29T15:35:30.868Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -14,7 +14,7 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-06-29T06:41:43.012Z",
+    "generated_at": "2026-06-29T15:23:27.035Z",
     "current_only": true,
     "total": 1066,
     "by_market": [
@@ -65,7 +65,7 @@
   },
   "expanded_stock_candidate_universe": {
     "source_file": "data/computed/market_facts/index.json",
-    "generated_at": "2026-06-28T00:24:10Z",
+    "generated_at": "2026-06-29T14:51:33Z",
     "collected_asset_total": 6479,
     "collected_stock_candidates": 1178,
     "scored_public_stock": 1066,
@@ -77,11 +77,13 @@
   "etf_universe": {
     "source_file": "data/computed/market_facts/index.json",
     "stockanalysis_index_file": "data/stockanalysis/index.json",
+    "etf_signals_summary_file": "data/computed/fenok_etf_signals_summary.json",
     "collected_etf_candidates": 5301,
-    "stage": "NORMALIZED",
-    "scored_public_etf": 0,
+    "eligible_etf_count": 4484,
+    "stage": "SCORED",
+    "scored_public_etf": 4484,
     "public_done_claim_allowed": false,
-    "caveat": "ETF data exists but ETF scoring is a separate asset_type=etf lane and is not proven in fenok_signals or public screener scoring."
+    "caveat": "ETF scoring is a separate asset_type=etf lane. Scores are computed but not yet public-daily-gated as Fenok Edge ETF coverage."
   },
   "source_availability": {
     "not_public_scoring": true,
@@ -321,20 +323,20 @@
       {
         "id": "etf_scoring_lane",
         "label": "ETF scoring lane",
-        "denominator": 5301,
-        "stage": "NORMALIZED",
+        "denominator": 4484,
+        "stage": "SCORED",
         "readiness_status": "not_ready",
         "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
-          "joined_to_target_universe": false,
-          "scored": false,
+          "joined_to_target_universe": true,
+          "scored": true,
           "public": false,
           "daily": false,
           "gated": false
         },
-        "caveat": "ETF source data is normalized but not joined/scored/published as Fenok Edge ETF scores."
+        "caveat": "ETF scores are computed in the separate ETF lane artifact, but UI/API consumption plus daily accumulation and fail-closed readiness gates are not fully proven yet."
       },
       {
         "id": "taiwan_current_numerator",
@@ -428,7 +430,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-29T13:44:00.137Z"
+        "generated_at": "2026-06-29T15:35:30.868Z"
       },
       {
         "id": "korea_counted_source_date",
