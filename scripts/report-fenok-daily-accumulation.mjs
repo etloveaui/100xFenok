@@ -60,6 +60,34 @@ function findTrack(index, id) {
   return asArray(index?.public_scoring_readiness?.tracks).find((track) => track?.id === id) ?? null;
 }
 
+function freshnessById(index) {
+  return Object.fromEntries(asArray(index?.freshness_gate?.checks).map((check) => [check.id, check]));
+}
+
+function summarizeFreshness(check) {
+  if (!check) return null;
+  return {
+    source_date: check.source_date ?? null,
+    generated_at: check.generated_at ?? null,
+    age_days: check.age_days ?? null,
+    status: check.status ?? null,
+    caveat: check.caveat ?? null,
+  };
+}
+
+function compactSources(sources) {
+  return Object.entries(sources)
+    .filter(([, value]) => value != null)
+    .map(([key, value]) => {
+      if (typeof value === "string") return `${key}=${value}`;
+      const date = value.source_date ?? value.generated_at ?? "unknown";
+      const status = value.status ? ` ${value.status}` : "";
+      const age = value.age_days != null ? ` age=${value.age_days}d` : "";
+      return `${key}=${date}${status}${age}`;
+    })
+    .join("; ");
+}
+
 function add(list, message, extra = {}) {
   list.push({ message, ...extra });
 }
@@ -72,6 +100,8 @@ function buildReport() {
   const etfSummary = readJsonOrNull("data/computed/fenok_etf_signals_summary.json");
   const historyGap = readJsonOrNull("data/stockanalysis/backfill/history_gap_report_latest.json");
   const incrementalPlan = readJsonOrNull("data/stockanalysis/backfill/incremental_plan_latest.json");
+  const yfSummary = readJsonOrNull("data/yf/finance/_summary.json");
+  const freshness = freshnessById(coverageIndex);
 
   const s0Track = findTrack(coverageIndex, "active_stock_scoring_current");
   const s1Track = findTrack(coverageIndex, "expanded_stock_candidates");
@@ -101,6 +131,16 @@ function buildReport() {
       },
       remaining_blockers: missingRequirements(s0Track?.requirements),
       caveat: s0Track?.caveat ?? null,
+      operator_status: {
+        last_sources: {
+          korea: summarizeFreshness(freshness.korea_counted_source_date),
+          us_flow: summarizeFreshness(freshness.us_flow_source_date),
+          us_occ: summarizeFreshness(freshness.us_occ_source_date),
+          signals_generated_at: signals?.generated_at ?? null,
+        },
+        blocking_gates: missingRequirements(s0Track?.requirements),
+        done_claim_allowed: s0Track?.public_done_claim_allowed === true,
+      },
     },
     s1_stock_candidates: {
       layer: "S1",
@@ -120,6 +160,15 @@ function buildReport() {
       },
       remaining_blockers: missingRequirements(s1Track?.requirements),
       caveat: s1.caveat ?? s1Track?.caveat ?? null,
+      operator_status: {
+        last_sources: {
+          market_facts_generated_at: marketFacts?.generated_at ?? null,
+          yf_summary_generated_at: yfSummary?.generated_at ?? null,
+          signals_generated_at: signals?.generated_at ?? null,
+        },
+        blocking_gates: missingRequirements(s1Track?.requirements),
+        done_claim_allowed: s1Track?.public_done_claim_allowed === true,
+      },
     },
     s3_etf_lane: {
       layer: "S3",
@@ -165,6 +214,16 @@ function buildReport() {
       },
       remaining_blockers: missingRequirements(s3Track?.requirements),
       caveat: s3.caveat ?? s3Track?.caveat ?? null,
+      operator_status: {
+        last_sources: {
+          market_facts_generated_at: marketFacts?.generated_at ?? null,
+          etf_signals_generated_at: etfSignals?.generated_at ?? etfSummary?.generated_at ?? null,
+          history_gap_report_generated_at: historyGap?.generated_at ?? null,
+          history_gap_plan_generated_at: historyGap?.incremental_plan?.generated_at ?? incrementalPlan?.generated_at ?? null,
+        },
+        blocking_gates: missingRequirements(s3Track?.requirements),
+        done_claim_allowed: s3Track?.public_done_claim_allowed === true,
+      },
     },
   };
 
@@ -223,7 +282,9 @@ function printHuman(report) {
   const s1 = report.tracks.s1_stock_candidates;
   const s3 = report.tracks.s3_etf_lane;
   console.log(`- S0 active stock scoring: stage=${s0.stage} denominator=${s0.denominator} scored_public_stock=${s0.scored_public_stock} public_daily_gated=${s0.public_daily_gated} cadence="${s0.cadence.schedule}" blockers=${s0.remaining_blockers.join(",") || "none"}`);
+  console.log(`  status: sources=[${compactSources(s0.operator_status.last_sources)}] blocking_gates=${s0.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s0.operator_status.done_claim_allowed}`);
   console.log(`- S1 stock candidates: stage=${s1.stage} denominator=${s1.denominator} promotion_gap=${s1.backlog.stock_promotion_audit_gap} public_daily_gated=${s1.public_daily_gated} cadence="YF one shard/140 per scheduled run; no scheduled stock-financial promotion" blockers=${s1.remaining_blockers.join(",") || "none"}`);
+  console.log(`  status: sources=[${compactSources(s1.operator_status.last_sources)}] blocking_gates=${s1.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s1.operator_status.done_claim_allowed}`);
   const gap = s3.history_gap;
   const historyText = gap
     ? `history_missing=${gap.missing_required_history} fetchable=${gap.fetchable_required_history} inception_limited=${gap.inception_limited_required_history}`
@@ -231,6 +292,7 @@ function printHuman(report) {
   const scoredSources = s3.scored_public_etf_sources;
   const sourceText = `coverage_index=${scoredSources.coverage_index},artifact=${scoredSources.fenok_etf_signals},summary=${scoredSources.fenok_etf_signals_summary}`;
   console.log(`- S3 ETF lane: stage=${s3.stage} computed_stage=${s3.computed_stage} denominator=${s3.denominator} scored_public_etf=${s3.scored_public_etf} scored_sources=[${sourceText}] ${historyText} public_daily_gated=${s3.public_daily_gated} cadence="YF one shard/140; StockAnalysis incremental 40/run" blockers=${s3.remaining_blockers.join(",") || "none"}`);
+  console.log(`  status: sources=[${compactSources(s3.operator_status.last_sources)}] blocking_gates=${s3.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s3.operator_status.done_claim_allowed}`);
   for (const warning of report.warnings) console.log(`WARN: ${warning.message}`);
   for (const error of report.errors) console.error(`ERROR: ${error.message}`);
 }
