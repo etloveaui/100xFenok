@@ -1,23 +1,23 @@
 # ETF Center
 
 > Scope: public ETF surfaces in 100xFenok (`/etfs`, `/etfs/new`, `/etfs/[ticker]`).
-> Last updated: 2026-06-21.
+> Last updated: 2026-06-30.
 
 ## 1. Overview
 
 The ETF Center is the dedicated surface for discovering, filtering, and inspecting exchange-traded funds. It consolidates data from the StockAnalysis ETF universe, the StockAnalysis ETF screener, individual ETF detail files, and Yahoo Finance fallback facts.
 
-Current coverage (2026-06-19 local DataPack):
+Current coverage (2026-06-30 local DataPack):
 
-- ETF universe candidates: 5,347
-- ETF detail coverage: 98.47% (5,265 / 5,347)
-- Primary StockAnalysis detail files: 4,579
-- Yahoo ETF fallback files: 686
-- Price coverage in joined universe API: 5,347 / 5,347
-- Expense ratio coverage: 5,213
-- Performance coverage: 4,579
-- Market-facts ETF return coverage: 1M 5,143 / 5,267, 3M 5,057 / 5,267, YTD 4,903 / 5,267, 1Y 4,332 / 5,267, 3Y CAGR 2,863 / 5,267, 5Y CAGR 2,038 / 5,267, 10Y CAGR 1,141 / 5,267, max CAGR 3,641 / 5,267
-- Multi-year detail history: 4,568 / 4,579 primary StockAnalysis detail files complete (99.76%); the remaining 11 are source gaps that still lack `monthly_3y` and `monthly_5y`.
+- ETF universe records: 5,333
+- ETF candidate symbols: 5,390
+- ETF detail coverage: 98.07% (5,286 / 5,390)
+- Primary StockAnalysis detail files: 4,584
+- Yahoo ETF fallback files: 715
+- Market-facts normalized ETF rows: 5,301
+- Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
+- Fenok Edge ETF daily-1Y readiness: `4484 = 3366 complete + 584 fetchable + 534 inception-limited`
+- Remaining distinction: ETF Center UI/data coverage is surface-ready, but Fenok Edge ETF paid-ready wording stays blocked until `daily=false` and `gated=false` clear.
 
 Design principles:
 

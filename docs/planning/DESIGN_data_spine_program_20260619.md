@@ -55,17 +55,19 @@ Measured from `data/stockanalysis/index.json` and
 
 | Metric | Value | P0 status |
 |---|---:|---|
-| ETF universe records | 5,280 | MEASURED |
-| ETF candidate symbols | 5,347 | MEASURED |
-| ETF detail files | 5,265 | MEASURED |
-| ETF detail coverage | 98.47% | MEASURED |
-| Primary StockAnalysis detail coverage | 85.64% | MEASURED |
-| Yahoo fallback ETF detail files in market facts | 686 | MEASURED |
+| ETF universe records | 5,333 | MEASURED |
+| ETF candidate symbols | 5,390 | MEASURED |
+| ETF covered detail files | 5,286 | MEASURED |
+| ETF detail coverage | 98.07% | MEASURED |
+| Primary StockAnalysis detail coverage | 84.81% | MEASURED |
+| Yahoo fallback ETF detail files | 715 | MEASURED |
+| Fenok Edge scored ETF lane | 4,484 | MEASURED |
+| Fenok Edge fetchable daily-1Y gaps | 584 | MEASURED / BLOCKS DAILY |
 | StockAnalysis stock detail files | 40 | MEASURED |
 | StockAnalysis financial candidate files | 40 | MEASURED |
 | Backfill hard errors | 0 | MEASURED |
-| Backfill expected 404 rows | 723 | MEASURED |
-| Backfill ready for finalize | true | MEASURED |
+| Backfill pending tracked ETF rows | 117 | MEASURED |
+| Backfill ready for finalize | warn | MEASURED |
 
 ## 2026-06-23 Productization Bridge
 
@@ -88,7 +90,7 @@ python3 scripts/audit-data-spine-inventory.py --json
 - `computed/market_facts/tickers`: 6,445 ticker payloads
 - `yf/finance`: 1,820 cached finance payloads
 - `global-scouter/stocks/detail`: 1,066 stock detail payloads
-- `stockanalysis/etfs`: 5,265 ETF detail payloads
+- `stockanalysis/etfs`: 5,286 covered ETF detail payloads across 5,390 candidates
 - `stockanalysis/stocks`: 40 stock overview payloads
 - `stockanalysis/financials`: 40 financial candidate payloads
 - `edgar-korean-summaries`: 1,821 JSON files, 202 by-ticker manifests
@@ -116,8 +118,12 @@ mirror productization path, not another feno-value adapter cleanup pass.
 
 Product judgment:
 
-- ETF coverage is product-ready: 5,347 candidates, 5,265 detail files, 98.47%
-  detail coverage, 686 auxiliary price/detail fallbacks, 82 missing details.
+- ETF Center data/UI coverage is surface-ready: 5,390 candidates, 5,286 covered
+  detail files, 98.07% detail coverage, 715 auxiliary Yahoo fallback files, and
+  104 missing detail candidates with explicit retry status.
+- Fenok Edge ETF scoring is a separate readiness lane: 4,484 eligible/scored
+  ETFs are PUBLIC-surfaced, but 584 fetchable daily-1Y gaps keep DAILY/GATED
+  false and forbid paid-ready wording.
 - Stock detail is usable for covered names, but not yet a universal financial
   statement product: StockAnalysis stock/financial candidate coverage is 40
   files, while Global Scouter stock detail is 1,066 and cached finance is 1,820.
@@ -161,7 +167,8 @@ and a test guard at
 | Cached finance / estimates | 1,820 cached finance payloads | financial/statistics tabs are available only when cache exists |
 | Global Scouter detail | 1,066 detail payloads | keep as stock-detail/screener base, not universal stock coverage |
 | StockAnalysis stock/financial candidates | 40 + 40 payloads | display as cross-check/auxiliary only; do not claim SSOT valuation input |
-| ETF details | 5,265 detail payloads | product-ready; missing 82 should render fallback/pending states |
+| ETF details | 5,286 covered detail payloads | ETF Center surface-ready; 104 missing detail candidates should render fallback/pending states |
+| Fenok Edge ETF scored lane | 4,484 scored ETFs, 584 fetchable daily-1Y gaps | PUBLIC surface only; not DAILY/GATED or paid-ready until fetchable daily gaps clear |
 | 13F / superinvestors | 78 SEC 13F JSON files | show reporting-delay disclaimers; enrichment coverage percentages stay Admin-only |
 | Korean filings | 1,821 JSON files / 202 by-ticker manifests | stock `공시` tab owner; source links and AI-summary disclaimer required |
 | Market parity | 26,629 multi-candidate checks | Data Lab keeps drift/stale/sign diagnostics; public product copy stays compact |
