@@ -11,7 +11,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const IS_DIRECT_RUN = process.argv[1] ? path.resolve(process.argv[1]) === __filename : false;
 const REPO_ROOT = path.resolve(__dirname, "..");
 const INDEX_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-edge-coverage-index.json");
 const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
@@ -232,6 +234,7 @@ function buildActiveS0Evidence(index, activeTotal, activeTrack, sourceRows, comp
   };
 }
 
+function main() {
 const index = readJson(INDEX_PATH);
 const errors = [];
 const warnings = [];
@@ -462,4 +465,14 @@ if (JSON_MODE) {
   for (const error of errors) console.error(`ERROR: ${error.message}`);
 }
 
-process.exit(errors.length ? 1 : 0);
+return errors.length ? 1 : 0;
+}
+
+if (IS_DIRECT_RUN) process.exit(main());
+
+export {
+  activeS0DailyGatedReady,
+  freshnessReady,
+  fullSourceCoverage,
+  requirementsReady,
+};
