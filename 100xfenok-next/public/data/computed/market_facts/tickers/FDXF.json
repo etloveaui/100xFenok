@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "FDXF",
   "asset_type": "stock",
-  "generated_at": "2026-06-29T14:51:33Z",
+  "generated_at": "2026-06-29T15:51:47Z",
   "identity": {
     "name": "FedEx Freight Holding Company, Inc.",
     "exchange": "NYQ",
@@ -35,6 +35,13 @@
           "confidence": "observed"
         },
         {
+          "value": 149.5,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
+        },
+        {
           "value": 172.25,
           "source": "slickcharts",
           "as_of": "2026-06-08T13:27:06+00:00",
@@ -42,7 +49,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "previous_close": {
       "value": 153.89,
@@ -62,16 +69,23 @@
           "as_of": null,
           "fetched_at": "2026-06-29T14:39:39Z",
           "confidence": "observed"
+        },
+        {
+          "value": 149.5,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
-      "value": -5.014999999999986,
-      "source": "yf.derived",
+      "value": -4.39,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-29T14:39:39Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-29T15:50:42Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
@@ -79,6 +93,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -4.39,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
+        },
         {
           "value": -5.014999999999986,
           "source": "yf.derived",
@@ -87,14 +108,14 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
-      "value": -3.258821235947746,
-      "source": "yf.derived",
+      "value": -2.85,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-29T14:39:39Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-29T15:50:42Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
@@ -103,6 +124,13 @@
       ],
       "candidates": [
         {
+          "value": -2.85,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
+        },
+        {
           "value": -3.258821235947746,
           "source": "yf.derived",
           "as_of": null,
@@ -110,7 +138,7 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "market_cap": {
       "value": 22168403968,
@@ -130,9 +158,16 @@
           "as_of": null,
           "fetched_at": "2026-06-29T14:39:39Z",
           "confidence": "observed"
+        },
+        {
+          "value": 22390000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "trailing_pe": {
       "value": 32.648026,
@@ -174,9 +209,16 @@
           "as_of": null,
           "fetched_at": "2026-06-29T14:39:39Z",
           "confidence": "observed"
+        },
+        {
+          "value": 35.6,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "dividend_yield": {
       "value": 0.0,
@@ -199,6 +241,28 @@
           "fetched_at": null,
           "confidence": "observed",
           "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": "n/a",
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-29T15:50:42Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": "n/a",
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:42Z",
+          "confidence": "observed"
         }
       ],
       "candidate_count": 1
@@ -293,14 +357,14 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": true
   },
   "source_files": {
     "yf": "yf/finance/FDXF.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/stocks/FDXF.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": "slickcharts/stocks/FDXF.json"
