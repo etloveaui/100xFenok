@@ -218,6 +218,14 @@ function rawMasterTickers(payload) {
   return unique(rows.map((row) => ticker(row.key ?? row.ticker ?? row.values?.[1])));
 }
 
+function stockanalysisSurfaceTickers(payload) {
+  const rows = Array.isArray(payload?.records) ? payload.records : [];
+  return unique(rows.flatMap((row) => [
+    ticker(String(row?.symbol ?? "").replace(/^\$/u, "")),
+    ticker(row?.other === "N/A" ? "" : row?.other),
+  ]));
+}
+
 function marketFactAssetSet(rows, assetType) {
   return new Set(rows
     .filter((row) => row.asset_type === assetType)
@@ -281,13 +289,14 @@ function evidenceFamiliesForTicker(item, row, {
   secSet,
   slickUniverseSet,
   slickStockFileSet,
+  stockanalysisSurfaceSet = new Set(),
   rawMasterSet,
 }) {
   const sources = row?.sources ?? {};
   const families = [];
 
   if (sources.yf === true || yfSet.has(item)) families.push("yf");
-  if (sources.stockanalysis === true || sources.stockanalysis_yf_fallback === true) families.push("stockanalysis");
+  if (sources.stockanalysis === true || sources.stockanalysis_yf_fallback === true || stockanalysisSurfaceSet.has(item)) families.push("stockanalysis");
   if (sources.slickcharts === true || slickUniverseSet.has(item) || slickStockFileSet.has(item)) families.push("slickcharts");
   if (secSet.has(item)) families.push("sec13f");
   if (rawMasterSet.has(item)) families.push("raw_company_master");
@@ -1032,6 +1041,7 @@ function localSourceFilesFor(item, row, detail, context) {
     market_facts_detail: Boolean(detail),
     yf_finance_file: context.yfSet.has(item),
     slickcharts_stock_file: context.slickStockFileSet.has(item),
+    stockanalysis_surface_file: context.stockanalysisSurfaceSet.has(item),
     stockanalysis_financials_file: context.stockanalysisFinancialsSet.has(item),
     sec13f_by_ticker: context.secSet.has(item),
     raw_company_master: context.rawMasterSet.has(item),
@@ -1134,7 +1144,7 @@ function buildS1BlockedUnblockDiagnosticsArtifact(statuses, context) {
   const blockedStatuses = statuses.filter((status) => status.status === "joined_not_ready");
   const diagnosticRows = blockedStatuses.map((status) => blockedUnblockDiagnosticRow(status, context));
   const expectedBlockedRows = [
-    ["DAY", ["evidence_families_min3", "market_currency_country_scope"]],
+    ["DAY", ["market_currency_country_scope"]],
     ["HOLX", ["market_currency_country_scope"]],
     ["MMC", ["market_currency_country_scope"]],
     ["STRC", ["evidence_families_min3"]],
@@ -1268,7 +1278,7 @@ function buildS1PromotionGatePlanArtifact(statuses, context) {
     etf_lane: false,
   };
   const expectedBlockedRows = [
-    ["DAY", ["evidence_families_min3", "market_currency_country_scope"]],
+    ["DAY", ["market_currency_country_scope"]],
     ["HOLX", ["market_currency_country_scope"]],
     ["MMC", ["market_currency_country_scope"]],
     ["STRC", ["evidence_families_min3"]],
@@ -1404,6 +1414,7 @@ function buildS1JoinedGate({
   secSet,
   slickUniverseSet,
   slickStockFileSet,
+  stockanalysisSurfaceSet,
   rawMasterSet,
   promotionContext = null,
   scoringContractContext = null,
@@ -1423,6 +1434,7 @@ function buildS1JoinedGate({
       secSet,
       slickUniverseSet,
       slickStockFileSet,
+      stockanalysisSurfaceSet,
       rawMasterSet,
     });
     const checks = {
@@ -1527,6 +1539,7 @@ function buildAudit({
   const sec13f = readJson("data/sec-13f/by_ticker.json");
   const rawMaster = readJson("data/global-scouter/raw/company_master_m_company.json");
   const stockanalysisIndex = readJsonOrNull("data/stockanalysis/index.json");
+  const stockanalysisActionsRecent = readJsonOrNull("data/stockanalysis/surfaces/actions_recent.json");
   const globalScouterStocks = readJsonOrNull("data/global-scouter/core/stocks_analyzer.json");
   const revisions = readJsonOrNull("data/global-scouter/core/revision_movers.json");
   const quarterCloses = readJsonOrNull("data/yf/quarter_closes.json");
@@ -1556,6 +1569,8 @@ function buildAudit({
   const slickUniverseSet = new Set(slickUniverseTickers);
   const slickStockFileTickers = listJsonTickers("data/slickcharts/stocks");
   const slickStockFileSet = new Set(slickStockFileTickers);
+  const stockanalysisSurfaceTickerList = stockanalysisSurfaceTickers(stockanalysisActionsRecent);
+  const stockanalysisSurfaceSet = new Set(stockanalysisSurfaceTickerList);
   const rawMasterTickerList = rawMasterTickers(rawMaster);
   const rawMasterSet = new Set(rawMasterTickerList);
   const stockAssetSet = marketFactAssetSet(marketRows, "stock");
@@ -1608,6 +1623,7 @@ function buildAudit({
     secSet,
     slickUniverseSet,
     slickStockFileSet,
+    stockanalysisSurfaceSet,
     rawMasterSet,
     promotionContext: promotionReport
       ? {
@@ -1694,6 +1710,7 @@ function buildAudit({
           secSet,
           slickUniverseSet,
           slickStockFileSet,
+          stockanalysisSurfaceSet,
           rawMasterSet,
           stockanalysisFinancialsSet,
         }
@@ -2150,19 +2167,26 @@ function printHuman(result) {
   }
 }
 
-const args = parseArgs(process.argv.slice(2));
-const audit = buildAudit(args);
-if (args.scorePreviewReport) {
-  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.score_preview_artifact, null, 2)}\n`);
-} else if (args.promotionGatePlanReport) {
-  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_gate_plan_artifact, null, 2)}\n`);
-} else if (args.blockedUnblockDiagnosticsReport) {
-  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.blocked_unblock_diagnostics_artifact, null, 2)}\n`);
-} else if (args.scoringContractReport) {
-  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact, null, 2)}\n`);
-} else if (args.promotionReport) {
-  process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_artifact, null, 2)}\n`);
-} else if (args.json) process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
-else printHuman(audit);
+export {
+  evidenceFamiliesForTicker,
+  stockanalysisSurfaceTickers,
+};
 
-process.exitCode = args.check && !audit.ok ? 1 : 0;
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  const args = parseArgs(process.argv.slice(2));
+  const audit = buildAudit(args);
+  if (args.scorePreviewReport) {
+    process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.score_preview_artifact, null, 2)}\n`);
+  } else if (args.promotionGatePlanReport) {
+    process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_gate_plan_artifact, null, 2)}\n`);
+  } else if (args.blockedUnblockDiagnosticsReport) {
+    process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.blocked_unblock_diagnostics_artifact, null, 2)}\n`);
+  } else if (args.scoringContractReport) {
+    process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.scoring_contract_artifact, null, 2)}\n`);
+  } else if (args.promotionReport) {
+    process.stdout.write(`${JSON.stringify(audit.s1_stock_promotion_candidates.joined_gate.promotion_artifact, null, 2)}\n`);
+  } else if (args.json) process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
+  else printHuman(audit);
+
+  process.exitCode = args.check && !audit.ok ? 1 : 0;
+}
