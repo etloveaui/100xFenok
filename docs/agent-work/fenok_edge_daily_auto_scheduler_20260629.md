@@ -33,6 +33,7 @@ Make daily market-source refreshes accumulate without turning missing or stale d
 - `qa:fenok-edge-readiness` includes `qa:fenok-daily-accumulation`, a no-fetch truth report that fails only on unsafe public/daily/gated claims.
 - `qa:fenok-edge-readiness` also includes `qa:fenok-s0-source-gaps`, a no-fetch S0 source-gap audit that classifies FINRA/OCC missing rows into collection candidates vs universe-mapping policy work.
 - `qa:fenok-edge-readiness` includes `qa:fenok-occ-options`, a no-fetch unit/plan test for OCC selector, request budget, and no-record availability evidence handling.
+- `qa:fenok-edge-readiness` includes `qa:fenok-s1-promotion-gate`, a no-fetch check that the durable non-public S1 promotion gate artifact can be regenerated without mutating S0/public outputs.
 - Existing build scripts still run `qa:fenok-edge-readiness` before runtime/static/Cloudflare builds.
 
 ## Daily Truth Table
@@ -76,6 +77,7 @@ Operator readout rule:
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --scoring-contract-report --check` is the first S1 scoring-chain contract artifact. It is stdout-only, non-public, non-daily, non-gated, keeps all score outputs null, and does not mutate `stock_action_index`, `fenok_signals`, or public mirrors.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --score-preview-report --check` adds the next non-public S1 preview step. It uses the shared S0 scoring core, emits only stdout preview rows for joined-ready S1 stocks, keeps missing/unsupported axes explicit as `null` / `미확인`, and still does not mutate public S0, `stock_action_index`, `fenok_signals`, or public mirrors.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --promotion-gate-plan-report --check` adds the next non-public S1 promotion gate plan. It turns the 108 joined-ready preview rows into shadow-candidate-only promotion rows, keeps the 4 blocked rows as explicit repair plans, and still writes no `stock_action_index`, `fenok_signals`, or public mirror output.
+- `scripts/write-fenok-s1-promotion-gate-plan.mjs --check` persists that S1 promotion gate plan to `data/admin/fenok-s1-stock-promotion-gate-plan.json` as admin-only derived evidence. It still writes no S0 scoring file, no `fenok_signals`, and no public mirror.
 - `scripts/audit-fenok-stock-promotion-candidates.mjs --blocked-unblock-diagnostics-report --check` keeps DAY/HOLX/MMC/STRC as blocker-only diagnostics with local source evidence and next repair targets; it still writes no `stock_action_index`, `fenok_signals`, or public mirror output.
 - The S1 joined gate counts tickers present in the StockAnalysis corporate-action surface as the existing `stockanalysis` evidence family, deduped with StockAnalysis detail files. This removes DAY's evidence-family blocker but does not resolve DAY/HOLX/MMC identity scope.
 - Blocked diagnostics expose `accepted_family_flags` separately from raw `source_flags`, so surface-only StockAnalysis evidence is visible without pretending the market_facts detail already has a StockAnalysis source flag.

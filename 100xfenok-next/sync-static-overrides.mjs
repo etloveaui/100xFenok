@@ -121,6 +121,7 @@ function compactFenokEdgePublicMirror() {
 
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
+removeGeneratedPublicMirror("public/data/admin/fenok-s1-stock-promotion-gate-plan.json");
 for (const relativePath of [
   "public/data/computed/fenok_flow_proxies.json",
   "public/data/computed/fenok_flow_proxies_history.json",

@@ -8,6 +8,7 @@ const appRoot = path.resolve(__dirname, "..");
 const publicDataRoot = path.join(appRoot, "public", "data");
 
 const forbiddenPatterns = [
+  /^admin\/fenok-s1-stock-promotion-gate-plan\.json$/,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
   /^computed\/fenok_flow_proxies.*\.json$/,

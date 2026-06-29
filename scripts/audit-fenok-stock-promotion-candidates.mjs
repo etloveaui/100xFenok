@@ -2260,6 +2260,7 @@ function printHuman(result) {
 }
 
 export {
+  buildAudit,
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
   corporateActionEvidenceFor,
