@@ -272,7 +272,7 @@ export default function HomeBentoGridV4({
               현재 시장 심리는 <b>{dashboard.fearGreedLabel}</b> 구간에 있으며, 상승 섹터 비율은{" "}
               <b>{((dashboard.sectorUp / Math.max(dashboard.sectorRows.length, 1)) * 100).toFixed(0)}%</b>입니다.
               금융 스트레스 요인은 <b>{dashboard.stressLabel}</b> 수준으로, 전반적인 위험 지수가{" "}
-              <b>{regimeClass === "is-risk-on" ? "우호적" : "경계해야 할"}</b> 흐름을 보이고 있습니다.
+              <b>{regimeClass === "is-risk-on" ? "양호한" : "경계해야 할"}</b> 흐름을 보이고 있습니다.
             </p>
             <div className="meta-status">
               최근 추세 반영 · 데이터 실시간 동기화{" "}

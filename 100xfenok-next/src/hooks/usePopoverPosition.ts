@@ -18,10 +18,12 @@ export function usePopoverPosition(
   triggerRef: RefObject<HTMLElement | null>,
   popoverRef: RefObject<HTMLElement | null>,
   placement: Placement,
+  enabled = true,
 ): PopoverPosition | null {
   const [position, setPosition] = useState<PopoverPosition | null>(null);
 
   useLayoutEffect(() => {
+    if (!enabled) return;
     const trigger = triggerRef.current;
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
@@ -107,7 +109,7 @@ export function usePopoverPosition(
       window.removeEventListener("resize", compute);
       window.removeEventListener("scroll", compute, true);
     };
-  }, [triggerRef, popoverRef, placement]);
+  }, [triggerRef, popoverRef, placement, enabled]);
 
   return position;
 }

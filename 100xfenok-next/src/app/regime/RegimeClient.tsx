@@ -49,7 +49,7 @@ function strongestTone(pulses: Pulse[]): MarketTone {
 function toneLabel(tone: MarketTone): string {
   if (tone === "rose") return "경계";
   if (tone === "amber") return "주의";
-  if (tone === "emerald") return "우호";
+  if (tone === "emerald") return "양호";
   return "중립";
 }
 
@@ -227,14 +227,14 @@ function buildHeadline(axes: Axis[]) {
     return {
       label: "주의 우세",
       tone: "amber" as MarketTone,
-      detail: `주의 ${cautionCount}개, 우호 ${friendlyCount}개입니다. 방향성보다 리스크 점검이 먼저입니다.`,
+      detail: `주의 ${cautionCount}개, 긍정 ${friendlyCount}개입니다. 방향성보다 리스크 점검이 먼저입니다.`,
     };
   }
   if (friendlyCount > 0) {
     return {
-      label: "우호 신호 우세",
+      label: "긍정 신호 우세",
       tone: "emerald" as MarketTone,
-      detail: `우호 ${friendlyCount}개가 확인됩니다. 단, 밸류에이션과 심리 과열 여부는 함께 봐야 합니다.`,
+      detail: `긍정 신호 ${friendlyCount}개가 확인됩니다. 단, 밸류에이션과 심리 과열 여부는 함께 봐야 합니다.`,
     };
   }
   return {

@@ -1,9 +1,9 @@
 const DIRECTION_LABELS: Record<string, string> = {
   strong: "강함",
-  constructive: "우호",
+  constructive: "양호",
   neutral: "중립",
   weak: "약함",
-  stressed: "압박",
+  stressed: "압력 큼",
   positive: "상",
   negative: "하",
   upside_bias: "상방 편중",

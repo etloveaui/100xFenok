@@ -5,7 +5,9 @@ import { createPortal } from "react-dom";
 import { usePopoverPosition } from "@/hooks/usePopoverPosition";
 import {
   type FenokSignalHelpKey,
-  getSignalHelpEntry,
+  getDisplaySignalHelpBands,
+  getDisplaySignalInterpretation,
+  getDisplaySignalLabel,
   toneClass,
 } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo } from "@/lib/fenok-signals/direction-ko";
@@ -23,6 +25,7 @@ export interface FenokSignalHelpPopoverProps {
   score?: number | null;
   direction?: string | null;
   placement?: "auto" | "top" | "bottom" | "left" | "right";
+  invertedDisplay?: boolean;
 }
 
 export default function FenokSignalHelpPopover({
@@ -30,6 +33,7 @@ export default function FenokSignalHelpPopover({
   score,
   direction,
   placement = "auto",
+  invertedDisplay = false,
 }: FenokSignalHelpPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const mounted = useSyncExternalStore(
@@ -39,11 +43,13 @@ export default function FenokSignalHelpPopover({
   );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const position = usePopoverPosition(triggerRef, popoverRef, placement);
+  const position = usePopoverPosition(triggerRef, popoverRef, placement, isOpen);
   const titleId = useId();
   const popoverId = useId();
-  const entry = getSignalHelpEntry(signal);
+  const titleLabel = getDisplaySignalLabel(signal, invertedDisplay);
   const scoreValue = isFiniteNumber(score) ? Math.round(score) : null;
+  const bands = getDisplaySignalHelpBands(signal, invertedDisplay);
+  const interpretation = getDisplaySignalInterpretation(signal, invertedDisplay);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -106,7 +112,7 @@ export default function FenokSignalHelpPopover({
           id={titleId}
           className="text-xs font-black text-[var(--c-ink)]"
         >
-          {entry.label}
+          {titleLabel}
         </strong>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
           {scoreValue ?? "—"}
@@ -114,10 +120,10 @@ export default function FenokSignalHelpPopover({
         </span>
       </div>
       <p className="mb-2 text-[11px] font-semibold leading-snug text-[var(--c-ink-2)]">
-        {entry.interpretation}
+        {interpretation}
       </p>
       <div className="mb-2 space-y-1">
-        {entry.bands.map((band) => {
+        {bands.map((band) => {
           const active =
             scoreValue !== null &&
             scoreValue >= band.min &&
@@ -140,7 +146,7 @@ export default function FenokSignalHelpPopover({
         })}
       </div>
       <p className="text-[9px] font-bold text-[var(--c-ink-4)]">
-        Fenok 파생 신호 · 매수권유 아님
+        Fenok 파생 신호 · 매수 권유 아님
       </p>
     </div>
   );
@@ -150,7 +156,7 @@ export default function FenokSignalHelpPopover({
       <button
         ref={triggerRef}
         type="button"
-        aria-label={`${entry.label} 신호 설명 열기`}
+        aria-label={`${titleLabel} 신호 설명 열기`}
         aria-expanded={isOpen}
         aria-controls={popoverId}
         onClick={toggle}

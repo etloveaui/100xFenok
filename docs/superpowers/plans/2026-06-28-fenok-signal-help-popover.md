@@ -55,9 +55,9 @@ export interface FenokSignalHelpEntry {
 
 const DEFAULT_BANDS: FenokSignalHelpBand[] = [
   { min: 81, max: 100, label: "강함", tone: "up" },
-  { min: 61, max: 80, label: "우호", tone: "up" },
+  { min: 61, max: 80, label: "양호", tone: "up" },
   { min: 41, max: 60, label: "중립", tone: "warn" },
-  { min: 0, max: 40, label: "위약", tone: "down" },
+  { min: 0, max: 40, label: "약함", tone: "down" },
 ];
 
 function makeDefaultEntry(
@@ -94,7 +94,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       "Fenok 파생 신호로 산출한 상대적 상방/하방 기대치예요.",
     bands: [
       { min: 81, max: 100, label: "상방 우세", tone: "up" },
-      { min: 61, max: 80, label: "상방 우호", tone: "up" },
+      { min: 61, max: 80, label: "상방 양호", tone: "up" },
       { min: 41, max: 60, label: "균형", tone: "warn" },
       { min: 0, max: 40, label: "하방 우세", tone: "down" },
     ],
@@ -148,10 +148,10 @@ Expected: no errors from the new file.
 ```ts
 const DIRECTION_LABELS: Record<string, string> = {
   strong: "강함",
-  constructive: "우호",
+  constructive: "양호",
   neutral: "중립",
   weak: "약함",
-  stressed: "압박",
+  stressed: "압력 큼",
   positive: "상",
   negative: "하",
   upside_bias: "상방 편중",
@@ -205,10 +205,12 @@ export function usePopoverPosition(
   triggerRef: RefObject<HTMLElement | null>,
   popoverRef: RefObject<HTMLElement | null>,
   placement: Placement,
+  enabled = true,
 ): PopoverPosition | null {
   const [position, setPosition] = useState<PopoverPosition | null>(null);
 
   useLayoutEffect(() => {
+    if (!enabled) return;
     const trigger = triggerRef.current;
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
@@ -290,7 +292,7 @@ export function usePopoverPosition(
       window.removeEventListener("resize", compute);
       window.removeEventListener("scroll", compute, true);
     };
-  }, [triggerRef, popoverRef, placement]);
+  }, [triggerRef, popoverRef, placement, enabled]);
 
   return position;
 }
@@ -352,7 +354,7 @@ export default function FenokSignalHelpPopover({
   );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const position = usePopoverPosition(triggerRef, popoverRef, placement);
+  const position = usePopoverPosition(triggerRef, popoverRef, placement, isOpen);
   const titleId = useId();
   const popoverId = useId();
   const entry = getSignalHelpEntry(signal);
@@ -396,7 +398,7 @@ export default function FenokSignalHelpPopover({
     setIsOpen((prev) => !prev);
   }
 
-  const headerDirection = directionKo(direction, "미확인");
+  const headerDirection = directionKo(direction, "");
 
   const popover = (
     <div
@@ -422,7 +424,8 @@ export default function FenokSignalHelpPopover({
           {entry.label}
         </strong>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-          {scoreValue ?? "—"} · {headerDirection}
+          {scoreValue ?? "—"}
+          {headerDirection ? ` · ${headerDirection}` : null}
         </span>
       </div>
       <p className="mb-2 text-[11px] font-semibold leading-snug text-[var(--c-ink-2)]">
@@ -452,7 +455,7 @@ export default function FenokSignalHelpPopover({
         })}
       </div>
       <p className="text-[9px] font-bold text-[var(--c-ink-4)]">
-        Fenok 파생 신호 · 매수권유 아님
+        Fenok 파생 신호 · 매수 권유 아님
       </p>
     </div>
   );

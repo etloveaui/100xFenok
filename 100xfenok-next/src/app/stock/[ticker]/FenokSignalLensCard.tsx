@@ -2,8 +2,8 @@ import type { FenokSignalsSummaryRecord } from "@/features/stock-analyzer/data/f
 import { FenokSignalRadar, type FenokSignalRadarAxis } from "@/components/screener/FenokSignalRadar";
 import { FenokSignalRadarHexagon, type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
 import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
-import type { FenokSignalHelpKey, FenokSignalTone } from "@/lib/fenok-signals/signal-help-config";
-import { getSignalHelpEntry, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
+import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
+import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo as axisDirectionKo } from "@/lib/fenok-signals/direction-ko";
 
 interface FenokSignalLensCardProps {
@@ -83,7 +83,7 @@ const SHORT_TERM_SIGNALS: SignalConfig[] = [
   { key: "netOptionsProxy", label: "옵션", scoreKey: "netOptionsProxyScore", helpKey: "netOptionsProxy" },
   {
     key: "offExchangeActivityProxy",
-    label: "오프거래소",
+    label: "장외거래",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
     contextual: true,
@@ -197,84 +197,100 @@ function directionKo(key: SignalKey, value: string | null | undefined): string {
   if (value === "downside_bias") return "하방 편중";
   if (value === "balanced") return "균형";
   if (value === "strong") return "강함";
-  if (value === "constructive") return "우호";
+  if (value === "constructive") return "양호";
   if (value === "neutral") return "중립";
   if (value === "weak") return "약함";
-  if (value === "stressed") return "압박";
+  if (value === "stressed") return "압력 큼";
   return value.replaceAll("_", " ");
 }
 
 function legacyScoreBarColor(score: number | null, inverted = false): string {
   if (score === null || score === undefined) return "bg-[var(--c-line)]";
-  if (inverted) {
-    if (score >= 70) return "bg-[var(--c-down)]";
-    if (score >= 50) return "bg-[var(--c-warn)]";
-    return "bg-[var(--c-up)]";
-  }
+  const displayScore = inverted ? 100 - score : score;
+  if (displayScore >= 70) return "bg-[var(--c-up)]";
+  if (displayScore >= 50) return "bg-[var(--c-warn)]";
+  return "bg-[var(--c-down)]";
+}
+
+function displayedScore(score: number | null, inverted = false): number | null {
+  if (score === null) return null;
+  return Math.max(0, Math.min(100, inverted ? 100 - score : score));
+}
+
+function metricDisplayScore(metric: SignalMetric): number | null {
+  return displayedScore(metric.score, metric.inverted);
+}
+
+function directionFromDisplayScore(score: number | null): string | null {
+  if (score === null) return "unavailable";
+  if (score >= 70) return "constructive";
+  if (score >= 45) return "neutral";
+  return "weak";
+}
+
+function legacyDirection(score: number | null, inverted: boolean, rawDirection: string | null): string | null {
+  if (!inverted) return rawDirection;
+  return directionFromDisplayScore(displayedScore(score, true));
+}
+
+function legacyMetricLabel(signal: LegacySignalConfig): string {
+  if (signal.key === "downsidePressure" && signal.inverted) return "하락 압력 완화";
+  if (signal.key === "shortPressureProxy" && signal.inverted) return "숏압력 완화";
+  return signal.label;
+}
+
+function legacyMetricInterpretation(signal: LegacySignalConfig): string {
+  if (signal.key === "downsidePressure" && signal.inverted) return "하락 압력을 뒤집어 표시한 점수, 높을수록 위험 낮음";
+  if (signal.key === "shortPressureProxy" && signal.inverted) return "숏 볼륨 압력을 뒤집어 표시한 점수, 높을수록 압력 낮음";
+  return signal.interpretation;
+}
+
+function scoreBarColor(metric: SignalMetric): string {
+  const score = metricDisplayScore(metric);
+  if (score === null) return "bg-[var(--c-line)]";
+  if (metric.contextual) return "bg-[var(--c-brand)]";
   if (score >= 70) return "bg-[var(--c-up)]";
   if (score >= 50) return "bg-[var(--c-warn)]";
   return "bg-[var(--c-down)]";
 }
 
-function scoreBarColor(metric: SignalMetric): string {
-  if (metric.score === null) return "bg-[var(--c-line)]";
-  if (metric.contextual) return "bg-[var(--c-brand)]";
-  if (metric.inverted) {
-    if (metric.score >= 70) return "bg-[var(--c-down)]";
-    if (metric.score >= 50) return "bg-[var(--c-warn)]";
-    return "bg-[var(--c-up)]";
-  }
-  if (metric.score >= 70) return "bg-[var(--c-up)]";
-  if (metric.score >= 50) return "bg-[var(--c-warn)]";
-  return "bg-[var(--c-down)]";
-}
-
 function scoreTone(metric: SignalMetric): string {
-  if (metric.score === null) return "text-[var(--c-ink-3)]";
+  const score = metricDisplayScore(metric);
+  if (score === null) return "text-[var(--c-ink-3)]";
   if (metric.contextual) return "text-[var(--c-brand)]";
-  if (metric.inverted) {
-    if (metric.score >= 70) return "text-[var(--c-down)]";
-    if (metric.score >= 50) return "text-[var(--c-warn)]";
-    return "text-[var(--c-up)]";
-  }
-  if (metric.score >= 70) return "text-[var(--c-up)]";
-  if (metric.score >= 50) return "text-[var(--c-warn)]";
+  if (score >= 70) return "text-[var(--c-up)]";
+  if (score >= 50) return "text-[var(--c-warn)]";
   return "text-[var(--c-down)]";
 }
 
 function scoreLabel(metric: SignalMetric): string {
-  if (metric.score === null) return "미확인";
+  const score = metricDisplayScore(metric);
+  if (score === null) return "미확인";
   if (metric.contextual) {
-    if (metric.score >= 70) return "높음";
-    if (metric.score >= 45) return "보통";
+    if (score >= 70) return "높음";
+    if (score >= 45) return "보통";
     return "낮음";
   }
   if (metric.inverted) {
-    if (metric.score >= 70) return "압력 높음";
-    if (metric.score >= 50) return "주의";
-    return "낮음";
+    if (score >= 70) return "압력 낮음";
+    if (score >= 50) return "주의";
+    return "압력 높음";
   }
-  if (metric.score >= 70) return "강함";
-  if (metric.score >= 50) return "우호";
-  if (metric.score >= 40) return "중립";
+  if (score >= 70) return "강함";
+  if (score >= 50) return "양호";
+  if (score >= 40) return "중립";
   return "약함";
 }
 
 function radarDirection(metric: SignalMetric): string | null {
-  if (metric.score === null) return "unavailable";
+  const score = metricDisplayScore(metric);
+  if (score === null) return "unavailable";
   if (metric.contextual) {
-    if (metric.score >= 70) return "strong";
-    if (metric.score >= 45) return "neutral";
+    if (score >= 70) return "strong";
+    if (score >= 45) return "neutral";
     return "weak";
   }
-  if (metric.inverted) {
-    if (metric.score >= 70) return "stressed";
-    if (metric.score >= 50) return "neutral";
-    return "constructive";
-  }
-  if (metric.score >= 70) return "constructive";
-  if (metric.score >= 45) return "neutral";
-  return "weak";
+  return directionFromDisplayScore(score);
 }
 
 function aggregateScore(metrics: SignalMetric[], fallback: unknown): number | null {
@@ -283,7 +299,7 @@ function aggregateScore(metrics: SignalMetric[], fallback: unknown): number | nu
   let count = 0;
   for (const metric of metrics) {
     if (metric.score === null || metric.contextual) continue;
-    total += metric.inverted ? 100 - metric.score : metric.score;
+    total += metricDisplayScore(metric) ?? 0;
     count += 1;
   }
   return count ? total / count : null;
@@ -318,20 +334,26 @@ function metricFromConfig(record: FenokSignalsSummaryRecord, signal: SignalConfi
 function metricRadarAxis(metric: SignalMetric): FenokSignalRadarAxis {
   return {
     label: metric.label,
-    score: metric.score,
+    score: metricDisplayScore(metric),
     direction: radarDirection(metric),
   };
 }
 
 function SignalMetricRow({ metric }: { metric: SignalMetric }) {
-  const width = metric.score === null ? 0 : Math.max(0, Math.min(100, metric.score));
+  const displayScore = metricDisplayScore(metric);
+  const width = displayScore === null ? 0 : Math.max(0, Math.min(100, displayScore));
   return (
     <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2">
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-[11px] font-black text-[var(--c-ink)]">{metric.label}</span>
-            <FenokSignalHelpPopover signal={metric.helpKey} score={metric.score} direction={radarDirection(metric)} />
+            <FenokSignalHelpPopover
+              signal={metric.helpKey}
+              score={displayScore}
+              direction={radarDirection(metric)}
+              invertedDisplay={metric.inverted}
+            />
           </div>
           <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={`text-[9px] font-black ${scoreTone(metric)}`}>{scoreLabel(metric)}</span>
@@ -346,7 +368,7 @@ function SignalMetricRow({ metric }: { metric: SignalMetric }) {
           </div>
         </div>
         <span className={`orbitron shrink-0 text-sm font-black tabular-nums ${scoreTone(metric)}`}>
-          {formatScore(metric.score)}
+          {formatScore(displayScore)}
         </span>
       </div>
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--c-surface-2)]">
@@ -430,7 +452,16 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
     const direction = typeof directionValue === "string" ? directionValue : null;
     const coverageValue = signal.coverageKey ? record[signal.coverageKey] : null;
     const coverage = isFiniteNumber(coverageValue) ? coverageValue : null;
-    return { ...signal, score, direction, coverage };
+    const displayScore = displayedScore(score, signal.inverted);
+    return {
+      ...signal,
+      label: legacyMetricLabel(signal),
+      interpretation: legacyMetricInterpretation(signal),
+      score,
+      displayScore,
+      direction: legacyDirection(score, Boolean(signal.inverted), direction),
+      coverage,
+    };
   });
   const hasSignal = chips.some((chip) => chip.score !== null);
   if (!hasSignal) return null;
@@ -462,7 +493,7 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
             </span>
           </div>
           <span className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-            매수권유 아님
+            매수 권유 아님
           </span>
         </div>
       </div>
@@ -472,13 +503,13 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
           <div className="flex items-center gap-3">
             <span
               className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-black tabular-nums ${convictionTone(convictionCall)}`}
-              title="Fenok 4-신호 동등가중 종합 점수"
+              title="Fenok 4-신호 동일가중 종합 점수"
             >
               <span aria-hidden="true">{convictionCallKo(convictionCall)}</span>
               {convictionScore ?? "—"}
             </span>
             <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-              Fenok 4-신호 동등가중 종합
+              Fenok 4-신호 동일가중 종합
             </span>
           </div>
           <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
@@ -493,7 +524,7 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
 
           <div className="grid content-center gap-3">
             {chips.map((chip) => {
-              const width = chip.score === null ? 0 : Math.max(0, Math.min(100, chip.score));
+              const width = chip.displayScore === null ? 0 : Math.max(0, Math.min(100, chip.displayScore));
               const directionText = directionKo(chip.key, chip.direction);
               return (
                 <div key={chip.key} className="space-y-1">
@@ -502,8 +533,9 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
                       <span className="text-xs font-black text-[var(--c-ink)]">{chip.label}</span>
                       <FenokSignalHelpPopover
                         signal={chip.helpKey}
-                        score={chip.score}
+                        score={chip.displayScore}
                         direction={chip.direction}
+                        invertedDisplay={chip.inverted}
                       />
                       {chip.coverageKey && chip.coverage !== null ? (
                         <span
@@ -518,7 +550,7 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
                       </span>
                     </div>
                     <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
-                      {formatScore(chip.score)}
+                      {formatScore(chip.displayScore)}
                       {directionText ? (
                         <span className="ml-1 text-[10px] font-bold text-[var(--c-ink-3)]">
                           {directionText}
@@ -540,7 +572,7 @@ function LegacyFenokSignalLensCard({ record }: { record: FenokSignalsSummaryReco
       </div>
 
       <p className="border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-4 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
-        Fenok 파생 프록시 · 매수권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+        Fenok 파생 프록시 · 매수 권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
         {formatCoverage(record.coverageRatio)}
       </p>
     </section>
@@ -565,6 +597,7 @@ interface LongTermAxis extends FenokSignalRadarHexagonAxis {
   fullLabel: string;
   coverage: number | null;
   tooltipNote?: string | null;
+  invertedDisplay?: boolean;
   meta: {
     tier: string | null;
     tone: "up" | "warn" | "down" | "neutral";
@@ -597,12 +630,12 @@ const LONG_TERM_AXIS_CONFIG: LongTermAxisConfig[] = [
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하방안전",
-    fullLabel: "하방안전",
+    spokeLabel: "하락완화",
+    fullLabel: "하락 압력 완화",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
     invertScore: true,
-    tooltipNote: "하락 압력의 역수, 높을수록 위험 낮음",
+    tooltipNote: "하락 압력을 뒤집어 표시한 점수, 높을수록 위험 낮음",
   },
   {
     key: "marketSimilarity",
@@ -681,28 +714,29 @@ const SHORT_TERM_AXIS_CONFIG: ShortTermAxisConfig[] = [
   },
   {
     key: "offExchangeActivityProxy",
-    spokeLabel: "오프거래소",
-    fullLabel: "오프거래소 활동 프록시",
+    spokeLabel: "장외거래",
+    fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
     tooltipNote: "FINRA 공개 데이터 파생, 다크풀/방향 신호 아님",
   },
   {
     key: "shortPressureProxy",
-    spokeLabel: "숏압력",
-    fullLabel: "숏 볼륨 압력 프록시",
+    spokeLabel: "숏완화",
+    fullLabel: "숏압력 완화",
     scoreKey: "shortPressureProxyScore",
     helpKey: "shortPressureProxy",
-    tooltipNote: "공개 short volume 파생, 숏 이자·대차비용 아님",
+    invertScore: true,
+    tooltipNote: "숏 볼륨 압력을 뒤집어 표시한 점수, 높을수록 압력 낮음",
   },
 ];
 
 function deriveAxisMeta(
   score: number | null,
   helpKey: FenokSignalHelpKey,
+  invertedDisplay = false,
 ): { tier: string | null; tone: LongTermAxis["meta"]["tone"]; direction: string | null } {
-  const entry = getSignalHelpEntry(helpKey);
-  const band = lookupBand(entry, score);
+  const band = lookupBand(getDisplaySignalHelpBands(helpKey, invertedDisplay), score);
   const tier = band?.label ?? null;
   const tone = band?.tone ?? "neutral";
   let direction: string | null = null;
@@ -724,9 +758,7 @@ function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
       typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
     const rawCoverage = config.coverageKey ? record[config.coverageKey] : null;
     const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
-    // For inverted axes, use default (non-inverted) bands so high score reads as positive.
-    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
-    const meta = deriveAxisMeta(score, metaHelpKey);
+    const meta = deriveAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
       label: config.spokeLabel,
@@ -737,6 +769,7 @@ function buildLongTermAxes(record: FenokSignalsSummaryRecord): LongTermAxis[] {
       helpKey: config.helpKey,
       coverage,
       tooltipNote: config.tooltipNote ?? null,
+      invertedDisplay: Boolean(config.invertScore),
       meta,
     };
   });
@@ -752,8 +785,7 @@ function buildShortTermAxes(record: FenokSignalsSummaryRecord): ShortTermAxis[] 
     const rawDirection = config.directionKey ? record[config.directionKey] : null;
     const explicitDirection =
       typeof rawDirection === "string" && rawDirection !== "unavailable" ? rawDirection : null;
-    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
-    const meta = deriveAxisMeta(score, metaHelpKey);
+    const meta = deriveAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
       label: config.spokeLabel,
@@ -764,6 +796,7 @@ function buildShortTermAxes(record: FenokSignalsSummaryRecord): ShortTermAxis[] 
       helpKey: config.helpKey,
       tooltipNote: config.tooltipNote ?? null,
       coverage: null,
+      invertedDisplay: Boolean(config.invertScore),
       meta,
     };
   });
@@ -795,7 +828,12 @@ function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
           </div>
         ) : null}
       </div>
-      <FenokSignalHelpPopover signal={axis.helpKey} score={axis.score} direction={axis.direction} />
+      <FenokSignalHelpPopover
+        signal={axis.helpKey}
+        score={axis.score}
+        direction={axis.direction}
+        invertedDisplay={axis.invertedDisplay}
+      />
       {axis.meta.tier && axis.score !== null ? (
         <span
           className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${toneClass(axis.meta.tone)}`}
@@ -871,7 +909,7 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
             </span>
           </div>
           <span className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-            매수권유 아님
+            매수 권유 아님
           </span>
         </div>
       </div>
@@ -910,7 +948,7 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
         </div>
 
         <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
-          Fenok 파생 신호 · 매수권유 아님
+          Fenok 파생 신호 · 매수 권유 아님
         </p>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -941,7 +979,7 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
         </div>
 
         <p className="text-[10px] font-bold text-[var(--c-ink-3)]">
-          Fenok 파생 신호 · 매수권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
+          Fenok 파생 신호 · 매수 권유 아님 · as_of {formatAsOf(record.asOf)} · coverage{" "}
           {formatCoverage(coverage)}
         </p>
       </div>

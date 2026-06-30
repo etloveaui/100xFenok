@@ -9,7 +9,7 @@ Give users a concise, plain-Korean explanation of each Fenok signal score withou
 
 - Explain what a signal measures in one sentence.
 - Map the 0–100 score to a four-band descriptive scale.
-- Carry the standard Fenok disclaimer (“Fenok 파생 신호 · 매수권유 아님”).
+- Carry the standard Fenok disclaimer (“Fenok 파생 신호 · 매수 권유 아님”).
 - Be keyboard accessible and mobile friendly.
 - Scale from the current 4 signals to the expected v0.2 set of 6–10 signals through a config-driven registry.
 
@@ -35,11 +35,11 @@ Give users a concise, plain-Korean explanation of each Fenok signal score withou
 | Score range | Label | Tone token |
 |-------------|-------|------------|
 | 81–100 | 강함 | `--c-up` / `--c-up-soft` |
-| 61–80 | 우호 | `--c-up` / `--c-up-soft` |
+| 61–80 | 양호 | `--c-up` / `--c-up-soft` |
 | 41–60 | 중립 | `--c-warn` / `--c-warn-soft` |
-| 0–40 | 위약 | `--c-down` / `--c-down-soft` |
+| 0–40 | 약함 | `--c-down` / `--c-down-soft` |
 
-Signal-specific overrides are allowed in the registry (e.g. Fenok Edge may label bands “상방 우위 / 균형 / 하방 압력” once v0.2 splits the axis).
+Signal-specific overrides are allowed in the registry (e.g. Fenok Edge labels bands “상방 우세 / 상방 양호 / 균형 / 하방 우세”; inverted risk axes can expose display-safe bands such as “위험 낮음” or “압력 낮음”).
 
 ## 5. Interaction model
 
@@ -105,7 +105,7 @@ Direction labels are provided by the shared `directionKo` helper (`src/lib/fenok
 1. **Header:** `{label}` + current `score` + `{directionKo(direction)}`.
 2. **Body:** `interpretation` paragraph.
 3. **Scale table:** four rows, each row tinted with the band tone token.
-4. **Footer:** `Fenok 파생 신호 · 매수권유 아님`.
+4. **Footer:** `Fenok 파생 신호 · 매수 권유 아님`.
 
 ## 8. Positioning behavior
 
@@ -116,12 +116,13 @@ function usePopoverPosition(
   triggerRef: RefObject<HTMLElement>,
   popoverRef: RefObject<HTMLElement>,
   placement: "auto" | "top" | "bottom" | "left" | "right",
+  enabled?: boolean,
 ): { top: number; left: number; actualPlacement: string }
 ```
 
 Rules:
 
-1. Measure trigger and popover rects in a `useLayoutEffect` after open.
+1. Measure trigger and popover rects in a `useLayoutEffect` only after open/portal mount (`enabled=true`).
 2. Compute viewport-relative coordinates because the popover is `position: fixed` in a portal.
 3. Prefer the requested `placement`; flip to the opposite side if it would overflow.
 4. Nudge `left` so the card stays within `8px` viewport padding.

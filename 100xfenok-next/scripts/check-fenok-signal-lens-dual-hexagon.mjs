@@ -84,6 +84,20 @@ const UI_CONTRACTS = [
   },
 ];
 
+const AWKWARD_SIGNAL_COPY_MARKERS = [
+  "위약",
+  "우호",
+  "하방안전",
+  "숏안전",
+  "역수",
+  "오프거래소",
+  "뉴스톤",
+  "동등가중",
+  "매수권유",
+  "Feno 자동",
+  "압박",
+];
+
 function readJson(absPath) {
   return JSON.parse(fs.readFileSync(absPath, "utf8"));
 }
@@ -183,6 +197,66 @@ function requireUiContracts(errors) {
     for (const marker of contract.markers) {
       if (!text.includes(marker)) errors.push(`${contract.file}: missing marker '${marker}'`);
     }
+  }
+  for (const file of [
+    "src/app/stock/[ticker]/FenokSignalLensCard.tsx",
+    "src/app/screener/StockDetailPanel.tsx",
+  ]) {
+    const text = fs.readFileSync(path.join(appRoot, file), "utf8");
+    const shortPressureBlock = /key:\s*"shortPressureProxy"[\s\S]*?fullLabel:\s*"숏압력 완화"[\s\S]*?invertScore:\s*true[\s\S]*?높을수록 압력 낮음/.test(text);
+    if (!shortPressureBlock) {
+      errors.push(`${file}: shortPressureProxy hexagon axis must render as inverted safety display`);
+    }
+    if (!text.includes('spokeLabel: "숏완화"')) {
+      errors.push(`${file}: shortPressureProxy spoke label must render as compact Korean copy '숏완화'`);
+    }
+    if (!text.includes("getDisplaySignalHelpBands(helpKey, invertedDisplay)")) {
+      errors.push(`${file}: signal help bands must use display-aware inverted bands`);
+    }
+    for (const marker of AWKWARD_SIGNAL_COPY_MARKERS) {
+      if (text.includes(marker)) {
+        errors.push(`${file}: signal lens copy must not use awkward marker '${marker}'`);
+      }
+    }
+  }
+
+  const helpConfig = fs.readFileSync(path.join(appRoot, "src/lib/fenok-signals/signal-help-config.ts"), "utf8");
+  for (const marker of [
+    "const SHORT_PRESSURE_SAFETY_BANDS",
+    "const DOWNSIDE_SAFETY_BANDS",
+    "export function getDisplaySignalHelpBands",
+    "export function getDisplaySignalLabel",
+    "export function getDisplaySignalInterpretation",
+    "하락 압력 완화",
+    "숏압력 완화",
+    "장외거래",
+    "뉴스 톤",
+    "약함",
+    "양호",
+  ]) {
+    if (!helpConfig.includes(marker)) {
+      errors.push(`src/lib/fenok-signals/signal-help-config.ts: missing display-aware help marker '${marker}'`);
+    }
+  }
+  for (const marker of AWKWARD_SIGNAL_COPY_MARKERS) {
+    if (helpConfig.includes(marker)) {
+      errors.push(`src/lib/fenok-signals/signal-help-config.ts: signal help copy must not use awkward marker '${marker}'`);
+    }
+  }
+
+  const directionKo = fs.readFileSync(path.join(appRoot, "src/lib/fenok-signals/direction-ko.ts"), "utf8");
+  if (!directionKo.includes('stressed: "압력 큼"') || directionKo.includes("압박")) {
+    errors.push("src/lib/fenok-signals/direction-ko.ts: stressed direction label must render as '압력 큼'");
+  }
+
+  const popover = fs.readFileSync(path.join(appRoot, "src/components/screener/FenokSignalHelpPopover.tsx"), "utf8");
+  if (!popover.includes("usePopoverPosition(triggerRef, popoverRef, placement, isOpen)")) {
+    errors.push("src/components/screener/FenokSignalHelpPopover.tsx: popover positioning must be recalculated when opened");
+  }
+
+  const popoverHook = fs.readFileSync(path.join(appRoot, "src/hooks/usePopoverPosition.ts"), "utf8");
+  if (!popoverHook.includes("enabled = true") || !popoverHook.includes("if (!enabled)") || !popoverHook.includes("placement, enabled")) {
+    errors.push("src/hooks/usePopoverPosition.ts: hook must expose an enabled gate and rerun on open state");
   }
 }
 

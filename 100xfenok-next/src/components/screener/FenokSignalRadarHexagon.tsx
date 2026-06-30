@@ -34,6 +34,8 @@ export interface FenokSignalRadarHexagonAxis {
   fullLabel?: string | null;
   /** Extra tooltip caveat for inverted/neutral axes. */
   tooltipNote?: string | null;
+  /** True when score is an inverted/safety display value, not the raw pressure value. */
+  invertedDisplay?: boolean;
 }
 
 export interface FenokSignalRadarHexagonProps {
@@ -57,10 +59,10 @@ function directionLabel(value: string | null | undefined): string {
 function tierLabel(value: string | null | undefined): string {
   if (!value || value === "unavailable") return "";
   if (value === "strong") return "강함";
-  if (value === "constructive") return "우호";
+  if (value === "constructive") return "양호";
   if (value === "neutral") return "중립";
   if (value === "weak") return "약함";
-  if (value === "stressed") return "압박";
+  if (value === "stressed") return "압력 큼";
   return value.replaceAll("_", " ");
 }
 

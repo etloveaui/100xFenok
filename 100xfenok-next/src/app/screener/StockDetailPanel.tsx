@@ -7,7 +7,7 @@ import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSig
 import { FenokSignalRadarHexagonPair } from "@/components/screener/FenokSignalRadarHexagonPair";
 import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
-import { getSignalHelpEntry, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
+import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo } from "@/lib/fenok-signals/direction-ko";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import type { ScreenerStock } from "@/lib/screener/types";
@@ -50,7 +50,7 @@ function signalDirectionLabel(direction: string | null | undefined): string {
 }
 
 function fenokTooltip(stock: ScreenerStock): string {
-  const lines = ["Fenok 4-신호 동등가중 종합 · 매수권유 아님"];
+  const lines = ["Fenok 4-신호 동일가중 종합 · 매수 권유 아님"];
   const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
     const s = isFiniteNumber(score) ? Math.round(score) : "—";
     lines.push(`${label}: ${s} · ${signalDirectionLabel(direction)}`);
@@ -330,6 +330,7 @@ interface DetailLongTermAxis extends FenokSignalRadarHexagonAxis {
   fullLabel: string;
   coverage: number | null;
   tooltipNote?: string | null;
+  invertedDisplay?: boolean;
   meta: { tier: string | null; tone: "up" | "warn" | "down" | "neutral" };
 }
 
@@ -371,12 +372,12 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하방안전",
-    fullLabel: "하방안전",
+    spokeLabel: "하락완화",
+    fullLabel: "하락 압력 완화",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
     invertScore: true,
-    tooltipNote: "하락 압력의 역수, 높을수록 위험 낮음",
+    tooltipNote: "하락 압력을 뒤집어 표시한 점수, 높을수록 위험 낮음",
   },
   {
     key: "marketSimilarity",
@@ -432,28 +433,29 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "offExchangeActivityProxy",
-    spokeLabel: "오프거래소",
-    fullLabel: "오프거래소 활동 프록시",
+    spokeLabel: "장외거래",
+    fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
     tooltipNote: "FINRA 공개 데이터 파생, 다크풀/방향 신호 아님",
   },
   {
     key: "shortPressureProxy",
-    spokeLabel: "숏압력",
-    fullLabel: "숏 볼륨 압력 프록시",
+    spokeLabel: "숏완화",
+    fullLabel: "숏압력 완화",
     scoreKey: "shortPressureProxyScore",
     helpKey: "shortPressureProxy",
-    tooltipNote: "공개 short volume 파생, 숏 이자·대차비용 아님",
+    invertScore: true,
+    tooltipNote: "숏 볼륨 압력을 뒤집어 표시한 점수, 높을수록 압력 낮음",
   },
 ];
 
 function deriveDetailAxisMeta(
   score: number | null,
   helpKey: FenokSignalHelpKey,
+  invertedDisplay = false,
 ): DetailLongTermAxis["meta"] & { direction: string | null } {
-  const entry = getSignalHelpEntry(helpKey);
-  const band = lookupBand(entry, score);
+  const band = lookupBand(getDisplaySignalHelpBands(helpKey, invertedDisplay), score);
   const tier = band?.label ?? null;
   const tone = band?.tone ?? "neutral";
   let direction: string | null = null;
@@ -479,8 +481,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       ? stock[config.coverageKey as keyof ScreenerStock]
       : null;
     const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
-    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
-    const meta = deriveDetailAxisMeta(score, metaHelpKey);
+    const meta = deriveDetailAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
       label: config.spokeLabel,
@@ -491,6 +492,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       helpKey: config.helpKey,
       tooltipNote: config.tooltipNote ?? null,
       coverage,
+      invertedDisplay: Boolean(config.invertScore),
       meta,
     };
   });
@@ -512,8 +514,7 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       ? stock[config.coverageKey as keyof ScreenerStock]
       : null;
     const coverage = isFiniteNumber(rawCoverage) ? rawCoverage : null;
-    const metaHelpKey: FenokSignalHelpKey = config.invertScore ? "upsidePotential" : config.helpKey;
-    const meta = deriveDetailAxisMeta(score, metaHelpKey);
+    const meta = deriveDetailAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
       label: config.spokeLabel,
@@ -524,6 +525,7 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       helpKey: config.helpKey,
       tooltipNote: config.tooltipNote ?? null,
       coverage,
+      invertedDisplay: Boolean(config.invertScore),
       meta,
     };
   });
@@ -555,7 +557,12 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
           </div>
         ) : null}
       </div>
-      <FenokSignalHelpPopover signal={axis.helpKey} score={axis.score} direction={axis.direction} />
+      <FenokSignalHelpPopover
+        signal={axis.helpKey}
+        score={axis.score}
+        direction={axis.direction}
+        invertedDisplay={axis.invertedDisplay}
+      />
       {axis.meta.tier && axis.score !== null ? (
         <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${toneClass(axis.meta.tone)}`}>
           {axis.meta.tier}
@@ -822,7 +829,7 @@ function buildScreenerThreeSecondVerdict({
   const riskCount = signals.filter((signal) => signal.tone === "risk").length;
   const badge =
     score >= 2 && riskCount === 0
-      ? "우호 신호 우세"
+      ? "긍정 신호 우세"
       : riskCount >= 2 || score <= -1
         ? "주의 신호 우세"
         : "강점·확인 포인트 공존";
@@ -2179,7 +2186,7 @@ export function StockDetailBody({
         <div className="mb-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3.5 shadow-[var(--sh-sm)]">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--c-ink-4)]">
-              Feno 자동 해석
+              Fenok 자동 해석
             </span>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black leading-none ${interpretation.badgeClass}`}>
               {interpretation.badge}
@@ -2348,7 +2355,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
         <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)]">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
-              Fenok 신호 한눈에 보기 · 매수권유 아님
+              Fenok 신호 한눈에 보기 · 매수 권유 아님
             </span>
             <div className="flex flex-wrap items-center gap-1.5">
               <span
@@ -2376,7 +2383,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
               size="lg"
             />
             <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
-              Fenok 파생 신호 · 매수권유 아님
+              Fenok 파생 신호 · 매수 권유 아님
             </p>
             <div className="grid gap-4 lg:grid-cols-2">
               {hasShortTermSignal ? (

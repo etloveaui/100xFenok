@@ -34,9 +34,23 @@ export interface FenokSignalHelpEntry {
 
 const DEFAULT_BANDS: FenokSignalHelpBand[] = [
   { min: 81, max: 100, label: "강함", tone: "up" },
-  { min: 61, max: 80, label: "우호", tone: "up" },
+  { min: 61, max: 80, label: "양호", tone: "up" },
   { min: 41, max: 60, label: "중립", tone: "warn" },
-  { min: 0, max: 40, label: "위약", tone: "down" },
+  { min: 0, max: 40, label: "약함", tone: "down" },
+];
+
+const DOWNSIDE_SAFETY_BANDS: FenokSignalHelpBand[] = [
+  { min: 81, max: 100, label: "위험 낮음", tone: "up" },
+  { min: 61, max: 80, label: "안정", tone: "up" },
+  { min: 41, max: 60, label: "보통", tone: "warn" },
+  { min: 0, max: 40, label: "위험 높음", tone: "down" },
+];
+
+const SHORT_PRESSURE_SAFETY_BANDS: FenokSignalHelpBand[] = [
+  { min: 81, max: 100, label: "압력 낮음", tone: "up" },
+  { min: 61, max: 80, label: "압력 관리", tone: "up" },
+  { min: 41, max: 60, label: "중립", tone: "warn" },
+  { min: 0, max: 40, label: "압력 높음", tone: "down" },
 ];
 
 function makeDefaultEntry(
@@ -73,7 +87,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       "Fenok 파생 신호로 산출한 상대적 상방/하방 기대치예요.",
     bands: [
       { min: 81, max: 100, label: "상방 우세", tone: "up" },
-      { min: 61, max: 80, label: "상방 우호", tone: "up" },
+      { min: 61, max: 80, label: "상방 양호", tone: "up" },
       { min: 41, max: 60, label: "균형", tone: "warn" },
       { min: 0, max: 40, label: "하방 우세", tone: "down" },
     ],
@@ -95,7 +109,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       "Fenok 파생 신호로 산출한 상대적 하락 압력 축이에요. 점수가 높을수록 위험이 커요.",
     bands: [
       { min: 81, max: 100, label: "위험 높음", tone: "down" },
-      { min: 61, max: 80, label: "위험 다소", tone: "warn" },
+      { min: 61, max: 80, label: "위험 다소 높음", tone: "warn" },
       { min: 41, max: 60, label: "보통", tone: "warn" },
       { min: 0, max: 40, label: "안정", tone: "up" },
     ],
@@ -122,8 +136,8 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   ),
   offExchangeActivityProxy: makeDefaultEntry(
     "offExchangeActivityProxy",
-    "오프거래소",
-    "FINRA 계열 공개 데이터에서 파생한 오프거래소 활동 프록시예요. 실시간 다크풀 의도 신호로 해석하면 안 돼요.",
+    "장외거래",
+    "FINRA 계열 공개 데이터에서 파생한 장외거래 활동 프록시예요. 실시간 다크풀 의도 신호로 해석하면 안 돼요.",
   ),
   shortPressureProxy: {
     key: "shortPressureProxy",
@@ -132,14 +146,14 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
       "공개 short volume/short activity 데이터를 이용한 Fenok 파생 압력 축이에요. 점수가 높을수록 숏 관련 압력이 큰 쪽이에요.",
     bands: [
       { min: 81, max: 100, label: "압력 높음", tone: "down" },
-      { min: 61, max: 80, label: "압력 다소", tone: "warn" },
+      { min: 61, max: 80, label: "압력 다소 높음", tone: "warn" },
       { min: 41, max: 60, label: "중립", tone: "warn" },
       { min: 0, max: 40, label: "압력 낮음", tone: "up" },
     ],
   },
   directNewsToneProxy: makeDefaultEntry(
     "directNewsToneProxy",
-    "뉴스톤",
+    "뉴스 톤",
     "허용된 뉴스/문서 소스에서 파생한 직접 뉴스 톤 프록시예요. 소셜 원문 수집이 승인되기 전까지는 저신뢰 보조축이에요.",
   ),
   volumeLiquidityTrend: makeDefaultEntry(
@@ -158,14 +172,49 @@ export function getSignalHelpEntry(key: FenokSignalHelpKey): FenokSignalHelpEntr
   return FENOK_SIGNAL_HELP_REGISTRY[key];
 }
 
+export function getDisplaySignalHelpBands(
+  key: FenokSignalHelpKey,
+  invertedDisplay = false,
+): FenokSignalHelpBand[] {
+  if (!invertedDisplay) return getSignalHelpEntry(key).bands;
+  if (key === "downsidePressure") return DOWNSIDE_SAFETY_BANDS;
+  if (key === "shortPressureProxy") return SHORT_PRESSURE_SAFETY_BANDS;
+  return getSignalHelpEntry(key).bands;
+}
+
+export function getDisplaySignalLabel(
+  key: FenokSignalHelpKey,
+  invertedDisplay = false,
+): string {
+  if (invertedDisplay && key === "downsidePressure") return "하락 압력 완화";
+  if (invertedDisplay && key === "shortPressureProxy") return "숏압력 완화";
+  return getSignalHelpEntry(key).label;
+}
+
+export function getDisplaySignalInterpretation(
+  key: FenokSignalHelpKey,
+  invertedDisplay = false,
+): string {
+  const entry = getSignalHelpEntry(key);
+  if (!invertedDisplay) return entry.interpretation;
+  if (key === "downsidePressure") {
+    return "화면 점수는 하락 압력 원점수를 뒤집어 표시한 점수예요. 높을수록 하락 위험이 낮다는 뜻이에요.";
+  }
+  if (key === "shortPressureProxy") {
+    return "화면 점수는 숏 볼륨 압력 원점수를 뒤집어 표시한 점수예요. 높을수록 숏 압력이 낮다는 뜻이에요.";
+  }
+  return entry.interpretation;
+}
+
 export function lookupBand(
-  entry: FenokSignalHelpEntry,
+  entryOrBands: FenokSignalHelpEntry | FenokSignalHelpBand[],
   score: number | null | undefined,
 ): FenokSignalHelpBand | null {
   if (score === null || score === undefined || Number.isNaN(score)) return null;
   const clamped = Math.max(0, Math.min(100, score));
+  const bands = Array.isArray(entryOrBands) ? entryOrBands : entryOrBands.bands;
   return (
-    entry.bands.find((band) => clamped >= band.min && clamped <= band.max) ??
+    bands.find((band) => clamped >= band.min && clamped <= band.max) ??
     null
   );
 }
