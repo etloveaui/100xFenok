@@ -49,6 +49,28 @@ function signalDirectionLabel(direction: string | null | undefined): string {
   return "·";
 }
 
+function edgeDirectionLabel(direction: string | null | undefined): string {
+  if (direction === "upside_bias") return "상방 우세";
+  if (direction === "downside_bias") return "하방 우세";
+  if (direction === "balanced") return "균형";
+  return "방향 미확인";
+}
+
+function edgeLeadLabel(shortScore: number | null, longScore: number | null): string {
+  if (shortScore === null && longScore === null) return "신호 미확인";
+  if (shortScore !== null && longScore !== null) {
+    if (shortScore >= longScore + 5) return "단기 우세";
+    if (longScore >= shortScore + 5) return "장기 우세";
+    return "단기·장기 균형";
+  }
+  return shortScore !== null ? "단기만 확인" : "장기만 확인";
+}
+
+function formatSignalCoverage(value: number | null | undefined): string {
+  if (!isFiniteNumber(value)) return "coverage 미확인";
+  return `coverage ${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
 function fenokTooltip(stock: ScreenerStock): string {
   const lines = ["Fenok 4-신호 동일가중 종합 · 매수 권유 아님"];
   const push = (label: string, score: number | null | undefined, direction: string | null | undefined) => {
@@ -2348,6 +2370,12 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
   const longTermAxes = stock ? buildDetailLongTermAxes(stock) : [];
   const hasShortTermSignal = shortTermAxes.some((axis) => axis.score !== null);
   const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
+  const edgeScore = isFiniteNumber(stock?.fenokEdgeScore)
+    ? Math.round(stock.fenokEdgeScore)
+    : null;
+  const edgeDirection = edgeDirectionLabel(stock?.fenokEdgeDirection);
+  const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
+  const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
 
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 p-4">
@@ -2372,6 +2400,56 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
                 <span aria-hidden="true">{longTermConvictionCall ?? "미정"}</span>
                 {longTermConvictionScore ?? "—"}
               </span>
+            </div>
+          </div>
+          <div className="mb-3 grid gap-2 md:grid-cols-3">
+            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                Fenok Edge Score
+              </div>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(edgeScore)}`}>
+                  {edgeScore ?? "—"}
+                </span>
+                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
+                  {edgeDirection}
+                </span>
+              </div>
+              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+                {signalCoverage}
+              </div>
+            </div>
+            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                Short Edge
+              </div>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(shortTermConvictionScore)}`}>
+                  {shortTermConvictionScore ?? "—"}
+                </span>
+                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
+                  {shortTermConvictionCall ?? "미정"}
+                </span>
+              </div>
+              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+                단기 6축 · {edgeLead}
+              </div>
+            </div>
+            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                Long Edge
+              </div>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(longTermConvictionScore)}`}>
+                  {longTermConvictionScore ?? "—"}
+                </span>
+                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
+                  {longTermConvictionCall ?? "미정"}
+                </span>
+              </div>
+              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+                장기 6축 · {edgeLead}
+              </div>
             </div>
           </div>
           <div className="space-y-4">

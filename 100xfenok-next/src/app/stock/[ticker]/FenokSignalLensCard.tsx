@@ -321,6 +321,34 @@ function formatScore(value: number | null): string {
   return value === null ? "—" : Math.round(value).toString();
 }
 
+function edgeDirectionLabel(direction: string | null | undefined): string {
+  if (direction === "upside_bias") return "상방 우세";
+  if (direction === "downside_bias") return "하방 우세";
+  if (direction === "balanced") return "균형";
+  return "방향 미확인";
+}
+
+function edgeLeadLabel(shortScore: number | null, longScore: number | null): string {
+  if (shortScore === null && longScore === null) return "신호 미확인";
+  if (shortScore !== null && longScore !== null) {
+    if (shortScore >= longScore + 5) return "단기 우세";
+    if (longScore >= shortScore + 5) return "장기 우세";
+    return "단기·장기 균형";
+  }
+  return shortScore !== null ? "단기만 확인" : "장기만 확인";
+}
+
+function signalToneForScore(score: number | null): string {
+  if (score === null) return "text-[var(--c-ink-3)]";
+  if (score >= 70) return "text-[var(--c-up)]";
+  if (score >= 50) return "text-[var(--c-warn)]";
+  return "text-[var(--c-down)]";
+}
+
+function signalCoverageLabel(value: number | null | undefined): string {
+  return `coverage ${formatCoverage(value)}`;
+}
+
 function metricFromConfig(record: FenokSignalsSummaryRecord, signal: SignalConfig): SignalMetric {
   const scoreValue = record[signal.scoreKey];
   const coverageValue = signal.coverageKey ? record[signal.coverageKey] : null;
@@ -892,6 +920,11 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
         ? Math.round(record.convictionScore)
         : null;
   const shortTermCall = rawShortTermCall ?? null;
+  const edgeScore = isFiniteNumber(record.upsideDownsideScore)
+    ? Math.round(record.upsideDownsideScore)
+    : null;
+  const edgeDirection = edgeDirectionLabel(record.upsideDownsideDirection);
+  const edgeLead = edgeLeadLabel(shortTermScore, longTermScore);
 
   return (
     <section className="panel overflow-hidden border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
@@ -915,6 +948,57 @@ export default function FenokSignalLensCard({ record }: FenokSignalLensCardProps
       </div>
 
       <div className="space-y-4 p-4">
+        <div className="grid gap-2 md:grid-cols-3">
+          <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+            <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+              Fenok Edge Score
+            </div>
+            <div className="mt-1 flex items-end justify-between gap-2">
+              <span className={`orbitron text-2xl font-black tabular-nums ${signalToneForScore(edgeScore)}`}>
+                {edgeScore ?? "—"}
+              </span>
+              <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
+                {edgeDirection}
+              </span>
+            </div>
+            <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+              {signalCoverageLabel(coverage)}
+            </div>
+          </div>
+          <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+            <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+              Short Edge
+            </div>
+            <div className="mt-1 flex items-end justify-between gap-2">
+              <span className={`orbitron text-2xl font-black tabular-nums ${signalToneForScore(shortTermScore)}`}>
+                {shortTermScore ?? "—"}
+              </span>
+              <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
+                {convictionCallKo(shortTermCall)}
+              </span>
+            </div>
+            <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+              단기 6축 · {edgeLead}
+            </div>
+          </div>
+          <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
+            <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+              Long Edge
+            </div>
+            <div className="mt-1 flex items-end justify-between gap-2">
+              <span className={`orbitron text-2xl font-black tabular-nums ${signalToneForScore(longTermScore)}`}>
+                {longTermScore ?? "—"}
+              </span>
+              <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
+                {convictionCallKo(longTermCall)}
+              </span>
+            </div>
+            <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
+              장기 6축 · {edgeLead}
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-3">
           <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-5 py-2.5">
             <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">

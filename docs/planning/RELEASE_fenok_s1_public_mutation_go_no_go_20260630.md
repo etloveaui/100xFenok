@@ -69,7 +69,7 @@ Forbidden target:
 - non-stock rows: `0`
 - fake score rows: `0`
 - duplicate current symbols: `0`
-- current blocked exclusions: `DAY`, `HOLX`, `MMC`, `STRC`
+- current blocked exclusions: `DAY`, `HOLX`, `KEY`, `MMC`, `STRC`
 
 ## Rollback
 

@@ -40,6 +40,7 @@ const PROTECTED_PUBLIC_MUTATION_PATHS = [
 const EXPECTED_BLOCKED_ROWS = [
   ["DAY", ["market_currency_country_scope"]],
   ["HOLX", ["market_currency_country_scope"]],
+  ["KEY", ["market_currency_country_scope"]],
   ["MMC", ["market_currency_country_scope"]],
   ["STRC", ["evidence_families_min3"]],
 ];
@@ -507,14 +508,14 @@ function buildAdminDryRunArtifact({ outRel, noWrite, enablePublicMutation }) {
       id: "s1_public_promotion_dry_run_counts_current",
       ok: counts.public_s0_before === 1066
         && counts.s1_gap_total === 112
-        && counts.promotion_rows === 108
-        && counts.excluded_blocked_rows === 4,
+        && counts.promotion_rows === 107
+        && counts.excluded_blocked_rows === 5,
       detail: `s0=${counts.public_s0_before}, gap=${counts.s1_gap_total}, promotion=${counts.promotion_rows}, blocked=${counts.excluded_blocked_rows}`,
     },
     {
       id: "s1_public_promotion_dry_run_hypothetical_denominator",
       ok: counts.public_s0_after_if_enabled === counts.public_s0_before + counts.promotion_rows
-        && counts.public_s0_after_if_enabled === 1174,
+        && counts.public_s0_after_if_enabled === 1173,
       detail: `${counts.public_s0_before}+${counts.promotion_rows}=${counts.public_s0_after_if_enabled}`,
     },
     {

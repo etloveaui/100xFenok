@@ -50,6 +50,9 @@ const UI_CONTRACTS = [
       "function buildShortTermAxes",
       "FenokSignalRadarHexagon title=\"Short-term\"",
       "FenokSignalRadarHexagon title=\"Long-term\"",
+      "Fenok Edge Score",
+      "Short Edge",
+      "Long Edge",
     ],
   },
   {
@@ -70,6 +73,9 @@ const UI_CONTRACTS = [
       "function buildDetailLongTermAxes",
       "function buildDetailShortTermAxes",
       "FenokSignalRadarHexagonPair",
+      "Fenok Edge Score",
+      "Short Edge",
+      "Long Edge",
     ],
   },
   {
