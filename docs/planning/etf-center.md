@@ -12,11 +12,11 @@ Current coverage (2026-06-30 local DataPack):
 - ETF universe records: 5,333
 - ETF candidate symbols: 5,390
 - ETF detail coverage: 98.07% (5,286 / 5,390)
-- Primary StockAnalysis detail files: 4,586
-- Yahoo ETF fallback files: 713
+- Primary StockAnalysis detail files: 4,588
+- Yahoo ETF fallback files: 715
 - Market-facts normalized ETF rows: 5,301
 - Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
-- Fenok Edge ETF daily-1Y readiness: `4484 = 3550 complete + 398 fetchable + 536 inception-limited`
+- Fenok Edge ETF daily-1Y readiness: `4484 = 3632 complete + 315 fetchable + 537 inception-limited`
 - Remaining distinction: ETF Center UI/data coverage is surface-ready, but Fenok Edge ETF paid-ready wording stays blocked until `daily=false` and `gated=false` clear.
 
 Design principles:

@@ -12,7 +12,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - Current local scored denominator: 4,484 eligible vanilla ETFs out of 5,333 StockAnalysis ETF records.
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
-- The coverage index still holds `daily=false` and `gated=false`: three bounded live batches reduced fetchable daily 1Y continuity gaps `584 -> 518 -> 441 -> 398`, while 2 fetchable required-history gaps also remain.
+- The coverage index still holds `daily=false` and `gated=false`: four bounded live batches reduced fetchable daily 1Y continuity gaps `584 -> 518 -> 441 -> 398 -> 315`, while 2 fetchable required-history gaps also remain.
 - This is not a paid-ready ETF lane claim. Paid-ready requires PUBLIC + DAILY + GATED to be proven together for the separate `asset_type=etf` scoring lane.
 
 ## Signal Families
@@ -73,7 +73,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `daily=true` only after coverage index consumes ETF freshness evidence, including ETF signal timestamp/history-gap status, a bounded max-age rule, and zero fetchable daily 1Y history gaps among scored ETFs.
 - `gated=true` only after `qa:fenok-etf-signal-gate` and the ETF freshness gate are both wired into the same fail-closed readiness track.
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
-- Current status is PUBLIC surface only, not DAILY/GATED. The current report has `fetchable_required_history=2`, and the scored ETF lane still has fetchable daily 1Y continuity gaps, so `daily=false`, `gated=false`, and `public_done_claim_allowed=false`. The durable generated evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json`, currently proving `4484 = 3550 complete + 398 fetchable + 536 inception-limited` for the scored ETF denominator.
+- Current status is PUBLIC surface only, not DAILY/GATED. The current report has `fetchable_required_history=2`, and the scored ETF lane still has fetchable daily 1Y continuity gaps, so `daily=false`, `gated=false`, and `public_done_claim_allowed=false`. The durable generated evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json`, currently proving `4484 = 3632 complete + 315 fetchable + 537 inception-limited` for the scored ETF denominator.
 
 ## Daily Data Prerequisite
 

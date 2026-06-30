@@ -62,7 +62,7 @@ Measured from `data/stockanalysis/index.json` and
 | Primary StockAnalysis detail coverage | 84.81% | MEASURED |
 | Yahoo fallback ETF detail files | 715 | MEASURED |
 | Fenok Edge scored ETF lane | 4,484 | MEASURED |
-| Fenok Edge fetchable daily-1Y gaps | 398 | MEASURED / BLOCKS DAILY |
+| Fenok Edge fetchable daily-1Y gaps | 315 | MEASURED / BLOCKS DAILY |
 | StockAnalysis stock detail files | 40 | MEASURED |
 | StockAnalysis financial candidate files | 40 | MEASURED |
 | Backfill hard errors | 0 | MEASURED |
@@ -122,7 +122,7 @@ Product judgment:
   detail files, 98.07% detail coverage, 715 auxiliary Yahoo fallback files, and
   104 missing detail candidates with explicit retry status.
 - Fenok Edge ETF scoring is a separate readiness lane: 4,484 eligible/scored
-  ETFs are PUBLIC-surfaced, but 398 fetchable daily-1Y gaps keep DAILY/GATED
+  ETFs are PUBLIC-surfaced, but 315 fetchable daily-1Y gaps keep DAILY/GATED
   false and forbid paid-ready wording.
 - Stock detail is usable for covered names, but not yet a universal financial
   statement product: StockAnalysis stock/financial candidate coverage is 40
@@ -168,7 +168,7 @@ and a test guard at
 | Global Scouter detail | 1,066 detail payloads | keep as stock-detail/screener base, not universal stock coverage |
 | StockAnalysis stock/financial candidates | 40 + 40 payloads | display as cross-check/auxiliary only; do not claim SSOT valuation input |
 | ETF details | 5,286 covered detail payloads | ETF Center surface-ready; 104 missing detail candidates should render fallback/pending states |
-| Fenok Edge ETF scored lane | 4,484 scored ETFs, 398 fetchable daily-1Y gaps | PUBLIC surface only; not DAILY/GATED or paid-ready until fetchable daily gaps clear |
+| Fenok Edge ETF scored lane | 4,484 scored ETFs, 315 fetchable daily-1Y gaps | PUBLIC surface only; not DAILY/GATED or paid-ready until fetchable daily gaps clear |
 | 13F / superinvestors | 78 SEC 13F JSON files | show reporting-delay disclaimers; enrichment coverage percentages stay Admin-only |
 | Korean filings | 1,821 JSON files / 202 by-ticker manifests | stock `공시` tab owner; source links and AI-summary disclaimer required |
 | Market parity | 26,629 multi-candidate checks | Data Lab keeps drift/stale/sign diagnostics; public product copy stays compact |
