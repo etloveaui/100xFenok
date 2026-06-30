@@ -91,6 +91,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.fetcher.parse_history_periods("monthly_99y")
 
+    def test_workflow_history_gaps_only_passes_yahoo_fallback(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
+        marker = 'elif [ "${INPUT_HISTORY_GAPS_ONLY:-false}" = "true" ]; then'
+        branch = workflow.split(marker, 1)[1].split("else", 1)[0]
+
+        self.assertIn("--history-gaps-only", branch)
+        self.assertIn("--yf-etf-fallback", branch)
+
     def test_select_base_etfs_uses_default_focus_set_without_incremental_only(self) -> None:
         etfs = self.fetcher.select_base_etfs(
             [],

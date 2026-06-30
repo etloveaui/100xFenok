@@ -182,6 +182,7 @@ jobs:
             if [ -n "$INPUT_INCREMENTAL_ETF_LIMIT" ]; then ARGS="$ARGS --incremental-etf-limit $INPUT_INCREMENTAL_ETF_LIMIT"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
+            if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then ARGS="$ARGS --yf-etf-fallback"; fi
           else
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --classify-etf-catalogs"
             if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
