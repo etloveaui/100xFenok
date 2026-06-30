@@ -6,6 +6,10 @@ import { buildEtfDaily1yReadiness } from "./write-fenok-etf-daily1y-readiness.mj
 const payload = buildEtfDaily1yReadiness();
 const plan = payload.fetchable_plan;
 const readiness = payload.daily_1y_readiness;
+const breakdownTotal = Object.values(readiness.fetchable_breakdown?.counts || readiness.fetchable_breakdown || {})
+  .reduce((sum, value) => sum + Number(value || 0), 0);
+const planBreakdownTotal = Object.values(plan.fetchable_breakdown?.counts || {})
+  .reduce((sum, value) => sum + Number(value || 0), 0);
 
 assert.equal(payload.ok, true);
 assert.ok(readiness.denominator > 0);
@@ -15,6 +19,7 @@ assert.equal(
 );
 assert.equal(readiness.daily_1y_missing, readiness.daily_1y_fetchable + readiness.inception_limited_daily_1y_gap);
 assert.equal(readiness.count_equation_ok, true);
+assert.equal(breakdownTotal, readiness.daily_1y_fetchable);
 assert.equal(payload.public_done_claim_allowed, false);
 
 assert.equal(Object.keys(payload).includes("fetchable_plan"), false);
@@ -33,6 +38,7 @@ assert.equal(plan.counts.matches_coverage_index_daily_check, true);
 assert.equal(plan.tickers.length, readiness.daily_1y_fetchable);
 assert.equal(new Set(plan.tickers).size, readiness.daily_1y_fetchable);
 assert.deepEqual(plan.tickers, [...plan.tickers].sort());
+assert.equal(planBreakdownTotal, readiness.daily_1y_fetchable);
 
 assert.equal(plan.bounded_batches.can_drive_bounded_ticker_batches, true);
 assert.equal(plan.bounded_batches.default_batch_size, 120);

@@ -62,7 +62,8 @@ Measured from `data/stockanalysis/index.json` and
 | Primary StockAnalysis detail coverage | 84.81% | MEASURED |
 | Yahoo fallback ETF detail files | 715 | MEASURED |
 | Fenok Edge scored ETF lane | 4,484 | MEASURED |
-| Fenok Edge fetchable daily-1Y gaps | 244 | MEASURED / BLOCKS DAILY |
+| Fenok Edge full ETF fetchable daily-1Y gaps | 243 | MEASURED / FULL-UNIVERSE DIAGNOSTIC |
+| Fenok Edge ETF Core Daily Basket | 118 fresh / 0 stale | MEASURED / SERVICE GATE READY |
 | StockAnalysis stock detail files | 40 | MEASURED |
 | StockAnalysis financial candidate files | 40 | MEASURED |
 | Backfill hard errors | 0 | MEASURED |
@@ -118,12 +119,13 @@ mirror productization path, not another feno-value adapter cleanup pass.
 
 Product judgment:
 
-- ETF Center data/UI coverage is surface-ready: 5,390 candidates, 5,286 covered
-  detail files, 98.07% detail coverage, 715 auxiliary Yahoo fallback files, and
-  104 missing detail candidates with explicit retry status.
-- Fenok Edge ETF scoring is a separate readiness lane: 4,484 eligible/scored
-  ETFs are PUBLIC-surfaced, but 244 fetchable daily-1Y gaps keep DAILY/GATED
-  false and forbid paid-ready wording.
+- ETF Center data/UI coverage is surface-ready: 5,390 candidates, 5,293 covered
+  detail files, 98.20% detail coverage, 716 auxiliary Yahoo fallback files, and
+  explicit missing/retry status.
+- Fenok Edge ETF scoring is split: 4,484 eligible/scored ETFs are PUBLIC-surfaced
+  plus rolling full-universe daily-1Y diagnostic
+  (`3,703 complete + 243 fetchable + 538 inception-limited`), while the ETF
+  service DAILY/GATED gate is the Core Daily Basket (`118 fresh / 0 stale`).
 - Stock detail is usable for covered names, but not yet a universal financial
   statement product: StockAnalysis stock/financial candidate coverage is 40
   files, while Global Scouter stock detail is 1,066 and cached finance is 1,820.
@@ -167,8 +169,8 @@ and a test guard at
 | Cached finance / estimates | 1,820 cached finance payloads | financial/statistics tabs are available only when cache exists |
 | Global Scouter detail | 1,066 detail payloads | keep as stock-detail/screener base, not universal stock coverage |
 | StockAnalysis stock/financial candidates | 40 + 40 payloads | display as cross-check/auxiliary only; do not claim SSOT valuation input |
-| ETF details | 5,286 covered detail payloads | ETF Center surface-ready; 104 missing detail candidates should render fallback/pending states |
-| Fenok Edge ETF scored lane | 4,484 scored ETFs, 244 fetchable daily-1Y gaps | PUBLIC surface only; not DAILY/GATED or paid-ready until fetchable daily gaps clear |
+| ETF details | 5,293 covered detail payloads | ETF Center surface-ready; missing detail candidates should render fallback/pending states |
+| Fenok Edge ETF scored lane | 4,484 scored ETFs; full daily-1Y diagnostic is `3,703 complete + 243 fetchable + 538 inception-limited`; Core Basket is `118 fresh / 0 stale` | Full lane is PUBLIC + diagnostic/backfill only; ETF service DAILY/GATED is Core Basket scoped |
 | 13F / superinvestors | 78 SEC 13F JSON files | show reporting-delay disclaimers; enrichment coverage percentages stay Admin-only |
 | Korean filings | 1,821 JSON files / 202 by-ticker manifests | stock `공시` tab owner; source links and AI-summary disclaimer required |
 | Market parity | 26,629 multi-candidate checks | Data Lab keeps drift/stale/sign diagnostics; public product copy stays compact |

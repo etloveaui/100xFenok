@@ -23,6 +23,10 @@ assert.equal(admin.daily_refresh_universe.tickers.length, admin.rows.length);
 assert.ok(admin.rows.length >= ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount);
 assert.ok(admin.rows.length < admin.coverage.source_scored_etf_count);
 assert.equal(new Set(admin.rows.map((row) => row.ticker)).size, admin.rows.length);
+assert.ok(
+  Number(admin.coverage.excluded_reason_counts?.single_stock_or_concentrated_derivative_income_strategy || 0) > 0,
+  "Core Basket must explicitly exclude single-stock/concentrated derivative-income ETF strategies",
+);
 
 for (const row of admin.rows) {
   assert.equal(row.asset_type, "etf", `${row.ticker}: asset_type`);
@@ -34,6 +38,11 @@ for (const row of admin.rows) {
   assert.ok(row.proof.daily_1y_rows >= ETF_CORE_DAILY_BASKET_CONFIG.minDaily1yRows, `${row.ticker}: daily rows`);
   assert.ok(row.proof.average_dollar_volume_5d >= ETF_CORE_DAILY_BASKET_CONFIG.minAverageDollarVolume5d, `${row.ticker}: dollar volume`);
   assert.ok(["fresh", "needs_refresh"].includes(row.status), `${row.ticker}: status`);
+  assert.doesNotMatch(
+    `${row.ticker} ${row.company ?? ""}`,
+    /\b(YieldMax|WeeklyPay|YieldBOOST|Option Income Strategy ETF|Performance\s*&\s*Distribution\s*Target)\b/i,
+    `${row.ticker}: concentrated derivative-income strategy must not enter Core Basket`,
+  );
 }
 
 if (admin.readiness.core_daily_basket_ready) {

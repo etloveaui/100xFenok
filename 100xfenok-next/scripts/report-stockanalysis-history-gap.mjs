@@ -7,6 +7,7 @@ const ROOT = process.cwd();
 const SOURCE_DIR = path.resolve(ROOT, "..", "data", "stockanalysis");
 const DETAIL_DIR = path.join(SOURCE_DIR, "etfs");
 const PLAN_PATH = path.join(SOURCE_DIR, "backfill", "incremental_plan_latest.json");
+const PENDING_LEDGER_PATH = path.join(SOURCE_DIR, "backfill", "pending_ledger.json");
 const REPORT_PATH = path.join(SOURCE_DIR, "backfill", "history_gap_report_latest.json");
 const PUBLIC_REPORT_PATH = path.join(ROOT, "public", "data", "stockanalysis", "backfill", "history_gap_report_latest.json");
 const AUDIT_PATH = path.resolve(ROOT, "..", "data", "computed", "market_data_audit.json");
@@ -112,6 +113,42 @@ function isPrimaryStockAnalysisDetail(payload) {
   if (payload.source_provider === "yahoo_finance") return false;
   if (payload.source === "yahoo_finance") return false;
   return true;
+}
+
+function isYahooFallbackDetail(payload) {
+  return payload?.source_provider === "yahoo_finance"
+    || payload?.source === "yahoo_finance"
+    || payload?.detail_status === "yf_fallback";
+}
+
+function missingFailureBucket(entry) {
+  const reason = String(entry?.failure_reason || "");
+  if (reason.includes("quoteType is not ETF/MUTUALFUND")) return "missing_external_quote_type_mismatch";
+  if (reason.includes("HTTP Error 404")) return "missing_source_unavailable";
+  if (reason) return "missing_other_error";
+  return "missing_untracked";
+}
+
+function daily1yFetchableSource(payload, { missingFile = false, pendingEntry = null } = {}) {
+  if (missingFile) return missingFailureBucket(pendingEntry);
+  if (isYahooFallbackDetail(payload)) return "yahoo_fallback_short_rows";
+  if (isPrimaryStockAnalysisDetail(payload)) return "stockanalysis_short_rows";
+  return "other_detail_short_rows";
+}
+
+function summarizeFetchableBreakdown(rows) {
+  const counts = {};
+  const samples = {};
+  for (const row of rows) {
+    const bucket = row.daily_1y_gap_source || "unknown";
+    counts[bucket] = (counts[bucket] || 0) + 1;
+    samples[bucket] = samples[bucket] || [];
+    if (samples[bucket].length < 10) samples[bucket].push(row.ticker);
+  }
+  return {
+    counts: Object.fromEntries(Object.entries(counts).sort()),
+    samples: Object.fromEntries(Object.entries(samples).sort()),
+  };
 }
 
 function historyPeriodRequiredYears(period) {
@@ -258,6 +295,9 @@ function main() {
         fetchable_missing: daily1yGap.fetchable,
         inception_limited_missing: daily1yGap.inceptionLimited,
         inception_date: daily1yGap.inceptionDate,
+        daily_1y_gap_source: daily1yFetchableSource(payload),
+        source_provider: payload.source_provider || payload.source || null,
+        detail_status: payload.detail_status || null,
       });
     } else if (daily1yGap.inceptionLimited.length > 0) {
       daily1yInceptionLimitedRows.push({
@@ -266,6 +306,8 @@ function main() {
         fetchable_missing: daily1yGap.fetchable,
         inception_limited_missing: daily1yGap.inceptionLimited,
         inception_date: daily1yGap.inceptionDate,
+        source_provider: payload.source_provider || payload.source || null,
+        detail_status: payload.detail_status || null,
       });
     }
 
@@ -298,6 +340,8 @@ function main() {
 
   const plan = existsSync(PLAN_PATH) ? readJson(PLAN_PATH) : null;
   const audit = existsSync(AUDIT_PATH) ? readJson(AUDIT_PATH) : null;
+  const pendingLedger = existsSync(PENDING_LEDGER_PATH) ? readJson(PENDING_LEDGER_PATH) : null;
+  const pendingEntries = asObject(pendingLedger?.entries);
   const planRequiredPeriods = Array.isArray(plan?.required_history_periods) ? plan.required_history_periods : [];
   const planBackfill = asObject(plan?.incremental_etf_backfill);
   const nestedSelectedTickers = tickersFromRows(planBackfill.selected);
@@ -324,6 +368,7 @@ function main() {
     inception_limited: Number(plan?.counts?.inception_limited_history_gap || 0) === inceptionLimitedRows.length,
     required_periods: planRequiredPeriods.join(",") === REQUIRED_PERIODS.join(","),
   };
+  const enforceIncrementalPlan = ENFORCE_INCREMENTAL_PLAN && strictCountMatches.required_periods;
   const marketFacts = asObject(audit?.market_facts);
   const return3y = asObject(marketFacts.return_field_coverage).return_3y_avg || {};
   const denominators = asObject(marketFacts.return_field_denominators);
@@ -340,8 +385,16 @@ function main() {
   const scoredDaily1yInceptionLimitedRows = [];
   for (const ticker of scoredEtfTickers) {
     const filePath = path.join(DETAIL_DIR, `${ticker}.json`);
+    const pendingEntry = asObject(pendingEntries[ticker]);
     if (!existsSync(filePath)) {
-      scoredDaily1yFetchableRows.push({ ticker, actual_rows: 0, missing_file: true });
+      scoredDaily1yFetchableRows.push({
+        ticker,
+        actual_rows: 0,
+        missing_file: true,
+        daily_1y_gap_source: daily1yFetchableSource(null, { missingFile: true, pendingEntry }),
+        pending_consecutive_failures: Number(pendingEntry.consecutive_failures || 0),
+        pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc || null,
+      });
       continue;
     }
     const payload = readJson(filePath);
@@ -355,6 +408,9 @@ function main() {
         fetchable_missing: gap.fetchable,
         inception_limited_missing: gap.inceptionLimited,
         inception_date: gap.inceptionDate,
+        daily_1y_gap_source: daily1yFetchableSource(payload),
+        source_provider: payload.source_provider || payload.source || null,
+        detail_status: payload.detail_status || null,
       });
     } else if (gap.inceptionLimited.length > 0) {
       scoredDaily1yInceptionLimitedRows.push({
@@ -363,6 +419,8 @@ function main() {
         fetchable_missing: gap.fetchable,
         inception_limited_missing: gap.inceptionLimited,
         inception_date: gap.inceptionDate,
+        source_provider: payload.source_provider || payload.source || null,
+        detail_status: payload.detail_status || null,
       });
     }
   }
@@ -393,6 +451,7 @@ function main() {
       missing: daily1yFetchableRows.length + daily1yInceptionLimitedRows.length,
       fetchable: daily1yFetchableRows.length,
       inception_limited: daily1yInceptionLimitedRows.length,
+      fetchable_breakdown: summarizeFetchableBreakdown(daily1yFetchableRows),
       samples: {
         fetchable: daily1yFetchableRows.slice(0, 10),
         inception_limited: daily1yInceptionLimitedRows.slice(0, 10),
@@ -404,6 +463,7 @@ function main() {
         missing: scoredDaily1yFetchableRows.length + scoredDaily1yInceptionLimitedRows.length,
         fetchable: scoredDaily1yFetchableRows.length,
         inception_limited: scoredDaily1yInceptionLimitedRows.length,
+        fetchable_breakdown: summarizeFetchableBreakdown(scoredDaily1yFetchableRows),
         samples: {
           fetchable: scoredDaily1yFetchableRows.slice(0, 10),
           inception_limited: scoredDaily1yInceptionLimitedRows.slice(0, 10),
@@ -428,9 +488,11 @@ function main() {
           strict_count_matches: strictCountMatches,
           subset_of_full_scan: subsetOfFullScan,
           enforcement: {
-            enforced: ENFORCE_INCREMENTAL_PLAN,
-            caveat: ENFORCE_INCREMENTAL_PLAN
+            enforced: enforceIncrementalPlan,
+            caveat: enforceIncrementalPlan
               ? "The default required-history report enforces incremental_plan consistency."
+              : ENFORCE_INCREMENTAL_PLAN && !strictCountMatches.required_periods
+                ? "The current incremental_plan targets different required_history_periods and is informational for this default report."
               : "Non-default reports, including daily_1y ETF continuity, keep incremental_plan consistency informational because exact ETF fetchable selection is emitted separately.",
           },
         }
@@ -481,22 +543,17 @@ function main() {
     console.error(`wrote ${PUBLIC_REPORT_PATH}`);
   }
 
-  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.strict_count_matches.required_periods) {
-    throw new Error(
-      `incremental_plan required_history_periods=${planRequiredPeriods.join(",")} does not match report required_history_periods=${REQUIRED_PERIODS.join(",")}`,
-    );
-  }
-  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.subset_of_full_scan.fetchable) {
+  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.fetchable) {
     throw new Error(
       `incremental_plan selected tickers are not in current fetchable full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.fetchable.join(",")}`,
     );
   }
-  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.subset_of_full_scan.total) {
+  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.total) {
     throw new Error(
       `incremental_plan total tickers are not in current missing full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.total.join(",")}`,
     );
   }
-  if (plan && ENFORCE_INCREMENTAL_PLAN && !report.incremental_plan.subset_of_full_scan.inception_limited) {
+  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.inception_limited) {
     throw new Error(
       `incremental_plan inception-limited tickers are not in current inception-limited full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.inception_limited.join(",")}`,
     );

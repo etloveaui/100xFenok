@@ -15,8 +15,9 @@ Current owner decisions:
   that claim short-term meaning. The current green claim is narrower: S0 is
   PUBLIC + DAILY + GATED under the current Korea+US source scope, not "all 1,066
   tickers fully refetched every day."
-- Daily operation remains a future design conversation. Do not finalize cron,
-  GitHub Actions, Cloudflare, or local Mac mini ownership in this pass.
+- StockAnalysis ETF schedule/deploy was owner-approved on 2026-06-30 for the
+  bounded lanes below. Broader cron/GitHub Actions/Cloudflare/Mac mini ownership
+  decisions still require separate approval before any new operating claim.
 - High load must be managed by a collection lane. When the Mac mini load average
   decision value exceeds `6`, new heavy collection batches should defer instead
   of competing with already-running work.
@@ -54,15 +55,15 @@ Non-negotiable handoff contents for the next main pane:
 ## Scheduler Changes
 
 - `.github/workflows/fetch-yf-finance.yml`
-  - Adds a weekday bounded catch-up schedule after the US close.
+  - Adds a KST Tue-Sat bounded ETF history-gap cross-check/backfill lane after the US close.
   - Scheduled runs override the manual defaults to `etf` profile, 6 rolling shards, 140 tickers per scheduled run, 1 second sleep, `max_age_hours=18`, `history_gaps_only=true`, and `stockanalysis_etfs=true`.
   - The default stock universe now includes both `global-scouter/stocks/detail/*.json` and `market_facts` rows where `asset_type=stock`; this keeps S1 stock candidates in the daily history/price accumulation lane without promoting them into public stock scores.
   - `stockanalysis_etfs=true` adds the full StockAnalysis ETF universe/screener candidate set so ETF daily history gaps can be filled by rotating shards.
   - Manual dispatch still keeps the existing full/profile/limit/shard controls.
 - `.github/workflows/fetch-stockanalysis.yml`
-  - Adds a weekday bounded ETF/surface catch-up schedule after the YF window.
+  - Adds a KST Tue-Sat bounded Core Basket/surface refresh lane after the YF window.
   - Scheduled runs disable stock financial statements, full ETF universe discovery, and universe backfill.
-  - Scheduled runs keep incremental ETF backfill on, capped at 40 ETF details, with core surfaces and 0.5 second sleep.
+  - Scheduled runs keep incremental ETF backfill on, capped at 40 ETF details, with Core Basket priority tickers, core surfaces, and 0.5 second sleep.
 - `.github/workflows/fenok-edge-daily.yml`
   - Adds a KST Tue-Sat 09:30 FINRA/OCC derived-proxy refresh.
   - FINRA defaults to a 7-day-to-yesterday window to tolerate holidays and source lag.
@@ -208,7 +209,8 @@ Current local snapshot:
 | --- | --- | --- | --- | --- |
 | S0 active stock scoring | PUBLIC + DAILY + GATED under current Korea+US S0 scope | `fenok-edge-krx-daily.yml` runs KST Mon-Fri 19:30 for bounded KRX private daily fetch; `fenok-edge-daily.yml` runs KST Tue-Sat 09:30, refreshing FINRA 7-day-to-yesterday and one rolling OCC batch | 1,066 scored/public stocks; current S0 daily/gated source scope is 975 Korea+US rows, with 91 HKEX/SSE/SZSE rows explicitly excluded until a separate Asia daily-source workstream exists; KRX 338/338, FINRA metric-ready 579/579 for active plain-US rows, OCC source-ready 579/579 (`573` options-activity rows + `6` both-side no-record no-listed-options evidence); strict `qa:fenok-s0-daily-gated` is green | none for current strict S0; US_CLASS/non-plain/class-share and Asia lanes remain expansion work |
 | S1 stock candidates | NORMALIZED / JOINED_READY staging, not scored | YF scheduled branch processes one rolling shard per run, capped at 140; scheduled StockAnalysis stock-financial fetches remain disabled | 1,178 normalized stock candidates, 1,066 scored/public stocks, 112 promotion-audit gap; current joined gate is 108 joined-ready and 4 blocked; blocker counts are `market_currency_country_scope=3`, `evidence_families_min3=1` | not scored/public/daily/gated as expanded stock coverage; remaining joined blockers are DAY, HOLX, MMC, STRC |
-| S3 ETF lane | PUBLIC surface, not DAILY/GATED | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis scheduled branch backfills up to 40 ETF details per run | 5,301 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; generated admin readiness evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json` with `4484 = 3703 complete + 244 fetchable + 537 inception-limited`; exact fetchable ticker plan is `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` with 244 tickers / 3 bounded batches at 120 each | `daily=false`, `gated=false`, `public_done_claim_allowed=false`; fetchable 1Y continuity gaps still block ETF paid-ready wording |
+| S3 ETF public/full universe | PUBLIC surface + diagnostic/backfill, not service gate | YF scheduled branch processes ETF history gaps through one rolling shard per run, capped at 140; StockAnalysis daily-1Y branch drains exact diagnostic gaps at 120/run when owner-approved | 5,310 normalized ETF candidates; 4,484 eligible vanilla ETFs scored in the separate ETF lane after classification plus conservative heuristic exclusions; named ETF gate verifies the compact public summary mirror, ETF signal API route, and ETF detail UI card; generated admin diagnostic evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json` with `4484 = 3703 complete + 243 fetchable + 538 inception-limited`; exact fetchable ticker plan is `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` with 243 tickers / 3 bounded batches at 120 each | Full-universe `daily=false`, `gated=false`, `public_done_claim_allowed=false`; this is rolling universe health, not the ETF service blocker |
+| ETF Core Daily Basket | SERVICE DAILY + GATED target | StockAnalysis Core Basket/surface branch refreshes the Core Basket priority list and rebuilds the Core Basket evidence | 118 selected from 1,577 structural candidates; 118 fresh / 0 stale; excludes leveraged, inverse, single-stock, single-stock/concentrated derivative-income strategy, low-confidence, broken-history, stale, and New ETF Radar-only rows | service gate ready while full ETF diagnostic continues separately |
 
 Operational command:
 
@@ -220,7 +222,7 @@ npm --prefix 100xfenok-next run qa:fenok-s0-source-gaps
 npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated
 ```
 
-The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. ETF `done` wording is allowed only when the compact public surface, freshness gate, and no-fetchable-required-history gate are true together.
+The command reads existing derived JSON only. It does not fetch, write, promote S1 rows, or compute ETF scores. ETF service `done` wording is Core Basket scoped: Core Basket gate, fresh evidence, and `stale_selected_count=0` must be true. Full ETF no-fetchable history checks remain diagnostic/backfill and do not block the Core Basket service gate.
 
 Operator readout rule:
 - Each S0/S1/S3 row prints `status: sources=[...] blocking_gates=... done_claim_allowed=...`.
@@ -232,9 +234,9 @@ Operator readout rule:
 - The S0 source-gap audit is the action splitter for those blockers: FINRA readiness now uses active plain-US metric-ready rows (`market=US`) and is 579/579. The old row-existence diagnostic remains 587/637, with 50 `US_CLASS` foreign-suffix rows and eight low-confidence placeholders tracked as mapping/semantic evidence, not FINRA refetch work.
 - OCC source-ready readiness is 579/579 for active plain-US rows: 573 rows have options-activity proxy output, and 6 both-side `no_record` rows now count as no-listed-options source-ready evidence without fabricating options activity. The legacy 64-row activity diagnostic remains visible as expansion evidence: 56 non-US suffix `US_CLASS` mapping/denominator rows, 2 Berkshire class-share symbol-form rows, and the 6 source-ready no-listed-options rows.
 - Asia ex-Taiwan is no longer allowed to masquerade as an S0 daily blocker. It stays visible as explicit exclusion evidence; an all-1,066 daily/gated claim requires a separate HKEX/SSE/SZSE source lane.
-- `ETF evidence` separates public surface proof from `daily`/`gated`; current 1Y continuity evidence still has fetchable gaps, so ETF paid-ready wording stays blocked even though the compact public surface is present.
-- `data/admin/fenok-edge-etf-daily1y-readiness.json` is the generated S3 daily 1Y evidence, and `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` is the exact no-fetch 244-ticker StockAnalysis daily-1Y blocker plan after five bounded live batches plus one explicit YF fallback residual batch reduced fetchable gaps `584 -> 518 -> 441 -> 398 -> 315 -> 275 -> 244`. Both must remain admin-only; `sync-static-overrides` removes the readiness public mirror and `qa:fenok-public-guard` forbids `public/data/admin/fenok-edge-etf-daily1y-readiness.json` and `public/data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`.
-- `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --required-history-periods daily_1y --incremental-etf-limit 120` now treats `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` as the exact dispatch source for this S3 blocker: it selects 120 from the 244 scored-ETF fetchable rows and does not broaden into generic missing/fallback/stale ETF retries.
+- `ETF evidence` separates public surface proof, Core Basket service readiness, and full-universe diagnostic readiness. Current full-universe 1Y continuity still has fetchable gaps, but that does not block the Core Basket service gate.
+- `data/admin/fenok-edge-etf-daily1y-readiness.json` is the generated full-universe daily 1Y diagnostic evidence, and `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` is the exact no-fetch 243-ticker StockAnalysis diagnostic plan after the latest YF fallback-enabled run. Both must remain admin-only; `sync-static-overrides` removes the readiness public mirror and `qa:fenok-public-guard` forbids `public/data/admin/fenok-edge-etf-daily1y-readiness.json` and `public/data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`.
+- `scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --required-history-periods daily_1y --incremental-etf-limit 120` now treats `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json` as the exact dispatch source for full-universe diagnostic catch-up: it selects 120 from the 243 scored-ETF fetchable rows and does not broaden into generic missing/fallback/stale ETF retries.
 - The strict goal gate remains `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated`; it must stay green before any current S0 PUBLIC + DAILY + GATED wording is used.
 
 ## Resource Controls

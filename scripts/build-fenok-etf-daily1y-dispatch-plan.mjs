@@ -3,7 +3,8 @@
  * Owner-gated ETF daily 1Y dispatch-plan builder.
  *
  * This converts the exact admin fetchable plan into a private workflow plan.
- * It performs no network calls and does not claim DAILY/GATED readiness.
+ * It performs no network calls, does not claim DAILY/GATED readiness, and is
+ * not the ETF Core Daily Basket service gate.
  */
 
 import fs from "node:fs";
@@ -72,6 +73,8 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, generatedAt = n
     owner_gated: true,
     status: "pending_owner_approval",
     network: "none",
+    service_gate: false,
+    claim_scope: "full_scored_etf_universe_diagnostic_backfill",
     workflow: "fetch-stockanalysis.yml",
     inputs: {
       history_gaps_only: "true",
@@ -100,7 +103,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, generatedAt = n
       first_batch: shards[0]?.tickers?.slice(0, 12) ?? [],
       source_fetchable: Array.isArray(plan.samples?.fetchable) ? plan.samples.fetchable : [],
     },
-    caveat: "External StockAnalysis backfill dispatch is owner-gated. This plan only selects exact scored ETF daily_1y fetchable gaps and never flips daily/gated readiness.",
+    caveat: "External StockAnalysis backfill dispatch is owner-gated. This plan only selects exact full scored-ETF daily_1y diagnostic gaps, never flips daily/gated readiness, and must not be used as the ETF Core Daily Basket service gate.",
   };
 }
 

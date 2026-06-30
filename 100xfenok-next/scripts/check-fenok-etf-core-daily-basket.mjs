@@ -22,6 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const PUBLIC_ADMIN_REL = "100xfenok-next/public/data/admin/fenok-etf-core-daily-basket.json";
 const PUBLIC_SUMMARY_REL = "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json";
+const CORE_EXCLUDED_DERIVATIVE_INCOME_PATTERN = /\b(YieldMax|WeeklyPay|YieldBOOST|Option Income Strategy ETF|Performance\s*&\s*Distribution\s*Target)\b/i;
 
 function abs(relPath) {
   return path.join(REPO_ROOT, relPath);
@@ -72,7 +73,9 @@ export function runEtfCoreDailyBasketChecks() {
   const rows = Array.isArray(admin?.rows) ? admin.rows : [];
   const summaryRows = Array.isArray(summary?.rows) ? summary.rows : [];
   const newEtfRows = rows.filter((row) => row.status === "new_etf_radar_only" || row.core_candidate_allowed === false);
+  const derivativeIncomeRows = rows.filter((row) => CORE_EXCLUDED_DERIVATIVE_INCOME_PATTERN.test(`${row.ticker} ${row.company ?? ""}`));
   if (newEtfRows.length > 0) errors.push("core basket rows must not include new ETF radar-only rows");
+  if (derivativeIncomeRows.length > 0) errors.push(`core basket rows must not include single-stock/concentrated derivative-income ETF strategies: ${derivativeIncomeRows.map((row) => row.ticker).join(",")}`);
   if (admin?.readiness?.core_daily_basket_ready === true && Number(admin?.readiness?.stale_selected_count) > 0) {
     errors.push("core_daily_basket_ready=true cannot have stale selected rows");
   }

@@ -18,6 +18,7 @@ const FETCHABLE_PLAN_REL_PATH = "data/admin/fenok-edge-etf-daily1y-fetchable-pla
 const DAILY_1Y_MIN_ROWS = 200;
 const STOCKANALYSIS_DETAIL_DIR_REL = "data/stockanalysis/etfs";
 const YF_FINANCE_DIR_REL = "data/yf/finance";
+const PENDING_LEDGER_REL = "data/stockanalysis/backfill/pending_ledger.json";
 const MONTH_NAME_TO_INDEX = new Map([
   ["jan", 0],
   ["january", 0],
@@ -116,6 +117,48 @@ function rowsForPeriod(payload, period) {
   return [];
 }
 
+function isYahooFallbackDetail(payload) {
+  return payload?.source_provider === "yahoo_finance"
+    || payload?.source === "yahoo_finance"
+    || payload?.detail_status === "yf_fallback";
+}
+
+function isPrimaryStockAnalysisDetail(payload) {
+  return payload?.asset_type === "etf"
+    && payload?.source_provider !== "yahoo_finance"
+    && payload?.source !== "yahoo_finance";
+}
+
+function missingFailureBucket(entry) {
+  const reason = String(entry?.failure_reason || "");
+  if (reason.includes("quoteType is not ETF/MUTUALFUND")) return "missing_external_quote_type_mismatch";
+  if (reason.includes("HTTP Error 404")) return "missing_source_unavailable";
+  if (reason) return "missing_other_error";
+  return "missing_untracked";
+}
+
+function daily1yFetchableSource(payload, { missingFile = false, pendingEntry = null } = {}) {
+  if (missingFile) return missingFailureBucket(pendingEntry);
+  if (isYahooFallbackDetail(payload)) return "yahoo_fallback_short_rows";
+  if (isPrimaryStockAnalysisDetail(payload)) return "stockanalysis_short_rows";
+  return "other_detail_short_rows";
+}
+
+function summarizeFetchableBreakdown(rows) {
+  const counts = {};
+  const samples = {};
+  for (const row of rows) {
+    const bucket = row.daily_1y_gap_source || "unknown";
+    counts[bucket] = (counts[bucket] || 0) + 1;
+    samples[bucket] = samples[bucket] || [];
+    if (samples[bucket].length < 10) samples[bucket].push(row.ticker);
+  }
+  return {
+    counts: Object.fromEntries(Object.entries(counts).sort()),
+    samples: Object.fromEntries(Object.entries(samples).sort()),
+  };
+}
+
 function parseStockAnalysisDate(value) {
   if (typeof value !== "string" || value.trim().length === 0) return null;
   const text = value.trim();
@@ -209,6 +252,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
   const generatedDailyCheck = findDailyCheck(readiness, "etf_no_fetchable_daily_1y_gap");
+  const pendingEntries = asObject(readJsonOrNull(PENDING_LEDGER_REL)?.entries);
 
   const completeRows = [];
   const fetchableRows = [];
@@ -220,6 +264,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
 
   for (const ticker of summaryTickers) {
     const yfRowsCount = yfHistoryRows(ticker);
+    const pendingEntry = asObject(pendingEntries[ticker]);
     const yfMissing = yfRowsCount == null || yfRowsCount < DAILY_1Y_MIN_ROWS;
     const yfRow = {
       ticker,
@@ -236,6 +281,9 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         actual_rows: 0,
         missing_file: true,
         yf_history_rows: yfRowsCount,
+        daily_1y_gap_source: daily1yFetchableSource(null, { missingFile: true, pendingEntry }),
+        pending_consecutive_failures: asNumber(pendingEntry.consecutive_failures),
+        pending_next_attempt_after_utc: pendingEntry.next_attempt_after_utc ?? null,
       });
       continue;
     }
@@ -257,6 +305,9 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         inception_limited_missing: gap.inceptionLimited,
         inception_date: gap.inceptionDate,
         yf_history_rows: yfRowsCount,
+        daily_1y_gap_source: daily1yFetchableSource(payload),
+        source_provider: payload.source_provider || payload.source || null,
+        detail_status: payload.detail_status || null,
       });
     } else if (gap.inceptionLimited.length > 0) {
       inceptionLimitedRows.push({
@@ -267,6 +318,8 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
         inception_limited_missing: gap.inceptionLimited,
         inception_date: gap.inceptionDate,
         yf_history_rows: yfRowsCount,
+        source_provider: payload.source_provider || payload.source || null,
+        detail_status: payload.detail_status || null,
       });
     }
   }
@@ -327,6 +380,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
       matches_history_gap_report: historyGapCountOk,
       matches_coverage_index: coverageCountOk,
       matches_coverage_index_daily_check: dailyCheckCountOk,
+      fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows).counts,
     },
     yf_local_crosscheck: {
       complete: yfRows.complete.length,
@@ -345,6 +399,7 @@ export function buildScoredEtfDaily1yFetchablePlan({ signalSummary, historyGap, 
     },
     tickers,
     rows: fetchableRows,
+    fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows),
     samples: {
       fetchable: compactRows(fetchableRows),
       inception_limited: compactRows(inceptionLimitedRows),
@@ -451,6 +506,8 @@ export function buildEtfDaily1yReadiness() {
       raw_rows_included: false,
       public_mirror_allowed: false,
       samples_are_diagnostic_only: true,
+      service_gate: false,
+      service_gate_owner: "data/admin/fenok-etf-core-daily-basket.json",
     },
     source_files: {
       etf_signal_summary: "data/computed/fenok_etf_signals_summary.json",
@@ -465,6 +522,7 @@ export function buildEtfDaily1yReadiness() {
       daily_1y_missing: daily1yMissing,
       daily_1y_fetchable: daily1yFetchable,
       inception_limited_daily_1y_gap: inceptionLimited,
+      fetchable_breakdown: scored.fetchable_breakdown ?? fetchablePlan.fetchable_breakdown,
       etf_no_fetchable_daily_1y_gap: daily1yFetchable,
       count_equation: "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap == denominator",
       count_equation_ok: countEquationOk,
@@ -475,7 +533,9 @@ export function buildEtfDaily1yReadiness() {
         ...(noFetchableDaily1yGap ? [] : ["etf_no_fetchable_daily_1y_gap"]),
         ...(readiness?.gated_ready ? [] : ["gated_ready"]),
       ],
-      caveat: "Fetchable daily 1Y gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block by themselves.",
+      claim_scope: "full_scored_etf_universe_diagnostic",
+      service_gate: false,
+      caveat: "Fetchable daily 1Y gaps keep only the full scored-ETF diagnostic lane daily=false. ETF Core Daily Basket is the service daily/gated target; inception-limited gaps are tracked but do not block by themselves.",
     },
     generated_count_checks: {
       summary_rows: summaryRows,

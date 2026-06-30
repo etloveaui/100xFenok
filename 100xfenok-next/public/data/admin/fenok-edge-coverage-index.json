@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-30T12:38:36.048Z",
+  "generated_at": "2026-06-30T13:06:00.636Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -84,19 +84,20 @@
         }
       },
       "public_surface_errors": [],
+      "service_gate_scope": "ETF Core Daily Basket owns ETF service DAILY/GATED readiness; full scored-ETF daily 1Y continuity stays diagnostic until explicitly promoted.",
       "daily_checks": [
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-30T09:31:24.830Z",
-          "age_hours": 3.12,
+          "age_hours": 3.58,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-06-30T12:38:29.658Z",
-          "age_hours": 0,
+          "generated_at": "2026-06-30T12:43:23.997Z",
+          "age_hours": 0.38,
           "max_age_hours": 48
         },
         {
@@ -112,7 +113,9 @@
           "ok": false,
           "fetchable_daily_1y_gap": 243,
           "inception_limited_daily_1y_gap": 538,
-          "caveat": "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed."
+          "claim_scope": "full_scored_etf_universe_diagnostic",
+          "service_gate": false,
+          "caveat": "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; fetchable gaps keep only the full-universe diagnostic lane daily=false."
         }
       ],
       "blockers": [
@@ -137,8 +140,8 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-06-30T12:38:29.739Z",
-        "generated_age_hours": 0,
+        "generated_at": "2026-06-30T13:05:40.671Z",
+        "generated_age_hours": 0.01,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
         "daily_ready": true,
@@ -148,7 +151,7 @@
         "no_full_etf_done_claim": true,
         "counts": {
           "source_scored_etf_count": 4484,
-          "structural_candidate_count": 1597,
+          "structural_candidate_count": 1577,
           "selected_count": 118,
           "fresh_selected_count": 118,
           "stale_selected_count": 0,
@@ -498,7 +501,7 @@
           "daily": false,
           "gated": false
         },
-        "caveat": "ETF scores are public-surfaced only when the named ETF gate proves the compact mirror, API route, and detail UI card. DAILY/GATED remain false until required-history gaps, StockAnalysis ETF detail daily 1Y continuity, and freshness gates all clear.",
+        "caveat": "ETF scores are public-surfaced by the named ETF gate. Full-universe DAILY/GATED remains a diagnostic/backlog track; ETF service DAILY/GATED is evaluated by the Core Daily Basket sublane.",
         "evidence_based_readiness": {
           "public_ready": true,
           "daily_ready": false,
@@ -518,19 +521,20 @@
             }
           },
           "public_surface_errors": [],
+          "service_gate_scope": "ETF Core Daily Basket owns ETF service DAILY/GATED readiness; full scored-ETF daily 1Y continuity stays diagnostic until explicitly promoted.",
           "daily_checks": [
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-30T09:31:24.830Z",
-              "age_hours": 3.12,
+              "age_hours": 3.58,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-06-30T12:38:29.658Z",
-              "age_hours": 0,
+              "generated_at": "2026-06-30T12:43:23.997Z",
+              "age_hours": 0.38,
               "max_age_hours": 48
             },
             {
@@ -546,7 +550,9 @@
               "ok": false,
               "fetchable_daily_1y_gap": 243,
               "inception_limited_daily_1y_gap": 538,
-              "caveat": "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed."
+              "claim_scope": "full_scored_etf_universe_diagnostic",
+              "service_gate": false,
+              "caveat": "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; fetchable gaps keep only the full-universe diagnostic lane daily=false."
             }
           ],
           "blockers": [
@@ -586,8 +592,8 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-06-30T12:38:29.739Z",
-          "generated_age_hours": 0,
+          "generated_at": "2026-06-30T13:05:40.671Z",
+          "generated_age_hours": 0.01,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
           "daily_ready": true,
@@ -597,7 +603,7 @@
           "no_full_etf_done_claim": true,
           "counts": {
             "source_scored_etf_count": 4484,
-            "structural_candidate_count": 1597,
+            "structural_candidate_count": 1577,
             "selected_count": 118,
             "fresh_selected_count": 118,
             "stale_selected_count": 0,
@@ -643,7 +649,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-30T12:38:36.048Z"
+        "generated_at": "2026-06-30T13:06:00.636Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -686,14 +692,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-30T09:31:24.830Z",
-        "age_hours": 3.12,
+        "age_hours": 3.58,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-06-30T12:38:29.658Z",
-        "age_hours": 0,
+        "generated_at": "2026-06-30T12:43:23.997Z",
+        "age_hours": 0.38,
         "max_age_hours": 48,
         "fetchable_required_history": 2,
         "inception_limited_required_history": 6,
@@ -702,21 +708,23 @@
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-06-30T12:38:29.658Z",
+        "generated_at": "2026-06-30T12:43:23.997Z",
         "fetchable_daily_1y_gap": 243,
         "inception_limited_daily_1y_gap": 538,
         "status": "blocked_fetchable_daily_gap",
-        "caveat": "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed."
+        "claim_scope": "full_scored_etf_universe_diagnostic",
+        "service_gate": false,
+        "caveat": "Full scored-ETF daily 1Y continuity is a diagnostic/backfill track, not the ETF Core Daily Basket service gate."
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-06-30T12:38:29.739Z",
-        "age_hours": 0,
+        "generated_at": "2026-06-30T13:05:40.671Z",
+        "age_hours": 0.01,
         "selected_count": 118,
         "fresh_selected_count": 118,
         "stale_selected_count": 0,
         "status": "ready",
-        "caveat": "Only the core basket sublane is evaluated here; full ETF lane daily/gated remains controlled by ETF daily 1Y gap checks."
+        "caveat": "This is the ETF service daily/gated target. Full ETF daily 1Y gaps stay in the separate rolling diagnostic/backfill lane."
       },
       {
         "id": "taiwan_universe_mapping",

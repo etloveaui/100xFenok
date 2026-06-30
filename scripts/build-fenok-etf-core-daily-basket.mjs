@@ -15,6 +15,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 
 const ADMIN_REL = "data/admin/fenok-etf-core-daily-basket.json";
 const SUMMARY_REL = "data/computed/fenok_etf_core_daily_basket_summary.json";
+const PUBLIC_SUMMARY_REL = "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json";
 const ETF_SIGNAL_SUMMARY_REL = "data/computed/fenok_etf_signals_summary.json";
 const ETF_ACTION_INDEX_REL = "data/computed/etf_action_index.json";
 const ETF_DETAIL_COVERAGE_REL = "data/stockanalysis/coverage/etf_detail.json";
@@ -44,6 +45,14 @@ export const ETF_CORE_DAILY_BASKET_CONFIG = Object.freeze({
     Uncategorized: 5,
   },
 });
+
+const CORE_EXCLUDED_DERIVATIVE_INCOME_PATTERNS = [
+  /\byieldmax\b/i,
+  /\bweeklypay\b/i,
+  /\byieldboost\b/i,
+  /\boption income strategy etf\b/i,
+  /\bperformance\s*&\s*distribution\s*target\b/i,
+];
 
 function parseArgs(argv) {
   return {
@@ -208,6 +217,20 @@ function detailPayload(ticker) {
   return readJsonOrNull(`${ETF_DETAIL_DIR_REL}/${ticker}.json`);
 }
 
+function derivativeIncomeReason({ ticker, actionRow, detail }) {
+  const normalized = asObject(detail?.normalized);
+  const overview = asObject(normalized.overview);
+  const text = [
+    ticker,
+    actionRow?.company,
+    normalized.name,
+    overview.provider_page,
+    overview.etf_website,
+  ].filter(Boolean).join(" ");
+  const matched = CORE_EXCLUDED_DERIVATIVE_INCOME_PATTERNS.find((pattern) => pattern.test(text));
+  return matched ? "single_stock_or_concentrated_derivative_income_strategy" : null;
+}
+
 function structuralReasons({ ticker, actionRow, detail, missingDetailSet, yahooFallbackSet, newEtfSet }) {
   const reasons = [];
   if (!actionRow) reasons.push("action_index_missing");
@@ -223,6 +246,8 @@ function structuralReasons({ ticker, actionRow, detail, missingDetailSet, yahooF
   if (classification.is_leveraged === true) reasons.push("leveraged_etf");
   if (classification.is_inverse === true) reasons.push("inverse_etf");
   if (classification.is_single_stock === true) reasons.push("single_stock_etf");
+  const derivativeIncome = derivativeIncomeReason({ ticker, actionRow, detail });
+  if (derivativeIncome) reasons.push(derivativeIncome);
 
   const dailyRows = asArray(asObject(normalized.history_periods).daily_1y);
   if (dailyRows.length < ETF_CORE_DAILY_BASKET_CONFIG.minDaily1yRows) reasons.push("daily_1y_rows_lt_200");
@@ -432,6 +457,7 @@ export function buildEtfCoreDailyBasket({
       public: false,
       public_mirror: false,
       public_summary_file: SUMMARY_REL,
+      public_summary_mirror: PUBLIC_SUMMARY_REL,
       no_full_etf_done_claim: true,
     },
     config: ETF_CORE_DAILY_BASKET_CONFIG,
@@ -527,6 +553,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   if (!args.noWrite && validation.ok) {
     writeJson(ADMIN_REL, payload.admin);
     writeJson(SUMMARY_REL, payload.summary);
+    writeJson(PUBLIC_SUMMARY_REL, payload.summary);
   }
 
   const result = {
@@ -534,6 +561,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     generated_at: payload.admin.generated_at,
     admin_output: args.noWrite ? "(no-write)" : ADMIN_REL,
     summary_output: args.noWrite ? "(no-write)" : SUMMARY_REL,
+    public_summary_output: args.noWrite ? "(no-write)" : PUBLIC_SUMMARY_REL,
     selected_count: payload.admin.coverage.selected_count,
     fresh_selected_count: payload.admin.coverage.fresh_selected_count,
     stale_selected_count: payload.admin.coverage.stale_selected_count,

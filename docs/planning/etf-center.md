@@ -16,11 +16,11 @@ Current coverage (2026-06-30 local DataPack):
 - Yahoo ETF fallback files: 716
 - Market-facts normalized ETF rows: 5,308
 - Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
-- Fenok Edge ETF daily-1Y readiness: `4484 = 3703 complete + 244 fetchable + 537 inception-limited`
-- ETF Core Daily Basket: `118` selected refresh tickers from `1,602` structural candidates; current state `1 fresh / 117 needs refresh`, so Core Basket daily-ready is still blocked.
+- Fenok Edge full ETF daily-1Y diagnostic: `4484 = 3703 complete + 243 fetchable + 538 inception-limited`; this is a rolling universe-health/backfill lane, not the ETF Center service gate.
+- ETF Core Daily Basket: `118` selected refresh tickers from `1,577` structural candidates after leveraged/inverse/single-stock/single-stock-derivative-income exclusions; current state `118 fresh / 0 stale`, so Core Basket daily-ready is green.
 - New ETF Radar: `new_etfs` rows are watchlist-only and cannot become core candidates without detail, history, classification, and scoring proof.
-- Remaining distinction: ETF Center UI/data coverage is surface-ready, but Fenok Edge ETF paid-ready wording stays blocked until `daily=false` and `gated=false` clear.
-- Live preflight before the 2026-06-30 owner-approved schedule-equivalent run: `qa:market-audit`, `qa:history-gap`, `qa:data-graph`, `qa:data-freshness`, and full `qa:fenok-edge-readiness` pass. The default monthly 3Y/5Y required-history gate has `0` fetchable rows and `12` inception-limited rows; the separate daily-1Y continuity dispatch remains owner-gated with `244` scored ETF gaps.
+- Remaining distinction: ETF Center UI/data coverage and Core Basket service gate are separate from full-universe ETF completion. Do not turn all `4,484` scored ETFs into a paid-ready blocker.
+- Current diagnostic preflight: `qa:market-audit`, `qa:history-gap`, `qa:data-graph`, `qa:data-freshness`, and full `qa:fenok-edge-readiness` have been used as gates for this lane. The separate full-universe daily-1Y continuity dispatch remains owner-gated with `243` scored ETF gaps.
 
 Design principles:
 
