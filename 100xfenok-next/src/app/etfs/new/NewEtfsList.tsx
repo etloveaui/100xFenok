@@ -14,6 +14,11 @@ import {
   type EtfUniverseRecord,
 } from "../../explore/etfUniverseUtils";
 
+type ApiDetailStatus = "snapshot_price" | "snapshot_summary";
+type ClassificationStatus = "joined" | "pending";
+type RadarStatus = "watchlist_only" | "unknown";
+type UiDetailStatus = "full" | "partial" | "pending";
+
 interface NewEtfRow {
   s?: string;
   n?: string;
@@ -21,6 +26,11 @@ interface NewEtfRow {
   price?: number;
   change?: number;
   classification?: EtfClassification;
+  radar_status?: RadarStatus | string;
+  detail_status?: ApiDetailStatus | string;
+  classification_status?: ClassificationStatus | string;
+  core_candidate_allowed?: boolean;
+  core_candidate_blockers?: string[];
 }
 
 interface EtfSnapshotPayload {
@@ -52,7 +62,11 @@ interface RadarRow extends Required<Pick<NewEtfRow, "s" | "n">> {
   price?: number;
   change?: number;
   classification?: EtfClassification;
-  detailStatus: "full" | "partial" | "pending";
+  detailStatus: UiDetailStatus;
+  apiDetailStatus: ApiDetailStatus;
+  classificationStatus: ClassificationStatus;
+  radarStatus: RadarStatus;
+  coreCandidateAllowed: boolean;
   issuer: string;
   typeTags: string[];
 }
@@ -127,7 +141,21 @@ function countRows(payload: EtfSnapshotPayload | null): number {
   return payload?.newEtfs?.records?.length ?? 0;
 }
 
-function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "full" | "partial" | "pending" {
+function normalizeApiDetailStatus(value: NewEtfRow["detail_status"]): ApiDetailStatus {
+  return value === "snapshot_price" ? "snapshot_price" : "snapshot_summary";
+}
+
+function normalizeClassificationStatus(row: NewEtfRow): ClassificationStatus {
+  if (row.classification_status === "joined" || row.classification) return "joined";
+  return "pending";
+}
+
+function normalizeRadarStatus(value: NewEtfRow["radar_status"]): RadarStatus {
+  return value === "watchlist_only" ? "watchlist_only" : "unknown";
+}
+
+function detailStatus(ticker: string, coverage: EtfCoveragePayload | null, apiStatus: ApiDetailStatus): UiDetailStatus {
+  if (!coverage) return apiStatus === "snapshot_price" ? "partial" : "pending";
   const symbol = normalizeForEntityKey(ticker);
   const missing = new Set((coverage?.missing_tickers ?? []).map((item) => normalizeForEntityKey(item)));
   if (missing.has(symbol)) return "pending";
@@ -136,16 +164,32 @@ function detailStatus(ticker: string, coverage: EtfCoveragePayload | null): "ful
   return "full";
 }
 
-function detailStatusLabel(status: "full" | "partial" | "pending"): string {
-  if (status === "pending") return "기본 정보";
-  if (status === "partial") return "가격 중심";
+function detailStatusLabel(status: UiDetailStatus): string {
+  if (status === "pending") return "관찰 대기";
+  if (status === "partial") return "부분 확인";
   return "상세 가능";
 }
 
-function detailStatusHint(status: "full" | "partial" | "pending"): string {
-  if (status === "pending") return "기본 정보부터 확인 가능";
-  if (status === "partial") return "가격 정보부터 확인 가능";
+function detailStatusHint(status: UiDetailStatus): string {
+  if (status === "pending") return "상세 데이터 대기";
+  if (status === "partial") return "가격/요약 확인";
   return "상세 화면 확인 가능";
+}
+
+function radarStatusLabel(status: RadarStatus): string {
+  const labels: Record<RadarStatus, string> = {
+    watchlist_only: "관찰 목록",
+    unknown: "관찰 목록",
+  };
+  return labels[status];
+}
+
+function classificationStatusLabel(status: ClassificationStatus): string {
+  return status === "joined" ? "분류 확인" : "분류 대기";
+}
+
+function coreCandidateLabel(allowed: boolean): string {
+  return allowed ? "코어 후보" : "코어 아님";
 }
 
 function typeFromParam(value: string | null | undefined): EtfTypeFilter {
@@ -205,7 +249,7 @@ function csvCell(value: string | number | null | undefined): string {
 
 function downloadCsv(rows: RadarRow[]) {
   const cappedRows = rows.slice(0, 500);
-  const headers = ["티커", "ETF명", "상장일", "가격", "변동률", "분류", "운용사", "제공 범위"];
+  const headers = ["티커", "ETF명", "상장일", "가격", "변동률", "분류", "운용사", "레이더 상태", "상세 상태", "코어 후보"];
   const lines = [
     headers.map(csvCell).join(","),
     ...cappedRows.map((row) => [
@@ -216,7 +260,9 @@ function downloadCsv(rows: RadarRow[]) {
       typeof row.change === "number" ? `${row.change.toFixed(2)}%` : "",
       row.typeTags.join(" / "),
       row.issuer,
+      radarStatusLabel(row.radarStatus),
       detailStatusLabel(row.detailStatus),
+      coreCandidateLabel(row.coreCandidateAllowed),
     ].map(csvCell).join(",")),
   ];
   const blob = new Blob([`\uFEFF${lines.join("\n")}`], { type: "text/csv;charset=utf-8" });
@@ -298,13 +344,22 @@ export default function NewEtfsList({
   const rows = useMemo<RadarRow[]>(() => {
     return (state.snapshot?.newEtfs?.records ?? [])
       .filter((row) => typeof row.s === "string" && row.s.trim())
-      .map((row) => ({
-        ...row,
-        s: row.s!.trim().toUpperCase(),
-        n: typeof row.n === "string" && row.n.trim() ? row.n.trim() : row.s!.trim().toUpperCase(),
-        detailStatus: detailStatus(row.s!, state.coverage),
-        issuer: issuerNameFromEtfName(typeof row.n === "string" && row.n.trim() ? row.n.trim() : row.s!.trim().toUpperCase()),
-      }))
+      .map((row) => {
+        const ticker = row.s!.trim().toUpperCase();
+        const displayName = typeof row.n === "string" && row.n.trim() ? row.n.trim() : ticker;
+        const apiDetailStatus = normalizeApiDetailStatus(row.detail_status);
+        return {
+          ...row,
+          s: ticker,
+          n: displayName,
+          detailStatus: detailStatus(ticker, state.coverage, apiDetailStatus),
+          apiDetailStatus,
+          classificationStatus: normalizeClassificationStatus(row),
+          radarStatus: normalizeRadarStatus(row.radar_status),
+          coreCandidateAllowed: row.core_candidate_allowed === true,
+          issuer: issuerNameFromEtfName(displayName),
+        };
+      })
       .map((row) => ({
         ...row,
         typeTags: typeTags(row),
@@ -367,8 +422,8 @@ export default function NewEtfsList({
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2>신규 상장 ETF 탐색</h2>
-        <span className="desc">{fmtDate(state.snapshot?.newEtfs?.fetched_at)} · {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개</span>
+        <h2>신규 ETF 레이더</h2>
+        <span className="desc">관찰 목록 · {fmtDate(state.snapshot?.newEtfs?.fetched_at)} · {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개</span>
       </div>
 
       {!loaded ? (
@@ -479,7 +534,7 @@ export default function NewEtfsList({
           <div className="mv-col">
             {filteredRows.length > 0 ? filteredRows.map((row) => {
               const displayName = row.n || row.s;
-              const metaText = `상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${detailStatusHint(row.detailStatus)}`;
+              const metaText = `상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${radarStatusLabel(row.radarStatus)} · ${classificationStatusLabel(row.classificationStatus)} · ${coreCandidateLabel(row.coreCandidateAllowed)} · ${detailStatusHint(row.detailStatus)}`;
               return (
                 <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
                   <span className="co">
@@ -494,8 +549,13 @@ export default function NewEtfsList({
                   </span>
                   <span className="flex min-w-[92px] flex-col items-end gap-1">
                     <span className={`pc num ${changeClass(row.change)}`}>{fmtChange(row.change)}</span>
-                    <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
-                      {detailStatusLabel(row.detailStatus)}
+                    <span className="flex flex-wrap justify-end gap-1">
+                      <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
+                        {radarStatusLabel(row.radarStatus)}
+                      </span>
+                      <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">
+                        {detailStatusLabel(row.detailStatus)}
+                      </span>
                     </span>
                   </span>
                 </TransitionLink>
@@ -522,7 +582,7 @@ export default function NewEtfsList({
       )}
       {loaded && rows.length > 0 ? (
         <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
-          <span>표시 중 {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개 · 각 행은 ETF 상세로 이동</span>
+          <span>표시 중 {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개 · 신규 ETF는 관찰 목록 기준</span>
           <TransitionLink href={ROUTES.etfs} className="font-black text-[var(--c-brand)] hover:underline">
             ETF 센터로 이동
           </TransitionLink>

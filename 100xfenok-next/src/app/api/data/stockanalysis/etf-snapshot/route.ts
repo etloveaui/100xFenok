@@ -9,6 +9,8 @@ const ETF_SNAPSHOT_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
 } as const;
 const DIGITAL_ASSET_ETF_SNAPSHOT_LIMIT = 100;
+const NEW_ETF_RADAR_STATUS = "watchlist_only";
+const NEW_ETF_CORE_BLOCKERS = ["new_etf_radar_only", "missing_core_scoring_proof"] as const;
 const ISSUER_NAME_PATTERNS = [
   ["ishares", "iShares"],
   ["blackrock", "iShares"],
@@ -64,6 +66,19 @@ function numericValue(value: unknown): number | null {
     return Number.isFinite(parsed) ? parsed : null;
   }
   return null;
+}
+
+function hasDisplayValue(row: JsonRecord, field: string): boolean {
+  const value = row[field];
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") return value.trim().length > 0;
+  return value !== null && value !== undefined;
+}
+
+function newEtfDetailStatus(row: JsonRecord): "snapshot_price" | "snapshot_summary" {
+  return hasDisplayValue(row, "price") || hasDisplayValue(row, "change")
+    ? "snapshot_price"
+    : "snapshot_summary";
 }
 
 function countsFromSurface(payload: JsonRecord | null, fallback: number) {
@@ -167,7 +182,14 @@ async function summarizeNewEtfs(limit: number) {
     records: rows.slice(0, limit).map((row) => {
       const picked = pickFields(row, ["s", "n", "inceptionDate", "price", "change"]);
       const classification = classifications.get(cleanTicker(row.s ?? row.symbol ?? row.ticker));
-      return classification ? { ...picked, classification } : picked;
+      const statusFields = {
+        radar_status: NEW_ETF_RADAR_STATUS,
+        detail_status: newEtfDetailStatus(row),
+        classification_status: classification ? "joined" : "pending",
+        core_candidate_allowed: false,
+        core_candidate_blockers: [...NEW_ETF_CORE_BLOCKERS],
+      };
+      return classification ? { ...picked, classification, ...statusFields } : { ...picked, ...statusFields };
     }),
   };
 }

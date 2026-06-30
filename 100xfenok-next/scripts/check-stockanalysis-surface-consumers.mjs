@@ -11,6 +11,7 @@ const CODE_FILES = [
   `${ROOT}/src/app/market/events/MarketEventsClient.tsx`,
   `${ROOT}/src/app/sectors/IndustryMapPanel.tsx`,
   `${ROOT}/src/app/etfs/EtfSurfaceSnapshotCard.tsx`,
+  `${ROOT}/src/app/etfs/new/NewEtfsList.tsx`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-universe/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/etf-snapshot/route.ts`,
   `${ROOT}/src/app/api/data/stockanalysis/[assetType]/[ticker]/route.ts`,
@@ -29,6 +30,10 @@ const ROUTE_CONTRACTS = {
   },
   "/api/data/stockanalysis/etf-snapshot": {
     files: ["src/app/api/data/stockanalysis/etf-snapshot/route.ts"],
+    contains: [
+      ["src/app/api/data/stockanalysis/etf-snapshot/route.ts", "radar_status"],
+      ["src/app/api/data/stockanalysis/etf-snapshot/route.ts", "core_candidate_allowed"],
+    ],
   },
   "/api/data/stockanalysis/etf-universe": {
     files: ["src/app/api/data/stockanalysis/etf-universe/route.ts"],
@@ -46,6 +51,10 @@ const ROUTE_CONTRACTS = {
     files: [
       "src/app/etfs/new/page.tsx",
       "src/app/etfs/new/NewEtfsList.tsx",
+    ],
+    contains: [
+      ["src/app/etfs/new/NewEtfsList.tsx", "radarStatusLabel"],
+      ["src/app/etfs/new/NewEtfsList.tsx", "coreCandidateLabel"],
     ],
   },
   "/etfs/[ticker]": {

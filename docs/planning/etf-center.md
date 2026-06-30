@@ -50,13 +50,17 @@ Implementation pointers:
 
 ### 2.2 `/etfs/new` — New Launch Radar
 
-Recently listed ETFs.
+Recently listed ETFs as a radar/watchlist surface. A row appearing here is not a Fenok Edge core candidate by default.
 
-> **DEC-246 (2026-06-20)**: `/etfs/new` is NOT demoted to a dumb redirect. It stays a deep view reachable from the `/etfs` 신규 segment because it carries features the universe list does not: the date-window filter (7/14/30 days anchored on surface `fetched_at`), coverage status chips (상세 가능 / 가격 제공 / 요약 제공 from `coverage/etf_detail.json`), date sort, and CSV export. Only the separate top-nav pill entry is replaced by the segment. If/when these features are ported into the 신규 segment, `/etfs/new` may then become an alias.
+> **DEC-246 (2026-06-20)**: `/etfs/new` is NOT demoted to a dumb redirect. It stays a deep view reachable from the `/etfs` 신규 segment because it carries features the universe list does not: the date-window filter (7/14/30 days anchored on surface `fetched_at`), radar/detail status chips (관찰 목록 / 상세 가능 / 부분 확인 / 관찰 대기), date sort, and CSV export. Only the separate top-nav pill entry is replaced by the segment. If/when these features are ported into the 신규 segment, `/etfs/new` may then become an alias.
 
-- Data source: `etf-snapshot.newEtfs` (from `surfaces/new_etfs.json`).
+- Data source: `etf-snapshot.newEtfs` (from `surfaces/new_etfs.json`) with explicit radar semantics:
+  - `radar_status`: `watchlist_only`
+  - `detail_status`: snapshot-level detail availability (`snapshot_price` / `snapshot_summary`)
+  - `classification_status`: `joined` / `pending`
+  - `core_candidate_allowed`: `false` unless a future pipeline adds detail, history, classification, and scoring proof.
 - Filters: query, type (leveraged / single-stock / inverse), date range (7 / 14 / 30 days), issuer, sort (date / ticker / change / price).
-- Status chips: "상세 가능", "가격 제공", "요약 제공" based on `coverage/etf_detail.json`.
+- Status chips: "관찰 목록", plus "상세 가능" / "부분 확인" / "관찰 대기" based on `coverage/etf_detail.json` and the snapshot fallback status.
 - CSV export.
 
 Implementation pointers:
@@ -117,7 +121,7 @@ Implementation pointers:
 `/api/data/stockanalysis/etf-snapshot`:
 
 - Returns curated subsets:
-  - `newEtfs`: up to 100 newest ETFs with joined classification.
+  - `newEtfs`: up to 100 newest ETFs with joined classification plus radar/watchlist status fields. These rows are watchlist-only and do not claim daily-history, gated, or core-readiness.
   - `screener`: AUM top 5 + volume leaders + change leaders.
   - `blackrock`, `proshares`: capped at 20 rows each with full `counts.rows` preserved for shown/total UI.
   - `bitcoin`: full digital-asset ETF bucket.
