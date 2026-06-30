@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s1-stock-promotion-gate-plan-admin/v0.1",
-  "generated_at": "2026-06-29T19:58:22.159Z",
+  "generated_at": "2026-06-30T11:17:30.010Z",
   "purpose": "Persist the current non-public S1 stock promotion gate plan so the 108 joined-ready candidates are durable admin evidence, not chat/stdout state.",
   "source_artifact_schema_version": "fenok-s1-stock-promotion-gate-plan/v0.2",
   "source_command": "node scripts/audit-fenok-stock-promotion-candidates.mjs --promotion-gate-plan-report --check",
@@ -39,24 +39,24 @@
     "public_s0_after_this_artifact": 1066,
     "s1_candidates": 1178,
     "s1_gap_total": 112,
-    "promotion_gate_rows": 108,
-    "excluded_blocked_rows": 4,
-    "future_candidate_count_if_approved": 1174,
+    "promotion_gate_rows": 107,
+    "excluded_blocked_rows": 5,
+    "future_candidate_count_if_approved": 1173,
     "etf_rows": 0,
     "non_stock_rows": 0,
     "s0_overlap_rows": 0,
-    "scored_preview_rows": 108,
+    "scored_preview_rows": 107,
     "fake_score_rows": 0,
-    "rows_with_missing_axes": 108,
-    "rows_with_unsupported_axes": 108,
+    "rows_with_missing_axes": 107,
+    "rows_with_unsupported_axes": 107,
     "files_written": 1,
     "public_files_written": 0,
-    "admin_artifact_rows": 108,
-    "blocked_plan_rows": 4
+    "admin_artifact_rows": 107,
+    "blocked_plan_rows": 5
   },
   "blocker_counts": {
     "evidence_families_min3": 1,
-    "market_currency_country_scope": 3
+    "market_currency_country_scope": 4
   },
   "acceptance_checks": [
     {
@@ -82,19 +82,19 @@
     {
       "id": "s1_admin_artifact_current_counts",
       "ok": true,
-      "detail": "promotion=108, blocked=4, future=1174"
+      "detail": "promotion=107, blocked=5, future=1173"
     }
   ],
   "source_acceptance_checks": [
     {
       "id": "s1_promotion_gate_plan_counts_match_gate",
       "ok": true,
-      "detail": "108+4 vs 108+4"
+      "detail": "107+5 vs 107+5"
     },
     {
       "id": "s1_promotion_gate_plan_preserves_s0_count",
       "ok": true,
-      "detail": "1066->1066, future=1174, s0_overlap_rows=0"
+      "detail": "1066->1066, future=1173, s0_overlap_rows=0"
     },
     {
       "id": "s1_promotion_gate_plan_no_etf_or_non_stock_rows",
@@ -114,12 +114,12 @@
     {
       "id": "s1_promotion_gate_plan_missing_axes_null_explicit",
       "ok": true,
-      "detail": "rows_with_missing_axes=108, rows_with_unsupported_axes=108"
+      "detail": "rows_with_missing_axes=107, rows_with_unsupported_axes=107"
     },
     {
       "id": "s1_promotion_gate_plan_blockers_exact_current_set",
       "ok": true,
-      "detail": "[[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"STRC\",[\"evidence_families_min3\"]]]"
+      "detail": "{\"blocked_rows\":[[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"KEY\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"STRC\",[\"evidence_families_min3\"]]],\"source_blocker_counts\":{\"evidence_families_min3\":1,\"market_currency_country_scope\":4}}"
     },
     {
       "id": "s1_promotion_gate_plan_stdout_only_no_writes",
@@ -9091,150 +9091,6 @@
       }
     },
     {
-      "ticker": "KEY",
-      "asset_type": "stock",
-      "source_stage": "JOINED_READY_NOT_SCORED",
-      "target_stage": "S1_PROMOTION_GATE_READY_NON_PUBLIC",
-      "promotion_action": "shadow_candidate_only",
-      "claim_scope": "Non-public S1 promotion gate plan only; not S0, not public, not daily, not gated.",
-      "eligibility": {
-        "joined_ready": true,
-        "outside_s0": true,
-        "etf_lane_excluded": true,
-        "exact_ticker_contract": true,
-        "minimum_evidence_families": 3,
-        "observed_evidence_family_count": 4
-      },
-      "identity": {
-        "name": "KeyCorp",
-        "exchange": "NYQ",
-        "currency": "USD",
-        "country_scope": "US",
-        "sector": "Financial Services",
-        "industry": "Banks - Regional"
-      },
-      "score_source": "scripts/stock-action-score-core.mjs",
-      "score_preview_summary": {
-        "action_score": 50.06,
-        "signal_score": 50.06,
-        "coverage_ratio": 1,
-        "confidence_label": "high",
-        "action_bucket": "income",
-        "action_label": "배당 점검",
-        "action_reasons": [
-          "기관 공시 주식 4명 · 옵션/클래스 포함 5명",
-          "배당 3.5%",
-          "Fwd PER 10.8",
-          "12M 39.5%"
-        ],
-        "families": {
-          "valuation": {
-            "present": true,
-            "eligible": true,
-            "score": 14,
-            "max": 20
-          },
-          "momentum_revision": {
-            "present": true,
-            "eligible": true,
-            "score": 14,
-            "max": 22
-          },
-          "income": {
-            "present": true,
-            "eligible": true,
-            "score": 8,
-            "max": 10
-          },
-          "index_structure": {
-            "present": true,
-            "eligible": true,
-            "score": 6,
-            "max": 18
-          },
-          "smart_money": {
-            "present": true,
-            "eligible": true,
-            "score": 5.56,
-            "max": 25
-          },
-          "sector_smart_money": {
-            "present": false,
-            "eligible": false,
-            "score": 0,
-            "max": 5
-          }
-        }
-      },
-      "score_quality_flags": [],
-      "missing_scoring_axes": [
-        {
-          "key": "global_scouter_core_row",
-          "label": "global-scouter core stock row",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "global_scouter_detail_file",
-          "label": "global-scouter detail estimates",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "stockanalysis_financials_file",
-          "label": "StockAnalysis financials",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "revision_movers",
-          "label": "revision movers",
-          "value": null,
-          "display": "미확인"
-        }
-      ],
-      "unsupported_scoring_axes": [
-        {
-          "key": "per_band",
-          "label": "PER band",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 market_facts does not carry Global Scouter PER-band min/current/max."
-        },
-        {
-          "key": "sector_smart_money",
-          "label": "sector smart money",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 market_facts identity sector is not yet bridged to the stock_action canonical sector map."
-        },
-        {
-          "key": "conviction_entries",
-          "label": "13F conviction entries",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 score preview keeps conviction unmapped until the ticker-level source join is explicit."
-        }
-      ],
-      "scoring_contract_reference": {
-        "source_contract_version": "action-score-v0.3.1",
-        "source_contract_doc": "docs/planning/CONTRACT_stock_action_score_v0_3_20260613.md",
-        "allowed_output_fields": [
-          "action_score",
-          "signal_score",
-          "coverage_ratio",
-          "confidence_label",
-          "action_bucket",
-          "action_label",
-          "action_reasons",
-          "families"
-        ],
-        "missing_value_policy": "Null only. No placeholder or inferred score values.",
-        "score_source": "scripts/stock-action-score-core.mjs",
-        "preview_only": true
-      }
-    },
-    {
       "ticker": "L",
       "asset_type": "stock",
       "source_stage": "JOINED_READY_NOT_SCORED",
@@ -11560,7 +11416,7 @@
         "etf_lane_excluded": true,
         "exact_ticker_contract": true,
         "minimum_evidence_families": 3,
-        "observed_evidence_family_count": 3
+        "observed_evidence_family_count": 4
       },
       "identity": {
         "name": "Paycom Software, Inc.",
@@ -11572,10 +11428,10 @@
       },
       "score_source": "scripts/stock-action-score-core.mjs",
       "score_preview_summary": {
-        "action_score": 38.22,
-        "signal_score": 44.23,
-        "coverage_ratio": 0.5474,
-        "confidence_label": "medium",
+        "action_score": 30.62,
+        "signal_score": 32.47,
+        "coverage_ratio": 0.8105,
+        "confidence_label": "high",
         "action_bucket": "watch",
         "action_label": "관찰",
         "action_reasons": [
@@ -11609,9 +11465,9 @@
             "max": 18
           },
           "smart_money": {
-            "present": false,
+            "present": true,
             "eligible": true,
-            "score": 0,
+            "score": 2,
             "max": 25
           },
           "sector_smart_money": {
@@ -11663,12 +11519,6 @@
         {
           "key": "slickcharts_dividends",
           "label": "SlickCharts dividends",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "sec13f_guru_holders",
-          "label": "13F guru holders",
           "value": null,
           "display": "미확인"
         },
@@ -16447,6 +16297,39 @@
             "alias_source": null
           }
         ]
+      },
+      "blocker_actions": [
+        {
+          "blocker": "market_currency_country_scope",
+          "required_action": "repair identity exchange/currency/country scope normalization before joined-ready promotion.",
+          "future_file_targets": [
+            "scripts/build-market-facts.py",
+            "scripts/audit-fenok-stock-promotion-candidates.mjs"
+          ]
+        }
+      ]
+    },
+    {
+      "ticker": "KEY",
+      "source_stage": "NORMALIZED_NOT_JOINED",
+      "target_stage": "S1_PROMOTION_BLOCKED",
+      "promotion_action": "repair_blockers_before_shadow_candidate",
+      "claim_scope": "Blocked S1 stock candidate plan only; do not score, publish, or include in S0.",
+      "blockers": [
+        "market_currency_country_scope"
+      ],
+      "evidence_family_count": 4,
+      "evidence_families": [
+        "raw_company_master",
+        "sec13f",
+        "slickcharts",
+        "yf"
+      ],
+      "country_scope": null,
+      "corporate_action_policy": {
+        "status": "none",
+        "reason": null,
+        "evidence": []
       },
       "blocker_actions": [
         {

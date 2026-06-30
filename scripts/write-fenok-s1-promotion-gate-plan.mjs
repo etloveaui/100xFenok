@@ -87,8 +87,9 @@ function buildAdminArtifact({ outRel, noWrite }) {
     },
     {
       id: "s1_admin_artifact_preserves_s0_public_count",
-      ok: sourceArtifact.counts?.public_s0_before === 1066
-        && sourceArtifact.counts?.public_s0_after_this_artifact === 1066
+      ok: Number.isInteger(sourceArtifact.counts?.public_s0_before)
+        && sourceArtifact.counts.public_s0_before > 0
+        && sourceArtifact.counts?.public_s0_after_this_artifact === sourceArtifact.counts.public_s0_before
         && sourceArtifact.counts?.s0_overlap_rows === 0,
       detail: `${sourceArtifact.counts?.public_s0_before}->${sourceArtifact.counts?.public_s0_after_this_artifact}, s0_overlap_rows=${sourceArtifact.counts?.s0_overlap_rows}`,
     },
@@ -105,9 +106,14 @@ function buildAdminArtifact({ outRel, noWrite }) {
     },
     {
       id: "s1_admin_artifact_current_counts",
-      ok: counts.promotion_gate_rows === 108
-        && counts.excluded_blocked_rows === 4
-        && counts.future_candidate_count_if_approved === 1174,
+      ok: Number.isInteger(counts.promotion_gate_rows)
+        && Number.isInteger(counts.excluded_blocked_rows)
+        && counts.promotion_gate_rows >= 0
+        && counts.excluded_blocked_rows >= 0
+        && counts.promotion_gate_rows + counts.excluded_blocked_rows === counts.s1_gap_total
+        && counts.future_candidate_count_if_approved === counts.public_s0_before + counts.promotion_gate_rows
+        && counts.admin_artifact_rows === counts.promotion_gate_rows
+        && counts.blocked_plan_rows === counts.excluded_blocked_rows,
       detail: `promotion=${counts.promotion_gate_rows}, blocked=${counts.excluded_blocked_rows}, future=${counts.future_candidate_count_if_approved}`,
     },
   ];

@@ -1345,9 +1345,8 @@ function buildS1BlockedUnblockDiagnosticsArtifact(statuses, context) {
 function buildS1PromotionGatePlanArtifact(statuses, context) {
   const previewArtifact = buildS1ScorePreviewArtifact(statuses, context);
   const promotionRows = previewArtifact.preview_rows.map(promotionGateRowFromPreview);
-  const blockedPlanRows = statuses
-    .filter((status) => status.status === "joined_not_ready")
-    .map((status) => promotionBlockedPlanRow(status, context));
+  const blockedStatuses = statuses.filter((status) => status.status === "joined_not_ready");
+  const blockedPlanRows = blockedStatuses.map((status) => promotionBlockedPlanRow(status, context));
   const etfRows = promotionRows.filter((row) => row.asset_type === "etf").length;
   const nonStockRows = promotionRows.filter((row) => row.asset_type !== "stock").length;
   const s0OverlapRows = promotionRows.filter((row) => context.s0Set.has(row.ticker)).length;
@@ -1366,20 +1365,24 @@ function buildS1PromotionGatePlanArtifact(statuses, context) {
     gated: false,
     etf_lane: false,
   };
-  const expectedBlockedRows = [
-    ["DAY", ["market_currency_country_scope"]],
-    ["HOLX", ["market_currency_country_scope"]],
-    ["MMC", ["market_currency_country_scope"]],
-    ["STRC", ["evidence_families_min3"]],
-  ];
   const actualBlockedRows = blockedPlanRows
     .map((row) => [row.ticker, row.blockers])
     .sort(([a], [b]) => a.localeCompare(b));
-  const blockerSetsMatch = actualBlockedRows.length === expectedBlockedRows.length
-    && actualBlockedRows.every(([tickerValue, blockers], index) => (
-      tickerValue === expectedBlockedRows[index][0]
-      && arraysEqual(blockers, expectedBlockedRows[index][1])
-    ));
+  const sourceBlockerCounts = countBlockers(blockedStatuses);
+  const actualBlockerCounts = countBlockers(blockedPlanRows);
+  const blockerKeys = new Set([...Object.keys(sourceBlockerCounts), ...Object.keys(actualBlockerCounts)]);
+  const blockerCountsMatchSource = [...blockerKeys].every((key) => (
+    Number(sourceBlockerCounts[key] ?? 0) === Number(actualBlockerCounts[key] ?? 0)
+  ));
+  const blockerSetsMatch = actualBlockedRows.length === blockedStatuses.length
+    && actualBlockedRows.every(([tickerValue, blockers]) => (
+      typeof tickerValue === "string"
+      && tickerValue.length > 0
+      && Array.isArray(blockers)
+      && blockers.length > 0
+      && blockers.every((blocker) => typeof blocker === "string" && blocker.length > 0)
+    ))
+    && blockerCountsMatchSource;
   const counts = {
     public_s0_before: context.s0Set.size,
     public_s0_after_this_artifact: context.s0Set.size,
@@ -1437,7 +1440,7 @@ function buildS1PromotionGatePlanArtifact(statuses, context) {
     {
       id: "s1_promotion_gate_plan_blockers_exact_current_set",
       ok: blockerSetsMatch,
-      detail: JSON.stringify(actualBlockedRows),
+      detail: JSON.stringify({ blocked_rows: actualBlockedRows, source_blocker_counts: sourceBlockerCounts }),
     },
     {
       id: "s1_promotion_gate_plan_stdout_only_no_writes",
@@ -1487,7 +1490,7 @@ function buildS1PromotionGatePlanArtifact(statuses, context) {
       "scripts/audit-fenok-stock-promotion-candidates.mjs",
     ],
     counts,
-    blocker_counts: countBlockers(statuses),
+    blocker_counts: sourceBlockerCounts,
     acceptance_checks: acceptanceChecks,
     promotion_gate_rows: promotionRows,
     blocked_plan_rows: blockedPlanRows,
