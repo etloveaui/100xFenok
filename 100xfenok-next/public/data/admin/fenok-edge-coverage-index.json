@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-30T12:07:03.732Z",
+  "generated_at": "2026-06-30T12:13:41.821Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -50,7 +50,7 @@
     }
   },
   "expanded_stock_candidate_universe": {
-    "generated_at": "2026-06-30T12:05:56Z",
+    "generated_at": "2026-06-30T12:12:35Z",
     "collected_asset_total": 6486,
     "collected_stock_candidates": 1178,
     "scored_public_stock": 1066,
@@ -89,13 +89,13 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-30T09:31:24.830Z",
-          "age_hours": 2.59,
+          "age_hours": 2.7,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-06-30T12:06:57.270Z",
+          "generated_at": "2026-06-30T12:13:35.420Z",
           "age_hours": 0,
           "max_age_hours": 48
         },
@@ -137,12 +137,12 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-06-30T12:06:57.347Z",
+        "generated_at": "2026-06-30T12:13:35.498Z",
         "generated_age_hours": 0,
         "generated_fresh": true,
-        "core_daily_basket_ready": false,
-        "daily_ready": false,
-        "gated_ready": false,
+        "core_daily_basket_ready": true,
+        "daily_ready": true,
+        "gated_ready": true,
         "public_ready": false,
         "public_done_claim_allowed": false,
         "no_full_etf_done_claim": true,
@@ -150,8 +150,8 @@
           "source_scored_etf_count": 4484,
           "structural_candidate_count": 1597,
           "selected_count": 118,
-          "fresh_selected_count": 113,
-          "stale_selected_count": 5,
+          "fresh_selected_count": 118,
+          "stale_selected_count": 0,
           "min_selected_count": 75,
           "selected_by_category": {
             "Alternatives": 15,
@@ -161,14 +161,10 @@
             "Fixed Income": 35,
             "Uncategorized": 1
           },
-          "freshness_blocker_counts": {
-            "quote_or_daily_stale": 5
-          }
+          "freshness_blocker_counts": {}
         },
-        "status": "blocked_refresh_needed",
-        "blockers": [
-          "selected_rows_need_daily_refresh"
-        ],
+        "status": "ready",
+        "blockers": [],
         "caveat": "Core Daily Basket is a smaller ETF sublane. It does not flip full etf_scoring_lane daily/gated readiness."
       }
     },
@@ -527,13 +523,13 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-30T09:31:24.830Z",
-              "age_hours": 2.59,
+              "age_hours": 2.7,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-06-30T12:06:57.270Z",
+              "generated_at": "2026-06-30T12:13:35.420Z",
               "age_hours": 0,
               "max_age_hours": 48
             },
@@ -583,19 +579,19 @@
           "joined_to_target_universe": true,
           "scored": true,
           "public": false,
-          "daily": false,
-          "gated": false
+          "daily": true,
+          "gated": true
         },
         "caveat": "Core Basket is an internal daily-refresh target list and compact public summary. It cannot be reported as full ETF lane completion.",
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-06-30T12:06:57.347Z",
+          "generated_at": "2026-06-30T12:13:35.498Z",
           "generated_age_hours": 0,
           "generated_fresh": true,
-          "core_daily_basket_ready": false,
-          "daily_ready": false,
-          "gated_ready": false,
+          "core_daily_basket_ready": true,
+          "daily_ready": true,
+          "gated_ready": true,
           "public_ready": false,
           "public_done_claim_allowed": false,
           "no_full_etf_done_claim": true,
@@ -603,8 +599,8 @@
             "source_scored_etf_count": 4484,
             "structural_candidate_count": 1597,
             "selected_count": 118,
-            "fresh_selected_count": 113,
-            "stale_selected_count": 5,
+            "fresh_selected_count": 118,
+            "stale_selected_count": 0,
             "min_selected_count": 75,
             "selected_by_category": {
               "Alternatives": 15,
@@ -614,14 +610,10 @@
               "Fixed Income": 35,
               "Uncategorized": 1
             },
-            "freshness_blocker_counts": {
-              "quote_or_daily_stale": 5
-            }
+            "freshness_blocker_counts": {}
           },
-          "status": "blocked_refresh_needed",
-          "blockers": [
-            "selected_rows_need_daily_refresh"
-          ],
+          "status": "ready",
+          "blockers": [],
           "caveat": "Core Daily Basket is a smaller ETF sublane. It does not flip full etf_scoring_lane daily/gated readiness."
         }
       },
@@ -651,7 +643,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-30T12:07:03.732Z"
+        "generated_at": "2026-06-30T12:13:41.821Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -694,13 +686,13 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-30T09:31:24.830Z",
-        "age_hours": 2.59,
+        "age_hours": 2.7,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-06-30T12:06:57.270Z",
+        "generated_at": "2026-06-30T12:13:35.420Z",
         "age_hours": 0,
         "max_age_hours": 48,
         "fetchable_required_history": 2,
@@ -710,7 +702,7 @@
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-06-30T12:06:57.270Z",
+        "generated_at": "2026-06-30T12:13:35.420Z",
         "fetchable_daily_1y_gap": 244,
         "inception_limited_daily_1y_gap": 537,
         "status": "blocked_fetchable_daily_gap",
@@ -718,12 +710,12 @@
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-06-30T12:06:57.347Z",
+        "generated_at": "2026-06-30T12:13:35.498Z",
         "age_hours": 0,
         "selected_count": 118,
-        "fresh_selected_count": 113,
-        "stale_selected_count": 5,
-        "status": "blocked_refresh_needed",
+        "fresh_selected_count": 118,
+        "stale_selected_count": 0,
+        "status": "ready",
         "caveat": "Only the core basket sublane is evaluated here; full ETF lane daily/gated remains controlled by ETF daily 1Y gap checks."
       },
       {
