@@ -25,6 +25,8 @@ const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
 const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 100;
 const DEFAULT_ALL_ELIGIBLE_FAIL_THRESHOLD = 5;
 const OCC_ENDPOINT = "https://marketdata.theocc.com/volume-query";
+const OCC_PLAIN_UNDERLYING_RE = /^[A-Z][A-Z0-9]{0,11}$/;
+const OCC_EXPLICIT_UNDERLYING_RE = /^[A-Z][A-Z0-9.\-]{0,11}$/;
 const OCC_AVAILABILITY_POLICY = {
   source_id: "occ_volume_query",
   availability_status: "not_verified",
@@ -59,6 +61,7 @@ function parseArgs(argv) {
     noWrite: false,
     planOnly: false,
     referenceOnly: false,
+    s0OccMissing: false,
     sleepMs: 250,
     startAfter: "",
   };
@@ -86,7 +89,12 @@ function parseArgs(argv) {
     else if (arg === "--no-write") args.noWrite = true;
     else if (arg === "--plan-only") args.planOnly = true;
     else if (arg === "--reference-only") args.referenceOnly = true;
+    else if (arg === "--s0-occ-missing") args.s0OccMissing = true;
     else throw new Error(`Unknown argument: ${arg}`);
+  }
+  const selectorCount = [args.allEligible, args.referenceOnly, args.s0OccMissing, Boolean(args.tickers)].filter(Boolean).length;
+  if (selectorCount > 1) {
+    throw new Error("Choose exactly one OCC ticker selector: --tickers, --reference-only, --all-eligible, or --s0-occ-missing");
   }
   if (args.allEligible) {
     if (!maxWalkbackDaysExplicit) args.maxWalkbackDays = 0;
@@ -145,24 +153,58 @@ function readEligibleManifest(relOrAbsPath) {
   throw new Error(`Unsupported eligible manifest shape: ${relOrAbsPath}`);
 }
 
-function loadAllEligibleUniverse({ eligibleManifest = "", limit = 0 } = {}) {
+function tickerRowsFromFenokSignals() {
+  const fenokSignals = readJson("computed/fenok_signals.json", {});
+  return Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
+}
+
+function readCandidateTickers({ eligibleManifest = "", usOnly = false } = {}) {
   let out = readEligibleManifest(eligibleManifest);
   if (!out) {
-    const fenokSignals = readJson("computed/fenok_signals.json", {});
-    const rows = Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
-    out = rows
-      .filter((row) => row.market_scope === "us")
+    out = tickerRowsFromFenokSignals()
+      .filter((row) => !usOnly || row.market_scope === "us")
       .map((row) => normalizeTicker(row.ticker))
       .filter(Boolean);
   }
+  return [...new Set(out.map(normalizeTicker).filter(Boolean))].sort();
+}
+
+function loadAllEligibleUniverse({ eligibleManifest = "", limit = 0 } = {}) {
+  let out = readCandidateTickers({ eligibleManifest, usOnly: true });
   // OCC listed-options endpoint uses plain US underlyings. Exclude foreign
   // suffixes and share-class punctuation unless an owner-reviewed manifest
   // maps them explicitly later.
-  out = [...new Set(out.map(normalizeTicker))]
-    .filter((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker))
-    .sort();
+  out = out.filter((ticker) => OCC_PLAIN_UNDERLYING_RE.test(ticker));
   if (limit > 0) out = out.slice(0, limit);
   return out;
+}
+
+function loadOccCoveredTickers() {
+  const output = readJson(OUTPUT_FILE, {});
+  const history = readJson(HISTORY_FILE, {});
+  const rows = [
+    ...(Array.isArray(output?.rows) ? output.rows : []),
+    ...(Array.isArray(history?.rows) ? history.rows : []),
+  ];
+  return new Set(rows.map((row) => normalizeTicker(row.ticker)).filter(Boolean));
+}
+
+function loadS0OccMissingUniverse({ eligibleManifest = "", limit = 0 } = {}) {
+  const sourceTickers = readCandidateTickers({ eligibleManifest, usOnly: true });
+  const covered = loadOccCoveredTickers();
+  const missing = sourceTickers.filter((ticker) => !covered.has(ticker));
+  const excluded = missing.filter((ticker) => !OCC_PLAIN_UNDERLYING_RE.test(ticker));
+  let selectable = missing.filter((ticker) => OCC_PLAIN_UNDERLYING_RE.test(ticker));
+  if (limit > 0) selectable = selectable.slice(0, limit);
+  return {
+    source_count: sourceTickers.length,
+    covered_count: sourceTickers.filter((ticker) => covered.has(ticker)).length,
+    missing_count: missing.length,
+    occ_plain_selectable_count: missing.length - excluded.length,
+    excluded_count: excluded.length,
+    excluded_sample: excluded.slice(0, 20),
+    tickers: selectable,
+  };
 }
 
 function applyTickerBatch(tickers, { batchIndex = 0, batchSize = 0, startAfter = "" } = {}) {
@@ -188,12 +230,37 @@ function loadTickerUniverse({ tickers, referenceOnly, limit }) {
   } else {
     throw new Error("OCC collection is bounded: pass --tickers or --reference-only");
   }
-  out = [...new Set(out)].filter((ticker) => /^[A-Z][A-Z0-9.\-]{0,11}$/.test(ticker));
+  out = [...new Set(out)].filter((ticker) => OCC_EXPLICIT_UNDERLYING_RE.test(ticker));
   if (limit > 0) out = out.slice(0, limit);
   return out;
 }
 
 function resolveTickerUniverse(args) {
+  if (args.s0OccMissing) {
+    const missingUniverse = loadS0OccMissingUniverse({
+      eligibleManifest: args.eligibleManifest,
+      limit: args.limit,
+    });
+    const tickers = applyTickerBatch(missingUniverse.tickers, {
+      batchIndex: args.batchIndex,
+      batchSize: args.batchSize,
+      startAfter: args.startAfter,
+    });
+    return {
+      mode: "s0_occ_missing_batched",
+      eligible_count: missingUniverse.occ_plain_selectable_count,
+      excluded_note: "S0 tickers already covered by OCC are skipped; dotted/foreign suffixes are excluded until owner-reviewed OCC underlying mapping exists.",
+      tickers,
+      missing_selector: {
+        source_count: missingUniverse.source_count,
+        covered_count: missingUniverse.covered_count,
+        missing_count: missingUniverse.missing_count,
+        occ_plain_selectable_count: missingUniverse.occ_plain_selectable_count,
+        excluded_count: missingUniverse.excluded_count,
+        excluded_sample: missingUniverse.excluded_sample,
+      },
+    };
+  }
   if (args.allEligible) {
     const eligibleTickers = loadAllEligibleUniverse({
       eligibleManifest: args.eligibleManifest,
@@ -452,6 +519,126 @@ function buildCoverage(rows, attempts = []) {
   };
 }
 
+function buildNoRecordEvidence({
+  generatedAt,
+  universe,
+  tickers,
+  dates,
+  dateResults,
+  args,
+  estimatedMaxLiveRequests,
+}) {
+  const attempts = dateResults.flatMap((item) => item.attempts.map((attempt) => ({
+    ymd: item.ymd,
+    ...attempt,
+  })));
+  const rows = dateResults.flatMap((item) => item.rows.map((row) => ({
+    ymd: item.ymd,
+    ticker: row.ticker,
+    total_volume: row.options_activity_proxy?.total_volume ?? null,
+    row_count: row.options_activity_proxy?.row_count ?? null,
+  })));
+  const statuses = [...new Set(attempts.map((attempt) => attempt.status).filter(Boolean))].sort();
+  const allEmpty = rows.length > 0 && rows.every((row) => Number(row.total_volume ?? 0) <= 0);
+  const cacheMissingNoFetch = statuses.includes("cache_missing_no_fetch");
+  return {
+    schema_version: "fenok-occ-availability-evidence/v0.1",
+    generated_at: generatedAt,
+    status: cacheMissingNoFetch ? "cache_missing_no_fetch" : allEmpty ? "all_empty_occ_records" : "no_usable_occ_records",
+    collection_mode: universe.mode,
+    no_fetch: Boolean(args.noFetch),
+    no_write: Boolean(args.noWrite),
+    selected_tickers: tickers.length,
+    selected_sample: tickers.slice(0, 20),
+    candidate_dates: dates,
+    request_budget: {
+      estimated_max_live_requests: estimatedMaxLiveRequests,
+      max_requests: args.maxRequests || null,
+      status: args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests ? "blocked_over_budget" : "within_budget",
+    },
+    evidence_counts: {
+      date_count: dateResults.length,
+      attempt_count: attempts.length,
+      empty_row_count: rows.length,
+      cache_missing_no_fetch: attempts.filter((attempt) => attempt.status === "cache_missing_no_fetch").length,
+      failed: attempts.filter((attempt) => attempt.status === "failed").length,
+    },
+    statuses,
+    date_results: dateResults.map((item) => ({
+      ymd: item.ymd,
+      rows: item.rows.length,
+      attempts: item.attempts.length,
+      empty_rows: item.rows.filter((row) => Number(row.options_activity_proxy?.total_volume ?? 0) <= 0).length,
+      attempt_statuses: [...new Set(item.attempts.map((attempt) => attempt.status).filter(Boolean))].sort(),
+    })),
+    missing_selector: universe.missing_selector ?? null,
+    raw_policy: {
+      external_collection: !args.noFetch,
+      raw_cache_public: false,
+      third_party_raw_public: false,
+      full_public_mirror: false,
+    },
+    availability_policy: OCC_AVAILABILITY_POLICY,
+  };
+}
+
+function mergeNoRecordEvidence(previous, evidence) {
+  const rows = Array.isArray(previous?.rows) ? previous.rows : [];
+  const historyRows = Array.isArray(previous?.availability_evidence_history)
+    ? previous.availability_evidence_history
+    : [];
+  const evidenceSummary = {
+    generated_at: evidence.generated_at,
+    status: evidence.status,
+    collection_mode: evidence.collection_mode,
+    no_fetch: evidence.no_fetch,
+    selected_tickers: evidence.selected_tickers,
+    candidate_dates: evidence.candidate_dates,
+    evidence_counts: evidence.evidence_counts,
+  };
+  return {
+    schema_version: previous?.schema_version ?? 1,
+    generated_at: evidence.generated_at,
+    formula_version: previous?.formula_version ?? FORMULA_VERSION,
+    contract_doc: previous?.contract_doc ?? CONTRACT_DOC,
+    public_surface_status: previous?.public_surface_status ?? "admin_private_derived_only_public_summary_source",
+    raw_policy: previous?.raw_policy ?? {
+      external_collection: false,
+      raw_cache_public: false,
+      third_party_raw_public: false,
+      full_public_mirror: false,
+      raw_cache_dir: path.relative(repoRoot, OCC_CACHE_DIR),
+      public_payload: null,
+    },
+    query_contract: previous?.query_contract ?? {
+      endpoint: OCC_ENDPOINT,
+      format: "csv",
+      volumeQueryType: "O",
+      symbolType: "U",
+      reportType: "D",
+      productKind: "OSTK",
+      accountType: "omitted_all_accounts",
+      porc: "C_or_P",
+    },
+    availability_policy: OCC_AVAILABILITY_POLICY,
+    collection_retry_policy: previous?.collection_retry_policy ?? {
+      max_walkback_days: null,
+      sleep_ms_between_side_queries: null,
+      exact_release_time_verified: false,
+      empirical_polling_required: true,
+    },
+    coverage: previous?.coverage ?? buildCoverage(rows, []),
+    semantics: previous?.semantics ?? {
+      netOptionsProxyScore: "Higher means higher OCC listed-options call-volume share versus put-volume share for the underlying on the source date. This is a volume-skew proxy, not real options flow, OPRA, or buyer/seller direction.",
+    },
+    previous_output_generated_at: previous?.generated_at ?? null,
+    availability_evidence: evidence,
+    availability_evidence_history: [...historyRows, evidenceSummary].slice(-30),
+    attempts: previous?.attempts ?? [],
+    rows,
+  };
+}
+
 function buildSnapshot({ rows, ymd, generatedAt, attempts, maxWalkbackDays, sleepMs }) {
   return {
     schema_version: 1,
@@ -539,7 +726,7 @@ function mergeHistory(snapshot) {
   }));
   const incomingKeys = new Set(incoming.map((row) => `${row.ticker}|${row.source_date}`));
   const kept = rows.filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}`));
-  return {
+  const next = {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
     generated_at: snapshot.generated_at,
@@ -551,6 +738,9 @@ function mergeHistory(snapshot) {
       String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
     )),
   };
+  if (snapshot.availability_evidence) next.availability_evidence = snapshot.availability_evidence;
+  if (snapshot.availability_evidence_history) next.availability_evidence_history = snapshot.availability_evidence_history;
+  return next;
 }
 
 async function build(args) {
@@ -565,6 +755,8 @@ async function build(args) {
       formula_version: FORMULA_VERSION,
       collection_mode: universe.mode,
       eligible_count: universe.eligible_count,
+      excluded_note: universe.excluded_note ?? null,
+      missing_selector: universe.missing_selector ?? null,
       selected_tickers: tickers.length,
       sample: tickers.slice(0, 20),
       candidate_dates: dates,
@@ -597,6 +789,7 @@ async function build(args) {
   }
 
   const dateAttempts = [];
+  const noRecordResults = [];
   for (const ymd of dates) {
     const result = await loadRowsForDate({
       ymd,
@@ -607,7 +800,10 @@ async function build(args) {
     });
     dateAttempts.push({ ymd, rows: result.rows.length, failed_attempts: result.attempts.length });
     const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
-    if (usableRows.length === 0) continue;
+    if (usableRows.length === 0) {
+      noRecordResults.push(result);
+      continue;
+    }
     const snapshot = buildSnapshot({
       rows: result.rows,
       ymd,
@@ -631,6 +827,7 @@ async function build(args) {
       coverage: outputSnapshot.coverage,
       batch_coverage: snapshot.coverage,
       collection_mode: universe.mode,
+      missing_selector: universe.missing_selector ?? null,
       selected_tickers: tickers.length,
       request_budget: {
         estimated_max_live_requests: estimatedMaxLiveRequests,
@@ -638,6 +835,40 @@ async function build(args) {
       },
       date_attempts: dateAttempts,
       reference_rows: outputSnapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
+    };
+  }
+  if (noRecordResults.length > 0) {
+    const generatedAt = isoNow();
+    const evidence = buildNoRecordEvidence({
+      generatedAt,
+      universe,
+      tickers,
+      dates,
+      dateResults: noRecordResults,
+      args,
+      estimatedMaxLiveRequests,
+    });
+    const outputSnapshot = mergeNoRecordEvidence(readJson(OUTPUT_FILE, null), evidence);
+    const history = mergeHistory(outputSnapshot);
+    if (!args.noWrite) {
+      writeJson(OUTPUT_FILE, outputSnapshot);
+      writeJson(HISTORY_FILE, history);
+    }
+    return {
+      output_file: `data/${OUTPUT_FILE}`,
+      history_file: `data/${HISTORY_FILE}`,
+      wrote: !args.noWrite,
+      no_record_persisted: !args.noWrite,
+      availability_evidence: evidence,
+      coverage: outputSnapshot.coverage,
+      collection_mode: universe.mode,
+      missing_selector: universe.missing_selector ?? null,
+      selected_tickers: tickers.length,
+      request_budget: {
+        estimated_max_live_requests: estimatedMaxLiveRequests,
+        max_requests: args.maxRequests || null,
+      },
+      date_attempts: dateAttempts,
     };
   }
   throw new Error(`No OCC option volume rows available in requested window: ${JSON.stringify(dateAttempts)}`);
@@ -660,11 +891,14 @@ export {
   applyTickerBatch,
   build,
   buildCoverage,
+  buildNoRecordEvidence,
   buildRowsForTest,
   candidateDates,
   directionFromOptionsVolume,
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
+  loadS0OccMissingUniverse,
+  mergeNoRecordEvidence,
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   parseOccCsv,

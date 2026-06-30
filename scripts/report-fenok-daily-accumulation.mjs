@@ -95,8 +95,8 @@ function buildReport() {
       denominator: asNumber(s0.total),
       scored_public_stock: asNumber(signals?.coverage?.row_count, asArray(signals?.rows).length),
       cadence: {
-        workflow: "fenok-edge-daily.yml",
-        schedule: "KST Tue-Sat 09:30; FINRA 7-day-to-yesterday window; OCC rolling batch",
+        workflow: "fenok-edge-krx-daily.yml + fenok-edge-daily.yml",
+        schedule: "KRX KST Mon-Fri 19:30 bounded daily fetch; FINRA KST Tue-Sat 09:30 7-day-to-yesterday window; OCC rolling batch",
         truth: "S0 is public-scored, but active_stock_scoring_current.requirements.daily/gated are still false.",
       },
       remaining_blockers: missingRequirements(s0Track?.requirements),

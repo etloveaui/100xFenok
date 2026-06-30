@@ -1385,11 +1385,11 @@ export default function StockDetailClient({
           <span className="stock-logo">{symbol.slice(0, 1)}</span>
           <div className="stock-id">
             <div className="stock-name">
-              <h1>{displayName}</h1>
+              <h1>{symbol}</h1>
               <WatchStar ticker={symbol} className="stock-star" />
             </div>
             <div className="stock-meta">
-              <span className="num">{symbol}</span>
+              <span>{displayName}</span>
               {canonical ? (
                 <>
                   <span className="x">·</span>
@@ -1451,8 +1451,8 @@ export default function StockDetailClient({
           <div className="panel stock-side-panel">
             <div className="panel-b">
             <div className="mb-3">
-              <h1 className="text-lg font-black tracking-tight text-slate-950">{row ? row.companyName : "..."}</h1>
-              <p className="orbitron text-sm font-black text-slate-500">{symbol}</p>
+              <h1 className="text-lg font-black tracking-tight text-slate-950">{symbol}</h1>
+              <p className="text-sm font-bold text-slate-500">{row ? row.companyName : "..."}</p>
             </div>
             {canonical ? (
               <div className="mb-3">

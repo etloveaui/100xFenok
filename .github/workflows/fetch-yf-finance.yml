@@ -156,6 +156,7 @@ jobs:
           python3 -m unittest scripts/test_fetch_yf_finance_selection.py
           python3 -m unittest scripts/test_audit_market_data.py
           npm --prefix 100xfenok-next run qa:market-audit
+          npm --prefix 100xfenok-next run qa:fenok-edge-readiness
           npm --prefix 100xfenok-next run qa:copy
 
       - name: Commit and push

@@ -484,7 +484,14 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
         </span>
       );
     case "name":
-      return <span className="block max-w-[180px] truncate text-sm font-semibold text-[var(--c-ink)]">{stock.name}</span>;
+      return (
+        <span className="block min-w-0 max-w-[180px]">
+          <span className="orbitron text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <span className="block truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
+            {stock.name ?? "—"}
+          </span>
+        </span>
+      );
     case "actionScore": {
       const lowEvidence = stock.lowEvidence === true;
       const confidence = confidenceText(stock.confidenceLabel);

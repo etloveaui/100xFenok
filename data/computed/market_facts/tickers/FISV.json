@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "FISV",
   "asset_type": "stock",
-  "generated_at": "2026-06-29T14:51:33Z",
+  "generated_at": "2026-06-29T15:51:47Z",
   "identity": {
     "name": "Fiserv, Inc.",
     "exchange": "NMS",
@@ -35,6 +35,13 @@
           "confidence": "observed"
         },
         {
+          "value": 48.78,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
+        },
+        {
           "value": 56.56,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -42,7 +49,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "previous_close": {
       "value": 49.45,
@@ -62,16 +69,23 @@
           "as_of": null,
           "fetched_at": "2026-06-29T14:39:46Z",
           "confidence": "observed"
+        },
+        {
+          "value": 48.78,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
-      "value": -0.3300000000000054,
-      "source": "yf.derived",
+      "value": -0.67,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-29T14:39:46Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-29T15:50:44Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
@@ -79,6 +93,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.67,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.3300000000000054,
           "source": "yf.derived",
@@ -87,14 +108,14 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
-      "value": -0.6673407482305468,
-      "source": "yf.derived",
+      "value": -1.35,
+      "source": "stockanalysis.quote",
       "as_of": null,
-      "fetched_at": "2026-06-29T14:39:46Z",
-      "confidence": "derived",
+      "fetched_at": "2026-06-29T15:50:44Z",
+      "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
         "yf",
@@ -103,6 +124,13 @@
       ],
       "candidates": [
         {
+          "value": -1.35,
+          "source": "stockanalysis.quote",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.6673407482305468,
           "source": "yf.derived",
           "as_of": null,
@@ -110,7 +138,7 @@
           "confidence": "derived"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "market_cap": {
       "value": 26193434624,
@@ -132,6 +160,13 @@
           "confidence": "observed"
         },
         {
+          "value": 26020000000.0,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
+        },
+        {
           "value": 30160000000.0,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -139,7 +174,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "trailing_pe": {
       "value": 8.325423,
@@ -190,6 +225,13 @@
           "confidence": "observed"
         },
         {
+          "value": 6.07,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
+        },
+        {
           "value": 6.32,
           "source": "slickcharts",
           "as_of": "2026-06-01T15:21:34+00:00",
@@ -197,7 +239,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "dividend_yield": {
       "value": 0,
@@ -220,6 +262,28 @@
           "fetched_at": null,
           "confidence": "observed",
           "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": 0.8,
+      "source": "stockanalysis.overview",
+      "as_of": null,
+      "fetched_at": "2026-06-29T15:50:44Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.8,
+          "source": "stockanalysis.overview",
+          "as_of": null,
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "observed"
         }
       ],
       "candidate_count": 1
@@ -268,9 +332,17 @@
           "fetched_at": "2026-06-29T14:39:46Z",
           "confidence": "derived",
           "unit": "percent_points"
+        },
+        {
+          "value": -11.379928315412178,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-06-01",
+          "fetched_at": "2026-06-29T15:50:44Z",
+          "confidence": "derived",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
       "value": -25.11053258969512,
@@ -337,14 +409,14 @@
   "financials": null,
   "sources": {
     "yf": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": true
   },
   "source_files": {
     "yf": "yf/finance/FISV.json",
-    "stockanalysis": null,
+    "stockanalysis": "stockanalysis/stocks/FISV.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": "slickcharts/stocks/FISV.json"
