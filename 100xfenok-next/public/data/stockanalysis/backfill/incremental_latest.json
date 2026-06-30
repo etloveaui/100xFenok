@@ -2,42 +2,2807 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-06-30T00:20:22Z",
+  "generated_at": "2026-06-30T11:08:13Z",
   "policy": {
     "limit": 120,
-    "max_age_hours": 720,
-    "cooldown_days": 7,
-    "cooldown_failure_threshold": 3,
+    "max_age_hours": null,
+    "cooldown_days": null,
+    "cooldown_failure_threshold": null,
     "required_history_periods": [
       "daily_1y"
     ],
     "history_gaps_only": true,
-    "selection": "primary StockAnalysis ETF detail files missing required history_periods only"
+    "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
+    "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+    "min_daily_1y_rows": 200
   },
   "counts": {
-    "candidates": 0,
-    "selected": 0,
+    "candidates": 244,
+    "selected": 120,
     "missing": 0,
     "fallback_retry": 0,
-    "history_gap": 0,
+    "history_gap": 244,
     "inception_limited_history_gap": 0,
-    "total_history_gap": 0,
+    "total_history_gap": 244,
     "stale": 0,
     "cooldown_skipped": 0,
-    "prior_failed_candidates": 0,
-    "ledger_tracked": 117,
+    "prior_failed_candidates": 72,
+    "daily_1y_missing_file": 62,
+    "daily_1y_short_rows": 182,
+    "ledger_tracked": 194,
     "ledger_cooldown": 41
   },
-  "selected": [],
+  "selected": [
+    {
+      "ticker": "AAAD",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 0,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "AAAP",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 1,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ACGO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 2,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 17,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ACII",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 3,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "ACYQ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 4,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ADDS",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 5,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "AFGR",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 6,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "AMEI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 7,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "AMEM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 8,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "AMGR",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 9,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "AMHI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 10,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "AMUN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 11,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": "1986-03-17",
+      "daily_1y_actual_rows": 172,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "APDB",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 12,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 37,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "AQLG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 13,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ARLI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 14,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 60,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ARMW",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 15,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 170,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ARMY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 16,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 190,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ASCI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 17,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": "1996-09-30",
+      "daily_1y_actual_rows": 172,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ASD",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 18,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 19,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ASEC",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 19,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BABW",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 20,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 170,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BAVA",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 21,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "BCEM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 22,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 56,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BD",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 23,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BGCG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 24,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 20,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BGEG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 25,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 18,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BGGG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 26,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 20,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BGIA",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 27,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 18,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BHYP",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 28,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BKLG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 29,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 5,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BRCE",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 30,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 171,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BREE",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 31,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 80,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BRIE",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 32,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 171,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BROL",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 33,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 23,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BRSM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 34,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "BSCA",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 35,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSGR",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 36,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSGT",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 37,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSJY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 38,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSOL",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 39,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 167,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSTS",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 40,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSTU",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 41,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BSTV",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 42,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 13,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BTCK",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 43,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 16,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "BWOW",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 44,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 145,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CBOO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 45,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 181,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CBTO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 46,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 182,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CBXO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 47,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 182,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CGOV",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 48,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 17,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CHNL",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 49,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 60,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CHYG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 50,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 16,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CIEI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 51,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 17,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CIVG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 52,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 17,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CJUN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 53,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 18,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CLNK",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 54,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "CLOO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 55,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "CMAY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 56,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 38,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "COMD",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 57,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 95,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "COSW",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 58,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 170,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CRDD",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 59,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 61,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CRIB",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 60,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CRUX",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 61,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": "1986-01-09",
+      "daily_1y_actual_rows": 72,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CSEN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 62,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 10,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "CTJN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 63,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 18,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DDFY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 64,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 38,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DDFZ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 65,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 20,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DDSQ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 66,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 122,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DDTY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 67,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 38,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DDTZ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 68,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 20,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DFAL",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 69,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 5,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DHLX",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 70,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": "2021-02-26",
+      "daily_1y_actual_rows": 187,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DLMY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 71,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 29,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DOJE",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 72,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 195,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DQJN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 73,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 6,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DRMP",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 74,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 12,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DUSG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 75,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": "2012-12-20",
+      "daily_1y_actual_rows": 35,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "DWWN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 76,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 25,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "EDGQ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 77,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "EDGX",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 78,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "EHCC",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 79,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 60,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "EMEM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 80,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 27,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "EMJN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 81,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 19,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "EMSC",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 82,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 26,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "ESUM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 83,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "ETHB",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 84,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 75,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "EZMO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 85,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 175,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FHIL",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 86,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 7,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FITZ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 87,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FOTO",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 88,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 21,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FPAA",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 89,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 15,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FREI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 90,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 5,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FSOL",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 91,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "FSTB",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 92,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 7,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GAVA",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 93,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 75,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GCSH",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 94,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "GDOG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 95,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 148,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GDT",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 96,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 109,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GDXW",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 97,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 165,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GEQ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 98,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GISC",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 99,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "GLDW",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 100,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 165,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "GSUI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 101,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 95,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "HBMX",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 102,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 19,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "HBR",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 103,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 167,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "HJUN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 104,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 18,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "HRSK",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 105,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "HYPG",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 106,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 18,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IBCB",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 107,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 63,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IBGM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 108,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 65,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IBHM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 109,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 63,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IBIM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 110,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IBTR",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 111,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 64,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IDEQ",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 112,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "IDJN",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 113,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 19,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IDMY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 114,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 36,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "IINC",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 1,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 115,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 1,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "INYY",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 4,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 116,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 0,
+      "daily_1y_min_rows": 200,
+      "missing_file": true,
+      "pending_consecutive_failures": 4,
+      "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+    },
+    {
+      "ticker": "JADB",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 117,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 37,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "JANI",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 118,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 102,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    },
+    {
+      "ticker": "JELM",
+      "source": "fenok_edge_etf_daily1y_fetchable_plan",
+      "reason": "history_gap",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 2,
+      "plan_order": 119,
+      "missing_history_periods": [
+        "daily_1y"
+      ],
+      "fetchable_missing_history_periods": [
+        "daily_1y"
+      ],
+      "inception_limited_history_periods": [],
+      "inception_date": null,
+      "daily_1y_actual_rows": 47,
+      "daily_1y_min_rows": 200,
+      "missing_file": false,
+      "pending_consecutive_failures": 0,
+      "pending_next_attempt_after_utc": null
+    }
+  ],
   "cooldown": [],
   "inception_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-06-30T00:23:47Z",
+    "generated_at": "2026-06-30T11:09:51Z",
     "counts": {
-      "tracked": 117,
+      "tracked": 194,
       "cooldown": 41,
-      "updated": 0,
+      "updated": 109,
       "cleared": 0
     }
   }

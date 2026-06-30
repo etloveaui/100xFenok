@@ -2,47 +2,166 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-06-30T00:23:47Z",
+  "generated_at": "2026-06-30T11:09:51Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "skip ETF detail candidates after consecutive expected-missing failures until next_attempt_after_utc"
   },
   "counts": {
-    "tracked": 117,
+    "tracked": 194,
     "cooldown": 41,
-    "updated": 0,
+    "updated": 109,
     "cleared": 0
   },
-  "updated": [],
+  "updated": [
+    "AAAD",
+    "AAAP",
+    "ACGO",
+    "ACII",
+    "ACYQ",
+    "ADDS",
+    "AFGR",
+    "AMEI",
+    "AMEM",
+    "AMGR",
+    "AMHI",
+    "APDB",
+    "AQLG",
+    "ARLI",
+    "ARMW",
+    "ARMY",
+    "ASD",
+    "ASEC",
+    "BABW",
+    "BAVA",
+    "BCEM",
+    "BD",
+    "BGCG",
+    "BGEG",
+    "BGGG",
+    "BGIA",
+    "BHYP",
+    "BKLG",
+    "BRCE",
+    "BREE",
+    "BRIE",
+    "BROL",
+    "BRSM",
+    "BSCA",
+    "BSGR",
+    "BSGT",
+    "BSJY",
+    "BSOL",
+    "BSTS",
+    "BSTU",
+    "BSTV",
+    "BTCK",
+    "BWOW",
+    "CBOO",
+    "CBTO",
+    "CBXO",
+    "CGOV",
+    "CHNL",
+    "CHYG",
+    "CIEI",
+    "CIVG",
+    "CJUN",
+    "CLNK",
+    "CLOO",
+    "COMD",
+    "COSW",
+    "CRDD",
+    "CRIB",
+    "CSEN",
+    "CTJN",
+    "DDFZ",
+    "DDSQ",
+    "DDTZ",
+    "DFAL",
+    "DLMY",
+    "DOJE",
+    "DQJN",
+    "DRMP",
+    "DWWN",
+    "EDGQ",
+    "EDGX",
+    "EHCC",
+    "EMEM",
+    "EMJN",
+    "EMSC",
+    "ESUM",
+    "ETHB",
+    "EZMO",
+    "FHIL",
+    "FITZ",
+    "FOTO",
+    "FPAA",
+    "FREI",
+    "FSOL",
+    "FSTB",
+    "GAVA",
+    "GCSH",
+    "GDOG",
+    "GDT",
+    "GDXW",
+    "GEQ",
+    "GISC",
+    "GLDW",
+    "GSUI",
+    "HBMX",
+    "HBR",
+    "HJUN",
+    "HRSK",
+    "HYPG",
+    "IBGM",
+    "IBIM",
+    "IDEQ",
+    "IDJN",
+    "IDMY",
+    "IINC",
+    "INYY",
+    "JADB",
+    "JANI",
+    "JELM"
+  ],
   "cleared": [],
   "entries": {
     "AAAD": {
       "ticker": "AAAD",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "AAAP": {
       "ticker": "AAAP",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "ACGO": {
+      "ticker": "ACGO",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "ACII": {
       "ticker": "ACII",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "ACLZ": {
       "ticker": "ACLZ",
@@ -64,30 +183,30 @@
     },
     "ACYQ": {
       "ticker": "ACYQ",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "ADDS": {
       "ticker": "ADDS",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "AFGR": {
       "ticker": "AFGR",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "AIQD": {
       "ticker": "AIQD",
@@ -109,39 +228,102 @@
     },
     "AMEI": {
       "ticker": "AMEI",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "AMEM": {
       "ticker": "AMEM",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "AMGR": {
       "ticker": "AMGR",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "AMHI": {
       "ticker": "AMHI",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "APDB": {
+      "ticker": "APDB",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "AQLG": {
+      "ticker": "AQLG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "ARLI": {
+      "ticker": "ARLI",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "ARMW": {
+      "ticker": "ARMW",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "ARMY": {
+      "ticker": "ARMY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "ASD": {
+      "ticker": "ASD",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "ASEC": {
+      "ticker": "ASEC",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "ASTG": {
       "ticker": "ASTG",
@@ -152,77 +334,221 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "BABW": {
+      "ticker": "BABW",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "BAVA": {
       "ticker": "BAVA",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "BCEM": {
+      "ticker": "BCEM",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "BD": {
       "ticker": "BD",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BGCG": {
+      "ticker": "BGCG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "BGEG": {
+      "ticker": "BGEG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BGGG": {
+      "ticker": "BGGG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BGIA": {
+      "ticker": "BGIA",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BHYP": {
+      "ticker": "BHYP",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BKLG": {
+      "ticker": "BKLG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BRCE": {
+      "ticker": "BRCE",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BREE": {
+      "ticker": "BREE",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BRIE": {
+      "ticker": "BRIE",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BROL": {
+      "ticker": "BROL",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "BRSM": {
       "ticker": "BRSM",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "BSCA": {
       "ticker": "BSCA",
-      "last_attempt_utc": "2026-06-18T17:17:44Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BSGR": {
+      "ticker": "BSGR",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "BSGT": {
       "ticker": "BSGT",
-      "last_attempt_utc": "2026-06-18T19:31:56Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "BSJY": {
       "ticker": "BSJY",
-      "last_attempt_utc": "2026-06-18T17:17:44Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BSOL": {
+      "ticker": "BSOL",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "BSTS": {
+      "ticker": "BSTS",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "BSTU": {
       "ticker": "BSTU",
-      "last_attempt_utc": "2026-06-18T17:17:44Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "BSTV": {
       "ticker": "BSTV",
-      "last_attempt_utc": "2026-06-18T17:17:44Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "BTCK": {
+      "ticker": "BTCK",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "BTCU": {
       "ticker": "BTCU",
@@ -232,6 +558,15 @@
       "next_attempt_after_utc": "2026-07-03T04:44:19Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
+    },
+    "BWOW": {
+      "ticker": "BWOW",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "CAMC": {
       "ticker": "CAMC",
@@ -251,6 +586,33 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "CBOO": {
+      "ticker": "CBOO",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CBTO": {
+      "ticker": "CBTO",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CBXO": {
+      "ticker": "CBXO",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "CDNG": {
       "ticker": "CDNG",
       "last_attempt_utc": "2026-06-26T04:44:19Z",
@@ -260,23 +622,77 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "CGOV": {
+      "ticker": "CGOV",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CHNL": {
+      "ticker": "CHNL",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CHYG": {
+      "ticker": "CHYG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CIEI": {
+      "ticker": "CIEI",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CIVG": {
+      "ticker": "CIVG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CJUN": {
+      "ticker": "CJUN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "CLNK": {
       "ticker": "CLNK",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "CLOO": {
       "ticker": "CLOO",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "COIO": {
       "ticker": "COIO",
@@ -287,14 +703,41 @@
       "last_status": "error",
       "last_provider": null
     },
-    "CRIB": {
-      "ticker": "CRIB",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+    "COMD": {
+      "ticker": "COMD",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "COSW": {
+      "ticker": "COSW",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CRDD": {
+      "ticker": "CRDD",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "CRIB": {
+      "ticker": "CRIB",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "CRUC": {
       "ticker": "CRUC",
@@ -305,23 +748,86 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
-    "DFAL": {
-      "ticker": "DFAL",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+    "CSEN": {
+      "ticker": "CSEN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "CTJN": {
+      "ticker": "CTJN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DDFZ": {
+      "ticker": "DDFZ",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DDSQ": {
+      "ticker": "DDSQ",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DDTZ": {
+      "ticker": "DDTZ",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DFAL": {
+      "ticker": "DFAL",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DLMY": {
+      "ticker": "DLMY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DOJE": {
+      "ticker": "DOJE",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "DQJN": {
       "ticker": "DQJN",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 1,
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "DRAL": {
       "ticker": "DRAL",
@@ -332,23 +838,77 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "DRMP": {
+      "ticker": "DRMP",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "DWWN": {
+      "ticker": "DWWN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "EDGQ": {
       "ticker": "EDGQ",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
     "EDGX": {
       "ticker": "EDGX",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "EHCC": {
+      "ticker": "EHCC",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "EMEM": {
+      "ticker": "EMEM",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "EMJN": {
+      "ticker": "EMJN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "EMSC": {
+      "ticker": "EMSC",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "ENTL": {
       "ticker": "ENTL",
@@ -361,12 +921,21 @@
     },
     "ESUM": {
       "ticker": "ESUM",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "ETHB": {
+      "ticker": "ETHB",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "EVMU": {
       "ticker": "EVMU",
@@ -377,11 +946,38 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "EZMO": {
+      "ticker": "EZMO",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "FEAT": {
       "ticker": "FEAT",
       "last_attempt_utc": "2026-06-19T10:07:15Z",
       "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "FHIL": {
+      "ticker": "FHIL",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "FITZ": {
+      "ticker": "FITZ",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
@@ -404,6 +1000,24 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "FOTO": {
+      "ticker": "FOTO",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "FPAA": {
+      "ticker": "FPAA",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "FPSX": {
       "ticker": "FPSX",
       "last_attempt_utc": "2026-06-26T04:44:19Z",
@@ -412,6 +1026,33 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": "yahoo_finance"
+    },
+    "FREI": {
+      "ticker": "FREI",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "FSOL": {
+      "ticker": "FSOL",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "FSTB": {
+      "ticker": "FSTB",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "FUSD": {
       "ticker": "FUSD",
@@ -422,14 +1063,59 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "GAVA": {
+      "ticker": "GAVA",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "GCSH": {
       "ticker": "GCSH",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "GDOG": {
+      "ticker": "GDOG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "GDT": {
+      "ticker": "GDT",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "GDXW": {
+      "ticker": "GDXW",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "GEQ": {
+      "ticker": "GEQ",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "GFSG": {
       "ticker": "GFSG",
@@ -442,12 +1128,57 @@
     },
     "GISC": {
       "ticker": "GISC",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "GLDW": {
+      "ticker": "GLDW",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "GSUI": {
+      "ticker": "GSUI",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "HBMX": {
+      "ticker": "HBMX",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "HBR": {
+      "ticker": "HBR",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "HJUN": {
+      "ticker": "HJUN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "HPEL": {
       "ticker": "HPEL",
@@ -460,39 +1191,111 @@
     },
     "HRSK": {
       "ticker": "HRSK",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
     },
-    "IDEQ": {
-      "ticker": "IDEQ",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "IINC": {
-      "ticker": "IINC",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+    "HYPG": {
+      "ticker": "HYPG",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "IBGM": {
+      "ticker": "IBGM",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "IBIM": {
+      "ticker": "IBIM",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "IDEQ": {
+      "ticker": "IDEQ",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
+      "last_status": "error",
+      "last_provider": null
+    },
+    "IDJN": {
+      "ticker": "IDJN",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "IDMY": {
+      "ticker": "IDMY",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "IINC": {
+      "ticker": "IINC",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 2,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "INYY": {
       "ticker": "INYY",
-      "last_attempt_utc": "2026-06-26T04:44:19Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-07-03T04:44:19Z",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 5,
+      "next_attempt_after_utc": "2026-07-07T11:09:51Z",
       "last_status": "error",
-      "last_provider": "yahoo_finance"
+      "last_provider": null
+    },
+    "JADB": {
+      "ticker": "JADB",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "JANI": {
+      "ticker": "JANI",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "JELM": {
+      "ticker": "JELM",
+      "last_attempt_utc": "2026-06-30T11:09:51Z",
+      "failure_reason": "HTTPError: HTTP Error 404: Not Found",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "JPO": {
       "ticker": "JPO",

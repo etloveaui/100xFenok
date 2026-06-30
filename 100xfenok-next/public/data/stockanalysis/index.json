@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-06-30T00:36:03Z",
+  "generated_at": "2026-06-30T11:10:00Z",
   "counts": {
     "etf_universe": 5333,
     "etf_candidate_total": 5390,
@@ -10,7 +10,7 @@
     "etf_detail_missing": 97,
     "etf_detail_coverage_pct": 98.2,
     "etf_detail_primary_pct": 84.92,
-    "etfs_requested": 35,
+    "etfs_requested": 120,
     "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
@@ -18,408 +18,1125 @@
     "financials_requested": 0,
     "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 31,
-    "failed": 4,
+    "ok": 11,
+    "failed": 109,
     "hard_failed": 0,
-    "etfs_stockanalysis_ok": 1,
-    "etfs_yahoo_fallback_ok": 30,
-    "etfs_still_pending": 4,
-    "incremental_etf_backfill_candidates": 0,
-    "incremental_etf_backfill_selected": 0,
+    "etfs_stockanalysis_ok": 11,
+    "etfs_yahoo_fallback_ok": 0,
+    "etfs_still_pending": 109,
+    "incremental_etf_backfill_candidates": 244,
+    "incremental_etf_backfill_selected": 120,
     "incremental_etf_cooldown_skipped": 0,
-    "incremental_etf_ledger_tracked": 0,
-    "incremental_etf_ledger_cooldown": 0
+    "incremental_etf_ledger_tracked": 194,
+    "incremental_etf_ledger_cooldown": 41
   },
   "results": [
     {
-      "ticker": "QETH",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/QETH.json",
-      "financials_path": null,
-      "latency_ms": 3369,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "QTAP",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/QTAP.json",
-      "financials_path": null,
-      "latency_ms": 2085,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "QTJA",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/QTJA.json",
-      "financials_path": null,
-      "latency_ms": 2214,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "QTOC",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/QTOC.json",
-      "financials_path": null,
-      "latency_ms": 2091,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "RBUF",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/RBUF.json",
-      "financials_path": null,
-      "latency_ms": 2174,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "RDTE",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/RDTE.json",
-      "financials_path": null,
-      "latency_ms": 2401,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "ROMO",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/ROMO.json",
-      "financials_path": null,
-      "latency_ms": 2244,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "RSJN",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/RSJN.json",
-      "financials_path": null,
-      "latency_ms": 2111,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "RYLG",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/RYLG.json",
-      "financials_path": null,
-      "latency_ms": 2249,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "SEPU",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/SEPU.json",
-      "financials_path": null,
-      "latency_ms": 2010,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "SGOL",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/SGOL.json",
-      "financials_path": null,
-      "latency_ms": 2350,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "SIVR",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/SIVR.json",
-      "financials_path": null,
-      "latency_ms": 2325,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "SLV",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/SLV.json",
-      "financials_path": null,
-      "latency_ms": 2642,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "SPBC",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/SPBC.json",
-      "financials_path": null,
-      "latency_ms": 2288,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "SPUC",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/SPUC.json",
-      "financials_path": null,
-      "latency_ms": 2367,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "STXF",
+      "ticker": "AAAD",
       "asset_type": "etf",
       "status": "error",
-      "provider": "yahoo_finance",
+      "provider": null,
       "path": null,
-      "latency_ms": 2036,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "latency_ms": 359,
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TAGS",
+      "ticker": "AAAP",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TAGS.json",
-      "financials_path": null,
-      "latency_ms": 2390,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 318,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TBIL",
+      "ticker": "ACGO",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TBIL.json",
-      "financials_path": null,
-      "latency_ms": 2088,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 302,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TBJL",
+      "ticker": "ACII",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TBJL.json",
-      "financials_path": null,
-      "latency_ms": 2341,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 320,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TBLL",
+      "ticker": "ACYQ",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TBLL.json",
-      "financials_path": null,
-      "latency_ms": 2398,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 296,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TCAI",
+      "ticker": "ADDS",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TCAI.json",
-      "financials_path": null,
-      "latency_ms": 2045,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 309,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TETH",
+      "ticker": "AFGR",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TETH.json",
-      "financials_path": null,
-      "latency_ms": 2748,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 350,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "TFJL",
+      "ticker": "AMEI",
       "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TFJL.json",
-      "financials_path": null,
-      "latency_ms": 2110,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 289,
+      "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "THIR",
+      "ticker": "AMEM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 288,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "AMGR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 291,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "AMHI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 276,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "AMUN",
       "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
-      "path": "etfs/THIR.json",
+      "path": "etfs/AMUN.json",
       "financials_path": null,
-      "latency_ms": 2336,
+      "latency_ms": 606,
       "stockanalysis_error": null,
       "error": null
     },
     {
-      "ticker": "THY",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/THY.json",
-      "financials_path": null,
-      "latency_ms": 2385,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "TJAN",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TJAN.json",
-      "financials_path": null,
-      "latency_ms": 2162,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "TJUL",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TJUL.json",
-      "financials_path": null,
-      "latency_ms": 2262,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "TNGY",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TNGY.json",
-      "financials_path": null,
-      "latency_ms": 2024,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "TSLW",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TSLW.json",
-      "financials_path": null,
-      "latency_ms": 2810,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "TSPY",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TSPY.json",
-      "financials_path": null,
-      "latency_ms": 2559,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "TYA",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/TYA.json",
-      "financials_path": null,
-      "latency_ms": 2345,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "UFIV",
-      "asset_type": "etf",
-      "status": "fallback_ok",
-      "provider": "yahoo_finance",
-      "path": "etfs/UFIV.json",
-      "financials_path": null,
-      "latency_ms": 2386,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "error": null
-    },
-    {
-      "ticker": "XLBI",
+      "ticker": "APDB",
       "asset_type": "etf",
       "status": "error",
-      "provider": "yahoo_finance",
+      "provider": null,
       "path": null,
-      "latency_ms": 1904,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "latency_ms": 298,
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "XLEI",
+      "ticker": "AQLG",
       "asset_type": "etf",
       "status": "error",
-      "provider": "yahoo_finance",
+      "provider": null,
       "path": null,
-      "latency_ms": 2043,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "latency_ms": 414,
       "error": "HTTPError: HTTP Error 404: Not Found"
     },
     {
-      "ticker": "XLSI",
+      "ticker": "ARLI",
       "asset_type": "etf",
       "status": "error",
-      "provider": "yahoo_finance",
+      "provider": null,
       "path": null,
-      "latency_ms": 1621,
-      "stockanalysis_error": "HTTPError: HTTP Error 404: Not Found",
-      "fallback_error": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "latency_ms": 291,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ARMW",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 292,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ARMY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 295,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ASCI",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/ASCI.json",
+      "financials_path": null,
+      "latency_ms": 657,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "ASD",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 275,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ASEC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 293,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BABW",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 311,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BAVA",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 292,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BCEM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 307,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BD",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 294,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BGCG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 280,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BGEG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 269,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BGGG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 277,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BGIA",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 258,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BHYP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 302,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BKLG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 290,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BRCE",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 293,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BREE",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 295,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BRIE",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 298,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BROL",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 274,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BRSM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 277,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSCA",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 291,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSGR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 279,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSGT",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 289,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSJY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 286,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSOL",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 289,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTS",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 288,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTU",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 300,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BSTV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 280,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BTCK",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 281,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "BWOW",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 292,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CBOO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 359,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CBTO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 315,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CBXO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 310,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CGOV",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 296,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CHNL",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 263,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CHYG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 278,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CIEI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 294,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CIVG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 287,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CJUN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 292,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CLNK",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 299,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CLOO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 285,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CMAY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CMAY.json",
+      "financials_path": null,
+      "latency_ms": 592,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "COMD",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 264,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "COSW",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 285,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CRDD",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 275,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CRIB",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 315,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CRUX",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/CRUX.json",
+      "financials_path": null,
+      "latency_ms": 617,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "CSEN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 290,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "CTJN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 275,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DDFY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DDFY.json",
+      "financials_path": null,
+      "latency_ms": 586,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DDFZ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 304,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DDSQ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 268,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DDTY",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DDTY.json",
+      "financials_path": null,
+      "latency_ms": 585,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DDTZ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 294,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DFAL",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 288,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DHLX",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DHLX.json",
+      "financials_path": null,
+      "latency_ms": 602,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DLMY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 270,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DOJE",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 273,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DQJN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 288,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DRMP",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 270,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "DUSG",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/DUSG.json",
+      "financials_path": null,
+      "latency_ms": 586,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "DWWN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 300,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EDGQ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 333,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EDGX",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 293,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EHCC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 277,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EMEM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 278,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EMJN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 297,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EMSC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 319,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ESUM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 291,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "ETHB",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 307,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "EZMO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 298,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FHIL",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 295,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FITZ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 273,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FOTO",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 302,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FPAA",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 272,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FREI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 278,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FSOL",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 284,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "FSTB",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 281,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GAVA",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 298,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GCSH",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 275,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GDOG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 283,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GDT",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 295,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GDXW",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 272,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GEQ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 275,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GISC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 278,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GLDW",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 292,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "GSUI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 305,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HBMX",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 269,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HBR",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 279,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HJUN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 281,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HRSK",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 274,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "HYPG",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 284,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "IBCB",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IBCB.json",
+      "financials_path": null,
+      "latency_ms": 591,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IBGM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 305,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "IBHM",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IBHM.json",
+      "financials_path": null,
+      "latency_ms": 598,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IBIM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 291,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "IBTR",
+      "asset_type": "etf",
+      "status": "ok",
+      "provider": "stockanalysis",
+      "path": "etfs/IBTR.json",
+      "financials_path": null,
+      "latency_ms": 595,
+      "stockanalysis_error": null,
+      "error": null
+    },
+    {
+      "ticker": "IDEQ",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 264,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "IDJN",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 268,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "IDMY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 297,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "IINC",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 300,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "INYY",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 277,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "JADB",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 281,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "JANI",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 314,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "ticker": "JELM",
+      "asset_type": "etf",
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 293,
       "error": "HTTPError: HTTP Error 404: Not Found"
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-06-30T00:36:03Z",
+    "generated_at": "2026-06-30T11:10:00Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5390,
@@ -447,15 +1164,2832 @@
         "retry_pending": 56
       },
       "missing_failure_breakdown": {
-        "external_quote_type_mismatch": 97
+        "external_quote_type_mismatch": 72,
+        "source_unavailable": 25
       },
-      "pending_tracked": 117,
+      "pending_tracked": 194,
       "pending_cooldown": 41,
       "pending_tracked_missing": 97
     }
   },
   "surface_results": null,
-  "incremental_etf_backfill": null,
-  "pending_ledger": null,
+  "incremental_etf_backfill": {
+    "schema_version": "stockanalysis/v1",
+    "source": "stockanalysis",
+    "operation": "incremental_etf_backfill_select",
+    "generated_at": "2026-06-30T11:08:13Z",
+    "policy": {
+      "limit": 120,
+      "max_age_hours": null,
+      "cooldown_days": null,
+      "cooldown_failure_threshold": null,
+      "required_history_periods": [
+        "daily_1y"
+      ],
+      "history_gaps_only": true,
+      "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
+      "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+      "min_daily_1y_rows": 200
+    },
+    "counts": {
+      "candidates": 244,
+      "selected": 120,
+      "missing": 0,
+      "fallback_retry": 0,
+      "history_gap": 244,
+      "inception_limited_history_gap": 0,
+      "total_history_gap": 244,
+      "stale": 0,
+      "cooldown_skipped": 0,
+      "prior_failed_candidates": 72,
+      "daily_1y_missing_file": 62,
+      "daily_1y_short_rows": 182,
+      "ledger_tracked": 194,
+      "ledger_cooldown": 41
+    },
+    "selected": [
+      {
+        "ticker": "AAAD",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 0,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "AAAP",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 1,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ACGO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 2,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 17,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ACII",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 3,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "ACYQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 4,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ADDS",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 5,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "AFGR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 6,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "AMEI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 7,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "AMEM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 8,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "AMGR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 9,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "AMHI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 10,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "AMUN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 11,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "1986-03-17",
+        "daily_1y_actual_rows": 172,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "APDB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 12,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 37,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "AQLG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 13,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ARLI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 14,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 60,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ARMW",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 15,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 170,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ARMY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 16,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 190,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ASCI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 17,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "1996-09-30",
+        "daily_1y_actual_rows": 172,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ASD",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 18,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 19,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ASEC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 19,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BABW",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 20,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 170,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BAVA",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 21,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "BCEM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 22,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 56,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BD",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 23,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BGCG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 24,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 20,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BGEG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 25,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 18,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BGGG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 26,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 20,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BGIA",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 27,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 18,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BHYP",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 28,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BKLG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 29,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 5,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BRCE",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 30,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 171,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BREE",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 31,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 80,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BRIE",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 32,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 171,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BROL",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 33,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 23,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BRSM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 34,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "BSCA",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 35,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSGR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 36,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSGT",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 37,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSJY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 38,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSOL",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 39,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 167,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSTS",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 40,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSTU",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 41,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BSTV",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 42,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 13,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BTCK",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 43,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 16,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "BWOW",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 44,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 145,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CBOO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 45,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 181,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CBTO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 46,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 182,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CBXO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 47,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 182,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CGOV",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 48,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 17,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CHNL",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 49,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 60,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CHYG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 50,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 16,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CIEI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 51,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 17,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CIVG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 52,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 17,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CJUN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 53,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 18,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CLNK",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 54,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "CLOO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 55,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "CMAY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 56,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 38,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "COMD",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 57,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 95,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "COSW",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 58,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 170,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CRDD",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 59,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 61,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CRIB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 60,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CRUX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 61,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "1986-01-09",
+        "daily_1y_actual_rows": 72,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CSEN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 62,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 10,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "CTJN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 63,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 18,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DDFY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 64,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 38,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DDFZ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 65,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 20,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DDSQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 66,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 122,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DDTY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 67,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 38,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DDTZ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 68,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 20,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DFAL",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 69,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 5,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DHLX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 70,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2021-02-26",
+        "daily_1y_actual_rows": 187,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DLMY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 71,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 29,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DOJE",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 72,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 195,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DQJN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 73,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 6,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DRMP",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 74,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 12,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DUSG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 75,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2012-12-20",
+        "daily_1y_actual_rows": 35,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "DWWN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 76,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 25,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "EDGQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 77,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "EDGX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 78,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "EHCC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 79,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 60,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "EMEM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 80,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 27,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "EMJN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 81,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 19,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "EMSC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 82,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 26,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "ESUM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 83,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "ETHB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 84,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 75,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "EZMO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 85,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 175,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FHIL",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 86,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 7,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FITZ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 87,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FOTO",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 88,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 21,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FPAA",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 89,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 15,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FREI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 90,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 5,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FSOL",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 91,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "FSTB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 92,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 7,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GAVA",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 93,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 75,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GCSH",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 94,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "GDOG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 95,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 148,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GDT",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 96,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 109,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GDXW",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 97,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 165,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GEQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 98,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GISC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 99,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "GLDW",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 100,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 165,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "GSUI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 101,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 95,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "HBMX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 102,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 19,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "HBR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 103,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 167,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "HJUN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 104,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 18,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "HRSK",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 105,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "HYPG",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 106,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 18,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IBCB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 107,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 63,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IBGM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 108,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 65,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IBHM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 109,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 63,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IBIM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 110,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IBTR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 111,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 64,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IDEQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 112,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "IDJN",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 113,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 19,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IDMY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 114,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 36,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "IINC",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 1,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 115,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 1,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "INYY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 4,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 116,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 0,
+        "daily_1y_min_rows": 200,
+        "missing_file": true,
+        "pending_consecutive_failures": 4,
+        "pending_next_attempt_after_utc": "2026-07-03T04:44:19Z"
+      },
+      {
+        "ticker": "JADB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 117,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 37,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "JANI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 118,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 102,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      },
+      {
+        "ticker": "JELM",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 119,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 47,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": null
+      }
+    ],
+    "cooldown": [],
+    "inception_limited": [],
+    "pending_ledger": {
+      "path": "backfill/pending_ledger.json",
+      "generated_at": "2026-06-30T11:09:51Z",
+      "counts": {
+        "tracked": 194,
+        "cooldown": 41,
+        "updated": 109,
+        "cleared": 0
+      }
+    }
+  },
+  "pending_ledger": {
+    "path": "backfill/pending_ledger.json",
+    "counts": {
+      "tracked": 194,
+      "cooldown": 41,
+      "updated": 109,
+      "cleared": 0
+    }
+  },
   "stop_reason": null
 }
