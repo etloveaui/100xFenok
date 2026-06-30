@@ -218,7 +218,7 @@ function buildReport() {
         : null,
       cadence: {
         yf_finance: "scheduled branch processes ETF history gaps through one rolling shard per run, cap 140",
-        stockanalysis: "scheduled branch uses incremental ETF detail backfill, cap 40 per run",
+        stockanalysis: "weekday scheduled branches are split: KST 07:50 scored-ETF daily_1y continuity backfill cap 120; KST 08:50 Core Basket + surface incremental refresh with Core Basket priority and incremental cap 40",
         truth: actualEtfScored > 0
           ? "ETF scores exist in the separate ETF artifact. Daily readiness now also requires StockAnalysis ETF detail daily 1Y continuity (no fetchable gaps)."
           : "ETF inputs are normalized and accumulated separately, but ETF scoring/public/daily gate is not done.",
@@ -312,7 +312,7 @@ function printHuman(report) {
   const s3EvidenceText = s3.evidence_based_readiness
     ? ` evidence_ready={public:${s3.evidence_based_readiness.public_ready},daily:${s3.evidence_based_readiness.daily_ready},gated:${s3.evidence_based_readiness.gated_ready}}`
     : "";
-  console.log(`- S3 ETF lane: stage=${s3.stage} computed_stage=${s3.computed_stage} denominator=${s3.denominator} scored_public_etf=${s3.scored_public_etf} scored_sources=[${sourceText}] ${historyText} public_daily_gated=${s3.public_daily_gated}${s3EvidenceText} cadence="YF one shard/140; StockAnalysis incremental 40/run" blockers=${s3.remaining_blockers.join(",") || "none"}`);
+  console.log(`- S3 ETF lane: stage=${s3.stage} computed_stage=${s3.computed_stage} denominator=${s3.denominator} scored_public_etf=${s3.scored_public_etf} scored_sources=[${sourceText}] ${historyText} public_daily_gated=${s3.public_daily_gated}${s3EvidenceText} cadence="YF one shard/140; StockAnalysis daily1y 120/run + Core Basket priority 40 incremental/run" blockers=${s3.remaining_blockers.join(",") || "none"}`);
   console.log(`  status: sources=[${compactSources(s3.operator_status.last_sources)}] blocking_gates=${s3.operator_status.blocking_gates.join(",") || "none"} done_claim_allowed=${s3.operator_status.done_claim_allowed}`);
   for (const warning of report.warnings) console.log(`WARN: ${warning.message}`);
   for (const error of report.errors) console.error(`ERROR: ${error.message}`);

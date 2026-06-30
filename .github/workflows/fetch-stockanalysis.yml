@@ -5,6 +5,8 @@ name: Fetch StockAnalysis Data
 
 on:
   schedule:
+    # Weekday scored-ETF daily 1Y continuity catch-up (KST Tue-Sat 07:50).
+    - cron: '50 22 * * 1-5'
     # Weekday bounded ETF/surface catch-up after US close (KST Tue-Sat 08:50).
     - cron: '50 23 * * 1-5'
     # 매주 일요일 23:20 UTC (한국 월요일 08:20) — Yahoo weekly refresh afterglow
@@ -125,19 +127,31 @@ jobs:
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           if [ "$EVENT_NAME" = "schedule" ]; then
             INPUT_FETCH_FINANCIALS="false"
             INPUT_DISCOVER_UNIVERSE="false"
             INPUT_UNIVERSE_BACKFILL="false"
             INPUT_INCREMENTAL_ETF_BACKFILL="true"
-            INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"
-            INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY_MAX_AGE_HOURS:-168}"
             INPUT_YF_ETF_FALLBACK="true"
-            INPUT_FETCH_SURFACES="true"
-            INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
             INPUT_SLEEP="${STOCKANALYSIS_DAILY_SLEEP:-0.5}"
             INPUT_MAX_UNIVERSE_PAGES="${STOCKANALYSIS_DAILY_MAX_UNIVERSE_PAGES:-5}"
+            if [ "$EVENT_SCHEDULE" = "50 22 * * 1-5" ]; then
+              INPUT_HISTORY_GAPS_ONLY="true"
+              INPUT_REQUIRED_HISTORY_PERIODS="daily_1y"
+              INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT:-120}"
+              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY1Y_MAX_AGE_HOURS:-168}"
+              INPUT_FETCH_SURFACES="false"
+              INPUT_SURFACE_SET=""
+            else
+              INPUT_HISTORY_GAPS_ONLY="false"
+              INPUT_REQUIRED_HISTORY_PERIODS=""
+              INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"
+              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY_MAX_AGE_HOURS:-168}"
+              INPUT_FETCH_SURFACES="true"
+              INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
+            fi
           fi
           if [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"
@@ -212,9 +226,12 @@ jobs:
           if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
           npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
 
-      - name: Build ETF core daily basket
+      - name: Build Fenok Edge ETF derived readiness
         run: |
           node scripts/build-fenok-etf-core-daily-basket.mjs --check
+          node scripts/build-fenok-edge-coverage-index.mjs
+          node scripts/write-fenok-etf-daily1y-readiness.mjs --check
+          npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
           mkdir -p 100xfenok-next/public/data/computed 100xfenok-next/public/data/admin
           cp data/computed/fenok_etf_core_daily_basket_summary.json 100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json
           rm -f 100xfenok-next/public/data/admin/fenok-etf-core-daily-basket.json
