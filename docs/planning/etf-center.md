@@ -161,6 +161,13 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
   `monthly_3y` / `monthly_5y`, without network calls. The written
   `incremental_plan_latest.json` is a plan artifact; `incremental_latest.json`
   remains the completed-run evidence.
+- **Fenok Edge daily-1Y exact plan**: for the S3 scored-ETF daily gate, run
+  `python3 scripts/fetch-stockanalysis.py --incremental-etf-backfill --incremental-etf-only --history-gaps-only --required-history-periods daily_1y --incremental-etf-limit <N>`.
+  In this `daily_1y` mode the selector first consumes
+  `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`, so the bounded run
+  targets only the scored-ETF fetchable daily-1Y blocker rows instead of generic
+  missing/fallback/stale ETF retries. Use `--plan-only` to verify the exact
+  batch before a live fetch.
 - **History gap QA summary**: run `npm run qa:history-gap` from
   `100xfenok-next/` before dispatching a live history refresh. It directly
   scans local primary StockAnalysis ETF detail files, reconciles the dispatch

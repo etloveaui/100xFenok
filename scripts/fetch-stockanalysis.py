@@ -45,6 +45,8 @@ DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
+FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH = "admin/fenok-edge-etf-daily1y-fetchable-plan.json"
+DAILY_1Y_MIN_ROWS = 200
 NON_DIRECTIONAL_SHORT_RE = re.compile(
     r"\b(?:"
     r"short[-\s]?(?:term|duration|maturity|intermediate)"
@@ -1577,9 +1579,16 @@ def missing_history_periods(payload: dict | None, required_periods: tuple[str, .
     missing = []
     for period_key in required_periods:
         rows = history_period_rows(payload, period_key)
-        if not rows:
+        min_rows = history_period_min_rows(period_key)
+        if not rows or (min_rows is not None and len(rows) < min_rows):
             missing.append(period_key)
     return missing
+
+
+def history_period_min_rows(period_key: str) -> int | None:
+    if period_key == "daily_1y":
+        return DAILY_1Y_MIN_ROWS
+    return None
 
 
 def history_period_required_years(period_key: str) -> int | None:
@@ -1629,6 +1638,15 @@ def etf_inception_date(payload: dict | None) -> datetime | None:
 
 def history_gap_classification(payload: dict | None, required_periods: tuple[str, ...], now_dt: datetime) -> dict:
     missing = missing_history_periods(payload, required_periods)
+    row_counts = {
+        period_key: len(history_period_rows(payload, period_key) or [])
+        for period_key in required_periods
+    }
+    min_rows = {
+        period_key: history_period_min_rows(period_key)
+        for period_key in required_periods
+        if history_period_min_rows(period_key) is not None
+    }
     inception = etf_inception_date(payload)
     fetchable = []
     inception_limited = []
@@ -1647,6 +1665,8 @@ def history_gap_classification(payload: dict | None, required_periods: tuple[str
         "fetchable_missing_history_periods": fetchable,
         "inception_limited_history_periods": inception_limited,
         "inception_date": inception.date().isoformat() if inception is not None else None,
+        "history_period_row_counts": row_counts,
+        "history_period_min_rows": min_rows,
     }
 
 
@@ -1825,6 +1845,108 @@ def etf_detail_backfill_reason(
     if max_age_hours > 0 and (age_hours is None or age_hours >= max_age_hours):
         return "stale", age_hours
     return None, age_hours
+
+
+def is_daily_1y_history_gap_mode(required_history_periods: tuple[str, ...], history_gaps_only: bool) -> bool:
+    return history_gaps_only and required_history_periods == ("daily_1y",)
+
+
+def load_daily_1y_fetchable_plan_rows() -> list[dict] | None:
+    payload = read_json(OUT_DIR.parent / FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH)
+    if not isinstance(payload, dict):
+        return None
+    rows = payload.get("rows")
+    tickers = payload.get("tickers")
+    if not isinstance(rows, list) or not isinstance(tickers, list):
+        return None
+    normalized_rows = []
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        ticker = clean_symbol(str(row.get("ticker") or ""))
+        if not ticker or ticker in seen:
+            continue
+        normalized_rows.append({**row, "ticker": ticker})
+        seen.add(ticker)
+    normalized_tickers = [ticker for ticker in (clean_symbol(str(item or "")) for item in tickers) if ticker]
+    if normalized_tickers != [row["ticker"] for row in normalized_rows]:
+        return None
+    return normalized_rows
+
+
+def daily_1y_plan_candidate_summary(
+    plan_rows: list[dict],
+    limit: int,
+    exclude: set[str],
+    pending_entries: dict,
+) -> dict:
+    candidates = []
+    for order, plan_row in enumerate(plan_rows):
+        ticker = plan_row["ticker"]
+        if ticker in exclude:
+            continue
+        pending_entry = pending_entries.get(ticker) if isinstance(pending_entries, dict) else None
+        prior_failures = parse_int((pending_entry or {}).get("consecutive_failures")) or 0
+        fetchable_missing = plan_row.get("fetchable_missing")
+        missing_periods = fetchable_missing if isinstance(fetchable_missing, list) and fetchable_missing else ["daily_1y"]
+        candidates.append(
+            {
+                "ticker": ticker,
+                "source": "fenok_edge_etf_daily1y_fetchable_plan",
+                "reason": "history_gap",
+                "age_hours": None,
+                "prior_failures": prior_failures,
+                "priority": 0,
+                "reason_priority": 2,
+                "plan_order": order,
+                "missing_history_periods": missing_periods,
+                "fetchable_missing_history_periods": missing_periods,
+                "inception_limited_history_periods": [],
+                "inception_date": plan_row.get("inception_date"),
+                "daily_1y_actual_rows": parse_int(plan_row.get("actual_rows")) or 0,
+                "daily_1y_min_rows": DAILY_1Y_MIN_ROWS,
+                "missing_file": bool(plan_row.get("missing_file")),
+                "pending_consecutive_failures": prior_failures,
+                "pending_next_attempt_after_utc": (pending_entry or {}).get("next_attempt_after_utc"),
+            }
+        )
+
+    selected = candidates[:limit] if limit > 0 else candidates
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "stockanalysis",
+        "operation": "incremental_etf_backfill_select",
+        "generated_at": now_iso(),
+        "policy": {
+            "limit": limit,
+            "max_age_hours": None,
+            "cooldown_days": None,
+            "cooldown_failure_threshold": None,
+            "required_history_periods": ["daily_1y"],
+            "history_gaps_only": True,
+            "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
+            "plan_path": f"data/{FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH}",
+            "min_daily_1y_rows": DAILY_1Y_MIN_ROWS,
+        },
+        "counts": {
+            "candidates": len(candidates),
+            "selected": len(selected),
+            "missing": 0,
+            "fallback_retry": 0,
+            "history_gap": len(candidates),
+            "inception_limited_history_gap": 0,
+            "total_history_gap": len(candidates),
+            "stale": 0,
+            "cooldown_skipped": 0,
+            "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
+            "daily_1y_missing_file": sum(1 for row in candidates if row.get("missing_file")),
+            "daily_1y_short_rows": sum(1 for row in candidates if not row.get("missing_file")),
+        },
+        "selected": selected,
+        "cooldown": [],
+        "inception_limited": [],
+    }
 
 
 def unique_symbols(items: list[str]) -> list[str]:
@@ -2097,6 +2219,11 @@ def incremental_etf_backfill_candidates(
     now_dt = now_dt or datetime.now(timezone.utc)
     pending_ledger = pending_ledger if isinstance(pending_ledger, dict) else load_pending_ledger()
     pending_entries = pending_ledger.get("entries") if isinstance(pending_ledger.get("entries"), dict) else {}
+    if is_daily_1y_history_gap_mode(required_history_periods, history_gaps_only):
+        daily_1y_plan_rows = load_daily_1y_fetchable_plan_rows()
+        if daily_1y_plan_rows is not None:
+            return daily_1y_plan_candidate_summary(daily_1y_plan_rows, limit, exclude, pending_entries)
+
     sources = [
         ("new_etfs", load_surface_symbols("new_etfs")),
         ("etf_universe", [row.get("ticker") for row in (universe_payload or {}).get("records") or []] or load_etf_universe_symbols()),

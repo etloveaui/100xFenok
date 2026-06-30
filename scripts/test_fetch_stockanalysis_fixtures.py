@@ -591,6 +591,100 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["counts"]["missing"], 0)
         self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
+    def test_incremental_etf_backfill_daily1y_uses_exact_fetchable_plan(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir.parent / "admin").mkdir(parents=True)
+                (out_dir / "etfs" / "PLANSHORT.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "stockanalysis",
+                            "asset_type": "etf",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                            "normalized": {
+                                "history_periods": {
+                                    "daily_1y": [{"t": "2026-06-01", "c": 100}],
+                                },
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "OFFPLAN.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "stockanalysis",
+                            "asset_type": "etf",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                            "normalized": {"history_periods": {"daily_1y": []}},
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "YF.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "yahoo_finance",
+                            "source_provider": "yahoo_finance",
+                            "detail_status": "yf_fallback",
+                            "fetched_at": "2026-06-18T00:00:00Z",
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (out_dir.parent / "admin" / "fenok-edge-etf-daily1y-fetchable-plan.json").write_text(
+                    json.dumps(
+                        {
+                            "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
+                            "tickers": ["PLANMISS", "PLANSHORT"],
+                            "rows": [
+                                {"ticker": "PLANMISS", "actual_rows": 0, "missing_file": True},
+                                {
+                                    "ticker": "PLANSHORT",
+                                    "actual_rows": 1,
+                                    "fetchable_missing": ["daily_1y"],
+                                    "inception_limited_missing": [],
+                                },
+                            ],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={
+                        "records": [
+                            {"ticker": "PLANMISS"},
+                            {"ticker": "PLANSHORT"},
+                            {"ticker": "OFFPLAN"},
+                            {"ticker": "YF"},
+                        ]
+                    },
+                    limit=10,
+                    max_age_hours=720,
+                    exclude=set(),
+                    required_history_periods=("daily_1y",),
+                    history_gaps_only=True,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["PLANMISS", "PLANSHORT"])
+        self.assertTrue(summary["selected"][0]["missing_file"])
+        self.assertEqual(summary["selected"][1]["daily_1y_actual_rows"], 1)
+        self.assertEqual(summary["selected"][1]["daily_1y_min_rows"], 200)
+        self.assertEqual(summary["counts"]["selected"], 2)
+        self.assertEqual(summary["counts"]["history_gap"], 2)
+        self.assertEqual(summary["counts"]["daily_1y_missing_file"], 1)
+        self.assertEqual(summary["counts"]["daily_1y_short_rows"], 1)
+        self.assertEqual(summary["counts"]["missing"], 0)
+        self.assertEqual(summary["counts"]["fallback_retry"], 0)
+
     def test_incremental_etf_backfill_plan_payload_is_separate_from_run_proof(self) -> None:
         summary = {
             "counts": {

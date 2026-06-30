@@ -84,6 +84,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - `history_gaps_only=true`
   - one rolling shard per schedule, currently capped at 140 tickers per run
 - The `etf_no_fetchable_daily_1y_gap` gate counts scored ETFs with fewer than 200 daily history rows, excluding inception-limited funds. Until this count is zero, `daily=false`.
+- For StockAnalysis S3 backfill, `--history-gaps-only --required-history-periods daily_1y` must stay bound to `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`; it is not a generic ETF missing/fallback retry sweep.
 - `qa:fenok-etf-daily1y-readiness` must pass before any ETF daily-readiness claim; it checks the generated count equation and keeps the artifact admin-only.
 - This is a bounded rotating shard, not a true all-ETF daily refresh.
 
