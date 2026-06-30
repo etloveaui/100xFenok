@@ -1,7 +1,7 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-06-30T22:43:31.717Z",
+  "generated_at": "2026-06-30T23:59:09.753Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -30,35 +30,22 @@
     "inception_limited_daily_1y_gap": 538,
     "fetchable_breakdown": {
       "counts": {
-        "missing_external_quote_type_mismatch": 35,
-        "missing_source_unavailable": 25,
+        "missing_external_quote_type_mismatch": 56,
         "stockanalysis_short_rows": 18,
-        "yahoo_fallback_short_rows": 165
+        "yahoo_fallback_short_rows": 169
       },
       "samples": {
         "missing_external_quote_type_mismatch": [
-          "JPO",
-          "KRYP",
-          "LSTB",
-          "MIVL",
-          "NGIF",
-          "NISM",
-          "NUDG",
-          "PHYS",
-          "PRIZ",
-          "PSLV"
-        ],
-        "missing_source_unavailable": [
           "AAAD",
-          "AAAP",
           "ACII",
           "ACYQ",
           "ADDS",
           "AFGR",
-          "AMEI",
-          "AMEM",
-          "AMGR",
-          "AMHI"
+          "AMHI",
+          "BAVA",
+          "BD",
+          "BRSM",
+          "CLNK"
         ],
         "stockanalysis_short_rows": [
           "AMUN",
@@ -73,16 +60,16 @@
           "IBHM"
         ],
         "yahoo_fallback_short_rows": [
+          "AAAP",
           "ACGO",
+          "AMEI",
+          "AMEM",
+          "AMGR",
           "APDB",
           "AQLG",
           "ARLI",
           "ARMW",
-          "ARMY",
-          "ASD",
-          "ASEC",
-          "BABW",
-          "BCEM"
+          "ARMY"
         ]
       }
     },
@@ -118,13 +105,13 @@
       },
       {
         "ticker": "AAAP",
-        "actual_rows": 0,
-        "missing_file": true,
+        "actual_rows": 6,
+        "missing_file": false,
         "inception_date": null
       },
       {
         "ticker": "ACGO",
-        "actual_rows": 17,
+        "actual_rows": 18,
         "missing_file": false,
         "inception_date": null
       },
@@ -154,20 +141,20 @@
       },
       {
         "ticker": "AMEI",
-        "actual_rows": 0,
-        "missing_file": true,
+        "actual_rows": 5,
+        "missing_file": false,
         "inception_date": null
       },
       {
         "ticker": "AMEM",
-        "actual_rows": 0,
-        "missing_file": true,
+        "actual_rows": 5,
+        "missing_file": false,
         "inception_date": null
       },
       {
         "ticker": "AMGR",
-        "actual_rows": 0,
-        "missing_file": true,
+        "actual_rows": 5,
+        "missing_file": false,
         "inception_date": null
       }
     ],
@@ -285,7 +272,7 @@
       "required_history_periods": "daily_1y",
       "incremental_etf_limit": "120"
     },
-    "note": "External StockAnalysis calls; run only after explicit approval."
+    "note": "External StockAnalysis calls; run only after explicit approval. This targets scored ETF daily 1Y continuity gaps, not the monthly required-history gate."
   },
   "errors": []
 }

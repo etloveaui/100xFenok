@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-06-30T14:45:23Z",
+  "generated_at": "2026-06-30T23:57:35Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -23,112 +23,102 @@
       "etf_screener": 5413,
       "new_etfs": 100
     },
-    "detail_files": 5347,
-    "covered_detail_files": 5334,
-    "missing_detail_files": 80,
+    "detail_files": 5350,
+    "covered_detail_files": 5337,
+    "missing_detail_files": 77,
     "extra_detail_files": 13,
     "stockanalysis_detail_files": 4591,
-    "yahoo_fallback_files": 756,
+    "yahoo_fallback_files": 759,
     "invalid_detail_files": 0,
-    "coverage_pct": 98.52,
+    "coverage_pct": 98.58,
     "primary_stockanalysis_pct": 84.56,
     "missing_by_source": {
-      "etf_universe": 78,
-      "etf_screener": 80,
-      "new_etfs": 25
+      "etf_universe": 75,
+      "etf_screener": 77,
+      "new_etfs": 22
     },
     "missing_status_breakdown": {
-      "retry_cooldown": 54,
-      "retry_pending": 26
+      "retry_cooldown": 59,
+      "retry_pending": 17,
+      "untracked": 1
     },
     "missing_failure_breakdown": {
-      "external_quote_type_mismatch": 55,
-      "source_unavailable": 25
+      "external_quote_type_mismatch": 76,
+      "untracked": 1
     },
-    "pending_tracked": 181,
-    "pending_cooldown": 54,
-    "pending_tracked_missing": 80
+    "pending_tracked": 109,
+    "pending_cooldown": 64,
+    "pending_tracked_missing": 76
   },
   "missing_reason_summary": {
-    "external_quote_type_mismatch": 55,
-    "source_unavailable": 25
+    "external_quote_type_mismatch": 76,
+    "untracked": 1
   },
   "missing_status_summary": {
-    "retry_cooldown": 54,
-    "retry_pending": 26
+    "retry_cooldown": 59,
+    "retry_pending": 17,
+    "untracked": 1
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
-      "AIQD",
-      "AIQU",
-      "ASMZ",
-      "BTCU",
-      "EVMU",
-      "GOLI",
-      "JPO",
-      "KRYP",
-      "LSTB",
-      "MIVL",
-      "MNSX",
-      "MSIX"
-    ],
-    "source_unavailable": [
       "AAAD",
-      "AAAP",
       "ACII",
       "ACYQ",
       "ADDS",
       "AFGR",
-      "AMEI",
-      "AMEM",
-      "AMGR",
+      "AIQD",
+      "AIQU",
       "AMHI",
+      "ASMZ",
       "BAVA",
-      "BD"
+      "BD",
+      "BRSM"
+    ],
+    "untracked": [
+      "KEYX"
     ]
   },
   "missing_status_samples": {
     "retry_cooldown": [
       "AAAD",
       "ACII",
+      "ACYQ",
       "ADDS",
       "AFGR",
       "AIQD",
       "AIQU",
+      "AMHI",
       "BAVA",
+      "BD",
       "BRSM",
-      "BTCU",
-      "CLNK",
-      "CLOO",
-      "EDGQ"
+      "BTCU"
     ],
     "retry_pending": [
-      "AAAP",
-      "ACYQ",
-      "AMEI",
-      "AMEM",
-      "AMGR",
-      "AMHI",
       "ASMZ",
-      "BD",
-      "CRIB",
       "GOLI",
-      "IINC",
-      "MNSX"
+      "MNSX",
+      "MSIX",
+      "MTSG",
+      "ONTX",
+      "RMBC",
+      "SIMX",
+      "SMTG",
+      "SPCF",
+      "TPLX",
+      "UGLD"
+    ],
+    "untracked": [
+      "KEYX"
     ]
   },
   "missing_tickers": [
     "AAAD",
-    "AAAP",
     "ACII",
     "ACYQ",
     "ADDS",
     "AFGR",
     "AIQD",
     "AIQU",
-    "AMEI",
-    "AMEM",
-    "AMGR",
     "AMHI",
     "ASMZ",
     "BAVA",
@@ -150,6 +140,7 @@
     "IINC",
     "INYY",
     "JPO",
+    "KEYX",
     "KRYP",
     "LSTB",
     "MIVL",
@@ -200,6 +191,7 @@
     "ZINC"
   ],
   "yahoo_fallback_tickers": [
+    "AAAP",
     "AAAU",
     "AAOX",
     "AAPB",
@@ -224,6 +216,9 @@
     "AMAA",
     "AMDC",
     "AMDW",
+    "AMEI",
+    "AMEM",
+    "AMGR",
     "AMJB",
     "AMUB",
     "AMZO",
@@ -578,7 +573,6 @@
     "KDEC",
     "KEEX",
     "KEYG",
-    "KEYX",
     "KFEB",
     "KJAN",
     "KJD",
@@ -976,16 +970,12 @@
   "samples": {
     "missing": [
       "AAAD",
-      "AAAP",
       "ACII",
       "ACYQ",
       "ADDS",
       "AFGR",
       "AIQD",
       "AIQU",
-      "AMEI",
-      "AMEM",
-      "AMGR",
       "AMHI",
       "ASMZ",
       "BAVA",
@@ -1007,6 +997,7 @@
       "IINC",
       "INYY",
       "JPO",
+      "KEYX",
       "KRYP",
       "LSTB",
       "MIVL",
@@ -1024,65 +1015,58 @@
       "RAAY",
       "RCLR",
       "RCLY",
-      "RMBC"
+      "RMBC",
+      "RMHY",
+      "RWEM",
+      "RWLC"
     ],
     "missing_retry_cooldown": [
       "AAAD",
       "ACII",
+      "ACYQ",
       "ADDS",
       "AFGR",
       "AIQD",
       "AIQU",
+      "AMHI",
       "BAVA",
+      "BD",
       "BRSM",
-      "BTCU",
-      "CLNK",
-      "CLOO",
-      "EDGQ"
+      "BTCU"
     ],
     "missing_retry_pending": [
-      "AAAP",
-      "ACYQ",
-      "AMEI",
-      "AMEM",
-      "AMGR",
-      "AMHI",
       "ASMZ",
-      "BD",
-      "CRIB",
       "GOLI",
-      "IINC",
-      "MNSX"
+      "MNSX",
+      "MSIX",
+      "MTSG",
+      "ONTX",
+      "RMBC",
+      "SIMX",
+      "SMTG",
+      "SPCF",
+      "TPLX",
+      "UGLD"
+    ],
+    "missing_untracked": [
+      "KEYX"
     ],
     "missing_external_quote_type_mismatch": [
-      "AIQD",
-      "AIQU",
-      "ASMZ",
-      "BTCU",
-      "EVMU",
-      "GOLI",
-      "JPO",
-      "KRYP",
-      "LSTB",
-      "MIVL",
-      "MNSX",
-      "MSIX"
-    ],
-    "missing_source_unavailable": [
       "AAAD",
-      "AAAP",
       "ACII",
       "ACYQ",
       "ADDS",
       "AFGR",
-      "AMEI",
-      "AMEM",
-      "AMGR",
+      "AIQD",
+      "AIQU",
       "AMHI",
+      "ASMZ",
       "BAVA",
-      "BD"
+      "BD",
+      "BRSM"
     ],
     "yahoo_fallback": [
+      "AAAP",
       "AAAU",
       "AAOX",
       "AAPB",
@@ -1107,6 +1091,9 @@
       "AMAA",
       "AMDC",
       "AMDW",
+      "AMEI",
+      "AMEM",
+      "AMGR",
       "AMJB",
       "AMUB",
       "AMZO",
@@ -1128,11 +1115,7 @@
       "ARMW",
       "ARMY",
       "ASD",
-      "ASEC",
-      "ASTG",
-      "ASTT",
-      "ASTY",
-      "ASUP"
+      "ASEC"
     ],
     "extra": [
       "BULX",
