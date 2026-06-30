@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
-const SCHEMA_VERSION = "fenok-s0-source-gap-audit/v0.1";
+const SCHEMA_VERSION = "fenok-s0-source-gap-audit/v0.2";
 const SAMPLE_LIMIT = 25;
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
 
@@ -332,6 +332,12 @@ function buildAudit({ full }) {
   const occPlainMissingTransientFailed = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "transient_failed");
   const occPlainMissingFailed = occPlainMissing.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "failed");
   const occPlainMissingUnattempted = occPlainMissing.filter((row) => !occAttemptStatuses.has(rowTicker(row)));
+  const occDailyEligibleRows = activeUsRows.filter(plainUsOccEligible);
+  const occPlainPresent = occDailyEligibleRows.filter((row) => occTickers.has(rowTicker(row)));
+  const occPlainNoListedOptionsSourceReady = occDailyEligibleRows.filter((row) => !occTickers.has(rowTicker(row)) && occAttemptStatuses.get(rowTicker(row)) === "no_record");
+  const occPlainSourceReady = [...occPlainPresent, ...occPlainNoListedOptionsSourceReady];
+  const occPlainBlocking = occDailyEligibleRows.filter((row) => !occTickers.has(rowTicker(row)) && occAttemptStatuses.get(rowTicker(row)) !== "no_record");
+  const occExcludedFromPlainReadiness = activeUsRows.filter((row) => !plainUsOccEligible(row));
 
   const activeTrack = getActiveTrack(coverageIndex);
   const finraSource = getSourceRow(coverageIndex, "us_finra_flow_proxy");
@@ -343,17 +349,18 @@ function buildAudit({ full }) {
   const expectedFinraSourceDenominator = finraIndexUsesMetricReadyEligibility ? finraEligibleRows.length : activeUsRows.length;
   const expectedFinraEvidenceMissing = finraIndexUsesMetricReadyEligibility ? finraEligibleMetricMissingRows.length : finraMissing.length;
   const errors = [];
+  const occPlainReadyEvidence = occEvidence?.derived_gap_breakdown?.active_plain_us_occ_ready_criterion;
 
   checkEqual(errors, "active_us_bucket_matches_rows", activeUsRows.length, coverageIndex?.active_scoring_universe?.buckets?.us);
   checkEqual(errors, "finra_present_matches_source_row", expectedFinraSourceCovered, finraSource?.covered_count);
   checkEqual(errors, "finra_strict_present_matches_payload_coverage", finraStrictPresent.length, flowProxies?.coverage?.with_finra);
   checkEqual(errors, "finra_denominator_matches_source_row", expectedFinraSourceDenominator, finraSource?.denominator);
-  checkEqual(errors, "occ_present_matches_source_row", occPresent.length, occSource?.covered_count);
-  checkEqual(errors, "occ_denominator_matches_source_row", activeUsRows.length, occSource?.denominator);
+  checkEqual(errors, "occ_source_ready_matches_source_row", occPlainSourceReady.length, occSource?.covered_count);
+  checkEqual(errors, "occ_plain_denominator_matches_source_row", occDailyEligibleRows.length, occSource?.denominator);
   checkEqual(errors, "finra_missing_matches_blocking_evidence", expectedFinraEvidenceMissing, finraEvidence?.missing_count);
-  checkEqual(errors, "occ_missing_matches_blocking_evidence", occMissing.length, occEvidence?.missing_count);
+  checkEqual(errors, "occ_plain_blocking_matches_blocking_evidence", occPlainBlocking.length, occEvidence?.missing_count);
   checkEqual(errors, "finra_partition_matches_denominator", finraPresent.length + finraMissing.length, activeUsRows.length);
-  checkEqual(errors, "occ_partition_matches_denominator", occPresent.length + occMissing.length, activeUsRows.length);
+  checkEqual(errors, "occ_plain_source_ready_partition_matches_denominator", occPlainSourceReady.length + occPlainBlocking.length, occDailyEligibleRows.length);
   checkEqual(errors, "finra_excluded_us_class_count_matches_source_row", activeUsRows.length - finraEligibleRows.length, finraSource?.excluded_us_class_count);
   checkEqual(errors, "finra_row_existence_count_matches_source_row", finraPresent.length, finraSource?.row_existence_count);
   checkEqual(errors, "finra_strict_metric_ready_count_matches_source_row", finraStrictPresent.length, finraSource?.strict_metric_ready_count);
@@ -361,8 +368,12 @@ function buildAudit({ full }) {
   const occPlainPolicyEvidence = occEvidence?.derived_gap_breakdown?.plain_us_collection_or_no_options_policy_required;
   checkEqual(errors, "occ_plain_attempted_unresolved_matches_blocking_evidence", occPlainMissingAttempted.length, occPlainPolicyEvidence?.attempted_unresolved_count);
   checkEqual(errors, "occ_plain_no_record_matches_blocking_evidence", occPlainMissingNoRecord.length, occPlainPolicyEvidence?.no_record_attempt_count);
+  checkEqual(errors, "occ_plain_no_listed_options_source_ready_matches_blocking_evidence", occPlainNoListedOptionsSourceReady.length, occPlainPolicyEvidence?.no_listed_options_source_ready_count);
   checkEqual(errors, "occ_plain_partial_no_record_matches_blocking_evidence", occPlainMissingPartialNoRecord.length, occPlainPolicyEvidence?.partial_no_record_or_form_gap_count);
   checkEqual(errors, "occ_plain_unattempted_matches_blocking_evidence", occPlainMissingUnattempted.length, occPlainPolicyEvidence?.unattempted_count);
+  checkEqual(errors, "occ_plain_activity_rows_matches_ready_evidence", occPlainPresent.length, occPlainReadyEvidence?.present_options_activity_rows);
+  checkEqual(errors, "occ_plain_no_listed_options_rows_matches_ready_evidence", occPlainNoListedOptionsSourceReady.length, occPlainReadyEvidence?.no_listed_options_evidence_rows);
+  checkEqual(errors, "occ_plain_blocking_rows_matches_ready_evidence", occPlainBlocking.length, occPlainReadyEvidence?.blocking_missing_count);
 
   const warnings = [];
   if (finraPlainMissing.length > 0) {
@@ -381,18 +392,18 @@ function buildAudit({ full }) {
       placeholder_count: finraPresent.length - finraStrictPresent.length,
     });
   }
-  if (occPlainMissing.length > 0 && !backfillIndex?.operationalization?.safe_daily_command_template) {
+  if (occPlainBlocking.length > 0 && !backfillIndex?.operationalization?.safe_daily_command_template) {
     warnings.push({
       id: "occ_plain_us_gap_without_backfill_template",
-      message: "OCC plain US gaps exist and no backfill command template was found.",
-      count: occPlainMissing.length,
+      message: "OCC plain US blocking gaps exist and no backfill command template was found.",
+      count: occPlainBlocking.length,
     });
   }
 
   const audit = {
     schema_version: SCHEMA_VERSION,
     generated_at: new Date().toISOString(),
-    purpose: "Read-only S0 source-gap audit for current active US denominator. Classifies FINRA/OCC missing rows into collection candidates vs universe mapping policy work.",
+    purpose: "Read-only S0 source-gap audit for current active US denominator. Classifies FINRA/OCC missing rows into source-ready evidence, collection candidates, and universe mapping policy work.",
     raw_policy: {
       fetches_external_data: false,
       writes_files: false,
@@ -438,6 +449,13 @@ function buildAudit({ full }) {
       occ_present: occPresent.length,
       occ_missing: occMissing.length,
       occ_coverage_pct: pct(occPresent.length, activeUsRows.length),
+      occ_plain_eligible_denominator: occDailyEligibleRows.length,
+      occ_plain_options_activity_present: occPlainPresent.length,
+      occ_plain_no_listed_options_source_ready: occPlainNoListedOptionsSourceReady.length,
+      occ_plain_source_ready_present: occPlainSourceReady.length,
+      occ_plain_source_ready_missing: occPlainBlocking.length,
+      occ_plain_source_ready_coverage_pct: pct(occPlainSourceReady.length, occDailyEligibleRows.length),
+      occ_excluded_us_class_or_non_plain_count: occExcludedFromPlainReadiness.length,
       both_finra_and_occ_missing: bothMissing.length,
     },
     classification: {
@@ -465,30 +483,31 @@ function buildAudit({ full }) {
       {
         id: "occ_plain_us_collection_or_no_options_policy",
         source: "OCC",
-        current_gap_count: occMissing.length,
+        current_gap_count: occPlainBlocking.length,
         collectable_plain_us_count: occPlainMissing.length,
         attempted_unresolved_count: occPlainMissingAttempted.length,
         no_record_attempt_count: occPlainMissingNoRecord.length,
-        no_listed_options_policy_pending_count: occPlainMissingNoRecord.length,
+        no_listed_options_source_ready_count: occPlainNoListedOptionsSourceReady.length,
+        no_listed_options_policy_pending_count: occPlainBlocking.length,
         partial_no_record_or_form_gap_count: occPlainMissingPartialNoRecord.length,
         transient_failed_attempt_count: occPlainMissingTransientFailed.length,
         failed_attempt_count: occPlainMissingFailed.length,
         unattempted_plain_us_count: occPlainMissingUnattempted.length,
-        mapping_or_denominator_policy_count: occMissing.length - occPlainMissing.length,
+        mapping_or_denominator_policy_count: occExcludedFromPlainReadiness.length,
         accepted_form_policy: {
           partial_zero_side_row_policy: "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
-          no_listed_options_policy: "not_accepted_for_readiness; both-side no_record remains evidence-only",
+          no_listed_options_policy: "accepted_for_source_readiness_when_both_call_and_put_queries_return_no_record_for_the_counted_source_date; scoring proxy remains null/zero-evidence rather than fabricated activity",
           current_partial_rows_without_output_row_count: occPlainMissingPartialNoRecord.length,
-          current_no_record_evidence_only_count: occPlainMissingNoRecord.length,
+          current_no_record_source_ready_count: occPlainNoListedOptionsSourceReady.length,
         },
-        next_action: "Do not broad-fetch. Re-run only unresolved partial rows if raw loaded-side cache is absent; keep both-side no-record evidence blocked until durable no-listed-options policy is owner-accepted.",
+        next_action: "Do not broad-fetch. Re-run only future unresolved plain-US blocking rows; both-side no-record evidence is source-ready but remains zero-activity evidence, not fabricated options volume.",
       },
       {
         id: "occ_non_plain_mapping_policy",
         source: "OCC",
-        current_gap_count: occMissing.length - occPlainMissing.length,
+        current_gap_count: occExcludedFromPlainReadiness.length,
         collectable_plain_us_count: 0,
-        mapping_or_denominator_policy_count: occMissing.length - occPlainMissing.length,
+        mapping_or_denominator_policy_count: occExcludedFromPlainReadiness.length,
         next_action: "Keep non-plain/foreign/class rows out of OCC plain-underlying denominator until owner-reviewed mappings exist.",
       },
       {
@@ -508,6 +527,8 @@ function buildAudit({ full }) {
       occ_plain_us_collection_or_no_options_policy_required: sampleRows(occPlainMissing, classifyOccGap),
       occ_plain_attempted_unresolved: sampleRows(occPlainMissingAttempted, classifyOccGap),
       occ_plain_no_record_attempts: sampleRows(occPlainMissingNoRecord, classifyOccGap),
+      occ_plain_no_listed_options_source_ready: sampleRows(occPlainNoListedOptionsSourceReady, classifyOccGap),
+      occ_plain_blocking_missing: sampleRows(occPlainBlocking, classifyOccGap),
       occ_plain_partial_no_record_or_form_gap: sampleRows(occPlainMissingPartialNoRecord, classifyOccGap),
       occ_plain_unattempted: sampleRows(occPlainMissingUnattempted, classifyOccGap),
       occ_class_share_symbol_normalization_or_source_gap: sampleRows(occClassShareMissing, classifyOccGap),
@@ -518,7 +539,7 @@ function buildAudit({ full }) {
       latest_us_daily_smoke_ticker_count: backfillIndex?.latest_us_daily_smoke?.target_universe?.ticker_count ?? null,
       latest_us_daily_run_ticker_count: backfillIndex?.latest_us_daily_run?.target_universe?.ticker_count ?? null,
       safe_daily_command_template_present: Boolean(backfillIndex?.operationalization?.safe_daily_command_template),
-      caveat: "Backfill index proves bounded run shape only. This audit does not read private raw cache and does not mark missing OCC rows as no-options underlyings.",
+      caveat: "Backfill index proves bounded run shape only. This audit does not read private raw cache. Both-side no_record availability rows count as source-ready no-listed-options evidence, not fabricated options activity.",
     },
     acceptance_checks: {
       ok: errors.length === 0,
@@ -553,8 +574,9 @@ function renderText(audit) {
     `FINRA eligible metric-ready: present=${audit.counts.finra_eligible_metric_ready_present}/${audit.counts.finra_eligible_denominator} excluded_us_class=${audit.counts.finra_excluded_us_class_count} coverage=${audit.counts.finra_eligible_metric_ready_coverage_pct}%`,
     `FINRA strict metric-ready: present=${audit.counts.finra_metric_ready_present} missing_or_placeholder=${audit.counts.finra_metric_ready_missing_or_placeholder} coverage=${audit.counts.finra_metric_ready_coverage_pct}%`,
     `FINRA missing classes: ${finraClasses || "none"}`,
-    `OCC: present=${audit.counts.occ_present} missing=${audit.counts.occ_missing} coverage=${audit.counts.occ_coverage_pct}%`,
-    `OCC missing classes: ${occClasses || "none"}`,
+    `OCC source-ready: present=${audit.counts.occ_plain_source_ready_present}/${audit.counts.occ_plain_eligible_denominator} options_activity=${audit.counts.occ_plain_options_activity_present} no_listed_options=${audit.counts.occ_plain_no_listed_options_source_ready} blocking=${audit.counts.occ_plain_source_ready_missing} coverage=${audit.counts.occ_plain_source_ready_coverage_pct}%`,
+    `OCC legacy activity diagnostic: rows=${audit.counts.occ_present}/${audit.counts.active_us_total} missing_or_excluded=${audit.counts.occ_missing} excluded_us_class_or_non_plain=${audit.counts.occ_excluded_us_class_or_non_plain_count} coverage=${audit.counts.occ_coverage_pct}%`,
+    `OCC legacy missing classes: ${occClasses || "none"}`,
     `Next FINRA action: ${audit.action_slices.find((slice) => slice.id === "finra_us_class_mapping_policy").next_action}`,
     `Next OCC action: ${audit.action_slices.find((slice) => slice.id === "occ_plain_us_collection_or_no_options_policy").next_action}`,
     warnings ? `Warnings: ${warnings}` : null,

@@ -497,6 +497,11 @@ const occPlainPartialNoRecordRows = occPlainMissingRows.filter((row) => occAttem
 const occPlainTransientFailedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "transient_failed");
 const occPlainFailedRows = occPlainMissingRows.filter((row) => occAttemptStatuses.get(rowTicker(row)) === "failed");
 const occPlainUnattemptedRows = occPlainMissingRows.filter((row) => !occAttemptStatuses.has(rowTicker(row)));
+const occDailyEligibleRows = usRows.filter(plainUsOccEligible);
+const occPlainPresentRows = occDailyEligibleRows.filter((row) => occSet.has(rowTicker(row)));
+const occPlainNoListedOptionsRows = occDailyEligibleRows.filter((row) => !occSet.has(rowTicker(row)) && occAttemptStatuses.get(rowTicker(row)) === "no_record");
+const occPlainSourceReadyRows = [...occPlainPresentRows, ...occPlainNoListedOptionsRows];
+const occPlainBlockingRows = occDailyEligibleRows.filter((row) => !occSet.has(rowTicker(row)) && occAttemptStatuses.get(rowTicker(row)) !== "no_record");
 const occPartialZeroSideRows = occRows.filter((row) => row?.accepted_form_policy === "one_side_loaded_one_side_no_record_zero_volume_side");
 const occBothSidesLoadedOrLegacyRows = occRows.filter((row) => row?.accepted_form_policy !== "one_side_loaded_one_side_no_record_zero_volume_side");
 
@@ -604,6 +609,7 @@ function activeS0BlockingEvidence() {
   const finraRowBreakdown = countByCategory(finraMissingRows, classifyFinraRowGap);
   const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
   const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
+  const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
   const checks = [
     {
       id: "finra_full_us_source_ready",
@@ -640,46 +646,58 @@ function activeS0BlockingEvidence() {
     },
     {
       id: "occ_full_us_source_ready",
-      status: occIntersection.length === usRows.length ? "ready" : "blocked",
-      covered_count: occIntersection.length,
-      denominator: usRows.length,
-      missing_count: Math.max(0, usRows.length - occIntersection.length),
+      status: occDailyReady ? "ready" : "blocked",
+      covered_count: occPlainSourceReadyRows.length,
+      denominator: occDailyEligibleRows.length,
+      missing_count: occPlainBlockingRows.length,
       source_date: occSourceDate,
+      eligibility_policy: "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
       derived_gap_breakdown: {
         missing_categories: {
-          ...occBreakdown,
+          ...countByCategory(occPlainBlockingRows, classifyOccGap),
+          excluded_non_plain_or_foreign_suffix_count: occBreakdown.non_plain_or_foreign_suffix_requires_universe_mapping ?? 0,
+          excluded_class_share_symbol_count: occClassShareMissingRows.length,
           plain_us_attempted_unresolved_count: occPlainAttemptedRows.length,
           plain_us_no_record_attempt_count: occPlainNoRecordRows.length,
-          plain_us_no_listed_options_policy_pending_count: occPlainNoRecordRows.length,
+          plain_us_no_listed_options_source_ready_count: occPlainNoListedOptionsRows.length,
           plain_us_partial_no_record_or_form_gap_count: occPlainPartialNoRecordRows.length,
           plain_us_transient_failed_attempt_count: occPlainTransientFailedRows.length,
           plain_us_failed_attempt_count: occPlainFailedRows.length,
           plain_us_unattempted_count: occPlainUnattemptedRows.length,
         },
+        active_plain_us_occ_ready_criterion: {
+          covered_count: occPlainSourceReadyRows.length,
+          denominator: occDailyEligibleRows.length,
+          present_options_activity_rows: occPlainPresentRows.length,
+          no_listed_options_evidence_rows: occPlainNoListedOptionsRows.length,
+          blocking_missing_count: occPlainBlockingRows.length,
+        },
         plain_us_collection_or_no_options_policy_required: {
           count: occPlainMissingRows.length,
           attempted_unresolved_count: occPlainAttemptedRows.length,
           no_record_attempt_count: occPlainNoRecordRows.length,
-          no_listed_options_policy_pending_count: occPlainNoRecordRows.length,
+          no_listed_options_source_ready_count: occPlainNoListedOptionsRows.length,
           partial_no_record_or_form_gap_count: occPlainPartialNoRecordRows.length,
           transient_failed_attempt_count: occPlainTransientFailedRows.length,
           failed_attempt_count: occPlainFailedRows.length,
           unattempted_count: occPlainUnattemptedRows.length,
           accepted_form_policy: {
             partial_zero_side_row_policy: "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
-            no_listed_options_policy: "not_accepted_for_readiness; both-side no_record remains evidence-only",
+            no_listed_options_policy: "accepted_for_source_readiness_when_both_call_and_put_queries_return_no_record_for_the_counted_source_date; scoring proxy remains null/zero-evidence rather than fabricated activity",
             current_partial_rows_without_output_row_count: occPlainPartialNoRecordRows.length,
-            current_no_record_evidence_only_count: occPlainNoRecordRows.length,
+            current_no_record_source_ready_count: occPlainNoListedOptionsRows.length,
           },
         },
         non_plain_or_foreign_suffix_requires_universe_mapping: {
           count: occBreakdown.non_plain_or_foreign_suffix_requires_universe_mapping ?? 0,
+          blocks_current_plain_occ_readiness: false,
         },
         class_share_symbol_normalization_or_source_gap: {
           count: occClassShareMissingRows.length,
+          blocks_current_plain_occ_readiness: false,
         },
       },
-      next_action: "Do not broad-fetch. Re-run only unresolved partial rows if raw loaded-side cache is absent; keep both-side no-record evidence blocked until durable no-listed-options policy is owner-accepted; fix non-US suffix denominator/mapping; test BRK class-share OCC symbol forms.",
+      next_action: "Do not broad-fetch. Keep non-plain/foreign/class rows as mapping/denominator policy work outside the current plain-OCC readiness denominator; continue BRK accepted-form research separately.",
     },
     {
       id: "no_asia_ex_taiwan_gap",
@@ -699,13 +717,14 @@ function activeS0BlockingEvidence() {
   return {
     evidence_origin: "derived_counts_only",
     daily_ready: checks.every((check) => check.status === "ready"),
-    gated_ready: false,
+    gated_ready: checks.every((check) => check.status === "ready"),
     checks,
     blockers: checks.filter((check) => check.status !== "ready"),
     caveat: "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims.",
   };
 }
 
+const activeS0Evidence = activeS0BlockingEvidence();
 const generatedAt = new Date().toISOString();
 const index = {
   schema_version: "fenok-edge-coverage-index/v0.2",
@@ -827,23 +846,26 @@ const index = {
     coverageRow({
       id: "us_occ_options_proxy",
       label: "US OCC listed-options proxy coverage",
-      count: occIntersection.length,
-      denominator: usRows.length,
-      denominatorLabel: "active_scoring_universe.us",
+      count: occPlainSourceReadyRows.length,
+      denominator: occDailyEligibleRows.length,
+      denominatorLabel: "active_scoring_universe.us where market=US and ticker is a plain OCC underlying",
       sourceDate: occSourceDate,
-      status: occIntersection.length === usRows.length ? "ready" : occIntersection.length > 0 ? "partial" : "missing",
+      status: occPlainSourceReadyRows.length === occDailyEligibleRows.length ? "ready" : occPlainSourceReadyRows.length > 0 ? "partial" : "missing",
       claimScope: "proxy_source_available",
       activeTotal: activeScoringTotal,
-      caveat: "OCC listed-options volume proxy only; not OPRA, premium, greeks, or buyer/seller direction.",
+      caveat: "OCC listed-options volume proxy or counted no-listed-options evidence for active plain-US rows only; not OPRA, premium, greeks, or buyer/seller direction. US_CLASS foreign/class rows are mapping policy work, not broad OCC fetch gaps.",
       extra: {
         source_file: "data/computed/fenok_occ_options_volume.json",
         rows: occRows.length,
         accepted_form_policy: {
-          counted_present_rows: occIntersection.length,
+          counted_present_rows: occPlainSourceReadyRows.length,
+          options_activity_rows: occPlainPresentRows.length,
+          no_listed_options_source_ready_rows: occPlainNoListedOptionsRows.length,
+          excluded_us_class_or_non_plain_rows: usRows.length - occDailyEligibleRows.length,
           both_sides_loaded_or_legacy_rows: occBothSidesLoadedOrLegacyRows.length,
           partial_zero_side_rows: occPartialZeroSideRows.length,
           partial_zero_side_rule: "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
-          no_listed_options_rule: "Both-side no_record is evidence-only and does not count as OCC source-ready until an owner-accepted no-listed-options policy exists.",
+          no_listed_options_rule: "Both-side no_record for the counted source date counts as source-ready no-listed-options evidence for daily/gated readiness; it does not fabricate options activity.",
         },
       },
     }),
@@ -949,12 +971,14 @@ const index = {
           joined_to_target_universe: true,
           scored: true,
           public: true,
-          daily: false,
-          gated: false,
+          daily: activeS0Evidence.daily_ready,
+          gated: activeS0Evidence.gated_ready,
         },
-        caveat: "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
+        caveat: activeS0Evidence.gated_ready
+          ? "The current active stock chain is public-scored and has Korea+US daily/gated source proof under the current S0 scope; HKEX/SSE/SZSE and US_CLASS mapping remain separate expansion work."
+          : "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
         extra: {
-          blocking_evidence: activeS0BlockingEvidence(),
+          blocking_evidence: activeS0Evidence,
         },
       }),
       readinessTrack({

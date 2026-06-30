@@ -2062,6 +2062,14 @@ function buildAudit({
     warnings.push(`SlickCharts stock files ${slickStockFileTickers.length} != index universe ${slickUniverseTickers.length}; keep these denominators separate`);
   }
 
+  const activeS0Track = Array.isArray(coverageIndex?.public_scoring_readiness?.tracks)
+    ? coverageIndex.public_scoring_readiness.tracks.find((track) => track?.id === "active_stock_scoring_current")
+    : null;
+  const activeS0DailyGated = activeS0Track?.requirements?.daily === true
+    && activeS0Track?.requirements?.gated === true
+    && activeS0Track?.readiness_status === "ready"
+    && activeS0Track?.public_done_claim_allowed === true;
+
   const result = {
     schema_version: SCHEMA_VERSION,
     generated_at: new Date().toISOString(),
@@ -2081,11 +2089,16 @@ function buildAudit({
     completion_ladder: coverageIndex?.public_scoring_readiness?.completion_ladder
       ?? ["COLLECTED", "NORMALIZED", "JOINED", "SCORED", "PUBLIC", "DAILY", "GATED"],
     s0_active_stock_scoring: {
-      stage: "PUBLIC_NOT_DAILY_GATED",
+      stage: activeS0DailyGated ? "PUBLIC_DAILY_GATED" : "PUBLIC_NOT_DAILY_GATED",
       count: s0Tickers.length,
       coverage_index_count: coverageIndex?.active_scoring_universe?.total ?? null,
+      requirements: activeS0Track?.requirements ?? null,
+      readiness_status: activeS0Track?.readiness_status ?? null,
+      public_done_claim_allowed: activeS0Track?.public_done_claim_allowed === true,
       by_market_scope: countBy(signalRows, (row) => String(row.market_scope ?? "unknown")),
-      caveat: "Current public-scored stock universe only; not complete/paid-ready until DAILY + GATED are proven.",
+      caveat: activeS0DailyGated
+        ? "Current public-scored stock universe has DAILY + GATED proof under the current S0 Korea+US scope; expansion lanes remain separate."
+        : "Current public-scored stock universe only; not complete/paid-ready until DAILY + GATED are proven.",
     },
     s1_stock_promotion_candidates: {
       stage: "NORMALIZED",
