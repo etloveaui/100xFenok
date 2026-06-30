@@ -113,7 +113,7 @@ import {
   assert.ok(optionStep);
   assert.ok(optionStep.args.includes("--all-eligible"));
   assert.ok(optionStep.args.includes("--max-walkback-days"));
-  assert.ok(optionStep.args.includes("0"));
+  assert.ok(optionStep.args.includes("2"));
   assert.ok(optionStep.args.includes("--batch-size"));
   assert.ok(optionStep.args.includes("50"));
   assert.ok(optionStep.args.includes("--batch-index"));

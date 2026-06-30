@@ -101,7 +101,7 @@ function parseArgs(argv) {
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (args.optionsAllEligible && !optionsMaxWalkbackDaysExplicit) {
-    args.optionsMaxWalkbackDays = "0";
+    args.optionsMaxWalkbackDays = "2";
   }
   return args;
 }
