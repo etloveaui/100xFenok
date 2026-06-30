@@ -161,26 +161,7 @@ jobs:
             fi
           fi
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
-            INPUT_ETFS="$(python3 - <<'PY'
-import json
-from pathlib import Path
-
-payload = json.loads(Path("data/admin/fenok-etf-core-daily-basket.json").read_text())
-tickers = payload.get("daily_refresh_universe", {}).get("tickers")
-if not isinstance(tickers, list):
-    tickers = [row.get("ticker") for row in payload.get("rows") or [] if isinstance(row, dict)]
-seen = set()
-out = []
-for raw in tickers or []:
-    ticker = str(raw or "").strip().upper()
-    if ticker and ticker not in seen:
-        out.append(ticker)
-        seen.add(ticker)
-if not out:
-    raise SystemExit("Core Basket refresh requested, but no tickers were found")
-print(",".join(out))
-PY
-)"
+            INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
           if [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"
