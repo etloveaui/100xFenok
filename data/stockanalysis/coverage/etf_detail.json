@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-06-30T00:36:03Z",
+  "generated_at": "2026-06-30T02:10:28Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -42,14 +42,16 @@
       "retry_pending": 56
     },
     "missing_failure_breakdown": {
-      "external_quote_type_mismatch": 97
+      "external_quote_type_mismatch": 72,
+      "source_unavailable": 25
     },
-    "pending_tracked": 117,
+    "pending_tracked": 194,
     "pending_cooldown": 41,
     "pending_tracked_missing": 97
   },
   "missing_reason_summary": {
-    "external_quote_type_mismatch": 97
+    "external_quote_type_mismatch": 72,
+    "source_unavailable": 25
   },
   "missing_status_summary": {
     "retry_cooldown": 41,
@@ -57,18 +59,32 @@
   },
   "missing_reason_samples": {
     "external_quote_type_mismatch": [
+      "ACLZ",
+      "ACMM",
+      "AIQD",
+      "AIQU",
+      "ASTG",
+      "BTCU",
+      "CAMC",
+      "CARX",
+      "CDNG",
+      "CRUC",
+      "DRAL",
+      "ENTL"
+    ],
+    "source_unavailable": [
       "AAAD",
       "AAAP",
       "ACII",
-      "ACLZ",
-      "ACMM",
       "ACYQ",
       "ADDS",
       "AFGR",
-      "AIQD",
-      "AIQU",
       "AMEI",
-      "AMEM"
+      "AMEM",
+      "AMGR",
+      "AMHI",
+      "BAVA",
+      "BD"
     ]
   },
   "missing_status_samples": {
@@ -1016,18 +1032,32 @@
       "CARX"
     ],
     "missing_external_quote_type_mismatch": [
+      "ACLZ",
+      "ACMM",
+      "AIQD",
+      "AIQU",
+      "ASTG",
+      "BTCU",
+      "CAMC",
+      "CARX",
+      "CDNG",
+      "CRUC",
+      "DRAL",
+      "ENTL"
+    ],
+    "missing_source_unavailable": [
       "AAAD",
       "AAAP",
       "ACII",
-      "ACLZ",
-      "ACMM",
       "ACYQ",
       "ADDS",
       "AFGR",
-      "AIQD",
-      "AIQU",
       "AMEI",
-      "AMEM"
+      "AMEM",
+      "AMGR",
+      "AMHI",
+      "BAVA",
+      "BD"
     ],
     "yahoo_fallback": [
       "AAAU",
