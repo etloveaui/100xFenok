@@ -249,7 +249,7 @@ function csvCell(value: string | number | null | undefined): string {
 
 function downloadCsv(rows: RadarRow[]) {
   const cappedRows = rows.slice(0, 500);
-  const headers = ["티커", "ETF명", "상장일", "가격", "변동률", "분류", "운용사", "레이더 상태", "상세 상태", "코어 후보"];
+  const headers = ["티커", "ETF명", "상장일", "가격", "변동률", "분류", "운용사", "레이더 상태", "제공 범위", "코어 후보"];
   const lines = [
     headers.map(csvCell).join(","),
     ...cappedRows.map((row) => [
