@@ -9,10 +9,14 @@ const publicDataRoot = path.join(appRoot, "public", "data");
 
 const forbiddenPatterns = [
   /^admin\/fenok-s1-stock-promotion-gate-plan\.json$/,
+  /^admin\/fenok-s1-stock-public-promotion-dry-run\.json$/,
+  /^admin\/fenok-s1-public-mutation-enable-readiness\.json$/,
   /^admin\/fenok-edge-etf-daily1y-readiness\.json$/,
   /^admin\/fenok-edge-etf-daily1y-fetchable-plan\.json$/,
+  /^admin\/fenok-etf-daily1y-dispatch-plan\.json$/,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
+  /^computed\/etf_action_index\.json$/,
   /^computed\/fenok_flow_proxies.*\.json$/,
   /^computed\/fenok_occ_options_volume.*\.json$/,
   /^computed\/fenok_news_tone_proxy.*\.json$/,
