@@ -252,7 +252,18 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
   if (Number(report?.fetchable_required_history || 0) > 0) {
     assert(report?.recommended_dispatch?.inputs?.history_gaps_only === "true", "ETF history gap report: fetchable gaps need history_gaps_only dispatch inputs", errors);
   } else {
-    assert(report?.recommended_dispatch?.status === "not_recommended", "ETF history gap report: no fetchable gaps must disable dispatch recommendation", errors);
+    const dailyDispatchInputs = report?.recommended_dispatch?.inputs || {};
+    const dailyFetchable = Number(report?.daily_1y_gap?.scored_etfs?.fetchable || report?.daily_1y_gap?.fetchable || 0);
+    const dailyDispatchAllowed =
+      report?.recommended_dispatch?.status === "owner_gated" &&
+      dailyDispatchInputs.history_gaps_only === "true" &&
+      dailyDispatchInputs.required_history_periods === "daily_1y" &&
+      dailyFetchable > 0;
+    assert(
+      report?.recommended_dispatch?.status === "not_recommended" || dailyDispatchAllowed,
+      "ETF history gap report: no fetchable required-history gaps must disable dispatch recommendation unless daily_1y continuity gaps remain",
+      errors,
+    );
   }
 }
 

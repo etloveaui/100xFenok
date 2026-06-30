@@ -134,10 +134,11 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - Gate: `npm --prefix 100xfenok-next run qa:fenok-etf-daily1y-dispatch-plan-gate`.
 - Current clean-base selector count: `244` fetchable scored ETFs, `537` inception-limited, `3703` complete, `3` shards at `<=120` tickers.
 - The dispatch plan has `owner_gated=true`, `network=none`, and no done/daily/gated claim. Running the actual external StockAnalysis backfill still requires explicit owner approval.
+- 2026-06-30 live preflight: owner approval was granted for the next schedule-equivalent StockAnalysis run. `qa:market-audit` now permits an owner-gated `daily_1y` dispatch recommendation when the default monthly required-history gate has zero fetchable rows but the scored ETF daily-1Y continuity gap remains. Verified locally before dispatch: `qa:market-audit`, `qa:history-gap`, `qa:data-graph`, `qa:data-freshness`, and full `qa:fenok-edge-readiness`.
 
 ## Remaining Work
 
-1. Run the next scheduled or owner-approved StockAnalysis Core Basket refresh so the `117` stale selected rows can move to fresh before any Core Basket daily-ready claim.
+1. Run the owner-approved StockAnalysis Core Basket refresh so the `117` stale selected rows can move to fresh before any Core Basket daily-ready claim.
 2. Keep the scheduled ETF freshness loop running so new ETFs move from fetchable gaps to complete, inception-limited, or radar-only status.
 3. Prove a daily all-ETF or eligible-ETF price/history refresh path beyond the current bounded rotating shard.
 4. Use the owner-gated private dispatch plan for the next bounded daily 1Y catch-up run; do not flip full ETF `daily` or `gated` until the fetchable gap count reaches zero.

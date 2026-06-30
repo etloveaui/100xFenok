@@ -11,15 +11,16 @@ Current coverage (2026-06-30 local DataPack):
 
 - ETF universe records: 5,333
 - ETF candidate symbols: 5,390
-- ETF detail coverage: 98.07% (5,286 / 5,390)
-- Primary StockAnalysis detail files: 4,588
-- Yahoo ETF fallback files: 715
-- Market-facts normalized ETF rows: 5,301
+- ETF detail coverage: 98.20% (5,293 covered / 5,390 candidates; 5,306 detail files including extras)
+- Primary StockAnalysis detail files: 4,590
+- Yahoo ETF fallback files: 716
+- Market-facts normalized ETF rows: 5,308
 - Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
 - Fenok Edge ETF daily-1Y readiness: `4484 = 3703 complete + 244 fetchable + 537 inception-limited`
 - ETF Core Daily Basket: `118` selected refresh tickers from `1,602` structural candidates; current state `1 fresh / 117 needs refresh`, so Core Basket daily-ready is still blocked.
 - New ETF Radar: `new_etfs` rows are watchlist-only and cannot become core candidates without detail, history, classification, and scoring proof.
 - Remaining distinction: ETF Center UI/data coverage is surface-ready, but Fenok Edge ETF paid-ready wording stays blocked until `daily=false` and `gated=false` clear.
+- Live preflight before the 2026-06-30 owner-approved schedule-equivalent run: `qa:market-audit`, `qa:history-gap`, `qa:data-graph`, `qa:data-freshness`, and full `qa:fenok-edge-readiness` pass. The default monthly 3Y/5Y required-history gate has `0` fetchable rows and `12` inception-limited rows; the separate daily-1Y continuity dispatch remains owner-gated with `244` scored ETF gaps.
 
 Design principles:
 

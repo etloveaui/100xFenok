@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-06-29T17:49:58Z",
+  "generated_at": "2026-06-30T10:46:01Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "monthly_3y",
@@ -27,9 +27,9 @@
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-06-29T17:49:58Z",
+    "generated_at": "2026-06-30T10:46:01Z",
     "policy": {
-      "limit": 120,
+      "limit": 0,
       "max_age_hours": 720,
       "cooldown_days": 7,
       "cooldown_failure_threshold": 3,
@@ -59,7 +59,7 @@
         "ticker": "JCAL",
         "source": "new_etfs",
         "reason": "history_gap",
-        "age_hours": 248.35,
+        "age_hours": 265.28,
         "prior_failures": 0,
         "priority": 0,
         "reason_priority": 2,
@@ -73,13 +73,18 @@
           "monthly_5y"
         ],
         "inception_date": "2026-06-12",
+        "history_period_row_counts": {
+          "monthly_3y": 0,
+          "monthly_5y": 0
+        },
+        "history_period_min_rows": {},
         "status": "inception_limited"
       },
       {
         "ticker": "JTNY",
         "source": "new_etfs",
         "reason": "history_gap",
-        "age_hours": 248.35,
+        "age_hours": 265.28,
         "prior_failures": 0,
         "priority": 0,
         "reason_priority": 2,
@@ -93,13 +98,18 @@
           "monthly_5y"
         ],
         "inception_date": "2026-06-12",
+        "history_period_row_counts": {
+          "monthly_3y": 0,
+          "monthly_5y": 0
+        },
+        "history_period_min_rows": {},
         "status": "inception_limited"
       },
       {
         "ticker": "BITA",
         "source": "new_etfs",
         "reason": "history_gap",
-        "age_hours": 248.35,
+        "age_hours": 265.28,
         "prior_failures": 0,
         "priority": 0,
         "reason_priority": 2,
@@ -113,13 +123,18 @@
           "monthly_5y"
         ],
         "inception_date": "2026-06-09",
+        "history_period_row_counts": {
+          "monthly_3y": 0,
+          "monthly_5y": 0
+        },
+        "history_period_min_rows": {},
         "status": "inception_limited"
       },
       {
         "ticker": "QNDX",
         "source": "etf_universe",
         "reason": "history_gap",
-        "age_hours": 0.03,
+        "age_hours": 16.96,
         "prior_failures": 0,
         "priority": 1,
         "reason_priority": 2,
@@ -133,6 +148,11 @@
           "monthly_5y"
         ],
         "inception_date": "2026-06-23",
+        "history_period_row_counts": {
+          "monthly_3y": 0,
+          "monthly_5y": 0
+        },
+        "history_period_min_rows": {},
         "status": "inception_limited"
       }
     ]
