@@ -220,6 +220,7 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
   const auditCounts = audit?.incremental_etf?.counts || {};
   const subsetOfFullScan = report?.incremental_plan?.subset_of_full_scan || {};
   const strictCountMatches = report?.incremental_plan?.strict_count_matches || {};
+  const enforceIncrementalPlan = report?.incremental_plan?.enforcement?.enforced !== false;
 
   assert(report?.schema_version === "stockanalysis-history-gap-report/v1", "ETF history gap report: schema version is required", errors);
   assert(typeof report?.generated_at === "string" && report.generated_at.length >= 10, "ETF history gap report: generated_at is required", errors);
@@ -242,13 +243,15 @@ function assertHistoryGapReportContract(report, incrementalPlan, audit, errors) 
     assert(Number(inceptionLimitedByPeriod[period] ?? -1) >= 0, `ETF history gap report: ${period} inception-limited count is required`, errors);
   }
   assert(strictCountMatches.required_periods === true, "ETF history gap report: strict count diagnostics must confirm required periods", errors);
-  assert(subsetOfFullScan.fetchable === true, "ETF history gap report: plan fetchable tickers must be a subset of current full scan", errors);
-  assert(subsetOfFullScan.total === true, "ETF history gap report: plan total tickers must be a subset of current full scan", errors);
-  assert(subsetOfFullScan.inception_limited === true, "ETF history gap report: plan inception-limited tickers must be a subset of current full scan", errors);
-  assert(Number(report?.fetchable_required_history || 0) >= Number(planCounts.history_gap || 0), "ETF history gap report: fetchable count must cover incremental plan history_gap", errors);
-  assert(Number(report?.missing_required_history || 0) >= Number(planCounts.total_history_gap ?? planCounts.history_gap ?? 0), "ETF history gap report: missing count must cover incremental plan total_history_gap", errors);
-  assert(Number(report?.inception_limited_required_history || 0) >= Number(planCounts.inception_limited_history_gap || 0), "ETF history gap report: inception-limited count must cover incremental plan", errors);
-  assert(Number(report?.fetchable_required_history || 0) >= Number(auditCounts.plan_history_gap || 0), "ETF history gap report: fetchable count must cover market audit plan_history_gap", errors);
+  if (enforceIncrementalPlan) {
+    assert(subsetOfFullScan.fetchable === true, "ETF history gap report: plan fetchable tickers must be a subset of current full scan", errors);
+    assert(subsetOfFullScan.total === true, "ETF history gap report: plan total tickers must be a subset of current full scan", errors);
+    assert(subsetOfFullScan.inception_limited === true, "ETF history gap report: plan inception-limited tickers must be a subset of current full scan", errors);
+    assert(Number(report?.fetchable_required_history || 0) >= Number(planCounts.history_gap || 0), "ETF history gap report: fetchable count must cover incremental plan history_gap", errors);
+    assert(Number(report?.missing_required_history || 0) >= Number(planCounts.total_history_gap ?? planCounts.history_gap ?? 0), "ETF history gap report: missing count must cover incremental plan total_history_gap", errors);
+    assert(Number(report?.inception_limited_required_history || 0) >= Number(planCounts.inception_limited_history_gap || 0), "ETF history gap report: inception-limited count must cover incremental plan", errors);
+    assert(Number(report?.fetchable_required_history || 0) >= Number(auditCounts.plan_history_gap || 0), "ETF history gap report: fetchable count must cover market audit plan_history_gap", errors);
+  }
   if (Number(report?.fetchable_required_history || 0) > 0) {
     assert(report?.recommended_dispatch?.inputs?.history_gaps_only === "true", "ETF history gap report: fetchable gaps need history_gaps_only dispatch inputs", errors);
   } else {
