@@ -478,13 +478,17 @@ export default function NewEtfsList({
 
           <div className="mv-col">
             {filteredRows.length > 0 ? filteredRows.map((row) => {
-              const detailText = `${row.n} · 상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${detailStatusHint(row.detailStatus)}`;
+              const displayName = row.n || row.s;
+              const metaText = `상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${detailStatusHint(row.detailStatus)}`;
               return (
                 <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
                   <span className="co">
                     <div className="n">{row.s}</div>
-                    <div className="tk" title={detailText}>
-                      {detailText}
+                    <div className="tk" title={displayName}>
+                      {displayName}
+                    </div>
+                    <div className="mt-0.5 truncate text-[11px] leading-snug text-[var(--c-ink-3)]" title={metaText}>
+                      {metaText}
                     </div>
                   </span>
                   <span className="flex min-w-[92px] flex-col items-end gap-1">

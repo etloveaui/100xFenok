@@ -290,12 +290,17 @@ function EtfLink({
   value?: string;
 }) {
   const symbol = normalizeForEntityKey(ticker);
-  const detailText = `${name || "-"} · ${detail || "-"}`;
+  const displayName = name || "-";
   const body = (
     <>
       <span className="co">
         <div className="n">{symbol || "-"}</div>
-        <div className="tk" title={detailText}>{detailText}</div>
+        <div className="tk" title={displayName}>{displayName}</div>
+        {detail ? (
+          <div className="mt-0.5 truncate text-[11px] leading-snug text-[var(--c-ink-3)]" title={detail}>
+            {detail}
+          </div>
+        ) : null}
       </span>
       <span className={`pc num ${String(value || "").startsWith("-") ? "down" : "up"}`}>{value || "-"}</span>
     </>
