@@ -49,6 +49,10 @@ on:
         description: 'Write a no-network ETF multi-year history gap plan only'
         required: false
         default: 'false'
+      core_basket_refresh:
+        description: 'Refresh exact ETF Core Daily Basket tickers from data/admin/fenok-etf-core-daily-basket.json'
+        required: false
+        default: 'false'
       history_gaps_only:
         description: 'With incremental ETF backfill, fetch only ETF details missing required history periods'
         required: false
@@ -116,6 +120,7 @@ jobs:
           INPUT_INCREMENTAL_ETF_LIMIT: ${{ github.event.inputs.incremental_etf_limit }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
           INPUT_HISTORY_GAP_PLAN: ${{ github.event.inputs.history_gap_plan }}
+          INPUT_CORE_BASKET_REFRESH: ${{ github.event.inputs.core_basket_refresh }}
           INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only }}
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_YF_ETF_FALLBACK: ${{ github.event.inputs.yf_etf_fallback }}
@@ -144,6 +149,7 @@ jobs:
               INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY1Y_MAX_AGE_HOURS:-168}"
               INPUT_FETCH_SURFACES="false"
               INPUT_SURFACE_SET=""
+              INPUT_CORE_BASKET_REFRESH="false"
             else
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
@@ -151,7 +157,30 @@ jobs:
               INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY_MAX_AGE_HOURS:-168}"
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
+              INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
             fi
+          fi
+          if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
+            INPUT_ETFS="$(python3 - <<'PY'
+import json
+from pathlib import Path
+
+payload = json.loads(Path("data/admin/fenok-etf-core-daily-basket.json").read_text())
+tickers = payload.get("daily_refresh_universe", {}).get("tickers")
+if not isinstance(tickers, list):
+    tickers = [row.get("ticker") for row in payload.get("rows") or [] if isinstance(row, dict)]
+seen = set()
+out = []
+for raw in tickers or []:
+    ticker = str(raw or "").strip().upper()
+    if ticker and ticker not in seen:
+        out.append(ticker)
+        seen.add(ticker)
+if not out:
+    raise SystemExit("Core Basket refresh requested, but no tickers were found")
+print(",".join(out))
+PY
+)"
           fi
           if [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only --write-plan"
