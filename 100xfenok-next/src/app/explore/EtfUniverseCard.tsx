@@ -660,6 +660,7 @@ export default function EtfUniverseCard({
                 <span className="co">
                   <div className="n">{ticker}</div>
                   <div className="tk" title={detailText}>
+                    <span className="ticker-pill" aria-hidden="true">{ticker}</span>
                     {detailText}
                   </div>
                   <EtfClassificationBadges row={row} />

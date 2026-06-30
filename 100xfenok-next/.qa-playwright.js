@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { chromium } = require("playwright");
-const fs = require("fs");
-const path = require("path");
+import { chromium } from "playwright";
+import fs from "node:fs";
+import http from "node:http";
+import path from "node:path";
 
 const qaCatalog = await import("./scripts/qa-route-catalog.mjs");
 
@@ -11,6 +12,8 @@ const adminPassword = process.env.QA_ADMIN_PASSWORD || "";
 const screenshotDir = process.env.QA_SCREENSHOT_DIR || "";
 const outputJsonPath = process.env.QA_OUTPUT_JSON || "";
 const strictMode = process.env.QA_BROWSER_STRICT === "1";
+const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
+const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
 
 function parseCsvEnv(value) {
   if (!value) return [];
@@ -180,7 +183,6 @@ async function maybeCaptureScreenshot(page, viewport, route) {
 async function prewarmRoutes() {
   if (!isDevServer) return;
   console.error("[QA] Dev server detected — pre-warming routes for Turbopack compilation...");
-  const http = require("http");
   for (const route of routes) {
     await new Promise((resolve) => {
       const req = http.get(`${base}${route}`, (res) => {
@@ -352,7 +354,7 @@ async function runEtfChecks(page, route) {
     const metaText = await page.locator(".stock-meta").first().textContent().catch(() => null);
     checks.push({
       check: "etfDetailIdentity",
-      pass: h1Visible && !!h1Text && !!metaText && metaText.toUpperCase().includes(ticker),
+      pass: h1Visible && String(h1Text || "").trim().toUpperCase() === ticker && !!String(metaText || "").trim(),
       h1: h1Text?.slice(0, 80),
       meta: metaText?.slice(0, 80),
     });
@@ -422,7 +424,11 @@ async function runDataStateSurfaceChecks(page, route) {
 
 (async () => {
   await prewarmRoutes();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    ...(browserChannel ? { channel: browserChannel } : {}),
+    ...(browserExecutablePath ? { executablePath: browserExecutablePath } : {}),
+  });
   const results = [];
 
   for (const vp of viewports) {

@@ -295,7 +295,10 @@ function EtfLink({
     <>
       <span className="co">
         <div className="n">{symbol || "-"}</div>
-        <div className="tk" title={displayName}>{displayName}</div>
+        <div className="tk" title={displayName}>
+          <span className="ticker-pill" aria-hidden="true">{symbol || "-"}</span>
+          {displayName}
+        </div>
         {detail ? (
           <div className="mt-0.5 truncate text-[11px] leading-snug text-[var(--c-ink-3)]" title={detail}>
             {detail}

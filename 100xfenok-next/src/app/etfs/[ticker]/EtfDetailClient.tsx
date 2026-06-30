@@ -770,7 +770,7 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
           <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="orbitron text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
             {ticker}
           </TransitionLink>
-          <p className="mt-1 min-w-0 break-words text-xs font-bold leading-snug text-[var(--c-ink)]">{row.name ?? ticker}</p>
+          <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
         </div>
         <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {formatAum(row)}
@@ -1514,10 +1514,6 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             </div>
             <div className="stock-meta">
               <span className="entity-name truncate" title={displayName}>{displayName}</span>
-              <span className="x">·</span>
-              <span className="num">{symbol}</span>
-              <span className="x">·</span>
-              <span>ETF</span>
               {exchange !== "—" ? <><span className="x">·</span><span>{exchange}</span></> : null}
               {category !== "—" ? <><span className="x">·</span><span>{category}</span></> : null}
               {provider !== "—" ? <><span className="x">·</span><span>{provider}</span></> : null}

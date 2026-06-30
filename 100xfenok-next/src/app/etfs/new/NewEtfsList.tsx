@@ -485,6 +485,7 @@ export default function NewEtfsList({
                   <span className="co">
                     <div className="n">{row.s}</div>
                     <div className="tk" title={displayName}>
+                      <span className="ticker-pill" aria-hidden="true">{row.s}</span>
                       {displayName}
                     </div>
                     <div className="mt-0.5 truncate text-[11px] leading-snug text-[var(--c-ink-3)]" title={metaText}>

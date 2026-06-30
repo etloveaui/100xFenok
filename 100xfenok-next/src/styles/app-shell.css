@@ -242,9 +242,10 @@
 .fnk-shell .mv-h.up{color:var(--c-up)} .fnk-shell .mv-h.down{color:var(--c-down)}
 .fnk-shell .mv-row{display:grid; grid-template-columns:minmax(0, 1fr) max-content; align-items:center; gap:var(--s3); padding:8px var(--panel-pad); border-top:1px solid var(--c-line-2); transition:.12s; cursor:pointer}
 .fnk-shell .mv-row:hover{background:var(--c-surface-2)}
-.fnk-shell .mv-row .co{min-width:0}
-.fnk-shell .mv-row .co .n{font-size:14px; font-weight:600; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.fnk-shell .mv-row .co .tk{display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere; font-size:12px; line-height:1.35; color:var(--c-ink-3)}
+.fnk-shell .mv-row .co{min-width:0; display:flex; flex-direction:column; gap:2px}
+.fnk-shell .mv-row .co .n{font-size:14px; font-weight:700; line-height:1.25; color:var(--c-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.fnk-shell .mv-row .co .tk{display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere; font-size:11px; line-height:1.35; color:var(--c-ink-3)}
+.fnk-shell .mv-row .co .tk .ticker-pill{font-size:10px; font-weight:700; color:var(--c-ink-2); background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:var(--r-pill); padding:1px 6px; margin-right:4px}
 .fnk-shell .mv-row .pc{justify-self:end; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap}
 
   /* 13F */
