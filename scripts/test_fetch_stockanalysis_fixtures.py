@@ -685,6 +685,47 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(summary["counts"]["missing"], 0)
         self.assertEqual(summary["counts"]["fallback_retry"], 0)
 
+    def test_incremental_etf_backfill_daily1y_honors_offset(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir.parent / "admin").mkdir(parents=True)
+                plan_rows = [
+                    {"ticker": "PLAN001", "actual_rows": 1, "fetchable_missing": ["daily_1y"]},
+                    {"ticker": "PLAN002", "actual_rows": 2, "fetchable_missing": ["daily_1y"]},
+                    {"ticker": "PLAN003", "actual_rows": 3, "fetchable_missing": ["daily_1y"]},
+                    {"ticker": "PLAN004", "actual_rows": 4, "fetchable_missing": ["daily_1y"]},
+                ]
+                (out_dir.parent / "admin" / "fenok-edge-etf-daily1y-fetchable-plan.json").write_text(
+                    json.dumps(
+                        {
+                            "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
+                            "tickers": [row["ticker"] for row in plan_rows],
+                            "rows": plan_rows,
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": []},
+                    limit=2,
+                    max_age_hours=720,
+                    offset=2,
+                    exclude=set(),
+                    required_history_periods=("daily_1y",),
+                    history_gaps_only=True,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        self.assertEqual([row["ticker"] for row in summary["selected"]], ["PLAN003", "PLAN004"])
+        self.assertEqual(summary["policy"]["offset"], 2)
+        self.assertEqual(summary["counts"]["offset_skipped"], 2)
+        self.assertEqual(summary["counts"]["selected"], 2)
+
     def test_incremental_etf_backfill_plan_payload_is_separate_from_run_proof(self) -> None:
         summary = {
             "counts": {

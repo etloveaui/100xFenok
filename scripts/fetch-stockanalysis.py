@@ -1895,6 +1895,7 @@ def load_daily_1y_fetchable_plan_rows() -> list[dict] | None:
 def daily_1y_plan_candidate_summary(
     plan_rows: list[dict],
     limit: int,
+    offset: int,
     exclude: set[str],
     pending_entries: dict,
 ) -> dict:
@@ -1929,7 +1930,9 @@ def daily_1y_plan_candidate_summary(
             }
         )
 
-    selected = candidates[:limit] if limit > 0 else candidates
+    safe_offset = max(0, offset)
+    offset_candidates = candidates[safe_offset:]
+    selected = offset_candidates[:limit] if limit > 0 else offset_candidates
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -1937,6 +1940,7 @@ def daily_1y_plan_candidate_summary(
         "generated_at": now_iso(),
         "policy": {
             "limit": limit,
+            "offset": safe_offset,
             "max_age_hours": None,
             "cooldown_days": None,
             "cooldown_failure_threshold": None,
@@ -1959,6 +1963,7 @@ def daily_1y_plan_candidate_summary(
             "prior_failed_candidates": sum(1 for row in candidates if row.get("prior_failures", 0) > 0),
             "daily_1y_missing_file": sum(1 for row in candidates if row.get("missing_file")),
             "daily_1y_short_rows": sum(1 for row in candidates if not row.get("missing_file")),
+            "offset_skipped": min(safe_offset, len(candidates)),
         },
         "selected": selected,
         "cooldown": [],
@@ -2224,6 +2229,7 @@ def incremental_etf_backfill_candidates(
     universe_payload: dict | None,
     limit: int,
     max_age_hours: float,
+    offset: int = 0,
     exclude: set[str] | None = None,
     pending_ledger: dict | None = None,
     cooldown_days: float = DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS,
@@ -2239,7 +2245,7 @@ def incremental_etf_backfill_candidates(
     if is_daily_1y_history_gap_mode(required_history_periods, history_gaps_only):
         daily_1y_plan_rows = load_daily_1y_fetchable_plan_rows()
         if daily_1y_plan_rows is not None:
-            return daily_1y_plan_candidate_summary(daily_1y_plan_rows, limit, exclude, pending_entries)
+            return daily_1y_plan_candidate_summary(daily_1y_plan_rows, limit, offset, exclude, pending_entries)
 
     sources = [
         ("new_etfs", load_surface_symbols("new_etfs")),
@@ -2769,6 +2775,7 @@ def main() -> None:
             universe_payload=universe_payload,
             limit=args.incremental_etf_limit,
             max_age_hours=args.incremental_etf_max_age_hours,
+            offset=args.offset,
             exclude=set(etfs),
             cooldown_days=args.incremental_etf_cooldown_days,
             cooldown_failure_threshold=args.incremental_etf_cooldown_failures,

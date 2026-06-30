@@ -150,6 +150,11 @@ jobs:
               INPUT_FETCH_SURFACES="false"
               INPUT_SURFACE_SET=""
               INPUT_CORE_BASKET_REFRESH="false"
+              if [ -n "${STOCKANALYSIS_DAILY1Y_OFFSET:-}" ]; then
+                INPUT_OFFSET="$STOCKANALYSIS_DAILY1Y_OFFSET"
+              else
+                INPUT_OFFSET="$(node -e 'const fs = require("fs"); const limit = Math.max(1, Number(process.env.STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT || 120) || 120); let count = 0; try { const payload = JSON.parse(fs.readFileSync("data/admin/fenok-edge-etf-daily1y-fetchable-plan.json", "utf8")); count = Array.isArray(payload.tickers) ? payload.tickers.length : 0; } catch {} const shards = Math.max(1, Math.ceil(count / limit)); const day = Math.floor(Date.now() / 86400000); process.stdout.write(String((day % shards) * limit));')"
+              fi
             else
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
@@ -175,6 +180,7 @@ jobs:
             if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_LIMIT" ]; then ARGS="$ARGS --incremental-etf-limit $INPUT_INCREMENTAL_ETF_LIMIT"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
+            if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
           else
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --classify-etf-catalogs"
             if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
