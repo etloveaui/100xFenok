@@ -155,6 +155,9 @@ export function runEtfSignalGateChecks(options = {}) {
     && publicCounts.eligible_etf_count === internalCounts.eligible_etf_count;
   const apiRouteReady = fileContains(root, "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts", [
     "fenok_etf_signals_summary.json",
+    "fields?: string[]",
+    "normalizeEtfSignalRow",
+    "Array.isArray(rawRow)",
     "FENOK_ETF_SIGNAL_NOT_FOUND",
   ]);
   const detailUiReady = fileContains(root, "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx", [

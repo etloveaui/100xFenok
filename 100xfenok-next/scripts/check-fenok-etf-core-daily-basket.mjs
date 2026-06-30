@@ -3,8 +3,8 @@
  * ETF Core Daily Basket gate.
  *
  * Requires the generated admin artifact and public-safe summary to match a
- * clean regeneration. The gate allows not_ready, but forbids pretending stale
- * selected rows are daily-ready.
+ * clean regeneration. The service gate fails closed when the selected Core
+ * Basket still has stale rows.
  */
 
 import fs from "node:fs";
@@ -76,9 +76,14 @@ export function runEtfCoreDailyBasketChecks() {
   const derivativeIncomeRows = rows.filter((row) => CORE_EXCLUDED_DERIVATIVE_INCOME_PATTERN.test(`${row.ticker} ${row.company ?? ""}`));
   if (newEtfRows.length > 0) errors.push("core basket rows must not include new ETF radar-only rows");
   if (derivativeIncomeRows.length > 0) errors.push(`core basket rows must not include single-stock/concentrated derivative-income ETF strategies: ${derivativeIncomeRows.map((row) => row.ticker).join(",")}`);
-  if (admin?.readiness?.core_daily_basket_ready === true && Number(admin?.readiness?.stale_selected_count) > 0) {
-    errors.push("core_daily_basket_ready=true cannot have stale selected rows");
-  }
+
+  const readiness = admin?.readiness ?? {};
+  const staleSelectedCount = Number(readiness.stale_selected_count ?? admin?.coverage?.stale_selected_count ?? 0);
+  const readinessBlockers = Array.isArray(readiness.blockers) ? readiness.blockers : [];
+  if (readiness.core_daily_basket_ready !== true) errors.push("core_daily_basket_ready must be true");
+  if (readiness.readiness_status !== "ready") errors.push("readiness_status must be ready");
+  if (staleSelectedCount > 0) errors.push(`Core Basket selected rows must be fresh; stale_selected_count=${staleSelectedCount}`);
+  if (readinessBlockers.length > 0) errors.push(`Core Basket readiness blockers must be empty: ${readinessBlockers.join(",")}`);
 
   return {
     ok: errors.length === 0,
@@ -109,6 +114,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   console.log(
     `[fenok-etf-core-daily-basket-gate] ok `
-    + `(selected=${result.counts.selected_count}, fresh=${result.counts.fresh_selected_count}, stale=${result.counts.stale_selected_count})`
+    + `(ready=${result.readiness?.core_daily_basket_ready === true}, selected=${result.counts.selected_count}, fresh=${result.counts.fresh_selected_count}, stale=${result.counts.stale_selected_count})`
   );
 }

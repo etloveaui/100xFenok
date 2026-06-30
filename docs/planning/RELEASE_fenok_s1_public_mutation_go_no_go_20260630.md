@@ -38,20 +38,20 @@ npm --prefix 100xfenok-next run qa:fenok-s1-public-mutation-readiness
 Exactly four files may change if the owner releases the enable command:
 
 1. `data/computed/stock_action_index.json`
-   - rows: `1066 -> 1174`
-   - delta: `+108`
+   - rows: `1066 -> 1173`
+   - delta: `+107`
    - public file: no
 2. `data/computed/fenok_signals.json`
-   - rows: `1066 -> 1174`
-   - delta: `+108`
+   - rows: `1066 -> 1173`
+   - delta: `+107`
    - public file: no
 3. `data/computed/fenok_signals_summary.json`
-   - rows: `1066 -> 1174`
-   - delta: `+108`
+   - rows: `1066 -> 1173`
+   - delta: `+107`
    - public file: no
 4. `100xfenok-next/public/data/computed/fenok_signals_summary.json`
-   - rows: `1066 -> 1174`
-   - delta: `+108`
+   - rows: `1066 -> 1173`
+   - delta: `+107`
    - public file: yes, slim summary only
 
 Forbidden target:
@@ -61,9 +61,9 @@ Forbidden target:
 ## Current Counts
 
 - S0 public stock rows before enable: `1066`
-- S1 promotion rows if enabled: `108`
-- blocked excluded rows: `4`
-- public rows after enable: `1174`
+- S1 promotion rows if enabled: `107`
+- blocked excluded rows: `5`
+- public rows after enable: `1173`
 - S0 overlap rows: `0`
 - ETF rows: `0`
 - non-stock rows: `0`
@@ -120,7 +120,7 @@ the project-standard staged-diff scan.
 
 ## Deploy And Public Guard Implications
 
-- The release changes the public denominator from `1066` to `1174` only after
+- The release changes the public denominator from `1066` to `1173` only after
   the explicit enable command runs and the resulting generated files are
   committed and published.
 - The slim public summary may change; the full public signal file remains

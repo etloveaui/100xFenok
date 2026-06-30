@@ -13,7 +13,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
 - The full scored-ETF lane is a public surface plus rolling universe-health/backfill diagnostic. It is not the ETF service DAILY/GATED gate. Current diagnostic evidence: `4,484 = 3,703 complete + 243 fetchable + 538 inception-limited`; fetchable required-history gaps are no longer the service blocker.
-- ETF Core Daily Basket is the implemented ETF service DAILY/GATED sublane. It does not reuse the full `4,484` scored ETF denominator for a daily-ready claim. Current generated state: `1,577` structural candidates -> `118` selected core refresh tickers, `118` fresh and `0` stale, so `etf_core_daily_basket_ready=true`.
+- ETF Core Daily Basket is the implemented ETF service DAILY/GATED sublane. It does not reuse the full `4,484` scored ETF denominator for a daily-ready claim. Current local regeneration is `1,576` structural candidates -> `118` selected core refresh tickers, `118` fresh and `0` stale, so `etf_core_daily_basket_ready=true`.
 - This is not a full-universe paid-ready ETF claim. Paid-ready wording for broad ETF scoring still requires explicit owner approval of the product scope; current service readiness is Core Basket scoped.
 
 ## Signal Families
@@ -80,7 +80,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket`
   - regenerates the Core Basket from `fenok_etf_signals_summary`, `etf_action_index`, ETF detail coverage, `new_etfs`, and per-ETF detail files
   - rejects public mirrors of the admin manifest
-  - allows `not_ready` when selected rows need refresh, but rejects any stale-row `core_daily_basket_ready=true` claim
+  - fails closed when selected Core Basket rows need refresh
   - requires no New ETF Radar row to enter the core basket
 - `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`
   - includes the ETF signal gate, ETF action-index gate, Core Basket gate, and ETF daily 1Y dispatch-plan gate
@@ -93,7 +93,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - ETF service daily readiness is claimed only through `etf_core_daily_basket_ready=true`, with `selected_count >= 75`, `stale_selected_count=0`, fresh generated artifacts, and the Core Basket QA gate.
 - ETF service gated readiness requires the Core Basket gate plus the general edge readiness gate to pass; it must not depend on all `4,484` scored ETFs having complete daily 1Y history.
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
-- Current status: full ETF scoring surface is PUBLIC plus diagnostic/backfill; ETF Core Daily Basket is service daily-ready (`118 fresh / 0 stale`). The durable full-universe diagnostic evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json`, currently proving `4484 = 3703 complete + 243 fetchable + 538 inception-limited` for the scored ETF denominator.
+- Current status: full ETF scoring surface is PUBLIC plus diagnostic/backfill; ETF Core Daily Basket is the service target and is currently green (`118 fresh / 0 stale`). The durable full-universe diagnostic evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json`, currently proving `4484 = 3703 complete + 243 fetchable + 538 inception-limited` for the scored ETF denominator.
 
 ## Core Daily Basket Sublane
 
@@ -139,7 +139,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 ## Remaining Work
 
-1. Keep the Core Basket schedule/gate green and watch for `stale_selected_count > 0` regressions.
+1. Keep the Core Basket schedule/gate green after clearing the current `stale_selected_count=0`, and keep the gate fail-closed for future regressions.
 2. Keep New ETF Radar as watchlist-only until detail/history/classification/scoring gates pass.
 3. Keep full ETF daily 1Y continuity as a rolling universe-health/backfill lane; do not make all `4,484` ETFs a service launch blocker.
 4. Use the owner-gated private dispatch plan for bounded full-universe catch-up only; do not flip full ETF `daily` or `gated` until the fetchable gap count reaches zero and the owner explicitly promotes that scope.

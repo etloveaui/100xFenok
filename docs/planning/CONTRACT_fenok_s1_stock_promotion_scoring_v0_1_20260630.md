@@ -21,14 +21,15 @@ Current local baseline from the S1 promotion gate:
 - S0 scored/public stock denominator: `1,066`
 - S1 market-facts stock candidates: `1,178`
 - S1 promotion audit gap: `112`
-- Joined-ready S1 rows: `108`
-- Blocked S1 rows: `4`
-- Future denominator if the 108-row seed is approved: `1,174`
+- Promotion-ready S1 rows: `107`
+- Blocked S1 rows: `5`
+- Future denominator if the 107-row seed is approved: `1,173`
 
 Blocked rows stay excluded:
 
 - `DAY`: `market_currency_country_scope`
 - `HOLX`: `market_currency_country_scope`
+- `KEY`: `market_currency_country_scope`
 - `MMC`: `market_currency_country_scope`
 - `STRC`: `evidence_families_min3`
 
@@ -36,7 +37,7 @@ ETF rows are out of scope and must remain in the separate S3 ETF lane.
 
 ## Promotion Scope
 
-The first promotion seed is exactly the 108 rows currently emitted by
+The first promotion seed is exactly the 107 rows currently emitted by
 `data/admin/fenok-s1-stock-promotion-gate-plan.json` as joined-ready promotion
 gate rows.
 
@@ -50,7 +51,7 @@ Rows are eligible only when all checks below are true:
 - `price_or_market_cap`
 - `evidence_families_min3`
 
-The four blocked rows must not be scored or promoted until their blockers are
+The five blocked rows must not be scored or promoted until their blockers are
 repaired and the S1 joined gate is regenerated.
 
 ## Formula Boundary
@@ -177,9 +178,9 @@ source rows in any public-bound payload.
 Public mutation remains forbidden until all acceptance checks below pass in the
 same clean worktree:
 
-1. Current S1 gate counts match exactly: `108` joined-ready and `4` blocked.
+1. Current S1 gate counts match exactly: `107` promotion-ready and `5` blocked.
 2. S0 denominator is preserved during dry run: `1066 -> 1066`.
-3. Hypothetical public denominator is explicit: `1066 + 108 = 1174`.
+3. Hypothetical public denominator is explicit: `1066 + 107 = 1173`.
 4. `s0_overlap_rows = 0`.
 5. `etf_rows = 0` and `non_stock_rows = 0`.
 6. `fake_score_rows = 0`.
@@ -277,7 +278,7 @@ outputs and the promotion implementation. Do not partially keep promoted rows.
 
 ## Owner Decisions Still Required
 
-- Approve whether the first public seed is exactly the current 108 rows.
+- Approve whether the first public seed is exactly the current 107 rows.
 - Approve use of the existing `action-score-v0.3.1` core for S1 public rows.
 - Approve the dry-run artifact path and schema.
 - Approve the explicit public mutation command name and default-off flag.

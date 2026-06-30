@@ -1,0 +1,865 @@
+{
+  "schema_version": "fenok-flow-backfill-index/v0.1",
+  "generated_at": "2026-06-29T12:34:33.046Z",
+  "purpose": "feno-data-readable admin index for Fenok Flow private US daily backfill runs; derived stats only, no raw rows.",
+  "raw_policy": {
+    "raw_public": false,
+    "public_mirror_allowed": false,
+    "raw_rows_included": false,
+    "private_manifest_pointer_only": true
+  },
+  "latest_us_daily_smoke": {
+    "run_id": "20260629",
+    "market": "US",
+    "status": "success",
+    "private_manifest_file": "_private/admin/fenok-flow/backfill/20260629/manifests/us_daily_backfill_smoke_5d_20260626.json",
+    "private_raw_base_dir": "_private/admin/fenok-flow/backfill/20260629",
+    "manifest_generated_at": "2026-06-29T12:19:56.581Z",
+    "date_count": 5,
+    "dates": [
+      "20260622",
+      "20260623",
+      "20260624",
+      "20260625",
+      "20260626"
+    ],
+    "target_universe": {
+      "mode": "explicit_reference_tickers",
+      "ticker_count": 8,
+      "tickers": [
+        "COIN",
+        "DASH",
+        "MU",
+        "NVDA",
+        "PLTR",
+        "PYPL",
+        "RDDT",
+        "UNH"
+      ],
+      "caveat": "Plain OCC underlyings only; dotted/foreign suffixes require owner-reviewed mapping before full universe expansion."
+    },
+    "source_class_map": [
+      {
+        "source_id": "finra_regsho_daily_cnms",
+        "provider": "FINRA",
+        "endpoint_class": "daily-history",
+        "cadence": "daily",
+        "status": "success",
+        "row_count": 58390,
+        "raw_public": false
+      },
+      {
+        "source_id": "occ_listed_options_volume",
+        "provider": "OCC",
+        "endpoint_class": "daily-history",
+        "cadence": "daily",
+        "status": "success",
+        "row_count": 4461,
+        "side_request_count": 80,
+        "side_success_count": 80,
+        "side_failed_count": 0,
+        "raw_public": false
+      },
+      {
+        "source_id": "finra_weekly_summary_reference",
+        "provider": "FINRA",
+        "endpoint_class": "periodic",
+        "cadence": "weekly_reference",
+        "status": "success",
+        "row_count": 15,
+        "raw_public": false
+      },
+      {
+        "source_id": "sec_companyfacts_periodic_reference",
+        "provider": "SEC",
+        "endpoint_class": "periodic",
+        "cadence": "periodic_reference",
+        "status": "success",
+        "ticker": "NVDA",
+        "concept_count": 643,
+        "fact_value_count": 26903,
+        "raw_public": false
+      }
+    ],
+    "status_counts": {
+      "success": 10,
+      "partial_or_failed": 0,
+      "empty": 0
+    },
+    "totals": {
+      "finra_regsho_daily_rows": 58390,
+      "occ_csv_rows": 4461,
+      "occ_call_volume": 29558666,
+      "occ_put_volume": 21404034
+    },
+    "normalized_score_candidates": [
+      {
+        "axis": "short_volume_pressure",
+        "source": "FINRA Reg SHO Daily CNMS",
+        "input": "short_volume / total_volume by ticker/date",
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      {
+        "axis": "options_volume_skew",
+        "source": "OCC Listed Options Volume Query",
+        "input": "call_volume share vs put_volume share by ticker/date",
+        "caveat": "OCC listed-options volume skew proxy only; not OPRA, premium, greeks, sweeps, blocks, or buyer/seller direction."
+      },
+      {
+        "axis": "weekly_context",
+        "source": "FINRA Weekly Summary",
+        "input": "weekly reference rows where relevant",
+        "caveat": "Delayed ATS/OTC overlay; never same-day dark-pool flow and not a daily scoring axis by itself."
+      },
+      {
+        "axis": "fundamental_reference",
+        "source": "SEC companyfacts",
+        "input": "periodic XBRL company facts",
+        "caveat": "SEC companyfacts is periodic fundamentals reference data; refresh on filing cadence, not daily market cadence."
+      }
+    ]
+  },
+  "operationalization": {
+    "automatic_daily_accumulation_status": "not_installed",
+    "cron_installed_by_this_run": false,
+    "safe_daily_command_template": "node scripts/backfill-fenok-us-daily-private.mjs --end-date YYYYMMDD --days 1 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id YYYYMMDD --sleep-ms 150 --max-occ-requests 16",
+    "daily_cache_rerun_template": "node scripts/backfill-fenok-us-daily-private.mjs --end-date YYYYMMDD --days 1 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id YYYYMMDD --sleep-ms 150 --max-occ-requests 16 --no-fetch",
+    "plan_only_template": "node scripts/backfill-fenok-us-daily-private.mjs --end-date YYYYMMDD --days 1 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id YYYYMMDD --sleep-ms 150 --max-occ-requests 16 --plan-only",
+    "full_252_batch_plan": {
+      "recommended_mode": "bounded_batches",
+      "trading_date_count": 252,
+      "ticker_count": 8,
+      "batch_size_trading_days": 5,
+      "batch_count": 51,
+      "full_batch_count": 50,
+      "final_batch_trading_days": 2,
+      "finra_daily_requests_total": 252,
+      "occ_side_requests_total": 4032,
+      "occ_side_requests_per_full_batch": 80,
+      "occ_side_requests_final_batch": 32,
+      "full_batch_command_template": "node scripts/backfill-fenok-us-daily-private.mjs --end-date BATCH_END_YYYYMMDD --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100",
+      "final_batch_command_template": "node scripts/backfill-fenok-us-daily-private.mjs --end-date FINAL_BATCH_END_YYYYMMDD --days 2 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 40",
+      "latest_available_trading_date": "20260626",
+      "exact_batch_queue_order": "oldest_to_newest_non_overlapping_trading_date_slices",
+      "batch_queue": [
+        {
+          "batch_index": 1,
+          "start_date": "20250626",
+          "end_date": "20250702",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250702 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 2,
+          "start_date": "20250703",
+          "end_date": "20250710",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250710 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 3,
+          "start_date": "20250711",
+          "end_date": "20250717",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250717 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 4,
+          "start_date": "20250718",
+          "end_date": "20250724",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250724 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 5,
+          "start_date": "20250725",
+          "end_date": "20250731",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250731 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 6,
+          "start_date": "20250801",
+          "end_date": "20250807",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250807 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 7,
+          "start_date": "20250808",
+          "end_date": "20250814",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250814 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 8,
+          "start_date": "20250815",
+          "end_date": "20250821",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250821 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 9,
+          "start_date": "20250822",
+          "end_date": "20250828",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250828 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 10,
+          "start_date": "20250829",
+          "end_date": "20250905",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250905 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 11,
+          "start_date": "20250908",
+          "end_date": "20250912",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250912 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 12,
+          "start_date": "20250915",
+          "end_date": "20250919",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250919 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 13,
+          "start_date": "20250922",
+          "end_date": "20250926",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20250926 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 14,
+          "start_date": "20250929",
+          "end_date": "20251003",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251003 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 15,
+          "start_date": "20251006",
+          "end_date": "20251010",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251010 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 16,
+          "start_date": "20251013",
+          "end_date": "20251017",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251017 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 17,
+          "start_date": "20251020",
+          "end_date": "20251024",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251024 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 18,
+          "start_date": "20251027",
+          "end_date": "20251031",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251031 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 19,
+          "start_date": "20251103",
+          "end_date": "20251107",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251107 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 20,
+          "start_date": "20251110",
+          "end_date": "20251114",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251114 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 21,
+          "start_date": "20251117",
+          "end_date": "20251121",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251121 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 22,
+          "start_date": "20251124",
+          "end_date": "20251201",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251201 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 23,
+          "start_date": "20251202",
+          "end_date": "20251208",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251208 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 24,
+          "start_date": "20251209",
+          "end_date": "20251215",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251215 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 25,
+          "start_date": "20251216",
+          "end_date": "20251222",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251222 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 26,
+          "start_date": "20251223",
+          "end_date": "20251230",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20251230 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 27,
+          "start_date": "20251231",
+          "end_date": "20260107",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260107 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 28,
+          "start_date": "20260108",
+          "end_date": "20260114",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260114 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 29,
+          "start_date": "20260115",
+          "end_date": "20260122",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260122 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 30,
+          "start_date": "20260123",
+          "end_date": "20260129",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260129 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 31,
+          "start_date": "20260130",
+          "end_date": "20260205",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260205 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 32,
+          "start_date": "20260206",
+          "end_date": "20260212",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260212 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 33,
+          "start_date": "20260213",
+          "end_date": "20260220",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260220 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 34,
+          "start_date": "20260223",
+          "end_date": "20260227",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260227 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 35,
+          "start_date": "20260302",
+          "end_date": "20260306",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260306 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 36,
+          "start_date": "20260309",
+          "end_date": "20260313",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260313 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 37,
+          "start_date": "20260316",
+          "end_date": "20260320",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260320 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 38,
+          "start_date": "20260323",
+          "end_date": "20260327",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260327 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 39,
+          "start_date": "20260330",
+          "end_date": "20260406",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260406 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 40,
+          "start_date": "20260407",
+          "end_date": "20260413",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260413 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 41,
+          "start_date": "20260414",
+          "end_date": "20260420",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260420 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 42,
+          "start_date": "20260421",
+          "end_date": "20260427",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260427 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 43,
+          "start_date": "20260428",
+          "end_date": "20260504",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260504 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 44,
+          "start_date": "20260505",
+          "end_date": "20260511",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260511 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 45,
+          "start_date": "20260512",
+          "end_date": "20260518",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260518 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 46,
+          "start_date": "20260519",
+          "end_date": "20260526",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260526 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 47,
+          "start_date": "20260527",
+          "end_date": "20260602",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260602 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 48,
+          "start_date": "20260603",
+          "end_date": "20260609",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260609 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 49,
+          "start_date": "20260610",
+          "end_date": "20260616",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260616 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 50,
+          "start_date": "20260617",
+          "end_date": "20260624",
+          "days": 5,
+          "finra_requests": 5,
+          "occ_side_requests": 80,
+          "max_occ_requests": 100,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260624 --days 5 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 100"
+        },
+        {
+          "batch_index": 51,
+          "start_date": "20260625",
+          "end_date": "20260626",
+          "days": 2,
+          "finra_requests": 2,
+          "occ_side_requests": 32,
+          "max_occ_requests": 40,
+          "command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260626 --days 2 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-full252 --sleep-ms 150 --max-occ-requests 40"
+        }
+      ],
+      "expected_duration": {
+        "min_throttle_wait_seconds": 605,
+        "estimated_wall_clock_minutes": "20-45 depending on FINRA/OCC HTTP latency and retries",
+        "note": "Throttle-only lower bound is about 10.1 minutes; network latency and retries dominate real runtime."
+      },
+      "retry_failure_policy": {
+        "retries_per_raw_fetch": 2,
+        "retry_backoff_ms": 500,
+        "per_batch_gate": "inspect manifest status_counts after each batch; continue only if failed=0 or failures are source-not-ready and intentionally accepted",
+        "rerun_policy": "rerun same command with --no-fetch to validate cache; rerun without --no-fetch only for missing/failed raw files after source readiness is confirmed",
+        "stop_conditions": [
+          "OCC request budget exceeded before fetch",
+          "FINRA latest available probe fails for intended date",
+          "side_failed_count > 0 for OCC after retry",
+          "credential scan or public raw mirror check fails"
+        ]
+      },
+      "recommended_go_no_go_gate": {
+        "current_recommendation": "NO-GO for unattended full252; GO only for supervised 5-day batches after user approval",
+        "go_when": [
+          "user explicitly approves full252 or specific batch range",
+          "latest-daily run remains success with max-occ-requests=16",
+          "first 5-day full252 batch finishes with failed=0 and no raw public mirror",
+          "disk budget and dirty-scope strategy are accepted"
+        ],
+        "no_go_when": [
+          "20260629 or target date is source-not-ready",
+          "OCC returns empty/unexpected CSV for representative tickers",
+          "batch manifest reports failed raw files",
+          "commit scope is not agreed while public computed/docs are already dirty"
+        ]
+      }
+    },
+    "system_load_controls": [
+      "plan-only mode previews dates, paths, and request count without network writes.",
+      "no-fetch mode validates cache reuse and fails closed on missing raw files.",
+      "max-occ-requests blocks oversized OCC batches before live fetch.",
+      "sleep-ms throttles OCC side queries.",
+      "explicit ticker universe bounds OCC request growth.",
+      "raw files stay under _private/admin/fenok-flow/backfill/<run-id>; public/admin index contains derived stats only."
+    ],
+    "failure_behavior": [
+      "per-source failed/empty counts are written to the private manifest.",
+      "failed reasons remain in summaries/manifest without exposing credentials.",
+      "rerunning the same run-id reuses cached raw files and updates summaries/manifest."
+    ],
+    "latest_daily_command": "node scripts/backfill-fenok-us-daily-private.mjs --end-date 20260626 --days 1 --requested-days 252 --tickers DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA --run-id 20260629-latest --sleep-ms 150 --max-occ-requests 16",
+    "latest_daily_status": {
+      "automatic_daily_accumulation_status": "not_installed",
+      "latest_manual_run_status": "success",
+      "latest_available_trading_date": "20260626",
+      "cron_installed_by_this_run": false
+    }
+  },
+  "feno_data_access": {
+    "category": "admin",
+    "file": "fenok-flow-backfill-index.json",
+    "example": "data read admin fenok-flow-backfill-index.json '.latest_us_daily_smoke.status_counts'"
+  },
+  "latest_available_probe": {
+    "checked_at": "2026-06-29T12:34:33.046Z",
+    "candidate_dates": [
+      "20260629",
+      "20260626"
+    ],
+    "latest_available_trading_date": "20260626",
+    "latest_unavailable": {
+      "date": "20260629",
+      "finra_regsho_daily_cnms": "http_403_not_ready",
+      "occ_volume_query": "empty_not_ready"
+    },
+    "latest_available": {
+      "date": "20260626",
+      "finra_regsho_daily_cnms": "http_200",
+      "occ_volume_query": "rows_present"
+    },
+    "caveat": "Availability was probed with representative FINRA daily file and OCC NVDA call-volume query; do not infer 20260629 daily completeness before source readiness."
+  },
+  "latest_us_daily_run": {
+    "run_id": "20260629-latest",
+    "market": "US",
+    "status": "success",
+    "private_manifest_file": "_private/admin/fenok-flow/backfill/20260629-latest/manifests/us_daily_backfill_smoke_1d_20260626.json",
+    "private_raw_base_dir": "_private/admin/fenok-flow/backfill/20260629-latest",
+    "manifest_generated_at": "2026-06-29T12:34:33.046Z",
+    "date_count": 1,
+    "dates": [
+      "20260626"
+    ],
+    "source_class_map": [
+      {
+        "source_id": "finra_regsho_daily_cnms",
+        "provider": "FINRA",
+        "endpoint_class": "daily-history",
+        "cadence": "daily",
+        "status": "success",
+        "row_count": 11973,
+        "side_request_count": null,
+        "side_success_count": null,
+        "side_failed_count": null,
+        "raw_public": false
+      },
+      {
+        "source_id": "occ_listed_options_volume",
+        "provider": "OCC",
+        "endpoint_class": "daily-history",
+        "cadence": "daily",
+        "status": "success",
+        "row_count": 897,
+        "side_request_count": 16,
+        "side_success_count": 16,
+        "side_failed_count": 0,
+        "raw_public": false
+      },
+      {
+        "source_id": "finra_weekly_summary_reference",
+        "provider": "FINRA",
+        "endpoint_class": "periodic",
+        "cadence": "weekly_reference",
+        "status": "success",
+        "row_count": 15,
+        "side_request_count": null,
+        "side_success_count": null,
+        "side_failed_count": null,
+        "raw_public": false
+      },
+      {
+        "source_id": "sec_companyfacts_periodic_reference",
+        "provider": "SEC",
+        "endpoint_class": "periodic",
+        "cadence": "periodic_reference",
+        "status": "success",
+        "row_count": null,
+        "side_request_count": null,
+        "side_success_count": null,
+        "side_failed_count": null,
+        "raw_public": false
+      }
+    ],
+    "status_counts": {
+      "success": 2,
+      "partial_or_failed": 0,
+      "empty": 0
+    },
+    "totals": {
+      "finra_regsho_daily_rows": 11973,
+      "occ_csv_rows": 897,
+      "occ_call_volume": 6889712,
+      "occ_put_volume": 5018074
+    },
+    "normalized_score_candidates": [
+      {
+        "axis": "short_volume_pressure",
+        "source": "FINRA Reg SHO Daily CNMS",
+        "input": "short_volume / total_volume by ticker/date",
+        "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+      },
+      {
+        "axis": "options_volume_skew",
+        "source": "OCC Listed Options Volume Query",
+        "input": "call_volume share vs put_volume share by ticker/date",
+        "caveat": "OCC listed-options volume skew proxy only; not OPRA, premium, greeks, sweeps, blocks, or buyer/seller direction."
+      },
+      {
+        "axis": "weekly_context",
+        "source": "FINRA Weekly Summary",
+        "input": "weekly reference rows where relevant",
+        "caveat": "Delayed ATS/OTC overlay; never same-day dark-pool flow and not a daily scoring axis by itself."
+      },
+      {
+        "axis": "fundamental_reference",
+        "source": "SEC companyfacts",
+        "input": "periodic XBRL company facts",
+        "caveat": "SEC companyfacts is periodic fundamentals reference data; refresh on filing cadence, not daily market cadence."
+      }
+    ],
+    "request_budget": {
+      "max_occ_requests": 16,
+      "sleep_ms_between_occ_side_queries": 150,
+      "retries_per_raw_fetch": 2
+    }
+  },
+  "next_tasks_beyond_data_pull": [
+    {
+      "task": "all_eligible_expansion_plan",
+      "status": "pending_owner_approval",
+      "note": "Expand beyond 8 reference tickers only with an owner-reviewed OCC-underlying universe and per-batch request cap."
+    },
+    {
+      "task": "freshness_gate",
+      "status": "pending",
+      "note": "Add a feno-data/admin freshness check for latest_us_daily_run.manifest_generated_at and latest_available_probe."
+    },
+    {
+      "task": "derived_scoring_adapter",
+      "status": "pending",
+      "note": "Transform private manifests into computed derived-only score histories without raw third-party rows."
+    },
+    {
+      "task": "retention_policy",
+      "status": "pending",
+      "note": "Define private raw retention and manifest retention before unattended accumulation."
+    },
+    {
+      "task": "commit_scope",
+      "status": "pending",
+      "note": "Commit should be limited to runner + admin bridge unless owner explicitly includes existing computed/docs dirty files."
+    }
+  ]
+}

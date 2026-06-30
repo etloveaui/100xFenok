@@ -31,7 +31,8 @@ type EtfSignalSummaryPayload = {
   generated_at?: string;
   formula_version?: string;
   coverage?: Record<string, unknown>;
-  rows?: EtfSignalRow[];
+  fields?: string[];
+  rows?: Array<EtfSignalRow | unknown[]>;
 };
 
 function cleanTicker(value: unknown): string {
@@ -46,6 +47,40 @@ async function loadEtfSignalsSummary(): Promise<EtfSignalSummaryPayload | null> 
   } catch {
     return null;
   }
+}
+
+function rowValue(payload: EtfSignalSummaryPayload, row: unknown[], key: string): unknown {
+  const index = Array.isArray(payload.fields) ? payload.fields.indexOf(key) : -1;
+  return index >= 0 ? row[index] : undefined;
+}
+
+function normalizeEtfSignalRow(payload: EtfSignalSummaryPayload, rawRow: EtfSignalRow | unknown[]): EtfSignalRow | null {
+  if (Array.isArray(rawRow)) {
+    const ticker = rowValue(payload, rawRow, "ticker");
+    if (!ticker) return null;
+    return {
+      ticker: typeof ticker === "string" ? ticker : String(ticker),
+      company: rowValue(payload, rawRow, "company") as EtfSignalRow["company"],
+      asset_type: rowValue(payload, rawRow, "asset_type") as EtfSignalRow["asset_type"],
+      category: rowValue(payload, rawRow, "category") as EtfSignalRow["category"],
+      aum: rowValue(payload, rawRow, "aum") as EtfSignalRow["aum"],
+      expense_ratio: rowValue(payload, rawRow, "expense_ratio") as EtfSignalRow["expense_ratio"],
+      dividend_yield: rowValue(payload, rawRow, "dividend_yield") as EtfSignalRow["dividend_yield"],
+      beta: rowValue(payload, rawRow, "beta") as EtfSignalRow["beta"],
+      scores: rowValue(payload, rawRow, "scores") as EtfSignalRow["scores"],
+      scored_signal_count: rowValue(payload, rawRow, "scored_signal_count") as EtfSignalRow["scored_signal_count"],
+    };
+  }
+  return rawRow && typeof rawRow === "object" ? rawRow : null;
+}
+
+function findEtfSignalRow(payload: EtfSignalSummaryPayload | null, ticker: string): EtfSignalRow | null {
+  if (!payload || !Array.isArray(payload.rows)) return null;
+  for (const rawRow of payload.rows) {
+    const row = normalizeEtfSignalRow(payload, rawRow);
+    if (cleanTicker(row?.ticker) === ticker) return row;
+  }
+  return null;
 }
 
 export async function GET(
@@ -67,7 +102,7 @@ export async function GET(
 
   return withResponseCache(`fenok-etf-signals:${normalizedTicker}`, 300, async () => {
     const payload = await loadEtfSignalsSummary();
-    const row = payload?.rows?.find((item) => cleanTicker(item.ticker) === normalizedTicker) ?? null;
+    const row = findEtfSignalRow(payload, normalizedTicker);
 
     if (!payload || !row) {
       return NextResponse.json(
