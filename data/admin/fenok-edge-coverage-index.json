@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-30T10:45:32.510Z",
+  "generated_at": "2026-06-30T11:50:23.853Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -90,8 +90,8 @@
   },
   "expanded_stock_candidate_universe": {
     "source_file": "data/computed/market_facts/index.json",
-    "generated_at": "2026-06-29T17:50:12Z",
-    "collected_asset_total": 6479,
+    "generated_at": "2026-06-30T11:49:31Z",
+    "collected_asset_total": 6486,
     "collected_stock_candidates": 1178,
     "scored_public_stock": 1066,
     "stock_promotion_audit_gap": 112,
@@ -103,7 +103,7 @@
     "source_file": "data/computed/market_facts/index.json",
     "stockanalysis_index_file": "data/stockanalysis/index.json",
     "etf_signals_summary_file": "data/computed/fenok_etf_signals_summary.json",
-    "collected_etf_candidates": 5301,
+    "collected_etf_candidates": 5308,
     "eligible_etf_count": 4484,
     "stage": "PUBLIC",
     "scored_public_etf": 4484,
@@ -132,13 +132,13 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-30T09:31:24.830Z",
-          "age_hours": 1.24,
+          "age_hours": 2.32,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-06-30T10:45:25.252Z",
+          "generated_at": "2026-06-30T11:50:18.931Z",
           "age_hours": 0,
           "max_age_hours": 48
         },
@@ -180,8 +180,8 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-06-30T09:40:53.633Z",
-        "generated_age_hours": 1.08,
+        "generated_at": "2026-06-30T11:50:18.991Z",
+        "generated_age_hours": 0,
         "generated_fresh": true,
         "core_daily_basket_ready": false,
         "daily_ready": false,
@@ -656,13 +656,13 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-30T09:31:24.830Z",
-              "age_hours": 1.24,
+              "age_hours": 2.32,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-06-30T10:45:25.252Z",
+              "generated_at": "2026-06-30T11:50:18.931Z",
               "age_hours": 0,
               "max_age_hours": 48
             },
@@ -719,8 +719,8 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-06-30T09:40:53.633Z",
-          "generated_age_hours": 1.08,
+          "generated_at": "2026-06-30T11:50:18.991Z",
+          "generated_age_hours": 0,
           "generated_fresh": true,
           "core_daily_basket_ready": false,
           "daily_ready": false,
@@ -783,28 +783,7 @@
       "completed_endpoint_calls": 620,
       "estimated_full_endpoint_calls": 7812,
       "latest_batch_manifest": "_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/manifest.json",
-      "latest_batch_dates": [
-        "2026-06-01",
-        "2026-06-02",
-        "2026-06-03",
-        "2026-06-04",
-        "2026-06-05",
-        "2026-06-08",
-        "2026-06-09",
-        "2026-06-10",
-        "2026-06-11",
-        "2026-06-12",
-        "2026-06-15",
-        "2026-06-16",
-        "2026-06-17",
-        "2026-06-18",
-        "2026-06-19",
-        "2026-06-22",
-        "2026-06-23",
-        "2026-06-24",
-        "2026-06-25",
-        "2026-06-26"
-      ],
+      "latest_batch_dates": [],
       "latest_batch_summary": {
         "total_files": 620,
         "success_files": 590,
@@ -816,28 +795,18 @@
       "caveat": "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date."
     },
     "us_252_reference_ticker_queue": {
-      "status": "started_bounded_supervised",
-      "completed_batches": 1,
+      "status": "not_started",
+      "completed_batches": 0,
       "total_batches": 51,
-      "completed_trading_dates": 5,
+      "completed_trading_dates": 0,
       "total_trading_dates": 252,
-      "completed_finra_requests": 5,
+      "completed_finra_requests": 0,
       "total_finra_requests": 252,
-      "completed_occ_side_requests": 80,
+      "completed_occ_side_requests": 0,
       "total_occ_side_requests": 4032,
-      "latest_batch_manifest": "_private/admin/fenok-flow/backfill/20260629-full252/manifests/us_daily_backfill_smoke_5d_20250702.json",
-      "latest_batch_dates": [
-        "20250626",
-        "20250627",
-        "20250630",
-        "20250701",
-        "20250702"
-      ],
-      "latest_batch_status_counts": {
-        "success": 10,
-        "partial_or_failed": 0,
-        "empty": 0
-      },
+      "latest_batch_manifest": null,
+      "latest_batch_dates": [],
+      "latest_batch_status_counts": null,
       "caveat": "This is 252-history progress for the 8 reference tickers only. It does not expand current active coverage beyond the existing computed US rows."
     }
   },
@@ -847,7 +816,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-30T10:45:32.510Z"
+        "generated_at": "2026-06-30T11:50:23.853Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -890,13 +859,13 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-30T09:31:24.830Z",
-        "age_hours": 1.24,
+        "age_hours": 2.32,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-06-30T10:45:25.252Z",
+        "generated_at": "2026-06-30T11:50:18.931Z",
         "age_hours": 0,
         "max_age_hours": 48,
         "fetchable_required_history": 2,
@@ -906,7 +875,7 @@
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-06-30T10:45:25.252Z",
+        "generated_at": "2026-06-30T11:50:18.931Z",
         "fetchable_daily_1y_gap": 244,
         "inception_limited_daily_1y_gap": 537,
         "status": "blocked_fetchable_daily_gap",
@@ -914,8 +883,8 @@
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-06-30T09:40:53.633Z",
-        "age_hours": 1.08,
+        "generated_at": "2026-06-30T11:50:18.991Z",
+        "age_hours": 0,
         "selected_count": 118,
         "fresh_selected_count": 1,
         "stale_selected_count": 117,

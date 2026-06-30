@@ -1,21 +1,21 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-06-30T11:10:50Z",
+  "generated_at": "2026-06-30T11:50:09Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6486,
     "fields": 19,
-    "multi_candidate_fields": 27381,
-    "divergence_rows": 27380,
+    "multi_candidate_fields": 27391,
+    "divergence_rows": 27390,
     "percent_scale_warnings": 33,
     "diagnosis_counts": {
       "agreement": 3871,
       "scale_mismatch": 33,
       "sign_divergence": 303,
-      "stale": 21279,
+      "stale": 21289,
       "value_drift": 1894
     },
-    "stale_rows": 21279,
+    "stale_rows": 21289,
     "scale_mismatch_rows": 33,
     "sign_divergence_rows": 303
   },
@@ -156,28 +156,28 @@
     },
     "return_1m": {
       "ticker_count": 6323,
-      "multi_candidate_count": 4560,
+      "multi_candidate_count": 4562,
       "selected_sources": {
         "stockanalysis.detail.performance": 4499,
         "yf.history_1y": 1824
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 4560,
-        "stockanalysis.etf_screener.performance": 4556,
+        "stockanalysis.detail.performance": 4562,
+        "stockanalysis.etf_screener.performance": 4562,
         "yf.history_1y": 68
       }
     },
     "return_1y": {
       "ticker_count": 5540,
-      "multi_candidate_count": 5532,
+      "multi_candidate_count": 5534,
       "selected_sources": {
         "stockanalysis.detail.performance": 3580,
         "yf": 1,
         "yf.history_1y": 1959
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 3638,
-        "stockanalysis.etf_screener.performance": 3637,
+        "stockanalysis.detail.performance": 3640,
+        "stockanalysis.etf_screener.performance": 3640,
         "yf": 1957,
         "yf.history_1y": 1957
       }
@@ -208,38 +208,38 @@
     },
     "return_5y_avg": {
       "ticker_count": 2042,
-      "multi_candidate_count": 1880,
+      "multi_candidate_count": 1881,
       "selected_sources": {
         "stockanalysis.detail.performance": 1836,
         "yf": 206
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 1880,
-        "stockanalysis.etf_screener.performance": 1880,
+        "stockanalysis.detail.performance": 1881,
+        "stockanalysis.etf_screener.performance": 1881,
         "yf": 46
       }
     },
     "return_max_avg": {
       "ticker_count": 3643,
-      "multi_candidate_count": 3637,
+      "multi_candidate_count": 3640,
       "selected_sources": {
         "stockanalysis.detail.performance": 3643
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 3637,
-        "stockanalysis.etf_screener.performance": 3637
+        "stockanalysis.detail.performance": 3640,
+        "stockanalysis.etf_screener.performance": 3640
       }
     },
     "return_ytd": {
       "ticker_count": 6106,
-      "multi_candidate_count": 4689,
+      "multi_candidate_count": 4691,
       "selected_sources": {
         "stockanalysis.detail.performance": 4147,
         "yf.history_1y": 1959
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 4205,
-        "stockanalysis.etf_screener.performance": 4204,
+        "stockanalysis.detail.performance": 4207,
+        "stockanalysis.etf_screener.performance": 4207,
         "yf": 548,
         "yf.history_1y": 549
       }
@@ -797,43 +797,6 @@
       }
     },
     {
-      "ticker": "MAYC",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 185.960036,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -1.0697994563505424
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 0.9196
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 185.960036,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 3.8074
-      }
-    },
-    {
       "ticker": "AMD",
       "asset_type": "stock",
       "field": "change",
@@ -1223,43 +1186,6 @@
       "freshness": {
         "stockanalysis.quote": 1.7904,
         "yf.derived": 0.0
-      }
-    },
-    {
-      "ticker": "ASCI",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 180.240035,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -3.1443156879168024
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 2.523
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 180.240035,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2696
       }
     },
     {
@@ -3831,6 +3757,76 @@
         "yf.history_1y": 0.0,
         "yf": 0.0
       }
+    },
+    {
+      "ticker": "FXF",
+      "asset_type": "etf",
+      "field": "return_ytd",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 153.739308,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -2.167054335811234
+        },
+        {
+          "source": "yf",
+          "value": 1.16456
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 153.739308,
+      "fresh_spread_pct": 153.739308,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "MA",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 153.732792,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -1.11
+        },
+        {
+          "source": "yf.derived",
+          "value": 2.0657776323324812
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 153.732792,
+      "fresh_spread_pct": 153.732792,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 1.8042,
+        "yf.derived": 0.0
+      }
     }
   ],
   "percent_scale_warnings": [
@@ -5069,43 +5065,6 @@
   ],
   "top_stale": [
     {
-      "ticker": "MAYC",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 185.960036,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -1.0697994563505424
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 0.9196
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 185.960036,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 3.8074
-      }
-    },
-    {
       "ticker": "XLU",
       "asset_type": "etf",
       "field": "return_3m",
@@ -5140,43 +5099,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.history": 8.5964
-      }
-    },
-    {
-      "ticker": "ASCI",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 180.240035,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -3.1443156879168024
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 2.523
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 180.240035,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2696
       }
     },
     {
@@ -5221,7 +5143,7 @@
       "asset_type": "etf",
       "field": "return_1m",
       "selected_source": "yf.history_1y",
-      "candidate_count": 2,
+      "candidate_count": 3,
       "relative_spread_pct": 152.190706,
       "values": [
         {
@@ -5231,13 +5153,18 @@
         {
           "source": "stockanalysis.detail.performance",
           "value": -1.5359420289855008
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": -1.5359420289855008
         }
       ],
       "diagnosis": "stale",
       "spread_pct": 152.190706,
       "fresh_spread_pct": null,
       "stale_sources": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.etf_screener.performance"
       ],
       "scale_mismatch": false,
       "scale_factor": null,
@@ -5250,44 +5177,8 @@
       },
       "freshness": {
         "yf.history_1y": 11.3535,
-        "stockanalysis.detail.performance": 0.0
-      }
-    },
-    {
-      "ticker": "DDTY",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 140.484048,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -0.3643564356435594
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 0.9
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 140.484048,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
         "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.27
+        "stockanalysis.etf_screener.performance": 3.8299
       }
     },
     {
@@ -5325,80 +5216,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.history": 8.6151
-      }
-    },
-    {
-      "ticker": "DDFY",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 119.713562,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -0.09975062344139438
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 0.506
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 119.713562,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.27
-      }
-    },
-    {
-      "ticker": "CMAY",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 119.105308,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -0.13176930596285286
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 0.6897
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 119.105308,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2699
       }
     },
     {
@@ -5591,7 +5408,7 @@
       "asset_type": "etf",
       "field": "return_1m",
       "selected_source": "yf.history_1y",
-      "candidate_count": 2,
+      "candidate_count": 3,
       "relative_spread_pct": 95.649775,
       "values": [
         {
@@ -5601,13 +5418,18 @@
         {
           "source": "stockanalysis.detail.performance",
           "value": 0.3221
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 0.3221
         }
       ],
       "diagnosis": "stale",
       "spread_pct": 95.649775,
       "fresh_spread_pct": null,
       "stale_sources": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.etf_screener.performance"
       ],
       "scale_mismatch": false,
       "scale_factor": null,
@@ -5620,7 +5442,8 @@
       },
       "freshness": {
         "yf.history_1y": 11.3477,
-        "stockanalysis.detail.performance": 0.0
+        "stockanalysis.detail.performance": 0.0,
+        "stockanalysis.etf_screener.performance": 3.8076
       }
     },
     {
@@ -6105,43 +5928,6 @@
       }
     },
     {
-      "ticker": "DHLX",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 72.861254,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -1.4629621181015025
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": -0.3970295737115624
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 72.861254,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2701
-      }
-    },
-    {
       "ticker": "INSM",
       "asset_type": "stock",
       "field": "forward_pe",
@@ -6250,43 +6036,6 @@
       "freshness": {
         "yf": 0.0,
         "slickcharts": 120.2166
-      }
-    },
-    {
-      "ticker": "IBHM",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 69.348711,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 0.4518
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 1.474
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 69.348711,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2704
       }
     },
     {
@@ -7252,43 +7001,6 @@
       }
     },
     {
-      "ticker": "IBCB",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 44.766875,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 0.7937
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 1.437
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 44.766875,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2704
-      }
-    },
-    {
       "ticker": "MU",
       "asset_type": "stock",
       "field": "trailing_pe",
@@ -7700,7 +7412,7 @@
       "asset_type": "etf",
       "field": "return_1m",
       "selected_source": "yf.history_1y",
-      "candidate_count": 2,
+      "candidate_count": 3,
       "relative_spread_pct": 37.943709,
       "values": [
         {
@@ -7710,13 +7422,18 @@
         {
           "source": "stockanalysis.detail.performance",
           "value": 3.519
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 3.519
         }
       ],
       "diagnosis": "stale",
       "spread_pct": 37.943709,
       "fresh_spread_pct": null,
       "stale_sources": [
-        "yf.history_1y"
+        "yf.history_1y",
+        "stockanalysis.etf_screener.performance"
       ],
       "scale_mismatch": false,
       "scale_factor": null,
@@ -7729,7 +7446,8 @@
       },
       "freshness": {
         "yf.history_1y": 11.4829,
-        "stockanalysis.detail.performance": 0.0
+        "stockanalysis.detail.performance": 0.0,
+        "stockanalysis.etf_screener.performance": 3.786
       }
     },
     {
@@ -8113,43 +7831,6 @@
       }
     },
     {
-      "ticker": "IBTR",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 32.85991,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 1.04
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 1.549
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 32.85991,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2705
-      }
-    },
-    {
       "ticker": "ACN",
       "asset_type": "stock",
       "field": "trailing_pe",
@@ -8258,43 +7939,6 @@
       "freshness": {
         "yf": 0.0,
         "slickcharts": 26.3695
-      }
-    },
-    {
-      "ticker": "DUSG",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "stockanalysis.detail.performance",
-      "candidate_count": 2,
-      "relative_spread_pct": 32.268941,
-      "values": [
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 3.415
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 5.042
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 32.268941,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.etf_screener.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": false,
-      "selected_rationale": {
-        "selected": "stockanalysis.detail.performance",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.detail.performance": 0.0,
-        "stockanalysis.etf_screener.performance": 4.2701
       }
     },
     {
@@ -8786,6 +8430,376 @@
       "freshness": {
         "yf": 0.0,
         "slickcharts": 26.3629
+      }
+    },
+    {
+      "ticker": "MRNA",
+      "asset_type": "stock",
+      "field": "price",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.849859,
+      "values": [
+        {
+          "source": "yf",
+          "value": 67.27
+        },
+        {
+          "source": "slickcharts",
+          "value": 47.19
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 29.849859,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.3629
+      }
+    },
+    {
+      "ticker": "ACN",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.733709,
+      "values": [
+        {
+          "source": "yf",
+          "value": 8.790313
+        },
+        {
+          "source": "slickcharts",
+          "value": 12.51
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 29.733709,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.346
+      }
+    },
+    {
+      "ticker": "CBOE",
+      "asset_type": "stock",
+      "field": "trailing_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.718736,
+      "values": [
+        {
+          "source": "yf",
+          "value": 20.016104
+        },
+        {
+          "source": "slickcharts",
+          "value": 28.48
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 29.718736,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 27.9689
+      }
+    },
+    {
+      "ticker": "XHB",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.633749,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 18.097971077728605
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 12.734863834325722
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 29.633749,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 8.5966
+      }
+    },
+    {
+      "ticker": "MPWR",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.508197,
+      "values": [
+        {
+          "source": "yf",
+          "value": 0.61
+        },
+        {
+          "source": "slickcharts",
+          "value": 0.43
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 29.508197,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.3628
+      }
+    },
+    {
+      "ticker": "XLK",
+      "asset_type": "etf",
+      "field": "return_3y_avg",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 29.317051,
+      "values": [
+        {
+          "source": "yf",
+          "value": 30.184060000000002
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 21.334983685285437
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 29.317051,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "stockanalysis.detail.history": 8.5964
+      }
+    },
+    {
+      "ticker": "SMCI",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 28.521933,
+      "values": [
+        {
+          "source": "yf",
+          "value": 19813720064.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 27720000000.0
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 28.521933,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 3,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.3695
+      }
+    },
+    {
+      "ticker": "TSN",
+      "asset_type": "stock",
+      "field": "dividend_yield",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 28.448276,
+      "values": [
+        {
+          "source": "yf",
+          "value": 3.48
+        },
+        {
+          "source": "slickcharts",
+          "value": 2.49
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 28.448276,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.3724
+      }
+    },
+    {
+      "ticker": "CTSH",
+      "asset_type": "stock",
+      "field": "market_cap",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 28.333876,
+      "values": [
+        {
+          "source": "yf",
+          "value": 18934190080.0
+        },
+        {
+          "source": "slickcharts",
+          "value": 26420000000.0
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 28.333876,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 3,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.3526
+      }
+    },
+    {
+      "ticker": "CTSH",
+      "asset_type": "stock",
+      "field": "forward_pe",
+      "selected_source": "yf",
+      "candidate_count": 2,
+      "relative_spread_pct": 28.304212,
+      "values": [
+        {
+          "source": "yf",
+          "value": 6.4741297
+        },
+        {
+          "source": "slickcharts",
+          "value": 9.03
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 28.304212,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "slickcharts"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": false,
+      "selected_rationale": {
+        "selected": "yf",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf": 0.0,
+        "slickcharts": 26.3526
       }
     }
   ],

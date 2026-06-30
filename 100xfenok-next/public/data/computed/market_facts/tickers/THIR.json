@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "THIR",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T10:46:19Z",
+  "generated_at": "2026-06-30T11:49:31Z",
   "identity": {
     "name": "THOR Index Rotation ETF",
     "exchange": "NYQ",
@@ -256,9 +256,17 @@
           "fetched_at": "2026-06-30T00:35:25Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": -1.5359420289855008,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-26T04:40:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 9.907015685572574,
@@ -323,6 +331,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 5.432,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-26T04:40:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 7.43494,
           "source": "yf",
           "as_of": null,
@@ -331,7 +347,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_1y": {
       "value": 22.284849676985264,
@@ -365,6 +381,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 17.303,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-26T04:40:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 21.664274,
           "source": "yf",
           "as_of": null,
@@ -373,7 +397,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_max_avg": {
       "value": 19.182,
@@ -395,9 +419,17 @@
           "fetched_at": "2026-06-30T00:35:25Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 19.182,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-26T04:40:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -531,14 +563,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/THIR.json",
     "stockanalysis": "stockanalysis/etfs/THIR.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

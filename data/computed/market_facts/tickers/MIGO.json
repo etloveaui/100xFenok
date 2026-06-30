@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MIGO",
   "asset_type": "etf",
-  "generated_at": "2026-06-30T10:46:19Z",
+  "generated_at": "2026-06-30T11:49:31Z",
   "identity": {
     "name": "Mig Core ETF",
     "exchange": "PCX",
@@ -202,9 +202,17 @@
           "fetched_at": "2026-06-30T00:03:12Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 0.3221,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-06-26T04:40:18Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 23.886370326805988,
@@ -672,14 +680,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/MIGO.json",
     "stockanalysis": "stockanalysis/etfs/MIGO.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
