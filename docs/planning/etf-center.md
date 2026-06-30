@@ -16,7 +16,7 @@ Current coverage (2026-06-30 local DataPack):
 - Yahoo ETF fallback files: 715
 - Market-facts normalized ETF rows: 5,301
 - Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
-- Fenok Edge ETF daily-1Y readiness: `4484 = 3632 complete + 315 fetchable + 537 inception-limited`
+- Fenok Edge ETF daily-1Y readiness: `4484 = 3672 complete + 275 fetchable + 537 inception-limited`
 - Remaining distinction: ETF Center UI/data coverage is surface-ready, but Fenok Edge ETF paid-ready wording stays blocked until `daily=false` and `gated=false` clear.
 
 Design principles:
