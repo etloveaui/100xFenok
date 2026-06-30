@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-occ-options-availability/v0.1",
-  "generated_at": "2026-06-29T21:41:54.810Z",
+  "generated_at": "2026-06-30T00:55:06.311Z",
   "formula_version": "fenok-occ-options-volume-v0.1",
   "purpose": "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
   "raw_policy": {
@@ -9,12 +9,12 @@
     "private_artifact_paths_included": false
   },
   "source_date": "20260626",
-  "collection_mode": "s0_occ_missing_plain_us_batched",
-  "selected_tickers": 25,
-  "eligible_count": 25,
+  "collection_mode": "s0_occ_class_share_accepted_form_batched",
+  "selected_tickers": 2,
+  "eligible_count": 2,
   "request_budget": {
-    "estimated_max_live_requests": 50,
-    "max_requests": 50
+    "estimated_max_live_requests": 4,
+    "max_requests": 20
   },
   "side_attempts": [
     {
@@ -37,6 +37,50 @@
       "status": "no_record",
       "error_class": "no_record",
       "error": "Unexpected OCC CSV header, missing quantity: No record(s) found"
+    },
+    {
+      "ticker": "BRK.A",
+      "source_date": "20260626",
+      "side": "C",
+      "attempted_form": "BRK.A",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "failed",
+      "error_class": "failed",
+      "error": "Unexpected OCC CSV header, missing quantity: Invalid symbol."
+    },
+    {
+      "ticker": "BRK.A",
+      "source_date": "20260626",
+      "side": "P",
+      "attempted_form": "BRK.A",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "failed",
+      "error_class": "failed",
+      "error": "Unexpected OCC CSV header, missing quantity: Invalid symbol."
+    },
+    {
+      "ticker": "BRK.B",
+      "source_date": "20260626",
+      "side": "C",
+      "attempted_form": "BRK.B",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "failed",
+      "error_class": "failed",
+      "error": "Unexpected OCC CSV header, missing quantity: Invalid symbol."
+    },
+    {
+      "ticker": "BRK.B",
+      "source_date": "20260626",
+      "side": "P",
+      "attempted_form": "BRK.B",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "failed",
+      "error_class": "failed",
+      "error": "Unexpected OCC CSV header, missing quantity: Invalid symbol."
     },
     {
       "ticker": "COLM",
@@ -7070,11 +7114,51 @@
       "attempted_forms": [
         "ATO"
       ],
-      "accepted_form": null,
+      "accepted_form": "ATO",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
+      },
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
+    },
+    {
+      "ticker": "BRK.A",
+      "source_date": "20260626",
+      "attempted_forms": [
+        "BRK.A"
+      ],
+      "accepted_form": null,
+      "accepted_form_policy": null,
+      "scoring_row_eligible": false,
+      "coverage_row_eligible": false,
+      "no_listed_options_policy_status": null,
+      "status": "failed",
+      "side_statuses": {
+        "C": "failed",
+        "P": "failed"
+      },
+      "evidence_policy": null
+    },
+    {
+      "ticker": "BRK.B",
+      "source_date": "20260626",
+      "attempted_forms": [
+        "BRK.B"
+      ],
+      "accepted_form": null,
+      "accepted_form_policy": null,
+      "scoring_row_eligible": false,
+      "coverage_row_eligible": false,
+      "no_listed_options_policy_status": null,
+      "status": "failed",
+      "side_statuses": {
+        "C": "failed",
+        "P": "failed"
       },
       "evidence_policy": null
     },
@@ -7084,13 +7168,17 @@
       "attempted_forms": [
         "COLM"
       ],
-      "accepted_form": null,
+      "accepted_form": "COLM",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "ELS",
@@ -7126,13 +7214,17 @@
       "attempted_forms": [
         "FTS"
       ],
-      "accepted_form": null,
+      "accepted_form": "FTS",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "FTV",
@@ -7140,13 +7232,17 @@
       "attempted_forms": [
         "FTV"
       ],
-      "accepted_form": null,
+      "accepted_form": "FTV",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "GIB",
@@ -7154,13 +7250,17 @@
       "attempted_forms": [
         "GIB"
       ],
-      "accepted_form": null,
+      "accepted_form": "GIB",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "GIII",
@@ -7168,13 +7268,17 @@
       "attempted_forms": [
         "GIII"
       ],
-      "accepted_form": null,
+      "accepted_form": "GIII",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "no_record",
         "P": "loaded"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "GIL",
@@ -8134,13 +8238,17 @@
       "attempted_forms": [
         "LII"
       ],
-      "accepted_form": null,
+      "accepted_form": "LII",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "LIN",
@@ -9366,13 +9474,17 @@
       "attempted_forms": [
         "PAG"
       ],
-      "accepted_form": null,
+      "accepted_form": "PAG",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "PANW",
@@ -9422,13 +9534,17 @@
       "attempted_forms": [
         "PBA"
       ],
-      "accepted_form": null,
+      "accepted_form": "PBA",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "PCAR",
@@ -10108,13 +10224,17 @@
       "attempted_forms": [
         "RPM"
       ],
-      "accepted_form": null,
+      "accepted_form": "RPM",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "RPRX",
@@ -10136,13 +10256,17 @@
       "attempted_forms": [
         "RS"
       ],
-      "accepted_form": null,
+      "accepted_form": "RS",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "RSG",
@@ -10570,13 +10694,17 @@
       "attempted_forms": [
         "STE"
       ],
-      "accepted_form": null,
+      "accepted_form": "STE",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "STLA",
@@ -11690,13 +11818,17 @@
       "attempted_forms": [
         "WLK"
       ],
-      "accepted_form": null,
+      "accepted_form": "WLK",
+      "accepted_form_policy": "one_side_loaded_one_side_no_record_zero_volume_side",
+      "scoring_row_eligible": true,
+      "coverage_row_eligible": true,
+      "no_listed_options_policy_status": null,
       "status": "partial_no_record_or_form_gap",
       "side_statuses": {
         "C": "loaded",
         "P": "no_record"
       },
-      "evidence_policy": null
+      "evidence_policy": "One side returned OCC rows and the other returned OCC no-record for the accepted form/date; the no-record side is treated as zero volume, not as a no-listed-options proof."
     },
     {
       "ticker": "WM",
@@ -11979,15 +12111,15 @@
       "evidence_policy": null
     }
   ],
-  "previous_generated_at": "2026-06-29T21:33:11.095Z",
+  "previous_generated_at": "2026-06-30T00:54:58.734Z",
   "upsert_policy": {
     "key": [
       "ticker",
       "source_date",
       "attempted_forms"
     ],
-    "replaced_rows": 19,
-    "added_rows": 25,
-    "cumulative_rows": 351
+    "replaced_rows": 0,
+    "added_rows": 2,
+    "cumulative_rows": 353
   }
 }

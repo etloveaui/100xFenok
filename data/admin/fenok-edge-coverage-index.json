@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-30T00:36:24.446Z",
+  "generated_at": "2026-06-30T01:01:18.341Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -14,7 +14,7 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-06-29T21:42:01.719Z",
+    "generated_at": "2026-06-30T00:59:40.282Z",
     "current_only": true,
     "total": 1066,
     "by_market": [
@@ -132,14 +132,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-29T15:35:23.637Z",
-          "age_hours": 9.02,
+          "age_hours": 9.43,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-06-30T00:36:24.293Z",
-          "age_hours": 0,
+          "age_hours": 0.42,
           "max_age_hours": 48
         },
         {
@@ -246,22 +246,22 @@
       {
         "id": "us_occ_options_proxy",
         "label": "US OCC listed-options proxy coverage",
-        "covered_count": 560,
+        "covered_count": 573,
         "denominator": 637,
         "denominator_label": "active_scoring_universe.us",
-        "coverage_pct": 87.91,
-        "active_scoring_coverage_pct": 52.53,
+        "coverage_pct": 89.95,
+        "active_scoring_coverage_pct": 53.75,
         "source_date": "2026-06-26",
         "availability_status": "partial",
         "claim_scope": "proxy_source_available",
         "not_public_scoring": true,
         "caveat": "OCC listed-options volume proxy only; not OPRA, premium, greeks, or buyer/seller direction.",
         "source_file": "data/computed/fenok_occ_options_volume.json",
-        "rows": 560,
+        "rows": 573,
         "accepted_form_policy": {
-          "counted_present_rows": 560,
+          "counted_present_rows": 573,
           "both_sides_loaded_or_legacy_rows": 560,
-          "partial_zero_side_rows": 0,
+          "partial_zero_side_rows": 13,
           "partial_zero_side_rule": "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
           "no_listed_options_rule": "Both-side no_record is evidence-only and does not count as OCC source-ready until an owner-accepted no-listed-options policy exists."
         }
@@ -347,10 +347,10 @@
       "formula": "KRX latest fully populated issuer daily proof + US FINRA flow proxy"
     },
     "latest_available_kr_plus_us_occ": {
-      "covered_count": 898,
+      "covered_count": 911,
       "denominator": 1066,
       "denominator_label": "active_scoring_universe.total",
-      "coverage_pct": 84.24,
+      "coverage_pct": 85.46,
       "claim_scope": "source_availability_composite",
       "not_public_scoring": true,
       "formula": "KRX latest fully populated issuer daily proof + US OCC options proxy"
@@ -468,36 +468,36 @@
             {
               "id": "occ_full_us_source_ready",
               "status": "blocked",
-              "covered_count": 560,
+              "covered_count": 573,
               "denominator": 637,
-              "missing_count": 77,
+              "missing_count": 64,
               "source_date": "2026-06-26",
               "derived_gap_breakdown": {
                 "missing_categories": {
                   "class_share_symbol_normalization_or_source_gap": 2,
                   "non_plain_or_foreign_suffix_requires_universe_mapping": 56,
-                  "plain_us_collection_or_no_options_policy_required": 19,
-                  "plain_us_attempted_unresolved_count": 19,
+                  "plain_us_collection_or_no_options_policy_required": 6,
+                  "plain_us_attempted_unresolved_count": 6,
                   "plain_us_no_record_attempt_count": 6,
                   "plain_us_no_listed_options_policy_pending_count": 6,
-                  "plain_us_partial_no_record_or_form_gap_count": 13,
+                  "plain_us_partial_no_record_or_form_gap_count": 0,
                   "plain_us_transient_failed_attempt_count": 0,
                   "plain_us_failed_attempt_count": 0,
                   "plain_us_unattempted_count": 0
                 },
                 "plain_us_collection_or_no_options_policy_required": {
-                  "count": 19,
-                  "attempted_unresolved_count": 19,
+                  "count": 6,
+                  "attempted_unresolved_count": 6,
                   "no_record_attempt_count": 6,
                   "no_listed_options_policy_pending_count": 6,
-                  "partial_no_record_or_form_gap_count": 13,
+                  "partial_no_record_or_form_gap_count": 0,
                   "transient_failed_attempt_count": 0,
                   "failed_attempt_count": 0,
                   "unattempted_count": 0,
                   "accepted_form_policy": {
                     "partial_zero_side_row_policy": "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
                     "no_listed_options_policy": "not_accepted_for_readiness; both-side no_record remains evidence-only",
-                    "current_partial_rows_without_output_row_count": 13,
+                    "current_partial_rows_without_output_row_count": 0,
                     "current_no_record_evidence_only_count": 6
                   }
                 },
@@ -542,36 +542,36 @@
             {
               "id": "occ_full_us_source_ready",
               "status": "blocked",
-              "covered_count": 560,
+              "covered_count": 573,
               "denominator": 637,
-              "missing_count": 77,
+              "missing_count": 64,
               "source_date": "2026-06-26",
               "derived_gap_breakdown": {
                 "missing_categories": {
                   "class_share_symbol_normalization_or_source_gap": 2,
                   "non_plain_or_foreign_suffix_requires_universe_mapping": 56,
-                  "plain_us_collection_or_no_options_policy_required": 19,
-                  "plain_us_attempted_unresolved_count": 19,
+                  "plain_us_collection_or_no_options_policy_required": 6,
+                  "plain_us_attempted_unresolved_count": 6,
                   "plain_us_no_record_attempt_count": 6,
                   "plain_us_no_listed_options_policy_pending_count": 6,
-                  "plain_us_partial_no_record_or_form_gap_count": 13,
+                  "plain_us_partial_no_record_or_form_gap_count": 0,
                   "plain_us_transient_failed_attempt_count": 0,
                   "plain_us_failed_attempt_count": 0,
                   "plain_us_unattempted_count": 0
                 },
                 "plain_us_collection_or_no_options_policy_required": {
-                  "count": 19,
-                  "attempted_unresolved_count": 19,
+                  "count": 6,
+                  "attempted_unresolved_count": 6,
                   "no_record_attempt_count": 6,
                   "no_listed_options_policy_pending_count": 6,
-                  "partial_no_record_or_form_gap_count": 13,
+                  "partial_no_record_or_form_gap_count": 0,
                   "transient_failed_attempt_count": 0,
                   "failed_attempt_count": 0,
                   "unattempted_count": 0,
                   "accepted_form_policy": {
                     "partial_zero_side_row_policy": "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
                     "no_listed_options_policy": "not_accepted_for_readiness; both-side no_record remains evidence-only",
-                    "current_partial_rows_without_output_row_count": 13,
+                    "current_partial_rows_without_output_row_count": 0,
                     "current_no_record_evidence_only_count": 6
                   }
                 },
@@ -647,14 +647,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-29T15:35:23.637Z",
-              "age_hours": 9.02,
+              "age_hours": 9.43,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-06-30T00:36:24.293Z",
-              "age_hours": 0,
+              "age_hours": 0.42,
               "max_age_hours": 48
             },
             {
@@ -750,7 +750,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-30T00:36:24.446Z"
+        "generated_at": "2026-06-30T01:01:18.341Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -793,14 +793,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-29T15:35:23.637Z",
-        "age_hours": 9.02,
+        "age_hours": 9.43,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-06-30T00:36:24.293Z",
-        "age_hours": 0,
+        "age_hours": 0.42,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 12,

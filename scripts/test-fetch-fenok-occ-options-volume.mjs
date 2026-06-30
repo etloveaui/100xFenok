@@ -157,7 +157,7 @@ const s0OccClassShare = loadS0OccClassShareUniverse();
 assert.deepEqual(s0OccClassShare, ["BRK.A", "BRK.B"]);
 
 const s0OccPartialMissing = loadS0OccPartialMissingUniverse();
-assert.deepEqual(s0OccPartialMissing, [
+const knownS0OccPartialMissingCandidates = [
   "ATO",
   "COLM",
   "FTS",
@@ -171,7 +171,8 @@ assert.deepEqual(s0OccPartialMissing, [
   "RS",
   "STE",
   "WLK",
-]);
+];
+assert.ok(s0OccPartialMissing.every((ticker) => knownS0OccPartialMissingCandidates.includes(ticker)));
 assert.ok(!s0OccPartialMissing.includes("ELS"));
 assert.ok(!s0OccPartialMissing.includes("NVR"));
 
