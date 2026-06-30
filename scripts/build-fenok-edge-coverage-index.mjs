@@ -87,6 +87,10 @@ function asObject(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 function rowTickerSet(payload) {
   return new Set((Array.isArray(payload?.rows) ? payload.rows : []).map((row) => normTicker(row.ticker_normalized ?? row.ticker)).filter(Boolean));
 }
@@ -325,6 +329,7 @@ function compactPublicCoverageIndex(index) {
       scored_public_etf: index.etf_universe?.scored_public_etf ?? null,
       public_done_claim_allowed: index.etf_universe?.public_done_claim_allowed === true,
       evidence_based_readiness: index.etf_universe?.evidence_based_readiness ?? null,
+      core_daily_basket: index.etf_universe?.core_daily_basket ?? null,
       caveat: index.etf_universe?.caveat ?? null,
     },
     source_availability: {
@@ -386,6 +391,7 @@ const signals = readJson("data/computed/fenok_signals.json", {});
 const marketFacts = readJson("data/computed/market_facts/index.json", {});
 const etfSignals = readJson("data/computed/fenok_etf_signals_summary.json", {});
 const etfHistoryGap = readJson("data/stockanalysis/backfill/history_gap_report_latest.json", {});
+const etfCoreDailyBasket = readJson("data/admin/fenok-etf-core-daily-basket.json", {});
 const priorIndex = readJson("data/admin/fenok-edge-coverage-index.json", {});
 const universeRows = Array.isArray(signals.rows) ? signals.rows : [];
 const activeScoringTotal = universeRows.length;
@@ -579,6 +585,58 @@ function computeEtfReadinessEvidence() {
 
 const etfReadinessEvidence = computeEtfReadinessEvidence();
 const etfReadinessStage = etfReadinessEvidence.public_ready ? "PUBLIC" : etfScoredPublic > 0 ? "SCORED" : "NORMALIZED";
+
+function computeEtfCoreDailyBasketEvidence() {
+  const exists = hasManifestPayload(etfCoreDailyBasket);
+  const readiness = etfCoreDailyBasket.readiness ?? {};
+  const coverage = etfCoreDailyBasket.coverage ?? {};
+  const generatedAgeHours = ageHours(etfCoreDailyBasket.generated_at);
+  const sourceCount = Number(coverage.source_scored_etf_count) || etfScoredPublic || 0;
+  const selectedCount = Number(coverage.selected_count) || 0;
+  const freshSelectedCount = Number(coverage.fresh_selected_count) || 0;
+  const staleSelectedCount = Number(coverage.stale_selected_count) || 0;
+  const minSelectedCount = Number(readiness.min_selected_count) || 0;
+  const coreReady = Boolean(readiness.core_daily_basket_ready);
+  const generatedFresh = generatedAgeHours != null && generatedAgeHours <= 48;
+  const blockers = [
+    ...(!exists ? ["core_daily_basket_artifact_missing"] : []),
+    ...(exists && !generatedFresh ? ["core_daily_basket_artifact_stale"] : []),
+    ...asArray(readiness.blockers),
+  ];
+
+  return {
+    evidence_origin: "derived_counts_only",
+    artifact_present: exists,
+    generated_at: etfCoreDailyBasket.generated_at ?? null,
+    generated_age_hours: generatedAgeHours,
+    generated_fresh: generatedFresh,
+    core_daily_basket_ready: coreReady,
+    daily_ready: coreReady,
+    gated_ready: coreReady,
+    public_ready: false,
+    public_done_claim_allowed: false,
+    no_full_etf_done_claim: true,
+    counts: {
+      source_scored_etf_count: sourceCount,
+      structural_candidate_count: Number(coverage.structural_candidate_count) || 0,
+      selected_count: selectedCount,
+      fresh_selected_count: freshSelectedCount,
+      stale_selected_count: staleSelectedCount,
+      min_selected_count: minSelectedCount,
+      selected_by_category: coverage.selected_by_category ?? {},
+      freshness_blocker_counts: coverage.freshness_blocker_counts ?? {},
+    },
+    status: !exists
+      ? "missing"
+      : coreReady && generatedFresh
+        ? "ready"
+        : "blocked_refresh_needed",
+    blockers: [...new Set(blockers.filter(Boolean))],
+    caveat: "Core Daily Basket is a smaller ETF sublane. It does not flip full etf_scoring_lane daily/gated readiness.",
+  };
+}
+
+const etfCoreDailyBasketEvidence = computeEtfCoreDailyBasketEvidence();
 
 function readinessTrack({ id, label, denominator, stage, booleans, caveat, extra = {} }) {
   const requirements = {
@@ -787,6 +845,11 @@ const index = {
     scored_public_etf: etfScoredPublic,
     public_done_claim_allowed: false,
     evidence_based_readiness: etfReadinessEvidence,
+    core_daily_basket: {
+      stage: etfCoreDailyBasketEvidence.artifact_present ? "GATED_INTERNAL" : "PLANNED",
+      public_done_claim_allowed: false,
+      evidence_based_readiness: etfCoreDailyBasketEvidence,
+    },
     caveat: "ETF scoring is a separate asset_type=etf lane. Public surface proof is separate from DAILY/GATED readiness and does not permit a paid-ready done claim.",
   },
   source_availability: {
@@ -1012,6 +1075,25 @@ const index = {
         },
       }),
       readinessTrack({
+        id: "etf_core_daily_basket",
+        label: "ETF Core Daily Basket",
+        denominator: etfCoreDailyBasketEvidence.counts.selected_count || null,
+        stage: etfCoreDailyBasketEvidence.artifact_present ? "GATED_INTERNAL" : "PLANNED",
+        booleans: {
+          source_available: etfCoreDailyBasketEvidence.artifact_present,
+          normalized: etfCoreDailyBasketEvidence.counts.structural_candidate_count > 0,
+          joined_to_target_universe: etfCoreDailyBasketEvidence.counts.selected_count > 0,
+          scored: etfCoreDailyBasketEvidence.counts.selected_count > 0,
+          public: false,
+          daily: etfCoreDailyBasketEvidence.daily_ready,
+          gated: etfCoreDailyBasketEvidence.gated_ready,
+        },
+        caveat: "Core Basket is an internal daily-refresh target list and compact public summary. It cannot be reported as full ETF lane completion.",
+        extra: {
+          evidence_based_readiness: etfCoreDailyBasketEvidence,
+        },
+      }),
+      readinessTrack({
         id: "taiwan_current_numerator",
         label: "Taiwan current active-universe numerator",
         denominator: activeScoringTotal,
@@ -1111,6 +1193,16 @@ const index = {
         inception_limited_daily_1y_gap: Number(etfHistoryGap.daily_1y_gap?.scored_etfs?.inception_limited) || 0,
         status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_daily_1y_gap")?.ok ? "ready" : "blocked_fetchable_daily_gap",
         caveat: "StockAnalysis ETF detail daily 1Y history continuity is required; fetchable gaps keep ETF daily=false. Inception-limited daily gaps are tracked but allowed.",
+      },
+      {
+        id: "etf_core_daily_basket",
+        generated_at: etfCoreDailyBasketEvidence.generated_at,
+        age_hours: etfCoreDailyBasketEvidence.generated_age_hours,
+        selected_count: etfCoreDailyBasketEvidence.counts.selected_count,
+        fresh_selected_count: etfCoreDailyBasketEvidence.counts.fresh_selected_count,
+        stale_selected_count: etfCoreDailyBasketEvidence.counts.stale_selected_count,
+        status: etfCoreDailyBasketEvidence.status,
+        caveat: "Only the core basket sublane is evaluated here; full ETF lane daily/gated remains controlled by ETF daily 1Y gap checks.",
       },
       {
         id: "taiwan_universe_mapping",

@@ -13,7 +13,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
 - The coverage index still holds `daily=false` and `gated=false`: five bounded live batches plus one explicit YF fallback residual batch reduced fetchable daily 1Y continuity gaps `584 -> 518 -> 441 -> 398 -> 315 -> 275 -> 244`; fetchable required-history gaps are now `0`.
-- ETF Core Daily Basket is a separate planned sublane. It must not reuse the full `4,484` scored ETF denominator for a daily-ready claim.
+- ETF Core Daily Basket is a separate implemented sublane. It must not reuse the full `4,484` scored ETF denominator for a daily-ready claim. Current generated state: `1,602` structural candidates -> `118` selected core refresh tickers, `1` fresh and `117` still needing daily refresh, so `etf_core_daily_basket_ready=false`.
 - This is not a paid-ready ETF lane claim. Paid-ready requires PUBLIC + DAILY + GATED to be proven together for the separate `asset_type=etf` scoring lane.
 
 ## Signal Families
@@ -33,13 +33,13 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 | Signal | Non-null rows / 4,484 | Note |
 |---|---:|---|
-| `cost_efficiency` | 4,378 | Slow-changing, weekly refresh acceptable. |
-| `liquidity` | 4,349 | ADV depends on daily history; true all-ETF daily refresh remains a target. |
-| `tracking_quality` | 4,415 | Missing beta/history creates null sub-score, not zero. |
-| `momentum_trend` | 4,403 | Explicit 1Y return is the main gap. |
-| `risk_adjusted_momentum` | 3,231 | Largest gap; needs return plus daily-history volatility. |
-| `income` | 3,686 | Non-dividend ETFs can legitimately be null. |
-| `diversification` | 4,415 | Holdings/sector/country fields are periodic, not daily. |
+| `cost_efficiency` | 4,387 | Slow-changing, weekly refresh acceptable. |
+| `liquidity` | 4,352 | ADV depends on daily history; true all-ETF daily refresh remains a target. |
+| `tracking_quality` | 4,422 | Missing beta/history creates null sub-score, not zero. |
+| `momentum_trend` | 4,405 | Explicit 1Y return is the main gap. |
+| `risk_adjusted_momentum` | 3,237 | Largest gap; needs return plus daily-history volatility. |
+| `income` | 3,689 | Non-dividend ETFs can legitimately be null. |
+| `diversification` | 4,422 | Holdings/sector/country fields are periodic, not daily. |
 | `classification_risk` | 4,484 | Static-ish classification lane plus conservative heuristic exclusion. |
 
 ## Public Surface
@@ -53,6 +53,8 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `data/computed/fenok_etf_signals.json` - full internal ETF signal payload.
 - `data/computed/fenok_etf_signals_summary.json` - compact public ETF signal summary.
 - `data/computed/etf_action_index.json` - internal ETF action-index preview. Derived composite score per eligible vanilla ETF; no public mirror.
+- `data/admin/fenok-etf-core-daily-basket.json` - admin-only ETF Core Daily Basket manifest and refresh target list; no public mirror.
+- `data/computed/fenok_etf_core_daily_basket_summary.json` - compact public-safe Core Basket summary.
 
 ## Gates
 
@@ -75,9 +77,14 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - requires shard size <= 120 and total planned tickers to match the exact admin fetchable-plan ticker count
   - requires workflow inputs `history_gaps_only=true`, `required_history_periods=daily_1y`, `incremental_etf_limit=120`
   - rejects any `done`, `daily_ready`, `gated_ready`, or `public_done_claim_allowed` claim
+- `npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket`
+  - regenerates the Core Basket from `fenok_etf_signals_summary`, `etf_action_index`, ETF detail coverage, `new_etfs`, and per-ETF detail files
+  - rejects public mirrors of the admin manifest
+  - allows `not_ready` when selected rows need refresh, but rejects any stale-row `core_daily_basket_ready=true` claim
+  - requires no New ETF Radar row to enter the core basket
 - `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`
-  - includes the ETF signal gate, ETF action-index gate, and ETF daily 1Y dispatch-plan gate
-  - fails closed if the ETF public surface, freshness evidence, fetchable required-history gate, fetchable daily 1Y history-continuity gate, action-index privacy gate, or dispatch-plan privacy gate regresses
+  - includes the ETF signal gate, ETF action-index gate, Core Basket gate, and ETF daily 1Y dispatch-plan gate
+  - fails closed if the ETF public surface, freshness evidence, Core Basket evidence, fetchable required-history gate, fetchable daily 1Y history-continuity gate, action-index privacy gate, or dispatch-plan privacy gate regresses
 
 ## Readiness Flip Criteria
 
@@ -87,10 +94,12 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
 - Current status is PUBLIC surface only, not DAILY/GATED. The current report has `fetchable_required_history=0`, but the scored ETF lane still has fetchable daily 1Y continuity gaps, so `daily=false`, `gated=false`, and `public_done_claim_allowed=false`. The durable generated evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json`, currently proving `4484 = 3703 complete + 244 fetchable + 537 inception-limited` for the scored ETF denominator.
 
-## Core Daily Basket Sublane (Planned)
+## Core Daily Basket Sublane
 
 - Purpose: provide a smaller ETF set that can truthfully be kept daily-fresh before the full ETF lane is daily-ready.
 - Readiness label: `etf_core_daily_basket_ready`; do not flip full `S3 ETF daily_ready`.
+- Current generated selection: `1,602` structural candidates -> `118` selected core refresh tickers (`50` Equity, `35` Fixed Income, `15` Alternatives, `10` Asset Allocation, `7` Commodity, `1` Uncategorized).
+- Current readiness: `fresh_selected_count=1`, `stale_selected_count=117`, blocker `selected_rows_need_daily_refresh`; therefore `core_daily_basket_ready=false`.
 - Exclusions by default: leveraged, inverse, single-stock, low-confidence classification, broken-history rows, and stale quote/volume rows.
 - Candidate buckets: broad US equity, sector, factor/style/dividend, international, fixed income, commodity/currency, alternatives, and asset-allocation funds.
 - Minimum proof before inclusion:
@@ -100,11 +109,13 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - enough scored ETF signal coverage exists for the public summary;
   - liquidity/AUM floors are met or the ticker is an owner-pinned exception with the exception recorded.
 - New ETFs enter the New ETF Radar first. They are not core by default until detail, history, classification, and scoring gates pass.
-- Planned gate: `npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket`.
+- Gate: `npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket`.
+- Automation path: default StockAnalysis ETF refresh now loads `data/admin/fenok-etf-core-daily-basket.json` and prioritizes `daily_refresh_universe.tickers` before the legacy focus ETF list.
 
 ## Daily Data Prerequisite
 
 - StockAnalysis detail coverage supplies slower ETF fields such as expense ratio, AUM, dividend yield, holdings, classification, and fund metadata.
+- The StockAnalysis scheduled workflow rebuilds the Core Basket after ETF detail/history work and mirrors only the compact Core Basket summary to public data.
 - Daily ETF scoring quality still requires fresher price/volume and 1Y return history. The weekday YF schedule therefore runs with:
   - `profile=etf`
   - `stockanalysis_etfs=true`
@@ -126,7 +137,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 ## Remaining Work
 
-1. Define and gate the ETF Core Daily Basket before any deploy/package claim that implies ETF daily service readiness.
+1. Run the next scheduled or owner-approved StockAnalysis Core Basket refresh so the `117` stale selected rows can move to fresh before any Core Basket daily-ready claim.
 2. Keep the scheduled ETF freshness loop running so new ETFs move from fetchable gaps to complete, inception-limited, or radar-only status.
 3. Prove a daily all-ETF or eligible-ETF price/history refresh path beyond the current bounded rotating shard.
 4. Use the owner-gated private dispatch plan for the next bounded daily 1Y catch-up run; do not flip full ETF `daily` or `gated` until the fetchable gap count reaches zero.

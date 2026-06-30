@@ -262,6 +262,8 @@ const readinessTracks = asArray(readiness.tracks);
 const activeS0ReadinessTrack = readinessTracks.find((track) => track?.id === ACTIVE_S0_TRACK_ID);
 const etfReadinessTrack = readinessTracks.find((track) => track?.id === "etf_scoring_lane");
 const etfEvidence = etfReadinessTrack?.evidence_based_readiness ?? index.etf_universe?.evidence_based_readiness ?? null;
+const etfCoreReadinessTrack = readinessTracks.find((track) => track?.id === "etf_core_daily_basket");
+const etfCoreEvidence = etfCoreReadinessTrack?.evidence_based_readiness ?? index.etf_universe?.core_daily_basket?.evidence_based_readiness ?? null;
 const freshnessChecks = asArray(index.freshness_gate?.checks);
 const activeS0Evidence = buildActiveS0Evidence(index, activeTotal, activeS0ReadinessTrack, sourceRows, composites, freshnessChecks);
 
@@ -362,6 +364,22 @@ if (etfReadinessTrack?.public_done_claim_allowed === true && etfEvidence?.gated_
   add(errors, "etf_scoring_lane: public_done_claim_allowed=true requires evidence_based_readiness.gated_ready=true");
 }
 
+if (etfCoreReadinessTrack?.requirements?.daily === true && etfCoreEvidence?.daily_ready !== true) {
+  add(errors, "etf_core_daily_basket: requirements.daily=true requires evidence_based_readiness.daily_ready=true");
+}
+if (etfCoreReadinessTrack?.requirements?.gated === true && etfCoreEvidence?.gated_ready !== true) {
+  add(errors, "etf_core_daily_basket: requirements.gated=true requires evidence_based_readiness.gated_ready=true");
+}
+if (etfCoreReadinessTrack?.public_done_claim_allowed === true) {
+  add(errors, "etf_core_daily_basket: public_done_claim_allowed must remain false until a product surface is explicitly gated");
+}
+if (etfCoreEvidence?.core_daily_basket_ready === true && Number(etfCoreEvidence?.counts?.stale_selected_count) > 0) {
+  add(errors, "etf_core_daily_basket: ready evidence cannot include stale selected rows");
+}
+if (etfCoreEvidence?.core_daily_basket_ready === true && etfCoreEvidence?.generated_fresh !== true) {
+  add(errors, "etf_core_daily_basket: ready evidence requires fresh generated artifact");
+}
+
 if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
   if (activeTotal !== EXPECTED_ACTIVE_S0_STOCK_COUNT) {
     add(errors, `strict S0 gate requires active_scoring_universe.total=${EXPECTED_ACTIVE_S0_STOCK_COUNT}; got ${activeTotal}`);
@@ -427,6 +445,7 @@ const result = {
   } : null,
   active_s0_daily_gated_evidence: activeS0Evidence,
   etf_scoring_lane_evidence: etfEvidence,
+  etf_core_daily_basket_evidence: etfCoreEvidence,
   checks: freshnessChecks.map((check) => ({
     id: check.id,
     status: check.status,
@@ -460,6 +479,9 @@ if (JSON_MODE) {
   console.log(`active S0 evidence: daily_ready=${activeS0Evidence.daily_ready} gated_ready=${activeS0Evidence.gated_ready} blockers=${activeS0Evidence.blockers.join(",") || "none"}`);
   if (etfEvidence) {
     console.log(`ETF evidence: public_ready=${etfEvidence.public_ready} daily_ready=${etfEvidence.daily_ready} gated_ready=${etfEvidence.gated_ready} blockers=${asArray(etfEvidence.blockers).join(",") || "none"}`);
+  }
+  if (etfCoreEvidence) {
+    console.log(`ETF core basket evidence: ready=${etfCoreEvidence.core_daily_basket_ready} selected=${etfCoreEvidence.counts?.selected_count ?? "n/a"} fresh=${etfCoreEvidence.counts?.fresh_selected_count ?? "n/a"} stale=${etfCoreEvidence.counts?.stale_selected_count ?? "n/a"} blockers=${asArray(etfCoreEvidence.blockers).join(",") || "none"}`);
   }
   for (const warning of warnings) console.log(`WARN: ${warning.message}`);
   for (const error of errors) console.error(`ERROR: ${error.message}`);

@@ -212,6 +212,14 @@ jobs:
           if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
           npm --prefix 100xfenok-next run qa:history-gap -- $ARGS
 
+      - name: Build ETF core daily basket
+        run: |
+          node scripts/build-fenok-etf-core-daily-basket.mjs --check
+          mkdir -p 100xfenok-next/public/data/computed 100xfenok-next/public/data/admin
+          cp data/computed/fenok_etf_core_daily_basket_summary.json 100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json
+          rm -f 100xfenok-next/public/data/admin/fenok-etf-core-daily-basket.json
+          npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket
+
       - name: Build market data audit
         run: python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
 

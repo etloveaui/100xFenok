@@ -46,6 +46,7 @@ DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
 FENOK_EDGE_ETF_DAILY1Y_FETCHABLE_PLAN_REL_PATH = "admin/fenok-edge-etf-daily1y-fetchable-plan.json"
+FENOK_ETF_CORE_DAILY_BASKET_REL_PATH = "admin/fenok-etf-core-daily-basket.json"
 DAILY_1Y_MIN_ROWS = 200
 NON_DIRECTIONAL_SHORT_RE = re.compile(
     r"\b(?:"
@@ -752,6 +753,20 @@ def parse_history_periods(value: str) -> tuple[str, ...]:
     return tuple(out)
 
 
+def load_core_daily_basket_symbols() -> list[str]:
+    path = OUT_DIR.parent / FENOK_ETF_CORE_DAILY_BASKET_REL_PATH
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return []
+    tickers = payload.get("daily_refresh_universe", {}).get("tickers")
+    if not isinstance(tickers, list):
+        tickers = [row.get("ticker") for row in payload.get("rows") or [] if isinstance(row, dict)]
+    return unique_symbols([str(ticker or "") for ticker in tickers])
+
+
 def select_base_etfs(
     explicit_etfs: list[str],
     *,
@@ -772,7 +787,9 @@ def select_base_etfs(
         return etfs
     if incremental_etf_backfill and incremental_etf_only:
         return explicit_etfs[:]
-    return explicit_etfs or DEFAULT_ETFS[:]
+    if explicit_etfs:
+        return explicit_etfs
+    return unique_symbols(load_core_daily_basket_symbols() + DEFAULT_ETFS)
 
 
 def fetch_json(rel_path: str, timeout: int) -> dict:

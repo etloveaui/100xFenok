@@ -17,6 +17,8 @@ Current coverage (2026-06-30 local DataPack):
 - Market-facts normalized ETF rows: 5,301
 - Fenok Edge ETF scoring lane: 4,484 eligible/scored vanilla ETFs
 - Fenok Edge ETF daily-1Y readiness: `4484 = 3703 complete + 244 fetchable + 537 inception-limited`
+- ETF Core Daily Basket: `118` selected refresh tickers from `1,602` structural candidates; current state `1 fresh / 117 needs refresh`, so Core Basket daily-ready is still blocked.
+- New ETF Radar: `new_etfs` rows are watchlist-only and cannot become core candidates without detail, history, classification, and scoring proof.
 - Remaining distinction: ETF Center UI/data coverage is surface-ready, but Fenok Edge ETF paid-ready wording stays blocked until `daily=false` and `gated=false` clear.
 
 Design principles:
@@ -106,6 +108,8 @@ Implementation pointers:
 | `data/stockanalysis/coverage/etf_detail.json` | Coverage counts and missing samples | coverage builder |
 | `data/computed/market_facts/tickers/{TICKER}.json` | Normalized facts (price, returns, expense_ratio, etc.) | `build-market-facts.py` |
 | `data/yf/finance/{TICKER}.json` | Yahoo Finance fallback info + history | `fetch-yf-finance.py` |
+| `data/admin/fenok-etf-core-daily-basket.json` | Admin-only Core Basket manifest and daily refresh target list | `build-fenok-etf-core-daily-basket.mjs` |
+| `data/computed/fenok_etf_core_daily_basket_summary.json` | Public-safe compact Core Basket summary | `build-fenok-etf-core-daily-basket.mjs` |
 
 ### 3.2 Join API
 
@@ -153,6 +157,12 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
   - Mirrors to `public/` and commits.
   - Commit/push retries a concurrent `main` advance up to 5 times by rebasing
     before each push attempt.
+- **Weekday Core Basket priority refresh**: scheduled StockAnalysis ETF runs load
+  `data/admin/fenok-etf-core-daily-basket.json` and prepend
+  `daily_refresh_universe.tickers` before the legacy focus ETF list. The same
+  workflow rebuilds the Core Basket and mirrors only
+  `fenok_etf_core_daily_basket_summary.json`; the admin manifest remains
+  private/admin-only.
 - **Weekly Yahoo refresh**: `fetch-yf-finance.yml` runs Saturdays 22:00 UTC.
   - Fetches Yahoo info + 1-year daily history for focus / major / portfolio / scouter / dashboard tickers.
   - Optional `--stockanalysis-etfs` flag for staged full-ETF backfills.
