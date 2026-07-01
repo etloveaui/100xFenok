@@ -271,8 +271,9 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
   ),
 };
 
-const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
+const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
 const MORE_TAB_IDS: ShellPage[] = [
+  "chart",
   "workbench",
   "ib",
   "vr",
@@ -284,7 +285,6 @@ const MORE_TAB_IDS: ShellPage[] = [
   "sectors",
   "etfs",
   "superinvestors",
-  "portfolio",
 ];
 
 const NAV_GROUP_ORDER: NavGroupName[] = ["분석", "도구", "더보기"];

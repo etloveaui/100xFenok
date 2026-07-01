@@ -72,6 +72,28 @@ async function collectRouteChecks(page, route) {
       if (tabs.length !== 5) {
         failures.push({ check: "mobile-tab-count", detail: `visible tabs=${tabs.length}` });
       }
+      const actualTabs = tabs.map((tab) => {
+        const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+        const label = (tab.textContent || "").replace(/\s+/g, " ").trim();
+        const href = tab instanceof HTMLAnchorElement ? normalizePath(new URL(tab.href, window.location.origin).pathname) : null;
+        return { label, path: href };
+      });
+      const expected = [
+        { label: "홈", path: "/" },
+        { label: "시장", path: "/market-valuation" },
+        { label: "스크리너", path: "/screener" },
+        { label: "포트폴리오", path: "/portfolio" },
+        { label: "더보기", path: null },
+      ];
+      const tabContractOk =
+        actualTabs.length === expected.length &&
+        expected.every((tab, index) => actualTabs[index]?.label === tab.label && actualTabs[index]?.path === tab.path);
+      if (!tabContractOk) {
+        failures.push({
+          check: "mobile-tab-primary-ia",
+          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expected)}`,
+        });
+      }
       tabs.forEach((tab, index) => {
         const style = window.getComputedStyle(tab);
         const fontSize = Number.parseFloat(style.fontSize || "0");
