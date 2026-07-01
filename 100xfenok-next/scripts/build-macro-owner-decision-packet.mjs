@@ -8,6 +8,7 @@
  */
 
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,12 +18,33 @@ const liveEquivalenceScript = path.join(__dirname, "check-macro-owner-live-equiv
 
 function parseArgs(argv) {
   const args = {
+    decisionRecordJson: null,
+    decisionRecordPath: null,
     json: false,
   };
 
-  for (const arg of argv) {
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
     if (arg === "--json") {
       args.json = true;
+      continue;
+    }
+    if (arg === "--decision-record") {
+      args.decisionRecordPath = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--decision-record=")) {
+      args.decisionRecordPath = arg.slice("--decision-record=".length);
+      continue;
+    }
+    if (arg === "--decision-record-json") {
+      args.decisionRecordJson = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--decision-record-json=")) {
+      args.decisionRecordJson = arg.slice("--decision-record-json=".length);
       continue;
     }
     throw new Error(`unknown argument: ${arg}`);
@@ -36,13 +58,64 @@ function runJson(scriptPath) {
   return JSON.parse(raw);
 }
 
+function readDecisionRecord(recordPath, recordJson) {
+  if (recordJson) return JSON.parse(recordJson);
+  if (!recordPath) return null;
+  return JSON.parse(fs.readFileSync(recordPath, "utf8"));
+}
+
 function fail(message, packet, json) {
   if (json && packet) console.log(JSON.stringify(packet, null, 2));
   console.error(`[macro-owner-decision-packet] ${message}`);
   process.exit(1);
 }
 
-function buildDecisionPacket(inventory, liveProof) {
+function decisionRecordTemplate(review, liveProof) {
+  return {
+    schema_version: "macro-owner-decision-record/v0.1",
+    family_id: review.family_id,
+    decision: "preserve|remap|retire",
+    owner_approved_by: "<owner>",
+    decided_at: "<ISO-8601 timestamp>",
+    local_live_equivalence_proof_status: liveProof.proof_status,
+    local_live_equivalence_rows_checked: liveProof.rows_checked,
+    mutation_approved: false,
+    notes: "Decision record only; redirect/delete/deploy requires separate explicit approval.",
+  };
+}
+
+function validateDecisionRecord(record, packet) {
+  const errors = [];
+  if (!record) return errors;
+  const allowedDecisions = new Set(["preserve", "remap", "retire"]);
+  if (record.schema_version !== "macro-owner-decision-record/v0.1") {
+    errors.push(`decision record schema_version mismatch: ${record.schema_version}`);
+  }
+  if (record.family_id !== packet.family_id) {
+    errors.push(`decision record family_id mismatch: ${record.family_id}`);
+  }
+  if (!allowedDecisions.has(record.decision)) {
+    errors.push(`decision record decision must be preserve, remap, or retire: ${record.decision}`);
+  }
+  if (typeof record.owner_approved_by !== "string" || record.owner_approved_by.trim().length === 0) {
+    errors.push("decision record owner_approved_by is required");
+  }
+  if (typeof record.decided_at !== "string" || Number.isNaN(Date.parse(record.decided_at))) {
+    errors.push(`decision record decided_at must be an ISO-8601 timestamp: ${record.decided_at}`);
+  }
+  if (record.local_live_equivalence_proof_status !== packet.evidence.local_live_equivalence_proof_status) {
+    errors.push(`decision record proof status mismatch: ${record.local_live_equivalence_proof_status}`);
+  }
+  if (record.local_live_equivalence_rows_checked !== packet.evidence.local_live_equivalence_rows_checked) {
+    errors.push(`decision record row count mismatch: ${record.local_live_equivalence_rows_checked}`);
+  }
+  if (record.mutation_approved !== false) {
+    errors.push("decision record must not approve redirect/delete/deploy mutation");
+  }
+  return errors;
+}
+
+function buildDecisionPacket(inventory, liveProof, decisionRecord) {
   const review = inventory.macro_monitor_rank1_owner_review;
   const nextCandidate = review.next_queue_candidate_after_owner_decision;
   const smokeRows = liveProof.rows.map((row) => ({
@@ -60,6 +133,7 @@ function buildDecisionPacket(inventory, liveProof) {
     mutation: "none",
     network: "local_runtime_only",
     owner_decision_status: review.owner_decision_status,
+    decision_record_status: decisionRecord ? "provided_pending_validation" : "not_supplied",
     family_id: review.family_id,
     owner_route: review.owner_route,
     compatibility_route: review.compatibility_route,
@@ -101,6 +175,8 @@ function buildDecisionPacket(inventory, liveProof) {
       "soak and rollback plan must be recorded before redirect/delete/deploy",
       "rank 2 cannot become active until rank 1 owner decision is recorded",
     ],
+    decision_record_template: decisionRecordTemplate(review, liveProof),
+    supplied_decision_record: decisionRecord,
     next_queue_candidate_after_owner_decision: nextCandidate,
   };
 }
@@ -130,6 +206,11 @@ function validatePacket(packet) {
       errors.push(`decision option must not authorize mutation: ${option.decision}`);
     }
   }
+  const decisionRecordErrors = validateDecisionRecord(packet.supplied_decision_record, packet);
+  errors.push(...decisionRecordErrors);
+  if (packet.supplied_decision_record && decisionRecordErrors.length === 0) {
+    packet.decision_record_status = "valid_no_mutation";
+  }
   return errors;
 }
 
@@ -137,6 +218,7 @@ function printText(packet) {
   console.log("[macro-owner-decision-packet] OK");
   console.log(`family=${packet.family_id}`);
   console.log(`owner_decision_status=${packet.owner_decision_status}`);
+  console.log(`decision_record_status=${packet.decision_record_status}`);
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
@@ -146,7 +228,8 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const inventory = runJson(inventoryScript);
   const liveProof = runJson(liveEquivalenceScript);
-  const packet = buildDecisionPacket(inventory, liveProof);
+  const decisionRecord = readDecisionRecord(args.decisionRecordPath, args.decisionRecordJson);
+  const packet = buildDecisionPacket(inventory, liveProof, decisionRecord);
   const errors = validatePacket(packet);
 
   if (errors.length > 0) {

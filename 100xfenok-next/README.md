@@ -63,7 +63,9 @@ Run `npm run qa:macro-owner-decision-packet` before asking the owner to choose
 preserve, remap, or retire for the rank-1 macro-monitor slice. It composes the
 canonical-root inventory and local live-equivalence proof into a no-mutation
 decision packet, keeps redirect/delete/deploy blocked, and leaves rank 2 queued
-until the owner decision is explicit.
+until the owner decision is explicit. To validate a supplied owner record, call
+`node scripts/build-macro-owner-decision-packet.mjs --decision-record-json=...`;
+the record must keep `mutation_approved=false`.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary
