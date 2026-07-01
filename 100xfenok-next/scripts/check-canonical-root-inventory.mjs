@@ -852,6 +852,74 @@ function grepFiles(files, matcher) {
   return [...new Set(matches)].sort();
 }
 
+function grepLineMatches(files, tokens) {
+  const activeTokens = tokens.filter(Boolean);
+  const matches = [];
+  for (const absPath of files) {
+    let text = "";
+    try {
+      text = readText(absPath);
+    } catch {
+      continue;
+    }
+    const file = rel(absPath);
+    const lines = text.split(/\r?\n/);
+    lines.forEach((lineText, index) => {
+      const matched_tokens = activeTokens.filter((token) => lineText.includes(token));
+      if (matched_tokens.length === 0) return;
+      matches.push({ file, line: index + 1, matched_tokens });
+    });
+  }
+  return matches;
+}
+
+function classifyMacroMonitorSourceEntrypoint(file) {
+  if (file.startsWith("100xfenok-next/src/components/dashboard/")) return "home_dashboard_legacy_bridge_entrypoint";
+  if (file === "100xfenok-next/src/app/radar/page.tsx") return "compatibility_bridge_route";
+  if (file.startsWith("100xfenok-next/src/app/admin/")) return "admin_route_entrypoint";
+  if (file.startsWith("100xfenok-next/src/app/")) return "app_route_source_reference";
+  return "src_reference";
+}
+
+function macroMonitorRank1ReviewEvidence(highRiskOwners, textFiles) {
+  const nextSlice = highRiskOwners.next_owner_review_slice;
+  const active = nextSlice?.family_id === "macro_monitor_legacy_tools";
+  const samplePaths = active ? nextSlice.packet.legacy_sample_paths : [];
+  const bridgeSmokePaths = active ? nextSlice.legacy_bridge_smoke_paths : [];
+  const sourceFiles = textFiles.filter((absPath) => rel(absPath).startsWith("100xfenok-next/src/"));
+  const sourceReferenceRows = grepLineMatches(sourceFiles, [
+    "/radar?path=tools%2Fmacro-monitor",
+    "tools%2Fmacro-monitor",
+    "tools/macro-monitor/",
+  ]).map((row) => ({
+    ...row,
+    class: classifyMacroMonitorSourceEntrypoint(row.file),
+    owner_gate: "owner must approve preserve, remap to native /macro-chart, or retire before redirect/delete/deploy",
+  }));
+  const homeEntrypoints = sourceReferenceRows.filter((row) => row.class === "home_dashboard_legacy_bridge_entrypoint");
+
+  return {
+    schema_version: "macro-monitor-rank1-owner-review/v0.1",
+    active,
+    family_id: nextSlice?.family_id ?? null,
+    owner_route: nextSlice?.owner_route ?? null,
+    compatibility_route: nextSlice?.compatibility_route ?? null,
+    mutation_status: nextSlice?.mutation_status ?? null,
+    blocked_actions: nextSlice?.blocked_actions ?? [],
+    pro_route_ia_acceptance: nextSlice?.packet?.pro_route_ia_acceptance ?? null,
+    legacy_sample_paths: samplePaths,
+    legacy_bridge_smoke_paths: bridgeSmokePaths,
+    public_home_legacy_bridge_entrypoint_count: homeEntrypoints.length,
+    public_home_legacy_bridge_entrypoints: homeEntrypoints,
+    src_legacy_reference_count: sourceReferenceRows.length,
+    src_legacy_references: sourceReferenceRows,
+    owner_review_findings: homeEntrypoints.length > 0 ? [
+      "Home/dashboard source still links primary tiles to legacy macro-monitor bridge paths; owner must compare those links with native /macro-chart before any href remap or legacy retirement proposal.",
+    ] : [],
+    recommended_next_gate: "run owner/compat/sample/bridge smokes, compare Home/dashboard legacy entrypoints against /macro-chart PRO IA, then request explicit owner preserve/remap/retire decision",
+  };
+}
+
 function collectOldUrlConsumers(files) {
   const byPattern = {};
   for (const item of OLD_URL_PATTERNS) byPattern[item.id] = [];
@@ -1043,6 +1111,7 @@ function main() {
   const routeBackedEquivalence = routeBackedEquivalenceMatrix(legacyHtml, legacyClassification);
   const retireReadiness = lowRiskRetireReadiness(legacyClassification, appRoutes, routeBackedEquivalence);
   const highRiskOwners = highRiskOwnerMatrix(legacyClassification, appRoutes);
+  const macroMonitorRank1Review = macroMonitorRank1ReviewEvidence(highRiskOwners, textFiles);
   const oldUrlClassification = oldUrlConsumerClassification(oldUrlConsumers);
 
   const workflowDir = path.join(repoRoot, ".github", "workflows");
@@ -1115,6 +1184,18 @@ function main() {
   if (highRiskOwners.owner_family_count > 0 && !highRiskOwners.next_owner_review_slice) {
     errors.push("high-risk owner review queue is missing the next owner-review slice");
   }
+  if (macroMonitorRank1Review.active && macroMonitorRank1Review.owner_route !== "/macro-chart") {
+    errors.push(`macro-monitor rank-1 review must stay tied to /macro-chart owner route: ${macroMonitorRank1Review.owner_route}`);
+  }
+  if (macroMonitorRank1Review.active && macroMonitorRank1Review.compatibility_route !== "/admin/macro-monitor") {
+    errors.push(`macro-monitor rank-1 review must keep /admin/macro-monitor compatibility route: ${macroMonitorRank1Review.compatibility_route}`);
+  }
+  if (
+    macroMonitorRank1Review.active
+    && macroMonitorRank1Review.legacy_bridge_smoke_paths.length !== macroMonitorRank1Review.legacy_sample_paths.length
+  ) {
+    errors.push(`macro-monitor rank-1 bridge smoke coverage mismatch: bridge=${macroMonitorRank1Review.legacy_bridge_smoke_paths.length} samples=${macroMonitorRank1Review.legacy_sample_paths.length}`);
+  }
 
   const report = {
     schema_version: "canonical-root-inventory/v0.1",
@@ -1142,6 +1223,9 @@ function main() {
       legacy_html_high_risk_owner_families: highRiskOwners.owner_family_count,
       legacy_html_high_risk_owner_equivalence_packets_ready: highRiskOwners.owner_route_equivalence_packet_ready_count,
       legacy_html_high_risk_owner_review_queue: highRiskOwners.owner_review_queue_count,
+      macro_monitor_rank1_legacy_bridge_smoke_paths: macroMonitorRank1Review.legacy_bridge_smoke_paths.length,
+      macro_monitor_rank1_public_home_legacy_bridge_entrypoints: macroMonitorRank1Review.public_home_legacy_bridge_entrypoint_count,
+      macro_monitor_rank1_src_legacy_references: macroMonitorRank1Review.src_legacy_reference_count,
       legacy_html_high_risk_unmapped: highRiskOwners.unmapped_count,
       legacy_html_high_risk_owner_route_missing: highRiskOwners.missing_owner_route_count,
     },
@@ -1157,6 +1241,7 @@ function main() {
     route_backed_equivalence: routeBackedEquivalence,
     low_risk_retire_readiness: retireReadiness,
     high_risk_owner_matrix: highRiskOwners,
+    macro_monitor_rank1_owner_review: macroMonitorRank1Review,
     deploy_inventory: deployInventory,
     old_url_consumers: oldUrlConsumers,
     old_url_consumer_classification: oldUrlClassification,

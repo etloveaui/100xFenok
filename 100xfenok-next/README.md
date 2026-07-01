@@ -33,7 +33,10 @@ also grouped into owner-route families so PRO IA review starts from the owning
 screen instead of a raw file-delete list. Each high-risk family also carries an
 owner-route equivalence packet with local smoke commands before any mutation can
 be requested, plus a deterministic owner-review queue that names the next gated
-family slice.
+family slice. The current rank-1 macro-monitor slice also reports legacy bridge
+smoke paths and source entrypoint evidence so Home/dashboard links can be
+compared with the native `/macro-chart` owner route before any preserve, remap,
+or retire decision.
 
 Run `npm run qa:route-iframe-contract` only against a local Next.js server. It
 defaults to `http://127.0.0.1:3105` and checks the route-backed iframe catalog:
