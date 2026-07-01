@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -2016,6 +2016,136 @@ async function collectRouteChecks(page, route) {
       });
       if (!loadMore || loadMore.getBoundingClientRect().height < 44) {
         failures.push({ check: "etf-universe-load-more-target", detail: loadMore ? `height=${Math.round(loadMore.getBoundingClientRect().height)}` : "missing load more" });
+      }
+    }
+
+    {
+      const detailUrl = new URL(currentRoute, window.location.origin);
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const detailPath = normalizePath(detailUrl.pathname);
+      if (/^\/etfs\/[^/]+$/.test(detailPath) && detailPath !== "/etfs/new" && detailPath !== "/etfs/compare") {
+        const expectedSymbol = decodeURIComponent(detailPath.split("/").pop() || "").toUpperCase();
+        const surface = document.querySelector("[data-etf-detail-surface]");
+        const owner = document.querySelector("[data-etf-detail-route-owner]");
+        const client = document.querySelector("[data-etf-detail-client]");
+        const header = document.querySelector("[data-etf-detail-header]");
+        const price = document.querySelector("[data-etf-detail-price]");
+        const actionRail = document.querySelector("[data-etf-detail-action-rail]");
+        const actions = Array.from(document.querySelectorAll("[data-etf-detail-owner-action]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const sections = Array.from(document.querySelectorAll("[data-etf-detail-section]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const metricCards = Array.from(document.querySelectorAll('[data-etf-detail-section="key-metrics"] [data-etf-detail-metric-card]'))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const holdings = document.querySelector('[data-etf-detail-section="holdings"]');
+        const holdingsTable = document.querySelector("[data-etf-detail-holdings-table]");
+        const holdingRows = Array.from(document.querySelectorAll("[data-etf-detail-holding-row]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const csvButton = document.querySelector("[data-etf-detail-holdings-csv]");
+        const appTitle = document.querySelector(".fnk-shell .appbar .title");
+        const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+        if (!surface || surface.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "etf-detail-surface-visible", detail: "missing ETF detail surface" });
+        }
+        if (!owner || owner.getAttribute("data-etf-detail-route-owner") !== "etf-detail") {
+          failures.push({
+            check: "etf-detail-route-owner",
+            detail: `owner=${owner?.getAttribute("data-etf-detail-route-owner") || "missing"}`,
+          });
+        }
+        if (!client || client.getAttribute("data-etf-detail-symbol") !== expectedSymbol) {
+          failures.push({
+            check: "etf-detail-symbol",
+            detail: `symbol=${client?.getAttribute("data-etf-detail-symbol") || "missing"} expected=${expectedSymbol}`,
+          });
+        }
+        if (!header || header.getBoundingClientRect().height <= 0 || !(header.textContent || "").includes(expectedSymbol)) {
+          failures.push({ check: "etf-detail-header-visible", detail: `missing header for ${expectedSymbol}` });
+        }
+        if (!price || price.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "etf-detail-price-visible", detail: "missing price block" });
+        }
+        if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "etf-detail-action-rail-visible", detail: "missing action rail" });
+        }
+
+        const expectedActions = [
+          ["etf-center", "/etfs", ""],
+          ["compare", "/etfs/compare", expectedSymbol],
+          ["portfolio", "/portfolio", expectedSymbol],
+        ];
+        const actualActions = actions.map((node) => {
+          const url = node instanceof HTMLAnchorElement ? new URL(node.href, window.location.origin) : null;
+          const path = url ? normalizePath(url.pathname) : "";
+          return [
+            node.getAttribute("data-etf-detail-owner-action"),
+            path,
+            url?.searchParams.get(path === "/portfolio" ? "ticker" : "tickers") || "",
+          ];
+        });
+        if (
+          actions.length !== expectedActions.length ||
+          !expectedActions.every((action, index) => {
+            const actual = actualActions[index] || [];
+            const paramOk = action[2] === "" ? true : String(actual[2] || "").split(",").includes(action[2]);
+            return actual[0] === action[0] && actual[1] === action[1] && paramOk;
+          })
+        ) {
+          failures.push({
+            check: "etf-detail-action-order",
+            detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions)}`,
+          });
+        }
+        actions.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "etf-detail-action-target", detail: `action ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+
+        const actualSections = sections.map((node) => node.getAttribute("data-etf-detail-section"));
+        const expectedSections = ["key-metrics", "signals", "peers", "performance", "holdings", "asset-allocation", "sectors", "countries", "history"];
+        expectedSections.forEach((section) => {
+          if (!actualSections.includes(section)) {
+            failures.push({ check: "etf-detail-section-visible", detail: `missing section=${section} actual=${JSON.stringify(actualSections)}` });
+          }
+        });
+        if (metricCards.length < 4) {
+          failures.push({ check: "etf-detail-key-metric-count", detail: `cards=${metricCards.length}` });
+        }
+        if (!holdings || holdings.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "etf-detail-holdings-visible", detail: "missing holdings section" });
+        }
+        if (!holdingsTable || holdingsTable.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "etf-detail-holdings-table-visible", detail: "missing holdings table" });
+        }
+        if (holdingRows.length < 5) {
+          failures.push({ check: "etf-detail-holding-row-count", detail: `rows=${holdingRows.length}` });
+        }
+        if (!csvButton || csvButton.getBoundingClientRect().height < 44) {
+          failures.push({ check: "etf-detail-holdings-csv-target", detail: csvButton ? `height=${Math.round(csvButton.getBoundingClientRect().height)}` : "missing csv button" });
+        }
+
+        const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+        if (!activeTabLabel.includes("더보기")) {
+          failures.push({ check: "etf-detail-mobile-tab-active", detail: `active=${activeTabLabel}` });
+        }
+        if ((appTitle?.textContent || "").trim() !== expectedSymbol) {
+          failures.push({ check: "etf-detail-app-title", detail: `title=${(appTitle?.textContent || "").trim()} expected=${expectedSymbol}` });
+        }
       }
     }
 

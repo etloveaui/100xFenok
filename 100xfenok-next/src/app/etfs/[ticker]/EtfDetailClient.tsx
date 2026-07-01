@@ -719,9 +719,19 @@ function buildEtfPeerCollections({
   };
 }
 
-function SectionCard({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  desc,
+  marker,
+  children,
+}: {
+  title: string;
+  desc?: string;
+  marker?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="panel stock-section">
+    <section className="panel stock-section" data-etf-detail-section={marker}>
       <div className="panel-h">
         <h2>{title}</h2>
         {desc ? <span className="desc">{desc}</span> : null}
@@ -744,7 +754,7 @@ function SkeletonSection() {
 
 function MetricCard({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
+    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3" data-etf-detail-metric-card="true">
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
       <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
       {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-[var(--c-ink-3)]">{note}</p> : null}
@@ -836,7 +846,7 @@ function EtfPeerCollectionsSection({
 }) {
   if (loading) {
     return (
-      <SectionCard title="ETF 연결 지도" desc="운용사·카테고리·보유종목 기준">
+      <SectionCard title="ETF 연결 지도" desc="운용사·카테고리·보유종목 기준" marker="peers">
         <p className="text-sm font-semibold text-[var(--c-ink-3)]">연결 후보 확인 중</p>
       </SectionCard>
     );
@@ -844,14 +854,14 @@ function EtfPeerCollectionsSection({
 
   if (failed || !data) {
     return (
-      <SectionCard title="ETF 연결 지도" desc="운용사·카테고리·보유종목 기준">
+      <SectionCard title="ETF 연결 지도" desc="운용사·카테고리·보유종목 기준" marker="peers">
         <p className="text-sm font-semibold text-[var(--c-ink-3)]">ETF 전체 범위 연결을 확인하지 못했습니다.</p>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="ETF 연결 지도" desc={`${data.universeCount?.toLocaleString("ko-KR") ?? "전체"}개 ETF 범위`}>
+    <SectionCard title="ETF 연결 지도" desc={`${data.universeCount?.toLocaleString("ko-KR") ?? "전체"}개 ETF 범위`} marker="peers">
       <div className="grid gap-4 xl:grid-cols-3">
         <PeerLane
           title={`같은 운용사 · ${data.issuerLabel}`}
@@ -958,7 +968,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
     return <p className="text-sm font-semibold text-[var(--c-ink-3)]">보유 구성 데이터 없음</p>;
   }
   return (
-    <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0}>
+    <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0} data-etf-detail-holdings-table="true">
       <table className="w-full min-w-[620px] text-xs">
         <thead className="sticky top-0 z-10 bg-white">
           <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
@@ -973,7 +983,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
             const weight = isFiniteNumber(item.weight_pct) ? item.weight_pct : null;
             const weightClass = weight !== null && weight < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]";
             return (
-              <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0">
+              <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0" data-etf-detail-holding-row="true">
                 <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
                 <th scope="row" className="px-2 py-2 text-left min-w-0">
                   {item.symbol ? (
@@ -1503,8 +1513,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   }
 
   return (
-    <div className="stock-shell">
-      <section className="stock-entity panel">
+    <div className="stock-shell" data-etf-detail-client="true" data-etf-detail-symbol={symbol}>
+      <section className="stock-entity panel" data-etf-detail-header="true">
         <div className="stock-entity-in">
           <span className="stock-logo">{symbol.slice(0, 1)}</span>
           <div className="stock-id">
@@ -1525,6 +1535,29 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 ))}
               </div>
             ) : null}
+            <nav className="mt-3 flex flex-wrap gap-2" aria-label="ETF 상세 빠른 이동" data-etf-detail-action-rail="true">
+              <TransitionLink
+                href={ROUTES.etfs}
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive hover:text-brand-interactive"
+                data-etf-detail-owner-action="etf-center"
+              >
+                ETF 센터
+              </TransitionLink>
+              <TransitionLink
+                href={ROUTES.etfCompareTickers([symbol])}
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive hover:text-brand-interactive"
+                data-etf-detail-owner-action="compare"
+              >
+                ETF 비교
+              </TransitionLink>
+              <TransitionLink
+                href={ROUTES.portfolioTicker(symbol)}
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive hover:text-brand-interactive"
+                data-etf-detail-owner-action="portfolio"
+              >
+                포트폴리오
+              </TransitionLink>
+            </nav>
             {classification?.is_single_stock ? (
               <>
                 <DataProvenanceNote
@@ -1555,7 +1588,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               </>
             ) : null}
           </div>
-          <div className="stock-price">
+          <div className="stock-price" data-etf-detail-price="true">
             <span className="big num">{formatMoney(price, currency)}</span>
             {changePct !== null ? <span className={`stock-chip num ${changePct >= 0 ? "up" : "down"}`}>{fmtSignedPercentPoints(changePct)}</span> : null}
             <span className="delay">{fmtDateish(updateDate)}</span>
@@ -1569,7 +1602,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         </div>
 
         <div className="stock-main-stack">
-          <SectionCard title="ETF 핵심 지표" desc="가격·비용·분류">
+          <SectionCard title="ETF 핵심 지표" desc="가격·비용·분류" marker="key-metrics">
             {hasLoadFailure ? (
               <div className="mb-3">
                 <EtfRetryCallout
@@ -1608,7 +1641,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             ) : null}
           </SectionCard>
 
-          <SectionCard title="Fenok Edge ETF 시그널" desc="별도 ETF 레인 · SCORED, not DAILY/GATED">
+          <SectionCard title="Fenok Edge ETF 시그널" desc="별도 ETF 레인 · SCORED, not DAILY/GATED" marker="signals">
             {signalsResult === undefined ? (
               <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
                 ETF 전용 시그널 확인 중
@@ -1647,11 +1680,11 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             currentSymbol={symbol}
           />
 
-          <SectionCard title="기간 수익률" desc="총수익률·연환산 수익률">
+          <SectionCard title="기간 수익률" desc="총수익률·연환산 수익률" marker="performance">
             <PerformanceView performance={performance} />
           </SectionCard>
 
-          <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${holdings.length.toLocaleString("ko-KR")}개 표시`}>
+          <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${holdings.length.toLocaleString("ko-KR")}개 표시`} marker="holdings">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
               <span>{holdingCount.toLocaleString("ko-KR")}개 원장 중 표시 가능한 항목</span>
               <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
@@ -1659,7 +1692,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 type="button"
                 onClick={() => downloadHoldingsCsv(symbol, holdings, holdingsUpdated)}
                 disabled={holdings.length === 0}
-                className="inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+                data-etf-detail-holdings-csv="true"
               >
                 CSV 저장
               </button>
@@ -1668,18 +1702,18 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <SectionCard title="자산 분해">
+            <SectionCard title="자산 분해" marker="asset-allocation">
               <WeightedList rows={assetAllocation} empty="자산 분해 데이터 없음" />
             </SectionCard>
-            <SectionCard title="섹터 분해">
+            <SectionCard title="섹터 분해" marker="sectors">
               <WeightedList rows={sectors} empty="섹터 데이터 없음" />
             </SectionCard>
-            <SectionCard title="국가 분해">
+            <SectionCard title="국가 분해" marker="countries">
               <WeightedList rows={countries} empty="국가 데이터 없음" />
             </SectionCard>
           </div>
 
-          <SectionCard title="가격 히스토리" desc="보유 데이터 기준 종가">
+          <SectionCard title="가격 히스토리" desc="보유 데이터 기준 종가" marker="history">
             <HistoryView
               history={history}
               historyPeriods={historyPeriods}
@@ -1692,9 +1726,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
             />
           </SectionCard>
 
-          <footer className="stock-footer">
-            <TransitionLink href={ROUTES.etfs} className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
-            <TransitionLink href={`/portfolio?ticker=${encodeURIComponent(symbol)}`} className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+          <footer className="stock-footer" data-etf-detail-footer="true">
+            <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-11 items-center text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="inline-flex min-h-11 items-center text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
           </footer>
         </div>
       </div>
