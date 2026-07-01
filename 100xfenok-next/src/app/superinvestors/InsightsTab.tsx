@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import TransitionLink from "@/components/TransitionLink";
 import TickerChip from "@/components/TickerChip";
+import { ROUTES } from "@/lib/routes";
 import type {
   BuyingPressureData,
   NewPositionsData,
@@ -342,11 +344,13 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
         const amountIntensity = Math.min(1, Math.abs(row.amount) / maxAmount);
         const heat = Math.round(18 + investorIntensity * 34);
         return (
-          <div
+          <TransitionLink
             key={`${row.rank}-${row.ticker}`}
+            href={ROUTES.stock(row.ticker)}
             data-superinvestor-accumulation-tile
             data-superinvestor-accumulation-investors={row.investors_count}
-            className="min-w-0 rounded-xl border border-emerald-200 px-3 py-3"
+            data-superinvestor-accumulation-link
+            className="block min-h-[44px] min-w-0 rounded-xl border border-emerald-200 px-3 py-3 transition hover:border-emerald-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             style={{ backgroundColor: `color-mix(in srgb, var(--c-up) ${heat}%, white)` }}
           >
             <div className="flex min-w-0 items-start justify-between gap-2">
@@ -369,7 +373,7 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
             <p className="mt-1 truncate text-[9px] font-semibold text-slate-600">
               대표 {row.top_investor?.name ?? row.top_investor?.id ?? "—"}
             </p>
-          </div>
+          </TransitionLink>
         );
       })}
     </div>

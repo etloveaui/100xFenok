@@ -672,6 +672,23 @@ async function collectRouteChecks(page, route) {
             detail: `investors=${JSON.stringify(investorCounts)}`,
           });
         }
+        const stockLinks = tiles
+          .filter((node) => node.matches("a[data-superinvestor-accumulation-link]"))
+          .map((node) => ({
+            href: node instanceof HTMLAnchorElement ? new URL(node.href, window.location.origin).pathname : "",
+            rect: node.getBoundingClientRect(),
+          }));
+        if (stockLinks.length !== tiles.length || stockLinks.some((link) => !link.href.startsWith("/stock/"))) {
+          failures.push({
+            check: "superinvestors-accumulation-heatmap-stock-links",
+            detail: `links=${JSON.stringify(stockLinks.map((link) => link.href))}`,
+          });
+        }
+        stockLinks.forEach((link, index) => {
+          if (link.rect.height < 44) {
+            failures.push({ check: "superinvestors-accumulation-heatmap-touch-target", detail: `tile ${index} height=${Math.round(link.rect.height)}` });
+          }
+        });
       }
     }
 
