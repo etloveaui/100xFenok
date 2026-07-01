@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -640,6 +640,92 @@ async function collectRouteChecks(page, route) {
       }
       if ((appTitle?.textContent || "").trim() !== "종목분석") {
         failures.push({ check: "stock-analyzer-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/ib") {
+      const surface = document.querySelector("[data-ib-surface]");
+      const owner = document.querySelector("[data-ib-route-owner]");
+      const boundary = document.querySelector("[data-ib-boundary]");
+      const chips = Array.from(document.querySelectorAll("[data-ib-boundary-chip]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const ownerLinks = Array.from(document.querySelectorAll("[data-ib-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const legacyFrame = document.querySelector("[data-ib-legacy-frame] iframe");
+      const immersiveRoute = document.querySelector('[data-immersive-route="ib"]');
+      const tabbar = document.querySelector(".fnk-shell .tabbar");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "ib-surface-visible", detail: "missing ib surface" });
+      }
+      if (!owner || owner.getAttribute("data-ib-route-owner") !== "legacy-v1") {
+        failures.push({
+          check: "ib-route-owner",
+          detail: `owner=${owner?.getAttribute("data-ib-route-owner") || "missing"}`,
+        });
+      }
+      if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("IB Helper (레거시)")) {
+        failures.push({ check: "ib-boundary-visible", detail: "missing visible legacy boundary" });
+      }
+
+      const expectedChips = ["legacy-v1", "native-v2-preview", "v1-backdoor"];
+      const actualChips = chips.map((node) => node.getAttribute("data-ib-boundary-chip"));
+      if (
+        chips.length !== expectedChips.length ||
+        !expectedChips.every((chip, index) => actualChips[index] === chip)
+      ) {
+        failures.push({
+          check: "ib-boundary-chip-order",
+          detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+        });
+      }
+
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => {
+        const url = new URL(node.href, window.location.origin);
+        return `${normalizePath(url.pathname)}${url.search}`;
+      });
+      const expectedLinks = [
+        "/ib?v2=1",
+        "/admin/ib-helper",
+        "/infinite-buying",
+      ];
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((link, index) => actualLinks[index] === link)
+      ) {
+        failures.push({
+          check: "ib-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "ib-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const frameSrc = legacyFrame instanceof HTMLIFrameElement
+        ? new URL(legacyFrame.src, window.location.origin)
+        : null;
+      if (!frameSrc || frameSrc.pathname !== "/ib-helper/index.html") {
+        failures.push({
+          check: "ib-legacy-frame-src",
+          detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,
+        });
+      }
+      if (!immersiveRoute || tabbar) {
+        failures.push({
+          check: "ib-immersive-route",
+          detail: `immersive=${Boolean(immersiveRoute)} tabbar=${Boolean(tabbar)}`,
+        });
       }
     }
 
