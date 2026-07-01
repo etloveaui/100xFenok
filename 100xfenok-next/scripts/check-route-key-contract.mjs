@@ -261,13 +261,18 @@ function assertRouteIaContracts(errors) {
   ], "Home V5 PRO IA", errors);
 
   assertSourceTokens(workbenchSource, [
-    '<AppShell active="workbench"',
+    'type WorkbenchSurface = "workbench" | "explore"',
+    'const shellActive = isExplore ? "explore" : "workbench"',
+    '<AppShell active={shellActive}',
     "data-workbench-route-rail",
     "data-workbench-gateway",
+    "data-explore-route-rail",
+    "data-explore-gateway",
     "WORKBENCH_GATEWAY_LINKS",
   ], "Workbench PRO IA", errors);
   assertSourceTokens(explorePageSource, [
-    "WorkbenchView",
+    "EXPLORE_META_TITLE",
+    '<WorkbenchView surface="explore" />',
   ], "Explore compatibility route", errors);
   assertSourceTokens(workbenchPageSource, [
     "WorkbenchView",

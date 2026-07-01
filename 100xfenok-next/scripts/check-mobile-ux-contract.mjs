@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -134,6 +134,105 @@ async function collectRouteChecks(page, route) {
         });
       if (featureTiles.length < 4 || featureTiles.length > 6) {
         failures.push({ check: "home-feature-tile-count", detail: `visible tiles=${featureTiles.length}` });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/explore") {
+      const surface = document.querySelector("[data-explore-surface]");
+      const routeRail = document.querySelector("[data-explore-route-rail]");
+      const routeCount = document.querySelector("[data-explore-route-count]");
+      const routeSteps = Array.from(document.querySelectorAll("[data-explore-route-step]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const gateway = document.querySelector("[data-explore-gateway]");
+      const ownerLinks = Array.from(document.querySelectorAll("[data-explore-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeTab = document.querySelector('.fnk-shell .tabbar .tab[aria-current="page"]');
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "explore-surface-visible", detail: "missing explore surface marker" });
+      }
+
+      if (!routeRail || routeRail.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "explore-route-rail-visible", detail: "missing visible explore route rail" });
+      }
+
+      const ownerRouteCount = Number.parseInt(routeRail?.getAttribute("data-explore-owner-route-count") || "", 10);
+      if (ownerRouteCount !== 7 || !(routeCount?.textContent || "").includes("7")) {
+        failures.push({
+          check: "explore-route-owner-count",
+          detail: `attr=${routeRail?.getAttribute("data-explore-owner-route-count") || "missing"} text=${routeCount?.textContent || ""}`,
+        });
+      }
+
+      const expectedRouteSteps = ["01", "02", "03"];
+      const actualRouteSteps = routeSteps.map((node) => node.getAttribute("data-explore-route-step-index"));
+      if (
+        routeSteps.length !== expectedRouteSteps.length ||
+        !expectedRouteSteps.every((step, index) => actualRouteSteps[index] === step)
+      ) {
+        failures.push({
+          check: "explore-route-step-order",
+          detail: `actual=${JSON.stringify(actualRouteSteps)} expected=${JSON.stringify(expectedRouteSteps)}`,
+        });
+      }
+
+      routeSteps.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "explore-route-step-target", detail: `step ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!gateway || gateway.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "explore-gateway-visible", detail: "missing visible explore gateway" });
+      }
+
+      const expectedLinks = [
+        "/market-valuation",
+        "/sectors",
+        "/etfs",
+        "/screener",
+        "/superinvestors",
+        "/portfolio",
+        "/macro-chart",
+      ];
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((href, index) => actualLinks[index] === href)
+      ) {
+        failures.push({
+          check: "explore-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "explore-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const activeTabLabel = (activeTab?.textContent || "").replace(/\s+/g, " ").trim();
+      const activeTabPath = activeTab instanceof HTMLAnchorElement ? normalizePath(new URL(activeTab.href, window.location.origin).pathname) : "";
+      if (activeTabLabel !== "홈" || activeTabPath !== "/") {
+        failures.push({
+          check: "explore-mobile-tab-active",
+          detail: `label=${activeTabLabel} path=${activeTabPath}`,
+        });
+      }
+
+      if ((appTitle?.textContent || "").trim() !== "홈") {
+        failures.push({ check: "explore-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
       }
     }
 

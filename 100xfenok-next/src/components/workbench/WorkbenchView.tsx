@@ -8,7 +8,7 @@ import MyWatchlistStrip from "@/app/explore/MyWatchlistStrip";
 import StockWorkbenchCard from "@/app/explore/StockWorkbenchCard";
 import MacroPlaybookCard from "@/app/explore/MacroPlaybookCard";
 import EtfUniverseCard from "@/app/explore/EtfUniverseCard";
-import { WORKBENCH_PRODUCT_TITLE } from "@/lib/product-nav";
+import { EXPLORE_PRODUCT_TITLE, WORKBENCH_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 
 const WORKBENCH_GATEWAY_LINKS = [
@@ -42,22 +42,35 @@ const WORKBENCH_FLOW_STEPS = [
   },
 ] as const;
 
-export default function WorkbenchView() {
+type WorkbenchSurface = "workbench" | "explore";
+
+export default function WorkbenchView({ surface = "workbench" }: { surface?: WorkbenchSurface }) {
+  const isExplore = surface === "explore";
+  const shellActive = isExplore ? "explore" : "workbench";
+  const shellTitle = isExplore ? EXPLORE_PRODUCT_TITLE : WORKBENCH_PRODUCT_TITLE;
+
   return (
-    <div className="fnk-shell">
-      <AppShell active="workbench" title={WORKBENCH_PRODUCT_TITLE}>
+    <div
+      className="fnk-shell"
+      data-workbench-surface={isExplore ? undefined : "true"}
+      data-explore-surface={isExplore ? "true" : undefined}
+    >
+      <AppShell active={shellActive} title={shellTitle}>
         <SignalStrip />
 
         <section
           aria-label="워크벤치 작업 순서"
           data-workbench-route-rail
+          data-explore-route-rail={isExplore ? "true" : undefined}
           data-workbench-owner-route-count={WORKBENCH_GATEWAY_LINKS.length}
+          data-explore-owner-route-count={isExplore ? WORKBENCH_GATEWAY_LINKS.length : undefined}
           className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--c-line-2)] pb-2">
             <h2 className="text-sm font-black text-[var(--c-ink)]">오늘 순서</h2>
             <span
               data-workbench-route-count
+              data-explore-route-count={isExplore ? "true" : undefined}
               className="rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-2)]"
             >
               {WORKBENCH_GATEWAY_LINKS.length}개 주요 화면
@@ -69,7 +82,9 @@ export default function WorkbenchView() {
                 key={step.index}
                 href={step.href}
                 data-workbench-route-step
+                data-explore-route-step={isExplore ? "true" : undefined}
                 data-workbench-route-step-index={step.index}
+                data-explore-route-step-index={isExplore ? step.index : undefined}
                 className="min-h-16 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface)] px-3 py-2 transition hover:border-brand-interactive hover:bg-[var(--c-surface-2)]"
               >
                 <span className="flex items-center gap-2 text-xs font-black text-[var(--c-ink)]">
@@ -85,6 +100,7 @@ export default function WorkbenchView() {
         <nav
           aria-label="워크벤치 전용 화면"
           data-workbench-gateway
+          data-explore-gateway={isExplore ? "true" : undefined}
           className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7"
         >
           {WORKBENCH_GATEWAY_LINKS.map((link) => (
@@ -92,6 +108,7 @@ export default function WorkbenchView() {
               key={link.href}
               href={link.href}
               data-workbench-owner-link
+              data-explore-owner-link={isExplore ? "true" : undefined}
               className="min-h-14 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 transition hover:border-brand-interactive hover:bg-[var(--c-surface-2)]"
             >
               <span className="block text-sm font-black text-[var(--c-ink)]">{link.label}</span>
