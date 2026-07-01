@@ -641,6 +641,14 @@ function ownerRouteEquivalencePacketForFamily(family) {
   };
 }
 
+function legacyBridgeSmokePathsForFamily(family) {
+  const samplePaths = family.owner_route_equivalence_packet.legacy_sample_paths;
+  if (family.id !== "macro_monitor_legacy_tools") return [];
+  return samplePaths.map((samplePath) => (
+    `/radar?path=${encodeURIComponent(samplePath.replace(/^\/+/, ""))}`
+  ));
+}
+
 function ownerReviewPriority(family) {
   const priorityByFamily = new Map([
     ["macro_monitor_legacy_tools", [10, "route-ia convergence: legacy macro-monitor tools must converge under the native macro-chart owner"]],
@@ -668,6 +676,7 @@ function highRiskOwnerReviewQueue(families) {
   return families
     .map((family) => {
       const [priority, priorityReason] = ownerReviewPriority(family);
+      const legacyBridgeSmokePaths = legacyBridgeSmokePathsForFamily(family);
       return {
         rank: 0,
         priority,
@@ -682,9 +691,12 @@ function highRiskOwnerReviewQueue(families) {
         no_mutation_before_owner_approval: true,
         priority_reason: priorityReason,
         recommended_slice: "run the packet's local commands, compare the owner route against PRO IA intent, then ask owner to preserve, remap, or retire",
+        legacy_bridge_smoke_paths: legacyBridgeSmokePaths,
+        legacy_bridge_local_commands: legacyBridgeSmokePaths.map((smokePath) => localSmokeCommand(smokePath)),
         acceptance_checks: [
           "owner_route_equivalence_packet.packet_ready is true",
           "packet local QA/smoke commands pass",
+          "legacy bridge smoke commands pass where provided",
           "legacy content stays behind the owner route and out of Home/mobile primary IA",
           "owner decision is explicit before redirect/delete/deploy",
         ],
@@ -775,6 +787,7 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     .map((family) => family.id)
     .sort();
   const ownerReviewQueue = highRiskOwnerReviewQueue(families);
+  const ownerReviewBridgeSmokePathCount = ownerReviewQueue.reduce((sum, item) => sum + item.legacy_bridge_smoke_paths.length, 0);
 
   return {
     schema_version: "high-risk-owner-matrix/v0.1",
@@ -783,6 +796,7 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     owner_route_equivalence_packet_ready_count: families.filter((family) => family.owner_route_equivalence_packet_ready).length,
     owner_route_equivalence_packet_not_ready_count: packetNotReadyFamilies.length,
     owner_review_queue_count: ownerReviewQueue.length,
+    owner_review_bridge_smoke_path_count: ownerReviewBridgeSmokePathCount,
     unmapped_count: unmappedRows.length,
     missing_owner_route_count: missingOwnerRouteRows.length,
     unsafe_row_count: unsafeRows.length,
