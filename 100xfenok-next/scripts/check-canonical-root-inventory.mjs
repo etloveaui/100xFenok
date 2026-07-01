@@ -1022,6 +1022,7 @@ function macroMonitorLiveEquivalencePrep(nextSlice, samplePaths, bridgeSmokePath
     radar_bridge_sample_count: bridgeSmokePaths.length,
     row_count: rows.length,
     required_before_owner_decision: [
+      "npm run qa:macro-owner-live-equivalence",
       "run every local smoke command in this matrix against an approved local Next server",
       "record owner route, compatibility route, legacy direct sample, and Radar bridge sample results",
       "compare Home/dashboard legacy entrypoints against native /macro-chart PRO IA",

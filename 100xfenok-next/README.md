@@ -52,6 +52,19 @@ route HTML must expose the expected iframe `src`, and that iframe asset must
 serve with `?embed=1`. Non-local `QA_BASE_URL` values are refused by default;
 set `QA_ROUTE_IFRAME_ALLOW_REMOTE=1` only for an explicitly approved live smoke.
 
+Run `npm run qa:macro-owner-live-equivalence` only against a local Next.js
+server. It defaults to `http://127.0.0.1:3105`, reads the rank-1 macro-monitor
+matrix from `qa:canonical-root-inventory`, then smokes `/macro-chart`,
+`/admin/macro-monitor`, three direct legacy samples, and their three Radar
+bridge URLs. Non-local `QA_BASE_URL` values are refused by default; set
+`QA_MACRO_OWNER_ALLOW_REMOTE=1` only for an explicitly approved live smoke.
+
+Run `npm run qa:macro-owner-decision-packet` before asking the owner to choose
+preserve, remap, or retire for the rank-1 macro-monitor slice. It composes the
+canonical-root inventory and local live-equivalence proof into a no-mutation
+decision packet, keeps redirect/delete/deploy blocked, and leaves rank 2 queued
+until the owner decision is explicit.
+
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary
 search-first entry, Workbench stays secondary, and mobile primary tabs stay
