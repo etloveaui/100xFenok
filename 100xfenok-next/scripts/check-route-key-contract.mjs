@@ -14,6 +14,7 @@ const REQUIRED_ROUTE_KEYS = [
   "etfs",
   "screener",
   "superinvestors",
+  "superinvestorsGuru",
   "portfolio",
   "macroChart",
   "stock",
@@ -276,7 +277,9 @@ function assertRouteIaContracts(errors) {
     'data-stock-financial-estimate-column="cell"',
     "data-stock-financial-estimate-legend",
     "(E) = 시장 예상치",
-  ], "Stock financial estimate column contract", errors);
+    "ROUTES.superinvestorsGuru(h.investor)",
+    "data-smart-money-investor-profile-link",
+  ], "Stock detail route/estimate contract", errors);
 }
 
 function pathPart(literal) {

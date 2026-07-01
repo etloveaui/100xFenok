@@ -1183,8 +1183,14 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
               {holders.map((h) => (
                 <tr key={h.investor} className="border-b border-slate-100 last:border-b-0">
                   <td className="px-2 py-1.5">
-                    <TransitionLink href={ROUTES.superinvestors} className="text-[10px] font-black text-brand-interactive hover:underline">
-                      {h.investor}
+                    <TransitionLink
+                      href={ROUTES.superinvestorsGuru(h.investor)}
+                      data-smart-money-investor-profile-link
+                      aria-label={`${h.investor} 투자자 포트폴리오 보기`}
+                      className="inline-flex flex-col text-left text-[10px] font-black text-brand-interactive hover:underline"
+                    >
+                      <span>{h.investor}</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-400">포트폴리오</span>
                     </TransitionLink>
                   </td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">

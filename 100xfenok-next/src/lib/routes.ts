@@ -38,6 +38,8 @@ export const ROUTES = {
   portfolioTicker: (ticker: string) => withQuery("/portfolio", { ticker: normalizeForRouteTicker(ticker) }),
   superinvestorsByTicker: (ticker: string) =>
     withQuery("/superinvestors", { tab: "by-ticker", ticker: normalizeForRouteTicker(ticker) }),
+  superinvestorsGuru: (guru: string) =>
+    withQuery("/superinvestors", { tab: "gurus", guru: String(guru ?? "").trim() }),
   etfCompareTickers: (tickers: readonly string[]) =>
     withQuery("/etfs/compare", { tickers: tickers.map(normalizeForRouteTicker).filter(Boolean).join(",") }),
   macroChartQuery: (query: string | URLSearchParams | Record<string, string | number | boolean | null | undefined>) =>
