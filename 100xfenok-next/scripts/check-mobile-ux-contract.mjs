@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -726,6 +726,120 @@ async function collectRouteChecks(page, route) {
           check: "ib-immersive-route",
           detail: `immersive=${Boolean(immersiveRoute)} tabbar=${Boolean(tabbar)}`,
         });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/vr") {
+      const surface = document.querySelector("[data-vr-surface]");
+      const owner = document.querySelector("[data-vr-route-owner]");
+      const boundary = document.querySelector("[data-vr-boundary]");
+      const actionRail = document.querySelector("[data-vr-action-rail]");
+      const chips = Array.from(document.querySelectorAll("[data-vr-boundary-chip]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const ownerLinks = Array.from(document.querySelectorAll("[data-vr-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const cards = Array.from(document.querySelectorAll("[data-vr-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const formula = document.querySelector("[data-vr-formula]");
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "vr-surface-visible", detail: "missing vr surface" });
+      }
+      if (!owner || owner.getAttribute("data-vr-route-owner") !== "legacy-guides") {
+        failures.push({
+          check: "vr-route-owner",
+          detail: `owner=${owner?.getAttribute("data-vr-route-owner") || "missing"}`,
+        });
+      }
+      if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("가이드와 계산기")) {
+        failures.push({ check: "vr-boundary-visible", detail: "missing visible vr boundary" });
+      }
+      if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "vr-action-rail-visible", detail: "missing visible vr action rail" });
+      }
+
+      const expectedChips = ["legacy-guide", "calculator", "app-shell"];
+      const actualChips = chips.map((node) => node.getAttribute("data-vr-boundary-chip"));
+      if (
+        chips.length !== expectedChips.length ||
+        !expectedChips.every((chip, index) => actualChips[index] === chip)
+      ) {
+        failures.push({
+          check: "vr-boundary-chip-order",
+          detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+        });
+      }
+      chips.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "vr-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => {
+        const url = new URL(node.href, window.location.origin);
+        return `${normalizePath(url.pathname)}${url.search}`;
+      });
+      const expectedLinks = [
+        "/vr?path=vr/vr-complete-system.html",
+        "/vr?path=vr/vr-total-guide-calculator.html",
+        "/ib",
+      ];
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((link, index) => actualLinks[index] === link)
+      ) {
+        failures.push({
+          check: "vr-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "vr-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedCards = ["system", "calculator"];
+      const actualCards = cards.map((node) => node.getAttribute("data-vr-card"));
+      if (
+        cards.length !== expectedCards.length ||
+        !expectedCards.every((card, index) => actualCards[index] === card)
+      ) {
+        failures.push({
+          check: "vr-card-order",
+          detail: `actual=${JSON.stringify(actualCards)} expected=${JSON.stringify(expectedCards)}`,
+        });
+      }
+      cards.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "vr-card-target", detail: `card ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!formula || formula.getBoundingClientRect().height <= 0 || !(formula.textContent || "").includes("V₂")) {
+        failures.push({ check: "vr-formula-visible", detail: "missing visible vr formula" });
+      }
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "vr-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "VR 전략 가이드") {
+        failures.push({ check: "vr-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
       }
     }
 

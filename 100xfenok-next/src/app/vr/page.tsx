@@ -33,6 +33,18 @@ type PageProps = {
   searchParams?: Promise<{ path?: string | string[] }>;
 };
 
+const VR_BOUNDARY_CHIPS = [
+  { key: "legacy-guide", label: "레거시 가이드" },
+  { key: "calculator", label: "계산기" },
+  { key: "app-shell", label: "앱 셸" },
+] as const;
+
+const VR_OWNER_LINKS = [
+  { key: "system", label: "완전 가이드", href: "/vr?path=vr/vr-complete-system.html" },
+  { key: "calculator", label: "계산기", href: "/vr?path=vr/vr-total-guide-calculator.html" },
+  { key: "ib", label: "IB Helper", href: ROUTES.ib },
+] as const;
+
 export default async function VRPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
   const cookieStore = await cookies();
@@ -68,7 +80,7 @@ export default async function VRPage({ searchParams }: PageProps) {
   }
 
   const landing = (
-    <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2">
+    <div className="vr-page-bg vr-mathematical-bg min-h-screen overflow-x-clip pb-2" data-vr-surface>
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center mb-10 md:mb-16">
           <div className="vr-floating-formula mb-4 inline-block text-6xl sm:text-7xl md:mb-6 md:text-8xl">⚖️</div>
@@ -79,7 +91,41 @@ export default async function VRPage({ searchParams }: PageProps) {
           </p>
         </header>
 
-        <div className="vr-card p-4 sm:p-6 mb-10 md:mb-12 text-center max-w-4xl mx-auto border-2 border-indigo-200">
+        <section className="vr-card mb-10 max-w-4xl mx-auto border-2 border-indigo-200 p-4 sm:p-6" data-vr-boundary>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-indigo-600" data-vr-route-owner="legacy-guides">
+                VR 전략 가이드
+              </p>
+              <h2 className="mt-2 text-xl font-black text-slate-800 sm:text-2xl">가이드와 계산기 경계</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {VR_BOUNDARY_CHIPS.map((chip) => (
+                <span
+                  key={chip.key}
+                  data-vr-boundary-chip={chip.key}
+                  className="inline-flex min-h-11 items-center rounded-full border border-indigo-100 bg-white/75 px-3 text-xs font-black text-slate-700"
+                >
+                  {chip.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3" data-vr-action-rail>
+            {VR_OWNER_LINKS.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                data-vr-owner-link={link.key}
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-indigo-200 bg-white/90 px-4 text-sm font-black text-indigo-700 transition hover:border-indigo-400 hover:bg-indigo-50"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className="vr-card p-4 sm:p-6 mb-10 md:mb-12 text-center max-w-4xl mx-auto border-2 border-indigo-200" data-vr-formula>
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
             <span className="text-slate-800 font-semibold">Core Formula</span>
@@ -94,7 +140,7 @@ export default async function VRPage({ searchParams }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-6xl mx-auto mb-12 md:mb-16">
-          <Link href="/vr?path=vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block">
+          <Link href="/vr?path=vr/vr-complete-system.html" className="vr-card p-5 sm:p-8 block" data-vr-card="system">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-system-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🔬 시스템 가이드
@@ -128,7 +174,7 @@ export default async function VRPage({ searchParams }: PageProps) {
             </div>
           </Link>
 
-          <Link href="/vr?path=vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block">
+          <Link href="/vr?path=vr/vr-total-guide-calculator.html" className="vr-card p-5 sm:p-8 block" data-vr-card="calculator">
             <div className="flex justify-between items-start mb-6">
               <span className="vr-calculator-badge text-white text-sm font-bold px-4 py-2 rounded-full">
                 🧮 계산기
