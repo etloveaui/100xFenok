@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/screener,/portfolio,/stock/NVDA,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/screener,/portfolio,/stock/NVDA,/stock/NVDA?tab=ownership,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -200,6 +200,8 @@ async function collectRouteChecks(page, route) {
     }
 
     if (currentRoute.startsWith("/stock/")) {
+      const stockRouteParams = new URL(currentRoute, window.location.origin).searchParams;
+      const stockTab = stockRouteParams.get("tab") || "overview";
       const tabs = document.querySelector(".stock-tabs");
       if (tabs) {
         const overflowed = tabs.scrollWidth > tabs.clientWidth + 1;
@@ -226,31 +228,49 @@ async function collectRouteChecks(page, route) {
           }
         }
       }
-      const summaryModules = Array.from(document.querySelectorAll("[data-stock-summary-module]"))
-        .map((node) => ({
-          key: node.getAttribute("data-stock-summary-module"),
-          rect: node.getBoundingClientRect(),
-        }))
-        .filter((entry) => entry.rect.width > 0 && entry.rect.height > 0);
-      const summaryScore = summaryModules.find((entry) => entry.key === "summary-score");
-      const valuationBand = summaryModules.find((entry) => entry.key === "valuation-band");
-      const threeSecondSummary = summaryModules.find((entry) => entry.key === "three-second-summary");
-      if (!summaryScore || !valuationBand) {
-        failures.push({
-          check: "stock-summary-valuation-modules-present",
-          detail: `modules=${JSON.stringify(summaryModules.map((entry) => entry.key))}`,
-        });
-      } else if (summaryScore.rect.top > valuationBand.rect.top + 1) {
-        failures.push({
-          check: "stock-summary-before-valuation",
-          detail: `summaryTop=${summaryScore.rect.top} valuationTop=${valuationBand.rect.top}`,
-        });
+      if (stockTab === "overview") {
+        const summaryModules = Array.from(document.querySelectorAll("[data-stock-summary-module]"))
+          .map((node) => ({
+            key: node.getAttribute("data-stock-summary-module"),
+            rect: node.getBoundingClientRect(),
+          }))
+          .filter((entry) => entry.rect.width > 0 && entry.rect.height > 0);
+        const summaryScore = summaryModules.find((entry) => entry.key === "summary-score");
+        const valuationBand = summaryModules.find((entry) => entry.key === "valuation-band");
+        const threeSecondSummary = summaryModules.find((entry) => entry.key === "three-second-summary");
+        if (!summaryScore || !valuationBand) {
+          failures.push({
+            check: "stock-summary-valuation-modules-present",
+            detail: `modules=${JSON.stringify(summaryModules.map((entry) => entry.key))}`,
+          });
+        } else if (summaryScore.rect.top > valuationBand.rect.top + 1) {
+          failures.push({
+            check: "stock-summary-before-valuation",
+            detail: `summaryTop=${summaryScore.rect.top} valuationTop=${valuationBand.rect.top}`,
+          });
+        }
+        if (summaryScore && threeSecondSummary && summaryScore.rect.top > threeSecondSummary.rect.top + 1) {
+          failures.push({
+            check: "stock-summary-score-first",
+            detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
+          });
+        }
       }
-      if (summaryScore && threeSecondSummary && summaryScore.rect.top > threeSecondSummary.rect.top + 1) {
-        failures.push({
-          check: "stock-summary-score-first",
-          detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
-        });
+      if (stockTab === "ownership") {
+        const diff = document.querySelector('[data-smart-money-section="diff"]');
+        const holdings = document.querySelector('[data-smart-money-section="holdings"]');
+        const asOf = document.querySelector("[data-smart-money-asof]");
+        if (!diff || !holdings || !asOf) {
+          failures.push({
+            check: "stock-smart-money-diff-modules-present",
+            detail: JSON.stringify({ diff: Boolean(diff), holdings: Boolean(holdings), asOf: Boolean(asOf) }),
+          });
+        } else if (diff.getBoundingClientRect().top > holdings.getBoundingClientRect().top + 1) {
+          failures.push({
+            check: "stock-smart-money-diff-before-holdings",
+            detail: `diffTop=${diff.getBoundingClientRect().top} holdingsTop=${holdings.getBoundingClientRect().top}`,
+          });
+        }
       }
     }
 

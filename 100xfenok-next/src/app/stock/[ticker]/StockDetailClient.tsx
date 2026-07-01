@@ -272,6 +272,7 @@ function loadStockanalysisFinancials(ticker: string): Promise<StockanalysisFinan
 // ---------------------------------------------------------------------------
 
 type TradesCache = { bought: any[]; sold: any[]; metadata: any };
+type SmartMoneyTrade = any & { action: "buy" | "sell" };
 
 let tradesCache: TradesCache | null = null;
 let tradesPromise: Promise<TradesCache | null> | null = null;
@@ -897,7 +898,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
 // ---------------------------------------------------------------------------
 
 function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ticker: string }) {
-  const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any } | null>(null);
+  const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
   const tradeInvestorName = (value: any) => {
     if (typeof value === "string") return value;
     if (typeof value?.name === "string") return value.name;
@@ -905,6 +906,19 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
     return null;
   };
   const tradeAmount = (value: unknown) => formatCompactMoney(value, "USD");
+  const tradeQuarter = (metadata: any) => {
+    const quarter = typeof metadata?.quarter === "string" && metadata.quarter.trim() ? metadata.quarter.trim() : null;
+    const generatedAt = typeof metadata?.generated_at === "string" && metadata.generated_at.trim()
+      ? metadata.generated_at.slice(0, 10)
+      : null;
+    return { quarter, generatedAt };
+  };
+  const tradeRows = useMemo<SmartMoneyTrade[]>(() => {
+    const rows: SmartMoneyTrade[] = [];
+    if (tradesChip?.bought) rows.push({ ...tradesChip.bought, action: "buy" });
+    if (tradesChip?.sold) rows.push({ ...tradesChip.sold, action: "sell" });
+    return rows.sort((a, b) => (b.amount ?? 0) - (a.amount ?? 0));
+  }, [tradesChip]);
 
   useEffect(() => {
     let cancelled = false;
@@ -913,7 +927,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
       const upper = ticker.toUpperCase();
       const b = data.bought.find((r: any) => r?.ticker === upper);
       const s = data.sold.find((r: any) => r?.ticker === upper);
-      setTradesChip({ bought: b, sold: s });
+      setTradesChip({ bought: b, sold: s, metadata: data.metadata });
     });
     return () => { cancelled = true; };
   }, [ticker]);
@@ -934,27 +948,65 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
   }, [f13Entries]);
 
   if ((!f13Entries || f13Entries.length === 0) && !tradesChip?.bought && !tradesChip?.sold) return null;
+  const { quarter, generatedAt } = tradeQuarter(tradesChip?.metadata);
+  const holderCount = f13Entries
+    ? new Set(f13Entries.map((entry) => entry.investor).filter((investor) => typeof investor === "string" && investor.trim() !== "")).size
+    : 0;
 
   return (
-    <section>
+    <section data-smart-money-section="root">
       <h2 className="mb-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-500">투자 대가 동향</h2>
-      <div className="mb-3 flex flex-wrap gap-2">
-        {tradesChip?.bought ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-emerald-700">
-            최근 분기 투자 대가 순매수 {isFiniteNumber(tradesChip.bought.rank) ? `#${tradesChip.bought.rank} · ` : ""}{tradeAmount(tradesChip.bought.amount)} ({tradesChip.bought.investors_count}명)
-            {tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}명` : ""}
-            {tradeInvestorName(tradesChip.bought.top_investor) ? ` · 대표 ${tradeInvestorName(tradesChip.bought.top_investor)}` : ""}
+      <div data-smart-money-section="diff" className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">분기 매매 변화</p>
+            <p className="mt-1 text-sm font-black text-slate-900">
+              {holderCount > 0 ? `${holderCount}개 투자자 보유` : "보유자 집계 중"}
+              {tradeRows.length > 0 ? ` · ${tradeRows.length}개 최근 변화 포착` : ""}
+            </p>
+          </div>
+          <span data-smart-money-asof className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
+            {quarter ?? "최근 분기"}{generatedAt ? ` · ${generatedAt}` : ""}
           </span>
-        ) : tradesChip?.sold ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-rose-700">
-            최근 분기 투자 대가 순매도 {isFiniteNumber(tradesChip.sold.rank) ? `#${tradesChip.sold.rank} · ` : ""}{tradeAmount(tradesChip.sold.amount)} ({tradesChip.sold.investors_count}명)
-            {tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}명` : ""}
-            {tradeInvestorName(tradesChip.sold.top_investor) ? ` · 대표 ${tradeInvestorName(tradesChip.sold.top_investor)}` : ""}
-          </span>
-        ) : null}
+        </div>
+        {tradeRows.length > 0 ? (
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {tradeRows.map((trade) => {
+              const isBuy = trade.action === "buy";
+              const countLabel = isBuy ? "매수 참여" : "매도 참여";
+              const eventCount = isBuy ? trade.new_count : trade.exit_count;
+              const eventLabel = isBuy ? "신규" : "청산";
+              const investorName = tradeInvestorName(trade.top_investor);
+              return (
+                <div
+                  key={trade.action}
+                  className={`rounded-lg border px-3 py-2 ${isBuy ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className={`text-[10px] font-black uppercase tracking-[0.08em] ${isBuy ? "text-emerald-700" : "text-rose-700"}`}>
+                      {isBuy ? "순매수 변화" : "순매도 변화"}
+                    </span>
+                    <span className={`rounded-full bg-white/75 px-2 py-0.5 text-[9px] font-black tabular-nums ${isBuy ? "text-emerald-700" : "text-rose-700"}`}>
+                      {isFiniteNumber(trade.rank) ? `#${trade.rank}` : "rank —"}
+                    </span>
+                  </div>
+                  <p className="mt-1 orbitron text-base font-black tabular-nums text-slate-950">{tradeAmount(trade.amount)}</p>
+                  <p className="mt-1 text-[10px] font-bold text-slate-600">
+                    {countLabel} {isFiniteNumber(trade.investors_count) ? `${trade.investors_count}명` : "—"}
+                    {isFiniteNumber(eventCount) && eventCount > 0 ? ` · ${eventLabel} ${eventCount}명` : ""}
+                  </p>
+                  {investorName ? <p className="mt-1 truncate text-[10px] font-semibold text-slate-500">대표 {investorName}</p> : null}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-3 text-[11px] font-semibold text-slate-500">최근 분기 순매수·순매도 랭킹에는 포함되지 않았습니다.</p>
+        )}
+        <p className="mt-2 text-[9px] font-semibold text-slate-500">13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다.</p>
       </div>
       {holders.length > 0 ? (
-        <div className="-mx-1 overflow-x-auto px-1">
+        <div data-smart-money-section="holdings" className="-mx-1 overflow-x-auto px-1">
           <table className="w-full min-w-[320px] text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
