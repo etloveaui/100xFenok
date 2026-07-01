@@ -14,8 +14,6 @@ import {
   type StockServicesEntry,
 } from "@/lib/data-entity-graph/stock-index";
 import {
-  BRIEFING_NAV_LABEL,
-  BRIEFING_ROUTE,
   CHART_NAV_LABEL,
   CHART_ROUTE,
   EXPLORE_NAV_LABEL,
@@ -66,18 +64,6 @@ const NAV: NavItem[] = [
         <path d="M3.5 9.2L10 3.8l6.5 5.4" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M5.4 8.6v7.2h9.2V8.6" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M8.4 15.8v-4.2h3.2v4.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "briefing",
-    group: "분석",
-    label: BRIEFING_NAV_LABEL,
-    href: BRIEFING_ROUTE,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="4" width="14" height="12" rx="2" />
-        <path d="M6.5 8h7M6.5 11h7M6.5 14h4" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -288,7 +274,6 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"];
 const MORE_TAB_IDS: ShellPage[] = [
   "workbench",
-  "briefing",
   "ib",
   "vr",
   "dailyWrap",

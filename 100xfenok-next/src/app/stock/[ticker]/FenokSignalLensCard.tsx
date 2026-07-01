@@ -272,9 +272,9 @@ function scoreLabel(metric: SignalMetric): string {
     return "낮음";
   }
   if (metric.inverted) {
-    if (score >= 70) return "압력 낮음";
+    if (score >= 70) return "낮음";
     if (score >= 50) return "주의";
-    return "압력 높음";
+    return "높음";
   }
   if (score >= 70) return "강함";
   if (score >= 50) return "양호";
@@ -845,11 +845,6 @@ function LongTermAxisLegend({ axis }: { axis: LongTermAxis }) {
         <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
           {axis.fullLabel}
         </div>
-        {axis.tooltipNote ? (
-          <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
-            {axis.tooltipNote}
-          </div>
-        ) : null}
         {axis.coverage !== null ? (
           <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
             데이터 {formatCoverage(axis.coverage)}

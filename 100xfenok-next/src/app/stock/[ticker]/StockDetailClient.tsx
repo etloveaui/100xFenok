@@ -301,7 +301,6 @@ type MaybeNumber = number | null | undefined;
 type NumberSeries = MaybeNumber[];
 type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates" | "filings";
 type StockTabItem = { id: StockTab; label: string; badge?: string };
-const FILINGS_TAB_BADGE = "AI 요약 · 200종목+";
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
 
 function StockTabsNav({
@@ -1041,7 +1040,7 @@ export default function StockDetailClient({
   const stockTabs: StockTabItem[] = [
     ...(!isEtfOnlyAsset ? [{ id: "overview" as const, label: "요약" }] : []),
     ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
-    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시", badge: FILINGS_TAB_BADGE }] : []),
+    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
     ...(yfAvailable
       ? [
           { id: "financials" as const, label: "재무" },
@@ -1421,31 +1420,33 @@ export default function StockDetailClient({
       </section>
 
       <div className="stock-body">
-        <div className="stock-summary-stack">
-          {yfAvailable ? (
-            <ThreeSecondSummary
-              data={yfData}
-              perBand={rowPerBand}
-              guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
-              industry={industryBench}
-            />
-          ) : null}
-          {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
-          {yfAvailable ? (
-            <SummaryScoreCard
-              data={yfData}
-              perBand={rowPerBand}
-              industry={industryBench}
-            />
-          ) : null}
-          {!isEtfAsset ? <FenokSignalLensCard record={fenokSignalLens} /> : null}
-          {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
-          <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
-          {!isEtfAsset ? <ConnectedView ticker={symbol} entry={connectionEntry} services={stockServicesEntry} variant="page" compact /> : null}
-      </div>
+        {activeStockTab === "overview" ? (
+          <div className="stock-summary-stack">
+            {yfAvailable ? (
+              <ThreeSecondSummary
+                data={yfData}
+                perBand={rowPerBand}
+                guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
+                industry={industryBench}
+              />
+            ) : null}
+            {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
+            {yfAvailable ? (
+              <SummaryScoreCard
+                data={yfData}
+                perBand={rowPerBand}
+                industry={industryBench}
+              />
+            ) : null}
+            {!isEtfAsset ? <FenokSignalLensCard record={fenokSignalLens} /> : null}
+            {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
+            <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
+            {!isEtfAsset ? <ConnectedView ticker={symbol} entry={connectionEntry} services={stockServicesEntry} variant="page" compact /> : null}
+          </div>
+        ) : null}
 
-      {activeStockTab !== "overview" ? renderStockDataTab() : (
-      <div className="stock-overview-grid">
+        {activeStockTab !== "overview" ? renderStockDataTab() : (
+          <div className="stock-overview-grid">
         {/* LEFT RAIL (280px sticky) */}
         <aside className="stock-side">
           <div className="panel stock-side-panel">

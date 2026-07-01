@@ -67,8 +67,8 @@ function tierLabel(value: string | null | undefined): string {
 }
 
 const SIZE_CLASS = {
-  md: "h-[200px] w-[200px]",
-  lg: "h-[200px] w-[200px] md:h-[280px] md:w-[280px]",
+  md: "h-[180px] w-[180px] max-w-full sm:h-[200px] sm:w-[200px]",
+  lg: "h-[180px] w-[180px] max-w-full sm:h-[200px] sm:w-[200px] md:h-[280px] md:w-[280px]",
 } as const;
 
 const LAYOUT_PADDING = {
@@ -191,7 +191,7 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
   );
 
   return (
-    <div className="flex flex-col items-center gap-2 antialiased">
+    <div className="flex min-w-0 max-w-full flex-col items-center gap-2 antialiased">
       <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
         {title}
       </span>

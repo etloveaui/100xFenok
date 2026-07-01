@@ -171,16 +171,15 @@ function FilingCoverageBanner({
   symbol: string;
 }) {
   const readyCount = filings.filter((filing) => Boolean(filing.summaryPath)).length;
-  const tickerCount = coverage?.tickerCount ?? null;
   const updated = coverage?.updated ? formatDate(coverage.updated) : null;
 
   return (
     <section className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-950">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="font-black">AI 공시 요약 범위</p>
+          <p className="font-black">공시 요약</p>
           <p className="mt-1 text-blue-900">
-            현재 {tickerCount ? `${tickerCount.toLocaleString("ko-KR")}종목` : "200종목+"}의 주요 SEC 공시를 한글 요약으로 연결합니다.
+            선택한 종목의 주요 SEC 공시와 한글 요약을 함께 확인합니다.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-black">

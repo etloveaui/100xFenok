@@ -568,11 +568,6 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
         <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
           {axis.fullLabel}
         </div>
-        {axis.tooltipNote ? (
-          <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
-            {axis.tooltipNote}
-          </div>
-        ) : null}
         {axis.coverage !== null ? (
           <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
             데이터 {Math.round(axis.coverage * 100)}%

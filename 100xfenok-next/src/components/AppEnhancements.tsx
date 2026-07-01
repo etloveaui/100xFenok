@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BRIEFING_NAV_LABEL, BRIEFING_ROUTE, EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from '@/lib/product-nav';
+import { EXPLORE_NAV_LABEL, EXPLORE_ROUTE } from '@/lib/product-nav';
 import { ROUTES, isDockRoutePath, isRouteOrChild, normalizePathname } from '@/lib/routes';
 
 type NetworkInformationLike = {
@@ -19,24 +19,9 @@ type NavigatorWithConnection = Navigator & {
 
 const dockItems = [
   {
-    href: BRIEFING_ROUTE,
-    label: BRIEFING_NAV_LABEL,
-    icon: '⌂',
-    isActive: (pathname: string) => pathname === BRIEFING_ROUTE,
-  },
-  {
-    href: ROUTES.market,
-    label: 'MARKET',
-    icon: '◔',
-    isActive: (pathname: string) =>
-      pathname === ROUTES.marketLegacy ||
-      pathname === ROUTES.market ||
-      pathname === ROUTES.alphaScout,
-  },
-  {
     href: EXPLORE_ROUTE,
     label: EXPLORE_NAV_LABEL,
-    icon: '◇',
+    icon: '⌂',
     isActive: (pathname: string) =>
       pathname === ROUTES.home ||
       pathname === ROUTES.explore ||
@@ -51,6 +36,15 @@ const dockItems = [
       pathname === ROUTES.stockAnalyzer ||
       pathname === ROUTES.stockAnalyzerNative ||
       pathname === ROUTES.dailyWrap,
+  },
+  {
+    href: ROUTES.market,
+    label: 'MARKET',
+    icon: '◔',
+    isActive: (pathname: string) =>
+      pathname === ROUTES.marketLegacy ||
+      pathname === ROUTES.market ||
+      pathname === ROUTES.alphaScout,
   },
   {
     href: ROUTES.ib,

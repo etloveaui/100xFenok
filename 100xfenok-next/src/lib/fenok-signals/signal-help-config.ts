@@ -40,17 +40,17 @@ const DEFAULT_BANDS: FenokSignalHelpBand[] = [
 ];
 
 const DOWNSIDE_SAFETY_BANDS: FenokSignalHelpBand[] = [
-  { min: 81, max: 100, label: "위험 낮음", tone: "up" },
+  { min: 81, max: 100, label: "낮음", tone: "up" },
   { min: 61, max: 80, label: "안정", tone: "up" },
   { min: 41, max: 60, label: "보통", tone: "warn" },
-  { min: 0, max: 40, label: "위험 높음", tone: "down" },
+  { min: 0, max: 40, label: "위험", tone: "down" },
 ];
 
 const SHORT_PRESSURE_SAFETY_BANDS: FenokSignalHelpBand[] = [
-  { min: 81, max: 100, label: "압력 낮음", tone: "up" },
-  { min: 61, max: 80, label: "압력 관리", tone: "up" },
+  { min: 81, max: 100, label: "낮음", tone: "up" },
+  { min: 61, max: 80, label: "관리", tone: "up" },
   { min: 41, max: 60, label: "중립", tone: "warn" },
-  { min: 0, max: 40, label: "압력 높음", tone: "down" },
+  { min: 0, max: 40, label: "높음", tone: "down" },
 ];
 
 function makeDefaultEntry(
@@ -108,8 +108,8 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
     interpretation:
       "Fenok 파생 신호로 산출한 상대적 하락 압력 축이에요. 점수가 높을수록 위험이 커요.",
     bands: [
-      { min: 81, max: 100, label: "위험 높음", tone: "down" },
-      { min: 61, max: 80, label: "위험 다소 높음", tone: "warn" },
+      { min: 81, max: 100, label: "위험", tone: "down" },
+      { min: 61, max: 80, label: "주의", tone: "warn" },
       { min: 41, max: 60, label: "보통", tone: "warn" },
       { min: 0, max: 40, label: "안정", tone: "up" },
     ],
@@ -145,10 +145,10 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
     interpretation:
       "공개 short volume/short activity 데이터를 이용한 Fenok 파생 압력 축이에요. 점수가 높을수록 숏 관련 압력이 큰 쪽이에요.",
     bands: [
-      { min: 81, max: 100, label: "압력 높음", tone: "down" },
-      { min: 61, max: 80, label: "압력 다소 높음", tone: "warn" },
+      { min: 81, max: 100, label: "높음", tone: "down" },
+      { min: 61, max: 80, label: "주의", tone: "warn" },
       { min: 41, max: 60, label: "중립", tone: "warn" },
-      { min: 0, max: 40, label: "압력 낮음", tone: "up" },
+      { min: 0, max: 40, label: "낮음", tone: "up" },
     ],
   },
   directNewsToneProxy: makeDefaultEntry(
