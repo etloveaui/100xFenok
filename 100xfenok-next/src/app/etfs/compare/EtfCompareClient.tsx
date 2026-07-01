@@ -57,7 +57,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
   const name = rawText(overview.name) !== "—" ? rawText(overview.name) : row.ticker;
 
   return (
-    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3">
+    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-summary-card="true">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-[var(--c-ink)]" />
@@ -82,7 +82,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
 function OverlapCard({ pair }: { pair: PairOverlap }) {
   const topCommon = pair.common.slice(0, 8);
   return (
-    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3">
+    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-overlap-card="true">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="orbitron text-sm font-black text-[var(--c-ink)]">
@@ -186,7 +186,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   }
 
   return (
-    <section className="panel">
+    <section className="panel" data-etf-compare-panel="true">
       <div className="panel-h">
         <h2>비교 세트</h2>
         <span className="desc">최대 {MAX_COMPARE_TICKERS}개 · 기준일 {asOfLabel}</span>
@@ -196,22 +196,25 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
           <label className="sr-only" htmlFor="etf-compare-tickers">비교 ETF</label>
           <input
             id="etf-compare-tickers"
+            data-etf-compare-control="input"
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            className="min-h-10 min-w-0 flex-1 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-bold text-[var(--c-ink)] outline-none transition focus:border-brand-interactive"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-bold text-[var(--c-ink)] outline-none transition focus:border-brand-interactive"
             placeholder="SPY, VOO"
           />
           <button
             type="submit"
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
+            data-etf-compare-control="submit"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
           >
             비교
           </button>
           <button
             type="button"
+            data-etf-compare-control="csv"
             onClick={() => downloadCompareCsv(rows, overlaps)}
             disabled={loading || rows.length === 0}
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-4)]"
           >
             CSV 저장
           </button>

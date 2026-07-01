@@ -21,9 +21,9 @@ export default async function NewEtfsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
 
   return (
-    <div className="fnk-shell">
+    <div className="fnk-shell" data-etf-new-surface="true" data-etf-new-route-owner="new-etf-radar">
       <AppShell active="etfs" title="신규 상장 ETF">
-        <section className="panel">
+        <section className="panel" data-etf-new-header="true">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
               <p className="data-shell-kicker">신규 ETF</p>
@@ -33,7 +33,12 @@ export default async function NewEtfsPage({ searchParams }: Props) {
               </p>
             </div>
             <div className="data-shell-head-actions">
-              <TransitionLink href={ROUTES.etfs} className="data-shell-link">
+              <TransitionLink
+                href={ROUTES.etfs}
+                className="data-shell-link"
+                data-etf-new-owner-link="etf-center"
+                style={{ minHeight: 44 }}
+              >
                 ETF 센터
               </TransitionLink>
             </div>

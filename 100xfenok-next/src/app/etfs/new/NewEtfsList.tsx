@@ -420,7 +420,7 @@ export default function NewEtfsList({
   ];
 
   return (
-    <section className="panel">
+    <section className="panel" data-etf-new-radar="true">
       <div className="panel-h">
         <h2>신규 ETF 레이더</h2>
         <span className="desc">관찰 목록 · {fmtDate(state.snapshot?.newEtfs?.fetched_at)} · {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개</span>
@@ -441,24 +441,26 @@ export default function NewEtfsList({
               <label className="sr-only" htmlFor="new-etf-search">신규 ETF 검색</label>
               <input
                 id="new-etf-search"
+                data-etf-new-control="search"
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
                   syncParams({ query: event.target.value });
                 }}
                 placeholder="티커, ETF명, 운용사 검색"
-                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-bold text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)] focus:ring-2 focus:ring-[rgb(var(--rgb-brand)/0.1)]"
+                className="min-h-11 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-bold text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)] focus:ring-2 focus:ring-[rgb(var(--rgb-brand)/0.1)]"
               />
               <label className="sr-only" htmlFor="new-etf-date-filter">상장일 필터</label>
               <select
                 id="new-etf-date-filter"
+                data-etf-new-control="date"
                 value={dateFilter}
                 onChange={(event) => {
                   const value = event.target.value as DateFilter;
                   setDateFilter(value);
                   syncParams({ dateFilter: value });
                 }}
-                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)]"
+                className="min-h-11 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)]"
               >
                 {(["전체", "7일", "14일", "30일"] as DateFilter[]).map((value) => (
                   <option key={value} value={value}>{value === "전체" ? "전체 기간" : `최근 ${value}`}</option>
@@ -467,12 +469,13 @@ export default function NewEtfsList({
               <label className="sr-only" htmlFor="new-etf-issuer-filter">운용사 필터</label>
               <select
                 id="new-etf-issuer-filter"
+                data-etf-new-control="issuer"
                 value={issuerFilter}
                 onChange={(event) => {
                   setIssuerFilter(event.target.value);
                   syncParams({ issuerFilter: event.target.value });
                 }}
-                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)]"
+                className="min-h-11 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)]"
               >
                 <option value="전체">전체 운용사</option>
                 {issuers.map(([issuer, count]) => (
@@ -482,13 +485,14 @@ export default function NewEtfsList({
               <label className="sr-only" htmlFor="new-etf-sort">정렬</label>
               <select
                 id="new-etf-sort"
+                data-etf-new-control="sort"
                 value={sort}
                 onChange={(event) => {
                   const value = event.target.value as NewEtfSort;
                   setSort(value);
                   syncParams({ sort: value });
                 }}
-                className="min-h-10 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)]"
+                className="min-h-11 rounded-xl border border-[var(--c-line)] bg-white px-3 text-sm font-black text-[var(--c-ink)] outline-none transition focus:border-[var(--c-brand)]"
               >
                 <option value="date">상장일순</option>
                 <option value="ticker">티커순</option>
@@ -503,11 +507,12 @@ export default function NewEtfsList({
                   key={option.value}
                   type="button"
                   aria-pressed={typeFilter === option.value}
+                  data-etf-new-type-filter={option.value}
                   onClick={() => {
                     setTypeFilter(option.value);
                     syncParams({ typeFilter: option.value });
                   }}
-                  className={`min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
+                  className={`min-h-11 rounded-full border px-3 text-[11px] font-black transition ${
                     typeFilter === option.value
                       ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
                       : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
@@ -518,8 +523,9 @@ export default function NewEtfsList({
               ))}
               <button
                 type="button"
+                data-etf-new-csv="true"
                 onClick={() => downloadCsv(filteredRows)}
-                className="ml-auto min-h-8 rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--c-brand)]"
+                className="ml-auto min-h-11 rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--c-brand)]"
               >
                 CSV 저장
               </button>
@@ -536,7 +542,7 @@ export default function NewEtfsList({
               const displayName = row.n || row.s;
               const metaText = `상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${radarStatusLabel(row.radarStatus)} · ${classificationStatusLabel(row.classificationStatus)} · ${coreCandidateLabel(row.coreCandidateAllowed)} · ${detailStatusHint(row.detailStatus)}`;
               return (
-                <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row">
+                <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row" data-etf-new-row="true">
                   <span className="co">
                     <div className="n">{row.s}</div>
                     <div className="tk" title={displayName}>

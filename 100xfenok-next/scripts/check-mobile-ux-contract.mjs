@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1931,6 +1931,162 @@ async function collectRouteChecks(page, route) {
       });
       if (!loadMore || loadMore.getBoundingClientRect().height < 44) {
         failures.push({ check: "etf-universe-load-more-target", detail: loadMore ? `height=${Math.round(loadMore.getBoundingClientRect().height)}` : "missing load more" });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/etfs/new") {
+      const surface = document.querySelector("[data-etf-new-surface]");
+      const owner = document.querySelector("[data-etf-new-route-owner]");
+      const header = document.querySelector("[data-etf-new-header]");
+      const ownerLink = document.querySelector("[data-etf-new-owner-link]");
+      const radar = document.querySelector("[data-etf-new-radar]");
+      const controls = Array.from(document.querySelectorAll("[data-etf-new-control]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const typeFilters = Array.from(document.querySelectorAll("[data-etf-new-type-filter]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const csvButton = document.querySelector("[data-etf-new-csv]");
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etf-new-surface-visible", detail: "missing new ETF surface" });
+      }
+      if (!owner || owner.getAttribute("data-etf-new-route-owner") !== "new-etf-radar") {
+        failures.push({
+          check: "etf-new-route-owner",
+          detail: `owner=${owner?.getAttribute("data-etf-new-route-owner") || "missing"}`,
+        });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0 || !(header.textContent || "").includes("신규 상장 ETF")) {
+        failures.push({ check: "etf-new-header-visible", detail: "missing new ETF header" });
+      }
+      const ownerHref = ownerLink instanceof HTMLAnchorElement
+        ? new URL(ownerLink.href, window.location.origin).pathname.replace(/\/+$/, "")
+        : "";
+      if (ownerHref !== "/etfs") {
+        failures.push({ check: "etf-new-owner-link", detail: `href=${ownerHref || "missing"}` });
+      }
+      if (ownerLink && ownerLink.getBoundingClientRect().height < 44) {
+        failures.push({ check: "etf-new-owner-link-target", detail: `height=${Math.round(ownerLink.getBoundingClientRect().height)}` });
+      }
+      if (!radar || radar.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etf-new-radar-visible", detail: "missing new ETF radar panel" });
+      }
+
+      const expectedControls = ["search", "date", "issuer", "sort"];
+      const actualControls = controls.map((node) => node.getAttribute("data-etf-new-control"));
+      if (
+        controls.length !== expectedControls.length ||
+        !expectedControls.every((key, index) => actualControls[index] === key)
+      ) {
+        failures.push({
+          check: "etf-new-control-order",
+          detail: `actual=${JSON.stringify(actualControls)} expected=${JSON.stringify(expectedControls)}`,
+        });
+      }
+      controls.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etf-new-control-target", detail: `control ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedTypes = ["전체", "레버리지", "단일종목 레버리지", "인버스"];
+      const actualTypes = typeFilters.map((node) => node.getAttribute("data-etf-new-type-filter"));
+      if (
+        typeFilters.length !== expectedTypes.length ||
+        !expectedTypes.every((key, index) => actualTypes[index] === key)
+      ) {
+        failures.push({
+          check: "etf-new-type-filter-order",
+          detail: `actual=${JSON.stringify(actualTypes)} expected=${JSON.stringify(expectedTypes)}`,
+        });
+      }
+      [...typeFilters, csvButton].filter(Boolean).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etf-new-action-target", detail: `action ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "etf-new-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "신규 상장 ETF") {
+        failures.push({ check: "etf-new-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/etfs/compare") {
+      const surface = document.querySelector("[data-etf-compare-surface]");
+      const owner = document.querySelector("[data-etf-compare-route-owner]");
+      const header = document.querySelector("[data-etf-compare-header]");
+      const ownerLink = document.querySelector("[data-etf-compare-owner-link]");
+      const panel = document.querySelector("[data-etf-compare-panel]");
+      const controls = Array.from(document.querySelectorAll("[data-etf-compare-control]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etf-compare-surface-visible", detail: "missing ETF compare surface" });
+      }
+      if (!owner || owner.getAttribute("data-etf-compare-route-owner") !== "holdings-overlap") {
+        failures.push({
+          check: "etf-compare-route-owner",
+          detail: `owner=${owner?.getAttribute("data-etf-compare-route-owner") || "missing"}`,
+        });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0 || !(header.textContent || "").includes("ETF 겹침 비교")) {
+        failures.push({ check: "etf-compare-header-visible", detail: "missing ETF compare header" });
+      }
+      const ownerHref = ownerLink instanceof HTMLAnchorElement
+        ? new URL(ownerLink.href, window.location.origin).pathname.replace(/\/+$/, "")
+        : "";
+      if (ownerHref !== "/etfs") {
+        failures.push({ check: "etf-compare-owner-link", detail: `href=${ownerHref || "missing"}` });
+      }
+      if (ownerLink && ownerLink.getBoundingClientRect().height < 44) {
+        failures.push({ check: "etf-compare-owner-link-target", detail: `height=${Math.round(ownerLink.getBoundingClientRect().height)}` });
+      }
+      if (!panel || panel.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etf-compare-panel-visible", detail: "missing ETF compare panel" });
+      }
+
+      const expectedControls = ["input", "submit", "csv"];
+      const actualControls = controls.map((node) => node.getAttribute("data-etf-compare-control"));
+      if (
+        controls.length !== expectedControls.length ||
+        !expectedControls.every((key, index) => actualControls[index] === key)
+      ) {
+        failures.push({
+          check: "etf-compare-control-order",
+          detail: `actual=${JSON.stringify(actualControls)} expected=${JSON.stringify(expectedControls)}`,
+        });
+      }
+      controls.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etf-compare-control-target", detail: `control ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "etf-compare-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "ETF 비교") {
+        failures.push({ check: "etf-compare-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
       }
     }
 
