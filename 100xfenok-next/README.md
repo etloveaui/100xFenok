@@ -78,7 +78,9 @@ no-mutation follow-up plan: preserve documentation, remap dry-run proposal, or
 retire readiness packet. Redirect, delete, and deploy remain separate explicit
 owner approvals. Rank 2 is exposed only as an inactive next-candidate preview;
 it must stay `active=false` and no-mutation until rank 1 has both a valid owner
-record and a recorded no-mutation follow-up.
+record and a recorded no-mutation follow-up. The inactive preview also carries
+a prep-only local smoke matrix for the rank-2 owner route, compatibility route,
+and legacy sample; that matrix is not rank release or live production proof.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary

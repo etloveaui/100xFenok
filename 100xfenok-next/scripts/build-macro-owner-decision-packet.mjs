@@ -268,6 +268,57 @@ function selectedDecisionFollowup(packet) {
   };
 }
 
+function commandForPath(packet, smokePath) {
+  const commands = packet?.pre_approval_local_commands ?? [];
+  return commands.find((command) => command.includes(`127.0.0.1:3105${smokePath}`)) ?? null;
+}
+
+function inactiveNextCandidateLiveEquivalencePrep(nextCandidate, packet) {
+  const ownerRoute = nextCandidate.owner_route;
+  const compatibilityRoute = nextCandidate.compatibility_route;
+  const legacySamplePaths = packet?.legacy_sample_paths ?? [];
+  const rows = [];
+
+  if (ownerRoute) {
+    rows.push({
+      role: "owner_route",
+      path: ownerRoute,
+      paired_path: legacySamplePaths[0] ?? compatibilityRoute ?? null,
+      command: commandForPath(packet, ownerRoute),
+    });
+  }
+  if (compatibilityRoute) {
+    rows.push({
+      role: "compatibility_route",
+      path: compatibilityRoute,
+      paired_path: ownerRoute,
+      command: commandForPath(packet, compatibilityRoute),
+    });
+  }
+  for (const legacyPath of legacySamplePaths) {
+    rows.push({
+      role: "legacy_sample",
+      path: legacyPath,
+      paired_path: ownerRoute,
+      command: commandForPath(packet, legacyPath),
+    });
+  }
+
+  return {
+    schema_version: "inactive-owner-review-live-equivalence-prep/v0.1",
+    proof_status: "prep_only_not_executed",
+    preview_only: true,
+    expected_rows: rows.length,
+    rows,
+    required_before_active_review: [
+      "rank 1 owner decision record validates as valid_no_mutation",
+      "rank 1 selected no-mutation follow-up is recorded",
+      "all inactive preview smoke rows pass locally before rank 2 owner review",
+      "rank 2 owner decision is still required before redirect/delete/deploy",
+    ],
+  };
+}
+
 function inactiveNextCandidatePreview(inventory, review) {
   const nextCandidate = review.next_queue_candidate_after_owner_decision;
   if (!nextCandidate) return null;
@@ -306,6 +357,7 @@ function inactiveNextCandidatePreview(inventory, review) {
       local_smoke_paths: packet?.local_smoke_paths ?? [],
       pre_approval_local_commands: packet?.pre_approval_local_commands ?? [],
     },
+    live_equivalence_prep: inactiveNextCandidateLiveEquivalencePrep(nextCandidate, packet),
     release_requirements: [
       "rank 1 owner decision record validates as valid_no_mutation",
       "rank 1 selected decision follow-up is recorded without mutation",
@@ -521,6 +573,26 @@ function validatePacket(packet) {
     if (!Array.isArray(preview.candidate?.local_smoke_paths) || preview.candidate.local_smoke_paths.length === 0) {
       errors.push("inactive next candidate preview must expose local smoke paths");
     }
+    const prep = preview.live_equivalence_prep;
+    if (prep?.proof_status !== "prep_only_not_executed" || prep.preview_only !== true) {
+      errors.push("inactive next candidate live-equivalence prep must stay prep-only");
+    }
+    if (!Array.isArray(prep?.rows) || prep.rows.length !== preview.candidate.local_smoke_paths.length) {
+      errors.push("inactive next candidate live-equivalence prep row count must match local smoke paths");
+    } else {
+      const roles = new Set(prep.rows.map((row) => row.role));
+      if (!roles.has("owner_route") || !roles.has("legacy_sample")) {
+        errors.push("inactive next candidate live-equivalence prep must include owner_route and legacy_sample rows");
+      }
+      if (preview.candidate.compatibility_route && !roles.has("compatibility_route")) {
+        errors.push("inactive next candidate live-equivalence prep must include compatibility_route row");
+      }
+      for (const row of prep.rows) {
+        if (!row.command) {
+          errors.push(`inactive next candidate live-equivalence prep row missing command: ${row.path}`);
+        }
+      }
+    }
   }
   const decisionRecordErrors = validateDecisionRecord(packet.supplied_decision_record, packet);
   errors.push(...decisionRecordErrors);
@@ -553,6 +625,7 @@ function printText(packet) {
     console.log(`selected_decision_followup=${packet.selected_decision_followup.id}`);
   }
   console.log(`inactive_next_candidate_preview=${packet.inactive_next_candidate_preview.candidate.family_id}`);
+  console.log(`inactive_next_candidate_prep_rows=${packet.inactive_next_candidate_preview.live_equivalence_prep.rows.length}`);
   console.log("decision_record_template_command=node scripts/build-macro-owner-decision-packet.mjs --decision-record-template");
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
