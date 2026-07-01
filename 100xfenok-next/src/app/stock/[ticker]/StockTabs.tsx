@@ -215,10 +215,10 @@ function FinancialsTab({ data }: { data: YfData }) {
     if (!source || revDates.length === 0) return <p className="text-xs text-slate-400">데이터 없음</p>;
     return (
       <div className="-mx-1 overflow-x-auto px-1">
-        <table className="w-full min-w-[500px] text-xs">
+        <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-              <th className="px-2 py-1.5 text-left" />
+              <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
               {revDates.map((d) => (
                 <th key={d} className="px-2 py-1.5 text-right">{d.slice(0, 7)}</th>
               ))}
@@ -231,7 +231,7 @@ function FinancialsTab({ data }: { data: YfData }) {
               if (!hasData) return null;
               return (
                 <tr key={eng} className="border-b border-slate-100 last:border-b-0">
-                  <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{ko}</td>
+                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
                   {vals.map((v, i) => (
                     <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">
                       {formatFn(v, eng)}

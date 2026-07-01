@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/screener,/portfolio,/stock/NVDA,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/screener,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -105,6 +105,35 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "mobile-tab-target", detail: `tab ${index} height=${rect.height}` });
         }
       });
+    }
+
+    if (currentRoute === "/" || currentRoute.startsWith("/?")) {
+      const homeSearch = document.querySelector("[data-home-search-first]");
+      const homeSearchInput = homeSearch?.querySelector('[role="combobox"]');
+      const homeSearchRect = homeSearchInput?.getBoundingClientRect();
+      const homeSearchVisible = Boolean(
+        homeSearchRect &&
+        homeSearchRect.width > 0 &&
+        homeSearchRect.height >= 32 &&
+        homeSearchRect.top >= 0 &&
+        homeSearchRect.top < window.innerHeight * 0.45,
+      );
+      if (!homeSearchVisible) {
+        failures.push({
+          check: "home-search-first-visible",
+          detail: homeSearchRect
+            ? `top=${homeSearchRect.top} height=${homeSearchRect.height}`
+            : "missing [data-home-search-first] combobox",
+        });
+      }
+      const featureTiles = Array.from(document.querySelectorAll("[data-home-feature-tile]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight;
+        });
+      if (featureTiles.length < 4 || featureTiles.length > 6) {
+        failures.push({ check: "home-feature-tile-count", detail: `visible tiles=${featureTiles.length}` });
+      }
     }
 
     if (currentRoute.startsWith("/screener")) {
@@ -277,6 +306,34 @@ async function collectRouteChecks(page, route) {
         if (!disclosure || disclosure.getBoundingClientRect().height <= 0) {
           failures.push({ check: "stock-estimate-disclosure-present", detail: "missing visible estimate source/EPS basis disclosure" });
         }
+      }
+      if (stockTab === "financials" || stockTab === "estimates") {
+        const financialTables = Array.from(document.querySelectorAll("[data-stock-financial-table]"))
+          .filter((table) => table.getBoundingClientRect().width > 0 && table.getBoundingClientRect().height > 0);
+        if (financialTables.length === 0) {
+          failures.push({ check: "stock-financial-table-present", detail: `tab=${stockTab}` });
+        }
+        financialTables.forEach((table, tableIndex) => {
+          const firstHeader = table.querySelector("thead th:first-child");
+          const firstCell = table.querySelector("tbody tr td:first-child");
+          [
+            { kind: "header", node: firstHeader },
+            { kind: "cell", node: firstCell },
+          ].forEach((entry) => {
+            if (!entry.node) {
+              failures.push({ check: "stock-financial-sticky-first-column-node", detail: `table=${tableIndex} missing=${entry.kind}` });
+              return;
+            }
+            const style = window.getComputedStyle(entry.node);
+            const left = Number.parseFloat(style.left || "999");
+            if (style.position !== "sticky" || Math.abs(left) > 1) {
+              failures.push({
+                check: "stock-financial-sticky-first-column",
+                detail: `table=${tableIndex} ${entry.kind} position=${style.position} left=${style.left}`,
+              });
+            }
+          });
+        });
       }
     }
 

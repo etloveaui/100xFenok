@@ -849,10 +849,10 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
 
   return (
     <div className="-mx-1 mt-3 overflow-x-auto px-1">
-      <table className="w-full min-w-[500px] text-xs">
+      <table data-stock-financial-table="compact" className="w-full min-w-[500px] text-xs">
         <thead>
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-            <th className="px-2 py-1.5 text-left" />
+            <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
             {years.map((y) => <th key={y} className="px-2 py-1.5 text-right">{y}</th>)}
             {estKeys.map((k) => (
               <th key={k} className="px-2 py-1.5 text-right bg-slate-50 text-slate-500">
@@ -867,7 +867,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
             const showGap = hasEstimateGap(completeness);
             return (
               <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">
+                <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">
                   <span className="block">{row.label}</span>
                   {showGap ? (
                     <span className={`mt-0.5 inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(completeness)}`}>
