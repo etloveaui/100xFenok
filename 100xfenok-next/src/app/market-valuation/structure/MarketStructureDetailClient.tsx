@@ -70,7 +70,10 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <div className="min-w-0 rounded-[1rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3">
+    <div
+      className="min-w-0 rounded-[1rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3"
+      data-market-structure-summary-card="true"
+    >
       <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)]">{label}</p>
       <p className="orbitron mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
         {value}
@@ -96,6 +99,7 @@ function SlotShell({
   return (
     <section
       data-slot={`market-structure-${id}`}
+      data-market-structure-slot={id}
       className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
     >
       <header className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
@@ -123,7 +127,7 @@ function SummaryStrip({ model }: { model: MarketStructureModel }) {
   const aaii = model.aaii;
 
   return (
-    <div className="grid min-w-0 gap-3 md:grid-cols-4">
+    <div className="grid min-w-0 gap-3 md:grid-cols-4" data-market-structure-summary="true">
       <MetricCard
         label="집중도"
         value={fmt(topConcentration?.top10Weight, 1, "%")}
@@ -173,7 +177,7 @@ export default function MarketStructureDetailClient({
 
   return (
     <div className="data-shell-page">
-      <section className="panel data-shell-header">
+      <section className="panel data-shell-header" data-market-structure-header="true">
         <div className="data-shell-head-main">
           <div className="mb-2 hidden items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-4)] md:flex">
             <TransitionLink href={ROUTES.market} className="hover:text-[var(--c-brand)]">
@@ -195,10 +199,20 @@ export default function MarketStructureDetailClient({
               {model.generatedAt}
             </span>
           ) : null}
-          <TransitionLink href={ROUTES.market} className="data-shell-link">
+          <TransitionLink
+            href={ROUTES.market}
+            className="data-shell-link"
+            data-market-structure-owner-link="market"
+            style={{ minHeight: 44 }}
+          >
             시장 밸류에이션
           </TransitionLink>
-          <TransitionLink href={EXPLORE_ROUTE} className="data-shell-link">
+          <TransitionLink
+            href={EXPLORE_ROUTE}
+            className="data-shell-link"
+            data-market-structure-owner-link="home"
+            style={{ minHeight: 44 }}
+          >
             {EXPLORE_NAV_LABEL}
           </TransitionLink>
         </div>
@@ -285,6 +299,20 @@ export default function MarketStructureDetailClient({
               )}
             </SlotShell>
 
+            <SlotShell id="concentration" title="지수 집중도" subtitle="보유비중 기준">
+              {slots.concentration ? (
+                slots.concentration(slotProps)
+              ) : (
+                <Placeholder>
+                  지수 집중도 패널 준비 중
+                  <br />
+                  상위 종목 비중과 쏠림 정도를 보여줍니다
+                </Placeholder>
+              )}
+            </SlotShell>
+          </div>
+
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[0.9fr_1.1fr]">
             <SlotShell id="sentiment" title="CNN 하위 심리" subtitle="7개 구성 지표">
               {slots.sentiment ? (
                 slots.sentiment(slotProps)
@@ -296,9 +324,7 @@ export default function MarketStructureDetailClient({
                 </Placeholder>
               )}
             </SlotShell>
-          </div>
 
-          <div className="grid min-w-0 gap-4 xl:grid-cols-[0.9fr_1.1fr]">
             <SlotShell id="aaii" title="AAII 개인투자자 심리" subtitle="강세·약세·스프레드">
               {slots.aaii ? (
                 slots.aaii(slotProps)
@@ -307,18 +333,6 @@ export default function MarketStructureDetailClient({
                   개인투자자 심리 패널 준비 중
                   <br />
                   강세와 약세 응답의 차이를 추적합니다
-                </Placeholder>
-              )}
-            </SlotShell>
-
-            <SlotShell id="concentration" title="지수 집중도" subtitle="보유비중 기준">
-              {slots.concentration ? (
-                slots.concentration(slotProps)
-              ) : (
-                <Placeholder>
-                  지수 집중도 패널 준비 중
-                  <br />
-                  상위 종목 비중과 쏠림 정도를 보여줍니다
                 </Placeholder>
               )}
             </SlotShell>

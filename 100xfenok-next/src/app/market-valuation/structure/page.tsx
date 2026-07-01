@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function MarketStructureDetailPage() {
   return (
-    <div className="fnk-shell">
+    <div className="fnk-shell" data-market-structure-surface="true" data-market-structure-route-owner="market-structure-detail">
       <AppShell active="market" title="시장 구조" backHref={ROUTES.market}>
         <section className="panel mb-[var(--s4)]">
           <div className="panel-b">

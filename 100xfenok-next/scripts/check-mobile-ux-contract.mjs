@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1552,6 +1552,91 @@ async function collectRouteChecks(page, route) {
           }
         });
       });
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation/structure") {
+      const surface = document.querySelector("[data-market-structure-surface]");
+      const owner = document.querySelector("[data-market-structure-route-owner]");
+      const header = document.querySelector("[data-market-structure-header]");
+      const ownerLinks = Array.from(document.querySelectorAll("[data-market-structure-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const summary = document.querySelector("[data-market-structure-summary]");
+      const summaryCards = Array.from(document.querySelectorAll("[data-market-structure-summary-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const slots = Array.from(document.querySelectorAll("[data-market-structure-slot]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMarketTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-structure-surface-visible", detail: "missing market structure surface" });
+      }
+      if (!owner || owner.getAttribute("data-market-structure-route-owner") !== "market-structure-detail") {
+        failures.push({
+          check: "market-structure-route-owner",
+          detail: `owner=${owner?.getAttribute("data-market-structure-route-owner") || "missing"}`,
+        });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0 || !(header.textContent || "").includes("시장 구조 상세")) {
+        failures.push({ check: "market-structure-header-visible", detail: "missing market structure header" });
+      }
+
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => {
+        const url = new URL(node.href, window.location.origin);
+        return normalizePath(url.pathname);
+      });
+      const expectedLinks = ["/market-valuation", "/"];
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((link, index) => actualLinks[index] === link)
+      ) {
+        failures.push({
+          check: "market-structure-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "market-structure-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!summary || summary.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-structure-summary-visible", detail: "missing market structure summary" });
+      }
+      if (summaryCards.length < 4) {
+        failures.push({ check: "market-structure-summary-card-count", detail: `cards=${summaryCards.length}` });
+      }
+      const expectedSlots = ["benchmark", "credit", "mag7", "membership", "liquidity", "concentration", "sentiment", "aaii"];
+      const actualSlots = slots.map((node) => node.getAttribute("data-market-structure-slot"));
+      if (
+        slots.length !== expectedSlots.length ||
+        !expectedSlots.every((slot, index) => actualSlots[index] === slot)
+      ) {
+        failures.push({
+          check: "market-structure-slot-order",
+          detail: `actual=${JSON.stringify(actualSlots)} expected=${JSON.stringify(expectedSlots)}`,
+        });
+      }
+
+      const activeTabLabel = (activeMarketTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("시장")) {
+        failures.push({ check: "market-structure-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "시장 구조") {
+        failures.push({ check: "market-structure-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/regime") {
