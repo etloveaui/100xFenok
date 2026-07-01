@@ -65,7 +65,9 @@ canonical-root inventory and local live-equivalence proof into a no-mutation
 decision packet, keeps redirect/delete/deploy blocked, and leaves rank 2 queued
 until the owner decision is explicit. To validate a supplied owner record, call
 `node scripts/build-macro-owner-decision-packet.mjs --decision-record-json=...`;
-the record must keep `mutation_approved=false`.
+the record must keep `mutation_approved=false`. The packet also exposes
+`next_gated_slice` and `safe_enforcement_slices`; those slices are intentionally
+no-mutation and must require a valid owner record before queue release.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary

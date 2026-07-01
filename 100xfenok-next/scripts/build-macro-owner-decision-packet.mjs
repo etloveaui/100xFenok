@@ -84,6 +84,84 @@ function decisionRecordTemplate(review, liveProof) {
   };
 }
 
+function nextGatedSlice(review, nextCandidate) {
+  return {
+    id: "macro_owner_decision_record",
+    family_id: review.family_id,
+    required_before_queue_release: true,
+    mutation: "none",
+    mutation_allowed: false,
+    validation_command: "node scripts/build-macro-owner-decision-packet.mjs --decision-record-json='<json>'",
+    required_record_schema: "macro-owner-decision-record/v0.1",
+    required_decisions: ["preserve", "remap", "retire"],
+    required_mutation_flag: false,
+    rank_2_candidate_after_valid_record: nextCandidate?.family_id ?? null,
+  };
+}
+
+function safeEnforcementSlices(review, nextCandidate) {
+  return [
+    {
+      id: "owner_decision_record_validation",
+      gate: "before_rank_2_release",
+      decision: "pending",
+      mutation: "none",
+      mutation_allowed: false,
+      owner_record_required: true,
+      allowed_next_action: "validate a supplied owner record; keep rank 1 active until the record is valid",
+      acceptance: [
+        "record schema is macro-owner-decision-record/v0.1",
+        `family_id is ${review.family_id}`,
+        "decision is preserve, remap, or retire",
+        "local proof status and row count match the current packet",
+        "mutation_approved is false",
+      ],
+    },
+    {
+      id: "preserve_bridge_documentation",
+      gate: "after_valid_preserve_record",
+      decision: "preserve",
+      mutation: "none",
+      mutation_allowed: false,
+      owner_record_required: true,
+      allowed_next_action: "document the preserve decision and keep the legacy bridge behind the current owner/compatibility routes",
+      acceptance: [
+        "Home remains search-first",
+        "legacy macro-monitor HTML stays out of mobile primary IA",
+        "rank 2 is only a review candidate after the valid record is present",
+      ],
+    },
+    {
+      id: "remap_proposal_dry_run",
+      gate: "after_valid_remap_record",
+      decision: "remap",
+      mutation: "none",
+      mutation_allowed: false,
+      owner_record_required: true,
+      allowed_next_action: "prepare an href-remap proposal and rollback plan; do not edit links until explicit mutation approval",
+      acceptance: [
+        `proposed destination remains ${review.owner_route}`,
+        "dashboard/home entrypoints are compared against native macro-chart PRO IA",
+        "redirect/delete/deploy remain blocked",
+      ],
+    },
+    {
+      id: "retire_readiness_packet",
+      gate: "after_valid_retire_record",
+      decision: "retire",
+      mutation: "none",
+      mutation_allowed: false,
+      owner_record_required: true,
+      allowed_next_action: "prepare a delete/redirect readiness packet with soak and rollback evidence; do not mutate public assets",
+      acceptance: [
+        "direct legacy samples and Radar bridge samples keep live-equivalence proof",
+        "soak and rollback plan are recorded before any mutation request",
+        `rank 2 candidate remains ${nextCandidate?.family_id ?? "unavailable"} until rank 1 is released`,
+      ],
+    },
+  ];
+}
+
 function validateDecisionRecord(record, packet) {
   const errors = [];
   if (!record) return errors;
@@ -177,6 +255,8 @@ function buildDecisionPacket(inventory, liveProof, decisionRecord) {
     ],
     decision_record_template: decisionRecordTemplate(review, liveProof),
     supplied_decision_record: decisionRecord,
+    next_gated_slice: nextGatedSlice(review, nextCandidate),
+    safe_enforcement_slices: safeEnforcementSlices(review, nextCandidate),
     next_queue_candidate_after_owner_decision: nextCandidate,
   };
 }
@@ -206,6 +286,24 @@ function validatePacket(packet) {
       errors.push(`decision option must not authorize mutation: ${option.decision}`);
     }
   }
+  if (packet.next_gated_slice?.mutation !== "none" || packet.next_gated_slice?.mutation_allowed !== false) {
+    errors.push("next gated slice must be no-mutation");
+  }
+  if (!packet.next_gated_slice?.required_before_queue_release) {
+    errors.push("next gated slice must be required before queue release");
+  }
+  if (!Array.isArray(packet.safe_enforcement_slices) || packet.safe_enforcement_slices.length === 0) {
+    errors.push("safe enforcement slices must be present");
+  } else {
+    for (const slice of packet.safe_enforcement_slices) {
+      if (slice.mutation !== "none" || slice.mutation_allowed !== false) {
+        errors.push(`safe enforcement slice must not authorize mutation: ${slice.id}`);
+      }
+      if (slice.owner_record_required !== true) {
+        errors.push(`safe enforcement slice must require owner record: ${slice.id}`);
+      }
+    }
+  }
   const decisionRecordErrors = validateDecisionRecord(packet.supplied_decision_record, packet);
   errors.push(...decisionRecordErrors);
   if (packet.supplied_decision_record && decisionRecordErrors.length === 0) {
@@ -220,6 +318,8 @@ function printText(packet) {
   console.log(`owner_decision_status=${packet.owner_decision_status}`);
   console.log(`decision_record_status=${packet.decision_record_status}`);
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
+  console.log(`next_gated_slice=${packet.next_gated_slice.id}`);
+  console.log(`safe_enforcement_slices=${packet.safe_enforcement_slices.map((slice) => slice.id).join(",")}`);
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
 }
