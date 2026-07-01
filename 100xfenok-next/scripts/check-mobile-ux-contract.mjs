@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1422,6 +1422,91 @@ async function collectRouteChecks(page, route) {
           const rect = link.getBoundingClientRect();
           if (rect.height < 44) {
             failures.push({ check: "superinvestors-guru-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
+          }
+        });
+      }
+      if (currentRoute.includes("tab=by-ticker") && (currentRoute.includes("ticker=") || currentRoute.includes("symbol="))) {
+        const params = new URLSearchParams(currentRoute.split("?")[1] || "");
+        const ticker = (params.get("ticker") || params.get("symbol") || "").toUpperCase();
+        const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
+        const landing = document.querySelector("[data-superinvestor-ticker-landing]");
+        const panel = document.querySelector("[data-superinvestor-ticker-panel]");
+        const result = document.querySelector("[data-superinvestor-ticker-result]");
+        const landingAsOf = landing?.querySelector("[data-superinvestor-ticker-landing-asof]");
+        const landingLag = landing?.querySelector("[data-superinvestor-ticker-landing-lag]");
+        const panelAsOf = panel?.querySelector("[data-superinvestor-ticker-asof]");
+        const panelLag = panel?.querySelector("[data-superinvestor-ticker-lag]");
+        const kpis = Array.from(document.querySelectorAll("[data-superinvestor-ticker-kpi]"));
+        const actions = Array.from(document.querySelectorAll("[data-superinvestor-ticker-action]"));
+        const stockLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-stock-link]"));
+        const screenerLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-screener-link]"));
+        const investorLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-investor-link], [data-superinvestor-ticker-holder-link]"));
+        const holdersRegion = document.querySelector("[data-superinvestor-ticker-holders]");
+        const rows = Array.from(document.querySelectorAll("[data-superinvestor-ticker-holder-row]"));
+        const holderLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-holder-link]"));
+
+        if (!selectedTab || !(selectedTab.textContent || "").includes("종목별")) {
+          failures.push({ check: "superinvestors-by-ticker-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
+        }
+        if (!landing) {
+          failures.push({ check: "superinvestors-by-ticker-landing", detail: "missing selected ticker landing strip" });
+        } else {
+          const landingRect = landing.getBoundingClientRect();
+          if (landing.getAttribute("data-superinvestor-ticker-symbol") !== ticker) {
+            failures.push({ check: "superinvestors-by-ticker-landing-symbol", detail: `landing=${landing.getAttribute("data-superinvestor-ticker-symbol") || ""} expected=${ticker}` });
+          }
+          if (landingRect.height <= 0 || landingRect.top >= window.innerHeight) {
+            failures.push({ check: "superinvestors-by-ticker-first-viewport", detail: `top=${Math.round(landingRect.top)} height=${Math.round(landingRect.height)} viewport=${window.innerHeight}` });
+          }
+        }
+        if (!panel || panel.getAttribute("data-superinvestor-ticker-symbol") !== ticker) {
+          failures.push({ check: "superinvestors-by-ticker-panel", detail: `panel=${panel?.getAttribute("data-superinvestor-ticker-symbol") || ""} expected=${ticker}` });
+        }
+        if (!result || result.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-by-ticker-result-visible", detail: "missing visible ticker result" });
+        }
+        if (!landingAsOf || !/\d{4}-Q\d/.test(landingAsOf.textContent || "")) {
+          failures.push({ check: "superinvestors-by-ticker-landing-asof", detail: `asOf=${landingAsOf?.textContent || ""}` });
+        }
+        if (!panelAsOf || !/\d{4}-Q\d/.test(panelAsOf.textContent || "")) {
+          failures.push({ check: "superinvestors-by-ticker-panel-asof", detail: `asOf=${panelAsOf?.textContent || ""}` });
+        }
+        if (!landingLag || !(landingLag.textContent || "").includes("45") || !panelLag || !(panelLag.textContent || "").includes("45")) {
+          failures.push({ check: "superinvestors-by-ticker-13f-lag", detail: `landing=${landingLag?.textContent || ""} panel=${panelLag?.textContent || ""}` });
+        }
+        if (kpis.length < 3) {
+          failures.push({ check: "superinvestors-by-ticker-kpis", detail: `kpis=${kpis.length}` });
+        }
+        if (!holdersRegion || holdersRegion.getBoundingClientRect().height <= 0 || rows.length < 8) {
+          failures.push({ check: "superinvestors-by-ticker-holder-rows", detail: `rows=${rows.length}` });
+        }
+        if (holderLinks.length < Math.min(8, rows.length)) {
+          failures.push({ check: "superinvestors-by-ticker-holder-links", detail: `links=${holderLinks.length} rows=${rows.length}` });
+        }
+        if (stockLinks.length < 2) {
+          failures.push({ check: "superinvestors-by-ticker-stock-links", detail: `links=${stockLinks.length}` });
+        }
+        if (screenerLinks.length < 2) {
+          failures.push({ check: "superinvestors-by-ticker-screener-links", detail: `links=${screenerLinks.length}` });
+        }
+        [...stockLinks, ...screenerLinks, ...investorLinks.slice(0, 12)].forEach((link, index) => {
+          const url = link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin) : null;
+          const href = url ? `${url.pathname}${url.search}` : "";
+          const isStock = link.matches("[data-superinvestor-ticker-stock-link]");
+          const isScreener = link.matches("[data-superinvestor-ticker-screener-link]");
+          const isInvestor = link.matches("[data-superinvestor-ticker-investor-link], [data-superinvestor-ticker-holder-link]");
+          if (isStock && !href.startsWith(`/stock/${ticker}`)) {
+            failures.push({ check: "superinvestors-by-ticker-stock-href", detail: `index=${index} href=${href}` });
+          }
+          if (isScreener && !(url?.pathname.replace(/\/$/, "") === "/screener" && url.searchParams.get("ticker") === ticker)) {
+            failures.push({ check: "superinvestors-by-ticker-screener-href", detail: `index=${index} href=${href}` });
+          }
+          if (isInvestor && !(url?.pathname.replace(/\/$/, "") === "/superinvestors" && url.searchParams.get("tab") === "gurus" && url.searchParams.get("guru"))) {
+            failures.push({ check: "superinvestors-by-ticker-investor-href", detail: `index=${index} href=${href}` });
+          }
+          const rect = link.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "superinvestors-by-ticker-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
           }
         });
       }

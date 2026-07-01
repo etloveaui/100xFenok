@@ -774,6 +774,12 @@ export default function SuperinvestorsClient({
     return enhancedConsensus.enhanced_consensus?.[key] ?? null;
   }, [enhancedConsensus, search]);
 
+  const selectedTicker = normalizeForEntityKey(search);
+  const byTickerHolderRows = useMemo(() => {
+    if (!byTickerEntry) return [];
+    return [...byTickerEntry.holder_details].sort((a, b) => (b.weight || 0) - (a.weight || 0));
+  }, [byTickerEntry]);
+
   const sectorRows = useMemo(() => {
     if (!bySector) return [];
     return Object.entries(bySector)
@@ -936,6 +942,89 @@ export default function SuperinvestorsClient({
                 className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
               >
                 {ticker}
+              </TransitionLink>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {dataReady && tab === "by-ticker" && selectedTicker && byTickerEntry && byTickerHolderRows.length > 0 ? (
+        <section
+          data-superinvestor-ticker-landing
+          data-superinvestor-ticker-symbol={selectedTicker}
+          data-superinvestor-ticker-quarter={quarter ?? ""}
+          className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-sky-50 p-4 shadow-[var(--sh-sm)]"
+          aria-label={`${selectedTicker} 13F 보유 투자자 요약`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">선택 종목</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">
+                {selectedTicker}
+              </h2>
+              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
+                {byTickerEntry.holder_details.length}명 보유 · 총 {fmtShares(byTickerEntry.total_shares)}주
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                data-superinvestor-ticker-landing-asof
+                className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
+              >
+                {quarter ?? "—"}
+              </span>
+              <span
+                data-superinvestor-ticker-landing-lag
+                className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
+              >
+                13F 최대 45일 지연
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div data-superinvestor-ticker-kpi="holders" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">보유 투자자</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{byTickerEntry.holder_details.length}명</p>
+            </div>
+            <div data-superinvestor-ticker-kpi="equity" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">주식 기준</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">
+                {byTickerEnhanced ? `${byTickerEnhanced.equity_holders}/${byTickerEnhanced.total_holders}명` : "—"}
+              </p>
+            </div>
+            <div data-superinvestor-ticker-kpi="score" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 점수</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">
+                {byTickerEnhanced ? fmtScore(byTickerEnhanced.equity_score) : "—"}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <TransitionLink
+              href={ROUTES.stock(selectedTicker)}
+              data-superinvestor-ticker-action
+              data-superinvestor-ticker-stock-link
+              className="inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
+            >
+              종목 상세
+            </TransitionLink>
+            <TransitionLink
+              href={ROUTES.screenerTicker(selectedTicker)}
+              data-superinvestor-ticker-action
+              data-superinvestor-ticker-screener-link
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+            >
+              스크리너
+            </TransitionLink>
+            {byTickerHolderRows.slice(0, 5).map((holder) => (
+              <TransitionLink
+                key={holder.investor}
+                href={ROUTES.superinvestorsGuru(holder.investor)}
+                data-superinvestor-ticker-action
+                data-superinvestor-ticker-investor-link
+                className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+              >
+                <span className="max-w-[150px] truncate">{holder.investor}</span>
               </TransitionLink>
             ))}
           </div>
@@ -1365,146 +1454,182 @@ export default function SuperinvestorsClient({
 
       {/* By ticker */}
       <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS["by-ticker"]} active={tab === "by-ticker"} className="space-y-3">
-          <label className="flex max-w-md flex-col gap-1">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">티커 검색</span>
-            <div className="flex gap-2">
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="예: AAPL"
-                className="min-h-10 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="inline-flex min-h-10 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-rose-300 hover:text-rose-600"
-              >
-                초기화
-              </button>
-            </div>
-          </label>
+        <label className="flex max-w-md flex-col gap-1">
+          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">티커 검색</span>
+          <div className="flex gap-2">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="예: AAPL"
+              className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+            />
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-rose-300 hover:text-rose-600"
+            >
+              초기화
+            </button>
+          </div>
+        </label>
 
-          <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4", !dataReady && "opacity-60")}>
-            {!dataReady ? (
-              <div className="space-y-3">
-                <div className="h-5 w-1/3 rounded bg-slate-200" />
-                <div className="h-4 w-1/2 rounded bg-slate-200" />
-                <div className="h-4 w-2/3 rounded bg-slate-200" />
-              </div>
-            ) : !search.trim() ? (
-              <EmptyState title="티커를 입력하세요" desc="보유 투자자를 확인할 종목 코드를 검색해 주세요." />
-            ) : !byTickerEntry ? (
-              <EmptyState
-                title={`${normalizeForEntityKey(search)} 데이터 없음`}
-                desc="해당 종목의 공시 보유 데이터가 아직 없습니다."
-              />
-            ) : byTickerEntry.holder_details.length === 0 ? (
-              <EmptyState
-                title={`${normalizeForEntityKey(search)}에 보유자가 없습니다`}
-                desc="현재 추적 중인 투자자 중 이 종목 보유자가 없습니다."
-              />
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-950">
-                      {normalizeForEntityKey(search)}
-                    </h2>
-                    {byTickerEnhanced ? (
-                      <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
-                        주식 기준 {byTickerEnhanced.equity_holders}/{byTickerEnhanced.total_holders}명 · 확신 점수 {fmtScore(byTickerEnhanced.equity_score)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-slate-500">
-                      보유자{" "}
-                      <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
-                    </span>
-                    <TransitionLink
-                      href={ROUTES.screenerTicker(normalizeForEntityKey(search))}
-                      className="inline-flex min-h-7 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                    >
-                      스크리너에서 보기
-                    </TransitionLink>
-                  </div>
+        <div
+          data-superinvestor-ticker-panel
+          data-superinvestor-ticker-symbol={selectedTicker}
+          className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4", !dataReady && "opacity-60")}
+        >
+          {!dataReady ? (
+            <div className="space-y-3">
+              <div className="h-5 w-1/3 rounded bg-slate-200" />
+              <div className="h-4 w-1/2 rounded bg-slate-200" />
+              <div className="h-4 w-2/3 rounded bg-slate-200" />
+            </div>
+          ) : !search.trim() ? (
+            <EmptyState title="티커를 입력하세요" desc="보유 투자자를 확인할 종목 코드를 검색해 주세요." />
+          ) : !byTickerEntry ? (
+            <EmptyState
+              title={`${normalizeForEntityKey(search)} 데이터 없음`}
+              desc="해당 종목의 공시 보유 데이터가 아직 없습니다."
+            />
+          ) : byTickerEntry.holder_details.length === 0 ? (
+            <EmptyState
+              title={`${normalizeForEntityKey(search)}에 보유자가 없습니다`}
+              desc="현재 추적 중인 투자자 중 이 종목 보유자가 없습니다."
+            />
+          ) : (
+            <div className="space-y-3">
+              <div data-superinvestor-ticker-result className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black tracking-tight text-slate-950">
+                    {selectedTicker}
+                  </h2>
+                  {byTickerEnhanced ? (
+                    <p data-superinvestor-ticker-equity-score className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+                      주식 기준 {byTickerEnhanced.equity_holders}/{byTickerEnhanced.total_holders}명 · 확신 점수 {fmtScore(byTickerEnhanced.equity_score)}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="종목별 보유자 표 가로 스크롤">
-                  <table className="w-full min-w-[820px] table-fixed text-sm">
-                    <colgroup>
-                      <col className="w-[190px]" />
-                      <col className="w-[104px]" />
-                      <col className="w-[132px]" />
-                      <col className="w-[128px]" />
-                      <col className="w-[104px]" />
-                      <col className="w-[162px]" />
-                    </colgroup>
-                    <thead>
-                      <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
-                        <th className="px-3 py-2 text-left">보유자</th>
-                        <th className="px-3 py-2 text-right">비중</th>
-                        <th className="px-3 py-2 text-right">평가액</th>
-                        <th className="px-3 py-2 text-right">주식수</th>
-                        <th className="px-3 py-2 text-right">전체 비중</th>
-                        <th className="px-3 py-2 text-left">보유 구분</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[...byTickerEntry.holder_details]
-                        .sort((a, b) => (b.weight || 0) - (a.weight || 0))
-                        .map((h) => (
-                          <tr key={h.investor} className="border-b border-slate-100 last:border-b-0">
-                            <td className="px-3 py-3">
-                              <span className="block truncate whitespace-nowrap font-black text-slate-900" title={h.investor}>{h.investor}</span>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-right">
-                              <span className="orbitron tabular-nums font-bold text-slate-900">{fmtWeight(h.weight)}</span>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-right">
-                              <span className="orbitron tabular-nums text-slate-700">{fmtAum(h.market_value)}</span>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-right">
-                              <span className="orbitron tabular-nums text-slate-700">{fmtShares(h.shares)}</span>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-right">
-                              <span className="orbitron tabular-nums text-slate-500">
-                                {((h.shares / (byTickerEntry.total_shares || 1)) * 100).toFixed(1)}%
-                              </span>
-                            </td>
-                            <td className="px-3 py-3">
-                              <div className="flex max-w-[180px] flex-wrap gap-1">
-                                {(h.classes_held ?? []).slice(0, 2).map((item) => (
-                                  <span key={item} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-600">
-                                    {item}
-                                  </span>
-                                ))}
-                                {(h.position_types ?? []).map((item) => (
-                                  <span key={item} className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700">
-                                    {item}
-                                  </span>
-                                ))}
-                                {!(h.classes_held?.length || h.position_types?.length) ? (
-                                  <span className="text-[10px] font-bold text-slate-300">—</span>
-                                ) : null}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex justify-end">
-                  <TransitionLink
-                    href={ROUTES.stock(search)}
-                    className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    data-superinvestor-ticker-asof
+                    className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
                   >
-                    종목 상세 보기 →
+                    {quarter ?? "—"}
+                  </span>
+                  <span
+                    data-superinvestor-ticker-lag
+                    className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
+                  >
+                    13F 최대 45일 지연
+                  </span>
+                  <span className="text-sm font-bold text-slate-500">
+                    보유자{" "}
+                    <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
+                  </span>
+                  <TransitionLink
+                    href={ROUTES.screenerTicker(selectedTicker)}
+                    data-superinvestor-ticker-action
+                    data-superinvestor-ticker-screener-link
+                    className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                  >
+                    스크리너에서 보기
                   </TransitionLink>
                 </div>
               </div>
-            )}
-          </div>
+              <div
+                data-superinvestor-ticker-holders
+                className="scroll-hint-x -mx-1 px-1"
+                role="region"
+                tabIndex={0}
+                aria-label="종목별 보유자 표 가로 스크롤"
+              >
+                <table className="w-full min-w-[820px] table-fixed text-sm">
+                  <colgroup>
+                    <col className="w-[190px]" />
+                    <col className="w-[104px]" />
+                    <col className="w-[132px]" />
+                    <col className="w-[128px]" />
+                    <col className="w-[104px]" />
+                    <col className="w-[162px]" />
+                  </colgroup>
+                  <thead>
+                    <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
+                      <th className="px-3 py-2 text-left">보유자</th>
+                      <th className="px-3 py-2 text-right">비중</th>
+                      <th className="px-3 py-2 text-right">평가액</th>
+                      <th className="px-3 py-2 text-right">주식수</th>
+                      <th className="px-3 py-2 text-right">전체 비중</th>
+                      <th className="px-3 py-2 text-left">보유 구분</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {byTickerHolderRows.map((h) => (
+                      <tr
+                        key={h.investor}
+                        data-superinvestor-ticker-holder-row
+                        data-superinvestor-ticker-holder-investor={h.investor}
+                        className="border-b border-slate-100 last:border-b-0"
+                      >
+                        <td className="px-3 py-3">
+                          <TransitionLink
+                            href={ROUTES.superinvestorsGuru(h.investor)}
+                            data-superinvestor-ticker-holder-link
+                            className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                            title={h.investor}
+                          >
+                            <span className="max-w-[150px] truncate">{h.investor}</span>
+                          </TransitionLink>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right">
+                          <span className="orbitron tabular-nums font-bold text-slate-900">{fmtWeight(h.weight)}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right">
+                          <span className="orbitron tabular-nums text-slate-700">{fmtAum(h.market_value)}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right">
+                          <span className="orbitron tabular-nums text-slate-700">{fmtShares(h.shares)}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right">
+                          <span className="orbitron tabular-nums text-slate-500">
+                            {((h.shares / (byTickerEntry.total_shares || 1)) * 100).toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="flex max-w-[180px] flex-wrap gap-1">
+                            {(h.classes_held ?? []).slice(0, 2).map((item) => (
+                              <span key={item} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-600">
+                                {item}
+                              </span>
+                            ))}
+                            {(h.position_types ?? []).map((item) => (
+                              <span key={item} className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700">
+                                {item}
+                              </span>
+                            ))}
+                            {!(h.classes_held?.length || h.position_types?.length) ? (
+                              <span className="text-[10px] font-bold text-slate-300">—</span>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-end">
+                <TransitionLink
+                  href={ROUTES.stock(selectedTicker)}
+                  data-superinvestor-ticker-action
+                  data-superinvestor-ticker-stock-link
+                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                >
+                  종목 상세 보기 →
+                </TransitionLink>
+              </div>
+            </div>
+          )}
+        </div>
       </TabPanel>
 
       {/* Trades ranking */}
