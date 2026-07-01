@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/regime,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -305,6 +305,103 @@ async function collectRouteChecks(page, route) {
           }
         });
       });
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/regime") {
+      const surface = document.querySelector("[data-regime-surface]");
+      const headline = document.querySelector("[data-regime-headline]");
+      const activeNav = document.querySelector('[data-market-section-link="regime"][aria-current="page"]');
+      const navLinks = Array.from(document.querySelectorAll("[data-market-section-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const summaryCards = Array.from(document.querySelectorAll("[data-regime-axis-summary-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const axisCards = Array.from(document.querySelectorAll("[data-regime-axis-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const sourceCards = Array.from(document.querySelectorAll("[data-regime-source-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "regime-surface-visible", detail: "missing regime surface" });
+      }
+      if (!headline || headline.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "regime-headline-visible", detail: "missing regime headline" });
+      }
+      if (!activeNav) {
+        failures.push({ check: "regime-market-nav-active", detail: "regime nav link is not aria-current page" });
+      }
+
+      const expectedNav = ["valuation", "regime", "events", "sectors"];
+      const actualNav = navLinks.map((node) => node.getAttribute("data-market-section-link"));
+      if (
+        navLinks.length !== expectedNav.length ||
+        !expectedNav.every((key, index) => actualNav[index] === key)
+      ) {
+        failures.push({
+          check: "regime-market-nav-order",
+          detail: `actual=${JSON.stringify(actualNav)} expected=${JSON.stringify(expectedNav)}`,
+        });
+      }
+
+      navLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "regime-market-nav-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedAxes = ["structure", "signals", "macro", "valuation"];
+      const actualSummaryAxes = summaryCards.map((node) => node.getAttribute("data-regime-axis-summary-card"));
+      const actualDetailAxes = axisCards.map((node) => node.getAttribute("data-regime-axis-card"));
+      if (
+        summaryCards.length !== expectedAxes.length ||
+        !expectedAxes.every((key, index) => actualSummaryAxes[index] === key)
+      ) {
+        failures.push({
+          check: "regime-axis-summary-order",
+          detail: `actual=${JSON.stringify(actualSummaryAxes)} expected=${JSON.stringify(expectedAxes)}`,
+        });
+      }
+      if (
+        axisCards.length !== expectedAxes.length ||
+        !expectedAxes.every((key, index) => actualDetailAxes[index] === key)
+      ) {
+        failures.push({
+          check: "regime-axis-detail-order",
+          detail: `actual=${JSON.stringify(actualDetailAxes)} expected=${JSON.stringify(expectedAxes)}`,
+        });
+      }
+
+      axisCards.forEach((card, cardIndex) => {
+        const axis = card.getAttribute("data-regime-axis-card") || "";
+        const rows = Array.from(card.querySelectorAll(`[data-regime-evidence-axis="${axis}"]`))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const tone = card.querySelector("[data-regime-axis-tone]");
+        if (rows.length === 0) {
+          failures.push({ check: "regime-axis-evidence-present", detail: `axis=${axis || cardIndex}` });
+        }
+        if (!tone || !(tone.textContent || "").trim()) {
+          failures.push({ check: "regime-axis-tone-present", detail: `axis=${axis || cardIndex}` });
+        }
+      });
+
+      if (sourceCards.length < 4) {
+        failures.push({ check: "regime-source-card-count", detail: `visible source cards=${sourceCards.length}` });
+      }
     }
 
     if (currentRoute.startsWith("/screener")) {

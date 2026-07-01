@@ -285,14 +285,19 @@ function readableCadence(value: string | null): string {
   return labels[value] ?? value;
 }
 
-function EvidenceList({ items }: { items: Pulse[] }) {
+function EvidenceList({ axisId, items }: { axisId: string; items: Pulse[] }) {
   if (items.length === 0) {
     return <p className="text-sm font-semibold text-[var(--c-ink-4)]">표시할 신호가 없습니다.</p>;
   }
   return (
     <div className="grid gap-2">
       {items.map((item) => (
-        <div key={item.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-2">
+        <div
+          key={item.id}
+          className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-2"
+          data-regime-evidence-row={item.id}
+          data-regime-evidence-axis={axisId}
+        >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-black text-[var(--c-ink)]">{item.label}</p>
@@ -311,18 +316,18 @@ function EvidenceList({ items }: { items: Pulse[] }) {
 
 function AxisCard({ axis }: { axis: Axis }) {
   return (
-    <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
+    <section className="rounded-[1.25rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]" data-regime-axis-card={axis.id}>
       <header className="mb-3 flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">판정 근거</p>
           <h2 className="mt-1 text-lg font-black text-[var(--c-ink)]">{axis.title}</h2>
           <p className="mt-1 text-sm font-semibold leading-6 text-[var(--c-ink-3)]">{axis.summary}</p>
         </div>
-        <span className={cx("shrink-0 rounded-full border px-2.5 py-1 text-xs font-black", toneClass(axis.tone))}>
+        <span className={cx("shrink-0 rounded-full border px-2.5 py-1 text-xs font-black", toneClass(axis.tone))} data-regime-axis-tone>
           {toneLabel(axis.tone)}
         </span>
       </header>
-      <EvidenceList items={axis.pulses} />
+      <EvidenceList axisId={axis.id} items={axis.pulses} />
     </section>
   );
 }
@@ -394,7 +399,7 @@ export default function RegimeClient() {
   const visibleSources = dataSources.filter((source) => ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"].includes(source.id));
 
   return (
-    <div className="data-shell-page">
+    <div className="data-shell-page" data-regime-surface>
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">시장 국면</p>
@@ -420,7 +425,7 @@ export default function RegimeClient() {
         </div>
       ) : null}
 
-      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-[var(--sh-sm)]", !dataReady && "opacity-70")}>
+      <section className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-[var(--sh-sm)]", !dataReady && "opacity-70")} data-regime-headline>
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">종합 판독</p>
@@ -434,7 +439,7 @@ export default function RegimeClient() {
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {axes.map((axis) => (
-            <div key={axis.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3">
+            <div key={axis.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-regime-axis-summary-card={axis.id}>
               <p className="text-[11px] font-black text-[var(--c-ink-4)]">{axis.title}</p>
               <p className={cx("mt-1 text-lg font-black", toneTextClass(axis.tone))}>
                 {toneLabel(axis.tone)}
@@ -461,7 +466,7 @@ export default function RegimeClient() {
         </header>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {visibleSources.map((source) => (
-            <div key={source.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3">
+            <div key={source.id} className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-regime-source-card={source.id}>
               <p className="text-sm font-black text-[var(--c-ink)]">{readableSourceLabel(source)}</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{readableSourceUsage(source)}</p>
               <p className="mt-2 text-[10px] font-bold text-[var(--c-ink-4)]">
