@@ -886,6 +886,9 @@ function macroMonitorRank1ReviewEvidence(highRiskOwners, textFiles) {
   const active = nextSlice?.family_id === "macro_monitor_legacy_tools";
   const samplePaths = active ? nextSlice.packet.legacy_sample_paths : [];
   const bridgeSmokePaths = active ? nextSlice.legacy_bridge_smoke_paths : [];
+  const nextQueueCandidate = active
+    ? highRiskOwners.owner_review_queue.find((item) => item.rank === nextSlice.rank + 1) ?? null
+    : null;
   const sourceFiles = textFiles.filter((absPath) => rel(absPath).startsWith("100xfenok-next/src/"));
   const sourceReferenceRows = grepLineMatches(sourceFiles, [
     "/radar?path=tools%2Fmacro-monitor",
@@ -906,6 +909,32 @@ function macroMonitorRank1ReviewEvidence(highRiskOwners, textFiles) {
     compatibility_route: nextSlice?.compatibility_route ?? null,
     mutation_status: nextSlice?.mutation_status ?? null,
     blocked_actions: nextSlice?.blocked_actions ?? [],
+    owner_decision_status: active ? "pending_owner_decision" : "not_active",
+    queue_advance_allowed_without_owner_decision: false,
+    queue_blocker: active
+      ? "rank 1 macro-monitor owner must choose preserve, remap, or retire before rank 2 can become the active review slice"
+      : null,
+    next_queue_candidate_after_owner_decision: nextQueueCandidate ? {
+      rank: nextQueueCandidate.rank,
+      family_id: nextQueueCandidate.family_id,
+      owner_route: nextQueueCandidate.owner_route,
+      compatibility_route: nextQueueCandidate.compatibility_route,
+      legacy_row_count: nextQueueCandidate.legacy_row_count,
+      packet_ready: nextQueueCandidate.packet_ready,
+      blocked_actions: nextQueueCandidate.blocked_actions,
+    } : null,
+    owner_decision_options: [
+      "preserve legacy macro-monitor bridge behind current owner route; no redirect/delete/deploy",
+      "remap Home/dashboard links to native /macro-chart only after owner-approved route IA and QA evidence",
+      "retire legacy paths only after owner-approved live-equivalence proof, soak, rollback, and explicit mutation approval",
+    ],
+    rank1_release_requirements: [
+      "owner decision recorded as preserve, remap, or retire",
+      "live-equivalence proof recorded for direct legacy paths and Radar bridge paths",
+      "Home/dashboard entrypoint decision recorded against native /macro-chart PRO IA",
+      "soak and rollback plan recorded before any redirect/delete/deploy",
+      "redirect/delete/deploy approval recorded explicitly if mutation is requested",
+    ],
     pro_route_ia_acceptance: nextSlice?.packet?.pro_route_ia_acceptance ?? null,
     legacy_sample_paths: samplePaths,
     legacy_bridge_smoke_paths: bridgeSmokePaths,
@@ -1196,6 +1225,15 @@ function main() {
   ) {
     errors.push(`macro-monitor rank-1 bridge smoke coverage mismatch: bridge=${macroMonitorRank1Review.legacy_bridge_smoke_paths.length} samples=${macroMonitorRank1Review.legacy_sample_paths.length}`);
   }
+  if (macroMonitorRank1Review.active && macroMonitorRank1Review.owner_decision_status !== "pending_owner_decision") {
+    errors.push(`macro-monitor rank-1 owner decision must remain pending until owner records preserve/remap/retire: ${macroMonitorRank1Review.owner_decision_status}`);
+  }
+  if (macroMonitorRank1Review.active && macroMonitorRank1Review.queue_advance_allowed_without_owner_decision !== false) {
+    errors.push("macro-monitor rank-1 queue advance must stay blocked without owner decision");
+  }
+  if (macroMonitorRank1Review.active && !macroMonitorRank1Review.next_queue_candidate_after_owner_decision) {
+    errors.push("macro-monitor rank-1 review must expose the next queue candidate for after owner decision");
+  }
 
   const report = {
     schema_version: "canonical-root-inventory/v0.1",
@@ -1226,6 +1264,7 @@ function main() {
       macro_monitor_rank1_legacy_bridge_smoke_paths: macroMonitorRank1Review.legacy_bridge_smoke_paths.length,
       macro_monitor_rank1_public_home_legacy_bridge_entrypoints: macroMonitorRank1Review.public_home_legacy_bridge_entrypoint_count,
       macro_monitor_rank1_src_legacy_references: macroMonitorRank1Review.src_legacy_reference_count,
+      macro_monitor_rank1_owner_decision_pending: macroMonitorRank1Review.owner_decision_status === "pending_owner_decision" ? 1 : 0,
       legacy_html_high_risk_unmapped: highRiskOwners.unmapped_count,
       legacy_html_high_risk_owner_route_missing: highRiskOwners.missing_owner_route_count,
     },

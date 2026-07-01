@@ -36,7 +36,9 @@ be requested, plus a deterministic owner-review queue that names the next gated
 family slice. The current rank-1 macro-monitor slice also reports legacy bridge
 smoke paths and source entrypoint evidence so Home/dashboard links can be
 compared with the native `/macro-chart` owner route before any preserve, remap,
-or retire decision.
+or retire decision. The queue must not advance past rank 1 until that owner
+decision is recorded; rank 2 is reported only as the next candidate after the
+rank-1 gate is released.
 
 Run `npm run qa:route-iframe-contract` only against a local Next.js server. It
 defaults to `http://127.0.0.1:3105` and checks the route-backed iframe catalog:
