@@ -15,6 +15,23 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const inventoryScript = path.join(__dirname, "check-canonical-root-inventory.mjs");
 const liveEquivalenceScript = path.join(__dirname, "check-macro-owner-live-equivalence.mjs");
+const ISO_8601_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function requireArgValue(argv, index, flag) {
+  const value = argv[index + 1];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${flag} requires a value`);
+  }
+  return value;
+}
+
+function requireInlineValue(arg, prefix, flag) {
+  const value = arg.slice(prefix.length);
+  if (!value) {
+    throw new Error(`${flag} requires a value`);
+  }
+  return value;
+}
 
 function parseArgs(argv) {
   const args = {
@@ -35,24 +52,28 @@ function parseArgs(argv) {
       continue;
     }
     if (arg === "--decision-record") {
-      args.decisionRecordPath = argv[index + 1];
+      args.decisionRecordPath = requireArgValue(argv, index, arg);
       index += 1;
       continue;
     }
     if (arg.startsWith("--decision-record=")) {
-      args.decisionRecordPath = arg.slice("--decision-record=".length);
+      args.decisionRecordPath = requireInlineValue(arg, "--decision-record=", "--decision-record");
       continue;
     }
     if (arg === "--decision-record-json") {
-      args.decisionRecordJson = argv[index + 1];
+      args.decisionRecordJson = requireArgValue(argv, index, arg);
       index += 1;
       continue;
     }
     if (arg.startsWith("--decision-record-json=")) {
-      args.decisionRecordJson = arg.slice("--decision-record-json=".length);
+      args.decisionRecordJson = requireInlineValue(arg, "--decision-record-json=", "--decision-record-json");
       continue;
     }
     throw new Error(`unknown argument: ${arg}`);
+  }
+
+  if (args.decisionRecordJson && args.decisionRecordPath) {
+    throw new Error("use only one decision record source: --decision-record-json or --decision-record");
   }
 
   return args;
@@ -69,10 +90,20 @@ function readDecisionRecord(recordPath, recordJson) {
   return JSON.parse(fs.readFileSync(recordPath, "utf8"));
 }
 
+function isIso8601Timestamp(value) {
+  return typeof value === "string"
+    && ISO_8601_TIMESTAMP_PATTERN.test(value)
+    && !Number.isNaN(Date.parse(value));
+}
+
 function fail(message, packet, json) {
   if (json && packet) console.log(JSON.stringify(packet, null, 2));
   console.error(`[macro-owner-decision-packet] ${message}`);
   process.exit(1);
+}
+
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function decisionRecordTemplate(review, liveProof) {
@@ -82,6 +113,7 @@ function decisionRecordTemplate(review, liveProof) {
     decision: "preserve|remap|retire",
     owner_approved_by: "<owner>",
     decided_at: "<ISO-8601 timestamp>",
+    local_live_equivalence_base_url: liveProof.base_url,
     local_live_equivalence_proof_status: liveProof.proof_status,
     local_live_equivalence_rows_checked: liveProof.rows_checked,
     mutation_approved: false,
@@ -99,6 +131,8 @@ function nextGatedSlice(review, nextCandidate) {
     validation_command: "node scripts/build-macro-owner-decision-packet.mjs --decision-record-json='<json>'",
     required_record_schema: "macro-owner-decision-record/v0.1",
     required_decisions: ["preserve", "remap", "retire"],
+    required_decided_at_format: "full ISO-8601 timestamp with timezone",
+    required_local_live_equivalence_base_url: "must match current packet proof",
     required_mutation_flag: false,
     rank_2_candidate_after_valid_record: nextCandidate?.family_id ?? null,
   };
@@ -118,7 +152,8 @@ function safeEnforcementSlices(review, nextCandidate) {
         "record schema is macro-owner-decision-record/v0.1",
         `family_id is ${review.family_id}`,
         "decision is preserve, remap, or retire",
-        "local proof status and row count match the current packet",
+        "decided_at is a full ISO-8601 timestamp with timezone",
+        "local proof base URL, status, and row count match the current packet",
         "mutation_approved is false",
       ],
     },
@@ -183,8 +218,11 @@ function validateDecisionRecord(record, packet) {
   if (typeof record.owner_approved_by !== "string" || record.owner_approved_by.trim().length === 0) {
     errors.push("decision record owner_approved_by is required");
   }
-  if (typeof record.decided_at !== "string" || Number.isNaN(Date.parse(record.decided_at))) {
-    errors.push(`decision record decided_at must be an ISO-8601 timestamp: ${record.decided_at}`);
+  if (!isIso8601Timestamp(record.decided_at)) {
+    errors.push(`decision record decided_at must be a full ISO-8601 timestamp with timezone: ${record.decided_at}`);
+  }
+  if (record.local_live_equivalence_base_url !== packet.evidence.local_live_equivalence_base_url) {
+    errors.push(`decision record base URL mismatch: ${record.local_live_equivalence_base_url}`);
   }
   if (record.local_live_equivalence_proof_status !== packet.evidence.local_live_equivalence_proof_status) {
     errors.push(`decision record proof status mismatch: ${record.local_live_equivalence_proof_status}`);
@@ -245,6 +283,7 @@ function buildDecisionPacket(inventory, liveProof, decisionRecord) {
     evidence: {
       canonical_root_inventory_ok: inventory.ok,
       pro_screen_model_acceptance_ready: Boolean(review.pro_screen_model_acceptance?.acceptance_ready),
+      local_live_equivalence_base_url: liveProof.base_url,
       local_live_equivalence_proof_status: liveProof.proof_status,
       local_live_equivalence_rows_checked: liveProof.rows_checked,
       local_live_equivalence_rows_expected: liveProof.expected_rows,
@@ -291,6 +330,9 @@ function validatePacket(packet) {
   }
   if (packet.decision_record_template?.family_id !== packet.family_id) {
     errors.push(`decision record template family mismatch: ${packet.decision_record_template?.family_id}`);
+  }
+  if (packet.decision_record_template?.local_live_equivalence_base_url !== packet.evidence.local_live_equivalence_base_url) {
+    errors.push("decision record template base URL must match packet proof");
   }
   if (packet.decision_record_template?.local_live_equivalence_proof_status !== packet.evidence.local_live_equivalence_proof_status) {
     errors.push("decision record template proof status must match packet proof");
@@ -346,10 +388,22 @@ function printText(packet) {
 }
 
 function main() {
-  const args = parseArgs(process.argv.slice(2));
+  let args;
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (error) {
+    fail(errorMessage(error), null, false);
+  }
+
   const inventory = runJson(inventoryScript);
   const liveProof = runJson(liveEquivalenceScript);
-  const decisionRecord = readDecisionRecord(args.decisionRecordPath, args.decisionRecordJson);
+  let decisionRecord;
+  try {
+    decisionRecord = readDecisionRecord(args.decisionRecordPath, args.decisionRecordJson);
+  } catch (error) {
+    fail(`decision record read/parse failed: ${errorMessage(error)}`, null, false);
+  }
+
   const packet = buildDecisionPacket(inventory, liveProof, decisionRecord);
   const errors = validatePacket(packet);
 
