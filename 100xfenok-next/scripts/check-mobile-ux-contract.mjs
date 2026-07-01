@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -555,6 +555,91 @@ async function collectRouteChecks(page, route) {
       }
       if ((appTitle?.textContent || "").trim() !== "시장 비교") {
         failures.push({ check: "multichart-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/tools/stock-analyzer") {
+      const surface = document.querySelector("[data-stock-analyzer-surface]");
+      const owner = document.querySelector("[data-stock-analyzer-route-owner]");
+      const boundary = document.querySelector("[data-stock-analyzer-boundary]");
+      const chips = Array.from(document.querySelectorAll("[data-stock-analyzer-boundary-chip]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const ownerLinks = Array.from(document.querySelectorAll("[data-stock-analyzer-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const legacyFrame = document.querySelector("[data-stock-analyzer-legacy-frame] iframe");
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "stock-analyzer-surface-visible", detail: "missing stock analyzer surface" });
+      }
+      if (!owner || owner.getAttribute("data-stock-analyzer-route-owner") !== "legacy-iframe") {
+        failures.push({
+          check: "stock-analyzer-route-owner",
+          detail: `owner=${owner?.getAttribute("data-stock-analyzer-route-owner") || "missing"}`,
+        });
+      }
+      if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("종목분석 (레거시)")) {
+        failures.push({ check: "stock-analyzer-boundary-visible", detail: "missing visible legacy boundary" });
+      }
+
+      const expectedChips = ["legacy-iframe", "native-preview", "v1-backdoor"];
+      const actualChips = chips.map((node) => node.getAttribute("data-stock-analyzer-boundary-chip"));
+      if (
+        chips.length !== expectedChips.length ||
+        !expectedChips.every((chip, index) => actualChips[index] === chip)
+      ) {
+        failures.push({
+          check: "stock-analyzer-boundary-chip-order",
+          detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+        });
+      }
+
+      const expectedLinks = [
+        "/tools/stock-analyzer/native",
+        "/screener",
+        "/stock/NVDA",
+      ];
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((link, index) => actualLinks[index] === link)
+      ) {
+        failures.push({
+          check: "stock-analyzer-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "stock-analyzer-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const frameSrc = legacyFrame instanceof HTMLIFrameElement
+        ? new URL(legacyFrame.src, window.location.origin)
+        : null;
+      if (!frameSrc || frameSrc.pathname !== "/tools/stock_analyzer/stock_analyzer.html") {
+        failures.push({
+          check: "stock-analyzer-legacy-frame-src",
+          detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,
+        });
+      }
+
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "stock-analyzer-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "종목분석") {
+        failures.push({ check: "stock-analyzer-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
       }
     }
 
