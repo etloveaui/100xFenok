@@ -12,7 +12,7 @@ interface Props {
   searchParams?: Promise<{ tab?: string | string[]; macro?: string | string[] }>;
 }
 
-const STOCK_DETAIL_TABS = ["overview", "etf", "financials", "statistics", "ownership", "estimates", "filings"] as const;
+const STOCK_DETAIL_TABS = ["overview", "etf", "statistics", "estimates", "financials", "ownership", "filings"] as const;
 type StockDetailInitialTab = (typeof STOCK_DETAIL_TABS)[number];
 
 function isStockDetailInitialTab(value: string | undefined): value is StockDetailInitialTab {
