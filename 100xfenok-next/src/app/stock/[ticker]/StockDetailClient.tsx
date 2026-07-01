@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
@@ -836,13 +836,14 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
   const estKeys = ["fy1", "fy2", "fy3"];
   const s = (n: number) => n >= 1000 ? fmtLarge(n) : `${n.toFixed(1)}`;
   const usd = (n: number) => `$${n.toFixed(2)}`;
-  const rows: Array<{ label: string; actuals: NumberSeries | null; estimates: Record<string, MaybeNumber> | null; fmt: (v: number) => string }> = [
-    { label: "매출", actuals: numberSeries(detail.income_statement?.revenue), estimates: detail.income_statement_estimates?.revenue ?? null, fmt: s },
-    { label: "영업이익", actuals: numberSeries(detail.income_statement?.operating_income), estimates: detail.income_statement_estimates?.operating_income ?? null, fmt: s },
-    { label: "순이익", actuals: numberSeries(detail.income_statement?.net_income), estimates: detail.income_statement_estimates?.net_income ?? null, fmt: s },
-    { label: "EPS", actuals: numberSeries(detail.per_share?.eps), estimates: detail.per_share_estimates?.eps ?? null, fmt: usd },
-    { label: "FCF", actuals: numberSeries(detail.cash_flow?.fcf), estimates: detail.cash_flow_estimates?.fcf ?? null, fmt: s },
-    { label: "DPS", actuals: numberSeries(detail.dividend?.dps), estimates: detail.dividend_estimates?.dps ?? null, fmt: usd },
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const rows: Array<{ label: string; actuals: NumberSeries | null; estimates: Record<string, MaybeNumber> | null; fmt: (v: number) => string; color: string }> = [
+    { label: "매출", actuals: numberSeries(detail.income_statement?.revenue), estimates: detail.income_statement_estimates?.revenue ?? null, fmt: s, color: "var(--c-up)" },
+    { label: "영업이익", actuals: numberSeries(detail.income_statement?.operating_income), estimates: detail.income_statement_estimates?.operating_income ?? null, fmt: s, color: "var(--c-info)" },
+    { label: "순이익", actuals: numberSeries(detail.income_statement?.net_income), estimates: detail.income_statement_estimates?.net_income ?? null, fmt: s, color: "var(--c-recovery)" },
+    { label: "EPS", actuals: numberSeries(detail.per_share?.eps), estimates: detail.per_share_estimates?.eps ?? null, fmt: usd, color: "var(--c-brand)" },
+    { label: "FCF", actuals: numberSeries(detail.cash_flow?.fcf), estimates: detail.cash_flow_estimates?.fcf ?? null, fmt: s, color: "var(--c-warn)" },
+    { label: "DPS", actuals: numberSeries(detail.dividend?.dps), estimates: detail.dividend_estimates?.dps ?? null, fmt: usd, color: "var(--c-info)" },
   ];
   const validRows = rows.filter((r) => finiteValues(r.actuals).length > 0);
   if (validRows.length === 0) return null;
@@ -865,25 +866,48 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           {validRows.map((row) => {
             const completeness = estimateCompletenessFromSeries(row.estimates);
             const showGap = hasEstimateGap(completeness);
+            const isExpanded = expandedRow === row.label;
             return (
-              <tr key={row.label} className="border-b border-slate-100 last:border-b-0">
-                <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">
-                  <span className="block">{row.label}</span>
-                  {showGap ? (
-                    <span className={`mt-0.5 inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(completeness)}`}>
-                      {completeness.label}
-                    </span>
-                  ) : null}
-                </td>
-                {row.actuals!.map((v, i) => (
-                  <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
-                ))}
-                {estKeys.map((k) => (
-                  <td key={k} className="px-2 py-1.5 text-right bg-slate-50 orbitron tabular-nums font-semibold text-slate-500">
-                    {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
+              <Fragment key={row.label}>
+                <tr className="border-b border-slate-100 last:border-b-0">
+                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">
+                    <span className="block">{row.label}</span>
+                    <button
+                      type="button"
+                      data-stock-financial-row-chart-button
+                      aria-expanded={isExpanded}
+                      aria-label={`${row.label} 추이 차트 ${isExpanded ? "접기" : "펼치기"}`}
+                      onClick={() => setExpandedRow(isExpanded ? null : row.label)}
+                      className="mt-1 inline-flex min-h-7 min-w-9 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-[9px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                    >
+                      추이
+                    </button>
+                    {showGap ? (
+                      <span className={`mt-1 inline-flex rounded-full px-1.5 py-[1px] text-[9px] font-black ${estimateCompletenessTone(completeness)}`}>
+                        {completeness.label}
+                      </span>
+                    ) : null}
                   </td>
-                ))}
-              </tr>
+                  {row.actuals!.map((v, i) => (
+                    <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
+                  ))}
+                  {estKeys.map((k) => (
+                    <td key={k} className="px-2 py-1.5 text-right bg-slate-50 orbitron tabular-nums font-semibold text-slate-500">
+                      {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
+                    </td>
+                  ))}
+                </tr>
+                {isExpanded ? (
+                  <tr data-stock-financial-row-chart-panel={row.label} className="border-b border-slate-100 bg-slate-50/70">
+                    <td className="sticky left-0 z-10 bg-slate-50 px-2 py-2 text-[10px] font-black text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">
+                      차트
+                    </td>
+                    <td colSpan={years.length + estKeys.length} className="px-2 py-2">
+                      <MiniBarChart actuals={row.actuals ?? []} estimates={row.estimates} years={years} color={row.color} formatValue={row.fmt} />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             );
           })}
         </tbody>

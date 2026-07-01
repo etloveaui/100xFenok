@@ -420,6 +420,25 @@ async function collectRouteChecks(page, route) {
           });
         });
       }
+      if (stockTab === "financials") {
+        const rowChartButtons = Array.from(document.querySelectorAll("[data-stock-financial-row-chart-button]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        if (rowChartButtons.length < 4) {
+          failures.push({ check: "stock-financial-row-chart-buttons", detail: `visible buttons=${rowChartButtons.length}` });
+        }
+        rowChartButtons.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.width < 36 || rect.height < 28) {
+            failures.push({
+              check: "stock-financial-row-chart-target",
+              detail: `button ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+            });
+          }
+        });
+      }
     }
 
     if (currentRoute.startsWith("/superinvestors")) {
@@ -484,6 +503,48 @@ async function collectScreenerExpandedChecks(page, route) {
   }, route);
 }
 
+async function collectStockFinancialChartChecks(page, route) {
+  const button = page.locator("[data-stock-financial-row-chart-button]").first();
+  if ((await button.count()) === 0) {
+    return {
+      route,
+      viewportWidth: null,
+      scrollWidth: null,
+      failures: [{ check: "stock-financial-row-chart-click", detail: "no financial row chart button to click" }],
+    };
+  }
+
+  await button.click({ timeout: 10000 });
+  await page.waitForTimeout(250);
+
+  return page.evaluate((currentRoute) => {
+    const failures = [];
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    const panel = document.querySelector("[data-stock-financial-row-chart-panel]");
+
+    if (!panel || panel.getBoundingClientRect().height <= 0) {
+      failures.push({ check: "stock-financial-row-chart-panel-visible", detail: "expanded row chart panel not visible" });
+    }
+    if (scrollWidth > viewportWidth + 1) {
+      failures.push({
+        check: "stock-financial-row-chart-no-horizontal-overflow",
+        detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+      });
+    }
+
+    return {
+      route: currentRoute,
+      viewportWidth,
+      scrollWidth,
+      failures,
+    };
+  }, route);
+}
+
 if (routes.length === 0) {
   throw new Error("No QA_MOBILE_UX_ROUTES configured.");
 }
@@ -528,6 +589,11 @@ try {
           const expandedChecks = await collectScreenerExpandedChecks(page, route);
           result.failures.push(...expandedChecks.failures);
           result.expandedScrollWidth = expandedChecks.scrollWidth;
+        }
+        if (route.startsWith("/stock/") && route.includes("tab=financials")) {
+          const financialChartChecks = await collectStockFinancialChartChecks(page, route);
+          result.failures.push(...financialChartChecks.failures);
+          result.financialChartScrollWidth = financialChartChecks.scrollWidth;
         }
       } catch (error) {
         result.failures = [{ check: "navigation", detail: String(error) }];
