@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/100x/daily-wrap,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -919,6 +919,99 @@ async function collectRouteChecks(page, route) {
       }
       if (tabbar) {
         failures.push({ check: "admin-data-lab-admin-shell", detail: "admin route should not render product mobile tabbar" });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/100x/daily-wrap") {
+      const surface = document.querySelector("[data-daily-wrap-surface]");
+      const owner = document.querySelector("[data-daily-wrap-route-owner]");
+      const boundary = document.querySelector("[data-daily-wrap-boundary]");
+      const chips = Array.from(document.querySelectorAll("[data-daily-wrap-boundary-chip]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const ownerLinks = Array.from(document.querySelectorAll("[data-daily-wrap-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const legacyFrame = document.querySelector("[data-daily-wrap-legacy-frame] iframe");
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "daily-wrap-surface-visible", detail: "missing daily wrap surface" });
+      }
+      if (!owner || owner.getAttribute("data-daily-wrap-route-owner") !== "legacy-viewer") {
+        failures.push({
+          check: "daily-wrap-route-owner",
+          detail: `owner=${owner?.getAttribute("data-daily-wrap-route-owner") || "missing"}`,
+        });
+      }
+      if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("100x Daily Wrap (레거시)")) {
+        failures.push({ check: "daily-wrap-boundary-visible", detail: "missing visible daily wrap boundary" });
+      }
+
+      const expectedChips = ["legacy-viewer", "native-preview", "date-filter"];
+      const actualChips = chips.map((node) => node.getAttribute("data-daily-wrap-boundary-chip"));
+      if (
+        chips.length !== expectedChips.length ||
+        !expectedChips.every((chip, index) => actualChips[index] === chip)
+      ) {
+        failures.push({
+          check: "daily-wrap-boundary-chip-order",
+          detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+        });
+      }
+      chips.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "daily-wrap-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => {
+        const url = new URL(node.href, window.location.origin);
+        return `${normalizePath(url.pathname)}${url.search}`;
+      });
+      const expectedLinks = [
+        "/100x/daily-wrap",
+        "/100x/daily-wrap?v2=1",
+        "/market/events",
+      ];
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((link, index) => actualLinks[index] === link)
+      ) {
+        failures.push({
+          check: "daily-wrap-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "daily-wrap-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const frameSrc = legacyFrame instanceof HTMLIFrameElement
+        ? new URL(legacyFrame.src, window.location.origin)
+        : null;
+      if (!frameSrc || frameSrc.pathname !== "/100x/daily-wrap/daily-wrap-viewer.html") {
+        failures.push({
+          check: "daily-wrap-legacy-frame-src",
+          detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,
+        });
+      }
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "daily-wrap-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "100x Daily Wrap") {
+        failures.push({ check: "daily-wrap-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
       }
     }
 
