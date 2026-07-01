@@ -590,6 +590,7 @@ function TradeRankingPanel({
   title,
   rows,
   amountColor,
+  side,
   expanded,
   onToggle,
   actionLabel,
@@ -597,6 +598,7 @@ function TradeRankingPanel({
   title: string;
   rows: TradesRankingRow[];
   amountColor: AmountColor;
+  side: "bought" | "sold";
   expanded: boolean;
   onToggle: () => void;
   actionLabel: (r: TradesRankingRow) => string | undefined;
@@ -615,9 +617,20 @@ function TradeRankingPanel({
   }
 
   return (
-    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
+    <div
+      data-superinvestor-trades-panel
+      data-superinvestor-trades-side={side}
+      className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4"
+    >
       <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-      <div className="scroll-hint-x mt-3 -mx-1 px-1" role="region" tabIndex={0} aria-label={`${title} 표 가로 스크롤`}>
+      <div
+        data-superinvestor-trades-region
+        data-superinvestor-trades-side={side}
+        className="scroll-hint-x mt-3 -mx-1 px-1"
+        role="region"
+        tabIndex={0}
+        aria-label={`${title} 표 가로 스크롤`}
+      >
         <table className="w-full min-w-[440px] text-xs">
           <thead>
             <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -631,13 +644,26 @@ function TradeRankingPanel({
           </thead>
           <tbody>
             {visibleRows.map((r) => (
-              <tr key={`${r.ticker}-${r.rank}`} className="border-b border-slate-100 last:border-b-0">
+              <tr
+                key={`${r.ticker}-${r.rank}`}
+                data-superinvestor-trades-row
+                data-superinvestor-trades-side={side}
+                data-superinvestor-trades-ticker={r.ticker}
+                className="border-b border-slate-100 last:border-b-0"
+              >
                 <td className="px-2 py-2">
                   <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
                 </td>
                 <td className="px-2 py-2">
-                  <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
-                  <TickerChip ticker={r.ticker} variant="inline" />
+                  <TransitionLink
+                    href={ROUTES.stock(r.ticker)}
+                    data-superinvestor-trades-action
+                    data-superinvestor-trades-stock-link
+                    className="inline-flex min-h-11 max-w-[150px] flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
+                  >
+                    <span className="block max-w-[130px] truncate font-bold text-slate-900">{r.name}</span>
+                    <TickerChip ticker={r.ticker} variant="inline" />
+                  </TransitionLink>
                 </td>
                 <td className="px-2 py-2">
                   <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
@@ -660,7 +686,19 @@ function TradeRankingPanel({
                   ) : null}
                 </td>
                 <td className="px-2 py-2 max-w-[110px]">
-                  <span className="block truncate text-[10px] font-bold text-slate-700">{r.top_investor?.name ?? "—"}</span>
+                  {r.top_investor?.id ? (
+                    <TransitionLink
+                      href={ROUTES.superinvestorsGuru(r.top_investor.id)}
+                      data-superinvestor-trades-action
+                      data-superinvestor-trades-investor-link
+                      className="inline-flex min-h-11 max-w-[118px] items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                      title={r.top_investor.name}
+                    >
+                      <span className="truncate">{r.top_investor.name}</span>
+                    </TransitionLink>
+                  ) : (
+                    <span className="block truncate text-[10px] font-bold text-slate-700">—</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -853,6 +891,11 @@ export default function SuperinvestorsClient({
   const topSectorHoldings = topSector?.top_holdings?.slice(0, 3).join(", ") || "—";
   const convictionNewCount = convictionEntries?.metadata?.high_conviction_new_count ?? null;
   const convictionHoldCount = convictionEntries?.metadata?.top_conviction_hold_count ?? null;
+  const topBoughtTrade = tradesData?.bought[0] ?? null;
+  const topSoldTrade = tradesData?.sold[0] ?? null;
+  const tradesBoughtAmount = tradesData?.bought.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
+  const tradesSoldAmount = tradesData?.sold.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
+  const tradesGeneratedAtLabel = fmtDateTimeKo(tradesData?.metadata.generated_at);
 
   return (
     <div className="data-shell-page">
@@ -1025,6 +1068,89 @@ export default function SuperinvestorsClient({
                 className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
               >
                 <span className="max-w-[150px] truncate">{holder.investor}</span>
+              </TransitionLink>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "trades" && tradesData && (topBoughtTrade || topSoldTrade) ? (
+        <section
+          data-superinvestor-trades-landing
+          data-superinvestor-trades-quarter={tradesData.metadata.quarter}
+          className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-4 shadow-[var(--sh-sm)]"
+          aria-label={`${tradesData.metadata.quarter} 13F 매매 순위 요약`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">13F 매매 순위</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">
+                {tradesData.metadata.quarter}
+              </h2>
+              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
+                {tradesData.metadata.investors_included.length}명 코호트 · 상위 {tradesData.metadata.top_n}개 매수/매도
+                {tradesGeneratedAtLabel ? ` · 변환 ${tradesGeneratedAtLabel}` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                data-superinvestor-trades-asof
+                className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
+              >
+                {tradesData.metadata.quarter}
+              </span>
+              <span
+                data-superinvestor-trades-lag
+                className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
+              >
+                13F 최대 45일 지연
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div data-superinvestor-trades-kpi="bought" className="rounded-xl border border-emerald-100 bg-white px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">상위 매수 규모</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtAum(tradesBoughtAmount)}</p>
+            </div>
+            <div data-superinvestor-trades-kpi="sold" className="rounded-xl border border-rose-100 bg-white px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">상위 매도 규모</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{fmtAum(tradesSoldAmount)}</p>
+            </div>
+            <div data-superinvestor-trades-kpi="cohort" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 투자자</p>
+              <p className="mt-1 orbitron text-sm font-black text-slate-950">{tradesData.metadata.investors_included.length}명</p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {topBoughtTrade ? (
+              <TransitionLink
+                href={ROUTES.stock(topBoughtTrade.ticker)}
+                data-superinvestor-trades-action
+                data-superinvestor-trades-stock-link
+                className="inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
+              >
+                매수 1위 {topBoughtTrade.ticker}
+              </TransitionLink>
+            ) : null}
+            {topSoldTrade ? (
+              <TransitionLink
+                href={ROUTES.stock(topSoldTrade.ticker)}
+                data-superinvestor-trades-action
+                data-superinvestor-trades-stock-link
+                className="inline-flex min-h-11 items-center rounded-full bg-rose-700 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
+              >
+                매도 1위 {topSoldTrade.ticker}
+              </TransitionLink>
+            ) : null}
+            {[topBoughtTrade, topSoldTrade].filter(Boolean).map((row) => (
+              <TransitionLink
+                key={`${row?.ticker}-${row?.top_investor?.id}`}
+                href={ROUTES.superinvestorsGuru(row?.top_investor.id ?? "")}
+                data-superinvestor-trades-action
+                data-superinvestor-trades-investor-link
+                className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+              >
+                <span className="max-w-[150px] truncate">{row?.top_investor.name}</span>
               </TransitionLink>
             ))}
           </div>
@@ -1676,6 +1802,7 @@ export default function SuperinvestorsClient({
                   title="많이 매수된 종목"
                   rows={tradesData.bought}
                   amountColor="emerald"
+                  side="bought"
                   expanded={tradesBoughtExpanded}
                   onToggle={() => setTradesBoughtExpanded((v) => !v)}
                   actionLabel={(r) =>
@@ -1688,6 +1815,7 @@ export default function SuperinvestorsClient({
                   title="많이 매도된 종목"
                   rows={tradesData.sold}
                   amountColor="rose"
+                  side="sold"
                   expanded={tradesSoldExpanded}
                   onToggle={() => setTradesSoldExpanded((v) => !v)}
                   actionLabel={(r) =>

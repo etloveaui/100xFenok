@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1314,6 +1314,73 @@ async function collectRouteChecks(page, route) {
         stockLinks.forEach((link, index) => {
           if (link.rect.height < 44) {
             failures.push({ check: "superinvestors-accumulation-heatmap-touch-target", detail: `tile ${index} height=${Math.round(link.rect.height)}` });
+          }
+        });
+      }
+      if (currentRoute.includes("tab=trades")) {
+        const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
+        const landing = document.querySelector("[data-superinvestor-trades-landing]");
+        const landingAsOf = landing?.querySelector("[data-superinvestor-trades-asof]");
+        const landingLag = landing?.querySelector("[data-superinvestor-trades-lag]");
+        const kpis = Array.from(document.querySelectorAll("[data-superinvestor-trades-kpi]"));
+        const panels = Array.from(document.querySelectorAll("[data-superinvestor-trades-panel]"));
+        const boughtPanel = document.querySelector('[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]');
+        const soldPanel = document.querySelector('[data-superinvestor-trades-panel][data-superinvestor-trades-side="sold"]');
+        const rows = Array.from(document.querySelectorAll("[data-superinvestor-trades-row]"));
+        const boughtRows = Array.from(document.querySelectorAll('[data-superinvestor-trades-row][data-superinvestor-trades-side="bought"]'));
+        const soldRows = Array.from(document.querySelectorAll('[data-superinvestor-trades-row][data-superinvestor-trades-side="sold"]'));
+        const stockLinks = Array.from(document.querySelectorAll("[data-superinvestor-trades-stock-link]"));
+        const investorLinks = Array.from(document.querySelectorAll("[data-superinvestor-trades-investor-link]"));
+        const actions = Array.from(document.querySelectorAll("[data-superinvestor-trades-action]"));
+
+        if (!selectedTab || !(selectedTab.textContent || "").includes("매매")) {
+          failures.push({ check: "superinvestors-trades-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
+        }
+        if (!landing) {
+          failures.push({ check: "superinvestors-trades-landing", detail: "missing trades landing strip" });
+        } else {
+          const landingRect = landing.getBoundingClientRect();
+          if (landingRect.height <= 0 || landingRect.top >= window.innerHeight) {
+            failures.push({ check: "superinvestors-trades-first-viewport", detail: `top=${Math.round(landingRect.top)} height=${Math.round(landingRect.height)} viewport=${window.innerHeight}` });
+          }
+        }
+        if (!landingAsOf || !/\d{4}-Q\d/.test(landingAsOf.textContent || "")) {
+          failures.push({ check: "superinvestors-trades-asof", detail: `asOf=${landingAsOf?.textContent || ""}` });
+        }
+        if (!landingLag || !(landingLag.textContent || "").includes("45")) {
+          failures.push({ check: "superinvestors-trades-13f-lag", detail: `lag=${landingLag?.textContent || ""}` });
+        }
+        if (kpis.length < 3) {
+          failures.push({ check: "superinvestors-trades-kpis", detail: `kpis=${kpis.length}` });
+        }
+        if (panels.length < 2 || !boughtPanel || !soldPanel) {
+          failures.push({ check: "superinvestors-trades-panels", detail: `panels=${panels.length}` });
+        }
+        if (rows.length < 20 || boughtRows.length < 10 || soldRows.length < 10) {
+          failures.push({ check: "superinvestors-trades-rows", detail: `rows=${rows.length} bought=${boughtRows.length} sold=${soldRows.length}` });
+        }
+        if (stockLinks.length < 12) {
+          failures.push({ check: "superinvestors-trades-stock-links", detail: `links=${stockLinks.length}` });
+        }
+        if (investorLinks.length < 12) {
+          failures.push({ check: "superinvestors-trades-investor-links", detail: `links=${investorLinks.length}` });
+        }
+        [...stockLinks.slice(0, 12), ...investorLinks.slice(0, 12)].forEach((link, index) => {
+          const url = link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin) : null;
+          const href = url ? `${url.pathname}${url.search}` : "";
+          const isStock = link.matches("[data-superinvestor-trades-stock-link]");
+          const isInvestor = link.matches("[data-superinvestor-trades-investor-link]");
+          if (isStock && !href.startsWith("/stock/")) {
+            failures.push({ check: "superinvestors-trades-stock-href", detail: `index=${index} href=${href}` });
+          }
+          if (isInvestor && !(url?.pathname.replace(/\/$/, "") === "/superinvestors" && url.searchParams.get("tab") === "gurus" && url.searchParams.get("guru"))) {
+            failures.push({ check: "superinvestors-trades-investor-href", detail: `index=${index} href=${href}` });
+          }
+        });
+        actions.slice(0, 24).forEach((link, index) => {
+          const rect = link.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "superinvestors-trades-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
           }
         });
       }
