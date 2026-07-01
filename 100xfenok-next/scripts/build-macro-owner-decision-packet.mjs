@@ -18,6 +18,7 @@ const liveEquivalenceScript = path.join(__dirname, "check-macro-owner-live-equiv
 
 function parseArgs(argv) {
   const args = {
+    decisionRecordTemplate: false,
     decisionRecordJson: null,
     decisionRecordPath: null,
     json: false,
@@ -27,6 +28,10 @@ function parseArgs(argv) {
     const arg = argv[index];
     if (arg === "--json") {
       args.json = true;
+      continue;
+    }
+    if (arg === "--decision-record-template") {
+      args.decisionRecordTemplate = true;
       continue;
     }
     if (arg === "--decision-record") {
@@ -281,6 +286,21 @@ function validatePacket(packet) {
   if (!packet.next_queue_candidate_after_owner_decision) {
     errors.push("next queue candidate must stay visible after owner decision");
   }
+  if (packet.decision_record_template?.schema_version !== "macro-owner-decision-record/v0.1") {
+    errors.push(`decision record template schema mismatch: ${packet.decision_record_template?.schema_version}`);
+  }
+  if (packet.decision_record_template?.family_id !== packet.family_id) {
+    errors.push(`decision record template family mismatch: ${packet.decision_record_template?.family_id}`);
+  }
+  if (packet.decision_record_template?.local_live_equivalence_proof_status !== packet.evidence.local_live_equivalence_proof_status) {
+    errors.push("decision record template proof status must match packet proof");
+  }
+  if (packet.decision_record_template?.local_live_equivalence_rows_checked !== packet.evidence.local_live_equivalence_rows_checked) {
+    errors.push("decision record template row count must match packet proof");
+  }
+  if (packet.decision_record_template?.mutation_approved !== false) {
+    errors.push("decision record template must keep mutation_approved=false");
+  }
   for (const option of packet.decision_options) {
     if (option.mutation_allowed !== false) {
       errors.push(`decision option must not authorize mutation: ${option.decision}`);
@@ -320,6 +340,7 @@ function printText(packet) {
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
   console.log(`next_gated_slice=${packet.next_gated_slice.id}`);
   console.log(`safe_enforcement_slices=${packet.safe_enforcement_slices.map((slice) => slice.id).join(",")}`);
+  console.log("decision_record_template_command=node scripts/build-macro-owner-decision-packet.mjs --decision-record-template");
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
 }
@@ -334,6 +355,11 @@ function main() {
 
   if (errors.length > 0) {
     fail(`failed (${errors.length} violation(s)): ${errors.join("; ")}`, packet, args.json);
+  }
+
+  if (args.decisionRecordTemplate) {
+    console.log(JSON.stringify(packet.decision_record_template, null, 2));
+    return;
   }
 
   if (args.json) {
