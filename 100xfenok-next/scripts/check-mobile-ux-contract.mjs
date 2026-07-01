@@ -2027,6 +2027,7 @@ async function collectRouteChecks(page, route) {
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market/events") {
       const surface = document.querySelector("[data-market-events-surface]");
+      const owner = document.querySelector("[data-market-events-route-owner]");
       const activeNav = document.querySelector('[data-market-section-link="events"][aria-current="page"]');
       const navLinks = Array.from(document.querySelectorAll("[data-market-section-link]"))
         .filter((node) => {
@@ -2045,6 +2046,12 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
+      const actionRail = document.querySelector("[data-market-events-action-rail]");
+      const actionLinks = Array.from(document.querySelectorAll("[data-market-events-action]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
       const controls = [
         { key: "search", node: document.querySelector("[data-market-events-search]") },
         { key: "section", node: document.querySelector("[data-market-events-section-filter]") },
@@ -2057,6 +2064,12 @@ async function collectRouteChecks(page, route) {
 
       if (!surface || surface.getBoundingClientRect().height <= 0) {
         failures.push({ check: "market-events-surface-visible", detail: "missing market events surface" });
+      }
+      if (!owner || owner.getAttribute("data-market-events-route-owner") !== "event-catalyst-center") {
+        failures.push({
+          check: "market-events-route-owner",
+          detail: `owner=${owner?.getAttribute("data-market-events-route-owner") || "missing"}`,
+        });
       }
       if (!activeNav) {
         failures.push({ check: "market-events-nav-active", detail: "events nav link is not aria-current page" });
@@ -2084,6 +2097,38 @@ async function collectRouteChecks(page, route) {
       if (!overview || overview.getBoundingClientRect().height <= 0) {
         failures.push({ check: "market-events-overview-visible", detail: "missing events overview panel" });
       }
+      if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-events-action-rail-visible", detail: "missing events action rail" });
+      }
+
+      const expectedActions = [
+        { key: "market", path: "/market-valuation" },
+        { key: "regime", path: "/regime" },
+        { key: "sectors", path: "/sectors" },
+        { key: "screener", path: "/screener" },
+      ];
+      const actualActions = actionLinks.map((node) => node.getAttribute("data-market-events-action"));
+      if (
+        actionLinks.length !== expectedActions.length ||
+        !expectedActions.every((action, index) => actualActions[index] === action.key)
+      ) {
+        failures.push({
+          check: "market-events-action-order",
+          detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions.map((action) => action.key))}`,
+        });
+      }
+      actionLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        const href = node.getAttribute("href") || "";
+        const expectedPath = expectedActions[index]?.path;
+        const actualPath = href ? new URL(href, window.location.origin).pathname.replace(/\/$/, "") || "/" : "";
+        if (rect.height < 44) {
+          failures.push({ check: "market-events-action-touch-target", detail: `action ${index} height=${Math.round(rect.height)}` });
+        }
+        if (expectedPath && actualPath !== expectedPath) {
+          failures.push({ check: "market-events-action-href", detail: `action ${index} href=${href} expected=${expectedPath}` });
+        }
+      });
 
       const expectedTabs = ["earnings", "actions", "ipo", "movers"];
       const actualTabs = tabs.map((node) => node.getAttribute("data-market-event-tab"));

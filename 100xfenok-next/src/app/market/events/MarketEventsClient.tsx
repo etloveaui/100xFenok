@@ -93,6 +93,13 @@ const TABS: Array<{ key: EventTab; label: string }> = [
   { key: "movers", label: "급등락" },
 ];
 
+const EVENT_ACTIONS = [
+  { key: "market", label: "시장", detail: "밸류·구조", href: ROUTES.market },
+  { key: "regime", label: "국면", detail: "종합 판독", href: ROUTES.regime },
+  { key: "sectors", label: "섹터", detail: "업종 지도", href: ROUTES.sectors },
+  { key: "screener", label: "스크리너", detail: "종목 선별", href: ROUTES.screener },
+] as const;
+
 let cache: EventData | null = null;
 let pending: Promise<EventData | null> | null = null;
 
@@ -339,7 +346,7 @@ export default function MarketEventsClient({
   }, []);
 
   return (
-    <div className="data-shell-page" data-market-events-surface="true">
+    <div className="data-shell-page" data-market-events-surface="true" data-market-events-route-owner="event-catalyst-center">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">시장 이벤트</p>
@@ -391,6 +398,24 @@ export default function MarketEventsClient({
             <TransitionLink href={ROUTES.sectors} className="font-black text-brand-interactive hover:underline">
               섹터로 이동
             </TransitionLink>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-market-events-action-rail="true">
+            {EVENT_ACTIONS.map((action, index) => (
+              <TransitionLink
+                key={action.key}
+                href={action.href}
+                className="group flex min-h-14 min-w-0 items-center gap-3 rounded-[1rem] border border-[var(--c-line)] bg-white px-3 py-3 text-left transition hover:border-[var(--c-brand)] hover:bg-[var(--c-surface-2)]"
+                data-market-events-action={action.key}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-surface)] text-xs font-black text-[var(--c-ink)] group-hover:border-[var(--c-brand)] group-hover:text-[var(--c-brand)]">
+                  {index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-black text-[var(--c-ink)]">{action.label}</span>
+                  <span className="block text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{action.detail}</span>
+                </span>
+              </TransitionLink>
+            ))}
           </div>
         </div>
       </section>
