@@ -205,6 +205,7 @@ function assertRouteIaContracts(errors) {
   const homeV1Source = readAppSource("src/app/HomeV1Client.tsx");
   const homeV5Source = readAppSource("src/app/HomeV5Client.tsx");
   const briefingPageSource = readAppSource("src/app/briefing/page.tsx");
+  const nvdaFilingAliasSource = readAppSource("src/app/filings/nvda-10k/page.tsx");
   const workbenchSource = readAppSource("src/components/workbench/WorkbenchView.tsx");
   const explorePageSource = readAppSource("src/app/explore/page.tsx");
   const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
@@ -272,6 +273,14 @@ function assertRouteIaContracts(errors) {
   assertSourceTokens(briefingPageSource, [
     "redirect(ROUTES.home)",
   ], "briefing alias PRO IA", errors);
+  assertSourceTokens(nvdaFilingAliasSource, [
+    'redirect(ROUTES.stockFilings("NVDA"))',
+  ], "NVDA filing legacy alias", errors);
+  assertSourceTokens(nextConfigSource, [
+    'source: "/filings/nvda-10k"',
+    'destination: "/stock/NVDA?tab=filings"',
+    "permanent: false",
+  ], "NVDA filing HTTP redirect alias", errors);
 
   assertSourceTokens(workbenchSource, [
     'type WorkbenchSurface = "workbench" | "explore"',
