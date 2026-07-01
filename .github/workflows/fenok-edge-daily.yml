@@ -29,11 +29,11 @@ on:
       occ_batch_size:
         description: 'OCC eligible ticker batch size'
         required: false
-        default: '50'
+        default: '750'
       occ_batch_count:
         description: 'OCC rolling batch count used with run_number'
         required: false
-        default: '13'
+        default: '1'
       occ_batch_index:
         description: 'Optional OCC batch index override'
         required: false
@@ -41,11 +41,11 @@ on:
       occ_max_requests:
         description: 'Maximum OCC HTTP requests per run'
         required: false
-        default: '100'
+        default: '1500'
       occ_fail_threshold:
         description: 'Maximum OCC hard failures before aborting'
         required: false
-        default: '5'
+        default: '25'
       occ_sleep_ms:
         description: 'Milliseconds between OCC requests'
         required: false
@@ -77,11 +77,11 @@ jobs:
           INPUT_NO_FETCH: ${{ github.event.inputs.no_fetch || 'false' }}
           INPUT_FINRA_FROM: ${{ github.event.inputs.finra_from || '' }}
           INPUT_FINRA_TO: ${{ github.event.inputs.finra_to || '' }}
-          INPUT_OCC_BATCH_SIZE: ${{ github.event.inputs.occ_batch_size || '50' }}
-          INPUT_OCC_BATCH_COUNT: ${{ github.event.inputs.occ_batch_count || '13' }}
+          INPUT_OCC_BATCH_SIZE: ${{ github.event.inputs.occ_batch_size || '750' }}
+          INPUT_OCC_BATCH_COUNT: ${{ github.event.inputs.occ_batch_count || '1' }}
           INPUT_OCC_BATCH_INDEX: ${{ github.event.inputs.occ_batch_index || '' }}
-          INPUT_OCC_MAX_REQUESTS: ${{ github.event.inputs.occ_max_requests || '100' }}
-          INPUT_OCC_FAIL_THRESHOLD: ${{ github.event.inputs.occ_fail_threshold || '5' }}
+          INPUT_OCC_MAX_REQUESTS: ${{ github.event.inputs.occ_max_requests || '1500' }}
+          INPUT_OCC_FAIL_THRESHOLD: ${{ github.event.inputs.occ_fail_threshold || '25' }}
           INPUT_OCC_SLEEP_MS: ${{ github.event.inputs.occ_sleep_ms || '250' }}
         shell: bash
         run: |

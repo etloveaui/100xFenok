@@ -1235,6 +1235,7 @@ function buildS1BlockedUnblockDiagnosticsArtifact(statuses, context) {
   const expectedBlockedRows = [
     ["DAY", ["market_currency_country_scope"]],
     ["HOLX", ["market_currency_country_scope"]],
+    ["KEY", ["market_currency_country_scope"]],
     ["MMC", ["market_currency_country_scope"]],
     ["STRC", ["evidence_families_min3"]],
   ];
@@ -1691,6 +1692,7 @@ function buildAudit({
   const gapMarketFactsDetails = existingTickerFiles(gapTickers, "data/computed/market_facts/tickers");
   const gapGlobalScouterDetails = existingTickerFiles(gapTickers, "data/global-scouter/stocks/detail");
   const classTickerGap = gapTickers.filter((item) => item.includes("."));
+  const classTickerCandidates = stockCandidateTickers.filter((item) => item.includes("."));
   const slickSourceNotUniverse = gapWithSlickSource.filter((item) => !slickUniverseSet.has(item));
   const slickUniverseMissingFiles = slickUniverseTickers.filter((item) => !slickStockFileSet.has(item));
   const slickStockFilesOutsideUniverse = slickStockFileTickers.filter((item) => !slickUniverseSet.has(item));
@@ -1832,7 +1834,8 @@ function buildAudit({
     },
     {
       id: "class_ticker_exact_match_guard",
-      ok: !gapTickers.includes("BRK.B") && classTickerGap.includes("BF.B"),
+      ok: !gapTickers.includes("BRK.B")
+        && classTickerCandidates.every((item) => s0Set.has(item) || classTickerGap.includes(item)),
       detail: "Use ticker, not ticker_normalized, when comparing S0 to market_facts",
     },
     {

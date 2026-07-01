@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { EXPECTED_IFRAME_SRC_BY_ROUTE } from "./qa-route-catalog.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
@@ -89,6 +90,76 @@ function fileSize(absPath) {
   } catch {
     return 0;
   }
+}
+
+function publicPathFromFile(file) {
+  return `/${file.replace(/^100xfenok-next\/public\//, "").replace(/^public\//, "")}`;
+}
+
+function legacyHtmlClassification(legacyHtml) {
+  const iframeTargets = new Map(
+    Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE).map(([route, target]) => [target, route]),
+  );
+  const rows = legacyHtml.map((item) => {
+    const publicPath = publicPathFromFile(item.file);
+    const route = iframeTargets.get(publicPath) ?? null;
+    if (publicPath === "/tools/stock_analyzer/CLEAR_CACHE.html") {
+      return {
+        ...item,
+        class: "low_risk_retire_candidate",
+        route: "/tools/stock-analyzer",
+        reason: "cache helper page is not an iframe target; smoke stock-analyzer direct URL before redirect/delete",
+      };
+    }
+    if (route) {
+      return {
+        ...item,
+        class: "route_backed_preserve_until_equivalence",
+        route,
+        reason: "expected iframe target for a live Next route",
+      };
+    }
+    if (
+      publicPath.startsWith("/admin/")
+      || publicPath.startsWith("/alpha-scout/")
+      || publicPath.startsWith("/posts-raw/")
+      || publicPath.startsWith("/tools/macro-monitor/")
+      || publicPath.startsWith("/vr/")
+    ) {
+      return {
+        ...item,
+        class: "dynamic_bridge_reachable_high_risk",
+        route: null,
+        reason: "legacyPublicFileExists or dynamic bridge route can still resolve this path family",
+      };
+    }
+    if (publicPath.startsWith("/100x/daily-wrap/") && publicPath !== "/100x/daily-wrap/daily-wrap-viewer.html") {
+      return {
+        ...item,
+        class: "daily_wrap_archive_high_risk",
+        route: "/100x/daily-wrap",
+        reason: "daily-wrap route uses viewer/data path; dated legacy HTML needs equivalence proof before redirect",
+      };
+    }
+    return {
+      ...item,
+      class: "unclassified_high_risk",
+      route: null,
+      reason: "no safe redirect/delete proof in the canonical inventory gate",
+    };
+  });
+
+  const byClass = rows.reduce((acc, row) => {
+    acc[row.class] = (acc[row.class] ?? 0) + 1;
+    return acc;
+  }, {});
+  return {
+    by_class: Object.fromEntries(Object.entries(byClass).sort(([a], [b]) => a.localeCompare(b))),
+    safe_first_candidates: rows.filter((row) => row.class === "low_risk_retire_candidate"),
+    route_backed: rows.filter((row) => row.class === "route_backed_preserve_until_equivalence"),
+    high_risk_count: rows.filter((row) => row.class.endsWith("_high_risk")).length,
+    rows,
+  };
 }
 
 function appRouteFromPage(absPath) {
@@ -189,6 +260,7 @@ function main() {
   const legacyExistsConsumers = grepFiles(textFiles, (text) => text.includes("legacyPublicFileExists"));
   const oldUrlConsumers = collectOldUrlConsumers(textFiles);
   const oldUrlConsumerFiles = [...new Set(Object.values(oldUrlConsumers).flat())].sort();
+  const legacyClassification = legacyHtmlClassification(legacyHtml);
 
   const workflowDir = path.join(repoRoot, ".github", "workflows");
   const workflows = walk(workflowDir, (absPath) => /\.(ya?ml)$/i.test(absPath))
@@ -226,13 +298,19 @@ function main() {
       legacy_public_file_exists_consumer_files: legacyExistsConsumers.length,
       workflow_files: workflows.length,
       old_url_consumer_files: oldUrlConsumerFiles.length,
+      legacy_html_low_risk_candidates: legacyClassification.safe_first_candidates.length,
+      legacy_html_route_backed: legacyClassification.route_backed.length,
+      legacy_html_high_risk: legacyClassification.high_risk_count,
     },
     samples: {
       app_routes: appRoutes.slice(0, 12),
       legacy_html: legacyHtml.slice(0, 12),
       route_embed_consumers: routeEmbedConsumers.slice(0, 20),
       legacy_public_file_exists_consumers: legacyExistsConsumers.slice(0, 20),
+      legacy_html_safe_first_candidates: legacyClassification.safe_first_candidates,
+      legacy_html_route_backed: legacyClassification.route_backed.slice(0, 20),
     },
+    legacy_html_classification: legacyClassification,
     deploy_inventory: deployInventory,
     old_url_consumers: oldUrlConsumers,
     owner_gates: {

@@ -389,6 +389,18 @@ function blockedRowsMatch(blockedRows) {
     ));
 }
 
+function countsMatchExpectedMutationState(counts) {
+  const preMutationState = counts.public_s0_before === 1066
+    && counts.s1_gap_total === 112
+    && counts.promotion_rows === 107
+    && counts.excluded_blocked_rows === 5;
+  const postMutationState = counts.public_s0_before === 1173
+    && counts.s1_gap_total === 5
+    && counts.promotion_rows === 0
+    && counts.excluded_blocked_rows === 5;
+  return preMutationState || postMutationState;
+}
+
 function compactPromotionRow(row) {
   return {
     ticker: row.ticker,
@@ -506,10 +518,7 @@ function buildAdminDryRunArtifact({ outRel, noWrite, enablePublicMutation }) {
     },
     {
       id: "s1_public_promotion_dry_run_counts_current",
-      ok: counts.public_s0_before === 1066
-        && counts.s1_gap_total === 112
-        && counts.promotion_rows === 107
-        && counts.excluded_blocked_rows === 5,
+      ok: countsMatchExpectedMutationState(counts),
       detail: `s0=${counts.public_s0_before}, gap=${counts.s1_gap_total}, promotion=${counts.promotion_rows}, blocked=${counts.excluded_blocked_rows}`,
     },
     {

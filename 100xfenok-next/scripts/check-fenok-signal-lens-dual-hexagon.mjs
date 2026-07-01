@@ -9,8 +9,6 @@ const repoRoot = path.resolve(appRoot, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(appRoot, "public", "data");
 
-const EXPECTED_ACTIVE_STOCK_COUNT = 1066;
-
 const LONG_AXES = [
   { key: "profitability", summaryKey: "profitabilityScore", sourceKey: "profitability", sourceScoreKey: "score_0_100" },
   { key: "growth", summaryKey: "growthScore", sourceKey: "growth", sourceScoreKey: "score_0_100" },
@@ -266,14 +264,15 @@ function requireUiContracts(errors) {
   }
 }
 
-const activePayload = readJson(path.join(dataRoot, "global-scouter/core/stocks_analyzer.json"));
+const stockActionIndex = readJson(path.join(dataRoot, "computed/stock_action_index.json"));
 const sourceSummaryRaw = fs.readFileSync(path.join(dataRoot, "computed/fenok_signals_summary.json"), "utf8");
 const publicSummaryRaw = fs.readFileSync(path.join(publicDataRoot, "computed/fenok_signals_summary.json"), "utf8");
 const summary = JSON.parse(sourceSummaryRaw);
 const source = readJson(path.join(dataRoot, "computed/fenok_signals.json"));
 const marketFactsIndex = readJson(path.join(dataRoot, "computed/market_facts/index.json"));
 
-const activeTickers = (Array.isArray(activePayload.data) ? activePayload.data : [])
+const activeTickers = (Array.isArray(stockActionIndex.rows) ? stockActionIndex.rows : [])
+  .filter((row) => row?.asset_type === "stock")
   .map((row) => tickerOf(row?.symbol))
   .filter(Boolean);
 const summaryFields = Array.isArray(summary.fields) ? summary.fields : [];
@@ -306,9 +305,6 @@ const counts = {
   etfRows: 0,
 };
 
-if (activeTickers.length !== EXPECTED_ACTIVE_STOCK_COUNT) {
-  errors.push(`active stock universe count ${activeTickers.length} != ${EXPECTED_ACTIVE_STOCK_COUNT}`);
-}
 if (summary.coverage?.row_count !== activeTickers.length) {
   errors.push(`summary coverage.row_count ${summary.coverage?.row_count} != active stock count ${activeTickers.length}`);
 }
@@ -460,7 +456,7 @@ if (counts.fullShortHexagon < activeTickers.length) {
 
 const report = {
   ok: errors.length === 0,
-  scope: "S0 active stock universe only",
+  scope: "public stock_action_index active stock universe",
   counts,
   axisCounts,
   axisMissingCounts,
