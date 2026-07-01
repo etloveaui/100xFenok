@@ -12,6 +12,7 @@ const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/screene
 const viewportCatalog = {
   mobile: { width: 390, height: 844 },
   narrow: { width: 375, height: 812 },
+  desktop: { width: 1280, height: 900 },
 };
 
 const requestedViewports = (process.env.QA_MOBILE_UX_VIEWPORTS || "mobile,narrow")
@@ -66,7 +67,7 @@ async function collectRouteChecks(page, route) {
     }
 
     const tabbar = document.querySelector(".fnk-shell .tabbar");
-    if (tabbar) {
+    if (viewportWidth < 768 && tabbar) {
       const tabs = Array.from(tabbar.querySelectorAll(".tab"))
         .filter((node) => node.getBoundingClientRect().width > 0);
       if (tabs.length !== 5) {
@@ -231,20 +232,22 @@ async function collectRouteChecks(page, route) {
         }
       });
 
-      const mobileExpandButtons = Array.from(document.querySelectorAll('[aria-controls^="screener-mobile-detail"]'))
-        .filter((node) => node.getBoundingClientRect().width > 0);
-      if (mobileExpandButtons.length === 0) {
-        failures.push({ check: "screener-mobile-expand-present", detail: "no visible mobile expand button" });
-      }
-      mobileExpandButtons.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({
-            check: "screener-expand-target",
-            detail: `expand ${index} height=${Math.round(rect.height)}`,
-          });
+      if (viewportWidth < 768) {
+        const mobileExpandButtons = Array.from(document.querySelectorAll('[aria-controls^="screener-mobile-detail"]'))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (mobileExpandButtons.length === 0) {
+          failures.push({ check: "screener-mobile-expand-present", detail: "no visible mobile expand button" });
         }
-      });
+        mobileExpandButtons.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({
+              check: "screener-expand-target",
+              detail: `expand ${index} height=${Math.round(rect.height)}`,
+            });
+          }
+        });
+      }
 
       const densityControl = document.querySelector("[data-screener-density-control]");
       const densityButtons = densityControl
@@ -253,6 +256,18 @@ async function collectRouteChecks(page, route) {
         : [];
       if (densityButtons.length !== 3) {
         failures.push({ check: "screener-density-control", detail: `buttons=${densityButtons.length}` });
+      }
+
+      if (viewportWidth >= 768) {
+        const viewModeControl = document.querySelector("[data-screener-view-mode-control]");
+        const viewModeButtons = viewModeControl
+          ? Array.from(viewModeControl.querySelectorAll("[data-screener-view-mode-option]"))
+            .filter((node) => node.getBoundingClientRect().width > 0)
+          : [];
+        const actualModes = viewModeButtons.map((node) => node.getAttribute("data-screener-view-mode-option"));
+        if (viewModeButtons.length !== 2 || actualModes[0] !== "table" || actualModes[1] !== "card") {
+          failures.push({ check: "screener-view-mode-control", detail: `modes=${JSON.stringify(actualModes)}` });
+        }
       }
     }
 
@@ -702,7 +717,17 @@ async function collectRouteChecks(page, route) {
 }
 
 async function collectScreenerExpandedChecks(page, route) {
-  const button = page.locator('[aria-controls^="screener-mobile-detail"]').first();
+  const viewport = page.viewportSize();
+  if (viewport && viewport.width >= 768) {
+    return {
+      route,
+      viewportWidth: viewport.width,
+      scrollWidth: null,
+      failures: [],
+    };
+  }
+
+  const button = page.locator('[aria-controls^="screener-mobile-detail"]:visible').first();
   if ((await button.count()) === 0) {
     return {
       route,
@@ -730,6 +755,82 @@ async function collectScreenerExpandedChecks(page, route) {
     if (scrollWidth > viewportWidth + 1) {
       failures.push({
         check: "screener-expanded-no-horizontal-overflow",
+        detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+      });
+    }
+
+    return {
+      route: currentRoute,
+      viewportWidth,
+      scrollWidth,
+      failures,
+    };
+  }, route);
+}
+
+async function collectScreenerCardViewChecks(page, route) {
+  const viewport = page.viewportSize();
+  if (!viewport || viewport.width < 768) {
+    return {
+      route,
+      viewportWidth: viewport?.width ?? null,
+      scrollWidth: null,
+      failures: [],
+    };
+  }
+
+  const cardButton = page.locator('[data-screener-view-mode-option="card"]:visible').first();
+  if ((await cardButton.count()) === 0) {
+    return {
+      route,
+      viewportWidth: viewport.width,
+      scrollWidth: null,
+      failures: [{ check: "screener-card-view-button", detail: "no visible card view button" }],
+    };
+  }
+
+  await cardButton.click({ timeout: 10000 });
+  await page.waitForTimeout(500);
+
+  const expandButton = page.locator('[data-screener-card-grid] [aria-controls^="screener-card-detail"]:visible').first();
+  if ((await expandButton.count()) > 0) {
+    await expandButton.click({ timeout: 10000 });
+    await page.waitForTimeout(300);
+  }
+
+  return page.evaluate((currentRoute) => {
+    const failures = [];
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    const grid = document.querySelector("[data-screener-card-grid]");
+    const visibleCards = grid
+      ? Array.from(grid.querySelectorAll("[data-screener-desktop-stock-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        })
+      : [];
+    const activeCardButton = document.querySelector('[data-screener-view-mode-option="card"][aria-pressed="true"]');
+    const detail = document.querySelector('[id^="screener-card-detail"]');
+
+    if (!grid || grid.getBoundingClientRect().height <= 0) {
+      failures.push({ check: "screener-card-view-grid-visible", detail: "card grid is not visible" });
+    }
+    if (!activeCardButton) {
+      failures.push({ check: "screener-card-view-active", detail: "card view button is not pressed" });
+    }
+    if (visibleCards.length === 0) {
+      failures.push({ check: "screener-card-view-visible-cards", detail: "no visible stock cards after card view click" });
+    }
+    if (visibleCards.length > 0 && (!detail || detail.getBoundingClientRect().height <= 0)) {
+      failures.push({ check: "screener-card-view-expanded-detail", detail: "expanded desktop card detail is not visible" });
+    }
+    if (scrollWidth > viewportWidth + 1) {
+      failures.push({
+        check: "screener-card-view-no-horizontal-overflow",
         detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
       });
     }
@@ -971,6 +1072,9 @@ try {
           const expandedChecks = await collectScreenerExpandedChecks(page, route);
           result.failures.push(...expandedChecks.failures);
           result.expandedScrollWidth = expandedChecks.scrollWidth;
+          const cardViewChecks = await collectScreenerCardViewChecks(page, route);
+          result.failures.push(...cardViewChecks.failures);
+          result.cardViewScrollWidth = cardViewChecks.scrollWidth;
         }
         if (route.startsWith("/stock/") && route.includes("tab=financials")) {
           const financialChartChecks = await collectStockFinancialChartChecks(page, route);

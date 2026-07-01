@@ -40,6 +40,14 @@ import {
 
 const PAGE_SIZE = 50;
 type ScreenerDensity = "compact" | "standard" | "comfortable";
+type ScreenerViewMode = "table" | "card";
+
+const VIEW_MODE_LABEL: Record<ScreenerViewMode, string> = {
+  table: "테이블",
+  card: "카드",
+};
+
+const VIEW_MODE_BUTTONS: ScreenerViewMode[] = ["table", "card"];
 
 const DENSITY_LABEL: Record<ScreenerDensity, string> = {
   compact: "콤팩트",
@@ -951,7 +959,7 @@ function MobileStockCard({
   const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
   const metrics = mobileMetricKeys(preset);
   return (
-    <article className="overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
+    <article data-screener-stock-card className="overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
         <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
           <input
@@ -1022,6 +1030,104 @@ function MobileStockCard({
         ))}
       </div>
       {preset === "estimate" ? <MobileEstimateTrendSections stock={stock} compact /> : null}
+      {expanded ? (
+        <div id={detailId} className="border-t border-[var(--c-line-2)]">
+          <StockDetailPanel ticker={stock.ticker} stock={stock} />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function DesktopStockCard({
+  stock,
+  expanded,
+  detailId,
+  preset,
+  selected,
+  onToggle,
+  onSelectedChange,
+}: {
+  stock: ScreenerStock;
+  expanded: boolean;
+  detailId: string;
+  preset: ColumnPreset;
+  selected: boolean;
+  onToggle: () => void;
+  onSelectedChange: () => void;
+}) {
+  const lowEvidence = stock.lowEvidence === true;
+  const confidence = confidenceText(stock.confidenceLabel);
+  const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
+  const actionTitle = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
+  const metrics = mobileMetricKeys(preset).slice(0, 6);
+  return (
+    <article data-screener-stock-card data-screener-desktop-stock-card className="overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--c-line-2)] px-4 py-3">
+        <label className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onSelectedChange}
+            className="h-5 min-h-5 w-5 min-w-5 accent-[var(--c-ink)]"
+          />
+          선택
+        </label>
+        <TransitionLink
+          href={ROUTES.stock(stock.ticker)}
+          className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-3 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
+        >
+          상세
+        </TransitionLink>
+      </div>
+      <div className="flex min-w-0 items-start gap-3 px-4 py-4">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={detailId}
+          aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+          onClick={onToggle}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--c-surface-2)] text-sm font-black text-[var(--c-ink-2)] transition focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+        >
+          {expanded ? "-" : "+"}
+        </button>
+        <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
+          <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="orbitron text-lg font-black text-slate-950">{stock.ticker}</span>
+            <GuruHolderBadge stock={stock} compact />
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
+              {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
+            </span>
+            <span
+              className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}
+              title={actionTitle}
+            >
+              {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
+            </span>
+          </span>
+          <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
+          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
+            {stock.sector || "섹터 미정"}
+            {stock.connection ? " · 연결 데이터 있음" : ""}
+          </span>
+        </button>
+        <button type="button" onClick={onToggle} className="shrink-0 text-right">
+          <span className="orbitron block text-base font-black tabular-nums text-slate-950">
+            {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
+          </span>
+          <span className="orbitron mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+            {fmtMarketCap(stock.marketCap)}
+          </span>
+          <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+            {fmtSignedPct(stock.return12m)}
+          </span>
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 border-t border-[var(--c-line-2)] px-4 py-3 lg:grid-cols-3">
+        {metrics.map((metricKey) => (
+          <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
+        ))}
+      </div>
       {expanded ? (
         <div id={detailId} className="border-t border-[var(--c-line-2)]">
           <StockDetailPanel ticker={stock.ticker} stock={stock} />
@@ -1181,6 +1287,7 @@ export default function ScreenerClient({
 
   const initialColumnPreset = coerceColumnPreset(initialPreset);
   const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? initialFilterValues.preset ?? "basic");
+  const [viewMode, setViewMode] = useState<ScreenerViewMode>("table");
   const [density, setDensity] = useState<ScreenerDensity>("standard");
 
   useEffect(() => {
@@ -1202,6 +1309,15 @@ export default function ScreenerClient({
     const saved = localStorage.getItem("screener-density");
     if (saved === "compact" || saved === "standard" || saved === "comfortable") {
       const frame = window.requestAnimationFrame(() => setDensity(saved));
+      return () => window.cancelAnimationFrame(frame);
+    }
+    return undefined;
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("screener-view-mode");
+    if (saved === "table" || saved === "card") {
+      const frame = window.requestAnimationFrame(() => setViewMode(saved));
       return () => window.cancelAnimationFrame(frame);
     }
     return undefined;
@@ -1243,6 +1359,11 @@ export default function ScreenerClient({
   function handleDensityChange(next: ScreenerDensity) {
     setDensity(next);
     localStorage.setItem("screener-density", next);
+  }
+
+  function handleViewModeChange(next: ScreenerViewMode) {
+    setViewMode(next);
+    localStorage.setItem("screener-view-mode", next);
   }
 
   // Sync filter state to URL for deep-link round-trips.
@@ -2437,7 +2558,7 @@ export default function ScreenerClient({
       {/* Preset selector */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">뷰</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">컬럼</span>
           {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
             <button
               key={p}
@@ -2455,24 +2576,46 @@ export default function ScreenerClient({
             </button>
           ))}
         </div>
-        <div data-screener-density-control className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">밀도</span>
-          {DENSITY_BUTTONS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => handleDensityChange(item)}
-              aria-pressed={density === item}
-              className={cx(
-                "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-                density === item
-                  ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
-                  : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-              )}
-            >
-              {DENSITY_LABEL[item]}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div data-screener-view-mode-control className="hidden flex-wrap items-center gap-2 md:flex">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">표시</span>
+            {VIEW_MODE_BUTTONS.map((item) => (
+              <button
+                key={item}
+                type="button"
+                data-screener-view-mode-option={item}
+                onClick={() => handleViewModeChange(item)}
+                aria-pressed={viewMode === item}
+                className={cx(
+                  "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                  viewMode === item
+                    ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
+                    : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+                )}
+              >
+                {VIEW_MODE_LABEL[item]}
+              </button>
+            ))}
+          </div>
+          <div data-screener-density-control className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">밀도</span>
+            {DENSITY_BUTTONS.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => handleDensityChange(item)}
+                aria-pressed={density === item}
+                className={cx(
+                  "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                  density === item
+                    ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
+                    : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+                )}
+              >
+                {DENSITY_LABEL[item]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -2503,121 +2646,147 @@ export default function ScreenerClient({
         </div>
 
         <div className="hidden md:block">
-          <div
-            className={cx("-mx-1 overflow-auto px-1", densityClass.scroller)}
-            data-screener-density={density}
-          >
-            <table className={cx("w-full min-w-[760px]", densityClass.table)}>
-              <thead>
-                <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
-                  <th className={cx("w-12 text-left", densityClass.headerCell)}>
-                    <input
-                      type="checkbox"
-                      checked={allPageSelected}
-                      onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
-                      aria-label="현재 페이지 종목 선택"
-                      className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-                    />
-                  </th>
-                  {activeColumns.map((column) => {
-                    const active = column.key === sortKey;
+          {viewMode === "card" ? (
+            <div data-screener-card-grid className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+              {pageRows.map((stock) => {
+                const expanded = expandedTicker === stock.ticker;
+                const detailId = `screener-card-detail-${stock.ticker}`;
+                return (
+                  <DesktopStockCard
+                    key={stock.ticker}
+                    stock={stock}
+                    expanded={expanded}
+                    detailId={detailId}
+                    preset={preset}
+                    selected={selectedTickers.has(stock.ticker)}
+                    onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
+                    onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
+                  />
+                );
+              })}
+              {dataReady && pageRows.length === 0 ? (
+                <div className="col-span-full px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
+                  조건에 맞는 종목이 없습니다.
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div
+              className={cx("-mx-1 overflow-auto px-1", densityClass.scroller)}
+              data-screener-density={density}
+            >
+              <table className={cx("w-full min-w-[760px]", densityClass.table)}>
+                <thead>
+                  <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+                    <th className={cx("w-12 text-left", densityClass.headerCell)}>
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        onChange={(event) => (event.target.checked ? selectPageRows() : deselectPageRows())}
+                        aria-label="현재 페이지 종목 선택"
+                        className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+                      />
+                    </th>
+                    {activeColumns.map((column) => {
+                      const active = column.key === sortKey;
+                      return (
+                        <th
+                          key={column.key}
+                          aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+                          className={cx(densityClass.headerCell, column.align === "right" ? "text-right" : "text-left")}
+                        >
+                          <div className={cx("inline-flex items-center gap-1", column.align === "right" && "justify-end")}>
+                            <button
+                              type="button"
+                              onClick={() => toggleSort(column.key)}
+                              aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
+                              className={cx(
+                                "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
+                                column.align === "right" && "flex-row-reverse",
+                              )}
+                            >
+                              {column.label}
+                              <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                            </button>
+                            <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageRows.map((stock) => {
+                    const expanded = expandedTicker === stock.ticker;
+                    const detailId = `screener-detail-${stock.ticker}`;
                     return (
-                      <th
-                        key={column.key}
-                        aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
-                        className={cx(densityClass.headerCell, column.align === "right" ? "text-right" : "text-left")}
-                      >
-                        <div className={cx("inline-flex items-center gap-1", column.align === "right" && "justify-end")}>
-                          <button
-                            type="button"
-                            onClick={() => toggleSort(column.key)}
-                            aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
-                            className={cx(
-                              "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
-                              column.align === "right" && "flex-row-reverse",
-                            )}
-                          >
-                            {column.label}
-                            <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
-                          </button>
-                          <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
-                        </div>
-                      </th>
+                      <Fragment key={stock.ticker}>
+                        <tr
+                          data-testid="screener-desktop-row"
+                          data-ticker={stock.ticker}
+                          onClick={() =>
+                            setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
+                          }
+                          className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
+                        >
+                          <td className={densityClass.bodyCell}>
+                            <input
+                              type="checkbox"
+                              checked={selectedTickers.has(stock.ticker)}
+                              onChange={() => toggleSelectedTicker(stock.ticker)}
+                              onClick={(event) => event.stopPropagation()}
+                              aria-label={`${stock.ticker} 선택`}
+                              className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+                            />
+                          </td>
+                          {activeColumns.map((column) => (
+                            <td
+                              key={column.key}
+                              className={cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left")}
+                            >
+                              {column.key === "ticker" ? (
+                                <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
+                                  <button
+                                    type="button"
+                                    aria-expanded={expanded}
+                                    aria-controls={detailId}
+                                    aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                                  >
+                                    <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                                    <span className="truncate">{stock.ticker}</span>
+                                  </button>
+                                  <GuruHolderBadge stock={stock} compact />
+                                </div>
+                              ) : renderCell(stock, column.key, preset)}
+                            </td>
+                          ))}
+                        </tr>
+                        {expanded ? (
+                          <tr id={detailId} data-testid="screener-desktop-detail-row" data-ticker={stock.ticker}>
+                            <td colSpan={activeColumns.length + 1} className="p-0">
+                              <StockDetailPanel ticker={stock.ticker} stock={stock} />
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
                     );
                   })}
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((stock) => {
-                  const expanded = expandedTicker === stock.ticker;
-                  const detailId = `screener-detail-${stock.ticker}`;
-                  return (
-                    <Fragment key={stock.ticker}>
-                      <tr
-                        data-testid="screener-desktop-row"
-                        data-ticker={stock.ticker}
-                        onClick={() =>
-                          setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
-                        }
-                        className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
-                      >
-                        <td className={densityClass.bodyCell}>
-                          <input
-                            type="checkbox"
-                            checked={selectedTickers.has(stock.ticker)}
-                            onChange={() => toggleSelectedTicker(stock.ticker)}
-                            onClick={(event) => event.stopPropagation()}
-                            aria-label={`${stock.ticker} 선택`}
-                            className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-                          />
-                        </td>
-                        {activeColumns.map((column) => (
-                          <td
-                            key={column.key}
-                            className={cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left")}
-                          >
-	                            {column.key === "ticker" ? (
-	                              <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
-	                                <button
-	                                  type="button"
-	                                  aria-expanded={expanded}
-	                                  aria-controls={detailId}
-	                                  aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-	                                  onClick={(event) => {
-	                                    event.stopPropagation();
-	                                    setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
-	                                  }}
-	                                  className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-	                                >
-	                                  <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
-	                                  <span className="truncate">{stock.ticker}</span>
-	                                </button>
-                              <GuruHolderBadge stock={stock} compact />
-                            </div>
-                          ) : renderCell(stock, column.key, preset)}
-                        </td>
-                      ))}
+                  {dataReady && pageRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={activeColumns.length + 1} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
+                        조건에 맞는 종목이 없습니다.
+                      </td>
                     </tr>
-                    {expanded ? (
-                      <tr id={detailId} data-testid="screener-desktop-detail-row" data-ticker={stock.ticker}>
-                        <td colSpan={activeColumns.length + 1} className="p-0">
-                          <StockDetailPanel ticker={stock.ticker} stock={stock} />
-                        </td>
-                      </tr>
-                    ) : null}
-                  </Fragment>
-                  );
-                })}
-                {dataReady && pageRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={activeColumns.length + 1} className="px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-                      조건에 맞는 종목이 없습니다.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Pagination */}
