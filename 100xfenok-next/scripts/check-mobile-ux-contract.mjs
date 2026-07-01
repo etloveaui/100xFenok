@@ -407,6 +407,39 @@ async function collectRouteChecks(page, route) {
             detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
           });
         }
+        if (summaryScore) {
+          const axisLinks = Array.from(document.querySelectorAll("[data-stock-summary-axis-link]"))
+            .filter((node) => {
+              const rect = node.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+          const expectedAxes = [
+            ["밸류에이션", "statistics"],
+            ["미래 성장", "estimates"],
+            ["과거 실적", "financials"],
+            ["재무 건전성", "financials"],
+            ["배당", "financials"],
+          ];
+          const actualAxes = axisLinks.map((node) => [
+            node.getAttribute("data-stock-summary-axis"),
+            node.getAttribute("data-stock-summary-axis-tab"),
+          ]);
+          if (
+            axisLinks.length !== expectedAxes.length ||
+            !expectedAxes.every((axis, index) => actualAxes[index]?.[0] === axis[0] && actualAxes[index]?.[1] === axis[1])
+          ) {
+            failures.push({
+              check: "stock-summary-axis-link-order",
+              detail: `actual=${JSON.stringify(actualAxes)} expected=${JSON.stringify(expectedAxes)}`,
+            });
+          }
+          axisLinks.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "stock-summary-axis-touch-target", detail: `axis ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+        }
         if (valuationBand) {
           const valuationTrack = valuationBand.rect.height > 0
             ? document.querySelector("[data-stock-valuation-band-track]")
@@ -739,6 +772,56 @@ async function collectStockEstimatesToggleChecks(page, route) {
   }, route);
 }
 
+async function collectStockSummaryAxisClickChecks(page, route) {
+  const button = page.locator('[data-stock-summary-axis-tab="estimates"]').first();
+  if ((await button.count()) === 0) {
+    return {
+      route,
+      viewportWidth: null,
+      scrollWidth: null,
+      failures: [{ check: "stock-summary-axis-click-target", detail: "no estimates axis link" }],
+    };
+  }
+
+  await button.click({ timeout: 10000 });
+  await page.waitForTimeout(300);
+
+  return page.evaluate((currentRoute) => {
+    const failures = [];
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    const estimatesPanel = document.querySelector("[data-stock-estimates-consensus-summary]");
+    const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
+    const params = new URLSearchParams(window.location.search);
+
+    if (!estimatesPanel || estimatesPanel.getBoundingClientRect().height <= 0) {
+      failures.push({ check: "stock-summary-axis-estimates-panel-visible", detail: "estimates panel not visible after axis click" });
+    }
+    if (params.get("tab") !== "estimates") {
+      failures.push({ check: "stock-summary-axis-url-sync", detail: `tab=${params.get("tab") || "missing"}` });
+    }
+    if (!selectedTab || !(selectedTab.textContent || "").includes("추정치")) {
+      failures.push({ check: "stock-summary-axis-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
+    }
+    if (scrollWidth > viewportWidth + 1) {
+      failures.push({
+        check: "stock-summary-axis-no-horizontal-overflow",
+        detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+      });
+    }
+
+    return {
+      route: currentRoute,
+      viewportWidth,
+      scrollWidth,
+      failures,
+    };
+  }, route);
+}
+
 async function collectSectorViewSwitchChecks(page, route) {
   const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
   const failures = [];
@@ -839,6 +922,11 @@ try {
           const estimatesToggleChecks = await collectStockEstimatesToggleChecks(page, route);
           result.failures.push(...estimatesToggleChecks.failures);
           result.estimatesToggleScrollWidth = estimatesToggleChecks.scrollWidth;
+        }
+        if (route.startsWith("/stock/") && !route.includes("tab=")) {
+          const summaryAxisChecks = await collectStockSummaryAxisClickChecks(page, route);
+          result.failures.push(...summaryAxisChecks.failures);
+          result.summaryAxisScrollWidth = summaryAxisChecks.scrollWidth;
         }
         if (route.startsWith("/sectors")) {
           const sectorViewChecks = await collectSectorViewSwitchChecks(page, route);

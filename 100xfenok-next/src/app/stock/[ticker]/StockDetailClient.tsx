@@ -1854,6 +1854,7 @@ export default function StockDetailClient({
                   data={yfData}
                   perBand={rowPerBand}
                   industry={industryBench}
+                  onAreaSelect={selectStockTab}
                 />
               </div>
             ) : null}

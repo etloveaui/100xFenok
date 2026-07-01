@@ -708,6 +708,15 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
 
 interface ScoreCheck { label: string; pass: boolean }
 interface AreaScore { area: string; score: number; total: number; checks: ScoreCheck[] }
+export type SummaryScoreTabTarget = "statistics" | "estimates" | "financials" | "ownership";
+
+const SUMMARY_SCORE_AREA_TARGETS: Record<string, { tab: SummaryScoreTabTarget; label: string; description: string }> = {
+  "밸류에이션": { tab: "statistics", label: "밸류", description: "PER 밴드·비교" },
+  "미래 성장": { tab: "estimates", label: "추정치", description: "FY+1 전망" },
+  "과거 실적": { tab: "financials", label: "재무", description: "8Y 추이" },
+  "재무 건전성": { tab: "financials", label: "재무", description: "현금·부채" },
+  "배당": { tab: "financials", label: "재무", description: "배당 이력" },
+};
 
 function pushCheck(checks: ScoreCheck[], label: string, pass: boolean | null) {
   if (pass === null) return; // data missing -> check excluded from total
@@ -806,10 +815,11 @@ function scoreColor(ratio: number): string {
   return "var(--c-down)";
 }
 
-export function SummaryScoreCard({ data, perBand, industry }: {
+export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
   data: YfData;
   perBand: { current: number; min: number; max: number } | null;
   industry?: IndustryBench | null;
+  onAreaSelect?: (tab: SummaryScoreTabTarget) => void;
 }) {
   const [open, setOpen] = useState(false);
   const areas = computeSummaryScores(data, perBand, industry);
@@ -839,16 +849,27 @@ export function SummaryScoreCard({ data, perBand, industry }: {
       <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
         {areas.map((a) => {
           const r = a.total > 0 ? a.score / a.total : 0;
+          const target = SUMMARY_SCORE_AREA_TARGETS[a.area];
           return (
-            <div key={a.area}>
-              <div className="flex items-baseline justify-between">
+            <button
+              key={a.area}
+              type="button"
+              data-stock-summary-axis-link
+              data-stock-summary-axis={a.area}
+              data-stock-summary-axis-tab={target?.tab ?? ""}
+              onClick={() => target ? onAreaSelect?.(target.tab) : undefined}
+              className="min-h-11 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-left transition hover:border-brand-interactive hover:bg-white"
+              aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
+            >
+              <div className="flex items-baseline justify-between gap-2">
                 <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
                 <span className="orbitron tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
               </div>
               <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
                 <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
               </div>
-            </div>
+              {target ? <span className="mt-1 block text-[9px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
+            </button>
           );
         })}
       </div>
