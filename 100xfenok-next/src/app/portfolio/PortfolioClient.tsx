@@ -117,6 +117,13 @@ function newId(): string {
   return `p-${Date.now()}-${++idCounter}`;
 }
 
+const PORTFOLIO_LOCAL_BOUNDARY_ITEMS = [
+  { key: "storage", label: "저장", value: "브라우저" },
+  { key: "sync", label: "동기화", value: "서버 전송 없음" },
+  { key: "backup", label: "백업", value: "JSON" },
+  { key: "connection", label: "연결", value: "CSV" },
+] as const;
+
 export default function PortfolioClient({ initialTicker = "" }: { initialTicker?: string }) {
   const portfolios = usePortfolios();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -438,6 +445,8 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           </div>
         </section>
 
+        <PortfolioLocalBoundaryStrip />
+
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
@@ -512,6 +521,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             type="button"
             onClick={handleConnectionExport}
             disabled={holdingRows.length === 0}
+            data-portfolio-connection-csv-action
             className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 sm:min-h-8"
           >
             연결 CSV
@@ -527,6 +537,8 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           </span>
         </div>
       )}
+
+      <PortfolioLocalBoundaryStrip />
 
       <DataStateNotice state={priceState} />
 
@@ -672,11 +684,15 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
 
       {/* Import / Export */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+        <div data-portfolio-export-section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-black tracking-tight text-slate-900">백업 내보내기</h2>
+          <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+            현재 선택한 포트폴리오만 JSON 파일로 저장합니다.
+          </p>
           <button
             type="button"
             onClick={handleExport}
+            data-portfolio-export-json-action
             className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             내보내기
@@ -689,8 +705,11 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             />
           )}
         </div>
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+        <div data-portfolio-import-section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-black tracking-tight text-slate-900">백업 가져오기</h2>
+          <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+            붙여넣은 JSON은 새 포트폴리오로 추가됩니다.
+          </p>
           <textarea
             value={importText}
             onChange={(e) => {
@@ -698,6 +717,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
               setImportError(null);
             }}
             placeholder="백업 내용을 붙여넣으세요"
+            data-portfolio-import-json-input
             className="mt-2 h-32 w-full rounded-xl border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 outline-none focus:border-brand-interactive"
           />
           {importError && <p className="mt-1 text-[10px] font-bold text-rose-600">{importError}</p>}
@@ -705,6 +725,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             type="button"
             onClick={handleImport}
             disabled={!importText.trim()}
+            data-portfolio-import-json-action
             className="mt-2 inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 disabled:opacity-40 sm:min-h-8"
           >
             가져오기
@@ -735,6 +756,37 @@ function Kpi({
         {value}
       </p>
     </div>
+  );
+}
+
+function PortfolioLocalBoundaryStrip() {
+  return (
+    <section
+      data-portfolio-local-boundary
+      className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 p-4"
+      aria-label="포트폴리오 저장 경계"
+    >
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">개인 데이터 경계</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-emerald-900">
+            입력한 포트폴리오는 이 브라우저에만 남고, 백업은 사용자가 직접 내보낸 파일로만 이동합니다.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {PORTFOLIO_LOCAL_BOUNDARY_ITEMS.map((item) => (
+            <div
+              key={item.key}
+              data-portfolio-boundary-item={item.key}
+              className="rounded-xl border border-emerald-200 bg-white px-3 py-2"
+            >
+              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-emerald-600">{item.label}</p>
+              <p className="mt-0.5 text-[11px] font-black text-emerald-950">{item.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -1214,7 +1266,7 @@ function HoldingsTable({
 
 function Disclaimer() {
   return (
-    <p className="text-[10px] font-semibold text-slate-600">
+    <p data-portfolio-local-disclaimer className="text-[10px] font-semibold text-slate-600">
       이 브라우저에만 저장 · 서버 전송 없음 · 시세를 확인하지 못한 종목은 평가액에서 제외
     </p>
   );
