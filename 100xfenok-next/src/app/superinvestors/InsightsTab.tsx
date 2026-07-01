@@ -351,7 +351,7 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
             data-superinvestor-accumulation-investors={row.investors_count}
             data-superinvestor-accumulation-link
             className="block min-h-[44px] min-w-0 rounded-xl border border-emerald-200 px-3 py-3 transition hover:border-emerald-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-            style={{ backgroundColor: `color-mix(in srgb, var(--c-up) ${heat}%, white)` }}
+            style={{ backgroundColor: `color-mix(in srgb, var(--c-up) ${heat}%, var(--c-panel))` }}
           >
             <div className="flex min-w-0 items-start justify-between gap-2">
               <TickerChip ticker={row.ticker} variant="inline" />
