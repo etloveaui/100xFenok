@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "@/components/shell/AppShell";
 import TickerChip from "@/components/TickerChip";
+import TickerTypeahead from "@/components/TickerTypeahead";
 import TransitionLink from "@/components/TransitionLink";
 import ConnectedView from "@/components/connected/ConnectedView";
 import LeadStoryCard from "@/components/connected/LeadStoryCard";
@@ -72,6 +73,13 @@ type EntityGraphSummary = {
 };
 
 type ConnectionTileId = "smart-money" | "etf-exposure" | "sector-leaders" | "recent-filings";
+
+const HOME_PRO_TILES = [
+  { label: "스크리너", href: ROUTES.screener, meta: "조건 검색" },
+  { label: "13F", href: ROUTES.superinvestors, meta: "투자 대가" },
+  { label: "섹터", href: ROUTES.sectors, meta: "모멘텀" },
+  { label: "밸류", href: ROUTES.market, meta: "지수 밴드" },
+] as const;
 
 type ConnectionCandidate = {
   ticker: string;
@@ -231,6 +239,41 @@ function V5MarketNow({ dashboard, dataReady, failedSources }: {
             </span>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function V5SearchFirst() {
+  return (
+    <section
+      data-home-search-first
+      className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4"
+    >
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">100xFenok PRO</p>
+          <div className="mt-2 rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 py-3 transition focus-within:border-brand-interactive focus-within:bg-white focus-within:shadow-[var(--sh-focus)]">
+            <TickerTypeahead
+              placeholder="티커, 기업명, 투자자 검색"
+              className="min-h-9 w-full min-w-0 bg-transparent text-[15px] font-semibold text-[var(--c-ink)] outline-none placeholder:text-[var(--c-ink-3)]"
+              formClass="flex w-full items-center"
+            />
+          </div>
+        </div>
+        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[420px]" aria-label="홈 핵심 화면">
+          {HOME_PRO_TILES.map((tile) => (
+            <TransitionLink
+              key={tile.href}
+              href={tile.href}
+              data-home-feature-tile
+              className="min-h-14 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 transition hover:border-brand-interactive hover:bg-white"
+            >
+              <span className="block text-sm font-black text-[var(--c-ink)]">{tile.label}</span>
+              <span className="mt-0.5 block text-[10px] font-semibold text-[var(--c-ink-3)]">{tile.meta}</span>
+            </TransitionLink>
+          ))}
+        </nav>
       </div>
     </section>
   );
@@ -854,6 +897,7 @@ export default function HomeV5Client() {
     <div className="fnk-shell v5-home">
       <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
         <div className="v5-stack">
+          <V5SearchFirst />
           <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />
           <V5MarketPulse dashboard={dashboard} />
