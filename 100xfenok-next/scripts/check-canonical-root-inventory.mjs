@@ -51,6 +51,14 @@ const OLD_URL_PATTERNS = [
   { id: "generic_workers_dev", pattern: /workers\.dev/i },
 ];
 
+const PRO_SCREEN_MODEL_SOURCE_REFS = [
+  "docs/design-handoff/100x-ux-redesign/04-deep-research-2026-standards.md:13",
+  "docs/design-handoff/100x-ux-redesign/04-deep-research-2026-standards.md:115",
+  "docs/planning/PLAN_100x_integrated_service_completion_20260630.md:249",
+  "docs/planning/PLAN_100x_integrated_service_completion_20260630.md:254",
+  "docs/planning/PLAN_100x_integrated_service_completion_20260630.md:563",
+];
+
 const TRIAGED_OLD_URL_OWNER_POLICY_BY_FILE = new Map([
   [
     "100xfenok-next/scripts/check-macro-chart-contract.mjs",
@@ -605,6 +613,51 @@ function routeResolutionFor(route, appRouteSet) {
   return "missing";
 }
 
+function proScreenModelAcceptanceForFamily(family) {
+  const mutationBlocked = ["delete", "redirect", "deploy"].every((action) => family.blocked_actions.includes(action));
+  const dedicatedRouteOwner = family.owner_route_required
+    ? family.owner_route_resolution !== "missing"
+    : family.owner_area === "system_fallback";
+  const secondaryWorkbenchOnly = family.owner_route === "/workbench"
+    ? "Workbench-owned legacy content stays a secondary gateway concern, never the Home entry model."
+    : "Non-Workbench legacy content must not be routed through Workbench as a cleanup shortcut.";
+  const macroChartPolicy = family.owner_route === "/macro-chart" || family.compatibility_route === "/macro-chart"
+    ? "Macro/chart legacy content remains under the native macro-chart owner; Chart stays outside mobile primary tabs."
+    : null;
+
+  return {
+    schema_version: "pro-screen-model-acceptance/v0.1",
+    acceptance_ready: Boolean(family.owner_area && family.pro_route_ia_acceptance && mutationBlocked && dedicatedRouteOwner),
+    source_refs: PRO_SCREEN_MODEL_SOURCE_REFS,
+    owner_family: family.id,
+    owner_area: family.owner_area,
+    owner_route: family.owner_route,
+    owner_route_resolution: family.owner_route_resolution,
+    compatibility_route: family.compatibility_route,
+    pro_route_ia_acceptance: family.pro_route_ia_acceptance,
+    screen_model_contract: [
+      "Home remains the search-first entry surface; legacy HTML cannot become the above-fold primary model.",
+      "Depth owners stay dedicated routes: Market, Sectors, ETF, Screener, Portfolio, Stock, Filings, Admin, or the explicit owner route.",
+      "Workbench remains a secondary dashboard/gateway; it is not a cleanup catch-all for unrelated legacy pages.",
+      "Mobile primary IA remains Home / Market / Screener / Portfolio / More; legacy HTML cannot create a new primary tab.",
+      "Dense legacy/detail content may remain behind owner routes only after local equivalence proof and owner decision.",
+    ],
+    owner_packet_required_checks: [
+      "owner-route equivalence packet is ready",
+      "packet local QA/smoke commands pass",
+      "PRO screen-model contract above is accepted by the owner",
+      "owner records preserve, remap, or retire before any redirect/delete/deploy",
+    ],
+    home_primary_allowed: false,
+    mobile_primary_allowed: false,
+    mutation_blocked_without_owner_decision: mutationBlocked,
+    dedicated_route_owner_required: family.owner_route_required,
+    dedicated_route_owner_present: dedicatedRouteOwner,
+    secondary_workbench_policy: secondaryWorkbenchOnly,
+    macro_chart_policy: macroChartPolicy,
+  };
+}
+
 function ownerRouteEquivalencePacketForFamily(family) {
   const localSmokePaths = [
     family.owner_route,
@@ -628,6 +681,7 @@ function ownerRouteEquivalencePacketForFamily(family) {
     blocked_actions: ["delete", "redirect", "deploy"],
     owner_decision_required_before_mutation: true,
     pro_route_ia_acceptance: family.pro_route_ia_acceptance,
+    pro_screen_model_acceptance: proScreenModelAcceptanceForFamily(family),
     local_smoke_paths: localSmokePaths,
     legacy_sample_paths: family.sample_public_paths.slice(0, 3),
     pre_approval_local_commands: [
@@ -693,9 +747,11 @@ function highRiskOwnerReviewQueue(families) {
         recommended_slice: "run the packet's local commands, compare the owner route against PRO IA intent, then ask owner to preserve, remap, or retire",
         legacy_bridge_smoke_paths: legacyBridgeSmokePaths,
         legacy_bridge_local_commands: legacyBridgeSmokePaths.map((smokePath) => localSmokeCommand(smokePath)),
+        pro_screen_model_acceptance: family.owner_route_equivalence_packet.pro_screen_model_acceptance,
         acceptance_checks: [
           "owner_route_equivalence_packet.packet_ready is true",
           "packet local QA/smoke commands pass",
+          "PRO screen-model acceptance is structured and ready",
           "legacy bridge smoke commands pass where provided",
           "legacy content stays behind the owner route and out of Home/mobile primary IA",
           "owner decision is explicit before redirect/delete/deploy",
@@ -786,6 +842,10 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     .filter((family) => !family.owner_route_equivalence_packet_ready)
     .map((family) => family.id)
     .sort();
+  const proScreenModelNotReadyFamilies = families
+    .filter((family) => !family.owner_route_equivalence_packet.pro_screen_model_acceptance?.acceptance_ready)
+    .map((family) => family.id)
+    .sort();
   const ownerReviewQueue = highRiskOwnerReviewQueue(families);
   const ownerReviewBridgeSmokePathCount = ownerReviewQueue.reduce((sum, item) => sum + item.legacy_bridge_smoke_paths.length, 0);
 
@@ -795,12 +855,15 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     owner_family_count: families.length,
     owner_route_equivalence_packet_ready_count: families.filter((family) => family.owner_route_equivalence_packet_ready).length,
     owner_route_equivalence_packet_not_ready_count: packetNotReadyFamilies.length,
+    pro_screen_model_acceptance_ready_count: families.filter((family) => family.owner_route_equivalence_packet.pro_screen_model_acceptance?.acceptance_ready).length,
+    pro_screen_model_acceptance_not_ready_count: proScreenModelNotReadyFamilies.length,
     owner_review_queue_count: ownerReviewQueue.length,
     owner_review_bridge_smoke_path_count: ownerReviewBridgeSmokePathCount,
     unmapped_count: unmappedRows.length,
     missing_owner_route_count: missingOwnerRouteRows.length,
     unsafe_row_count: unsafeRows.length,
     packet_not_ready_families: packetNotReadyFamilies,
+    pro_screen_model_not_ready_families: proScreenModelNotReadyFamilies,
     unmapped_rows: unmappedRows,
     missing_owner_route_rows: missingOwnerRouteRows,
     unsafe_rows: unsafeRows,
@@ -881,11 +944,99 @@ function classifyMacroMonitorSourceEntrypoint(file) {
   return "src_reference";
 }
 
+function macroMonitorLiveEquivalencePrep(nextSlice, samplePaths, bridgeSmokePaths) {
+  const active = nextSlice?.family_id === "macro_monitor_legacy_tools";
+  if (!active) {
+    return {
+      schema_version: "macro-monitor-live-equivalence-prep/v0.1",
+      active: false,
+      matrix_ready: false,
+      proof_status: "not_active",
+      row_count: 0,
+      rows: [],
+    };
+  }
+
+  const rows = [
+    {
+      role: "native_owner_route",
+      path: nextSlice.owner_route,
+      expected_http_status: 200,
+      smoke_command: localSmokeCommand(nextSlice.owner_route),
+      proof_status: "pending_local_runtime_smoke",
+      mutation_status: "not_executed",
+    },
+    {
+      role: "compatibility_route",
+      path: nextSlice.compatibility_route,
+      expected_http_status: 200,
+      smoke_command: localSmokeCommand(nextSlice.compatibility_route),
+      proof_status: "pending_local_runtime_smoke",
+      mutation_status: "not_executed",
+    },
+  ];
+
+  samplePaths.forEach((samplePath, index) => {
+    const equivalenceGroup = `macro_monitor_sample_${index + 1}`;
+    const bridgePath = bridgeSmokePaths[index] ?? null;
+    rows.push({
+      role: "legacy_direct_sample",
+      equivalence_group: equivalenceGroup,
+      path: samplePath,
+      paired_path: bridgePath,
+      expected_http_status: 200,
+      smoke_command: localSmokeCommand(samplePath),
+      proof_status: "pending_local_runtime_smoke",
+      mutation_status: "not_executed",
+    });
+    if (!bridgePath) return;
+    rows.push({
+      role: "radar_bridge_sample",
+      equivalence_group: equivalenceGroup,
+      path: bridgePath,
+      paired_path: samplePath,
+      expected_http_status: 200,
+      smoke_command: localSmokeCommand(bridgePath),
+      proof_status: "pending_local_runtime_smoke",
+      mutation_status: "not_executed",
+    });
+  });
+
+  const requiredRowsReady = rows.every((row) => row.path && row.smoke_command && row.mutation_status === "not_executed");
+  const matrixReady = samplePaths.length > 0
+    && samplePaths.length === bridgeSmokePaths.length
+    && nextSlice.owner_route === "/macro-chart"
+    && nextSlice.compatibility_route === "/admin/macro-monitor"
+    && requiredRowsReady;
+
+  return {
+    schema_version: "macro-monitor-live-equivalence-prep/v0.1",
+    active: true,
+    matrix_ready: matrixReady,
+    proof_status: "prep_only_pending_local_runtime_smoke",
+    inventory_network: "none",
+    inventory_mutation: "none",
+    owner_route: nextSlice.owner_route,
+    compatibility_route: nextSlice.compatibility_route,
+    legacy_sample_count: samplePaths.length,
+    radar_bridge_sample_count: bridgeSmokePaths.length,
+    row_count: rows.length,
+    required_before_owner_decision: [
+      "run every local smoke command in this matrix against an approved local Next server",
+      "record owner route, compatibility route, legacy direct sample, and Radar bridge sample results",
+      "compare Home/dashboard legacy entrypoints against native /macro-chart PRO IA",
+      "keep owner decision pending until preserve, remap, or retire is explicitly recorded",
+    ],
+    rows,
+  };
+}
+
 function macroMonitorRank1ReviewEvidence(highRiskOwners, textFiles) {
   const nextSlice = highRiskOwners.next_owner_review_slice;
   const active = nextSlice?.family_id === "macro_monitor_legacy_tools";
   const samplePaths = active ? nextSlice.packet.legacy_sample_paths : [];
   const bridgeSmokePaths = active ? nextSlice.legacy_bridge_smoke_paths : [];
+  const liveEquivalencePrep = macroMonitorLiveEquivalencePrep(nextSlice, samplePaths, bridgeSmokePaths);
   const nextQueueCandidate = active
     ? highRiskOwners.owner_review_queue.find((item) => item.rank === nextSlice.rank + 1) ?? null
     : null;
@@ -936,6 +1087,8 @@ function macroMonitorRank1ReviewEvidence(highRiskOwners, textFiles) {
       "redirect/delete/deploy approval recorded explicitly if mutation is requested",
     ],
     pro_route_ia_acceptance: nextSlice?.packet?.pro_route_ia_acceptance ?? null,
+    pro_screen_model_acceptance: nextSlice?.packet?.pro_screen_model_acceptance ?? null,
+    live_equivalence_prep: liveEquivalencePrep,
     legacy_sample_paths: samplePaths,
     legacy_bridge_smoke_paths: bridgeSmokePaths,
     public_home_legacy_bridge_entrypoint_count: homeEntrypoints.length,
@@ -1207,6 +1360,9 @@ function main() {
   if (highRiskOwners.owner_route_equivalence_packet_not_ready_count > 0) {
     errors.push(`high-risk owner-route equivalence packets are not ready: ${highRiskOwners.packet_not_ready_families.join(", ")}`);
   }
+  if (highRiskOwners.pro_screen_model_acceptance_not_ready_count > 0) {
+    errors.push(`high-risk PRO screen-model acceptance packets are not ready: ${highRiskOwners.pro_screen_model_not_ready_families.join(", ")}`);
+  }
   if (highRiskOwners.owner_review_queue_count !== highRiskOwners.owner_family_count) {
     errors.push(`high-risk owner review queue must cover every owner family: queue=${highRiskOwners.owner_review_queue_count} families=${highRiskOwners.owner_family_count}`);
   }
@@ -1234,6 +1390,24 @@ function main() {
   if (macroMonitorRank1Review.active && !macroMonitorRank1Review.next_queue_candidate_after_owner_decision) {
     errors.push("macro-monitor rank-1 review must expose the next queue candidate for after owner decision");
   }
+  if (macroMonitorRank1Review.active && !macroMonitorRank1Review.pro_screen_model_acceptance?.acceptance_ready) {
+    errors.push("macro-monitor rank-1 review must expose ready PRO screen-model acceptance before owner decision");
+  }
+  if (macroMonitorRank1Review.active && macroMonitorRank1Review.pro_screen_model_acceptance?.home_primary_allowed !== false) {
+    errors.push("macro-monitor rank-1 legacy content must not be allowed as the Home primary model");
+  }
+  if (macroMonitorRank1Review.active && macroMonitorRank1Review.pro_screen_model_acceptance?.mobile_primary_allowed !== false) {
+    errors.push("macro-monitor rank-1 legacy content must not be allowed as mobile primary IA");
+  }
+  if (macroMonitorRank1Review.active && !macroMonitorRank1Review.live_equivalence_prep?.matrix_ready) {
+    errors.push("macro-monitor rank-1 live-equivalence prep matrix must be ready before owner decision");
+  }
+  if (
+    macroMonitorRank1Review.active
+    && macroMonitorRank1Review.live_equivalence_prep?.row_count !== 2 + (macroMonitorRank1Review.legacy_sample_paths.length * 2)
+  ) {
+    errors.push(`macro-monitor rank-1 live-equivalence matrix row count mismatch: rows=${macroMonitorRank1Review.live_equivalence_prep?.row_count}`);
+  }
 
   const report = {
     schema_version: "canonical-root-inventory/v0.1",
@@ -1260,11 +1434,15 @@ function main() {
       legacy_html_high_risk: legacyClassification.high_risk_count,
       legacy_html_high_risk_owner_families: highRiskOwners.owner_family_count,
       legacy_html_high_risk_owner_equivalence_packets_ready: highRiskOwners.owner_route_equivalence_packet_ready_count,
+      legacy_html_high_risk_pro_screen_model_acceptance_ready: highRiskOwners.pro_screen_model_acceptance_ready_count,
       legacy_html_high_risk_owner_review_queue: highRiskOwners.owner_review_queue_count,
       macro_monitor_rank1_legacy_bridge_smoke_paths: macroMonitorRank1Review.legacy_bridge_smoke_paths.length,
       macro_monitor_rank1_public_home_legacy_bridge_entrypoints: macroMonitorRank1Review.public_home_legacy_bridge_entrypoint_count,
       macro_monitor_rank1_src_legacy_references: macroMonitorRank1Review.src_legacy_reference_count,
       macro_monitor_rank1_owner_decision_pending: macroMonitorRank1Review.owner_decision_status === "pending_owner_decision" ? 1 : 0,
+      macro_monitor_rank1_pro_screen_model_acceptance_ready: macroMonitorRank1Review.pro_screen_model_acceptance?.acceptance_ready ? 1 : 0,
+      macro_monitor_rank1_live_equivalence_matrix_ready: macroMonitorRank1Review.live_equivalence_prep?.matrix_ready ? 1 : 0,
+      macro_monitor_rank1_live_equivalence_matrix_rows: macroMonitorRank1Review.live_equivalence_prep?.row_count ?? 0,
       legacy_html_high_risk_unmapped: highRiskOwners.unmapped_count,
       legacy_html_high_risk_owner_route_missing: highRiskOwners.missing_owner_route_count,
     },

@@ -260,6 +260,7 @@ function assertRouteIaContracts(errors) {
 
   assertSourceTokens(workbenchSource, [
     '<AppShell active="workbench"',
+    "data-workbench-route-rail",
     "data-workbench-gateway",
     "WORKBENCH_GATEWAY_LINKS",
   ], "Workbench PRO IA", errors);

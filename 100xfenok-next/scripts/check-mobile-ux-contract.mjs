@@ -137,12 +137,50 @@ async function collectRouteChecks(page, route) {
     }
 
     if (currentRoute.startsWith("/workbench")) {
+      const routeRail = document.querySelector("[data-workbench-route-rail]");
+      const routeCount = document.querySelector("[data-workbench-route-count]");
+      const routeSteps = Array.from(document.querySelectorAll("[data-workbench-route-step]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
       const gateway = document.querySelector("[data-workbench-gateway]");
       const ownerLinks = Array.from(document.querySelectorAll("[data-workbench-owner-link]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
+
+      if (!routeRail || routeRail.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "workbench-route-rail-visible", detail: "missing visible route rail" });
+      }
+
+      const ownerRouteCount = Number.parseInt(routeRail?.getAttribute("data-workbench-owner-route-count") || "", 10);
+      if (ownerRouteCount !== 7 || !(routeCount?.textContent || "").includes("7")) {
+        failures.push({
+          check: "workbench-route-owner-count",
+          detail: `attr=${routeRail?.getAttribute("data-workbench-owner-route-count") || "missing"} text=${routeCount?.textContent || ""}`,
+        });
+      }
+
+      const expectedRouteSteps = ["01", "02", "03"];
+      const actualRouteSteps = routeSteps.map((node) => node.getAttribute("data-workbench-route-step-index"));
+      if (
+        routeSteps.length !== expectedRouteSteps.length ||
+        !expectedRouteSteps.every((step, index) => actualRouteSteps[index] === step)
+      ) {
+        failures.push({
+          check: "workbench-route-step-order",
+          detail: `actual=${JSON.stringify(actualRouteSteps)} expected=${JSON.stringify(expectedRouteSteps)}`,
+        });
+      }
+
+      routeSteps.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "workbench-route-step-target", detail: `step ${index} height=${Math.round(rect.height)}` });
+        }
+      });
 
       if (!gateway || gateway.getBoundingClientRect().height <= 0) {
         failures.push({ check: "workbench-gateway-visible", detail: "missing visible workbench gateway" });

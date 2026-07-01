@@ -33,12 +33,18 @@ also grouped into owner-route families so PRO IA review starts from the owning
 screen instead of a raw file-delete list. Each high-risk family also carries an
 owner-route equivalence packet with local smoke commands before any mutation can
 be requested, plus a deterministic owner-review queue that names the next gated
-family slice. The current rank-1 macro-monitor slice also reports legacy bridge
-smoke paths and source entrypoint evidence so Home/dashboard links can be
+family slice. Each queued packet also carries structured PRO screen-model
+acceptance, so canonical-root cleanup must preserve Home as search-first, keep
+dedicated depth owners, leave Workbench secondary, and keep legacy HTML out of
+mobile primary IA. The current rank-1 macro-monitor slice also reports legacy
+bridge smoke paths and source entrypoint evidence so Home/dashboard links can be
 compared with the native `/macro-chart` owner route before any preserve, remap,
-or retire decision. The queue must not advance past rank 1 until that owner
-decision is recorded; rank 2 is reported only as the next candidate after the
-rank-1 gate is released.
+or retire decision. Its live-equivalence prep matrix is still no-network
+inventory output, but it lists the required local smoke rows for `/macro-chart`,
+`/admin/macro-monitor`, three direct legacy samples, and their three Radar
+bridge URLs. The queue must not advance past rank 1 until that owner decision is
+recorded; rank 2 is reported only as the next candidate after the rank-1 gate is
+released.
 
 Run `npm run qa:route-iframe-contract` only against a local Next.js server. It
 defaults to `http://127.0.0.1:3105` and checks the route-backed iframe catalog:
