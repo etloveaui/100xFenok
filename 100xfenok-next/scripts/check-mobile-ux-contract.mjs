@@ -159,6 +159,20 @@ async function collectRouteChecks(page, route) {
           });
         }
       });
+      const connectionActions = Array.from(document.querySelectorAll('[data-portfolio-touch-action]'))
+        .filter((node) => node.getBoundingClientRect().width > 0);
+      if (connectionActions.length === 0) {
+        failures.push({ check: "portfolio-connection-action-present", detail: "no visible connection action" });
+      }
+      connectionActions.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.width < 36 || rect.height < 36) {
+          failures.push({
+            check: "portfolio-connection-action-target",
+            detail: `action ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+          });
+        }
+      });
     }
 
     if (currentRoute.startsWith("/stock/")) {

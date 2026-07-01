@@ -841,7 +841,8 @@ function ConnectionActionLink({
   return (
     <TransitionLink
       href={href}
-      className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${toneClass}`}
+      data-portfolio-touch-action="connection"
+      className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border px-3 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${toneClass}`}
     >
       {children}
     </TransitionLink>
@@ -1028,7 +1029,8 @@ function PortfolioConnectionPanel({
                       <TransitionLink
                         key={link.ticker}
                         href={link.route || `/etfs/${encodeURIComponent(link.ticker)}`}
-                        className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[10px] font-black text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                        data-portfolio-touch-action="etf-chip"
+                        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-cyan-200 bg-white px-2.5 text-[10px] font-black text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"
                         title={[link.label ?? link.ticker, link.raw_underlying ? `분류 원문 ${link.raw_underlying}` : null].filter(Boolean).join(" · ")}
                       >
                         {link.ticker}
