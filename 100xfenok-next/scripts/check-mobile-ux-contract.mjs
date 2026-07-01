@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1187,6 +1187,137 @@ async function collectRouteChecks(page, route) {
           if ((appTitle?.textContent || "").trim() !== "분석 아카이브") {
             failures.push({ check: "posts-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
           }
+        }
+      }
+    }
+
+    {
+      const radarUrl = new URL(currentRoute, window.location.origin);
+      const radarPath = radarUrl.pathname.replace(/\/+$/, "") || "/";
+      if (radarPath === "/radar") {
+        const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+        const surface = document.querySelector("[data-radar-surface]");
+        const owner = document.querySelector("[data-radar-route-owner]");
+        const boundary = document.querySelector("[data-radar-boundary]");
+        const chips = Array.from(document.querySelectorAll("[data-radar-boundary-chip]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const ownerLinks = Array.from(document.querySelectorAll("[data-radar-owner-link]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const categoryLinks = Array.from(document.querySelectorAll("[data-radar-category-link]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const legacyFrame = document.querySelector("[data-radar-legacy-frame] iframe");
+        const activeTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+        const appTitle = document.querySelector(".fnk-shell .appbar .title");
+
+        if (!surface || surface.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "radar-surface-visible", detail: "missing radar surface" });
+        }
+        if (!owner || owner.getAttribute("data-radar-route-owner") !== "legacy-macro-monitor") {
+          failures.push({
+            check: "radar-route-owner",
+            detail: `owner=${owner?.getAttribute("data-radar-route-owner") || "missing"}`,
+          });
+        }
+        if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar (레거시)")) {
+          failures.push({ check: "radar-boundary-visible", detail: "missing visible radar boundary" });
+        }
+
+        const expectedChips = ["legacy-monitor", "native-macro", "detail-bridge"];
+        const actualChips = chips.map((node) => node.getAttribute("data-radar-boundary-chip"));
+        if (
+          chips.length !== expectedChips.length ||
+          !expectedChips.every((chip, index) => actualChips[index] === chip)
+        ) {
+          failures.push({
+            check: "radar-boundary-chip-order",
+            detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+          });
+        }
+        chips.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "radar-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+
+        const expectedOwnerLinks = ["/macro-chart", "/workbench", "/explore"];
+        const actualOwnerLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+        if (
+          ownerLinks.length !== expectedOwnerLinks.length ||
+          !expectedOwnerLinks.every((link, index) => actualOwnerLinks[index] === link)
+        ) {
+          failures.push({
+            check: "radar-owner-link-order",
+            detail: `actual=${JSON.stringify(actualOwnerLinks)} expected=${JSON.stringify(expectedOwnerLinks)}`,
+          });
+        }
+        ownerLinks.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "radar-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+
+        const expectedCategoryLinks = [
+          "/radar",
+          "/radar?category=liquidity",
+          "/radar?category=rates",
+          "/radar?category=sentiment",
+        ];
+        const actualCategoryLinks = categoryLinks.map((node) => {
+          const url = new URL(node.href, window.location.origin);
+          return `${normalizePath(url.pathname)}${url.search}`;
+        });
+        if (
+          categoryLinks.length !== expectedCategoryLinks.length ||
+          !expectedCategoryLinks.every((link, index) => actualCategoryLinks[index] === link)
+        ) {
+          failures.push({
+            check: "radar-category-link-order",
+            detail: `actual=${JSON.stringify(actualCategoryLinks)} expected=${JSON.stringify(expectedCategoryLinks)}`,
+          });
+        }
+        categoryLinks.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "radar-category-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+
+        const frameSrc = legacyFrame instanceof HTMLIFrameElement
+          ? new URL(legacyFrame.src, window.location.origin)
+          : null;
+        const expectedFramePath = radarUrl.searchParams.get("path")
+          ? "/tools/macro-monitor/details/liquidity-flow.html"
+          : "/tools/macro-monitor/index.html";
+        if (!frameSrc || frameSrc.pathname !== expectedFramePath) {
+          failures.push({
+            check: "radar-legacy-frame-src",
+            detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"} expected=${expectedFramePath}`,
+          });
+        }
+        if (!radarUrl.searchParams.get("path") && radarUrl.searchParams.get("category") && frameSrc?.searchParams.get("category") !== radarUrl.searchParams.get("category")) {
+          failures.push({
+            check: "radar-category-forwarding",
+            detail: `frameCategory=${frameSrc?.searchParams.get("category") || ""} expected=${radarUrl.searchParams.get("category")}`,
+          });
+        }
+
+        const activeTabLabel = (activeTab?.textContent || "").replace(/\s+/g, " ").trim();
+        if (activeTabLabel !== "홈") {
+          failures.push({ check: "radar-mobile-tab-active", detail: `active=${activeTabLabel}` });
+        }
+        if ((appTitle?.textContent || "").trim() !== "Market Radar") {
+          failures.push({ check: "radar-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
         }
       }
     }
