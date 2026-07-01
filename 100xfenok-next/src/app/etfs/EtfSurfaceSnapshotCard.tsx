@@ -283,11 +283,13 @@ function EtfLink({
   name,
   detail,
   value,
+  qaKind,
 }: {
   ticker?: string;
   name?: string;
   detail?: string;
   value?: string;
+  qaKind?: string;
 }) {
   const symbol = normalizeForEntityKey(ticker);
   const displayName = name || "-";
@@ -309,11 +311,11 @@ function EtfLink({
     </>
   );
   return symbol ? (
-    <TransitionLink href={`/etfs/${encodeURIComponent(symbol)}`} className="mv-row">
+    <TransitionLink href={`/etfs/${encodeURIComponent(symbol)}`} className="mv-row" data-etfs-snapshot-row={qaKind ?? "item"}>
       {body}
     </TransitionLink>
   ) : (
-    <div className="mv-row">{body}</div>
+    <div className="mv-row" data-etfs-snapshot-row={qaKind ?? "item"}>{body}</div>
   );
 }
 
@@ -432,7 +434,7 @@ export default function EtfSurfaceSnapshotCard() {
   const newEtfCount = countRows(data?.newEtfs);
 
   return (
-    <section className="panel">
+    <section className="panel" data-etfs-snapshot="true">
       <div className="panel-h">
         <h2>ETF 한눈에 보기</h2>
         <span className="desc">
@@ -474,6 +476,7 @@ export default function EtfSurfaceSnapshotCard() {
                   name={row.n}
                   detail={`${classHint ? `${classHint} · ` : ""}상장일 ${row.inceptionDate || "-"} · 가격 ${row.price ?? "-"}`}
                   value={typeof row.change === "number" ? `${row.change.toFixed(2)}%` : "-"}
+                  qaKind="new"
                 />
               );
             })}
@@ -488,6 +491,7 @@ export default function EtfSurfaceSnapshotCard() {
                 name={row.n}
                 detail={`${row.assetClass || "-"} · 보유 ${fmtNumber(row.holdings)}`}
                 value={fmtAum(row.aum)}
+                qaKind="large"
               />
             ))}
           </div>
@@ -501,6 +505,7 @@ export default function EtfSurfaceSnapshotCard() {
                 name={row.n}
                 detail={`${row.assetClass || "-"} · 가격 ${fmtPrice(row.price)} · 보유 ${fmtNumber(row.holdings)}`}
                 value={fmtVolume(row.volume)}
+                qaKind="volume"
               />
             ))}
           </div>
@@ -514,6 +519,7 @@ export default function EtfSurfaceSnapshotCard() {
                 name={row.n}
                 detail={`${row.assetClass || "-"} · 가격 ${fmtPrice(row.price)} · 거래량 ${fmtVolume(row.volume)}`}
                 value={fmtSignedPct(row.change)}
+                qaKind="change"
               />
             ))}
           </div>
@@ -530,6 +536,7 @@ export default function EtfSurfaceSnapshotCard() {
                 name={row.fund_name}
                 detail={providerDetail(row)}
                 value={row.assets || "-"}
+                qaKind="provider"
               />
             ))}
           </div>
@@ -543,6 +550,7 @@ export default function EtfSurfaceSnapshotCard() {
                 name={row.fund_name}
                 detail={bitcoinDetail(row)}
                 value={row.pct_change || "-"}
+                qaKind="bitcoin"
               />
             ))}
           </div>
@@ -562,7 +570,7 @@ export default function EtfSurfaceSnapshotCard() {
                 onValueChange={setCollectionKey}
                 ariaLabel="ETF 모음 분류"
                 className="flex flex-wrap gap-1.5"
-                getTabClassName={(_, selected) => `min-h-8 rounded-full border px-3 text-[11px] font-black transition ${
+                getTabClassName={(_, selected) => `min-h-11 rounded-full border px-3 text-[11px] font-black transition ${
                   selected
                     ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
                     : "border-[var(--c-line)] bg-white text-[var(--c-ink-3)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
@@ -593,6 +601,7 @@ export default function EtfSurfaceSnapshotCard() {
                           name={bitcoinRow.fund_name}
                           detail={bitcoinDetail(bitcoinRow)}
                           value={bitcoinRow.pct_change || "-"}
+                          qaKind="collection"
                         />
                       );
                     }
@@ -604,6 +613,7 @@ export default function EtfSurfaceSnapshotCard() {
                         name={providerRow.fund_name}
                         detail={providerDetail(providerRow)}
                         value={providerRow.assets || "-"}
+                        qaKind="collection"
                       />
                     );
                   })}

@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/regime,/market/events,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -512,6 +512,141 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "market-events-control-target", detail: `control=${key} height=${Math.round(rect.height)}` });
         }
       });
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/etfs") {
+      const surface = document.querySelector("[data-etfs-surface]");
+      const header = document.querySelector("[data-etfs-header]");
+      const toolLinks = Array.from(document.querySelectorAll("[data-etfs-tool-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const snapshot = document.querySelector("[data-etfs-snapshot]");
+      const snapshotRows = Array.from(document.querySelectorAll("[data-etfs-snapshot-row]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const snapshotKinds = new Set(snapshotRows.map((node) => node.getAttribute("data-etfs-snapshot-row")));
+      const universe = document.querySelector("[data-etf-universe]");
+      const controls = [
+        { key: "search", node: document.querySelector("[data-etf-universe-search]") },
+        { key: "category", node: document.querySelector("[data-etf-universe-category]") },
+        { key: "asset", node: document.querySelector("[data-etf-universe-asset-class]") },
+        { key: "issuer", node: document.querySelector("[data-etf-universe-issuer]") },
+        { key: "aum", node: document.querySelector("[data-etf-universe-aum]") },
+        { key: "expense", node: document.querySelector("[data-etf-universe-expense]") },
+      ];
+      const segmentButtons = Array.from(document.querySelectorAll("[data-etf-universe-segment]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const universeRows = Array.from(document.querySelectorAll("[data-etf-universe-row]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const loadMore = document.querySelector("[data-etf-universe-load-more]");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etfs-surface-visible", detail: "missing ETF center surface" });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etfs-header-visible", detail: "missing ETF header" });
+      }
+
+      const expectedToolLinks = [
+        ["compare", "/etfs/compare"],
+        ["new", "/etfs/new"],
+      ];
+      const actualToolLinks = toolLinks.map((node) => [
+        node.getAttribute("data-etfs-tool-link"),
+        node instanceof HTMLAnchorElement ? new URL(node.href, window.location.origin).pathname.replace(/\/+$/, "") : "",
+      ]);
+      if (
+        toolLinks.length !== expectedToolLinks.length ||
+        !expectedToolLinks.every((link, index) => actualToolLinks[index]?.[0] === link[0] && actualToolLinks[index]?.[1] === link[1])
+      ) {
+        failures.push({
+          check: "etfs-tool-link-order",
+          detail: `actual=${JSON.stringify(actualToolLinks)} expected=${JSON.stringify(expectedToolLinks)}`,
+        });
+      }
+      toolLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etfs-tool-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!snapshot || snapshot.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etfs-snapshot-visible", detail: "missing ETF snapshot panel" });
+      }
+      if (snapshotRows.length < 12) {
+        failures.push({ check: "etfs-snapshot-row-count", detail: `visible rows=${snapshotRows.length}` });
+      }
+      ["new", "large", "volume", "change", "provider", "bitcoin"].forEach((kind) => {
+        if (!snapshotKinds.has(kind)) {
+          failures.push({ check: "etfs-snapshot-row-kind", detail: `missing kind=${kind}` });
+        }
+      });
+      snapshotRows.slice(0, 8).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etfs-snapshot-row-target", detail: `row ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!universe || universe.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "etf-universe-visible", detail: "missing ETF universe panel" });
+      }
+      controls.forEach(({ key, node }) => {
+        if (!node || node.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "etf-universe-control-present", detail: `control=${key}` });
+          return;
+        }
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etf-universe-control-target", detail: `control=${key} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedSegments = ["전체", "신규", "디지털자산", "레버리지", "단일종목 레버리지", "인버스"];
+      const actualSegments = segmentButtons.map((node) => node.getAttribute("data-etf-universe-segment"));
+      if (
+        segmentButtons.length !== expectedSegments.length ||
+        !expectedSegments.every((key, index) => actualSegments[index] === key)
+      ) {
+        failures.push({
+          check: "etf-universe-segment-order",
+          detail: `actual=${JSON.stringify(actualSegments)} expected=${JSON.stringify(expectedSegments)}`,
+        });
+      }
+      const activeSegment = segmentButtons.find((node) => node.getAttribute("aria-pressed") === "true");
+      if (activeSegment?.getAttribute("data-etf-universe-segment") !== "전체") {
+        failures.push({ check: "etf-universe-default-segment", detail: `active=${activeSegment?.getAttribute("data-etf-universe-segment") || ""}` });
+      }
+      segmentButtons.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etf-universe-segment-target", detail: `segment ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (universeRows.length < 20) {
+        failures.push({ check: "etf-universe-row-count", detail: `visible rows=${universeRows.length}` });
+      }
+      universeRows.slice(0, 8).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "etf-universe-row-target", detail: `row ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+      if (!loadMore || loadMore.getBoundingClientRect().height < 44) {
+        failures.push({ check: "etf-universe-load-more-target", detail: loadMore ? `height=${Math.round(loadMore.getBoundingClientRect().height)}` : "missing load more" });
+      }
     }
 
     if (currentRoute.startsWith("/screener")) {

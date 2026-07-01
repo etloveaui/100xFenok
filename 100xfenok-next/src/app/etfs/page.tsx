@@ -51,9 +51,9 @@ export default async function EtfsPage({ searchParams }: Props) {
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
 
   return (
-    <div className="fnk-shell">
+    <div className="fnk-shell" data-etfs-surface="true">
       <AppShell active="etfs" title="ETF" backHref={ROUTES.home}>
-        <section className="panel">
+        <section className="panel" data-etfs-header="true">
           <div className="data-shell-header">
             <div className="data-shell-head-main">
               <p className="data-shell-kicker">ETF</p>
@@ -63,11 +63,21 @@ export default async function EtfsPage({ searchParams }: Props) {
               </p>
             </div>
             <div className="data-shell-head-actions">
-              <nav className="data-shell-section-nav" aria-label="ETF 도구">
-                <TransitionLink href={ROUTES.etfCompare} className="data-shell-link">
+              <nav className="data-shell-section-nav" aria-label="ETF 도구" data-etfs-tool-nav="true">
+                <TransitionLink
+                  href={ROUTES.etfCompare}
+                  className="data-shell-link min-h-11"
+                  style={{ minHeight: 44 }}
+                  data-etfs-tool-link="compare"
+                >
                   ETF 비교
                 </TransitionLink>
-                <TransitionLink href={ROUTES.etfNew} className="data-shell-link">
+                <TransitionLink
+                  href={ROUTES.etfNew}
+                  className="data-shell-link min-h-11"
+                  style={{ minHeight: 44 }}
+                  data-etfs-tool-link="new"
+                >
                   신규 ETF
                 </TransitionLink>
               </nav>
