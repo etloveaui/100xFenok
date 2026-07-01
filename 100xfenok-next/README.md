@@ -110,6 +110,173 @@ Only after that readiness state, `node
 scripts/build-macro-owner-decision-packet.mjs --rank2-owner-review-template`
 prints the rank-2 owner-review packet for `market_legacy_archive`. The template
 contains preserve/remap/retire choices but remains review-only and no-mutation.
+Use `--rank2-owner-decision-record-template` under the same readiness gate to
+print the owner-review decision skeleton, then validate a filled record with
+`--rank2-owner-decision-record-json=...` or
+`--rank2-owner-decision-record <file>`. The record must keep
+`rank2_active=false`, `mutation=none`, `mutation_approved=false`, and
+delete/redirect/deploy blocked.
+After a valid rank-2 owner decision record, use
+`--rank2-owner-followup-record-template` to print the selected preserve/remap/retire
+follow-up skeleton, then validate it with
+`--rank2-owner-followup-record-json=...` or
+`--rank2-owner-followup-record <file>`. The follow-up record must keep
+`route_mutation_requested=false`, `deploy_requested=false`, and the same
+blocked delete/redirect/deploy actions.
+Only after that no-mutation follow-up validates,
+`--rank2-mutation-approval-request-template` prints a request-only packet for
+separate owner mutation approval. It keeps `approval_status=pending_owner_approval`,
+`request_only=true`, `mutation_allowed=false`, and `execution_allowed=false`;
+it still does not authorize redirect/delete/deploy.
+`--rank2-mutation-approval-record-template` then prints the owner approval
+record skeleton, but validation still requires `execution_allowed=false`,
+`deploy_approved=false`, and `route_patch_applied=false`; execution remains a
+future separate approval gate.
+Even with a valid approval record, the packet keeps
+`rank2_execution_readiness=blocked_pending_execution_prerequisites` until a
+route/file diff proposal, rollback plan, local post-patch smoke plan, and
+explicit deploy approval are recorded separately.
+After a valid approval record, `--rank2-route-diff-proposal-template` prints a
+draft-only route/file diff proposal skeleton. A supplied
+`--rank2-route-diff-proposal-json=...` or `--rank2-route-diff-proposal <file>`
+record may satisfy only the route/file diff prerequisite, while still requiring
+`patch_applied=false`, `public_files_modified=false`,
+`redirect_config_changed=false`, `delete_paths=[]`, `execution_allowed=false`,
+and `deploy_approved=false`. Rollback, local post-patch smoke, and explicit
+deploy approval remain separate blockers.
+After a valid route/file diff proposal, `--rank2-rollback-plan-template` prints
+a plan-only rollback skeleton. A supplied `--rank2-rollback-plan-json=...` or
+`--rank2-rollback-plan <file>` record may satisfy only the rollback prerequisite,
+while still requiring `rollback_scope=plan_only_no_execution`,
+`patch_applied=false`, `rollback_applied=false`, `public_files_modified=false`,
+`redirect_config_changed=false`, `delete_paths=[]`, `execution_allowed=false`,
+and `deploy_approved=false`. Local post-patch smoke and explicit deploy
+approval remain separate blockers.
+After a valid rollback plan, `--rank2-local-post-patch-smoke-plan-template`
+prints a plan-only local smoke skeleton for the owner route, compatibility
+route, and legacy sample paths. A supplied
+`--rank2-local-post-patch-smoke-plan-json=...` or
+`--rank2-local-post-patch-smoke-plan <file>` record may satisfy only the local
+post-patch smoke plan prerequisite, while keeping `smoke_scope=plan_only_no_runtime`,
+`smoke_executed=false`, runtime statuses blank, `execution_allowed=false`, and
+`deploy_approved=false`. Explicit deploy approval remains a separate blocker.
+After a valid local smoke plan, `--rank2-explicit-deploy-approval-template`
+prints a record-only approval skeleton. A supplied
+`--rank2-explicit-deploy-approval-json=...` or
+`--rank2-explicit-deploy-approval <file>` record may satisfy only the explicit
+deploy approval prerequisite with `deploy_approved=true`, while still requiring
+`deploy_executed=false`, `production_live_smoke_executed=false`,
+`execution_allowed=false`, and a separate route execution packet before any
+runtime action.
+After all execution prerequisites are recorded, `--rank2-route-execution-packet-template`
+prints the separate route execution packet as a record-only skeleton. A supplied
+`--rank2-route-execution-packet-json=...` or
+`--rank2-route-execution-packet <file>` record may satisfy only that packet
+record with `execution_scope=record_only_no_runtime`, while keeping
+`owner_runtime_release_status=not_recorded`, `route_patch_applied=false`,
+`post_patch_smoke_executed=false`, `deploy_executed=false`, and
+`production_live_smoke_executed=false`.
+After a valid route execution packet, `--rank2-owner-runtime-release-template`
+prints an owner runtime release record skeleton. A supplied
+`--rank2-owner-runtime-release-json=...` or
+`--rank2-owner-runtime-release <file>` record may satisfy only that release
+record with `release_scope=record_only_before_runtime`, while keeping
+`execution_allowed=false`, `route_patch_applied=false`,
+`post_patch_smoke_executed=false`, `deploy_executed=false`, and
+`production_live_smoke_executed=false`; the next runtime gate is
+`route_patch_application_record`.
+After a valid owner runtime release record,
+`--rank2-route-patch-application-template` prints the route patch application
+record skeleton. A supplied `--rank2-route-patch-application-json=...` or
+`--rank2-route-patch-application <file>` record may satisfy only the local patch
+application record with `patch_scope=record_only_local_patch_no_smoke_no_deploy`
+and `route_patch_applied=true`, while keeping `post_patch_smoke_executed=false`,
+`deploy_executed=false`, `production_live_smoke_executed=false`,
+`public_files_modified=false`, `redirect_config_changed=false`, and
+`delete_paths=[]`; the next runtime gate is `local_post_patch_smoke_record`.
+After a valid route patch application record,
+`--rank2-local-post-patch-smoke-record-template` prints the local post-patch
+smoke record skeleton. A supplied
+`--rank2-local-post-patch-smoke-record-json=...` or
+`--rank2-local-post-patch-smoke-record <file>` record may satisfy only local
+runtime smoke with `smoke_scope=local_runtime_only_no_deploy`,
+`post_patch_smoke_executed=true`, and all smoke rows reporting the expected HTTP
+status with `ok=true`, while keeping `deploy_executed=false`,
+`production_live_smoke_executed=false`, `public_files_modified=false`,
+`redirect_config_changed=false`, and `delete_paths=[]`; the next runtime gate is
+`deploy_execution_record`.
+After a valid local post-patch smoke record,
+`--rank2-deploy-execution-template` prints the deploy execution record skeleton.
+A supplied `--rank2-deploy-execution-json=...` or
+`--rank2-deploy-execution <file>` record may satisfy only deploy execution with
+`deploy_scope=record_only_deploy_no_live_smoke` and `deploy_executed=true`,
+while keeping `production_live_smoke_executed=false`,
+`public_files_modified=false`, `redirect_config_changed=false`, and
+`delete_paths=[]`; the next runtime gate is `production_live_smoke_record`.
+After a valid deploy execution record,
+`--rank2-production-live-smoke-template` prints the production live smoke record
+skeleton. A supplied `--rank2-production-live-smoke-json=...` or
+`--rank2-production-live-smoke <file>` record may satisfy only production live
+smoke with `smoke_scope=production_live_smoke_only_no_redirect_no_delete`,
+`production_live_smoke_executed=true`, and all production smoke rows reporting
+the expected HTTP status with `ok=true`, while keeping
+`public_files_modified=false`, `redirect_config_changed=false`, and
+`delete_paths=[]`; the next runtime gate is
+`post_live_redirect_delete_approval_request`.
+After a valid production live smoke record,
+`--rank2-post-live-redirect-delete-approval-request-template` prints the
+post-live redirect/delete approval request skeleton. A supplied
+`--rank2-post-live-redirect-delete-approval-request-json=...` or
+`--rank2-post-live-redirect-delete-approval-request <file>` record may satisfy
+only the request step with
+`request_scope=post_live_request_only_no_redirect_no_delete`,
+`redirect_delete_approval_requested=true`, and
+`redirect_delete_executed=false`, while keeping `public_files_modified=false`,
+`redirect_config_changed=false`, and `delete_paths=[]`; the next runtime gate is
+`post_live_redirect_delete_approval_record`.
+After a valid post-live redirect/delete approval request record,
+`--rank2-post-live-redirect-delete-approval-record-template` prints the owner
+approval record skeleton. A supplied
+`--rank2-post-live-redirect-delete-approval-record-json=...` or
+`--rank2-post-live-redirect-delete-approval-record <file>` record may satisfy
+only the owner approval step with
+`approval_scope=record_only_no_redirect_no_delete`,
+`redirect_delete_approved=true`, and `redirect_delete_executed=false`, while
+keeping `public_files_modified=false`, `redirect_config_changed=false`, and
+`delete_paths=[]`; the next runtime gate is
+`post_live_redirect_delete_execution_packet`.
+After a valid post-live redirect/delete owner approval record,
+`--rank2-post-live-redirect-delete-execution-packet-template` prints the
+execution packet skeleton. A supplied
+`--rank2-post-live-redirect-delete-execution-packet-json=...` or
+`--rank2-post-live-redirect-delete-execution-packet <file>` record may satisfy
+only the execution-packet planning step with
+`execution_scope=packet_only_no_redirect_no_delete`,
+`redirect_delete_execution_planned=true`, and
+`redirect_delete_executed=false`, while keeping `public_files_modified=false`,
+`redirect_config_changed=false`, and `delete_paths=[]`; the next runtime gate is
+`post_live_redirect_delete_execution_record`.
+After a valid post-live redirect/delete execution packet record,
+`--rank2-post-live-redirect-delete-execution-record-template` prints the
+execution evidence record skeleton. A supplied
+`--rank2-post-live-redirect-delete-execution-record-json=...` or
+`--rank2-post-live-redirect-delete-execution-record <file>` record may satisfy
+only the externally performed execution evidence step with
+`execution_scope=record_only_redirect_delete_execution_evidence`,
+`redirect_delete_executed=true`, and
+`execution_performed_by_this_command=false`; it must also keep
+`local_files_modified_by_this_command=false` and then moves the next runtime
+gate to `post_live_redirect_delete_post_execution_smoke_record`.
+After a valid post-live redirect/delete execution record,
+`--rank2-post-live-redirect-delete-post-execution-smoke-template` prints the
+post-execution smoke evidence skeleton. A supplied
+`--rank2-post-live-redirect-delete-post-execution-smoke-json=...` or
+`--rank2-post-live-redirect-delete-post-execution-smoke <file>` record may
+satisfy only externally performed post-execution smoke evidence with
+`smoke_scope=post_execution_smoke_only_no_additional_redirect_delete_no_deploy`,
+all rows `ok=true` with an allowed HTTP status, and
+`smoke_performed_by_this_command=false`; the next runtime gate is
+`post_live_redirect_delete_rollback_readiness_record`.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary
