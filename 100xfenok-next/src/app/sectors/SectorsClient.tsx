@@ -341,6 +341,86 @@ function SectorMomentumCard({
   );
 }
 
+function SectorRelativeBarChart({
+  rows,
+  windowKey,
+  benchmarkValue,
+  windowLabel,
+}: {
+  rows: SectorRow[];
+  windowKey: MomentumWindow;
+  benchmarkValue: number | null;
+  windowLabel: string;
+}) {
+  const items = rows
+    .map((row) => {
+      const value = row.momentum[windowKey];
+      const relative = typeof value === "number" && typeof benchmarkValue === "number" ? value - benchmarkValue : null;
+      return { row, value, relative };
+    })
+    .filter((item): item is { row: SectorRow; value: number; relative: number } => (
+      typeof item.value === "number" &&
+      typeof item.relative === "number" &&
+      Number.isFinite(item.value) &&
+      Number.isFinite(item.relative)
+    ));
+  const maxAbs = Math.max(0.01, ...items.map((item) => Math.abs(item.relative)));
+
+  return (
+    <div
+      data-sector-relative-bars
+      data-sector-relative-window={windowKey}
+      data-sector-relative-count={items.length}
+      className="mb-4 rounded-2xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] p-3"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-black text-[var(--c-ink)]">S&amp;P 500 대비 {windowLabel} 초과 성과</p>
+        <span className="orbitron rounded-full bg-white px-2 py-1 text-[10px] font-black tabular-nums text-[var(--c-ink-3)]">
+          기준 {pct(benchmarkValue, 1)}
+        </span>
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs font-semibold text-[var(--c-ink-3)]">S&amp;P 기준선 또는 섹터 성과가 없습니다.</p>
+      ) : (
+        <div className="mt-3 grid gap-2">
+          {items.map(({ row, value, relative }) => {
+            const width = Math.max(3, Math.min(50, (Math.abs(relative) / maxAbs) * 50));
+            const positive = relative >= 0;
+            return (
+              <div
+                key={row.key}
+                data-sector-relative-bar
+                data-sector-relative-side={positive ? "up" : "down"}
+                className="grid min-h-11 grid-cols-[minmax(88px,0.8fr)_minmax(140px,1.4fr)_minmax(58px,auto)] items-center gap-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-black text-[var(--c-ink)]">{row.name}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.etf}</p>
+                </div>
+                <div className="relative h-6 rounded-full bg-white">
+                  <span className="absolute left-1/2 top-0 h-full w-px bg-[var(--c-line)]" aria-hidden="true" />
+                  <span
+                    className={cx(
+                      "absolute top-1/2 h-3 -translate-y-1/2 rounded-full",
+                      positive ? "left-1/2 bg-[var(--c-up)]" : "right-1/2 bg-[var(--c-down)]",
+                    )}
+                    style={{ width: `${width}%` }}
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="text-right">
+                  <p className={cx("orbitron text-xs font-black tabular-nums", metricTone(relative))}>{pp(relative, 1)}</p>
+                  <p className="orbitron text-[10px] font-bold tabular-nums text-[var(--c-ink-3)]">{pct(value, 1)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EtfMobileCard({ row }: { row: SectorRow }) {
   const etf = row.etfInfo;
   return (
@@ -508,18 +588,24 @@ export default function SectorsClient() {
       {/* Heatmap */}
       <div id="sector-panel-heatmap" className={mobilePanelClass(mobileView === "heatmap")} data-sector-panel="heatmap">
         <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과">
-        <p className="mb-3 text-xs text-[var(--c-ink-2)]">
-          {beatCount === null
-            ? benchmarksFailed
-              ? "S&P 500 기준선 데이터가 없습니다."
-              : "S&P 500 기준선을 불러오는 중입니다."
-            : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
-        </p>
-        <div className="grid gap-2 md:hidden">
-          {sorted.map((row) => (
-            <SectorMomentumCard key={row.key} row={row} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
-          ))}
-        </div>
+          <p className="mb-3 text-xs text-[var(--c-ink-2)]">
+            {beatCount === null
+              ? benchmarksFailed
+                ? "S&P 500 기준선 데이터가 없습니다."
+                : "S&P 500 기준선을 불러오는 중입니다."
+              : `${activeWindowLabel} 기준 ${beatCount}/${rows.length}개 섹터가 S&P 500을 앞섭니다.`}
+          </p>
+          <SectorRelativeBarChart
+            rows={sorted}
+            windowKey={sortWindow}
+            benchmarkValue={activeBenchmark}
+            windowLabel={activeWindowLabel}
+          />
+          <div className="grid gap-2 md:hidden">
+            {sorted.map((row) => (
+              <SectorMomentumCard key={row.key} row={row} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
+            ))}
+          </div>
         <div className="scroll-hint-x -mx-1 mt-3 px-1 md:mt-0" role="region" tabIndex={0} aria-label="섹터 기간별 성과표 가로 스크롤">
           <table className="w-full min-w-[720px] border-separate border-spacing-1 text-sm">
             <thead>

@@ -272,38 +272,62 @@ async function collectRouteChecks(page, route) {
     }
 
     if (currentRoute.startsWith("/sectors")) {
-      const viewSwitch = document.querySelector("[data-sector-view-switch]");
-      const viewTabs = Array.from(document.querySelectorAll("[data-sector-view-tab]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      if (!viewSwitch || viewSwitch.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "sector-view-switch-visible", detail: "missing visible sector view switch" });
-      }
-
-      const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
-      const actualTabs = viewTabs.map((node) => node.getAttribute("data-sector-view-tab"));
-      if (
-        viewTabs.length !== expectedTabs.length ||
-        !expectedTabs.every((tab, index) => actualTabs[index] === tab)
-      ) {
-        failures.push({
-          check: "sector-view-switch-tabs",
-          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
-        });
-      }
-      viewTabs.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "sector-view-switch-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
+      if (viewportWidth < 768) {
+        const viewSwitch = document.querySelector("[data-sector-view-switch]");
+        const viewTabs = Array.from(document.querySelectorAll("[data-sector-view-tab]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        if (!viewSwitch || viewSwitch.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "sector-view-switch-visible", detail: "missing visible sector view switch" });
         }
-      });
+
+        const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
+        const actualTabs = viewTabs.map((node) => node.getAttribute("data-sector-view-tab"));
+        if (
+          viewTabs.length !== expectedTabs.length ||
+          !expectedTabs.every((tab, index) => actualTabs[index] === tab)
+        ) {
+          failures.push({
+            check: "sector-view-switch-tabs",
+            detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
+          });
+        }
+        viewTabs.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "sector-view-switch-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+      }
 
       const heatmapPanel = document.querySelector('[data-sector-panel="heatmap"]');
       if (!heatmapPanel || heatmapPanel.getBoundingClientRect().height <= 0) {
         failures.push({ check: "sector-heatmap-default-visible", detail: "default heatmap panel not visible" });
       }
+      const relativeBars = document.querySelector("[data-sector-relative-bars]");
+      const relativeBarRows = Array.from(document.querySelectorAll("[data-sector-relative-bar]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const relativeSides = new Set(relativeBarRows.map((node) => node.getAttribute("data-sector-relative-side")));
+      if (!relativeBars || relativeBars.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "sector-relative-bars-visible", detail: "missing S&P relative bar strip" });
+      }
+      if (relativeBarRows.length === 0) {
+        failures.push({ check: "sector-relative-bars-populated", detail: "no visible relative bar rows" });
+      }
+      if (!relativeSides.has("up") && !relativeSides.has("down")) {
+        failures.push({ check: "sector-relative-bars-side", detail: `sides=${JSON.stringify(Array.from(relativeSides))}` });
+      }
+      relativeBarRows.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "sector-relative-bar-target", detail: `row ${index} height=${Math.round(rect.height)}` });
+        }
+      });
     }
 
     if (currentRoute.startsWith("/portfolio")) {
@@ -983,6 +1007,15 @@ async function collectStockSummaryAxisClickChecks(page, route) {
 }
 
 async function collectSectorViewSwitchChecks(page, route) {
+  const viewport = page.viewportSize();
+  if (!viewport || viewport.width >= 768) {
+    return {
+      route,
+      failures: [],
+      scrollWidth: null,
+    };
+  }
+
   const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
   const failures = [];
   let clickScrollWidth = null;
