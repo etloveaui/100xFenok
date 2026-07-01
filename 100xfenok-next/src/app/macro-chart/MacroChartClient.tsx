@@ -1199,8 +1199,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   );
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="space-y-5" data-macro-chart-workbench="true">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" data-macro-chart-header="true">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Macro Chart</p>
@@ -1215,8 +1215,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 key={preset.id}
                 type="button"
                 onClick={() => applyPreset(preset.id)}
-                className="min-h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                className="min-h-11 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
                 title={preset.description}
+                data-macro-chart-preset={preset.id}
               >
                 {preset.label}
               </button>
@@ -1225,7 +1226,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               type="button"
               onClick={() => setRangeId(nextRangeId(rangeId, -1))}
               disabled={!canZoomIn}
-              className="min-h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+              className="min-h-11 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+              data-macro-chart-action="zoom-in"
             >
               확대
             </button>
@@ -1233,7 +1235,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               type="button"
               onClick={() => setRangeId(nextRangeId(rangeId, 1))}
               disabled={!canZoomOut}
-              className="min-h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+              className="min-h-11 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+              data-macro-chart-action="zoom-out"
             >
               축소
             </button>
@@ -1241,7 +1244,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               type="button"
               onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
               disabled={!ready || chartSeries.length === 0}
-              className="min-h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+              className="min-h-11 rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+              data-macro-chart-action="png"
             >
               PNG 저장
             </button>
@@ -1253,7 +1257,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 setExportNotice("전체 CSV 저장됨");
               }}
               disabled={!ready || chartSeries.length === 0}
-              className="min-h-9 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
+              className="min-h-11 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
+              data-macro-chart-action="csv"
             >
               전체 CSV 저장
             </button>
@@ -1269,7 +1274,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           {selectedDefinitions.length ? (
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 xl:hidden" aria-label="모바일 매크로 상태">
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 xl:hidden" aria-label="모바일 매크로 상태" data-macro-chart-mobile-status="true">
               <span className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-slate-900 px-3 text-xs font-black text-white">
                 기간 {rangeLabel(rangeId)}
               </span>
@@ -1292,8 +1297,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     key={item.id}
                     type="button"
                     onClick={() => toggleSeries(item.id)}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700"
                     aria-label={`${definition.shortLabel} 제거`}
+                    data-macro-chart-mobile-chip={item.id}
                   >
                     {definition.shortLabel}
                     <span aria-hidden className="text-slate-400">×</span>
@@ -1305,8 +1311,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   key={formula.id}
                   type="button"
                   onClick={() => removeFormula(formula.id)}
-                  className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-black text-amber-800"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-black text-amber-800"
                   aria-label={`${formulaLabel(formula)} 삭제`}
+                  data-macro-chart-mobile-formula={formula.id}
                 >
                   {formulaLabel(formula)}
                   <span aria-hidden className="text-amber-500">×</span>
@@ -1392,7 +1399,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   key={lens.id}
                   type="button"
                   onClick={() => applyAnalysisLens(lens)}
-                  className="block w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                  className="block min-h-11 w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                  data-macro-chart-lens={lens.id}
                 >
                   <span className="block truncate text-xs font-black text-slate-900">{lens.label}</span>
                   <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
@@ -1412,7 +1420,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   key={lens.id}
                   type="button"
                   onClick={() => applyMarketCompareLens(lens)}
-                  className="block w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                  className="block min-h-11 w-full rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
+                  data-macro-chart-market-lens={lens.id}
                 >
                   <span className="block truncate text-xs font-black text-slate-900">{lens.label}</span>
                   <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{lens.detail}</span>
@@ -1439,19 +1448,22 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             <div className="mt-3 grid grid-cols-3 gap-2">
               <TransitionLink
                 href={activeMacroContext.screenerHref}
-                className="inline-flex min-h-9 items-center justify-center rounded-md bg-slate-900 px-2 text-[11px] font-black text-white transition hover:bg-brand-interactive"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-900 px-2 text-[11px] font-black text-white transition hover:bg-brand-interactive"
+                data-macro-chart-context-link="screener"
               >
                 스크리너
               </TransitionLink>
               <TransitionLink
                 href={activeMacroContext.etfHref}
-                className="inline-flex min-h-9 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
+                data-macro-chart-context-link="etf"
               >
                 ETF
               </TransitionLink>
               <TransitionLink
                 href={activeMacroContext.stockHref}
-                className="inline-flex min-h-9 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-sky-200 bg-white px-2 text-[11px] font-black text-sky-800 transition hover:border-brand-interactive hover:text-brand-interactive"
+                data-macro-chart-context-link="stock"
               >
                 {activeMacroContext.stockSymbol}
               </TransitionLink>
@@ -1469,7 +1481,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   <TransitionLink
                     key={link.id}
                     href={link.href}
-                    className="block rounded-lg bg-slate-50 px-3 py-2 transition hover:bg-slate-100"
+                    className="block min-h-11 rounded-lg bg-slate-50 px-3 py-2 transition hover:bg-slate-100"
+                    data-macro-chart-connection-link={link.id}
                   >
                     <span className="block truncate text-xs font-black text-slate-900">{link.label}</span>
                     <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{link.detail}</span>
@@ -1492,7 +1505,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 onClick={() => setPickerOpen((value) => !value)}
                 aria-controls="macro-series-picker-panel"
                 aria-expanded={pickerOpen}
-                className="min-h-10 shrink-0 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-700 xl:hidden"
+                className="min-h-11 shrink-0 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-700 xl:hidden"
+                data-macro-chart-picker-toggle="true"
               >
                 {pickerOpen ? "닫기" : "열기"}
               </button>
@@ -1506,7 +1520,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={queryInput}
                 onChange={(event) => setQueryInput(event.target.value)}
                 placeholder="M2, VIX, PMI..."
-                className="min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                className="min-h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                data-macro-chart-search="true"
               />
               <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
                 <label className="sr-only" htmlFor="macro-stooq-ticker">
@@ -1524,12 +1539,14 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       }
                     }}
                     placeholder="NVDA, SPY.US..."
-                    className="min-h-10 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                    className="min-h-11 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand-interactive"
+                    data-macro-chart-symbol-input="true"
                   />
                   <button
                     type="button"
                     onClick={addStooqSeries}
-                    className="min-h-10 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
+                    className="min-h-11 shrink-0 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive"
+                    data-macro-chart-symbol-add="true"
                   >
                     + 티커 추가
                   </button>
@@ -1570,8 +1587,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={currentFormulaLeftId}
                 onChange={(event) => setFormulaLeftId(event.target.value)}
                 disabled={selected.length < 2}
-                className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+                className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
                 aria-label="합성 왼쪽 시리즈"
+                data-macro-chart-formula-control="left"
               >
                 {selected.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -1583,8 +1601,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={formulaOperator}
                 onChange={(event) => setFormulaOperator(event.target.value as MacroFormulaOperator)}
                 disabled={selected.length < 2}
-                className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+                className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
                 aria-label="합성 계산식"
+                data-macro-chart-formula-control="operator"
               >
                 <option value="spread">{MACRO_FORMULA_LABELS.spread}</option>
                 <option value="ratio">{MACRO_FORMULA_LABELS.ratio}</option>
@@ -1593,8 +1612,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 value={currentFormulaRightId}
                 onChange={(event) => setFormulaRightId(event.target.value)}
                 disabled={selected.length < 2}
-                className="min-h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
+                className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
                 aria-label="합성 오른쪽 시리즈"
+                data-macro-chart-formula-control="right"
               >
                 {selected
                   .filter((item) => item.id !== currentFormulaLeftId)
@@ -1608,7 +1628,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 type="button"
                 onClick={addFormula}
                 disabled={selected.length < 2 || formulas.length >= MAX_FORMULA_SERIES}
-                className="min-h-9 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
+                className="min-h-11 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700"
+                data-macro-chart-formula-control="add"
               >
                 합성 추가
               </button>

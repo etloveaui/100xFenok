@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -212,6 +212,161 @@ async function collectRouteChecks(page, route) {
         const rect = node.getBoundingClientRect();
         if (rect.height < 44) {
           failures.push({ check: "workbench-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/macro-chart") {
+      const surface = document.querySelector("[data-macro-chart-surface]");
+      const workbench = document.querySelector("[data-macro-chart-workbench]");
+      const header = document.querySelector("[data-macro-chart-header]");
+      const chartCanvas = document.querySelector("canvas");
+      const presetButtons = Array.from(document.querySelectorAll("[data-macro-chart-preset]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const actionButtons = Array.from(document.querySelectorAll("[data-macro-chart-action]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const lensButtons = Array.from(document.querySelectorAll("[data-macro-chart-lens]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const marketLensButtons = Array.from(document.querySelectorAll("[data-macro-chart-market-lens]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const contextLinks = Array.from(document.querySelectorAll("[data-macro-chart-context-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const connectionLinks = Array.from(document.querySelectorAll("[data-macro-chart-connection-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const pickerToggle = document.querySelector("[data-macro-chart-picker-toggle]");
+      const formulaControls = Array.from(document.querySelectorAll("[data-macro-chart-formula-control]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const mobileStatus = document.querySelector("[data-macro-chart-mobile-status]");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "macro-chart-surface-visible", detail: "missing macro chart surface" });
+      }
+      if (!workbench || workbench.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "macro-chart-workbench-visible", detail: "missing macro chart workbench" });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "macro-chart-header-visible", detail: "missing macro chart header" });
+      }
+      if (!chartCanvas || chartCanvas.getBoundingClientRect().width < 260 || chartCanvas.getBoundingClientRect().height < 240) {
+        const rect = chartCanvas?.getBoundingClientRect();
+        failures.push({ check: "macro-chart-canvas-visible", detail: rect ? `${Math.round(rect.width)}x${Math.round(rect.height)}` : "missing canvas" });
+      }
+
+      const expectedPresets = ["risk-liquidity", "liquidity", "activity"];
+      const actualPresets = presetButtons.map((node) => node.getAttribute("data-macro-chart-preset"));
+      if (
+        presetButtons.length !== expectedPresets.length ||
+        !expectedPresets.every((preset, index) => actualPresets[index] === preset)
+      ) {
+        failures.push({ check: "macro-chart-preset-order", detail: `actual=${JSON.stringify(actualPresets)} expected=${JSON.stringify(expectedPresets)}` });
+      }
+      presetButtons.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-preset-target", detail: `preset ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedActions = ["zoom-in", "zoom-out", "png", "csv"];
+      const actualActions = actionButtons.map((node) => node.getAttribute("data-macro-chart-action"));
+      if (
+        actionButtons.length !== expectedActions.length ||
+        !expectedActions.every((action, index) => actualActions[index] === action)
+      ) {
+        failures.push({ check: "macro-chart-action-order", detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions)}` });
+      }
+      actionButtons.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-action-target", detail: `action ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (viewportWidth < 1280 && (!mobileStatus || mobileStatus.getBoundingClientRect().height <= 0)) {
+        failures.push({ check: "macro-chart-mobile-status-visible", detail: "missing mobile status rail" });
+      }
+
+      if (lensButtons.length < 3) {
+        failures.push({ check: "macro-chart-lens-count", detail: `lenses=${lensButtons.length}` });
+      }
+      lensButtons.slice(0, 3).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-lens-target", detail: `lens ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+      if (marketLensButtons.length < 3) {
+        failures.push({ check: "macro-chart-market-lens-count", detail: `lenses=${marketLensButtons.length}` });
+      }
+      marketLensButtons.slice(0, 3).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-market-lens-target", detail: `lens ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedContextLinks = ["screener", "etf", "stock"];
+      const actualContextLinks = contextLinks.map((node) => node.getAttribute("data-macro-chart-context-link"));
+      if (
+        contextLinks.length !== expectedContextLinks.length ||
+        !expectedContextLinks.every((link, index) => actualContextLinks[index] === link)
+      ) {
+        failures.push({ check: "macro-chart-context-link-order", detail: `actual=${JSON.stringify(actualContextLinks)} expected=${JSON.stringify(expectedContextLinks)}` });
+      }
+      contextLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-context-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+      if (connectionLinks.length < 2) {
+        failures.push({ check: "macro-chart-connection-link-count", detail: `links=${connectionLinks.length}` });
+      }
+      connectionLinks.slice(0, 3).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-connection-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (viewportWidth < 1280) {
+        if (!pickerToggle || pickerToggle.getBoundingClientRect().height < 44) {
+          failures.push({ check: "macro-chart-picker-toggle-target", detail: pickerToggle ? `height=${Math.round(pickerToggle.getBoundingClientRect().height)}` : "missing picker toggle" });
+        }
+      }
+      const actualFormulaControls = formulaControls.map((node) => node.getAttribute("data-macro-chart-formula-control"));
+      const expectedFormulaControls = ["left", "operator", "right", "add"];
+      if (
+        formulaControls.length !== expectedFormulaControls.length ||
+        !expectedFormulaControls.every((control, index) => actualFormulaControls[index] === control)
+      ) {
+        failures.push({ check: "macro-chart-formula-control-order", detail: `actual=${JSON.stringify(actualFormulaControls)} expected=${JSON.stringify(expectedFormulaControls)}` });
+      }
+      formulaControls.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "macro-chart-formula-control-target", detail: `control ${index} height=${Math.round(rect.height)}` });
         }
       });
     }
