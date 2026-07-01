@@ -607,7 +607,7 @@ export default function EtfUniverseCard({
                 }`}
               >
                 <span>{option.label}</span>
-                <span className={selected ? "text-white/80" : "text-[var(--c-ink-4)]"}>{formatNumber(option.count)}</span>
+                <span className={selected ? "text-white" : "text-[var(--c-ink-3)]"}>{formatNumber(option.count)}</span>
               </button>
             );
           })}
@@ -667,7 +667,7 @@ export default function EtfUniverseCard({
                 </span>
                 <span className="pc num neutral">
                   {formatAum(row)}
-                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-[var(--c-ink-4)]">보수 {formatPercentPointsValue(expenseRatioValue(row))}</small> : null}
+                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-[var(--c-ink-3)]">보수 {formatPercentPointsValue(expenseRatioValue(row))}</small> : null}
                 </span>
               </TransitionLink>
             );

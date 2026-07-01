@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import MacroContextCard from "@/components/macro/MacroContextCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import AppShell from "@/components/shell/AppShell";
+import TransitionLink from "@/components/TransitionLink";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
 import { ROUTES } from "@/lib/routes";
 import EtfUniverseCard from "../explore/EtfUniverseCard";
@@ -62,6 +63,14 @@ export default async function EtfsPage({ searchParams }: Props) {
               </p>
             </div>
             <div className="data-shell-head-actions">
+              <nav className="data-shell-section-nav" aria-label="ETF 도구">
+                <TransitionLink href={ROUTES.etfCompare} className="data-shell-link">
+                  ETF 비교
+                </TransitionLink>
+                <TransitionLink href={ROUTES.etfNew} className="data-shell-link">
+                  신규 ETF
+                </TransitionLink>
+              </nav>
               <MarketQuickLinks />
             </div>
           </div>
