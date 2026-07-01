@@ -302,7 +302,7 @@ type NumberSeries = MaybeNumber[];
 type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates" | "filings";
 type StockTabItem = { id: StockTab; label: string; badge?: string };
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
-const STOCK_TAB_VALUES: StockTab[] = ["overview", "etf", "financials", "statistics", "ownership", "estimates", "filings"];
+const STOCK_TAB_VALUES: StockTab[] = ["overview", "etf", "statistics", "estimates", "financials", "ownership", "filings"];
 
 function stockTabDomSafe(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "ticker";
@@ -594,6 +594,115 @@ function perBandPositionColor(current: number, min: number, max: number): string
   return cls === "emerald" ? "text-emerald-700 bg-emerald-50"
     : cls === "rose" ? "text-rose-700 bg-rose-50"
     : "text-slate-700 bg-slate-50";
+}
+
+type ValuationBandSummary = {
+  current: number;
+  min: number;
+  max: number;
+  avg?: number | null;
+  source: string;
+};
+
+function resolveValuationBandSummary(
+  rowPerBand: ReturnType<typeof validAnalyzerPerBand>,
+  detailPerBands: ReturnType<typeof validDetailPerBands>,
+): ValuationBandSummary | null {
+  if (detailPerBands) {
+    return {
+      current: detailPerBands.current,
+      min: detailPerBands.min_8y,
+      max: detailPerBands.max_8y,
+      avg: detailPerBands.avg_8y,
+      source: "8Y PER band",
+    };
+  }
+  return rowPerBand ? { ...rowPerBand, source: "Screener PER band" } : null;
+}
+
+function valuationBandTone(
+  band: ValuationBandSummary,
+  signalLens: FenokSignalsSummaryRecord | null | undefined,
+) {
+  const pct = bandPct(band.current, band.min, band.max);
+  const cls = bandClass(pct);
+  const weakScores = [
+    signalLens?.profitabilityScore,
+    signalLens?.growthScore,
+    signalLens?.longTermScore,
+  ].filter((score): score is number => isFiniteNumber(score) && score < 45);
+  const valueTrapWatch = cls === "emerald" && weakScores.length > 0;
+
+  if (valueTrapWatch) {
+    return {
+      label: "밸류트랩 점검",
+      detail: "PER는 낮지만 성장·수익성 점수 약세가 함께 보입니다.",
+      chipClass: "border-amber-200 bg-amber-50 text-amber-700",
+      fillClass: "bg-amber-500",
+    };
+  }
+  if (cls === "emerald") {
+    return {
+      label: "역사 대비 싼 구간",
+      detail: "PER 밴드 하단권입니다. 다음은 성장·마진 방어를 확인합니다.",
+      chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      fillClass: "bg-emerald-500",
+    };
+  }
+  if (cls === "rose") {
+    return {
+      label: "프리미엄 구간",
+      detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.",
+      chipClass: "border-rose-200 bg-rose-50 text-rose-700",
+      fillClass: "bg-rose-500",
+    };
+  }
+  return {
+    label: "적정 범위",
+    detail: "현재 PER는 역사 밴드 중간권입니다.",
+    chipClass: "border-slate-200 bg-slate-50 text-slate-700",
+    fillClass: "bg-brand-interactive",
+  };
+}
+
+function ValuationBandSummaryCard({
+  band,
+  signalLens,
+}: {
+  band: ValuationBandSummary | null;
+  signalLens: FenokSignalsSummaryRecord | null | undefined;
+}) {
+  if (!band) return null;
+  const pct = bandPct(band.current, band.min, band.max);
+  const clampedPct = Math.max(0, Math.min(100, pct * 100));
+  const tone = valuationBandTone(band, signalLens);
+
+  return (
+    <div data-stock-summary-module="valuation-band" className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">밸류에이션 판정</p>
+          <p className="mt-1 text-sm font-black text-slate-900">{tone.label}</p>
+        </div>
+        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black tabular-nums ${tone.chipClass}`}>
+          밴드 {Math.round(clampedPct)}%
+        </span>
+      </div>
+      <div className="mt-3">
+        <div className="relative h-2 rounded-full bg-slate-100">
+          <span className={`absolute top-0 h-2 w-2 -translate-x-1/2 rounded-full ${tone.fillClass}`} style={{ left: `${clampedPct}%` }} />
+        </div>
+        <div className="mt-1 grid grid-cols-3 text-[9px] font-black tabular-nums text-slate-500">
+          <span>{band.min.toFixed(1)}x</span>
+          <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x avg` : band.source}</span>
+          <span className="text-right">{band.max.toFixed(1)}x</span>
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] font-semibold leading-5 text-slate-600">
+        현재 PER {band.current.toFixed(1)}x · {tone.detail}
+      </p>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -957,6 +1066,7 @@ export default function StockDetailClient({
   const years: string[] = Array.isArray(detail?.years) ? detail.years : [];
   const rowPerBand = validAnalyzerPerBand(row);
   const detailPerBands = validDetailPerBands(detail?.per_bands);
+  const valuationBandSummary = resolveValuationBandSummary(rowPerBand, detailPerBands);
   const profitabilityEstimates = detail ? deriveProfitabilityEstimates(detail) : null;
 
   useEffect(() => {
@@ -1135,15 +1245,15 @@ export default function StockDetailClient({
   const stockTabs: StockTabItem[] = [
     ...(!isEtfOnlyAsset ? [{ id: "overview" as const, label: "요약" }] : []),
     ...(isEtfAsset ? [{ id: "etf" as const, label: "ETF" }] : []),
-    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
     ...(yfAvailable
       ? [
-          { id: "financials" as const, label: "재무" },
-          { id: "statistics" as const, label: "통계" },
-          { id: "ownership" as const, label: "보유기관" },
+          { id: "statistics" as const, label: "밸류" },
           { id: "estimates" as const, label: "추정치" },
+          { id: "financials" as const, label: "재무" },
+          { id: "ownership" as const, label: "보유기관" },
         ]
       : []),
+    ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
   ];
 
   useEffect(() => {
@@ -1542,21 +1652,26 @@ export default function StockDetailClient({
         {activeStockTab === "overview" ? (
           <div className="stock-summary-stack">
             {yfAvailable ? (
-              <ThreeSecondSummary
-                data={yfData}
-                perBand={rowPerBand}
-                guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
-                industry={industryBench}
-              />
+              <div data-stock-summary-module="summary-score">
+                <SummaryScoreCard
+                  data={yfData}
+                  perBand={rowPerBand}
+                  industry={industryBench}
+                />
+              </div>
+            ) : null}
+            <ValuationBandSummaryCard band={valuationBandSummary} signalLens={fenokSignalLens} />
+            {yfAvailable ? (
+              <div data-stock-summary-module="three-second-summary">
+                <ThreeSecondSummary
+                  data={yfData}
+                  perBand={rowPerBand}
+                  guruCount={f13Entries ? new Set(f13Entries.map((e) => e.investor)).size : 0}
+                  industry={industryBench}
+                />
+              </div>
             ) : null}
             {yfAvailable ? <FiftyTwoWeekBar info={yfData.info} /> : null}
-            {yfAvailable ? (
-              <SummaryScoreCard
-                data={yfData}
-                perBand={rowPerBand}
-                industry={industryBench}
-              />
-            ) : null}
             {!isEtfAsset ? <FenokSignalLensCard record={fenokSignalLens} /> : null}
             {!isEtfAsset || marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
             <TickerSurfaceEventsCard ticker={symbol} assetKind={isEtfAsset ? "etf" : "stock"} compact />
@@ -1638,15 +1753,15 @@ export default function StockDetailClient({
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-4">
                   {[
-                    ["재무", "매출·FCF·상세"],
-                    ["통계", "밸류·수익성"],
-                    ["추정치", "FY+1~3·변화"],
-                    ["보유기관", "13F 투자자"],
-                  ].map(([label, desc]) => (
+                    { label: "밸류", desc: "PER 밴드·수익성", tab: "statistics" as const },
+                    { label: "추정치", desc: "FY+1~3·변화", tab: "estimates" as const },
+                    { label: "재무", desc: "매출·FCF·상세", tab: "financials" as const },
+                    { label: "보유기관", desc: "13F 투자자", tab: "ownership" as const },
+                  ].map(({ label, desc, tab }) => (
                     <button
                       key={label}
                       type="button"
-                      onClick={() => selectStockTab(label === "재무" ? "financials" : label === "통계" ? "statistics" : label === "추정치" ? "estimates" : "ownership")}
+                      onClick={() => selectStockTab(tab)}
                       className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left transition hover:border-brand-interactive hover:bg-white"
                     >
                       <span className="block text-[11px] font-black text-slate-800">{label}</span>

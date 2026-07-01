@@ -209,6 +209,48 @@ async function collectRouteChecks(page, route) {
             detail: `scrollWidth=${tabs.scrollWidth} clientWidth=${tabs.clientWidth}`,
           });
         }
+        const stockTabLabels = Array.from(tabs.querySelectorAll('[role="tab"]'))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .map((node) => (node.textContent || "").replace(/\s+/g, " ").trim());
+        const expectedStockTabOrder = ["요약", "밸류", "추정치", "재무", "보유기관", "공시"];
+        if (stockTabLabels.includes("요약") && stockTabLabels.includes("공시")) {
+          const actualPrimaryOrder = stockTabLabels.filter((label) => expectedStockTabOrder.includes(label));
+          const orderOk =
+            actualPrimaryOrder.length === expectedStockTabOrder.length &&
+            expectedStockTabOrder.every((label, index) => actualPrimaryOrder[index] === label);
+          if (!orderOk) {
+            failures.push({
+              check: "stock-pro-tab-order",
+              detail: `actual=${JSON.stringify(stockTabLabels)} expected=${JSON.stringify(expectedStockTabOrder)}`,
+            });
+          }
+        }
+      }
+      const summaryModules = Array.from(document.querySelectorAll("[data-stock-summary-module]"))
+        .map((node) => ({
+          key: node.getAttribute("data-stock-summary-module"),
+          rect: node.getBoundingClientRect(),
+        }))
+        .filter((entry) => entry.rect.width > 0 && entry.rect.height > 0);
+      const summaryScore = summaryModules.find((entry) => entry.key === "summary-score");
+      const valuationBand = summaryModules.find((entry) => entry.key === "valuation-band");
+      const threeSecondSummary = summaryModules.find((entry) => entry.key === "three-second-summary");
+      if (!summaryScore || !valuationBand) {
+        failures.push({
+          check: "stock-summary-valuation-modules-present",
+          detail: `modules=${JSON.stringify(summaryModules.map((entry) => entry.key))}`,
+        });
+      } else if (summaryScore.rect.top > valuationBand.rect.top + 1) {
+        failures.push({
+          check: "stock-summary-before-valuation",
+          detail: `summaryTop=${summaryScore.rect.top} valuationTop=${valuationBand.rect.top}`,
+        });
+      }
+      if (summaryScore && threeSecondSummary && summaryScore.rect.top > threeSecondSummary.rect.top + 1) {
+        failures.push({
+          check: "stock-summary-score-first",
+          detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
+        });
       }
     }
 
