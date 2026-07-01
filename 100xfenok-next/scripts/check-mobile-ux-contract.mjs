@@ -516,6 +516,30 @@ async function collectRouteChecks(page, route) {
       if (currentRoute.includes("tab=insights") && regions.length < 5) {
         failures.push({ check: "superinvestors-insights-scroll-regions", detail: `visible regions=${regions.length}` });
       }
+      if (currentRoute.includes("tab=insights")) {
+        const heatmap = document.querySelector("[data-superinvestor-accumulation-heatmap]");
+        const tiles = Array.from(document.querySelectorAll("[data-superinvestor-accumulation-tile]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        if (!heatmap || heatmap.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-accumulation-heatmap-visible", detail: "missing visible accumulation heat-map" });
+        }
+        if (tiles.length < 6) {
+          failures.push({ check: "superinvestors-accumulation-heatmap-tiles", detail: `visible tiles=${tiles.length}` });
+        }
+        const investorCounts = tiles
+          .map((node) => Number.parseInt(node.getAttribute("data-superinvestor-accumulation-investors") || "", 10))
+          .filter(Number.isFinite);
+        const sortedDescending = investorCounts.every((value, index) => index === 0 || investorCounts[index - 1] >= value);
+        if (investorCounts.length !== tiles.length || !sortedDescending) {
+          failures.push({
+            check: "superinvestors-accumulation-heatmap-sort",
+            detail: `investors=${JSON.stringify(investorCounts)}`,
+          });
+        }
+      }
     }
 
     return {

@@ -226,6 +226,64 @@ function BuyingPressureCard({ data, trades }: { data: BuyingPressureData | null;
   );
 }
 
+function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
+  const rows = useMemo(() => {
+    return [...(trades?.bought ?? [])]
+      .sort((a, b) => b.investors_count - a.investors_count || b.amount - a.amount)
+      .slice(0, 12);
+  }, [trades]);
+  const maxInvestors = Math.max(1, ...rows.map((row) => row.investors_count));
+  const maxAmount = Math.max(1, ...rows.map((row) => Math.abs(row.amount)));
+
+  if (rows.length === 0) {
+    return (
+      <div data-superinvestor-accumulation-heatmap className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-500">
+        누적 매수 heat-map 데이터가 없습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div data-superinvestor-accumulation-heatmap className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {rows.map((row) => {
+        const investorIntensity = row.investors_count / maxInvestors;
+        const amountIntensity = Math.min(1, Math.abs(row.amount) / maxAmount);
+        const heat = Math.round(18 + investorIntensity * 34);
+        return (
+          <div
+            key={`${row.rank}-${row.ticker}`}
+            data-superinvestor-accumulation-tile
+            data-superinvestor-accumulation-investors={row.investors_count}
+            className="min-w-0 rounded-xl border border-emerald-200 px-3 py-3"
+            style={{ backgroundColor: `color-mix(in srgb, var(--c-up) ${heat}%, white)` }}
+          >
+            <div className="flex min-w-0 items-start justify-between gap-2">
+              <TickerChip ticker={row.ticker} variant="inline" />
+              <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-black tabular-nums text-emerald-700">
+                #{row.rank}
+              </span>
+            </div>
+            <p className="mt-1 truncate text-[10px] font-semibold text-slate-700" title={row.name}>{row.name}</p>
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-emerald-800">매수 참여</p>
+                <p className="orbitron text-lg font-black tabular-nums text-slate-950">{row.investors_count}명</p>
+              </div>
+              <p className="orbitron text-[11px] font-black tabular-nums text-emerald-800">{fmtUSD(row.amount)}</p>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full bg-white/70">
+              <div className="h-1.5 rounded-full bg-emerald-700" style={{ width: `${Math.max(8, amountIntensity * 100)}%` }} />
+            </div>
+            <p className="mt-1 truncate text-[9px] font-semibold text-slate-600">
+              대표 {row.top_investor?.name ?? row.top_investor?.id ?? "—"}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function PressurePanel({ title, rows, color, signLabel }: {
   title: string; rows: BuyingPressureRow[]; color: "emerald" | "rose";
   signLabel: (r: BuyingPressureRow) => string;
@@ -583,6 +641,15 @@ export default function InsightsTab() {
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
             {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <SkeletonCard />}
+          </div>
+
+          <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
+            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">거장 누적 매수 heat-map</h3>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">매수 참여 투자자 수로 정렬한 종목 heat-map — 진할수록 더 많은 투자자가 같은 분기에 매수</p>
+            {tr ? <AccumulationHeatmap trades={tr} /> : <SkeletonCard />}
+            <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+              {tr?.metadata.quarter ?? quarterLabel} 기준 · 순매수 금액은 막대 길이, 참여 투자자 수는 타일 진하기로 표시합니다.
+            </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
