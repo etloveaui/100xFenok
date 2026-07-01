@@ -225,6 +225,103 @@ function collectOldUrlConsumers(files) {
   );
 }
 
+function classifyOldUrlConsumer(file, pattern_ids) {
+  const patternSet = new Set(pattern_ids);
+  const referencesWorkerOnly = (
+    (patternSet.has("cloudflare_worker") || patternSet.has("generic_workers_dev"))
+    && !patternSet.has("github_pages_100x")
+    && !patternSet.has("cloudflare_pages")
+    && !patternSet.has("generic_pages_dev")
+  );
+
+  if (referencesWorkerOnly && (
+    file === ".github/workflows/deploy-worker.yml"
+    || file === "100xfenok-next/public/robots.txt"
+    || file === "100xfenok-next/src/app/robots.ts"
+    || file === "100xfenok-next/src/lib/site-url.ts"
+    || file === "100xfenok-next/scripts/check-seo-surface.mjs"
+    || file === "100xfenok-next/scripts/smoke-stockanalysis-routes.mjs"
+  )) {
+    return {
+      class: "current_worker_canonical",
+      first_action: "preserve; current Worker canonical-candidate reference, not a legacy cleanup target by default",
+    };
+  }
+
+  if (file.startsWith("100xfenok-next/public/")) {
+    return {
+      class: "public_mirror_copy",
+      first_action: "do not edit directly unless this path is the public SSOT; triage source owner first",
+    };
+  }
+
+  if (file.startsWith("docs/archive/") || file.includes("/docs/archives/")) {
+    return {
+      class: "historical_doc",
+      first_action: "preserve historical context unless the doc is used as an active execution source",
+    };
+  }
+
+  if (
+    file.startsWith(".github/workflows/")
+    || file.startsWith("config/")
+    || file.startsWith("scripts/")
+  ) {
+    return {
+      class: "source_runtime_template",
+      first_action: "owner-gated source-level URL migration plan required before changing external/runtime output",
+    };
+  }
+
+  if (
+    file.startsWith("admin/")
+    || file.startsWith("alpha-scout/")
+    || file.startsWith("tools/")
+    || file.startsWith("100x/")
+  ) {
+    return {
+      class: "source_admin_tool_config",
+      first_action: "triage source path and generated public mirror together before URL edits",
+    };
+  }
+
+  return {
+    class: "unresolved_requires_owner_triage",
+    first_action: "classify owner and runtime impact before any URL replacement",
+  };
+}
+
+function oldUrlConsumerClassification(oldUrlConsumers) {
+  const patternIdsByFile = new Map();
+  for (const [patternId, files] of Object.entries(oldUrlConsumers)) {
+    for (const file of files) {
+      const patternIds = patternIdsByFile.get(file) ?? [];
+      patternIds.push(patternId);
+      patternIdsByFile.set(file, patternIds);
+    }
+  }
+
+  const rows = [...patternIdsByFile.entries()].map(([file, patternIds]) => {
+    const sortedPatternIds = [...new Set(patternIds)].sort();
+    return {
+      file,
+      pattern_ids: sortedPatternIds,
+      ...classifyOldUrlConsumer(file, sortedPatternIds),
+    };
+  }).sort((left, right) => left.file.localeCompare(right.file));
+
+  const byClass = rows.reduce((acc, row) => {
+    acc[row.class] = (acc[row.class] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    by_class: Object.fromEntries(Object.entries(byClass).sort(([a], [b]) => a.localeCompare(b))),
+    unresolved_requires_owner_triage: rows.filter((row) => row.class === "unresolved_requires_owner_triage"),
+    rows,
+  };
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const appPages = walk(path.join(appRoot, "src", "app"), (absPath) => absPath.endsWith("/page.tsx"));
@@ -261,6 +358,7 @@ function main() {
   const oldUrlConsumers = collectOldUrlConsumers(textFiles);
   const oldUrlConsumerFiles = [...new Set(Object.values(oldUrlConsumers).flat())].sort();
   const legacyClassification = legacyHtmlClassification(legacyHtml);
+  const oldUrlClassification = oldUrlConsumerClassification(oldUrlConsumers);
 
   const workflowDir = path.join(repoRoot, ".github", "workflows");
   const workflows = walk(workflowDir, (absPath) => /\.(ya?ml)$/i.test(absPath))
@@ -298,6 +396,7 @@ function main() {
       legacy_public_file_exists_consumer_files: legacyExistsConsumers.length,
       workflow_files: workflows.length,
       old_url_consumer_files: oldUrlConsumerFiles.length,
+      old_url_unresolved_requires_owner_triage: oldUrlClassification.unresolved_requires_owner_triage.length,
       legacy_html_low_risk_candidates: legacyClassification.safe_first_candidates.length,
       legacy_html_route_backed: legacyClassification.route_backed.length,
       legacy_html_high_risk: legacyClassification.high_risk_count,
@@ -313,6 +412,7 @@ function main() {
     legacy_html_classification: legacyClassification,
     deploy_inventory: deployInventory,
     old_url_consumers: oldUrlConsumers,
+    old_url_consumer_classification: oldUrlClassification,
     owner_gates: {
       redirect: "blocked_without_explicit_owner_approval",
       legacy_delete: "blocked_without_explicit_owner_approval",
