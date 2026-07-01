@@ -1109,6 +1109,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
 
   if ((!f13Entries || f13Entries.length === 0) && !tradesChip?.bought && !tradesChip?.sold) return null;
   const { quarter, generatedAt } = tradeQuarter(tradesChip?.metadata);
+  const reportBasisLabel = [quarter ?? "최근 분기", generatedAt].filter(Boolean).join(" · ");
   const holderCount = f13Entries
     ? new Set(f13Entries.map((entry) => entry.investor).filter((investor) => typeof investor === "string" && investor.trim() !== "")).size
     : 0;
@@ -1126,7 +1127,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
             </p>
           </div>
           <span data-smart-money-asof className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-            {quarter ?? "최근 분기"}{generatedAt ? ` · ${generatedAt}` : ""}
+            {reportBasisLabel}
           </span>
         </div>
         {tradeRows.length > 0 ? (
@@ -1163,16 +1164,19 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
         ) : (
           <p className="mt-3 text-[11px] font-semibold text-slate-500">최근 분기 순매수·순매도 랭킹에는 포함되지 않았습니다.</p>
         )}
-        <p className="mt-2 text-[9px] font-semibold text-slate-500">13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다.</p>
+        <p data-smart-money-lag-disclosure className="mt-2 text-[9px] font-semibold text-slate-500">
+          13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다. 보유자별 표는 같은 기준분기/생성일로 읽어야 합니다.
+        </p>
       </div>
       {holders.length > 0 ? (
         <div data-smart-money-section="holdings" className="-mx-1 overflow-x-auto px-1">
-          <table className="w-full min-w-[320px] text-xs">
+          <table className="w-full min-w-[410px] text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
                 <th className="px-2 py-1.5 text-left">투자자</th>
                 <th className="px-2 py-1.5 text-right">주식수</th>
                 <th className="px-2 py-1.5 text-right">비중</th>
+                <th data-smart-money-report-date-column className="px-2 py-1.5 text-right">공시/기준</th>
               </tr>
             </thead>
             <tbody>
@@ -1188,6 +1192,9 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
                   </td>
                   <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-700">
                     {h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}
+                  </td>
+                  <td data-smart-money-report-date-cell className="px-2 py-1.5 text-right text-[10px] font-black text-slate-500">
+                    {reportBasisLabel}
                   </td>
                 </tr>
               ))}

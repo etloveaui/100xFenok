@@ -498,6 +498,10 @@ async function collectRouteChecks(page, route) {
         const diff = document.querySelector('[data-smart-money-section="diff"]');
         const holdings = document.querySelector('[data-smart-money-section="holdings"]');
         const asOf = document.querySelector("[data-smart-money-asof]");
+        const lagDisclosure = document.querySelector("[data-smart-money-lag-disclosure]");
+        const reportColumn = document.querySelector("[data-smart-money-report-date-column]");
+        const reportCells = Array.from(document.querySelectorAll("[data-smart-money-report-date-cell]"))
+          .filter((node) => node.getBoundingClientRect().width > 0);
         if (!diff || !holdings || !asOf) {
           failures.push({
             check: "stock-smart-money-diff-modules-present",
@@ -507,6 +511,15 @@ async function collectRouteChecks(page, route) {
           failures.push({
             check: "stock-smart-money-diff-before-holdings",
             detail: `diffTop=${diff.getBoundingClientRect().top} holdingsTop=${holdings.getBoundingClientRect().top}`,
+          });
+        }
+        if (!lagDisclosure || !(lagDisclosure.textContent || "").includes("최대 45일 지연")) {
+          failures.push({ check: "stock-smart-money-13f-lag-disclosure", detail: lagDisclosure?.textContent || "missing lag disclosure" });
+        }
+        if (!reportColumn || reportCells.length === 0) {
+          failures.push({
+            check: "stock-smart-money-report-date-column",
+            detail: JSON.stringify({ reportColumn: Boolean(reportColumn), reportCells: reportCells.length }),
           });
         }
       }
