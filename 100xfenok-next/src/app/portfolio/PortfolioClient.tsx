@@ -538,14 +538,8 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
         <Kpi label="보유 종목" value={`${active?.holdings.length ?? 0}종목`} />
       </div>
 
-      <PortfolioConnectionPanel
-        rows={holdingRows}
-        summary={connectionSummary}
-        loading={connectionIndex === undefined || servicesIndex === undefined}
-      />
-
       {/* Holdings table */}
-      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div data-portfolio-section="holdings" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">보유 종목</h2>
         <div className="mt-3 grid gap-3 lg:hidden">
           {holdingRows.length === 0 ? (
@@ -567,7 +561,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       </div>
 
       {/* Add ticker form */}
-      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div data-portfolio-section="add-holding" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">종목 추가</h2>
         <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="flex w-full flex-col gap-1 sm:w-auto">
@@ -628,7 +622,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       </div>
 
       {/* Cash edit */}
-      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div data-portfolio-section="cash" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">현금</h2>
         {editingCash ? (
           <div className="mt-2 flex items-center gap-2">
@@ -669,6 +663,12 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           </button>
         )}
       </div>
+
+      <PortfolioConnectionPanel
+        rows={holdingRows}
+        summary={connectionSummary}
+        loading={connectionIndex === undefined || servicesIndex === undefined}
+      />
 
       {/* Import / Export */}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -962,7 +962,7 @@ function PortfolioConnectionPanel({
   ];
 
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+    <section data-portfolio-section="connections" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h2 className="text-sm font-black tracking-tight text-slate-900">데이터 연결 서비스</h2>

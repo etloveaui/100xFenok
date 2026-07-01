@@ -173,6 +173,30 @@ async function collectRouteChecks(page, route) {
           });
         }
       });
+      const managementSections = [
+        { key: "holdings", node: document.querySelector('[data-portfolio-section="holdings"]') },
+        { key: "add-holding", node: document.querySelector('[data-portfolio-section="add-holding"]') },
+        { key: "cash", node: document.querySelector('[data-portfolio-section="cash"]') },
+      ];
+      const connectionSection = document.querySelector('[data-portfolio-section="connections"]');
+      if (!connectionSection || managementSections.some((entry) => !entry.node)) {
+        failures.push({
+          check: "portfolio-management-sections-present",
+          detail: JSON.stringify({
+            connection: Boolean(connectionSection),
+            management: managementSections.map((entry) => [entry.key, Boolean(entry.node)]),
+          }),
+        });
+      } else {
+        const connectionTop = connectionSection.getBoundingClientRect().top;
+        const lateSection = managementSections.find((entry) => entry.node.getBoundingClientRect().top > connectionTop);
+        if (lateSection) {
+          failures.push({
+            check: "portfolio-management-before-connections",
+            detail: `${lateSection.key} starts after connection service`,
+          });
+        }
+      }
     }
 
     if (currentRoute.startsWith("/stock/")) {
