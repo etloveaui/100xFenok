@@ -16,7 +16,7 @@ import { clamp, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatter
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
 import { formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
-import { BRIEFING_PRODUCT_TITLE } from "@/lib/product-nav";
+import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import {
   getStockConnection,
   getStockServices,
@@ -720,9 +720,12 @@ function V5SmartMoneyTwoHop({ ticker, label }: { ticker: string; label: string }
 
   useEffect(() => {
     let cancelled = false;
-    setHolders(undefined);
-    setSelectedHolder(null);
-    setInvestor(undefined);
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setHolders(undefined);
+      setSelectedHolder(null);
+      setInvestor(undefined);
+    });
     const timer = window.setTimeout(() => {
       loadByTickerHolders(ticker).then((next) => {
         if (!cancelled) setHolders(next);
@@ -737,10 +740,14 @@ function V5SmartMoneyTwoHop({ ticker, label }: { ticker: string; label: string }
   useEffect(() => {
     let cancelled = false;
     if (!selectedHolder) {
-      setInvestor(undefined);
+      Promise.resolve().then(() => {
+        if (!cancelled) setInvestor(undefined);
+      });
       return () => { cancelled = true; };
     }
-    setInvestor(undefined);
+    Promise.resolve().then(() => {
+      if (!cancelled) setInvestor(undefined);
+    });
     const timer = window.setTimeout(() => {
       loadInvestorHoldings(selectedHolder.investor).then((next) => {
         if (!cancelled) setInvestor(next);
@@ -845,7 +852,7 @@ export default function HomeV5Client() {
 
   return (
     <div className="fnk-shell v5-home">
-      <AppShell active="explore" title={BRIEFING_PRODUCT_TITLE}>
+      <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
         <div className="v5-stack">
           <V5MarketNow dashboard={dashboard} dataReady={dataReady} failedSources={failedSources} />
           <V5ReadingHero regime={regime} dashboard={dashboard} dataReady={dataReady} />

@@ -67,8 +67,8 @@ function tierLabel(value: string | null | undefined): string {
 }
 
 const SIZE_CLASS = {
-  md: "h-[180px] w-[180px] max-w-full sm:h-[200px] sm:w-[200px]",
-  lg: "h-[180px] w-[180px] max-w-full sm:h-[200px] sm:w-[200px] md:h-[280px] md:w-[280px]",
+  md: "h-[min(38vw,180px)] w-[min(38vw,180px)] min-h-[128px] min-w-[128px] max-w-full sm:h-[200px] sm:w-[200px]",
+  lg: "h-[min(38vw,180px)] w-[min(38vw,180px)] min-h-[128px] min-w-[128px] max-w-full sm:h-[200px] sm:w-[200px] md:h-[280px] md:w-[280px]",
 } as const;
 
 const LAYOUT_PADDING = {

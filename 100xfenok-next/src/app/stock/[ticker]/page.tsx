@@ -12,6 +12,13 @@ interface Props {
   searchParams?: Promise<{ tab?: string | string[]; macro?: string | string[] }>;
 }
 
+const STOCK_DETAIL_TABS = ["overview", "etf", "financials", "statistics", "ownership", "estimates", "filings"] as const;
+type StockDetailInitialTab = (typeof STOCK_DETAIL_TABS)[number];
+
+function isStockDetailInitialTab(value: string | undefined): value is StockDetailInitialTab {
+  return STOCK_DETAIL_TABS.includes(value as StockDetailInitialTab);
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
   const symbol = normalizeForRouteTicker(ticker);
@@ -29,7 +36,7 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const query = searchParams ? await searchParams : {};
   const symbol = normalizeForRouteTicker(ticker);
   const requestedTab = Array.isArray(query.tab) ? query.tab[0] : query.tab;
-  const initialTab = requestedTab === "filings" ? "filings" : undefined;
+  const initialTab = isStockDetailInitialTab(requestedTab) ? requestedTab : undefined;
   const initialMacroContextId = macroContextFromParam(query.macro)?.id;
   return (
     <div className="fnk-shell">

@@ -394,7 +394,7 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하락완화",
+    spokeLabel: "하방",
     fullLabel: "하락 압력 완화",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
@@ -421,7 +421,7 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
 const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "technicalFlow",
-    spokeLabel: "기술·자금",
+    spokeLabel: "기술",
     fullLabel: "기술·자금 흐름",
     scoreKey: "technicalFlowScore",
     directionKey: "technicalFlowDirection",
@@ -429,7 +429,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "volumeLiquidityTrend",
-    spokeLabel: "거래량",
+    spokeLabel: "거래",
     fullLabel: "거래량·유동성 추세",
     scoreKey: "volumeLiquidityTrendScore",
     directionKey: "volumeLiquidityTrendDirection",
@@ -438,7 +438,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "shortTermRelativeStrength",
-    spokeLabel: "상대강도",
+    spokeLabel: "강도",
     fullLabel: "단기 상대 강도",
     scoreKey: "shortTermRelativeStrengthScore",
     directionKey: "shortTermRelativeStrengthDirection",
@@ -455,7 +455,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "offExchangeActivityProxy",
-    spokeLabel: "장외거래",
+    spokeLabel: "장외",
     fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
@@ -557,6 +557,12 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
   const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
   const scoreText = axis.score === null ? "—" : Math.round(axis.score).toString();
   const tierText = axis.meta.tier ?? "미확인";
+  const compactTierText =
+    tierText === "압력 큼"
+      ? "높음"
+      : tierText === "강하게 낮음"
+        ? "낮음"
+        : tierText;
   const directionText = directionKo(axis.direction, "미확인");
   const ariaLabel = `${axis.fullLabel}: ${scoreText}점, ${directionText}, ${tierText}${axis.tooltipNote ? ` · ${axis.tooltipNote}` : ""}`;
   return (
@@ -582,7 +588,7 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
       />
       {axis.meta.tier && axis.score !== null ? (
         <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${toneClass(axis.meta.tone)}`}>
-          {axis.meta.tier}
+          {compactTierText}
         </span>
       ) : null}
       <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
@@ -2373,9 +2379,9 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
 
   return (
-    <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 p-4">
+    <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-2 py-3 sm:p-4">
       {stock && (
-        <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)]">
+        <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-2.5 shadow-[var(--sh-sm)] sm:p-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
               Fenok 신호 한눈에 보기 · 매수 권유 아님
@@ -2453,7 +2459,7 @@ export default function StockDetailPanel({ ticker, stock }: { ticker: string; st
               rightTitle="Long-term"
               leftAxes={shortTermAxes}
               rightAxes={longTermAxes}
-              size="lg"
+              size="md"
             />
             <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
               Fenok 파생 신호 · 매수 권유 아님

@@ -2,6 +2,8 @@ import { chromium } from "playwright";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
+const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
+const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
 const routes = (process.env.QA_MOBILE_UX_ROUTES || "/screener,/portfolio,/stock/NVDA,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
@@ -170,6 +172,48 @@ async function collectRouteChecks(page, route) {
   }, route);
 }
 
+async function collectScreenerExpandedChecks(page, route) {
+  const button = page.locator('[aria-controls^="screener-mobile-detail"]').first();
+  if ((await button.count()) === 0) {
+    return {
+      route,
+      viewportWidth: null,
+      scrollWidth: null,
+      failures: [{ check: "screener-expanded-click-target", detail: "no mobile detail button to click" }],
+    };
+  }
+
+  await button.click({ timeout: 10000 });
+  await page.waitForTimeout(500);
+
+  return page.evaluate((currentRoute) => {
+    const failures = [];
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    const detail = document.querySelector('[id^="screener-mobile-detail"]');
+
+    if (!detail || detail.getBoundingClientRect().height <= 0) {
+      failures.push({ check: "screener-expanded-detail-visible", detail: "expanded detail panel not visible" });
+    }
+    if (scrollWidth > viewportWidth + 1) {
+      failures.push({
+        check: "screener-expanded-no-horizontal-overflow",
+        detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+      });
+    }
+
+    return {
+      route: currentRoute,
+      viewportWidth,
+      scrollWidth,
+      failures,
+    };
+  }, route);
+}
+
 if (routes.length === 0) {
   throw new Error("No QA_MOBILE_UX_ROUTES configured.");
 }
@@ -178,7 +222,11 @@ if (viewports.length === 0) {
   throw new Error("No valid QA_MOBILE_UX_VIEWPORTS configured.");
 }
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  ...(browserChannel ? { channel: browserChannel } : {}),
+  ...(browserExecutablePath ? { executablePath: browserExecutablePath } : {}),
+});
 const results = [];
 
 try {
@@ -206,6 +254,11 @@ try {
         result.failures = checks.failures;
         result.viewportWidth = checks.viewportWidth;
         result.scrollWidth = checks.scrollWidth;
+        if (route.startsWith("/screener")) {
+          const expandedChecks = await collectScreenerExpandedChecks(page, route);
+          result.failures.push(...expandedChecks.failures);
+          result.expandedScrollWidth = expandedChecks.scrollWidth;
+        }
       } catch (error) {
         result.failures = [{ check: "navigation", detail: String(error) }];
       }
