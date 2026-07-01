@@ -72,7 +72,11 @@ To print the current owner record template, use `node
 scripts/build-macro-owner-decision-packet.mjs --decision-record-template`. The
 packet also exposes
 `next_gated_slice` and `safe_enforcement_slices`; those slices are intentionally
-no-mutation and must require a valid owner record before queue release.
+no-mutation and must require a valid owner record before queue release. After a
+valid owner record is supplied, the packet still selects only a decision-specific
+no-mutation follow-up plan: preserve documentation, remap dry-run proposal, or
+retire readiness packet. Redirect, delete, and deploy remain separate explicit
+owner approvals.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary

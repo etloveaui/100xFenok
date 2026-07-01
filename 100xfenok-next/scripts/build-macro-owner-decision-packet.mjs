@@ -202,6 +202,72 @@ function safeEnforcementSlices(review, nextCandidate) {
   ];
 }
 
+function decisionFollowupPlans(review, nextCandidate) {
+  const common = {
+    family_id: review.family_id,
+    mutation: "none",
+    mutation_allowed: false,
+    owner_record_required: true,
+    separate_mutation_approval_required: true,
+    blocked_actions: review.blocked_actions,
+    rank_2_review_candidate_after_followup: nextCandidate?.family_id ?? null,
+  };
+
+  return [
+    {
+      ...common,
+      id: "preserve_decision_documentation_packet",
+      gate: "after_valid_preserve_record_before_rank_2_review",
+      decision: "preserve",
+      allowed_next_action: "document the owner-approved preserve decision and keep legacy macro-monitor bridges behind owner/compatibility routes",
+      required_evidence: [
+        "owner decision record remains valid_no_mutation",
+        "Home and mobile primary IA remain search-first / non-legacy",
+        "rank 2 is exposed as a candidate only after the preserve documentation packet is recorded",
+      ],
+    },
+    {
+      ...common,
+      id: "remap_dry_run_proposal_packet",
+      gate: "after_valid_remap_record_before_any_href_edit",
+      decision: "remap",
+      allowed_next_action: "prepare a dry-run href-remap proposal against native /macro-chart, with rollback and QA commands, without editing routes or public assets",
+      required_evidence: [
+        `proposed destination stays ${review.owner_route}`,
+        "Home/dashboard legacy entrypoints are listed before any href patch",
+        "redirect/delete/deploy remain blocked until a separate mutation approval is recorded",
+      ],
+    },
+    {
+      ...common,
+      id: "retire_readiness_packet",
+      gate: "after_valid_retire_record_before_any_delete_or_redirect",
+      decision: "retire",
+      allowed_next_action: "prepare delete/redirect readiness, soak, rollback, and post-change smoke evidence without mutating public assets",
+      required_evidence: [
+        "local live-equivalence proof stays green for owner, compatibility, direct legacy, and Radar bridge paths",
+        "soak and rollback plan are written before any delete/redirect request",
+        "deploy/live smoke remains explicit owner-approved work, not implied by the retire decision record",
+      ],
+    },
+  ];
+}
+
+function selectedDecisionFollowup(packet) {
+  const record = packet.supplied_decision_record;
+  if (!record || packet.decision_record_status !== "valid_no_mutation") return null;
+  const plan = packet.decision_followup_plans.find((candidate) => candidate.decision === record.decision);
+  if (!plan) return null;
+  return {
+    ...plan,
+    selected_by_decision_record: true,
+    owner_approved_by: record.owner_approved_by,
+    decided_at: record.decided_at,
+    mutation_status: "not_executed",
+    rank_2_release_status: "candidate_visible_only_after_no_mutation_followup",
+  };
+}
+
 function validateDecisionRecord(record, packet) {
   const errors = [];
   if (!record) return errors;
@@ -301,6 +367,8 @@ function buildDecisionPacket(inventory, liveProof, decisionRecord) {
     supplied_decision_record: decisionRecord,
     next_gated_slice: nextGatedSlice(review, nextCandidate),
     safe_enforcement_slices: safeEnforcementSlices(review, nextCandidate),
+    decision_followup_plans: decisionFollowupPlans(review, nextCandidate),
+    selected_decision_followup: null,
     next_queue_candidate_after_owner_decision: nextCandidate,
   };
 }
@@ -366,10 +434,37 @@ function validatePacket(packet) {
       }
     }
   }
+  if (!Array.isArray(packet.decision_followup_plans) || packet.decision_followup_plans.length !== 3) {
+    errors.push("decision followup plans must cover preserve, remap, and retire");
+  } else {
+    const expectedDecisions = new Set(["preserve", "remap", "retire"]);
+    for (const plan of packet.decision_followup_plans) {
+      expectedDecisions.delete(plan.decision);
+      if (plan.mutation !== "none" || plan.mutation_allowed !== false) {
+        errors.push(`decision followup plan must not authorize mutation: ${plan.id}`);
+      }
+      if (plan.owner_record_required !== true || plan.separate_mutation_approval_required !== true) {
+        errors.push(`decision followup plan must require owner record plus separate mutation approval: ${plan.id}`);
+      }
+    }
+    if (expectedDecisions.size > 0) {
+      errors.push(`decision followup plans missing decisions: ${Array.from(expectedDecisions).join(",")}`);
+    }
+  }
   const decisionRecordErrors = validateDecisionRecord(packet.supplied_decision_record, packet);
   errors.push(...decisionRecordErrors);
   if (packet.supplied_decision_record && decisionRecordErrors.length === 0) {
     packet.decision_record_status = "valid_no_mutation";
+    packet.selected_decision_followup = selectedDecisionFollowup(packet);
+    if (!packet.selected_decision_followup) {
+      errors.push(`valid decision record did not select a followup plan: ${packet.supplied_decision_record.decision}`);
+    } else if (
+      packet.selected_decision_followup.mutation !== "none" ||
+      packet.selected_decision_followup.mutation_allowed !== false ||
+      packet.selected_decision_followup.separate_mutation_approval_required !== true
+    ) {
+      errors.push(`selected decision followup must remain no-mutation: ${packet.selected_decision_followup.id}`);
+    }
   }
   return errors;
 }
@@ -382,6 +477,10 @@ function printText(packet) {
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
   console.log(`next_gated_slice=${packet.next_gated_slice.id}`);
   console.log(`safe_enforcement_slices=${packet.safe_enforcement_slices.map((slice) => slice.id).join(",")}`);
+  console.log(`decision_followup_plans=${packet.decision_followup_plans.map((plan) => plan.id).join(",")}`);
+  if (packet.selected_decision_followup) {
+    console.log(`selected_decision_followup=${packet.selected_decision_followup.id}`);
+  }
   console.log("decision_record_template_command=node scripts/build-macro-owner-decision-packet.mjs --decision-record-template");
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
