@@ -19,6 +19,7 @@ Current coverage (2026-06-30 local DataPack):
 - Fenok Edge full ETF daily-1Y diagnostic: `4484 = 3703 complete + 243 fetchable + 538 inception-limited`; this is a rolling universe-health/backfill lane, not the ETF Center service gate.
 - ETF Core Daily Basket: `118` selected refresh tickers from `1,576` structural candidates after leveraged/inverse/single-stock/single-stock-derivative-income exclusions; current local regeneration is `118 fresh / 0 stale`, so Core Basket daily-ready is green while full-universe daily-1Y remains diagnostic/backfill.
 - New ETF Radar: `new_etfs` rows are watchlist-only and cannot become core candidates without detail, history, classification, and scoring proof.
+- New ETF Radar gate: `qa:fenok-etf-new-radar-gate` keeps the source/public `new_etfs` mirror aligned, requires zero overlap with Core Basket rows, and preserves `watchlist_only` / `core_candidate_allowed=false` semantics.
 - Remaining distinction: ETF Center UI/data coverage and Core Basket service gate are separate from full-universe ETF completion. Do not turn all `4,484` scored ETFs into a paid-ready blocker.
 - Current diagnostic preflight: `qa:market-audit`, `qa:history-gap`, `qa:data-graph`, and `qa:data-freshness` have been used as gates for this lane. The separate full-universe daily-1Y continuity dispatch remains owner-gated with `243` scored ETF gaps; full `qa:fenok-edge-readiness` is currently blocked by the stale Core Basket gate.
 
@@ -65,6 +66,7 @@ Recently listed ETFs as a radar/watchlist surface. A row appearing here is not a
 - Filters: query, type (leveraged / single-stock / inverse), date range (7 / 14 / 30 days), issuer, sort (date / ticker / change / price).
 - Status chips: "관찰 목록", plus "상세 가능" / "부분 확인" / "관찰 대기" based on `coverage/etf_detail.json` and the snapshot fallback status.
 - CSV export.
+- Gate: `npm --prefix 100xfenok-next run qa:fenok-etf-new-radar-gate`.
 
 Implementation pointers:
 

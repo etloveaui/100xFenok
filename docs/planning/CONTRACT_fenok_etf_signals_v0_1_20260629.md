@@ -82,9 +82,14 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - rejects public mirrors of the admin manifest
   - fails closed when selected Core Basket rows need refresh
   - requires no New ETF Radar row to enter the core basket
+- `npm --prefix 100xfenok-next run qa:fenok-etf-new-radar-gate`
+  - requires the source/public `new_etfs` surface to match
+  - requires New ETF Radar rows to remain `watchlist_only` with `core_candidate_allowed=false`
+  - requires Core Basket admin/summary/public-summary rows to have zero overlap with the New ETF Radar ticker set
+  - requires the `new_etf_radar_only` exclusion count to match the current overlap between New ETF Radar and the scored ETF signal universe
 - `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`
-  - includes the ETF signal gate, ETF action-index gate, Core Basket gate, and ETF daily 1Y dispatch-plan gate
-  - fails closed if the ETF public surface, freshness evidence, Core Basket evidence, fetchable required-history gate, fetchable daily 1Y history-continuity gate, action-index privacy gate, or dispatch-plan privacy gate regresses
+  - includes the ETF signal gate, ETF action-index gate, Core Basket gate, New ETF Radar gate, and ETF daily 1Y dispatch-plan gate
+  - fails closed if the ETF public surface, freshness evidence, Core Basket evidence, New ETF Radar watchlist-only contract, fetchable required-history gate, fetchable daily 1Y history-continuity gate, action-index privacy gate, or dispatch-plan privacy gate regresses
 
 ## Readiness Flip Criteria
 
@@ -99,7 +104,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 
 - Purpose: provide the service DAILY/GATED ETF set without making the over-broad `4,484`-ETF universe a launch blocker.
 - Readiness label: `etf_core_daily_basket_ready`; do not flip full `S3 ETF daily_ready`.
-- Current generated selection: `1,577` structural candidates -> `118` selected core refresh tickers (`50` Equity, `35` Fixed Income, `15` Alternatives, `10` Asset Allocation, `7` Commodity, `1` Uncategorized).
+- Current generated selection: `1,576` structural candidates -> `118` selected core refresh tickers (`50` Equity, `35` Fixed Income, `15` Alternatives, `10` Asset Allocation, `7` Commodity, `1` Uncategorized).
 - Current readiness: `fresh_selected_count=118`, `stale_selected_count=0`, blockers `[]`; therefore `core_daily_basket_ready=true`.
 - Exclusions by default: leveraged, inverse, single-stock, single-stock/concentrated derivative-income strategy, low-confidence classification, broken-history rows, and stale quote/volume rows.
 - Candidate buckets: broad US equity, sector, factor/style/dividend, international, fixed income, commodity/currency, alternatives, and asset-allocation funds.
@@ -109,7 +114,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
   - non-stale quote and volume evidence exists;
   - enough scored ETF signal coverage exists for the public summary;
   - liquidity/AUM floors are met or the ticker is an owner-pinned exception with the exception recorded.
-- New ETFs enter the New ETF Radar first. They are not core by default until detail, history, classification, and scoring gates pass.
+- New ETFs enter the New ETF Radar first. They are not core by default until detail, history, classification, and scoring gates pass; `qa:fenok-etf-new-radar-gate` keeps this watchlist-only contract fail-closed.
 - Gate: `npm --prefix 100xfenok-next run qa:fenok-etf-core-daily-basket`.
 - Automation path: default StockAnalysis ETF refresh now loads `data/admin/fenok-etf-core-daily-basket.json` and prioritizes `daily_refresh_universe.tickers` before the legacy focus ETF list.
 
