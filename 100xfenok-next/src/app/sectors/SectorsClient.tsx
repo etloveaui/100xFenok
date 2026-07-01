@@ -33,6 +33,25 @@ const MOBILE_VIEWS: ReadonlyArray<{ key: MobileView; label: string }> = [
   { key: "guru", label: "기관 보유" },
 ];
 
+const MOBILE_VIEW_COPY: Record<MobileView, { title: string; description: string }> = {
+  heatmap: {
+    title: "성과 흐름",
+    description: "기간별 상대 강도와 리더·약세 업종을 먼저 봅니다.",
+  },
+  etf: {
+    title: "대표 ETF",
+    description: "섹터 ETF 수익률, 베타, 보수율을 비교합니다.",
+  },
+  valuation: {
+    title: "밸류 위치",
+    description: "Fwd P/E 밴드와 ROE로 비싼/싼 업종을 나눕니다.",
+  },
+  guru: {
+    title: "기관 보유",
+    description: "13F 기반 스마트머니 비중과 4분기 변화를 봅니다.",
+  },
+};
+
 function dateOnly(value: string | null | undefined): string | null {
   return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
 }
@@ -174,13 +193,16 @@ function valuationSourceLine(sourceMeta: SectorSourceMeta): string {
 function MobileViewSwitch({
   value,
   onChange,
+  activeSummary,
 }: {
   value: MobileView;
   onChange: (next: MobileView) => void;
+  activeSummary: string;
 }) {
+  const activeCopy = MOBILE_VIEW_COPY[value];
   return (
     <div className="md:hidden" data-sector-view-switch>
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm">
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm sm:grid-cols-4">
         {MOBILE_VIEWS.map((view) => {
           const active = view.key === value;
           return (
@@ -188,6 +210,7 @@ function MobileViewSwitch({
               key={view.key}
               type="button"
               data-sector-view-tab={view.key}
+              aria-controls={`sector-panel-${view.key}`}
               onClick={() => onChange(view.key)}
               aria-pressed={active}
               className={cx(
@@ -199,6 +222,18 @@ function MobileViewSwitch({
             </button>
           );
         })}
+      </div>
+      <div
+        data-sector-view-current={value}
+        className="mt-2 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 shadow-sm"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-black text-[var(--c-ink)]">{activeCopy.title}</p>
+          <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black tabular-nums text-[var(--c-ink-3)]">
+            {activeSummary}
+          </span>
+        </div>
+        <p className="mt-1 text-[11px] font-semibold leading-relaxed text-[var(--c-ink-3)]">{activeCopy.description}</p>
       </div>
     </div>
   );
@@ -408,6 +443,12 @@ export default function SectorsClient() {
   const smartRows = rows.filter((row) => row.smartMoney);
   const smartLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.weight ?? -Infinity) - (a.smartMoney?.weight ?? -Infinity))[0] : null;
   const smartDeltaLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.delta4q ?? -Infinity) - (a.smartMoney?.delta4q ?? -Infinity))[0] : null;
+  const mobileViewSummary: Record<MobileView, string> = {
+    heatmap: `${rows.length}개`,
+    etf: `${etfRows.length}개`,
+    valuation: `${valuationRows.length}개`,
+    guru: `${smartRows.length}개`,
+  };
   const headerDesc =
     benchmarksReady && leaders[0] && laggards[0]
       ? `${dateLabel ?? "최신"} 기준 ${activeWindowLabel} 리더는 ${leaders[0].name} ${pct(leaders[0].momentum[sortWindow], 1)}, 약세는 ${laggards[0].name} ${pct(laggards[0].momentum[sortWindow], 1)}입니다.`
@@ -447,7 +488,7 @@ export default function SectorsClient() {
         <LoadingSkeleton />
       ) : null}
 
-      <MobileViewSwitch value={mobileView} onChange={setMobileView} />
+      <MobileViewSwitch value={mobileView} onChange={setMobileView} activeSummary={mobileViewSummary[mobileView]} />
 
       <SectorPulse
         leader={leaders[0]}
@@ -465,7 +506,7 @@ export default function SectorsClient() {
       />
 
       {/* Heatmap */}
-      <div className={mobilePanelClass(mobileView === "heatmap")} data-sector-panel="heatmap">
+      <div id="sector-panel-heatmap" className={mobilePanelClass(mobileView === "heatmap")} data-sector-panel="heatmap">
         <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과">
         <p className="mb-3 text-xs text-[var(--c-ink-2)]">
           {beatCount === null
@@ -611,7 +652,7 @@ export default function SectorsClient() {
       </div>
 
       {/* ETF comparison */}
-      <div className={mobilePanelClass(mobileView === "etf")} data-sector-panel="etf">
+      <div id="sector-panel-etf" className={mobilePanelClass(mobileView === "etf")} data-sector-panel="etf">
       <SectionCard kicker="섹터 ETF" title="섹터 ETF 비교">
         {etfRows.length === 0 ? (
           <p className="text-sm text-[var(--c-ink-2)]">ETF 데이터를 불러오지 못했습니다.</p>
@@ -671,7 +712,7 @@ export default function SectorsClient() {
       </div>
 
       {/* Sector valuation */}
-      <div className={mobilePanelClass(mobileView === "valuation")} data-sector-panel="valuation">
+      <div id="sector-panel-valuation" className={mobilePanelClass(mobileView === "valuation")} data-sector-panel="valuation">
       <SectionCard kicker="밸류에이션" title="섹터 밸류에이션">
         <div className="grid gap-2 md:hidden">
           {valuationRows.map((row) => (
@@ -722,7 +763,7 @@ export default function SectorsClient() {
         </p>
       </SectionCard>
       </div>
-      <div className={mobilePanelClass(mobileView === "guru")} data-sector-panel="guru">
+      <div id="sector-panel-guru" className={mobilePanelClass(mobileView === "guru")} data-sector-panel="guru">
         <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
       </div>
 

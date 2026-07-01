@@ -701,6 +701,52 @@ async function collectStockEstimatesToggleChecks(page, route) {
   }, route);
 }
 
+async function collectSectorViewSwitchChecks(page, route) {
+  const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
+  const failures = [];
+  let clickScrollWidth = null;
+
+  for (const tab of expectedTabs) {
+    await page.locator(`[data-sector-view-tab="${tab}"]`).click();
+    await page.waitForTimeout(150);
+    const check = await page.evaluate((key) => {
+      const localFailures = [];
+      const viewportWidth = window.innerWidth;
+      const scrollWidth = Math.max(
+        document.documentElement.scrollWidth,
+        document.body?.scrollWidth ?? 0,
+      );
+      const button = document.querySelector(`[data-sector-view-tab="${key}"]`);
+      const panel = document.querySelector(`[data-sector-panel="${key}"]`);
+      const current = document.querySelector("[data-sector-view-current]");
+      const buttonPressed = button?.getAttribute("aria-pressed") === "true";
+      const panelRect = panel?.getBoundingClientRect();
+      const currentKey = current?.getAttribute("data-sector-view-current");
+
+      if (!buttonPressed) {
+        localFailures.push({ check: "sector-view-switch-click-state", detail: `tab=${key} aria-pressed=${button?.getAttribute("aria-pressed")}` });
+      }
+      if (!panel || !panelRect || panelRect.width <= 0 || panelRect.height <= 0) {
+        localFailures.push({ check: "sector-view-switch-click-panel", detail: `tab=${key} panel not visible` });
+      }
+      if (currentKey !== key) {
+        localFailures.push({ check: "sector-view-current-summary", detail: `tab=${key} current=${currentKey || ""}` });
+      }
+      if (scrollWidth > viewportWidth + 1) {
+        localFailures.push({
+          check: "sector-view-switch-no-horizontal-overflow",
+          detail: `tab=${key} scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+        });
+      }
+      return { failures: localFailures, scrollWidth };
+    }, tab);
+    failures.push(...check.failures);
+    clickScrollWidth = Math.max(clickScrollWidth ?? 0, check.scrollWidth ?? 0);
+  }
+
+  return { route, failures, scrollWidth: clickScrollWidth };
+}
+
 if (routes.length === 0) {
   throw new Error("No QA_MOBILE_UX_ROUTES configured.");
 }
@@ -755,6 +801,11 @@ try {
           const estimatesToggleChecks = await collectStockEstimatesToggleChecks(page, route);
           result.failures.push(...estimatesToggleChecks.failures);
           result.estimatesToggleScrollWidth = estimatesToggleChecks.scrollWidth;
+        }
+        if (route.startsWith("/sectors")) {
+          const sectorViewChecks = await collectSectorViewSwitchChecks(page, route);
+          result.failures.push(...sectorViewChecks.failures);
+          result.sectorViewSwitchScrollWidth = sectorViewChecks.scrollWidth;
         }
       } catch (error) {
         result.failures = [{ check: "navigation", detail: String(error) }];
