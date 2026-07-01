@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-06-30T23:59:04.081Z",
+  "generated_at": "2026-07-01T01:59:44.841Z",
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
   "raw_policy": {
     "raw_public": false,
@@ -14,9 +14,9 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-06-30T22:43:21.215Z",
+    "generated_at": "2026-07-01T01:27:44.043Z",
     "current_only": true,
-    "total": 1066,
+    "total": 1173,
     "by_market": [
       {
         "market": "HKEX",
@@ -40,24 +40,24 @@
       },
       {
         "market": "US",
-        "count": 579
+        "count": 685
       },
       {
         "market": "US_CLASS",
-        "count": 58
+        "count": 59
       }
     ],
     "buckets": {
-      "us": 637,
+      "us": 744,
       "korea": 338,
       "asia_ex_taiwan": 91,
       "explicit_taiwan": 0
     },
     "s0_daily_gated_scope": {
       "policy": "korea_plus_us_current_daily_sources",
-      "eligible_count": 975,
+      "eligible_count": 1082,
       "eligible_buckets": {
-        "us": 637,
+        "us": 744,
         "korea": 338
       },
       "excluded_count": 91,
@@ -76,7 +76,7 @@
         }
       ],
       "excluded_reason": "HKEX/SSE/SZSE rows are active/public scored rows, but they are outside the current Korea+US daily-source workstream.",
-      "public_scoring_total_remains": 1066
+      "public_scoring_total_remains": 1173
     },
     "taiwan_ticker_anomalies": [
       {
@@ -93,8 +93,8 @@
     "generated_at": "2026-06-30T23:57:36Z",
     "collected_asset_total": 6530,
     "collected_stock_candidates": 1178,
-    "scored_public_stock": 1066,
-    "stock_promotion_audit_gap": 112,
+    "scored_public_stock": 1173,
+    "stock_promotion_audit_gap": 5,
     "stage": "NORMALIZED",
     "public_done_claim_allowed": false,
     "caveat": "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated."
@@ -133,14 +133,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-06-30T22:43:21.933Z",
-          "age_hours": 1.26,
+          "age_hours": 3.27,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-06-30T23:58:57.456Z",
-          "age_hours": 0,
+          "age_hours": 2.01,
           "max_age_hours": 48
         },
         {
@@ -182,8 +182,8 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-06-30T23:58:57.540Z",
-        "generated_age_hours": 0,
+        "generated_at": "2026-07-01T01:05:58.436Z",
+        "generated_age_hours": 0.9,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
         "daily_ready": true,
@@ -226,7 +226,7 @@
         "denominator": 338,
         "denominator_label": "active_scoring_universe.korea",
         "coverage_pct": 100,
-        "active_scoring_coverage_pct": 31.71,
+        "active_scoring_coverage_pct": 28.82,
         "source_date": "2026-06-26",
         "availability_status": "ready",
         "claim_scope": "source_available",
@@ -265,34 +265,34 @@
       {
         "id": "us_finra_flow_proxy",
         "label": "US FINRA flow proxy coverage, active plain-US metric-ready",
-        "covered_count": 579,
-        "denominator": 579,
+        "covered_count": 682,
+        "denominator": 685,
         "denominator_label": "active_scoring_universe.us where market=US",
-        "coverage_pct": 100,
-        "active_scoring_coverage_pct": 54.32,
+        "coverage_pct": 99.56,
+        "active_scoring_coverage_pct": 58.14,
         "source_date": "2026-06-26",
-        "availability_status": "ready",
+        "availability_status": "partial",
         "claim_scope": "proxy_source_available",
         "not_public_scoring": true,
         "caveat": "FINRA short-sale/off-exchange metric-ready coverage for active plain-US rows only; not full all-axis scoring and not directional flow. US_CLASS foreign/class rows are tracked as mapping policy work, not FINRA fetch gaps.",
         "source_file": "data/computed/fenok_flow_proxies.json",
-        "rows": 587,
-        "row_existence_count": 587,
-        "strict_metric_ready_count": 579,
-        "low_confidence_placeholder_count": 8,
-        "excluded_us_class_count": 58,
+        "rows": 694,
+        "row_existence_count": 694,
+        "strict_metric_ready_count": 682,
+        "low_confidence_placeholder_count": 12,
+        "excluded_us_class_count": 59,
         "eligibility_policy": "active rows where market=US and FINRA proxy metrics are high-confidence/non-placeholder"
       },
       {
         "id": "us_occ_options_proxy",
         "label": "US OCC listed-options proxy coverage",
         "covered_count": 579,
-        "denominator": 579,
+        "denominator": 685,
         "denominator_label": "active_scoring_universe.us where market=US and ticker is a plain OCC underlying",
-        "coverage_pct": 100,
-        "active_scoring_coverage_pct": 54.32,
+        "coverage_pct": 84.53,
+        "active_scoring_coverage_pct": 49.36,
         "source_date": "2026-06-26",
-        "availability_status": "ready",
+        "availability_status": "partial",
         "claim_scope": "proxy_source_available",
         "not_public_scoring": true,
         "caveat": "OCC listed-options volume proxy or counted no-listed-options evidence for active plain-US rows only; not OPRA, premium, greeks, or buyer/seller direction. US_CLASS foreign/class rows are mapping policy work, not broad OCC fetch gaps.",
@@ -302,7 +302,7 @@
           "counted_present_rows": 579,
           "options_activity_rows": 573,
           "no_listed_options_source_ready_rows": 6,
-          "excluded_us_class_or_non_plain_rows": 58,
+          "excluded_us_class_or_non_plain_rows": 59,
           "both_sides_loaded_or_legacy_rows": 560,
           "partial_zero_side_rows": 13,
           "partial_zero_side_rule": "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
@@ -313,10 +313,10 @@
         "id": "us_latest_bounded_backfill_run",
         "label": "US latest bounded backfill run coverage",
         "covered_count": 8,
-        "denominator": 637,
+        "denominator": 744,
         "denominator_label": "active_scoring_universe.us",
-        "coverage_pct": 1.26,
-        "active_scoring_coverage_pct": 0.75,
+        "coverage_pct": 1.08,
+        "active_scoring_coverage_pct": 0.68,
         "source_date": "2026-06-26",
         "availability_status": "ready",
         "claim_scope": "run_health",
@@ -348,7 +348,7 @@
         "id": "taiwan_current_universe",
         "label": "Taiwan current active-universe numerator",
         "covered_count": 0,
-        "denominator": 1066,
+        "denominator": 1173,
         "denominator_label": "active_scoring_universe.total",
         "coverage_pct": 0,
         "active_scoring_coverage_pct": 0,
@@ -381,42 +381,42 @@
     "not_public_scoring": true,
     "caveat": "Composite counts are useful for source availability progress only. They are not public scoring coverage.",
     "latest_available_kr_plus_us_flow": {
-      "covered_count": 917,
-      "denominator": 1066,
+      "covered_count": 1020,
+      "denominator": 1173,
       "denominator_label": "active_scoring_universe.total",
-      "coverage_pct": 86.02,
+      "coverage_pct": 86.96,
       "claim_scope": "source_availability_composite",
       "not_public_scoring": true,
       "formula": "KRX latest fully populated issuer daily proof + US FINRA flow proxy"
     },
     "latest_available_kr_plus_us_occ": {
       "covered_count": 917,
-      "denominator": 1066,
+      "denominator": 1173,
       "denominator_label": "active_scoring_universe.total",
-      "coverage_pct": 86.02,
+      "coverage_pct": 78.18,
       "claim_scope": "source_availability_composite",
       "not_public_scoring": true,
       "formula": "KRX latest fully populated issuer daily proof + US OCC options proxy"
     },
     "strict_new_bounded_run_plus_kr": {
       "covered_count": 346,
-      "denominator": 1066,
+      "denominator": 1173,
       "denominator_label": "active_scoring_universe.total",
-      "coverage_pct": 32.46,
+      "coverage_pct": 29.5,
       "claim_scope": "run_health_composite",
       "not_public_scoring": true,
       "formula": "KRX latest fully populated issuer daily proof + latest US bounded reference-ticker run"
     },
     "remaining_asia_ex_taiwan": {
       "count": 91,
-      "denominator": 1066,
+      "denominator": 1173,
       "denominator_label": "active_scoring_universe.total",
-      "pct": 8.54,
+      "pct": 7.76,
       "claim_scope": "explicit_s0_daily_scope_exclusion",
       "not_public_scoring": true,
       "excluded_from_s0_daily_gated_scope": true,
       "blocks_daily_ready": false,
-      "daily_gated_scope_denominator": 975,
+      "daily_gated_scope_denominator": 1082,
       "daily_gated_scope_label": "active_scoring_universe.us + active_scoring_universe.korea",
       "excluded_markets": [
         {
@@ -450,59 +450,60 @@
       {
         "id": "active_stock_scoring_current",
         "label": "Current active stock scoring chain",
-        "denominator": 1066,
+        "denominator": 1173,
         "stage": "PUBLIC",
-        "readiness_status": "ready",
-        "public_done_claim_allowed": true,
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": true,
-          "gated": true
+          "daily": false,
+          "gated": false
         },
-        "caveat": "The current active stock chain is public-scored and has Korea+US daily/gated source proof under the current S0 scope; HKEX/SSE/SZSE and US_CLASS mapping remain separate expansion work.",
+        "caveat": "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
         "blocking_evidence": {
           "evidence_origin": "derived_counts_only",
-          "daily_ready": true,
-          "gated_ready": true,
+          "daily_ready": false,
+          "gated_ready": false,
           "checks": [
             {
               "id": "finra_full_us_source_ready",
-              "status": "ready",
-              "covered_count": 579,
-              "denominator": 579,
-              "missing_count": 0,
+              "status": "blocked",
+              "covered_count": 682,
+              "denominator": 685,
+              "missing_count": 3,
               "source_date": "2026-06-26",
               "eligibility_policy": "active_scoring_universe rows where market=US; US_CLASS foreign/class rows stay in active US bucket but are excluded from FINRA plain-US readiness until mapped or rebucketed.",
-              "excluded_us_class_count": 58,
-              "row_existence_count": 587,
-              "strict_metric_ready_count": 579,
-              "strict_metric_missing_or_placeholder_count": 58,
-              "low_confidence_placeholder_count": 8,
+              "excluded_us_class_count": 59,
+              "row_existence_count": 694,
+              "strict_metric_ready_count": 682,
+              "strict_metric_missing_or_placeholder_count": 62,
+              "low_confidence_placeholder_count": 12,
               "derived_gap_breakdown": {
                 "row_existence_criterion": {
-                  "covered_count": 587,
+                  "covered_count": 694,
                   "missing_count": 50,
                   "missing_categories": {
                     "non_plain_or_foreign_suffix_requires_universe_mapping": 50
                   }
                 },
                 "strict_metric_ready_criterion": {
-                  "covered_count": 579,
-                  "missing_or_placeholder_count": 58,
+                  "covered_count": 682,
+                  "missing_or_placeholder_count": 62,
                   "missing_or_placeholder_categories": {
                     "class_share_placeholder_requires_finra_symbol_policy": 2,
                     "non_plain_or_foreign_suffix_requires_universe_mapping": 50,
-                    "non_plain_placeholder_requires_universe_mapping": 6
+                    "non_plain_placeholder_requires_universe_mapping": 7,
+                    "plain_us_finra_metric_gap": 3
                   }
                 },
                 "active_plain_us_metric_ready_criterion": {
-                  "covered_count": 579,
-                  "denominator": 579,
-                  "missing_count": 0
+                  "covered_count": 682,
+                  "denominator": 685,
+                  "missing_count": 3
                 }
               },
               "semantic_warning": "Row-existence FINRA coverage is not the same as metric-ready FINRA coverage when low-confidence placeholders exist.",
@@ -510,15 +511,16 @@
             },
             {
               "id": "occ_full_us_source_ready",
-              "status": "ready",
+              "status": "blocked",
               "covered_count": 579,
-              "denominator": 579,
-              "missing_count": 0,
+              "denominator": 685,
+              "missing_count": 106,
               "source_date": "2026-06-26",
               "eligibility_policy": "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
               "derived_gap_breakdown": {
                 "missing_categories": {
-                  "excluded_non_plain_or_foreign_suffix_count": 56,
+                  "plain_us_collection_or_no_options_policy_required": 106,
+                  "excluded_non_plain_or_foreign_suffix_count": 57,
                   "excluded_class_share_symbol_count": 2,
                   "plain_us_attempted_unresolved_count": 6,
                   "plain_us_no_record_attempt_count": 6,
@@ -526,24 +528,24 @@
                   "plain_us_partial_no_record_or_form_gap_count": 0,
                   "plain_us_transient_failed_attempt_count": 0,
                   "plain_us_failed_attempt_count": 0,
-                  "plain_us_unattempted_count": 0
+                  "plain_us_unattempted_count": 106
                 },
                 "active_plain_us_occ_ready_criterion": {
                   "covered_count": 579,
-                  "denominator": 579,
+                  "denominator": 685,
                   "present_options_activity_rows": 573,
                   "no_listed_options_evidence_rows": 6,
-                  "blocking_missing_count": 0
+                  "blocking_missing_count": 106
                 },
                 "plain_us_collection_or_no_options_policy_required": {
-                  "count": 6,
+                  "count": 112,
                   "attempted_unresolved_count": 6,
                   "no_record_attempt_count": 6,
                   "no_listed_options_source_ready_count": 6,
                   "partial_no_record_or_form_gap_count": 0,
                   "transient_failed_attempt_count": 0,
                   "failed_attempt_count": 0,
-                  "unattempted_count": 0,
+                  "unattempted_count": 106,
                   "accepted_form_policy": {
                     "partial_zero_side_row_policy": "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
                     "no_listed_options_policy": "accepted_for_source_readiness_when_both_call_and_put_queries_return_no_record_for_the_counted_source_date; scoring proxy remains null/zero-evidence rather than fabricated activity",
@@ -552,7 +554,7 @@
                   }
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
-                  "count": 56,
+                  "count": 57,
                   "blocks_current_plain_occ_readiness": false
                 },
                 "class_share_symbol_normalization_or_source_gap": {
@@ -585,12 +587,108 @@
               ],
               "claim_scope": "explicit_s0_daily_scope_exclusion",
               "blocks_daily_ready": false,
-              "daily_gated_scope_denominator": 975,
+              "daily_gated_scope_denominator": 1082,
               "daily_gated_scope_policy": "Current S0 daily/gated source scope is Korea + US only; HKEX/SSE/SZSE need a separate Asia daily-source workstream before an all-1066 daily/gated claim.",
               "next_action": "Build HKEX/SSE/SZSE daily-source workstream before claiming all active 1066 stocks as daily/gated."
             }
           ],
-          "blockers": [],
+          "blockers": [
+            {
+              "id": "finra_full_us_source_ready",
+              "status": "blocked",
+              "covered_count": 682,
+              "denominator": 685,
+              "missing_count": 3,
+              "source_date": "2026-06-26",
+              "eligibility_policy": "active_scoring_universe rows where market=US; US_CLASS foreign/class rows stay in active US bucket but are excluded from FINRA plain-US readiness until mapped or rebucketed.",
+              "excluded_us_class_count": 59,
+              "row_existence_count": 694,
+              "strict_metric_ready_count": 682,
+              "strict_metric_missing_or_placeholder_count": 62,
+              "low_confidence_placeholder_count": 12,
+              "derived_gap_breakdown": {
+                "row_existence_criterion": {
+                  "covered_count": 694,
+                  "missing_count": 50,
+                  "missing_categories": {
+                    "non_plain_or_foreign_suffix_requires_universe_mapping": 50
+                  }
+                },
+                "strict_metric_ready_criterion": {
+                  "covered_count": 682,
+                  "missing_or_placeholder_count": 62,
+                  "missing_or_placeholder_categories": {
+                    "class_share_placeholder_requires_finra_symbol_policy": 2,
+                    "non_plain_or_foreign_suffix_requires_universe_mapping": 50,
+                    "non_plain_placeholder_requires_universe_mapping": 7,
+                    "plain_us_finra_metric_gap": 3
+                  }
+                },
+                "active_plain_us_metric_ready_criterion": {
+                  "covered_count": 682,
+                  "denominator": 685,
+                  "missing_count": 3
+                }
+              },
+              "semantic_warning": "Row-existence FINRA coverage is not the same as metric-ready FINRA coverage when low-confidence placeholders exist.",
+              "next_action": "Keep US_CLASS foreign/class rows out of FINRA readiness until mapped or rebucketed; do not refetch FINRA for those rows."
+            },
+            {
+              "id": "occ_full_us_source_ready",
+              "status": "blocked",
+              "covered_count": 579,
+              "denominator": 685,
+              "missing_count": 106,
+              "source_date": "2026-06-26",
+              "eligibility_policy": "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
+              "derived_gap_breakdown": {
+                "missing_categories": {
+                  "plain_us_collection_or_no_options_policy_required": 106,
+                  "excluded_non_plain_or_foreign_suffix_count": 57,
+                  "excluded_class_share_symbol_count": 2,
+                  "plain_us_attempted_unresolved_count": 6,
+                  "plain_us_no_record_attempt_count": 6,
+                  "plain_us_no_listed_options_source_ready_count": 6,
+                  "plain_us_partial_no_record_or_form_gap_count": 0,
+                  "plain_us_transient_failed_attempt_count": 0,
+                  "plain_us_failed_attempt_count": 0,
+                  "plain_us_unattempted_count": 106
+                },
+                "active_plain_us_occ_ready_criterion": {
+                  "covered_count": 579,
+                  "denominator": 685,
+                  "present_options_activity_rows": 573,
+                  "no_listed_options_evidence_rows": 6,
+                  "blocking_missing_count": 106
+                },
+                "plain_us_collection_or_no_options_policy_required": {
+                  "count": 112,
+                  "attempted_unresolved_count": 6,
+                  "no_record_attempt_count": 6,
+                  "no_listed_options_source_ready_count": 6,
+                  "partial_no_record_or_form_gap_count": 0,
+                  "transient_failed_attempt_count": 0,
+                  "failed_attempt_count": 0,
+                  "unattempted_count": 106,
+                  "accepted_form_policy": {
+                    "partial_zero_side_row_policy": "implemented_for_future_collection_when_one_side_loaded_and_the_other_side_no_record",
+                    "no_listed_options_policy": "accepted_for_source_readiness_when_both_call_and_put_queries_return_no_record_for_the_counted_source_date; scoring proxy remains null/zero-evidence rather than fabricated activity",
+                    "current_partial_rows_without_output_row_count": 0,
+                    "current_no_record_source_ready_count": 6
+                  }
+                },
+                "non_plain_or_foreign_suffix_requires_universe_mapping": {
+                  "count": 57,
+                  "blocks_current_plain_occ_readiness": false
+                },
+                "class_share_symbol_normalization_or_source_gap": {
+                  "count": 2,
+                  "blocks_current_plain_occ_readiness": false
+                }
+              },
+              "next_action": "Do not broad-fetch. Keep non-plain/foreign/class rows as mapping/denominator policy work outside the current plain-OCC readiness denominator; continue BRK accepted-form research separately."
+            }
+          ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
         }
       },
@@ -654,14 +752,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-06-30T22:43:21.933Z",
-              "age_hours": 1.26,
+              "age_hours": 3.27,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-06-30T23:58:57.456Z",
-              "age_hours": 0,
+              "age_hours": 2.01,
               "max_age_hours": 48
             },
             {
@@ -718,8 +816,8 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-06-30T23:58:57.540Z",
-          "generated_age_hours": 0,
+          "generated_at": "2026-07-01T01:05:58.436Z",
+          "generated_age_hours": 0.9,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
           "daily_ready": true,
@@ -752,7 +850,7 @@
       {
         "id": "taiwan_current_numerator",
         "label": "Taiwan current active-universe numerator",
-        "denominator": 1066,
+        "denominator": 1173,
         "stage": "COLLECTED",
         "readiness_status": "not_ready",
         "public_done_claim_allowed": false,
@@ -777,7 +875,28 @@
       "completed_endpoint_calls": 620,
       "estimated_full_endpoint_calls": 7812,
       "latest_batch_manifest": "_private/admin/fenok-edge-korea/backfill/20260629/krx_backfill_20d_20260626/manifest.json",
-      "latest_batch_dates": [],
+      "latest_batch_dates": [
+        "2026-06-01",
+        "2026-06-02",
+        "2026-06-03",
+        "2026-06-04",
+        "2026-06-05",
+        "2026-06-08",
+        "2026-06-09",
+        "2026-06-10",
+        "2026-06-11",
+        "2026-06-12",
+        "2026-06-15",
+        "2026-06-16",
+        "2026-06-17",
+        "2026-06-18",
+        "2026-06-19",
+        "2026-06-22",
+        "2026-06-23",
+        "2026-06-24",
+        "2026-06-25",
+        "2026-06-26"
+      ],
       "latest_batch_summary": {
         "total_files": 620,
         "success_files": 590,
@@ -789,18 +908,28 @@
       "caveat": "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date."
     },
     "us_252_reference_ticker_queue": {
-      "status": "not_started",
-      "completed_batches": 0,
+      "status": "started_bounded_supervised",
+      "completed_batches": 1,
       "total_batches": 51,
-      "completed_trading_dates": 0,
+      "completed_trading_dates": 5,
       "total_trading_dates": 252,
-      "completed_finra_requests": 0,
+      "completed_finra_requests": 5,
       "total_finra_requests": 252,
-      "completed_occ_side_requests": 0,
+      "completed_occ_side_requests": 80,
       "total_occ_side_requests": 4032,
-      "latest_batch_manifest": null,
-      "latest_batch_dates": [],
-      "latest_batch_status_counts": null,
+      "latest_batch_manifest": "_private/admin/fenok-flow/backfill/20260629-full252/manifests/us_daily_backfill_smoke_5d_20250702.json",
+      "latest_batch_dates": [
+        "20250626",
+        "20250627",
+        "20250630",
+        "20250701",
+        "20250702"
+      ],
+      "latest_batch_status_counts": {
+        "success": 10,
+        "partial_or_failed": 0,
+        "empty": 0
+      },
       "caveat": "This is 252-history progress for the 8 reference tickers only. It does not expand current active coverage beyond the existing computed US rows."
     }
   },
@@ -810,26 +939,26 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-06-30T23:59:04.081Z"
+        "generated_at": "2026-07-01T01:59:44.841Z"
       },
       {
         "id": "korea_counted_source_date",
         "source_date": "2026-06-26",
-        "age_days": 4,
-        "status": "ready",
+        "age_days": 5,
+        "status": "stale",
         "caveat": "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date."
       },
       {
         "id": "us_flow_source_date",
         "source_date": "2026-06-26",
-        "age_days": 4,
-        "status": "ready"
+        "age_days": 5,
+        "status": "stale"
       },
       {
         "id": "us_occ_source_date",
         "source_date": "2026-06-26",
-        "age_days": 4,
-        "status": "ready"
+        "age_days": 5,
+        "status": "stale"
       },
       {
         "id": "etf_public_surface",
@@ -853,14 +982,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-06-30T22:43:21.933Z",
-        "age_hours": 1.26,
+        "age_hours": 3.27,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-06-30T23:58:57.456Z",
-        "age_hours": 0,
+        "age_hours": 2.01,
         "max_age_hours": 48,
         "fetchable_required_history": 0,
         "inception_limited_required_history": 12,
@@ -879,8 +1008,8 @@
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-06-30T23:58:57.540Z",
-        "age_hours": 0,
+        "generated_at": "2026-07-01T01:05:58.436Z",
+        "age_hours": 0.9,
         "selected_count": 118,
         "fresh_selected_count": 118,
         "stale_selected_count": 0,
