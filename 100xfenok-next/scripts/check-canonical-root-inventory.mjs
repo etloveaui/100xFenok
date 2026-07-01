@@ -641,6 +641,60 @@ function ownerRouteEquivalencePacketForFamily(family) {
   };
 }
 
+function ownerReviewPriority(family) {
+  const priorityByFamily = new Map([
+    ["macro_monitor_legacy_tools", [10, "route-ia convergence: legacy macro-monitor tools must converge under the native macro-chart owner"]],
+    ["market_legacy_archive", [20, "route-ia convergence: legacy /market bookmark must stay tied to the native market screen"]],
+    ["daily_wrap_archive", [30, "large public archive with an exact owner route and dated legacy pages"]],
+    ["admin_design_lab_prototypes", [40, "largest admin prototype family; preserve behind admin owner route and keep out of product IA"]],
+    ["admin_valuation_lab_legacy", [50, "large admin valuation-lab family; requires owner mapping before any retirement proposal"]],
+    ["alpha_scout_archive", [60, "public report archive with exact product owner route and deep-link samples"]],
+    ["admin_market_radar_legacy", [70, "admin market-radar family shares route-backed context with macro-monitor"]],
+    ["posts_raw_archive", [80, "public raw post archive with exact posts owner route"]],
+    ["ib_legacy_tools", [90, "legacy IB tools need /ib owner comparison before proposal"]],
+    ["vr_legacy_tools", [100, "legacy VR tools need /vr owner comparison before proposal"]],
+    ["multichart_legacy_tool", [110, "legacy multichart asset needs macro/multichart owner decision"]],
+    ["workbench_orphan_guide", [120, "orphan guide must remain a secondary Workbench concern, not primary IA"]],
+    ["admin_data_lab_legacy", [130, "single admin data-lab legacy row with exact owner route"]],
+    ["admin_ib_helper_legacy", [140, "admin helper catch-all route requires admin owner confirmation"]],
+    ["admin_personal_legacy", [150, "personal admin content must stay outside product IA"]],
+    ["admin_root_legacy", [160, "admin root shell requires admin owner confirmation"]],
+    ["system_fallback_page", [170, "deployment fallback page requires deploy-owner review, not product IA review"]],
+  ]);
+  return priorityByFamily.get(family.id) ?? [900, "explicit owner review required before any proposal"];
+}
+
+function highRiskOwnerReviewQueue(families) {
+  return families
+    .map((family) => {
+      const [priority, priorityReason] = ownerReviewPriority(family);
+      return {
+        rank: 0,
+        priority,
+        family_id: family.id,
+        owner_area: family.owner_area,
+        owner_route: family.owner_route,
+        compatibility_route: family.compatibility_route,
+        legacy_row_count: family.row_count,
+        packet_ready: family.owner_route_equivalence_packet_ready,
+        mutation_status: "not_executed",
+        blocked_actions: ["delete", "redirect", "deploy"],
+        no_mutation_before_owner_approval: true,
+        priority_reason: priorityReason,
+        recommended_slice: "run the packet's local commands, compare the owner route against PRO IA intent, then ask owner to preserve, remap, or retire",
+        acceptance_checks: [
+          "owner_route_equivalence_packet.packet_ready is true",
+          "packet local QA/smoke commands pass",
+          "legacy content stays behind the owner route and out of Home/mobile primary IA",
+          "owner decision is explicit before redirect/delete/deploy",
+        ],
+        packet: family.owner_route_equivalence_packet,
+      };
+    })
+    .sort((left, right) => left.priority - right.priority || right.legacy_row_count - left.legacy_row_count || left.family_id.localeCompare(right.family_id))
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+}
+
 function highRiskOwnerMatrix(legacyClassification, appRoutes) {
   const appRouteSet = new Set(appRoutes.map((item) => item.route));
   const highRiskRows = legacyClassification.rows.filter((row) => row.class.endsWith("_high_risk"));
@@ -720,6 +774,7 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     .filter((family) => !family.owner_route_equivalence_packet_ready)
     .map((family) => family.id)
     .sort();
+  const ownerReviewQueue = highRiskOwnerReviewQueue(families);
 
   return {
     schema_version: "high-risk-owner-matrix/v0.1",
@@ -727,6 +782,7 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     owner_family_count: families.length,
     owner_route_equivalence_packet_ready_count: families.filter((family) => family.owner_route_equivalence_packet_ready).length,
     owner_route_equivalence_packet_not_ready_count: packetNotReadyFamilies.length,
+    owner_review_queue_count: ownerReviewQueue.length,
     unmapped_count: unmappedRows.length,
     missing_owner_route_count: missingOwnerRouteRows.length,
     unsafe_row_count: unsafeRows.length,
@@ -734,6 +790,8 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     unmapped_rows: unmappedRows,
     missing_owner_route_rows: missingOwnerRouteRows,
     unsafe_rows: unsafeRows,
+    next_owner_review_slice: ownerReviewQueue[0] ?? null,
+    owner_review_queue: ownerReviewQueue,
     families,
     rows,
   };
@@ -1037,6 +1095,12 @@ function main() {
   if (highRiskOwners.owner_route_equivalence_packet_not_ready_count > 0) {
     errors.push(`high-risk owner-route equivalence packets are not ready: ${highRiskOwners.packet_not_ready_families.join(", ")}`);
   }
+  if (highRiskOwners.owner_review_queue_count !== highRiskOwners.owner_family_count) {
+    errors.push(`high-risk owner review queue must cover every owner family: queue=${highRiskOwners.owner_review_queue_count} families=${highRiskOwners.owner_family_count}`);
+  }
+  if (highRiskOwners.owner_family_count > 0 && !highRiskOwners.next_owner_review_slice) {
+    errors.push("high-risk owner review queue is missing the next owner-review slice");
+  }
 
   const report = {
     schema_version: "canonical-root-inventory/v0.1",
@@ -1063,6 +1127,7 @@ function main() {
       legacy_html_high_risk: legacyClassification.high_risk_count,
       legacy_html_high_risk_owner_families: highRiskOwners.owner_family_count,
       legacy_html_high_risk_owner_equivalence_packets_ready: highRiskOwners.owner_route_equivalence_packet_ready_count,
+      legacy_html_high_risk_owner_review_queue: highRiskOwners.owner_review_queue_count,
       legacy_html_high_risk_unmapped: highRiskOwners.unmapped_count,
       legacy_html_high_risk_owner_route_missing: highRiskOwners.missing_owner_route_count,
     },
