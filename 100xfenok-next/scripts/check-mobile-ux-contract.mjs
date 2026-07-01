@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/screener,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -166,6 +166,50 @@ async function collectRouteChecks(page, route) {
           });
         }
       });
+
+      const densityControl = document.querySelector("[data-screener-density-control]");
+      const densityButtons = densityControl
+        ? Array.from(densityControl.querySelectorAll('button[aria-pressed]'))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+        : [];
+      if (densityButtons.length !== 3) {
+        failures.push({ check: "screener-density-control", detail: `buttons=${densityButtons.length}` });
+      }
+    }
+
+    if (currentRoute.startsWith("/sectors")) {
+      const viewSwitch = document.querySelector("[data-sector-view-switch]");
+      const viewTabs = Array.from(document.querySelectorAll("[data-sector-view-tab]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      if (!viewSwitch || viewSwitch.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "sector-view-switch-visible", detail: "missing visible sector view switch" });
+      }
+
+      const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
+      const actualTabs = viewTabs.map((node) => node.getAttribute("data-sector-view-tab"));
+      if (
+        viewTabs.length !== expectedTabs.length ||
+        !expectedTabs.every((tab, index) => actualTabs[index] === tab)
+      ) {
+        failures.push({
+          check: "sector-view-switch-tabs",
+          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
+        });
+      }
+      viewTabs.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "sector-view-switch-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const heatmapPanel = document.querySelector('[data-sector-panel="heatmap"]');
+      if (!heatmapPanel || heatmapPanel.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "sector-heatmap-default-visible", detail: "default heatmap panel not visible" });
+      }
     }
 
     if (currentRoute.startsWith("/portfolio")) {

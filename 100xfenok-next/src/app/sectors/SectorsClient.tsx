@@ -179,7 +179,7 @@ function MobileViewSwitch({
   onChange: (next: MobileView) => void;
 }) {
   return (
-    <div className="md:hidden">
+    <div className="md:hidden" data-sector-view-switch>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-1 shadow-sm">
         {MOBILE_VIEWS.map((view) => {
           const active = view.key === value;
@@ -187,6 +187,7 @@ function MobileViewSwitch({
             <button
               key={view.key}
               type="button"
+              data-sector-view-tab={view.key}
               onClick={() => onChange(view.key)}
               aria-pressed={active}
               className={cx(
@@ -464,7 +465,7 @@ export default function SectorsClient() {
       />
 
       {/* Heatmap */}
-      <div className={mobilePanelClass(mobileView === "heatmap")}>
+      <div className={mobilePanelClass(mobileView === "heatmap")} data-sector-panel="heatmap">
         <SectionCard kicker="모멘텀 히트맵" title="업종 × 기간 성과">
         <p className="mb-3 text-xs text-[var(--c-ink-2)]">
           {beatCount === null
@@ -610,7 +611,7 @@ export default function SectorsClient() {
       </div>
 
       {/* ETF comparison */}
-      <div className={mobilePanelClass(mobileView === "etf")}>
+      <div className={mobilePanelClass(mobileView === "etf")} data-sector-panel="etf">
       <SectionCard kicker="섹터 ETF" title="섹터 ETF 비교">
         {etfRows.length === 0 ? (
           <p className="text-sm text-[var(--c-ink-2)]">ETF 데이터를 불러오지 못했습니다.</p>
@@ -670,7 +671,7 @@ export default function SectorsClient() {
       </div>
 
       {/* Sector valuation */}
-      <div className={mobilePanelClass(mobileView === "valuation")}>
+      <div className={mobilePanelClass(mobileView === "valuation")} data-sector-panel="valuation">
       <SectionCard kicker="밸류에이션" title="섹터 밸류에이션">
         <div className="grid gap-2 md:hidden">
           {valuationRows.map((row) => (
@@ -721,7 +722,7 @@ export default function SectorsClient() {
         </p>
       </SectionCard>
       </div>
-      <div className={mobilePanelClass(mobileView === "guru")}>
+      <div className={mobilePanelClass(mobileView === "guru")} data-sector-panel="guru">
         <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
       </div>
 

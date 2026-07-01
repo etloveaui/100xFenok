@@ -39,6 +39,45 @@ import {
 } from "@/lib/screener/filter-url";
 
 const PAGE_SIZE = 50;
+type ScreenerDensity = "compact" | "standard" | "comfortable";
+
+const DENSITY_LABEL: Record<ScreenerDensity, string> = {
+  compact: "콤팩트",
+  standard: "표준",
+  comfortable: "편안함",
+};
+
+const DENSITY_BUTTONS: ScreenerDensity[] = ["compact", "standard", "comfortable"];
+
+const DENSITY_TABLE_CLASS: Record<ScreenerDensity, {
+  scroller: string;
+  table: string;
+  headerCell: string;
+  bodyCell: string;
+  tickerCell: string;
+}> = {
+  compact: {
+    scroller: "max-h-[720px]",
+    table: "text-xs",
+    headerCell: "px-2 py-1.5",
+    bodyCell: "px-2 py-1.5",
+    tickerCell: "min-h-9 px-1",
+  },
+  standard: {
+    scroller: "max-h-[620px]",
+    table: "text-sm",
+    headerCell: "px-2 py-2",
+    bodyCell: "px-2 py-2",
+    tickerCell: "min-h-11 px-1.5",
+  },
+  comfortable: {
+    scroller: "max-h-[560px]",
+    table: "text-sm",
+    headerCell: "px-3 py-3",
+    bodyCell: "px-3 py-3",
+    tickerCell: "min-h-14 px-2",
+  },
+};
 
 const COUNTRY_LABEL: Record<string, string> = {
   US: "미국",
@@ -1142,6 +1181,7 @@ export default function ScreenerClient({
 
   const initialColumnPreset = coerceColumnPreset(initialPreset);
   const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? initialFilterValues.preset ?? "basic");
+  const [density, setDensity] = useState<ScreenerDensity>("standard");
 
   useEffect(() => {
     if (initialColumnPreset) return;
@@ -1157,6 +1197,15 @@ export default function ScreenerClient({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [initialColumnPreset]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("screener-density");
+    if (saved === "compact" || saved === "standard" || saved === "comfortable") {
+      const frame = window.requestAnimationFrame(() => setDensity(saved));
+      return () => window.cancelAnimationFrame(frame);
+    }
+    return undefined;
+  }, []);
 
   // Ensure Fenok Picks always defaults to conviction desc when no explicit valid sort is set.
   useEffect(() => {
@@ -1189,6 +1238,11 @@ export default function ScreenerClient({
         setSortDir("desc");
       }
     }
+  }
+
+  function handleDensityChange(next: ScreenerDensity) {
+    setDensity(next);
+    localStorage.setItem("screener-density", next);
   }
 
   // Sync filter state to URL for deep-link round-trips.
@@ -1716,6 +1770,7 @@ export default function ScreenerClient({
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
   const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(fenokEdgeMin)) + Number(Boolean(convictionMin)) + Number(Boolean(connectionFilter));
+  const densityClass = DENSITY_TABLE_CLASS[density];
 
   return (
     <div className="data-shell-page">
@@ -2380,24 +2435,45 @@ export default function ScreenerClient({
       </section>
 
       {/* Preset selector */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">뷰</span>
-        {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => handlePresetChange(p)}
-            aria-pressed={preset === p}
-            className={cx(
-              "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-              preset === p
-                ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
-                : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-            )}
-          >
-            {PRESET_LABEL[p]}
-          </button>
-        ))}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">뷰</span>
+          {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => handlePresetChange(p)}
+              aria-pressed={preset === p}
+              className={cx(
+                "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                preset === p
+                  ? "border border-[var(--c-brand)] bg-[var(--c-brand-soft)] text-[var(--c-brand)]"
+                  : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+              )}
+            >
+              {PRESET_LABEL[p]}
+            </button>
+          ))}
+        </div>
+        <div data-screener-density-control className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">밀도</span>
+          {DENSITY_BUTTONS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => handleDensityChange(item)}
+              aria-pressed={density === item}
+              className={cx(
+                "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
+                density === item
+                  ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
+                  : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
+              )}
+            >
+              {DENSITY_LABEL[item]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Results */}
@@ -2428,12 +2504,13 @@ export default function ScreenerClient({
 
         <div className="hidden md:block">
           <div
-            className="-mx-1 max-h-[620px] overflow-auto px-1"
+            className={cx("-mx-1 overflow-auto px-1", densityClass.scroller)}
+            data-screener-density={density}
           >
-            <table className="w-full min-w-[760px] text-sm">
+            <table className={cx("w-full min-w-[760px]", densityClass.table)}>
               <thead>
                 <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
-                  <th className="w-12 px-2 py-2 text-left">
+                  <th className={cx("w-12 text-left", densityClass.headerCell)}>
                     <input
                       type="checkbox"
                       checked={allPageSelected}
@@ -2448,7 +2525,7 @@ export default function ScreenerClient({
                       <th
                         key={column.key}
                         aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
-                        className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
+                        className={cx(densityClass.headerCell, column.align === "right" ? "text-right" : "text-left")}
                       >
                         <div className={cx("inline-flex items-center gap-1", column.align === "right" && "justify-end")}>
                           <button
@@ -2475,46 +2552,46 @@ export default function ScreenerClient({
                   const expanded = expandedTicker === stock.ticker;
                   const detailId = `screener-detail-${stock.ticker}`;
                   return (
-                  <Fragment key={stock.ticker}>
-                    <tr
-                      data-testid="screener-desktop-row"
-                      data-ticker={stock.ticker}
-                      onClick={() =>
-                        setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
-                      }
-                      className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
-                    >
-                      <td className="px-2 py-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedTickers.has(stock.ticker)}
-                          onChange={() => toggleSelectedTicker(stock.ticker)}
-                          onClick={(event) => event.stopPropagation()}
-                          aria-label={`${stock.ticker} 선택`}
-                          className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
-                        />
-                      </td>
-                      {activeColumns.map((column) => (
-                        <td
-                          key={column.key}
-                          className={cx("px-2 py-2", column.align === "right" ? "text-right" : "text-left")}
-                        >
-                          {column.key === "ticker" ? (
-                            <div className="flex min-h-11 max-w-full items-center gap-1.5 px-1.5">
-                              <button
-                                type="button"
-                                aria-expanded={expanded}
-                                aria-controls={detailId}
-                                aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
-                                }}
-                                className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-                              >
-                                <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
-                                <span className="truncate">{stock.ticker}</span>
-                              </button>
+                    <Fragment key={stock.ticker}>
+                      <tr
+                        data-testid="screener-desktop-row"
+                        data-ticker={stock.ticker}
+                        onClick={() =>
+                          setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))
+                        }
+                        className="cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"
+                      >
+                        <td className={densityClass.bodyCell}>
+                          <input
+                            type="checkbox"
+                            checked={selectedTickers.has(stock.ticker)}
+                            onChange={() => toggleSelectedTicker(stock.ticker)}
+                            onClick={(event) => event.stopPropagation()}
+                            aria-label={`${stock.ticker} 선택`}
+                            className="h-5 min-h-5 w-5 min-w-5 accent-slate-900"
+                          />
+                        </td>
+                        {activeColumns.map((column) => (
+                          <td
+                            key={column.key}
+                            className={cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left")}
+                          >
+	                            {column.key === "ticker" ? (
+	                              <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
+	                                <button
+	                                  type="button"
+	                                  aria-expanded={expanded}
+	                                  aria-controls={detailId}
+	                                  aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+	                                  onClick={(event) => {
+	                                    event.stopPropagation();
+	                                    setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker));
+	                                  }}
+	                                  className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+	                                >
+	                                  <span className="w-5 text-center text-[12px] text-[var(--c-ink-4)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+	                                  <span className="truncate">{stock.ticker}</span>
+	                                </button>
                               <GuruHolderBadge stock={stock} compact />
                             </div>
                           ) : renderCell(stock, column.key, preset)}
