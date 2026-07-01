@@ -18,7 +18,7 @@ const MARKET_SECTION_ITEMS: Array<{
 
 export default function MarketSectionNav({ active }: { active: MarketSectionKey }) {
   return (
-    <nav className="data-shell-section-nav" aria-label="시장 섹션">
+    <nav className="data-shell-section-nav" aria-label="시장 섹션" data-market-section-nav>
       {MARKET_SECTION_ITEMS.map((item) => {
         const selected = item.key === active;
         return (
@@ -27,6 +27,8 @@ export default function MarketSectionNav({ active }: { active: MarketSectionKey 
             href={item.href}
             className={`data-shell-link ${selected ? "on" : ""}`}
             aria-current={selected ? "page" : undefined}
+            data-market-section-link={item.key}
+            style={{ minHeight: 44 }}
           >
             {item.label}
           </TransitionLink>

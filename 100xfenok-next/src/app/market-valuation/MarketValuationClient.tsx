@@ -115,12 +115,14 @@ function PanelShell({
 }
 
 function MarketSection({
+  sectionKey,
   index,
   title,
   summary,
   children,
   muted = false,
 }: {
+  sectionKey: string;
   index: string;
   title: string;
   summary: string;
@@ -128,7 +130,7 @@ function MarketSection({
   muted?: boolean;
 }) {
   return (
-    <section className="grid gap-3" data-loading={muted ? "true" : undefined}>
+    <section className="grid gap-3" data-market-section={sectionKey} data-loading={muted ? "true" : undefined}>
       <header className="flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">{index}</p>
@@ -461,18 +463,18 @@ function MomentumCell({ label, value }: { label: string; value: number | null })
   );
 }
 
-function ValuationRow({ label, band, digits }: { label: string; band: ValuationBand; digits: number }) {
+function ValuationRow({ label, metric, band, digits }: { label: string; metric: string; band: ValuationBand; digits: number }) {
   const meta = valuationMeta(band.percentile);
   const curPos = positionPct(band.current, band.min, band.max);
   const avgPos = positionPct(band.avg, band.min, band.max);
   return (
-    <div className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3">
+    <div className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-market-valuation-row={metric}>
       <div className="flex items-baseline justify-between">
         <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</span>
         <span className="orbitron text-xl font-black text-[var(--c-ink)]">{fmt(band.current, digits)}</span>
       </div>
       <div className="mt-1 flex items-center justify-between text-[11px] font-bold">
-        <span className={cx("inline-flex items-center gap-1", meta.tone)}>
+        <span className={cx("inline-flex items-center gap-1", meta.tone)} data-market-valuation-verdict>
           <span className={cx("h-1.5 w-1.5 rounded-full", meta.dot)} />
           {meta.label}
           {band.percentile !== null ? <span className="text-[var(--c-ink-4)]">· 역사 {band.percentile}%</span> : null}
@@ -482,7 +484,7 @@ function ValuationRow({ label, band, digits }: { label: string; band: ValuationB
         </span>
       </div>
       {/* 16-year band gauge: min ── avg ── max, with current marker */}
-      <div className="relative mt-2 h-2 rounded-full bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200">
+      <div className="relative mt-2 h-2 rounded-full bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200" data-market-valuation-gauge>
         {avgPos !== null ? (
           <span className="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-[var(--c-line)]" style={{ left: `${avgPos}%` }} aria-hidden="true" />
         ) : null}
@@ -519,7 +521,7 @@ export default function MarketValuationClient() {
   } = useMarketValuation();
 
   return (
-    <div className="data-shell-page">
+    <div className="data-shell-page" data-market-valuation-surface>
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">시장 밸류에이션</p>
@@ -545,19 +547,19 @@ export default function MarketValuationClient() {
         </div>
       ) : null}
 
-      <MarketSection index="01 개요" title="개요" summary="시장 체온과 주요 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
+      <MarketSection sectionKey="overview" index="01 개요" title="개요" summary="시장 체온과 주요 신호를 먼저 보고 오늘의 방향성을 잡습니다." muted={!dataReady}>
         <MarketThermometer />
         <SignalPulsePanel items={signalPulses} />
       </MarketSection>
 
-      <MarketSection index="02 매크로" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
+      <MarketSection sectionKey="macro" index="02 매크로" title="매크로" summary="PMI, 경기 펄스, 채권 신호를 한 흐름으로 묶어 확인합니다." muted={!dataReady}>
         <PmiActivityChartPanel />
         <MacroPulsePanel items={macroPulses} fallbackAsOf={sourceDate} />
         <BondPulsePanel items={bondPulses} fallbackAsOf={sourceDate} />
       </MarketSection>
 
-      <MarketSection index="03 밸류에이션" title="밸류에이션" summary="ERP, 야데니 모델, 지수별 평가 밴드를 한곳에 모았습니다." muted={!dataReady}>
-        <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+      <MarketSection sectionKey="valuation" index="03 밸류에이션" title="밸류에이션" summary="ERP, 야데니 모델, 지수별 평가 밴드를 한곳에 모았습니다." muted={!dataReady}>
+        <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]" data-market-valuation-chart-grid>
           <ErpHistoryPanel />
           <YardeniOverlayChartPanel />
         </div>
@@ -566,6 +568,7 @@ export default function MarketValuationClient() {
             <section
               key={index.id}
               className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5"
+              data-market-index-card={index.id}
             >
               <header className="flex items-end justify-between gap-2">
                 <div className="min-w-0">
@@ -581,8 +584,8 @@ export default function MarketValuationClient() {
               </header>
 
               <div className="mt-3 grid gap-2">
-                <ValuationRow label="Fwd P/E" band={index.pe} digits={1} />
-                <ValuationRow label="P/B" band={index.pb} digits={2} />
+                <ValuationRow label="Fwd P/E" metric="pe" band={index.pe} digits={1} />
+                <ValuationRow label="P/B" metric="pb" band={index.pb} digits={2} />
                 <div className="flex items-center justify-between rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-2">
                   <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE</span>
                   <span className="orbitron text-lg font-black tabular-nums text-[var(--c-ink)]">
@@ -595,13 +598,13 @@ export default function MarketValuationClient() {
         </div>
       </MarketSection>
 
-      <MarketSection index="04 구조·심리" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
+      <MarketSection sectionKey="structure" index="04 구조·심리" title="구조·심리" summary="시장 내부 구조와 투자 심리의 압력을 함께 봅니다." muted={!dataReady}>
         <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
         <StructureDetailEntry />
         <SentimentPulsePanel items={sentimentPulses} fallbackAsOf={sourceDate} />
       </MarketSection>
 
-      <MarketSection index="05 맥락" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
+      <MarketSection sectionKey="context" index="05 맥락" title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다." muted={!dataReady}>
         <AnnualReturnsChartPanel />
         <EventRiskPanel items={eventRisks} fallbackAsOf={sourceDate} />
       </MarketSection>

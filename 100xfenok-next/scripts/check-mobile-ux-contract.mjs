@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -213,6 +213,97 @@ async function collectRouteChecks(page, route) {
         if (rect.height < 44) {
           failures.push({ check: "workbench-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
         }
+      });
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation") {
+      const surface = document.querySelector("[data-market-valuation-surface]");
+      const nav = document.querySelector("[data-market-section-nav]");
+      const navLinks = Array.from(document.querySelectorAll("[data-market-section-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const sections = Array.from(document.querySelectorAll("[data-market-section]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const chartGrid = document.querySelector("[data-market-valuation-chart-grid]");
+      const indexCards = Array.from(document.querySelectorAll("[data-market-index-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-valuation-surface-visible", detail: "missing market valuation surface" });
+      }
+      if (!nav || nav.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-section-nav-visible", detail: "missing market section nav" });
+      }
+
+      const expectedLinks = ["valuation", "regime", "events", "sectors"];
+      const actualLinks = navLinks.map((node) => node.getAttribute("data-market-section-link"));
+      if (
+        navLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((key, index) => actualLinks[index] === key)
+      ) {
+        failures.push({
+          check: "market-section-nav-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+
+      navLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "market-section-nav-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedSections = ["overview", "macro", "valuation", "structure", "context"];
+      const actualSections = sections.map((node) => node.getAttribute("data-market-section"));
+      if (
+        sections.length !== expectedSections.length ||
+        !expectedSections.every((key, index) => actualSections[index] === key)
+      ) {
+        failures.push({
+          check: "market-valuation-section-order",
+          detail: `actual=${JSON.stringify(actualSections)} expected=${JSON.stringify(expectedSections)}`,
+        });
+      }
+
+      if (!chartGrid || chartGrid.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-valuation-chart-grid-visible", detail: "missing ERP/Yardeni chart grid" });
+      }
+      if (indexCards.length < 2) {
+        failures.push({ check: "market-index-card-count", detail: `visible cards=${indexCards.length}` });
+      }
+
+      indexCards.forEach((card, cardIndex) => {
+        const rows = Array.from(card.querySelectorAll("[data-market-valuation-row]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const rowMetrics = rows.map((node) => node.getAttribute("data-market-valuation-row"));
+        if (rows.length !== 2 || rowMetrics[0] !== "pe" || rowMetrics[1] !== "pb") {
+          failures.push({
+            check: "market-index-card-valuation-rows",
+            detail: `card=${cardIndex} rows=${JSON.stringify(rowMetrics)}`,
+          });
+        }
+        rows.forEach((row, rowIndex) => {
+          const gauge = row.querySelector("[data-market-valuation-gauge]");
+          const verdict = row.querySelector("[data-market-valuation-verdict]");
+          if (!gauge || gauge.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "market-valuation-gauge-visible", detail: `card=${cardIndex} row=${rowIndex}` });
+          }
+          if (!verdict || !(verdict.textContent || "").trim()) {
+            failures.push({ check: "market-valuation-verdict-present", detail: `card=${cardIndex} row=${rowIndex}` });
+          }
+        });
       });
     }
 
