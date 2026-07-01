@@ -369,6 +369,30 @@ async function collectRouteChecks(page, route) {
             detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
           });
         }
+        if (valuationBand) {
+          const valuationTrack = valuationBand.rect.height > 0
+            ? document.querySelector("[data-stock-valuation-band-track]")
+            : null;
+          const valuationVerdict = document.querySelector("[data-stock-valuation-verdict]");
+          const valuationZones = Array.from(document.querySelectorAll("[data-stock-valuation-zone]"))
+            .map((node) => node.getAttribute("data-stock-valuation-zone"));
+          const expectedZones = ["deep-discount", "discount", "neutral", "premium", "overheated"];
+          if (!valuationTrack || valuationTrack.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "stock-valuation-band-track-visible", detail: "missing visible graduated valuation track" });
+          }
+          if (!valuationVerdict || !(valuationVerdict.textContent || "").trim()) {
+            failures.push({ check: "stock-valuation-verdict-present", detail: "missing plain-language valuation verdict" });
+          }
+          if (
+            valuationZones.length !== expectedZones.length ||
+            !expectedZones.every((zone, index) => valuationZones[index] === zone)
+          ) {
+            failures.push({
+              check: "stock-valuation-graduated-zones",
+              detail: `actual=${JSON.stringify(valuationZones)} expected=${JSON.stringify(expectedZones)}`,
+            });
+          }
+        }
       }
       if (stockTab === "ownership") {
         const diff = document.querySelector('[data-smart-money-section="diff"]');

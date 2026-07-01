@@ -605,6 +605,14 @@ type ValuationBandSummary = {
   source: string;
 };
 
+type ValuationBandTone = {
+  label: string;
+  detail: string;
+  chipClass: string;
+  fillClass: string;
+  zone: "deep-discount" | "discount" | "neutral" | "premium" | "overheated" | "trap";
+};
+
 function resolveValuationBandSummary(
   rowPerBand: ReturnType<typeof validAnalyzerPerBand>,
   detailPerBands: ReturnType<typeof validDetailPerBands>,
@@ -624,15 +632,17 @@ function resolveValuationBandSummary(
 function valuationBandTone(
   band: ValuationBandSummary,
   signalLens: FenokSignalsSummaryRecord | null | undefined,
-) {
+): ValuationBandTone {
   const pct = bandPct(band.current, band.min, band.max);
-  const cls = bandClass(pct);
+  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
+  const neutralStart = Math.max(0.18, avgPct - 0.1);
+  const neutralEnd = Math.min(0.82, avgPct + 0.1);
   const weakScores = [
     signalLens?.profitabilityScore,
     signalLens?.growthScore,
     signalLens?.longTermScore,
   ].filter((score): score is number => isFiniteNumber(score) && score < 45);
-  const valueTrapWatch = cls === "emerald" && weakScores.length > 0;
+  const valueTrapWatch = pct < neutralStart && weakScores.length > 0;
 
   if (valueTrapWatch) {
     return {
@@ -640,29 +650,51 @@ function valuationBandTone(
       detail: "PER는 낮지만 성장·수익성 점수 약세가 함께 보입니다.",
       chipClass: "border-amber-200 bg-amber-50 text-amber-700",
       fillClass: "bg-amber-500",
+      zone: "trap",
     };
   }
-  if (cls === "emerald") {
+  if (pct < neutralStart * 0.55) {
     return {
-      label: "역사 대비 싼 구간",
-      detail: "PER 밴드 하단권입니다. 다음은 성장·마진 방어를 확인합니다.",
+      label: "강한 할인 구간",
+      detail: "PER 밴드 하단 깊숙한 구간입니다. 다음은 성장·마진 방어를 확인합니다.",
       chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
       fillClass: "bg-emerald-500",
+      zone: "deep-discount",
     };
   }
-  if (cls === "rose") {
+  if (pct < neutralStart) {
+    return {
+      label: "할인 구간",
+      detail: "현재 PER가 공정가치권 아래에 있습니다.",
+      chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      fillClass: "bg-emerald-500",
+      zone: "discount",
+    };
+  }
+  if (pct <= neutralEnd) {
+    return {
+      label: "공정가치권",
+      detail: "현재 PER는 평균 밴드의 ±10% 중립권입니다.",
+      chipClass: "border-slate-200 bg-white text-slate-700",
+      fillClass: "bg-slate-900",
+      zone: "neutral",
+    };
+  }
+  if (pct < neutralEnd + (1 - neutralEnd) * 0.55) {
     return {
       label: "프리미엄 구간",
-      detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.",
+      detail: "현재 PER가 공정가치권 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.",
       chipClass: "border-rose-200 bg-rose-50 text-rose-700",
       fillClass: "bg-rose-500",
+      zone: "premium",
     };
   }
   return {
-    label: "적정 범위",
-    detail: "현재 PER는 역사 밴드 중간권입니다.",
-    chipClass: "border-slate-200 bg-slate-50 text-slate-700",
-    fillClass: "bg-brand-interactive",
+    label: "과열 프리미엄",
+    detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.",
+    chipClass: "border-rose-200 bg-rose-50 text-rose-700",
+    fillClass: "bg-rose-600",
+    zone: "overheated",
   };
 }
 
@@ -677,25 +709,40 @@ function ValuationBandSummaryCard({
   const pct = bandPct(band.current, band.min, band.max);
   const clampedPct = Math.max(0, Math.min(100, pct * 100));
   const tone = valuationBandTone(band, signalLens);
+  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
+  const neutralStartPct = Math.max(18, Math.min(82, avgPct * 100 - 10));
+  const neutralEndPct = Math.max(18, Math.min(82, avgPct * 100 + 10));
+  const lowMidPct = neutralStartPct * 0.55;
+  const highMidPct = neutralEndPct + (100 - neutralEndPct) * 0.55;
 
   return (
     <div data-stock-summary-module="valuation-band" className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">밸류에이션 판정</p>
-          <p className="mt-1 text-sm font-black text-slate-900">{tone.label}</p>
+          <p data-stock-valuation-verdict={tone.zone} className="mt-1 text-sm font-black text-slate-900">{tone.label}</p>
         </div>
         <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black tabular-nums ${tone.chipClass}`}>
           밴드 {Math.round(clampedPct)}%
         </span>
       </div>
       <div className="mt-3">
-        <div className="relative h-2 rounded-full bg-slate-100">
-          <span className={`absolute top-0 h-2 w-2 -translate-x-1/2 rounded-full ${tone.fillClass}`} style={{ left: `${clampedPct}%` }} />
+        <div
+          data-stock-valuation-band-track
+          className="relative h-3 overflow-hidden rounded-full border border-slate-200 bg-white"
+          aria-label={`PER 밴드 ${Math.round(clampedPct)}%, ${tone.label}`}
+        >
+          <span data-stock-valuation-zone="deep-discount" className="absolute inset-y-0 left-0 bg-emerald-600/45" style={{ width: `${lowMidPct}%` }} />
+          <span data-stock-valuation-zone="discount" className="absolute inset-y-0 bg-emerald-400/28" style={{ left: `${lowMidPct}%`, width: `${Math.max(0, neutralStartPct - lowMidPct)}%` }} />
+          <span data-stock-valuation-zone="neutral" className="absolute inset-y-0 bg-white" style={{ left: `${neutralStartPct}%`, width: `${Math.max(0, neutralEndPct - neutralStartPct)}%` }} />
+          <span data-stock-valuation-zone="premium" className="absolute inset-y-0 bg-rose-300/30" style={{ left: `${neutralEndPct}%`, width: `${Math.max(0, highMidPct - neutralEndPct)}%` }} />
+          <span data-stock-valuation-zone="overheated" className="absolute inset-y-0 bg-rose-500/45" style={{ left: `${highMidPct}%`, width: `${Math.max(0, 100 - highMidPct)}%` }} />
+          <span className="absolute inset-y-[-3px] w-[3px] rounded-full bg-slate-900 shadow-sm" style={{ left: `${clampedPct}%`, transform: "translateX(-1.5px)" }} />
+          <span className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow ${tone.fillClass}`} style={{ left: `${clampedPct}%` }} />
         </div>
         <div className="mt-1 grid grid-cols-3 text-[9px] font-black tabular-nums text-slate-500">
           <span>{band.min.toFixed(1)}x</span>
-          <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x avg` : band.source}</span>
+          <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x ±10%` : band.source}</span>
           <span className="text-right">{band.max.toFixed(1)}x</span>
         </div>
       </div>
