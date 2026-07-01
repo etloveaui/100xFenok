@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -463,6 +463,35 @@ async function collectRouteChecks(page, route) {
               detail: `actual=${JSON.stringify(valuationZones)} expected=${JSON.stringify(expectedZones)}`,
             });
           }
+        }
+      }
+      if (stockTab === "filings") {
+        const embeddedFilings = document.querySelector('[data-edgar-embedded="true"]');
+        const coverageBanner = document.querySelector("[data-edgar-coverage-banner]");
+        const autoSummaryWarning = document.querySelector("[data-edgar-auto-summary-warning]");
+        const generationSource = document.querySelector("[data-edgar-generation-source]");
+        const visibleOverviewModules = Array.from(document.querySelectorAll("[data-stock-summary-module]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        if (!embeddedFilings || embeddedFilings.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "stock-filings-embedded-visible", detail: "missing visible embedded filings surface" });
+        }
+        if (coverageBanner) {
+          failures.push({ check: "stock-filings-no-coverage-banner", detail: "embedded filings tab should not repeat the coverage banner" });
+        }
+        if (autoSummaryWarning) {
+          failures.push({ check: "stock-filings-no-auto-summary-warning", detail: "embedded filings tab should not repeat standalone auto-summary warning" });
+        }
+        if ((generationSource?.textContent || "").includes("AI")) {
+          failures.push({ check: "stock-filings-no-ai-noise-copy", detail: (generationSource?.textContent || "").trim() });
+        }
+        if (visibleOverviewModules.length > 0) {
+          failures.push({
+            check: "stock-filings-tab-specific-content",
+            detail: `overview modules visible=${visibleOverviewModules.map((node) => node.getAttribute("data-stock-summary-module")).join(",")}`,
+          });
         }
       }
       if (stockTab === "ownership") {

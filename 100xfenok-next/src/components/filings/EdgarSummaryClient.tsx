@@ -176,7 +176,10 @@ function FilingCoverageBanner({
   const updated = coverage?.updated ? formatDate(coverage.updated) : null;
 
   return (
-    <section className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-950">
+    <section
+      data-edgar-coverage-banner
+      className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-950"
+    >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="font-black">공시 요약</p>
@@ -420,7 +423,7 @@ export default function EdgarSummaryClient({
   if (filings && filings.length === 0) {
     return (
       <div className={embedded ? "stock-main-stack" : "data-shell-page"}>
-        <FilingCoverageBanner coverage={coverage} filings={filings} symbol={symbol} />
+        {!embedded ? <FilingCoverageBanner coverage={coverage} filings={filings} symbol={symbol} /> : null}
         <section className="panel">
           <div className="panel-b">
             <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
@@ -449,7 +452,7 @@ export default function EdgarSummaryClient({
   const displaySourceUrl = artifact?.filing.sourceUrl ?? selectedFiling?.sourceUrl;
 
   return (
-    <div className={embedded ? "stock-main-stack" : "data-shell-page"}>
+    <div className={embedded ? "stock-main-stack" : "data-shell-page"} data-edgar-embedded={embedded ? "true" : "false"}>
       {!embedded ? (
         <section className="panel">
           <div className="data-shell-header">
@@ -466,16 +469,17 @@ export default function EdgarSummaryClient({
         </section>
       ) : null}
 
-      <FilingCoverageBanner coverage={coverage} filings={filings} symbol={symbol} compact={embedded} />
+      {!embedded ? <FilingCoverageBanner coverage={coverage} filings={filings} symbol={symbol} /> : null}
 
-      <section className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+      {!embedded ? <section
+        data-edgar-auto-summary-warning
+        className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900"
+      >
         <p className="font-bold">자동 생성 요약입니다. 공시 원문 확인이 필수이며 투자권유가 아닙니다.</p>
-        {!embedded ? (
-          <p className="mt-1">
-            원문 전체 번역이 아니라 핵심만 추린 요약입니다. 원문에서 추출되지 않은 항목은 아래 출처 카드에 표시되며, 번역이 아직 없는 공시는 원문 링크를 먼저 제공합니다.
-          </p>
-        ) : null}
-      </section>
+        <p className="mt-1">
+          원문 전체 번역이 아니라 핵심만 추린 요약입니다. 원문에서 추출되지 않은 항목은 아래 출처 카드에 표시되며, 번역이 아직 없는 공시는 원문 링크를 먼저 제공합니다.
+        </p>
+      </section> : null}
 
       <section className="panel">
         <div className="panel-h">
@@ -597,8 +601,8 @@ export default function EdgarSummaryClient({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <p className="text-xs font-bold text-slate-500">요약 생성일</p>
-              <p className="mt-1 text-sm text-slate-700">
-                {formatDateTime(artifact.generation.generatedAtUtc)} · AI 자동 생성
+              <p className="mt-1 text-sm text-slate-700" data-edgar-generation-source>
+                {formatDateTime(artifact.generation.generatedAtUtc)} · 자동 생성
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3">
