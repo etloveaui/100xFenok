@@ -42,6 +42,30 @@
   color: var(--ink-1);
   letter-spacing: -0.02em;
 }
+.as-preview-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+.as-preview-strip span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--stroke-light);
+  border-radius: 9999px;
+  background: var(--paper-1);
+  padding: 4px 10px;
+}
+.as-preview-strip__badge {
+  color: var(--brand-interactive);
+  border-color: rgba(27, 115, 211, 0.24) !important;
+  background: rgba(27, 115, 211, 0.08) !important;
+}
 
 /* ===== Filter ===== */
 .as-filter {
@@ -81,7 +105,8 @@
   gap: 6px;
 }
 .as-tag {
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 8px 12px;
   border-radius: 9999px;
   font-family: var(--font-display);
   font-weight: 700;

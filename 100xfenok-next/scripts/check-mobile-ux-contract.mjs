@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -727,6 +727,59 @@ async function collectRouteChecks(page, route) {
           detail: `immersive=${Boolean(immersiveRoute)} tabbar=${Boolean(tabbar)}`,
         });
       }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/alpha-scout") {
+      const surface = document.querySelector("[data-alpha-scout-surface]");
+      const previewStrip = document.querySelector("[data-alpha-scout-preview-strip]");
+      const filter = document.querySelector("[data-alpha-scout-filter]");
+      const search = document.querySelector("[data-alpha-scout-search]");
+      const tags = Array.from(document.querySelectorAll("[data-alpha-scout-tag]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const featured = document.querySelector("[data-alpha-scout-featured]");
+      const cards = Array.from(document.querySelectorAll("[data-alpha-scout-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "alpha-scout-surface-visible", detail: "missing alpha scout surface" });
+      }
+      if (!previewStrip || !(previewStrip.textContent || "").includes("미리보기") || !(previewStrip.textContent || "").includes("정적")) {
+        failures.push({ check: "alpha-scout-preview-honesty", detail: `text=${previewStrip?.textContent || ""}` });
+      }
+      if (!filter || filter.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "alpha-scout-filter-visible", detail: "missing alpha scout filter" });
+      }
+      if (!search || search.getBoundingClientRect().height < 44) {
+        failures.push({ check: "alpha-scout-search-target", detail: `height=${Math.round(search?.getBoundingClientRect().height || 0)}` });
+      }
+      if (tags.length < 4) {
+        failures.push({ check: "alpha-scout-tag-count", detail: `visible tags=${tags.length}` });
+      }
+      tags.slice(0, 8).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "alpha-scout-tag-target", detail: `tag ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+      if (!featured || featured.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "alpha-scout-featured-visible", detail: "missing featured issue" });
+      }
+      const cardKinds = cards.map((node) => node.getAttribute("data-alpha-scout-card"));
+      if (!cardKinds.includes("featured") || !cardKinds.includes("archive")) {
+        failures.push({ check: "alpha-scout-card-kinds", detail: `kinds=${JSON.stringify(cardKinds)}` });
+      }
+      cards.slice(0, 6).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "alpha-scout-card-target", detail: `card ${index} height=${Math.round(rect.height)}` });
+        }
+      });
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation") {

@@ -21,6 +21,7 @@ export default function CoverCard({
       onClick={() => onClick(issue)}
       role="link"
       tabIndex={0}
+      data-alpha-scout-card={isHero ? "featured" : "archive"}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();

@@ -45,13 +45,18 @@ export default function ListView({
   }, [rest]);
 
   return (
-    <div className="as-list">
+    <div className="as-list" data-alpha-scout-surface>
       <header className="as-list__head">
         <span className="kicker">100x Alpha Scout · 주간 딥다이브</span>
         <h1 className="as-list__title">알파 스카우트 · 이번 주 리포트</h1>
+        <div className="as-preview-strip" data-alpha-scout-preview-strip>
+          <span className="as-preview-strip__badge">미리보기</span>
+          <span>정적 샘플 리포트 기반</span>
+          <span>{ISSUES.length}개 리포트</span>
+        </div>
       </header>
-      <div className="as-filter">
-        <div className="as-filter__search">
+      <div className="as-filter" data-alpha-scout-filter>
+        <div className="as-filter__search" data-alpha-scout-search>
           <i className="fas fa-search" aria-hidden="true" />
           <input
             type="search"
@@ -69,6 +74,7 @@ export default function ListView({
               className={v2cx("as-tag", activeTag === tag && "is-on")}
               onClick={() => setActiveTag(activeTag === tag ? null : tag)}
               aria-pressed={activeTag === tag}
+              data-alpha-scout-tag={tag}
             >
               {tag}
             </button>
@@ -76,12 +82,12 @@ export default function ListView({
         </div>
       </div>
       {featured ? (
-        <section className="as-hero-section">
+        <section className="as-hero-section" data-alpha-scout-featured>
           <CoverCard issue={featured} variant="hero" onClick={onOpenArticle} />
         </section>
       ) : null}
       {byMonth.map(([month, issues]) => (
-        <section key={month} className="as-month">
+        <section key={month} className="as-month" data-alpha-scout-month={month}>
           <h2 className="as-month__label">{month}</h2>
           <div className="as-month__grid">
             {issues.map((issue) => (
