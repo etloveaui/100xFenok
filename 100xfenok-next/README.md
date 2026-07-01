@@ -277,6 +277,16 @@ satisfy only externally performed post-execution smoke evidence with
 all rows `ok=true` with an allowed HTTP status, and
 `smoke_performed_by_this_command=false`; the next runtime gate is
 `post_live_redirect_delete_rollback_readiness_record`.
+After a valid post-execution smoke record,
+`--rank2-post-live-redirect-delete-rollback-readiness-template` prints the
+rollback readiness evidence skeleton. A supplied
+`--rank2-post-live-redirect-delete-rollback-readiness-json=...` or
+`--rank2-post-live-redirect-delete-rollback-readiness <file>` record may satisfy
+only rollback readiness with
+`rollback_scope=record_only_rollback_readiness_no_rollback_no_deploy`,
+`rollback_ready=true`, `rollback_applied=false`, and
+`rollback_performed_by_this_command=false`; the next runtime gate is
+`post_live_redirect_delete_owner_closeout_record`.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary

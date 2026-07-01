@@ -58,6 +58,8 @@ function parseArgs(argv) {
     rank2PostLiveRedirectDeleteExecutionPacketTemplate: false,
     rank2PostLiveRedirectDeleteExecutionRecordTemplate: false,
     rank2PostLiveRedirectDeletePostExecutionSmokeTemplate: false,
+    rank2PostLiveRedirectDeleteRollbackReadinessTemplate: false,
+    rank2PostLiveRedirectDeleteOwnerCloseoutTemplate: false,
     decisionRecordJson: null,
     decisionRecordPath: null,
     decisionFollowupRecordTemplate: false,
@@ -101,6 +103,10 @@ function parseArgs(argv) {
     rank2PostLiveRedirectDeleteExecutionRecordPath: null,
     rank2PostLiveRedirectDeletePostExecutionSmokeRecordJson: null,
     rank2PostLiveRedirectDeletePostExecutionSmokeRecordPath: null,
+    rank2PostLiveRedirectDeleteRollbackReadinessRecordJson: null,
+    rank2PostLiveRedirectDeleteRollbackReadinessRecordPath: null,
+    rank2PostLiveRedirectDeleteOwnerCloseoutRecordJson: null,
+    rank2PostLiveRedirectDeleteOwnerCloseoutRecordPath: null,
     json: false,
   };
 
@@ -196,6 +202,14 @@ function parseArgs(argv) {
     }
     if (arg === "--rank2-post-live-redirect-delete-post-execution-smoke-template") {
       args.rank2PostLiveRedirectDeletePostExecutionSmokeTemplate = true;
+      continue;
+    }
+    if (arg === "--rank2-post-live-redirect-delete-rollback-readiness-template") {
+      args.rank2PostLiveRedirectDeleteRollbackReadinessTemplate = true;
+      continue;
+    }
+    if (arg === "--rank2-post-live-redirect-delete-owner-closeout-template") {
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutTemplate = true;
       continue;
     }
     if (arg === "--decision-followup-record-template") {
@@ -580,6 +594,42 @@ function parseArgs(argv) {
       args.rank2PostLiveRedirectDeletePostExecutionSmokeRecordJson = requireInlineValue(arg, "--rank2-post-live-redirect-delete-post-execution-smoke-json=", "--rank2-post-live-redirect-delete-post-execution-smoke-json");
       continue;
     }
+    if (arg === "--rank2-post-live-redirect-delete-rollback-readiness") {
+      args.rank2PostLiveRedirectDeleteRollbackReadinessRecordPath = requireArgValue(argv, index, arg);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--rank2-post-live-redirect-delete-rollback-readiness=")) {
+      args.rank2PostLiveRedirectDeleteRollbackReadinessRecordPath = requireInlineValue(arg, "--rank2-post-live-redirect-delete-rollback-readiness=", "--rank2-post-live-redirect-delete-rollback-readiness");
+      continue;
+    }
+    if (arg === "--rank2-post-live-redirect-delete-rollback-readiness-json") {
+      args.rank2PostLiveRedirectDeleteRollbackReadinessRecordJson = requireArgValue(argv, index, arg);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--rank2-post-live-redirect-delete-rollback-readiness-json=")) {
+      args.rank2PostLiveRedirectDeleteRollbackReadinessRecordJson = requireInlineValue(arg, "--rank2-post-live-redirect-delete-rollback-readiness-json=", "--rank2-post-live-redirect-delete-rollback-readiness-json");
+      continue;
+    }
+    if (arg === "--rank2-post-live-redirect-delete-owner-closeout") {
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordPath = requireArgValue(argv, index, arg);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--rank2-post-live-redirect-delete-owner-closeout=")) {
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordPath = requireInlineValue(arg, "--rank2-post-live-redirect-delete-owner-closeout=", "--rank2-post-live-redirect-delete-owner-closeout");
+      continue;
+    }
+    if (arg === "--rank2-post-live-redirect-delete-owner-closeout-json") {
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordJson = requireArgValue(argv, index, arg);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--rank2-post-live-redirect-delete-owner-closeout-json=")) {
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordJson = requireInlineValue(arg, "--rank2-post-live-redirect-delete-owner-closeout-json=", "--rank2-post-live-redirect-delete-owner-closeout-json");
+      continue;
+    }
     throw new Error(`unknown argument: ${arg}`);
   }
 
@@ -646,6 +696,12 @@ function parseArgs(argv) {
   if (args.rank2PostLiveRedirectDeletePostExecutionSmokeRecordJson && args.rank2PostLiveRedirectDeletePostExecutionSmokeRecordPath) {
     throw new Error("use only one rank2 post-live redirect/delete post-execution smoke source: --rank2-post-live-redirect-delete-post-execution-smoke-json or --rank2-post-live-redirect-delete-post-execution-smoke");
   }
+  if (args.rank2PostLiveRedirectDeleteRollbackReadinessRecordJson && args.rank2PostLiveRedirectDeleteRollbackReadinessRecordPath) {
+    throw new Error("use only one rank2 post-live redirect/delete rollback readiness source: --rank2-post-live-redirect-delete-rollback-readiness-json or --rank2-post-live-redirect-delete-rollback-readiness");
+  }
+  if (args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordJson && args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordPath) {
+    throw new Error("use only one rank2 post-live redirect/delete owner closeout source: --rank2-post-live-redirect-delete-owner-closeout-json or --rank2-post-live-redirect-delete-owner-closeout");
+  }
   if (args.rank2PreActivationTemplate && (args.rank2PreActivationRecordJson || args.rank2PreActivationRecordPath)) {
     throw new Error("--rank2-pre-activation-template cannot be combined with a rank2 pre-activation record");
   }
@@ -707,6 +763,14 @@ function parseArgs(argv) {
   if (args.rank2PostLiveRedirectDeletePostExecutionSmokeTemplate
     && (args.rank2PostLiveRedirectDeletePostExecutionSmokeRecordJson || args.rank2PostLiveRedirectDeletePostExecutionSmokeRecordPath)) {
     throw new Error("--rank2-post-live-redirect-delete-post-execution-smoke-template cannot be combined with a rank2 post-live redirect/delete post-execution smoke record");
+  }
+  if (args.rank2PostLiveRedirectDeleteRollbackReadinessTemplate
+    && (args.rank2PostLiveRedirectDeleteRollbackReadinessRecordJson || args.rank2PostLiveRedirectDeleteRollbackReadinessRecordPath)) {
+    throw new Error("--rank2-post-live-redirect-delete-rollback-readiness-template cannot be combined with a rank2 post-live redirect/delete rollback readiness record");
+  }
+  if (args.rank2PostLiveRedirectDeleteOwnerCloseoutTemplate
+    && (args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordJson || args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordPath)) {
+    throw new Error("--rank2-post-live-redirect-delete-owner-closeout-template cannot be combined with a rank2 post-live redirect/delete owner closeout record");
   }
 
   return args;
@@ -1223,6 +1287,44 @@ function safeEnforcementSlices(review, nextCandidate) {
         "smoke_scope=post_execution_smoke_only_no_additional_redirect_delete_no_deploy",
         "all post-execution smoke rows must report ok=true with an allowed HTTP status",
         "smoke_performed_by_this_command=false and rollback readiness remains a separate future record",
+      ],
+    },
+    {
+      id: "rank2_post_live_redirect_delete_rollback_readiness_record_validation",
+      gate: "after_valid_post_execution_smoke_before_owner_closeout",
+      decision: "pending_post_live_redirect_delete_rollback_readiness_record",
+      mutation: "none",
+      mutation_allowed: false,
+      owner_record_required: true,
+      separate_mutation_approval_required: true,
+      candidate_family_id: nextCandidate?.family_id ?? null,
+      allowed_next_action: "validate rollback readiness evidence without applying rollback, deploys, redirects, deletes, or public-file mutation from this command",
+      acceptance: [
+        `rank 2 candidate remains ${nextCandidate?.family_id ?? "unavailable"}`,
+        "post-execution smoke must already be valid_post_live_redirect_delete_post_execution_smoke_recorded",
+        "rollback readiness schema is rank2-post-live-redirect-delete-rollback-readiness-record/v0.1",
+        "rollback_scope=record_only_rollback_readiness_no_rollback_no_deploy and rollback_ready=true",
+        "rollback_applied=false and rollback_performed_by_this_command=false",
+        "owner closeout remains a separate future record",
+      ],
+    },
+    {
+      id: "rank2_post_live_redirect_delete_owner_closeout_record_validation",
+      gate: "after_valid_rollback_readiness_before_record_chain_close",
+      decision: "pending_post_live_redirect_delete_owner_closeout_record",
+      mutation: "none",
+      mutation_allowed: false,
+      owner_record_required: true,
+      separate_mutation_approval_required: true,
+      candidate_family_id: nextCandidate?.family_id ?? null,
+      allowed_next_action: "validate final owner closeout evidence without applying runtime, rollback, deploy, redirect, delete, or public-file mutation from this command",
+      acceptance: [
+        `rank 2 candidate remains ${nextCandidate?.family_id ?? "unavailable"}`,
+        "rollback readiness must already be valid_post_live_redirect_delete_rollback_readiness_recorded",
+        "owner closeout schema is rank2-post-live-redirect-delete-owner-closeout-record/v0.1",
+        "closeout_scope=record_only_owner_closeout_no_additional_runtime",
+        "owner_closeout_accepted=true and additional_runtime_required=false",
+        "closeout_performed_by_this_command=false and next_required_runtime_gate=none_record_chain_closed",
       ],
     },
   ];
@@ -4180,6 +4282,370 @@ function validateRank2PostLiveRedirectDeletePostExecutionSmokeRecord(record, tem
   return errors;
 }
 
+function rank2PostLiveRedirectDeleteRollbackReadinessTemplate(packet) {
+  const postExecutionSmoke = packet.supplied_rank2_post_live_redirect_delete_post_execution_smoke_record
+    ?? packet.rank2_post_live_redirect_delete_post_execution_smoke_template
+    ?? {};
+  const rollbackSteps = postExecutionSmoke.rollback_steps ?? [];
+  return {
+    schema_version: "rank2-post-live-redirect-delete-rollback-readiness-record/v0.1",
+    candidate_family_id: postExecutionSmoke.candidate_family_id ?? null,
+    decision: postExecutionSmoke.decision ?? null,
+    followup_id: postExecutionSmoke.followup_id ?? null,
+    requested_action: postExecutionSmoke.requested_action ?? null,
+    post_live_redirect_delete_post_execution_smoke_record_status: packet.rank2_post_live_redirect_delete_post_execution_smoke_record_status,
+    rollback_readiness_status: "recorded_rollback_readiness",
+    rollback_scope: "record_only_rollback_readiness_no_rollback_no_deploy",
+    recorded_by: "<owner>",
+    recorded_at: "<ISO-8601 timestamp>",
+    production_base_url: postExecutionSmoke.production_base_url ?? PRODUCTION_WORKER_BASE_URL,
+    deployment_target: postExecutionSmoke.deployment_target ?? "100xfenok-edge",
+    owner_route: postExecutionSmoke.owner_route ?? null,
+    compatibility_route: postExecutionSmoke.compatibility_route ?? null,
+    legacy_sample_paths: postExecutionSmoke.legacy_sample_paths ?? [],
+    pro_screen_model_acceptance: postExecutionSmoke.pro_screen_model_acceptance ?? null,
+    proposed_changes: postExecutionSmoke.proposed_changes ?? [],
+    rollback_steps: rollbackSteps,
+    rollback_readiness_checks: rollbackSteps.map((step, index) => ({
+      check_id: `rollback_step_${index + 1}`,
+      step: step.step ?? `rollback_step_${index + 1}`,
+      trigger: step.trigger ?? null,
+      action: step.action ?? null,
+      verification: step.verification ?? null,
+      rollback_ready: true,
+      rollback_applied: false,
+    })),
+    production_smoke_rows: postExecutionSmoke.production_smoke_rows ?? [],
+    post_execution_smoke_rows: postExecutionSmoke.rows ?? [],
+    requested_actions: postExecutionSmoke.requested_actions ?? ["redirect_review", "delete_review"],
+    execution_steps: postExecutionSmoke.execution_steps ?? [],
+    route_patch_applied: true,
+    post_patch_smoke_executed: true,
+    deploy_executed: true,
+    production_live_smoke_executed: true,
+    redirect_delete_approval_requested: true,
+    redirect_delete_approved: true,
+    redirect_delete_execution_planned: true,
+    redirect_delete_executed: true,
+    post_execution_smoke_executed: true,
+    rollback_ready: true,
+    rollback_applied: false,
+    public_files_modified: true,
+    redirect_config_changed: true,
+    delete_paths: postExecutionSmoke.delete_paths ?? [],
+    execution_performed_outside_this_command: true,
+    execution_performed_by_this_command: false,
+    smoke_performed_outside_this_command: true,
+    smoke_performed_by_this_command: false,
+    rollback_performed_by_this_command: false,
+    local_files_modified_by_this_command: false,
+    redirect_config_changed_by_this_command: false,
+    delete_performed_by_this_command: false,
+    blocked_actions: ["deploy", "additional_redirect_delete", "rollback_execution"],
+    owner_closeout_record_required: true,
+    next_required_runtime_gate: "post_live_redirect_delete_owner_closeout_record",
+    notes: "Rollback readiness record only; this command does not apply rollback, deploy, redirects, deletes, smoke, or public file mutation.",
+  };
+}
+
+function validateRank2PostLiveRedirectDeleteRollbackReadinessRecord(record, template, packet) {
+  const errors = [];
+  if (!record) return errors;
+  if (packet.rank2_post_live_redirect_delete_post_execution_smoke_record_status !== "valid_post_live_redirect_delete_post_execution_smoke_recorded") {
+    return ["rank2 post-live redirect/delete rollback readiness requires a valid post-execution smoke record first"];
+  }
+  if (!template) return ["rank2 post-live redirect/delete rollback readiness template is missing"];
+  if (record.schema_version !== template.schema_version) {
+    errors.push(`rank2 post-live redirect/delete rollback readiness schema_version mismatch: ${record.schema_version}`);
+  }
+  if (
+    record.candidate_family_id !== template.candidate_family_id
+    || record.decision !== template.decision
+    || record.followup_id !== template.followup_id
+    || record.requested_action !== template.requested_action
+  ) {
+    errors.push("rank2 post-live redirect/delete rollback readiness identity mismatch");
+  }
+  if (record.post_live_redirect_delete_post_execution_smoke_record_status !== "valid_post_live_redirect_delete_post_execution_smoke_recorded") {
+    errors.push(`rank2 post-live redirect/delete rollback readiness smoke status mismatch: ${record.post_live_redirect_delete_post_execution_smoke_record_status}`);
+  }
+  if (record.rollback_readiness_status !== "recorded_rollback_readiness") {
+    errors.push(`rank2 post-live redirect/delete rollback readiness status mismatch: ${record.rollback_readiness_status}`);
+  }
+  if (record.rollback_scope !== "record_only_rollback_readiness_no_rollback_no_deploy") {
+    errors.push(`rank2 post-live redirect/delete rollback readiness scope mismatch: ${record.rollback_scope}`);
+  }
+  if (typeof record.recorded_by !== "string" || record.recorded_by.trim().length === 0) {
+    errors.push("rank2 post-live redirect/delete rollback readiness recorded_by is required");
+  }
+  if (!isIso8601Timestamp(record.recorded_at)) {
+    errors.push(`rank2 post-live redirect/delete rollback readiness recorded_at must be a full ISO-8601 timestamp with timezone: ${record.recorded_at}`);
+  }
+  if (record.production_base_url !== template.production_base_url) {
+    errors.push(`rank2 post-live redirect/delete rollback readiness base URL mismatch: ${record.production_base_url}`);
+  }
+  if (record.deployment_target !== template.deployment_target) {
+    errors.push(`rank2 post-live redirect/delete rollback readiness deployment_target mismatch: ${record.deployment_target}`);
+  }
+  if (record.owner_route !== template.owner_route || record.compatibility_route !== template.compatibility_route) {
+    errors.push("rank2 post-live redirect/delete rollback readiness route identity mismatch");
+  }
+  if (JSON.stringify(record.legacy_sample_paths) !== JSON.stringify(template.legacy_sample_paths)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness legacy sample paths mismatch");
+  }
+  if (JSON.stringify(record.pro_screen_model_acceptance) !== JSON.stringify(template.pro_screen_model_acceptance)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness PRO screen-model acceptance mismatch");
+  }
+  if (JSON.stringify(record.proposed_changes) !== JSON.stringify(template.proposed_changes)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness proposed changes mismatch");
+  }
+  if (JSON.stringify(record.rollback_steps) !== JSON.stringify(template.rollback_steps)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness rollback steps mismatch");
+  }
+  if (JSON.stringify(record.rollback_readiness_checks) !== JSON.stringify(template.rollback_readiness_checks)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness checks mismatch");
+  }
+  if (JSON.stringify(record.production_smoke_rows) !== JSON.stringify(template.production_smoke_rows)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness production smoke rows mismatch");
+  }
+  if (JSON.stringify(record.post_execution_smoke_rows) !== JSON.stringify(template.post_execution_smoke_rows)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness post-execution smoke rows mismatch");
+  }
+  if (JSON.stringify(record.requested_actions) !== JSON.stringify(template.requested_actions)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness requested actions mismatch");
+  }
+  if (JSON.stringify(record.execution_steps) !== JSON.stringify(template.execution_steps)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness execution steps mismatch");
+  }
+  if (
+    record.route_patch_applied !== true
+    || record.post_patch_smoke_executed !== true
+    || record.deploy_executed !== true
+    || record.production_live_smoke_executed !== true
+    || record.redirect_delete_approval_requested !== true
+    || record.redirect_delete_approved !== true
+    || record.redirect_delete_execution_planned !== true
+    || record.redirect_delete_executed !== true
+    || record.post_execution_smoke_executed !== true
+    || record.rollback_ready !== true
+  ) {
+    errors.push("rank2 post-live redirect/delete rollback readiness must record completed execution/smoke evidence and rollback readiness");
+  }
+  if (record.rollback_applied !== false) {
+    errors.push("rank2 post-live redirect/delete rollback readiness must not apply rollback");
+  }
+  if (record.public_files_modified !== true || record.redirect_config_changed !== true) {
+    errors.push("rank2 post-live redirect/delete rollback readiness must preserve redirect config/public file mutation evidence");
+  }
+  if (JSON.stringify(record.delete_paths) !== JSON.stringify(template.delete_paths)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness delete_paths mismatch");
+  }
+  if (
+    record.execution_performed_outside_this_command !== true
+    || record.smoke_performed_outside_this_command !== true
+  ) {
+    errors.push("rank2 post-live redirect/delete rollback readiness must mark execution and smoke as outside-this-command evidence");
+  }
+  if (
+    record.execution_performed_by_this_command !== false
+    || record.smoke_performed_by_this_command !== false
+    || record.rollback_performed_by_this_command !== false
+    || record.local_files_modified_by_this_command !== false
+    || record.redirect_config_changed_by_this_command !== false
+    || record.delete_performed_by_this_command !== false
+  ) {
+    errors.push("rank2 post-live redirect/delete rollback readiness must keep by-this-command mutation/smoke/rollback flags false");
+  }
+  if (JSON.stringify(record.blocked_actions) !== JSON.stringify(template.blocked_actions)) {
+    errors.push("rank2 post-live redirect/delete rollback readiness blocked actions mismatch");
+  }
+  if (record.owner_closeout_record_required !== true) {
+    errors.push("rank2 post-live redirect/delete rollback readiness must require owner closeout next");
+  }
+  if (record.next_required_runtime_gate !== "post_live_redirect_delete_owner_closeout_record") {
+    errors.push(`rank2 post-live redirect/delete rollback readiness next_required_runtime_gate mismatch: ${record.next_required_runtime_gate}`);
+  }
+  return errors;
+}
+
+function rank2PostLiveRedirectDeleteOwnerCloseoutTemplate(packet) {
+  const rollbackReadiness = packet.supplied_rank2_post_live_redirect_delete_rollback_readiness_record
+    ?? packet.rank2_post_live_redirect_delete_rollback_readiness_template
+    ?? {};
+  return {
+    schema_version: "rank2-post-live-redirect-delete-owner-closeout-record/v0.1",
+    candidate_family_id: rollbackReadiness.candidate_family_id ?? null,
+    decision: rollbackReadiness.decision ?? null,
+    followup_id: rollbackReadiness.followup_id ?? null,
+    requested_action: rollbackReadiness.requested_action ?? null,
+    post_live_redirect_delete_rollback_readiness_record_status: packet.rank2_post_live_redirect_delete_rollback_readiness_record_status,
+    owner_closeout_status: "recorded_owner_closeout",
+    closeout_scope: "record_only_owner_closeout_no_additional_runtime",
+    closed_by: "<owner>",
+    closed_at: "<ISO-8601 timestamp>",
+    production_base_url: rollbackReadiness.production_base_url ?? PRODUCTION_WORKER_BASE_URL,
+    deployment_target: rollbackReadiness.deployment_target ?? "100xfenok-edge",
+    owner_route: rollbackReadiness.owner_route ?? null,
+    compatibility_route: rollbackReadiness.compatibility_route ?? null,
+    legacy_sample_paths: rollbackReadiness.legacy_sample_paths ?? [],
+    pro_screen_model_acceptance: rollbackReadiness.pro_screen_model_acceptance ?? null,
+    proposed_changes: rollbackReadiness.proposed_changes ?? [],
+    rollback_steps: rollbackReadiness.rollback_steps ?? [],
+    rollback_readiness_checks: rollbackReadiness.rollback_readiness_checks ?? [],
+    production_smoke_rows: rollbackReadiness.production_smoke_rows ?? [],
+    post_execution_smoke_rows: rollbackReadiness.post_execution_smoke_rows ?? [],
+    requested_actions: rollbackReadiness.requested_actions ?? ["redirect_review", "delete_review"],
+    execution_steps: rollbackReadiness.execution_steps ?? [],
+    route_patch_applied: true,
+    post_patch_smoke_executed: true,
+    deploy_executed: true,
+    production_live_smoke_executed: true,
+    redirect_delete_approval_requested: true,
+    redirect_delete_approved: true,
+    redirect_delete_execution_planned: true,
+    redirect_delete_executed: true,
+    post_execution_smoke_executed: true,
+    rollback_ready: true,
+    rollback_applied: false,
+    owner_closeout_accepted: true,
+    additional_runtime_required: false,
+    public_files_modified: true,
+    redirect_config_changed: true,
+    delete_paths: rollbackReadiness.delete_paths ?? [],
+    execution_performed_outside_this_command: true,
+    execution_performed_by_this_command: false,
+    smoke_performed_outside_this_command: true,
+    smoke_performed_by_this_command: false,
+    rollback_performed_by_this_command: false,
+    closeout_performed_by_this_command: false,
+    local_files_modified_by_this_command: false,
+    redirect_config_changed_by_this_command: false,
+    delete_performed_by_this_command: false,
+    blocked_actions: ["additional_deploy", "additional_redirect_delete", "rollback_execution"],
+    next_required_runtime_gate: "none_record_chain_closed",
+    notes: "Owner closeout record only; this command does not apply runtime, rollback, deploy, redirects, deletes, smoke, or public file mutation.",
+  };
+}
+
+function validateRank2PostLiveRedirectDeleteOwnerCloseoutRecord(record, template, packet) {
+  const errors = [];
+  if (!record) return errors;
+  if (packet.rank2_post_live_redirect_delete_rollback_readiness_record_status !== "valid_post_live_redirect_delete_rollback_readiness_recorded") {
+    return ["rank2 post-live redirect/delete owner closeout requires a valid rollback readiness record first"];
+  }
+  if (!template) return ["rank2 post-live redirect/delete owner closeout template is missing"];
+  if (record.schema_version !== template.schema_version) {
+    errors.push(`rank2 post-live redirect/delete owner closeout schema_version mismatch: ${record.schema_version}`);
+  }
+  if (
+    record.candidate_family_id !== template.candidate_family_id
+    || record.decision !== template.decision
+    || record.followup_id !== template.followup_id
+    || record.requested_action !== template.requested_action
+  ) {
+    errors.push("rank2 post-live redirect/delete owner closeout identity mismatch");
+  }
+  if (record.post_live_redirect_delete_rollback_readiness_record_status !== "valid_post_live_redirect_delete_rollback_readiness_recorded") {
+    errors.push(`rank2 post-live redirect/delete owner closeout rollback readiness status mismatch: ${record.post_live_redirect_delete_rollback_readiness_record_status}`);
+  }
+  if (record.owner_closeout_status !== "recorded_owner_closeout") {
+    errors.push(`rank2 post-live redirect/delete owner closeout status mismatch: ${record.owner_closeout_status}`);
+  }
+  if (record.closeout_scope !== "record_only_owner_closeout_no_additional_runtime") {
+    errors.push(`rank2 post-live redirect/delete owner closeout scope mismatch: ${record.closeout_scope}`);
+  }
+  if (typeof record.closed_by !== "string" || record.closed_by.trim().length === 0) {
+    errors.push("rank2 post-live redirect/delete owner closeout closed_by is required");
+  }
+  if (!isIso8601Timestamp(record.closed_at)) {
+    errors.push(`rank2 post-live redirect/delete owner closeout closed_at must be a full ISO-8601 timestamp with timezone: ${record.closed_at}`);
+  }
+  if (record.production_base_url !== template.production_base_url) {
+    errors.push(`rank2 post-live redirect/delete owner closeout base URL mismatch: ${record.production_base_url}`);
+  }
+  if (record.deployment_target !== template.deployment_target) {
+    errors.push(`rank2 post-live redirect/delete owner closeout deployment_target mismatch: ${record.deployment_target}`);
+  }
+  if (record.owner_route !== template.owner_route || record.compatibility_route !== template.compatibility_route) {
+    errors.push("rank2 post-live redirect/delete owner closeout route identity mismatch");
+  }
+  if (JSON.stringify(record.legacy_sample_paths) !== JSON.stringify(template.legacy_sample_paths)) {
+    errors.push("rank2 post-live redirect/delete owner closeout legacy sample paths mismatch");
+  }
+  if (JSON.stringify(record.pro_screen_model_acceptance) !== JSON.stringify(template.pro_screen_model_acceptance)) {
+    errors.push("rank2 post-live redirect/delete owner closeout PRO screen-model acceptance mismatch");
+  }
+  if (JSON.stringify(record.proposed_changes) !== JSON.stringify(template.proposed_changes)) {
+    errors.push("rank2 post-live redirect/delete owner closeout proposed changes mismatch");
+  }
+  if (JSON.stringify(record.rollback_steps) !== JSON.stringify(template.rollback_steps)) {
+    errors.push("rank2 post-live redirect/delete owner closeout rollback steps mismatch");
+  }
+  if (JSON.stringify(record.rollback_readiness_checks) !== JSON.stringify(template.rollback_readiness_checks)) {
+    errors.push("rank2 post-live redirect/delete owner closeout rollback readiness checks mismatch");
+  }
+  if (JSON.stringify(record.production_smoke_rows) !== JSON.stringify(template.production_smoke_rows)) {
+    errors.push("rank2 post-live redirect/delete owner closeout production smoke rows mismatch");
+  }
+  if (JSON.stringify(record.post_execution_smoke_rows) !== JSON.stringify(template.post_execution_smoke_rows)) {
+    errors.push("rank2 post-live redirect/delete owner closeout post-execution smoke rows mismatch");
+  }
+  if (JSON.stringify(record.requested_actions) !== JSON.stringify(template.requested_actions)) {
+    errors.push("rank2 post-live redirect/delete owner closeout requested actions mismatch");
+  }
+  if (JSON.stringify(record.execution_steps) !== JSON.stringify(template.execution_steps)) {
+    errors.push("rank2 post-live redirect/delete owner closeout execution steps mismatch");
+  }
+  if (
+    record.route_patch_applied !== true
+    || record.post_patch_smoke_executed !== true
+    || record.deploy_executed !== true
+    || record.production_live_smoke_executed !== true
+    || record.redirect_delete_approval_requested !== true
+    || record.redirect_delete_approved !== true
+    || record.redirect_delete_execution_planned !== true
+    || record.redirect_delete_executed !== true
+    || record.post_execution_smoke_executed !== true
+    || record.rollback_ready !== true
+    || record.owner_closeout_accepted !== true
+  ) {
+    errors.push("rank2 post-live redirect/delete owner closeout must record completed evidence, rollback readiness, and owner closeout acceptance");
+  }
+  if (record.rollback_applied !== false || record.additional_runtime_required !== false) {
+    errors.push("rank2 post-live redirect/delete owner closeout must not apply rollback or require additional runtime");
+  }
+  if (record.public_files_modified !== true || record.redirect_config_changed !== true) {
+    errors.push("rank2 post-live redirect/delete owner closeout must preserve redirect config/public file mutation evidence");
+  }
+  if (JSON.stringify(record.delete_paths) !== JSON.stringify(template.delete_paths)) {
+    errors.push("rank2 post-live redirect/delete owner closeout delete_paths mismatch");
+  }
+  if (
+    record.execution_performed_outside_this_command !== true
+    || record.smoke_performed_outside_this_command !== true
+  ) {
+    errors.push("rank2 post-live redirect/delete owner closeout must mark execution and smoke as outside-this-command evidence");
+  }
+  if (
+    record.execution_performed_by_this_command !== false
+    || record.smoke_performed_by_this_command !== false
+    || record.rollback_performed_by_this_command !== false
+    || record.closeout_performed_by_this_command !== false
+    || record.local_files_modified_by_this_command !== false
+    || record.redirect_config_changed_by_this_command !== false
+    || record.delete_performed_by_this_command !== false
+  ) {
+    errors.push("rank2 post-live redirect/delete owner closeout must keep by-this-command mutation/smoke/rollback/closeout flags false");
+  }
+  if (JSON.stringify(record.blocked_actions) !== JSON.stringify(template.blocked_actions)) {
+    errors.push("rank2 post-live redirect/delete owner closeout blocked actions mismatch");
+  }
+  if (record.next_required_runtime_gate !== "none_record_chain_closed") {
+    errors.push(`rank2 post-live redirect/delete owner closeout next_required_runtime_gate mismatch: ${record.next_required_runtime_gate}`);
+  }
+  return errors;
+}
+
 function rank2ExecutionReadiness(packet) {
   const routeDiffProposalRecorded = packet.rank2_route_diff_proposal_record_status === "valid_no_mutation_route_diff_proposal_recorded";
   const rollbackPlanRecorded = packet.rank2_rollback_plan_record_status === "valid_no_mutation_rollback_plan_recorded";
@@ -4263,6 +4729,8 @@ function buildDecisionPacket(
   rank2PostLiveRedirectDeleteExecutionPacketRecord,
   rank2PostLiveRedirectDeleteExecutionRecord,
   rank2PostLiveRedirectDeletePostExecutionSmokeRecord,
+  rank2PostLiveRedirectDeleteRollbackReadinessRecord,
+  rank2PostLiveRedirectDeleteOwnerCloseoutRecord,
 ) {
   const review = inventory.macro_monitor_rank1_owner_review;
   const nextCandidate = review.next_queue_candidate_after_owner_decision;
@@ -4367,6 +4835,10 @@ function buildDecisionPacket(
     rank2_post_live_redirect_delete_execution_record_status: rank2PostLiveRedirectDeleteExecutionRecord ? "provided_pending_validation" : "not_supplied",
     supplied_rank2_post_live_redirect_delete_post_execution_smoke_record: rank2PostLiveRedirectDeletePostExecutionSmokeRecord,
     rank2_post_live_redirect_delete_post_execution_smoke_record_status: rank2PostLiveRedirectDeletePostExecutionSmokeRecord ? "provided_pending_validation" : "not_supplied",
+    supplied_rank2_post_live_redirect_delete_rollback_readiness_record: rank2PostLiveRedirectDeleteRollbackReadinessRecord,
+    rank2_post_live_redirect_delete_rollback_readiness_record_status: rank2PostLiveRedirectDeleteRollbackReadinessRecord ? "provided_pending_validation" : "not_supplied",
+    supplied_rank2_post_live_redirect_delete_owner_closeout_record: rank2PostLiveRedirectDeleteOwnerCloseoutRecord,
+    rank2_post_live_redirect_delete_owner_closeout_record_status: rank2PostLiveRedirectDeleteOwnerCloseoutRecord ? "provided_pending_validation" : "not_supplied",
     next_gated_slice: nextGatedSlice(review, nextCandidate),
     safe_enforcement_slices: safeEnforcementSlices(review, nextCandidate),
     decision_followup_plans: followupPlans,
@@ -4396,6 +4868,8 @@ function buildDecisionPacket(
     rank2_post_live_redirect_delete_execution_packet_template: null,
     rank2_post_live_redirect_delete_execution_record_template: null,
     rank2_post_live_redirect_delete_post_execution_smoke_template: null,
+    rank2_post_live_redirect_delete_rollback_readiness_template: null,
+    rank2_post_live_redirect_delete_owner_closeout_template: null,
     rank2_execution_readiness: null,
     next_queue_candidate_after_owner_decision: nextCandidate,
   };
@@ -4474,6 +4948,8 @@ function validatePacket(packet) {
     const rank2PostLiveRedirectDeleteExecutionPacketSlice = packet.safe_enforcement_slices.find((slice) => slice.id === "rank2_post_live_redirect_delete_execution_packet_validation");
     const rank2PostLiveRedirectDeleteExecutionRecordSlice = packet.safe_enforcement_slices.find((slice) => slice.id === "rank2_post_live_redirect_delete_execution_record_validation");
     const rank2PostLiveRedirectDeletePostExecutionSmokeSlice = packet.safe_enforcement_slices.find((slice) => slice.id === "rank2_post_live_redirect_delete_post_execution_smoke_record_validation");
+    const rank2PostLiveRedirectDeleteRollbackReadinessSlice = packet.safe_enforcement_slices.find((slice) => slice.id === "rank2_post_live_redirect_delete_rollback_readiness_record_validation");
+    const rank2PostLiveRedirectDeleteOwnerCloseoutSlice = packet.safe_enforcement_slices.find((slice) => slice.id === "rank2_post_live_redirect_delete_owner_closeout_record_validation");
     for (const slice of packet.safe_enforcement_slices) {
       if (slice.mutation !== "none" || slice.mutation_allowed !== false) {
         errors.push(`safe enforcement slice must not authorize mutation: ${slice.id}`);
@@ -4794,6 +5270,38 @@ function validatePacket(packet) {
         || !rank2PostLiveRedirectDeletePostExecutionSmokeSlice.acceptance.some((item) => item.includes("ok=true"))
         || !rank2PostLiveRedirectDeletePostExecutionSmokeSlice.acceptance.some((item) => item.includes("smoke_performed_by_this_command=false"))) {
         errors.push("rank2 post-live redirect/delete post-execution smoke slice must require smoke-only/external-evidence semantics");
+      }
+    }
+    if (!rank2PostLiveRedirectDeleteRollbackReadinessSlice) {
+      errors.push("safe enforcement slices must include rank2_post_live_redirect_delete_rollback_readiness_record_validation");
+    } else {
+      if (rank2PostLiveRedirectDeleteRollbackReadinessSlice.candidate_family_id !== packet.next_queue_candidate_after_owner_decision?.family_id) {
+        errors.push(`rank2 post-live redirect/delete rollback readiness slice candidate mismatch: ${rank2PostLiveRedirectDeleteRollbackReadinessSlice.candidate_family_id}`);
+      }
+      if (rank2PostLiveRedirectDeleteRollbackReadinessSlice.separate_mutation_approval_required !== true) {
+        errors.push("rank2 post-live redirect/delete rollback readiness slice must require separate mutation approval");
+      }
+      if (!Array.isArray(rank2PostLiveRedirectDeleteRollbackReadinessSlice.acceptance)
+        || !rank2PostLiveRedirectDeleteRollbackReadinessSlice.acceptance.some((item) => item.includes("rollback_scope=record_only_rollback_readiness_no_rollback_no_deploy"))
+        || !rank2PostLiveRedirectDeleteRollbackReadinessSlice.acceptance.some((item) => item.includes("rollback_ready=true"))
+        || !rank2PostLiveRedirectDeleteRollbackReadinessSlice.acceptance.some((item) => item.includes("rollback_performed_by_this_command=false"))) {
+        errors.push("rank2 post-live redirect/delete rollback readiness slice must require rollback-readiness-only/no-command-rollback semantics");
+      }
+    }
+    if (!rank2PostLiveRedirectDeleteOwnerCloseoutSlice) {
+      errors.push("safe enforcement slices must include rank2_post_live_redirect_delete_owner_closeout_record_validation");
+    } else {
+      if (rank2PostLiveRedirectDeleteOwnerCloseoutSlice.candidate_family_id !== packet.next_queue_candidate_after_owner_decision?.family_id) {
+        errors.push(`rank2 post-live redirect/delete owner closeout slice candidate mismatch: ${rank2PostLiveRedirectDeleteOwnerCloseoutSlice.candidate_family_id}`);
+      }
+      if (rank2PostLiveRedirectDeleteOwnerCloseoutSlice.separate_mutation_approval_required !== true) {
+        errors.push("rank2 post-live redirect/delete owner closeout slice must require separate mutation approval");
+      }
+      if (!Array.isArray(rank2PostLiveRedirectDeleteOwnerCloseoutSlice.acceptance)
+        || !rank2PostLiveRedirectDeleteOwnerCloseoutSlice.acceptance.some((item) => item.includes("closeout_scope=record_only_owner_closeout_no_additional_runtime"))
+        || !rank2PostLiveRedirectDeleteOwnerCloseoutSlice.acceptance.some((item) => item.includes("owner_closeout_accepted=true"))
+        || !rank2PostLiveRedirectDeleteOwnerCloseoutSlice.acceptance.some((item) => item.includes("closeout_performed_by_this_command=false"))) {
+        errors.push("rank2 post-live redirect/delete owner closeout slice must require owner-closeout-only/no-command-runtime semantics");
       }
     }
   }
@@ -5489,6 +5997,63 @@ function validatePacket(packet) {
   ) {
     packet.rank2_post_live_redirect_delete_post_execution_smoke_record_status = "valid_post_live_redirect_delete_post_execution_smoke_recorded";
   }
+  packet.rank2_post_live_redirect_delete_rollback_readiness_template = rank2PostLiveRedirectDeleteRollbackReadinessTemplate(packet);
+  if (
+    packet.rank2_post_live_redirect_delete_rollback_readiness_template.rollback_readiness_status !== "recorded_rollback_readiness"
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.rollback_scope !== "record_only_rollback_readiness_no_rollback_no_deploy"
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.route_patch_applied !== true
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.deploy_executed !== true
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.redirect_delete_executed !== true
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.post_execution_smoke_executed !== true
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.rollback_ready !== true
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.rollback_applied !== false
+    || packet.rank2_post_live_redirect_delete_rollback_readiness_template.rollback_performed_by_this_command !== false
+  ) {
+    errors.push("rank2 post-live redirect/delete rollback readiness template must stay readiness-only/no-command-rollback");
+  }
+  if (!packet.rank2_post_live_redirect_delete_rollback_readiness_template.blocked_actions.includes("rollback_execution")) {
+    errors.push("rank2 post-live redirect/delete rollback readiness template must block rollback execution");
+  }
+  const rank2PostLiveRedirectDeleteRollbackReadinessErrors = validateRank2PostLiveRedirectDeleteRollbackReadinessRecord(
+    packet.supplied_rank2_post_live_redirect_delete_rollback_readiness_record,
+    packet.rank2_post_live_redirect_delete_rollback_readiness_template,
+    packet,
+  );
+  errors.push(...rank2PostLiveRedirectDeleteRollbackReadinessErrors);
+  if (
+    packet.supplied_rank2_post_live_redirect_delete_rollback_readiness_record
+    && rank2PostLiveRedirectDeleteRollbackReadinessErrors.length === 0
+  ) {
+    packet.rank2_post_live_redirect_delete_rollback_readiness_record_status = "valid_post_live_redirect_delete_rollback_readiness_recorded";
+  }
+  packet.rank2_post_live_redirect_delete_owner_closeout_template = rank2PostLiveRedirectDeleteOwnerCloseoutTemplate(packet);
+  if (
+    packet.rank2_post_live_redirect_delete_owner_closeout_template.owner_closeout_status !== "recorded_owner_closeout"
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.closeout_scope !== "record_only_owner_closeout_no_additional_runtime"
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.rollback_ready !== true
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.rollback_applied !== false
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.owner_closeout_accepted !== true
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.additional_runtime_required !== false
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.closeout_performed_by_this_command !== false
+    || packet.rank2_post_live_redirect_delete_owner_closeout_template.next_required_runtime_gate !== "none_record_chain_closed"
+  ) {
+    errors.push("rank2 post-live redirect/delete owner closeout template must stay closeout-only/no-additional-runtime");
+  }
+  if (!packet.rank2_post_live_redirect_delete_owner_closeout_template.blocked_actions.includes("rollback_execution")) {
+    errors.push("rank2 post-live redirect/delete owner closeout template must keep rollback execution blocked");
+  }
+  const rank2PostLiveRedirectDeleteOwnerCloseoutErrors = validateRank2PostLiveRedirectDeleteOwnerCloseoutRecord(
+    packet.supplied_rank2_post_live_redirect_delete_owner_closeout_record,
+    packet.rank2_post_live_redirect_delete_owner_closeout_template,
+    packet,
+  );
+  errors.push(...rank2PostLiveRedirectDeleteOwnerCloseoutErrors);
+  if (
+    packet.supplied_rank2_post_live_redirect_delete_owner_closeout_record
+    && rank2PostLiveRedirectDeleteOwnerCloseoutErrors.length === 0
+  ) {
+    packet.rank2_post_live_redirect_delete_owner_closeout_record_status = "valid_post_live_redirect_delete_owner_closeout_recorded";
+  }
   return errors;
 }
 
@@ -5521,6 +6086,7 @@ function printText(packet) {
   console.log(`rank2_post_live_redirect_delete_execution_packet_record_status=${packet.rank2_post_live_redirect_delete_execution_packet_record_status}`);
   console.log(`rank2_post_live_redirect_delete_execution_record_status=${packet.rank2_post_live_redirect_delete_execution_record_status}`);
   console.log(`rank2_post_live_redirect_delete_post_execution_smoke_record_status=${packet.rank2_post_live_redirect_delete_post_execution_smoke_record_status}`);
+  console.log(`rank2_post_live_redirect_delete_rollback_readiness_record_status=${packet.rank2_post_live_redirect_delete_rollback_readiness_record_status}`);
   console.log(`rank2_execution_readiness=${packet.rank2_execution_readiness.status}`);
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
   console.log(`next_gated_slice=${packet.next_gated_slice.id}`);
@@ -5557,6 +6123,7 @@ function printText(packet) {
   console.log("rank2_post_live_redirect_delete_execution_packet_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-execution-packet-template");
   console.log("rank2_post_live_redirect_delete_execution_record_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-execution-record-template");
   console.log("rank2_post_live_redirect_delete_post_execution_smoke_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-post-execution-smoke-template");
+  console.log("rank2_post_live_redirect_delete_rollback_readiness_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-rollback-readiness-template");
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
 }
@@ -5592,6 +6159,7 @@ function main() {
   let rank2PostLiveRedirectDeleteExecutionPacketRecord;
   let rank2PostLiveRedirectDeleteExecutionRecord;
   let rank2PostLiveRedirectDeletePostExecutionSmokeRecord;
+  let rank2PostLiveRedirectDeleteRollbackReadinessRecord;
   try {
     decisionRecord = readDecisionRecord(args.decisionRecordPath, args.decisionRecordJson);
   } catch (error) {
@@ -5712,6 +6280,14 @@ function main() {
   } catch (error) {
     fail(`rank2 post-live redirect/delete post-execution smoke record read/parse failed: ${errorMessage(error)}`, null, false);
   }
+  try {
+    rank2PostLiveRedirectDeleteRollbackReadinessRecord = readDecisionRecord(
+      args.rank2PostLiveRedirectDeleteRollbackReadinessRecordPath,
+      args.rank2PostLiveRedirectDeleteRollbackReadinessRecordJson,
+    );
+  } catch (error) {
+    fail(`rank2 post-live redirect/delete rollback readiness record read/parse failed: ${errorMessage(error)}`, null, false);
+  }
 
   const packet = buildDecisionPacket(
     inventory,
@@ -5737,6 +6313,7 @@ function main() {
     rank2PostLiveRedirectDeleteExecutionPacketRecord,
     rank2PostLiveRedirectDeleteExecutionRecord,
     rank2PostLiveRedirectDeletePostExecutionSmokeRecord,
+    rank2PostLiveRedirectDeleteRollbackReadinessRecord,
   );
   const errors = validatePacket(packet);
 
@@ -5912,6 +6489,14 @@ function main() {
       fail("--rank2-post-live-redirect-delete-post-execution-smoke-template requires rank2_post_live_redirect_delete_execution_record_status=valid_post_live_redirect_delete_execution_recorded_pending_smoke", packet, args.json);
     }
     console.log(JSON.stringify(packet.rank2_post_live_redirect_delete_post_execution_smoke_template, null, 2));
+    return;
+  }
+
+  if (args.rank2PostLiveRedirectDeleteRollbackReadinessTemplate) {
+    if (packet.rank2_post_live_redirect_delete_post_execution_smoke_record_status !== "valid_post_live_redirect_delete_post_execution_smoke_recorded") {
+      fail("--rank2-post-live-redirect-delete-rollback-readiness-template requires rank2_post_live_redirect_delete_post_execution_smoke_record_status=valid_post_live_redirect_delete_post_execution_smoke_recorded", packet, args.json);
+    }
+    console.log(JSON.stringify(packet.rank2_post_live_redirect_delete_rollback_readiness_template, null, 2));
     return;
   }
 
