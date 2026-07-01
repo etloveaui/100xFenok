@@ -220,6 +220,10 @@ function publicPathFromFile(file) {
   return `/${file.replace(/^100xfenok-next\/public\//, "").replace(/^public\//, "")}`;
 }
 
+function localSmokeCommand(smokePath) {
+  return `curl -L -sS -o /dev/null -w 'status=%{http_code}\\n' http://127.0.0.1:3105${smokePath}`;
+}
+
 function legacyHtmlClassification(legacyHtml) {
   const iframeTargets = new Map(
     Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE).map(([route, target]) => [target, route]),
@@ -361,9 +365,6 @@ function lowRiskRetireReadiness(legacyClassification, appRoutes, routeBackedEqui
     const staticReadyForOwnerReview = replacementRoutePresent && replacementAssetPresent;
     const replacementRouteSmokePath = `${candidate.route}/`;
     const replacementTargetSmokePath = routeBackedTarget?.target_path ?? "/tools/stock_analyzer/stock_analyzer.html";
-    const localSmokeCommand = (smokePath) => (
-      `curl -L -sS -o /dev/null -w 'status=%{http_code}\\n' http://127.0.0.1:3105${smokePath}`
-    );
     const ownerApprovalPacket = {
       schema_version: "owner-approval-packet/v0.1",
       approval_packet_ready: staticReadyForOwnerReview,
@@ -604,6 +605,42 @@ function routeResolutionFor(route, appRouteSet) {
   return "missing";
 }
 
+function ownerRouteEquivalencePacketForFamily(family) {
+  const localSmokePaths = [
+    family.owner_route,
+    family.compatibility_route,
+    ...family.sample_public_paths.slice(0, 3),
+  ].filter(Boolean);
+  const packetReady = (!family.owner_route_required || family.owner_route_present)
+    && family.sample_public_paths.length > 0
+    && family.mutation_status === "not_executed";
+
+  return {
+    schema_version: "owner-route-equivalence-packet/v0.1",
+    packet_ready: packetReady,
+    family_id: family.id,
+    owner_area: family.owner_area,
+    owner_route: family.owner_route,
+    owner_route_resolution: family.owner_route_resolution,
+    compatibility_route: family.compatibility_route,
+    legacy_row_count: family.row_count,
+    mutation_status: "not_executed",
+    blocked_actions: ["delete", "redirect", "deploy"],
+    owner_decision_required_before_mutation: true,
+    pro_route_ia_acceptance: family.pro_route_ia_acceptance,
+    local_smoke_paths: localSmokePaths,
+    legacy_sample_paths: family.sample_public_paths.slice(0, 3),
+    pre_approval_local_commands: [
+      "npm run qa:canonical-root-inventory",
+      "npm run qa:routes",
+      ...localSmokePaths.map((smokePath) => localSmokeCommand(smokePath)),
+    ],
+    required_before_redirect_or_delete: family.required_before_redirect_or_delete,
+    first_action: family.first_action,
+    next_gate: "owner reviews this packet and chooses preserve, remap, or retire; no mutation before approval",
+  };
+}
+
 function highRiskOwnerMatrix(legacyClassification, appRoutes) {
   const appRouteSet = new Set(appRoutes.map((item) => item.route));
   const highRiskRows = legacyClassification.rows.filter((row) => row.class.endsWith("_high_risk"));
@@ -655,6 +692,16 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     if (current.sample_public_paths.length < 8) current.sample_public_paths.push(row.public_path);
     familiesById.set(row.owner_family, current);
   }
+  const families = [...familiesById.values()]
+    .map((item) => {
+      const packet = ownerRouteEquivalencePacketForFamily(item);
+      return {
+        ...item,
+        owner_route_equivalence_packet: packet,
+        owner_route_equivalence_packet_ready: packet.packet_ready,
+      };
+    })
+    .sort((left, right) => left.id.localeCompare(right.id));
   const unmappedRows = rows.filter((row) => !row.owner_family).map((row) => row.public_path).sort();
   const missingOwnerRouteRows = rows
     .filter((row) => row.owner_route_required && !row.owner_route_present)
@@ -669,18 +716,25 @@ function highRiskOwnerMatrix(legacyClassification, appRoutes) {
     ))
     .map((row) => row.public_path)
     .sort();
+  const packetNotReadyFamilies = families
+    .filter((family) => !family.owner_route_equivalence_packet_ready)
+    .map((family) => family.id)
+    .sort();
 
   return {
     schema_version: "high-risk-owner-matrix/v0.1",
     high_risk_row_count: highRiskRows.length,
-    owner_family_count: familiesById.size,
+    owner_family_count: families.length,
+    owner_route_equivalence_packet_ready_count: families.filter((family) => family.owner_route_equivalence_packet_ready).length,
+    owner_route_equivalence_packet_not_ready_count: packetNotReadyFamilies.length,
     unmapped_count: unmappedRows.length,
     missing_owner_route_count: missingOwnerRouteRows.length,
     unsafe_row_count: unsafeRows.length,
+    packet_not_ready_families: packetNotReadyFamilies,
     unmapped_rows: unmappedRows,
     missing_owner_route_rows: missingOwnerRouteRows,
     unsafe_rows: unsafeRows,
-    families: [...familiesById.values()].sort((left, right) => left.id.localeCompare(right.id)),
+    families,
     rows,
   };
 }
@@ -980,6 +1034,9 @@ function main() {
   if (highRiskOwners.unsafe_row_count > 0) {
     errors.push(`high-risk legacy owner rows must remain owner-gated and non-mutating: ${highRiskOwners.unsafe_rows.join(", ")}`);
   }
+  if (highRiskOwners.owner_route_equivalence_packet_not_ready_count > 0) {
+    errors.push(`high-risk owner-route equivalence packets are not ready: ${highRiskOwners.packet_not_ready_families.join(", ")}`);
+  }
 
   const report = {
     schema_version: "canonical-root-inventory/v0.1",
@@ -1005,6 +1062,7 @@ function main() {
       legacy_html_route_backed: legacyClassification.route_backed.length,
       legacy_html_high_risk: legacyClassification.high_risk_count,
       legacy_html_high_risk_owner_families: highRiskOwners.owner_family_count,
+      legacy_html_high_risk_owner_equivalence_packets_ready: highRiskOwners.owner_route_equivalence_packet_ready_count,
       legacy_html_high_risk_unmapped: highRiskOwners.unmapped_count,
       legacy_html_high_risk_owner_route_missing: highRiskOwners.missing_owner_route_count,
     },

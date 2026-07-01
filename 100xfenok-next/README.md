@@ -30,7 +30,9 @@ low-risk helper retirement readiness. A readiness row never authorizes deletion;
 its owner-approval packet records non-mutating pre-approval commands, proposed
 scope, soak, and rollback fields for review. High-risk legacy HTML rows are
 also grouped into owner-route families so PRO IA review starts from the owning
-screen instead of a raw file-delete list.
+screen instead of a raw file-delete list. Each high-risk family also carries an
+owner-route equivalence packet with local smoke commands before any mutation can
+be requested.
 
 Run `npm run qa:route-iframe-contract` only against a local Next.js server. It
 defaults to `http://127.0.0.1:3105` and checks the route-backed iframe catalog:
