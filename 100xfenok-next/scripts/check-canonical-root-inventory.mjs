@@ -51,6 +51,130 @@ const OLD_URL_PATTERNS = [
   { id: "generic_workers_dev", pattern: /workers\.dev/i },
 ];
 
+const TRIAGED_OLD_URL_OWNER_POLICY_BY_FILE = new Map([
+  [
+    "100xfenok-next/scripts/check-macro-chart-contract.mjs",
+    {
+      class: "source_qa_contract",
+      owner_area: "macro_chart_worker_contract",
+      source_vs_public_owner: "source_contract_owner_first",
+      runtime_impact: "qa-only allowlist and contract fixture; no public mirror mutation",
+      owner_gate: "owner approval required before changing the Stooq Worker contract",
+      first_action: "preserve current owner Worker proxy contract; migrate only with macro-chart owner approval and QA update",
+    },
+  ],
+  [
+    "100xfenok-next/scripts/check-macro-chart-stooq-loader.ts",
+    {
+      class: "source_qa_contract",
+      owner_area: "macro_chart_worker_contract",
+      source_vs_public_owner: "source_contract_owner_first",
+      runtime_impact: "qa-only loader fixture; no public mirror mutation",
+      owner_gate: "owner approval required before changing the Stooq Worker contract",
+      first_action: "preserve current owner Worker proxy assertion; update only with the runtime loader source",
+    },
+  ],
+  [
+    "100xfenok-next/scripts/check-quote-contract.mjs",
+    {
+      class: "source_qa_contract",
+      owner_area: "quote_gateway_contract",
+      source_vs_public_owner: "source_contract_owner_first_then_public_mirror",
+      runtime_impact: "qa contract for admin quote source and mirrored public copies",
+      owner_gate: "owner approval required before changing quote gateway URL or mirrored GAS outputs",
+      first_action: "preserve current Worker quote gateway contract; triage source and public mirrors together",
+    },
+  ],
+  [
+    "100xfenok-next/src/lib/macro-chart/stooq.ts",
+    {
+      class: "source_runtime_endpoint",
+      owner_area: "macro_chart_worker_runtime",
+      source_vs_public_owner: "source_runtime_owner_first",
+      runtime_impact: "runtime data endpoint for Stooq proxy; no public mirror mutation by this file",
+      owner_gate: "owner approval required before endpoint migration",
+      first_action: "preserve current owner Worker proxy until a replacement endpoint and contract QA are approved",
+    },
+  ],
+  [
+    "100xfenok-next/src/lib/server/ticker.ts",
+    {
+      class: "source_runtime_endpoint",
+      owner_area: "ticker_worker_runtime",
+      source_vs_public_owner: "source_runtime_owner_first",
+      runtime_impact: "runtime quote endpoint fallback; no public mirror mutation by this file",
+      owner_gate: "owner approval required before endpoint migration",
+      first_action: "preserve current ticker Worker endpoint until quote gateway migration is approved",
+    },
+  ],
+  [
+    "docs/planning/CONTRACT_macro_chart_stooq_fusion_20260624.md",
+    {
+      class: "planning_policy_doc",
+      owner_area: "macro_chart_worker_contract",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "planning contract reference only",
+      owner_gate: "update with owner-approved macro-chart policy change; do not rewrite as cleanup",
+      first_action: "preserve as active contract evidence for the Stooq Worker decision",
+    },
+  ],
+  [
+    "docs/planning/DEC_multichart_stooq_worker_20260624.md",
+    {
+      class: "planning_policy_doc",
+      owner_area: "macro_chart_worker_decision",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "decision record only",
+      owner_gate: "update only if the Stooq Worker decision changes",
+      first_action: "preserve as decision evidence for the allowed owner Worker proxy",
+    },
+  ],
+  [
+    "docs/planning/DESIGN_data_spine_program_20260619.md",
+    {
+      class: "planning_policy_doc",
+      owner_area: "data_spine_bridge_policy",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "design inventory reference only",
+      owner_gate: "update only with owner-approved bridge/indexing policy",
+      first_action: "preserve as bridge-hosting policy evidence until canonical root policy is final",
+    },
+  ],
+  [
+    "docs/planning/FORGE_market_valuation_ledger_20260613.md",
+    {
+      class: "historical_planning_doc",
+      owner_area: "market_valuation_delivery_ledger",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "historical implementation ledger only",
+      owner_gate: "do not rewrite historical live evidence as URL cleanup",
+      first_action: "preserve historical deployment evidence unless the owner asks for a retrospective note",
+    },
+  ],
+  [
+    "docs/planning/PLAN_design_system_remodel_20260625.md",
+    {
+      class: "historical_planning_doc",
+      owner_area: "design_system_delivery_ledger",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "historical deployment ledger only",
+      owner_gate: "do not rewrite historical live evidence as URL cleanup",
+      first_action: "preserve historical deployment evidence unless the owner asks for a retrospective note",
+    },
+  ],
+  [
+    "docs/planning/PLAN_public_surface_cleanup_20260623.md",
+    {
+      class: "planning_policy_doc",
+      owner_area: "public_surface_canonical_policy",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "planning policy reference only",
+      owner_gate: "update only with owner-approved canonical origin decision",
+      first_action: "preserve because it already records the Pages host as non-canonical until host migration",
+    },
+  ],
+]);
+
 function parseArgs(argv) {
   return {
     json: argv.includes("--json"),
@@ -226,6 +350,9 @@ function collectOldUrlConsumers(files) {
 }
 
 function classifyOldUrlConsumer(file, pattern_ids) {
+  const triagedOwnerPolicy = TRIAGED_OLD_URL_OWNER_POLICY_BY_FILE.get(file);
+  if (triagedOwnerPolicy) return triagedOwnerPolicy;
+
   const patternSet = new Set(pattern_ids);
   const referencesWorkerOnly = (
     (patternSet.has("cloudflare_worker") || patternSet.has("generic_workers_dev"))
@@ -244,6 +371,10 @@ function classifyOldUrlConsumer(file, pattern_ids) {
   )) {
     return {
       class: "current_worker_canonical",
+      owner_area: "current_worker_canonical_surface",
+      source_vs_public_owner: "source_or_metadata_owner_first",
+      runtime_impact: "current Worker canonical-candidate reference",
+      owner_gate: "preserve unless the canonical origin decision changes",
       first_action: "preserve; current Worker canonical-candidate reference, not a legacy cleanup target by default",
     };
   }
@@ -251,6 +382,10 @@ function classifyOldUrlConsumer(file, pattern_ids) {
   if (file.startsWith("100xfenok-next/public/")) {
     return {
       class: "public_mirror_copy",
+      owner_area: "public_mirror",
+      source_vs_public_owner: "public_mirror_requires_source_owner_first",
+      runtime_impact: "public copied output or static mirror",
+      owner_gate: "do not edit directly unless this path is the public SSOT",
       first_action: "do not edit directly unless this path is the public SSOT; triage source owner first",
     };
   }
@@ -258,6 +393,10 @@ function classifyOldUrlConsumer(file, pattern_ids) {
   if (file.startsWith("docs/archive/") || file.includes("/docs/archives/")) {
     return {
       class: "historical_doc",
+      owner_area: "historical_docs",
+      source_vs_public_owner: "docs_reference_no_public_mirror",
+      runtime_impact: "historical reference only",
+      owner_gate: "preserve unless owner asks to rewrite active execution docs",
       first_action: "preserve historical context unless the doc is used as an active execution source",
     };
   }
@@ -269,6 +408,10 @@ function classifyOldUrlConsumer(file, pattern_ids) {
   ) {
     return {
       class: "source_runtime_template",
+      owner_area: "runtime_or_deploy_template",
+      source_vs_public_owner: "source_owner_first",
+      runtime_impact: "runtime, workflow, or generated-output source template",
+      owner_gate: "owner-gated source-level URL migration plan required",
       first_action: "owner-gated source-level URL migration plan required before changing external/runtime output",
     };
   }
@@ -281,12 +424,20 @@ function classifyOldUrlConsumer(file, pattern_ids) {
   ) {
     return {
       class: "source_admin_tool_config",
+      owner_area: "admin_or_tool_source",
+      source_vs_public_owner: "source_and_public_mirror_owner_together",
+      runtime_impact: "admin/tool source may have generated public mirror consumers",
+      owner_gate: "triage source path and generated public mirror together",
       first_action: "triage source path and generated public mirror together before URL edits",
     };
   }
 
   return {
     class: "unresolved_requires_owner_triage",
+    owner_area: "unknown",
+    source_vs_public_owner: "unknown_requires_owner_triage",
+    runtime_impact: "unknown",
+    owner_gate: "classify owner and runtime impact before any URL replacement",
     first_action: "classify owner and runtime impact before any URL replacement",
   };
 }
@@ -316,8 +467,14 @@ function oldUrlConsumerClassification(oldUrlConsumers) {
   }, {});
 
   return {
+    owner_policy_schema_version: "old-url-owner-policy/v0.1",
     by_class: Object.fromEntries(Object.entries(byClass).sort(([a], [b]) => a.localeCompare(b))),
     unresolved_requires_owner_triage: rows.filter((row) => row.class === "unresolved_requires_owner_triage"),
+    owner_approval_required_before_url_change: rows.filter((row) => (
+      row.owner_gate.includes("owner approval required")
+      || row.owner_gate.includes("owner-approved")
+      || row.owner_gate.includes("owner-gated")
+    )),
     rows,
   };
 }
@@ -397,6 +554,7 @@ function main() {
       workflow_files: workflows.length,
       old_url_consumer_files: oldUrlConsumerFiles.length,
       old_url_unresolved_requires_owner_triage: oldUrlClassification.unresolved_requires_owner_triage.length,
+      old_url_owner_approval_required_before_url_change: oldUrlClassification.owner_approval_required_before_url_change.length,
       legacy_html_low_risk_candidates: legacyClassification.safe_first_candidates.length,
       legacy_html_route_backed: legacyClassification.route_backed.length,
       legacy_html_high_risk: legacyClassification.high_risk_count,
