@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/tools/stock-analyzer/native,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -640,6 +640,151 @@ async function collectRouteChecks(page, route) {
       }
       if ((appTitle?.textContent || "").trim() !== "종목분석") {
         failures.push({ check: "stock-analyzer-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/tools/stock-analyzer/native") {
+      const surface = document.querySelector("[data-stock-analyzer-native-surface]");
+      const owner = document.querySelector("[data-stock-analyzer-native-route-owner]");
+      const dashboard = document.querySelector("[data-stock-analyzer-native]");
+      const header = document.querySelector("[data-stock-analyzer-native-header]");
+      const actions = Array.from(document.querySelectorAll("[data-stock-analyzer-native-action]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const tabs = Array.from(document.querySelectorAll("[data-stock-analyzer-native-tab]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const filters = Array.from(document.querySelectorAll("[data-stock-analyzer-native-filter]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const filterTargets = filters
+        .map((node) => {
+          if (node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLButtonElement) return node;
+          return node.querySelector("input,select,button");
+        })
+        .filter(Boolean);
+      const summaryCards = Array.from(document.querySelectorAll("[data-stock-analyzer-native-summary-card]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const quickSnapshot = document.querySelector("[data-stock-analyzer-native-quick-snapshot]");
+      const filteredUniverse = document.querySelector("[data-stock-analyzer-native-filtered-universe]");
+      const mobileList = document.querySelector("[data-stock-analyzer-native-mobile-list]");
+      const table = document.querySelector("[data-stock-analyzer-native-table]");
+      const selected = document.querySelector("[data-stock-analyzer-native-selected]");
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "stock-analyzer-native-surface-visible", detail: "missing native surface" });
+      }
+      if (!owner || owner.getAttribute("data-stock-analyzer-native-route-owner") !== "native-dashboard") {
+        failures.push({
+          check: "stock-analyzer-native-route-owner",
+          detail: `owner=${owner?.getAttribute("data-stock-analyzer-native-route-owner") || "missing"}`,
+        });
+      }
+      if (!dashboard || dashboard.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "stock-analyzer-native-dashboard-visible", detail: "missing dashboard surface" });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0 || !(header.textContent || "").includes("Stock Analyzer Dashboard")) {
+        failures.push({ check: "stock-analyzer-native-header-visible", detail: "missing visible native header" });
+      }
+
+      const expectedActions = ["refresh", "legacy"];
+      const actualActions = actions.map((node) => node.getAttribute("data-stock-analyzer-native-action"));
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      if (
+        actions.length !== expectedActions.length ||
+        !expectedActions.every((action, index) => actualActions[index] === action)
+      ) {
+        failures.push({
+          check: "stock-analyzer-native-action-order",
+          detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions)}`,
+        });
+      }
+      const legacyAction = actions.find((node) => node.getAttribute("data-stock-analyzer-native-action") === "legacy");
+      if (
+        !(legacyAction instanceof HTMLAnchorElement) ||
+        normalizePath(new URL(legacyAction.href, window.location.origin).pathname) !== "/tools/stock-analyzer"
+      ) {
+        failures.push({ check: "stock-analyzer-native-legacy-action-target", detail: "legacy action does not return to legacy route" });
+      }
+      actions.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "stock-analyzer-native-action-target", detail: `action ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedTabs = ["overview", "growth", "ranking", "eps", "portfolio", "compare"];
+      const actualTabs = tabs.map((node) => node.getAttribute("data-stock-analyzer-native-tab"));
+      if (
+        tabs.length !== expectedTabs.length ||
+        !expectedTabs.every((tab, index) => actualTabs[index] === tab)
+      ) {
+        failures.push({
+          check: "stock-analyzer-native-tab-order",
+          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
+        });
+      }
+      tabs.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "stock-analyzer-native-tab-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedFilters = ["search", "sector", "sort", "order", "reset"];
+      const actualFilters = filters.map((node) => node.getAttribute("data-stock-analyzer-native-filter"));
+      if (
+        filters.length !== expectedFilters.length ||
+        !expectedFilters.every((filter, index) => actualFilters[index] === filter)
+      ) {
+        failures.push({
+          check: "stock-analyzer-native-filter-order",
+          detail: `actual=${JSON.stringify(actualFilters)} expected=${JSON.stringify(expectedFilters)}`,
+        });
+      }
+      filterTargets.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "stock-analyzer-native-filter-target", detail: `filter ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (summaryCards.length !== 4) {
+        failures.push({ check: "stock-analyzer-native-summary-card-count", detail: `cards=${summaryCards.length}` });
+      }
+      if (!quickSnapshot || quickSnapshot.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "stock-analyzer-native-quick-snapshot-visible", detail: "missing quick snapshot" });
+      }
+      if (!filteredUniverse || filteredUniverse.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "stock-analyzer-native-filtered-universe-visible", detail: "missing filtered universe" });
+      }
+      if (viewportWidth < 768 && (!mobileList || mobileList.getBoundingClientRect().height <= 0)) {
+        failures.push({ check: "stock-analyzer-native-mobile-list-visible", detail: "missing mobile list surface" });
+      }
+      if (viewportWidth >= 768 && (!table || table.getBoundingClientRect().height <= 0)) {
+        failures.push({ check: "stock-analyzer-native-table-visible", detail: "missing desktop table" });
+      }
+      if (!selected || selected.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "stock-analyzer-native-selected-visible", detail: "missing selected snapshot" });
+      }
+
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "stock-analyzer-native-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "종목분석 네이티브") {
+        failures.push({ check: "stock-analyzer-native-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
       }
     }
 

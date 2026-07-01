@@ -250,8 +250,14 @@ export function StockAnalyzerDashboard() {
     !dashboard.isLoading && dashboard.filteredRecords.length === 0;
 
   return (
-    <main className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4" data-stock-analyzer-native="true">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <main
+      className="container mx-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4"
+      data-stock-analyzer-native="true"
+    >
+      <section
+        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+        data-stock-analyzer-native-header="true"
+      >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600">
@@ -270,12 +276,14 @@ export function StockAnalyzerDashboard() {
               type="button"
               onClick={() => void refresh()}
               className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              data-stock-analyzer-native-action="refresh"
             >
               새로고침
             </button>
             <Link
               href="/tools/stock-analyzer"
               className="min-h-11 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+              data-stock-analyzer-native-action="legacy"
             >
               기본 화면
             </Link>
@@ -288,6 +296,7 @@ export function StockAnalyzerDashboard() {
               key={tab.id}
               type="button"
               onClick={() => setTab(tab.id)}
+              data-stock-analyzer-native-tab={tab.id}
               className={`min-h-11 flex-shrink-0 rounded-full px-4 text-sm font-bold transition ${
                 dashboard.activeTab === tab.id
                   ? "bg-brand-navy text-white"
@@ -300,9 +309,12 @@ export function StockAnalyzerDashboard() {
         </div>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <section
+        className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+        data-stock-analyzer-native-filters="true"
+      >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <label className="xl:col-span-2">
+          <label className="xl:col-span-2" data-stock-analyzer-native-filter="search">
             <span className="mb-1 block text-xs font-semibold text-slate-500">검색</span>
             <input
               type="search"
@@ -313,7 +325,7 @@ export function StockAnalyzerDashboard() {
             />
           </label>
 
-          <label>
+          <label data-stock-analyzer-native-filter="sector">
             <span className="mb-1 block text-xs font-semibold text-slate-500">섹터</span>
             <select
               value={dashboard.filters.sectors[0] ?? ""}
@@ -332,7 +344,7 @@ export function StockAnalyzerDashboard() {
             </select>
           </label>
 
-          <label>
+          <label data-stock-analyzer-native-filter="sort">
             <span className="mb-1 block text-xs font-semibold text-slate-500">정렬 기준</span>
             <select
               value={dashboard.filters.sortKey}
@@ -347,7 +359,7 @@ export function StockAnalyzerDashboard() {
             </select>
           </label>
 
-          <label>
+          <label data-stock-analyzer-native-filter="order">
             <span className="mb-1 block text-xs font-semibold text-slate-500">정렬 순서</span>
             <select
               value={dashboard.filters.sortOrder}
@@ -366,7 +378,8 @@ export function StockAnalyzerDashboard() {
           <button
             type="button"
             onClick={resetFilters}
-            className="min-h-10 rounded-lg bg-slate-100 px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-200"
+            className="min-h-11 rounded-lg bg-slate-100 px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-200"
+            data-stock-analyzer-native-filter="reset"
           >
             필터 초기화
           </button>
@@ -389,19 +402,19 @@ export function StockAnalyzerDashboard() {
       )}
 
       <section className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="universe">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Universe</p>
           <p className="mt-1 text-2xl font-black text-slate-800">{formatNumber(dashboard.records.length, 0)}</p>
         </article>
-        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="filtered">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Filtered</p>
           <p className="mt-1 text-2xl font-black text-slate-800">{formatNumber(dashboard.filteredRecords.length, 0)}</p>
         </article>
-        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="growth">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg 3M Growth</p>
           <p className="mt-1 text-2xl font-black text-emerald-600">{formatPercent(averageGrowth)}</p>
         </article>
-        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="per">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg PER</p>
           <p className="mt-1 text-2xl font-black text-blue-700">{formatNumber(averagePer, 2)}</p>
         </article>
@@ -410,7 +423,10 @@ export function StockAnalyzerDashboard() {
       {shouldRenderHeavyPanels ? (
         <StockAnalyzerCharts charts={dashboard.charts} />
       ) : (
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section
+          className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          data-stock-analyzer-native-quick-snapshot="true"
+        >
           <h2 className="text-sm font-black text-slate-700">Quick Snapshot</h2>
           <p className="mt-1 text-xs text-slate-500">
             초기 렌더 성능을 위해 차트는 유휴 시간에 순차 로드됩니다.
@@ -437,7 +453,10 @@ export function StockAnalyzerDashboard() {
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
-        <article className="min-h-[430px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article
+          className="min-h-[430px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          data-stock-analyzer-native-filtered-universe="true"
+        >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-700">Filtered Universe</h2>
             <span className="text-xs text-slate-500">
@@ -445,7 +464,10 @@ export function StockAnalyzerDashboard() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2 md:hidden">
+          <div
+            className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2 md:hidden"
+            data-stock-analyzer-native-mobile-list="true"
+          >
             {hasNoFilteredResults ? (
               <div className="min-[520px]:col-span-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-600">
                 조건에 맞는 종목이 없습니다. 검색어 또는 필터를 조정해 주세요.
@@ -456,6 +478,7 @@ export function StockAnalyzerDashboard() {
                     type="button"
                     key={`mobile-${record.symbol}`}
                     onClick={() => selectSymbol(record.symbol)}
+                    data-stock-analyzer-native-mobile-card={record.symbol}
                     className={`w-full rounded-xl border p-3 text-left transition ${
                       dashboard.selectedSymbol === record.symbol
                         ? "border-blue-200 bg-blue-50/60"
@@ -512,8 +535,8 @@ export function StockAnalyzerDashboard() {
                 ))}
           </div>
 
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[720px] border-collapse text-sm">
+          <div className="hidden overflow-x-auto md:block" data-stock-analyzer-native-table-wrap="true">
+            <table className="w-full min-w-[720px] border-collapse text-sm" data-stock-analyzer-native-table="true">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
                   <th className="py-2 pr-2">Ticker</th>
@@ -591,7 +614,10 @@ export function StockAnalyzerDashboard() {
           </div>
         </article>
 
-        <article className="min-h-[240px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article
+          className="min-h-[240px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          data-stock-analyzer-native-selected="true"
+        >
           <h2 className="text-sm font-black text-slate-700">Selected Snapshot</h2>
 
           {selectedRecord ? (
