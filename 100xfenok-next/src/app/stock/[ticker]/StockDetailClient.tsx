@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
@@ -302,6 +302,44 @@ type NumberSeries = MaybeNumber[];
 type StockTab = "overview" | "etf" | "financials" | "statistics" | "ownership" | "estimates" | "filings";
 type StockTabItem = { id: StockTab; label: string; badge?: string };
 const ESTIMATE_LABELS: Record<string, string> = { fy1: "FY+1", fy2: "FY+2", fy3: "FY+3" };
+const STOCK_TAB_VALUES: StockTab[] = ["overview", "etf", "financials", "statistics", "ownership", "estimates", "filings"];
+
+function stockTabDomSafe(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "ticker";
+}
+
+function stockTabId(symbol: string, tab: StockTab): string {
+  return `stock-${stockTabDomSafe(symbol)}-tab-${tab}`;
+}
+
+function stockPanelId(symbol: string, tab: StockTab): string {
+  return `stock-${stockTabDomSafe(symbol)}-panel-${tab}`;
+}
+
+function isStockTab(value: string | null | undefined): value is StockTab {
+  return typeof value === "string" && STOCK_TAB_VALUES.includes(value as StockTab);
+}
+
+function stockTabFromLocation(): StockTab {
+  if (typeof window === "undefined") return "overview";
+  const value = new URLSearchParams(window.location.search).get("tab");
+  return isStockTab(value) ? value : "overview";
+}
+
+function writeStockTabUrl(tab: StockTab, mode: "push" | "replace"): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (tab === "overview") {
+    url.searchParams.delete("tab");
+  } else {
+    url.searchParams.set("tab", tab);
+  }
+  const nextHref = `${url.pathname}${url.search}${url.hash}`;
+  const currentHref = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextHref === currentHref) return;
+  if (mode === "push") window.history.pushState(window.history.state, "", nextHref);
+  else window.history.replaceState(window.history.state, "", nextHref);
+}
 
 function StockTabsNav({
   symbol,
@@ -317,7 +355,11 @@ function StockTabsNav({
   note?: string | null;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef(new Map<StockTab, HTMLButtonElement>());
   const [canScroll, setCanScroll] = useState(false);
+  const [focusedTab, setFocusedTab] = useState<StockTab>(activeTab);
+  const activeIndex = tabs.findIndex((tab) => tab.id === activeTab);
+  const focusedInTabs = tabs.some((tab) => tab.id === focusedTab);
 
   useEffect(() => {
     const node = ref.current;
@@ -333,21 +375,70 @@ function StockTabsNav({
     };
   }, [tabs.length, note]);
 
+  useEffect(() => {
+    setFocusedTab(activeTab);
+  }, [activeTab]);
+
+  function moveTo(currentIndex: number, delta: number) {
+    if (tabs.length === 0) return;
+    const baseIndex = currentIndex >= 0 ? currentIndex : activeIndex >= 0 ? activeIndex : 0;
+    const nextIndex = delta === 0 ? baseIndex : baseIndex + delta;
+    const normalizedIndex = (nextIndex + tabs.length) % tabs.length;
+    const nextTab = tabs[normalizedIndex] ?? tabs[0];
+    if (!nextTab) return;
+    setFocusedTab(nextTab.id);
+    onSelect(nextTab.id);
+    requestAnimationFrame(() => {
+      buttonRefs.current.get(nextTab.id)?.focus();
+    });
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveTo(index, 1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveTo(index, -1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      moveTo(0, 0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      moveTo(tabs.length - 1, 0);
+    }
+  }
+
   return (
-    <div ref={ref} className={`stock-tabs ${canScroll ? "can-scroll" : ""}`} role="tablist" aria-label={`${symbol} 상세 탭`}>
-      {tabs.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          role="tab"
-          aria-selected={activeTab === t.id}
-          onClick={() => onSelect(t.id)}
-          className={`stock-tab ${activeTab === t.id ? "on" : ""}`}
-        >
-          <span className="block">{t.label}</span>
-          {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
-        </button>
-      ))}
+    <div ref={ref} className={`stock-tabs ${canScroll ? "can-scroll" : ""}`} role="tablist" aria-label={`${symbol} 상세 탭`} aria-orientation="horizontal">
+      {tabs.map((t, index) => {
+        const selected = activeTab === t.id;
+        const focusable = focusedTab === t.id || (selected && !focusedInTabs) || (activeIndex < 0 && !focusedInTabs && index === 0);
+        return (
+          <button
+            key={t.id}
+            ref={(node) => {
+              if (node) buttonRefs.current.set(t.id, node);
+              else buttonRefs.current.delete(t.id);
+            }}
+            id={stockTabId(symbol, t.id)}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            aria-controls={stockPanelId(symbol, t.id)}
+            tabIndex={focusable ? 0 : -1}
+            onClick={() => {
+              setFocusedTab(t.id);
+              onSelect(t.id);
+            }}
+            onKeyDown={(event) => handleKeyDown(event, index)}
+            className={`stock-tab ${selected ? "on" : ""}`}
+          >
+            <span className="block">{t.label}</span>
+            {t.badge ? <span className="mt-0.5 block text-[10px] font-black text-blue-600">{t.badge}</span> : null}
+          </button>
+        );
+      })}
       {note ? <span className="stock-tab-note">{note}</span> : null}
     </div>
   );
@@ -891,6 +982,10 @@ export default function StockDetailClient({
   const [stockServicesEntry, setStockServicesEntry] = useState<StockServicesEntry | null | undefined>(undefined);
   const [fenokSignalLens, setFenokSignalLens] = useState<FenokSignalsSummaryRecord | null | undefined>(undefined);
   const marketFactsAssetType = marketFacts?.asset_type;
+  const selectStockTab = useCallback((tab: StockTab, mode: "push" | "replace" = "push") => {
+    setStockTab(tab);
+    writeStockTabUrl(tab, mode);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1051,6 +1146,18 @@ export default function StockDetailClient({
       : []),
   ];
 
+  useEffect(() => {
+    function handlePopState() {
+      setStockTab(stockTabFromLocation());
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    writeStockTabUrl(activeStockTab, "replace");
+  }, [activeStockTab]);
+
   // Unknown ticker
   if (!rowLoading && !row) {
     if (marketFactsLoading || etfData === undefined || etfSurfaceData === undefined) {
@@ -1115,11 +1222,17 @@ export default function StockDetailClient({
               symbol={symbol}
               tabs={stockTabs}
               activeTab={activeStockTab}
-              onSelect={setStockTab}
+              onSelect={selectStockTab}
               note={etfData === undefined ? "ETF 상세 로딩 중..." : null}
             />
           </section>
-          <div className="stock-body">
+          <div
+            id={stockPanelId(symbol, activeStockTab)}
+            role="tabpanel"
+            aria-labelledby={stockTabId(symbol, activeStockTab)}
+            tabIndex={0}
+            className="stock-body"
+          >
             {activeStockTab === "etf" ? (
               <div className="stock-summary-stack">
                 {marketFacts ? <MarketFactsDepth ticker={symbol} compact /> : null}
@@ -1414,12 +1527,18 @@ export default function StockDetailClient({
           symbol={symbol}
           tabs={stockTabs}
           activeTab={activeStockTab}
-          onSelect={setStockTab}
+          onSelect={selectStockTab}
           note={isEtfAsset && etfData === undefined ? "ETF 상세 로딩 중..." : !yfLoaded ? "추가 지표 로딩 중..." : !yfAvailable ? "추가 지표 준비 중" : null}
         />
       </section>
 
-      <div className="stock-body">
+      <div
+        id={stockPanelId(symbol, activeStockTab)}
+        role="tabpanel"
+        aria-labelledby={stockTabId(symbol, activeStockTab)}
+        tabIndex={0}
+        className="stock-body"
+      >
         {activeStockTab === "overview" ? (
           <div className="stock-summary-stack">
             {yfAvailable ? (
@@ -1527,7 +1646,7 @@ export default function StockDetailClient({
                     <button
                       key={label}
                       type="button"
-                      onClick={() => setStockTab(label === "재무" ? "financials" : label === "통계" ? "statistics" : label === "추정치" ? "estimates" : "ownership")}
+                      onClick={() => selectStockTab(label === "재무" ? "financials" : label === "통계" ? "statistics" : label === "추정치" ? "estimates" : "ownership")}
                       className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left transition hover:border-brand-interactive hover:bg-white"
                     >
                       <span className="block text-[11px] font-black text-slate-800">{label}</span>
