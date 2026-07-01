@@ -305,7 +305,13 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
   }
 
   return (
-    <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="최신 보유 종목 표 가로 스크롤">
+    <div
+      data-superinvestor-guru-top-holdings
+      className="scroll-hint-x -mx-1 px-1"
+      role="region"
+      tabIndex={0}
+      aria-label="최신 보유 종목 표 가로 스크롤"
+    >
       <table className="w-full min-w-[480px] text-xs">
         <thead>
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -318,10 +324,15 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
         </thead>
         <tbody>
           {rows.map((h) => (
-            <tr key={`${h.ticker}-${h.cusip}`} className="border-b border-slate-100 last:border-b-0">
+            <tr
+              key={`${h.ticker}-${h.cusip}`}
+              data-superinvestor-guru-holding-row
+              data-superinvestor-guru-holding-ticker={h.ticker ?? ""}
+              className="border-b border-slate-100 last:border-b-0"
+            >
               <td className="px-2 py-2">
                 {h.ticker ? (
-                  <TickerChip ticker={h.ticker} variant="inline" />
+                  <TickerChip ticker={h.ticker} variant="pill" className="min-h-11" />
                 ) : (
                   <span className="text-[var(--c-ink-3)]">—</span>
                 )}
@@ -368,6 +379,9 @@ function GuruDetailPanel({
   const sectorQuarters = Array.isArray(investorView?.quarters) ? investorView.quarters : [];
   const hasSectorHistory = sectorQuarters.length > 0 && Object.keys(sectorHistory).length > 0;
   const hasPortfolioView = !!investorView && (treemapRows.length > 0 || hasSectorHistory || !!investorView.performance);
+  const latestQuarter = latest?.quarter ?? summary.quarter ?? "—";
+  const reportDate = latest?.report_date ?? "—";
+  const filingDate = latest?.filing_date ?? "—";
 
   useEffect(() => {
     let cancelled = false;
@@ -380,24 +394,66 @@ function GuruDetailPanel({
   }, [id]);
 
   return (
-    <div className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
+    <div
+      id={`superinvestor-guru-profile-${id}`}
+      data-superinvestor-guru-profile
+      data-superinvestor-guru-id={id}
+      data-superinvestor-guru-quarter={latestQuarter}
+      data-superinvestor-guru-report-date={reportDate}
+      data-superinvestor-guru-filing-date={filingDate}
+      className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4"
+    >
+      <div data-superinvestor-guru-profile-hero className="mb-3 grid gap-2 sm:grid-cols-3">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">13F 기준</p>
+          <p data-superinvestor-guru-asof className="mt-1 text-sm font-black text-amber-950">
+            {latestQuarter}
+          </p>
+          <p className="mt-1 text-[10px] font-semibold text-amber-700">
+            보고 기준일 {reportDate}
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">공시일</p>
+          <p data-superinvestor-guru-filing className="mt-1 text-sm font-black text-slate-950">
+            {filingDate}
+          </p>
+          <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+            SEC 13F DataPack 변환
+          </p>
+        </div>
+        <div
+          data-superinvestor-guru-lag-disclosure
+          className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2"
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">공시 지연</p>
+          <p className="mt-1 text-sm font-black text-sky-950">최대 45일</p>
+          <p className="mt-1 text-[10px] font-semibold text-sky-700">
+            오늘 보유가 아니라 분기 보고치
+          </p>
+        </div>
+      </div>
+
       {/* Row 1 — KPI strip (panel lives inside a narrow card column — keep 2x2) */}
       <div className="grid grid-cols-2 gap-2">
-        <KpiCard label="운용 자산" value={fmtAum(latest?.aum_total ?? summary.aum)} isLoading={loading} />
+        <KpiCard label="운용 자산" value={fmtAum(latest?.aum_total ?? summary.aum)} isLoading={loading} dataKey="aum" />
         <KpiCard
           label="보유 종목"
           value={latest ? latest.holdings_count.toLocaleString() : "—"}
           isLoading={loading}
+          dataKey="holdings"
         />
         <KpiCard
           label="TOP 10 비중"
           value={latest?.top_10_weight != null ? `${(latest.top_10_weight * 100).toFixed(1)}%` : "—"}
           isLoading={loading}
+          dataKey="top10"
         />
         <KpiCard
           label="회전율"
           value={turnover === undefined ? "..." : turnover === null ? "—" : `${(turnover * 100).toFixed(1)}%`}
           isLoading={loading || turnover === undefined}
+          dataKey="turnover"
         />
       </div>
 
@@ -434,7 +490,7 @@ function GuruDetailPanel({
       {/* Quarter label */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-          {latest ? latest.quarter : summary.quarter || "—"}
+          {latestQuarter}
         </p>
         {prev ? (
           <p className="text-[10px] font-semibold text-slate-500">
@@ -445,14 +501,20 @@ function GuruDetailPanel({
 
       {/* Portfolio charts (from portfolio_views.json) */}
       {hasPortfolioView ? (
-        <div className="mt-4 border-t border-slate-200 pt-4">
+        <div
+          data-superinvestor-guru-portfolio
+          data-superinvestor-guru-portfolio-quarter={investorView?.quarter ?? ""}
+          className="mt-4 border-t border-slate-200 pt-4"
+        >
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
             {treemapRows.length > 0 ? (
-              <PortfolioTreemap
-                rows={treemapRows}
-                quarterLabel={investorView.quarter}
-              />
+              <div data-superinvestor-guru-treemap data-superinvestor-guru-treemap-count={treemapRows.length}>
+                <PortfolioTreemap
+                  rows={treemapRows}
+                  quarterLabel={investorView.quarter}
+                />
+              </div>
             ) : null}
             {hasSectorHistory ? (
               <SectorMixPanel
@@ -501,13 +563,15 @@ function KpiCard({
   label,
   value,
   isLoading,
+  dataKey,
 }: {
   label: string;
   value: string;
   isLoading?: boolean;
+  dataKey?: string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
+    <div data-superinvestor-guru-kpi={dataKey} className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
       <p className="truncate text-[11px] font-medium text-slate-500">{label}</p>
       {isLoading ? (
         <div className="mt-1 h-6 w-3/4 rounded bg-slate-200" />
@@ -680,9 +744,18 @@ export default function SuperinvestorsClient({
   const guruEntries = useMemo<[string, SummaryInvestor][]>(() => {
     if (!summary) return [];
     const rows = Object.entries(summary.investors);
-    if (!group) return rows;
-    return rows.filter(([, inv]) => inv.group === group);
-  }, [summary, group]);
+    const filtered = group ? rows.filter(([, inv]) => inv.group === group) : rows;
+    if (!expandedGuru) return filtered;
+    return [...filtered].sort(([a], [b]) => {
+      if (a === expandedGuru) return -1;
+      if (b === expandedGuru) return 1;
+      return 0;
+    });
+  }, [summary, group, expandedGuru]);
+  const selectedGuruEntry =
+    expandedGuru && summary?.investors[expandedGuru]
+      ? ([expandedGuru, summary.investors[expandedGuru]] as const)
+      : null;
 
   const groups = useMemo(() => {
     if (!summary) return [];
@@ -812,6 +885,61 @@ export default function SuperinvestorsClient({
         <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
           기관 공시 데이터를 불러오지 못했습니다.
         </div>
+      ) : null}
+
+      {dataReady && selectedGuruEntry ? (
+        <section
+          data-superinvestor-guru-landing
+          data-superinvestor-guru-id={selectedGuruEntry[0]}
+          className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-4 shadow-[var(--sh-sm)]"
+          aria-label={`${selectedGuruEntry[1].name} 투자자 프로필 바로가기`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">선택 투자자</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">
+                {selectedGuruEntry[1].name}
+              </h2>
+              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
+                {selectedGuruEntry[1].group} · {fmtAum(selectedGuruEntry[1].aum)} · {selectedGuruEntry[1].holdings_count}종목
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                data-superinvestor-guru-landing-asof
+                className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
+              >
+                {selectedGuruEntry[1].latest_quarter || quarter || "—"}
+              </span>
+              <span
+                data-superinvestor-guru-landing-lag
+                className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
+              >
+                13F 최대 45일 지연
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <a
+              href={`#superinvestor-guru-profile-${selectedGuruEntry[0]}`}
+              data-superinvestor-guru-action
+              className="inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
+            >
+              프로필 보기
+            </a>
+            {[...new Set(selectedGuruEntry[1].top5)].slice(0, 5).map((ticker, i) => (
+              <TransitionLink
+                key={`${ticker}-${i}`}
+                href={ROUTES.stock(ticker)}
+                data-superinvestor-guru-action
+                data-superinvestor-guru-landing-stock-link
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+              >
+                {ticker}
+              </TransitionLink>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {dataReady ? (
@@ -1139,7 +1267,7 @@ export default function SuperinvestorsClient({
                   setGroup(e.target.value);
                   setExpandedGuru(null);
                 }}
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
               >
                 <option value="">전체 스타일</option>
                 {groups.map((g) => (
@@ -1165,6 +1293,9 @@ export default function SuperinvestorsClient({
                 return (
                   <div
                     key={id}
+                    data-superinvestor-guru-card
+                    data-superinvestor-guru-id={id}
+                    data-superinvestor-guru-expanded={isOpen ? "true" : "false"}
                     className={cx(
                       "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] transition",
                       // expanded detail (KPI + treemap + sector mix) needs the full row width
@@ -1202,12 +1333,14 @@ export default function SuperinvestorsClient({
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">Top 5</p>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {[...new Set(inv.top5)].slice(0, 5).map((ticker, i) => (
-                            <span
+                            <TransitionLink
                               key={`${ticker}-${i}`}
-                              className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-700"
+                              href={ROUTES.stock(ticker)}
+                              data-superinvestor-guru-top5-link
+                              className="inline-flex min-h-11 items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:bg-slate-200 hover:text-brand-interactive"
                             >
                               {ticker}
-                            </span>
+                            </TransitionLink>
                           ))}
                         </div>
                       </div>

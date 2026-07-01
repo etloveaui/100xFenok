@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1314,6 +1314,114 @@ async function collectRouteChecks(page, route) {
         stockLinks.forEach((link, index) => {
           if (link.rect.height < 44) {
             failures.push({ check: "superinvestors-accumulation-heatmap-touch-target", detail: `tile ${index} height=${Math.round(link.rect.height)}` });
+          }
+        });
+      }
+      if (currentRoute.includes("tab=gurus") && currentRoute.includes("guru=")) {
+        const params = new URLSearchParams(currentRoute.split("?")[1] || "");
+        const guruId = params.get("guru") || "";
+        const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
+        const landing = document.querySelector("[data-superinvestor-guru-landing]");
+        const landingAsOf = landing?.querySelector("[data-superinvestor-guru-landing-asof]");
+        const landingLag = landing?.querySelector("[data-superinvestor-guru-landing-lag]");
+        const landingActions = Array.from(landing?.querySelectorAll("[data-superinvestor-guru-action]") || []);
+        const landingStockLinks = Array.from(landing?.querySelectorAll("[data-superinvestor-guru-landing-stock-link]") || []);
+        const cards = Array.from(document.querySelectorAll("[data-superinvestor-guru-card]"));
+        const card = cards.find((node) => node.getAttribute("data-superinvestor-guru-id") === guruId);
+        const profile = document.querySelector(`[data-superinvestor-guru-profile][data-superinvestor-guru-id="${guruId}"]`);
+        const profileHero = profile?.querySelector("[data-superinvestor-guru-profile-hero]");
+        const asOf = profile?.querySelector("[data-superinvestor-guru-asof]");
+        const lag = profile?.querySelector("[data-superinvestor-guru-lag-disclosure]");
+        const filing = profile?.querySelector("[data-superinvestor-guru-filing]");
+        const kpis = Array.from(profile?.querySelectorAll("[data-superinvestor-guru-kpi]") || []);
+        const portfolio = profile?.querySelector("[data-superinvestor-guru-portfolio]");
+        const treemap = profile?.querySelector("[data-superinvestor-guru-treemap]");
+        const topHoldings = profile?.querySelector("[data-superinvestor-guru-top-holdings]");
+        const holdingRows = Array.from(profile?.querySelectorAll("[data-superinvestor-guru-holding-row]") || []);
+        const top5Links = Array.from(card?.querySelectorAll("a[data-superinvestor-guru-top5-link]") || []);
+        const holdingLinks = holdingRows
+          .map((row) => row.querySelector('a[href^="/stock/"]'))
+          .filter(Boolean);
+
+        if (!selectedTab || !(selectedTab.textContent || "").includes("투자자")) {
+          failures.push({ check: "superinvestors-guru-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
+        }
+        if (!landing) {
+          failures.push({ check: "superinvestors-guru-landing", detail: "missing selected guru landing strip" });
+        } else {
+          const landingRect = landing.getBoundingClientRect();
+          if (landing.getAttribute("data-superinvestor-guru-id") !== guruId) {
+            failures.push({ check: "superinvestors-guru-landing-id", detail: `landing=${landing.getAttribute("data-superinvestor-guru-id") || ""} expected=${guruId}` });
+          }
+          if (landingRect.height <= 0 || landingRect.top >= window.innerHeight) {
+            failures.push({ check: "superinvestors-guru-first-viewport", detail: `top=${Math.round(landingRect.top)} height=${Math.round(landingRect.height)} viewport=${window.innerHeight}` });
+          }
+        }
+        if (!landingAsOf || !/\d{4}-Q\d/.test(landingAsOf.textContent || "")) {
+          failures.push({ check: "superinvestors-guru-landing-asof", detail: `asOf=${landingAsOf?.textContent || ""}` });
+        }
+        if (!landingLag || !(landingLag.textContent || "").includes("45")) {
+          failures.push({ check: "superinvestors-guru-landing-lag", detail: `lag=${landingLag?.textContent || ""}` });
+        }
+        if (landingActions.length < 4) {
+          failures.push({ check: "superinvestors-guru-landing-actions", detail: `actions=${landingActions.length}` });
+        }
+        if (!card) {
+          failures.push({ check: "superinvestors-guru-card", detail: `guru=${guruId || "missing"}` });
+        } else {
+          if (card.getAttribute("data-superinvestor-guru-expanded") !== "true") {
+            failures.push({ check: "superinvestors-guru-expanded", detail: `expanded=${card.getAttribute("data-superinvestor-guru-expanded") || ""}` });
+          }
+          if (cards[0] !== card) {
+            failures.push({ check: "superinvestors-guru-pinned-first", detail: `first=${cards[0]?.getAttribute("data-superinvestor-guru-id") || ""} expected=${guruId}` });
+          }
+        }
+        if (!profile || profile.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-guru-profile-visible", detail: `guru=${guruId || "missing"}` });
+        }
+        if (!profileHero || profileHero.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-guru-profile-hero", detail: "missing visible profile hero" });
+        }
+        if (!asOf || !/\d{4}-Q\d/.test(asOf.textContent || "")) {
+          failures.push({ check: "superinvestors-guru-asof", detail: `asOf=${asOf?.textContent || ""}` });
+        }
+        if (!filing || !/\d{4}-\d{2}-\d{2}/.test(filing.textContent || "")) {
+          failures.push({ check: "superinvestors-guru-filing-date", detail: `filing=${filing?.textContent || ""}` });
+        }
+        if (!lag || !(lag.textContent || "").includes("45")) {
+          failures.push({ check: "superinvestors-guru-13f-lag", detail: `lag=${lag?.textContent || ""}` });
+        }
+        if (kpis.length < 4) {
+          failures.push({ check: "superinvestors-guru-kpis", detail: `kpis=${kpis.length}` });
+        }
+        if (!portfolio || portfolio.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-guru-portfolio-visible", detail: "missing portfolio section" });
+        }
+        if (!treemap || Number.parseInt(treemap.getAttribute("data-superinvestor-guru-treemap-count") || "", 10) < 1) {
+          failures.push({ check: "superinvestors-guru-treemap", detail: `count=${treemap?.getAttribute("data-superinvestor-guru-treemap-count") || ""}` });
+        }
+        if (!topHoldings || topHoldings.getBoundingClientRect().height <= 0 || holdingRows.length < 8) {
+          failures.push({ check: "superinvestors-guru-top-holdings", detail: `rows=${holdingRows.length}` });
+        }
+        if (portfolio && topHoldings && !(portfolio.compareDocumentPosition(topHoldings) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+          failures.push({ check: "superinvestors-guru-profile-order", detail: "portfolio should precede top holdings" });
+        }
+        if (top5Links.length < 3) {
+          failures.push({ check: "superinvestors-guru-top5-stock-links", detail: `links=${top5Links.length}` });
+        }
+        if (holdingLinks.length < Math.min(8, holdingRows.length)) {
+          failures.push({ check: "superinvestors-guru-holding-stock-links", detail: `links=${holdingLinks.length} rows=${holdingRows.length}` });
+        }
+        [...landingStockLinks, ...top5Links, ...holdingLinks.slice(0, 8)].forEach((link, index) => {
+          const href = link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin).pathname : "";
+          if (!href.startsWith("/stock/")) {
+            failures.push({ check: "superinvestors-guru-action-href", detail: `index=${index} href=${href}` });
+          }
+        });
+        [...landingActions, ...top5Links, ...holdingLinks.slice(0, 8)].forEach((link, index) => {
+          const rect = link.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "superinvestors-guru-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
           }
         });
       }
