@@ -37,6 +37,7 @@ function parseArgs(argv) {
   const args = {
     decisionRecordTemplate: false,
     rank2PreActivationTemplate: false,
+    rank2OwnerReviewTemplate: false,
     decisionRecordJson: null,
     decisionRecordPath: null,
     decisionFollowupRecordTemplate: false,
@@ -59,6 +60,10 @@ function parseArgs(argv) {
     }
     if (arg === "--rank2-pre-activation-template") {
       args.rank2PreActivationTemplate = true;
+      continue;
+    }
+    if (arg === "--rank2-owner-review-template") {
+      args.rank2OwnerReviewTemplate = true;
       continue;
     }
     if (arg === "--decision-followup-record-template") {
@@ -610,6 +615,106 @@ function validateDecisionFollowupRecord(record, packet) {
   return errors;
 }
 
+function rank2ReviewReadiness(packet) {
+  const requiredRecords = [
+    {
+      id: "rank1_owner_decision_record",
+      status: packet.decision_record_status,
+      required_status: "valid_no_mutation",
+    },
+    {
+      id: "rank1_no_mutation_followup_record",
+      status: packet.decision_followup_record_status,
+      required_status: "valid_no_mutation_followup_recorded",
+    },
+    {
+      id: "rank2_pre_activation_local_smoke_record",
+      status: packet.rank2_pre_activation_record_status,
+      required_status: "valid_no_mutation_pre_activation",
+    },
+  ];
+  const missingRecords = requiredRecords.filter((record) => record.status !== record.required_status);
+  const ready = missingRecords.length === 0;
+  return {
+    schema_version: "rank2-owner-review-readiness/v0.1",
+    candidate_family_id: packet.next_queue_candidate_after_owner_decision?.family_id ?? null,
+    status: ready ? "ready_for_rank2_owner_review_no_mutation" : "blocked_pending_records",
+    ready_for_rank2_owner_review: ready,
+    rank2_active: false,
+    mutation: "none",
+    mutation_allowed: false,
+    separate_mutation_approval_required: true,
+    blocked_actions: ["delete", "redirect", "deploy"],
+    required_records: requiredRecords,
+    missing_records: missingRecords.map((record) => record.id),
+    next_allowed_action: ready
+      ? "start rank-2 owner review only; keep redirect/delete/deploy blocked"
+      : "supply the missing valid records before rank-2 owner review",
+  };
+}
+
+function rank2OwnerReviewTemplate(packet) {
+  const preview = packet.inactive_next_candidate_preview;
+  const readiness = packet.rank2_review_readiness;
+  const candidate = preview?.candidate ?? {};
+  return {
+    schema_version: "rank2-owner-review-packet/v0.1",
+    issue: packet.issue,
+    candidate_family_id: candidate.family_id ?? null,
+    status: readiness?.ready_for_rank2_owner_review ? "available_no_mutation" : "blocked_until_rank2_review_readiness",
+    readiness_status: readiness?.status ?? null,
+    rank2_active: false,
+    mutation: "none",
+    mutation_allowed: false,
+    separate_mutation_approval_required: true,
+    blocked_actions: ["delete", "redirect", "deploy"],
+    owner_route: candidate.owner_route ?? null,
+    compatibility_route: candidate.compatibility_route ?? null,
+    legacy_sample_paths: preview?.live_equivalence_prep?.rows
+      ?.filter((row) => row.role === "legacy_sample")
+      .map((row) => row.path) ?? [],
+    pro_screen_model_acceptance: {
+      ready: candidate.pro_screen_model_acceptance_ready ?? false,
+      home_primary_allowed: candidate.home_primary_allowed ?? null,
+      mobile_primary_allowed: candidate.mobile_primary_allowed ?? null,
+    },
+    evidence_status: {
+      rank1_owner_decision_record: packet.decision_record_status,
+      rank1_no_mutation_followup_record: packet.decision_followup_record_status,
+      rank2_pre_activation_local_smoke_record: packet.rank2_pre_activation_record_status,
+    },
+    decision_record_template: {
+      schema_version: "rank2-owner-decision-record/v0.1",
+      candidate_family_id: candidate.family_id ?? null,
+      decision: "preserve|remap|retire",
+      owner_approved_by: "<owner>",
+      decided_at: "<ISO-8601 timestamp>",
+      mutation_approved: false,
+      notes: "Rank-2 owner-review decision only; redirect/delete/deploy require separate explicit approval.",
+    },
+    decision_options: [
+      {
+        decision: "preserve",
+        meaning: "keep legacy market archive behind current owner/compatibility routes; no redirect/delete/deploy",
+        mutation_allowed: false,
+      },
+      {
+        decision: "remap",
+        meaning: "prepare a dry-run proposal that keeps /market tied to the native /market-valuation owner route",
+        mutation_allowed: false,
+      },
+      {
+        decision: "retire",
+        meaning: "prepare retire readiness only after owner-approved equivalence proof, soak, rollback, and separate mutation approval",
+        mutation_allowed: false,
+      },
+    ],
+    next_allowed_action: readiness?.ready_for_rank2_owner_review
+      ? "ask owner to choose preserve, remap, or retire for rank-2 review only"
+      : "supply all readiness records before printing the rank-2 owner-review template",
+  };
+}
+
 function buildDecisionPacket(inventory, liveProof, decisionRecord, decisionFollowupRecord, rank2PreActivationRecord) {
   const review = inventory.macro_monitor_rank1_owner_review;
   const nextCandidate = review.next_queue_candidate_after_owner_decision;
@@ -684,6 +789,8 @@ function buildDecisionPacket(inventory, liveProof, decisionRecord, decisionFollo
     decision_followup_record_templates: followupPlans.map(decisionFollowupRecordTemplate),
     selected_decision_followup: null,
     inactive_next_candidate_preview: inactiveNextCandidatePreview(inventory, review),
+    rank2_review_readiness: null,
+    rank2_owner_review_template: null,
     next_queue_candidate_after_owner_decision: nextCandidate,
   };
 }
@@ -883,6 +990,32 @@ function validatePacket(packet) {
   if (packet.supplied_rank2_pre_activation_record && rank2RecordErrors.length === 0) {
     packet.rank2_pre_activation_record_status = "valid_no_mutation_pre_activation";
   }
+  packet.rank2_review_readiness = rank2ReviewReadiness(packet);
+  if (packet.rank2_review_readiness.rank2_active !== false || packet.rank2_review_readiness.mutation_allowed !== false) {
+    errors.push("rank2 review readiness must not activate rank2 or allow mutation");
+  }
+  if (packet.rank2_review_readiness.ready_for_rank2_owner_review && packet.rank2_review_readiness.missing_records.length > 0) {
+    errors.push("rank2 review readiness cannot be ready with missing records");
+  }
+  if (!packet.rank2_review_readiness.blocked_actions.includes("delete")
+    || !packet.rank2_review_readiness.blocked_actions.includes("redirect")
+    || !packet.rank2_review_readiness.blocked_actions.includes("deploy")) {
+    errors.push("rank2 review readiness must keep delete/redirect/deploy blocked");
+  }
+  packet.rank2_owner_review_template = rank2OwnerReviewTemplate(packet);
+  if (packet.rank2_owner_review_template.rank2_active !== false || packet.rank2_owner_review_template.mutation_allowed !== false) {
+    errors.push("rank2 owner-review template must not activate rank2 or allow mutation");
+  }
+  if (!packet.rank2_owner_review_template.blocked_actions.includes("delete")
+    || !packet.rank2_owner_review_template.blocked_actions.includes("redirect")
+    || !packet.rank2_owner_review_template.blocked_actions.includes("deploy")) {
+    errors.push("rank2 owner-review template must keep delete/redirect/deploy blocked");
+  }
+  for (const option of packet.rank2_owner_review_template.decision_options) {
+    if (option.mutation_allowed !== false) {
+      errors.push(`rank2 owner-review option must not authorize mutation: ${option.decision}`);
+    }
+  }
   return errors;
 }
 
@@ -893,6 +1026,8 @@ function printText(packet) {
   console.log(`decision_record_status=${packet.decision_record_status}`);
   console.log(`decision_followup_record_status=${packet.decision_followup_record_status}`);
   console.log(`rank2_pre_activation_record_status=${packet.rank2_pre_activation_record_status}`);
+  console.log(`rank2_review_readiness=${packet.rank2_review_readiness.status}`);
+  console.log(`rank2_owner_review_template=${packet.rank2_owner_review_template.status}`);
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
   console.log(`next_gated_slice=${packet.next_gated_slice.id}`);
   console.log(`safe_enforcement_slices=${packet.safe_enforcement_slices.map((slice) => slice.id).join(",")}`);
@@ -952,6 +1087,14 @@ function main() {
 
   if (args.rank2PreActivationTemplate) {
     console.log(JSON.stringify(packet.inactive_next_candidate_preview.live_equivalence_prep.record_template, null, 2));
+    return;
+  }
+
+  if (args.rank2OwnerReviewTemplate) {
+    if (!packet.rank2_review_readiness.ready_for_rank2_owner_review) {
+      fail("--rank2-owner-review-template requires rank2_review_readiness=ready_for_rank2_owner_review_no_mutation", packet, args.json);
+    }
+    console.log(JSON.stringify(packet.rank2_owner_review_template, null, 2));
     return;
   }
 

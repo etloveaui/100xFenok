@@ -101,6 +101,15 @@ scripts/build-macro-owner-decision-packet.mjs --decision-record-json=...
 record skeleton, then validate a filled record with
 `--decision-followup-record-json=...` or `--decision-followup-record <file>`.
 The follow-up record still cannot request rank-2 release or mutation.
+When the rank-1 owner decision record, rank-1 no-mutation follow-up record, and
+rank-2 pre-activation smoke record are all valid, the packet exposes
+`rank2_review_readiness=ready_for_rank2_owner_review_no_mutation`. That state is
+review-only: `rank2_active=false`, `mutation_allowed=false`, and
+delete/redirect/deploy remain blocked.
+Only after that readiness state, `node
+scripts/build-macro-owner-decision-packet.mjs --rank2-owner-review-template`
+prints the rank-2 owner-review packet for `market_legacy_archive`. The template
+contains preserve/remap/retire choices but remains review-only and no-mutation.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary
