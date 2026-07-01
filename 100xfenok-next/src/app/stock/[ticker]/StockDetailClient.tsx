@@ -1618,6 +1618,9 @@ export default function StockDetailClient({
               <SectionCard title="추정치 변화">
                 <RevisionPulse detail={detail} />
                 <CompactFinancialTable detail={detail} years={years} />
+                <p data-stock-estimate-disclosure="true" className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
+                  출처: StockAnalysis/Yahoo 계열 추정치 정규화 데이터. EPS 기준(희석/조정 여부)은 제공자 원문 확인이 필요합니다.
+                </p>
               </SectionCard>
             ) : null}
 
