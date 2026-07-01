@@ -205,6 +205,7 @@ function assertRouteIaContracts(errors) {
   const workbenchSource = readAppSource("src/components/workbench/WorkbenchView.tsx");
   const explorePageSource = readAppSource("src/app/explore/page.tsx");
   const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
+  const stockDetailSource = readAppSource("src/app/stock/[ticker]/StockDetailClient.tsx");
 
   assertSourceTokens(productNavSource, [
     "EXPLORE_ROUTE = ROUTES.home",
@@ -270,6 +271,12 @@ function assertRouteIaContracts(errors) {
   assertSourceTokens(workbenchPageSource, [
     "WorkbenchView",
   ], "Workbench route", errors);
+  assertSourceTokens(stockDetailSource, [
+    'data-stock-financial-estimate-column="header"',
+    'data-stock-financial-estimate-column="cell"',
+    "data-stock-financial-estimate-legend",
+    "(E) = 시장 예상치",
+  ], "Stock financial estimate column contract", errors);
 }
 
 function pathPart(literal) {

@@ -903,8 +903,13 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
             <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
             {years.map((y) => <th key={y} className="px-2 py-1.5 text-right">{y}</th>)}
             {estKeys.map((k) => (
-              <th key={k} className="px-2 py-1.5 text-right bg-slate-50 text-slate-500">
-                <MetricHelp label={ESTIMATE_LABELS[k] ?? k.toUpperCase()} metricKey={k} align="right" />
+              <th
+                key={k}
+                data-stock-financial-estimate-column="header"
+                data-stock-financial-estimate-key={k}
+                className="border-l border-dashed border-slate-200 bg-sky-50/70 px-2 py-1.5 text-right text-slate-600"
+              >
+                <MetricHelp label={`${ESTIMATE_LABELS[k] ?? k.toUpperCase()}(E)`} metricKey={k} align="right" />
               </th>
             ))}
           </tr>
@@ -939,7 +944,12 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
                     <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
                   ))}
                   {estKeys.map((k) => (
-                    <td key={k} className="px-2 py-1.5 text-right bg-slate-50 orbitron tabular-nums font-semibold text-slate-500">
+                    <td
+                      key={k}
+                      data-stock-financial-estimate-column="cell"
+                      data-stock-financial-estimate-key={k}
+                      className="border-l border-dashed border-slate-100 bg-sky-50/60 px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-600"
+                    >
                       {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
                     </td>
                   ))}
@@ -959,7 +969,9 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           })}
         </tbody>
       </table>
-      <p className="mt-1 text-[9px] font-semibold text-slate-500">E = 시장 예상치</p>
+      <p data-stock-financial-estimate-legend className="mt-1 text-[9px] font-semibold text-slate-500">
+        (E) = 시장 예상치 · 점선 배경은 실제 실적과 분리된 추정 구간
+      </p>
     </div>
   );
 }
