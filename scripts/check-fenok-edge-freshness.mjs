@@ -20,8 +20,14 @@ const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data"
 const PUBLIC_INDEX_PATH = path.join(PUBLIC_DATA_ROOT, "admin", "fenok-edge-coverage-index.json");
 const JSON_MODE = process.argv.includes("--json");
 const REQUIRE_ACTIVE_S0_DAILY_GATED = process.argv.includes("--require-active-s0-daily-gated");
+const PUBLIC_BUNDLE_MODE = process.argv.includes("--public-bundle") || process.argv.includes("--warn-stale-counted-sources");
 const EXPECTED_ACTIVE_S0_STOCK_COUNT = 1066;
 const ACTIVE_S0_TRACK_ID = "active_stock_scoring_current";
+const COUNTED_DAILY_SOURCE_FRESHNESS_IDS = new Set([
+  "korea_counted_source_date",
+  "us_flow_source_date",
+  "us_occ_source_date",
+]);
 const PUBLIC_FORBIDDEN_PATTERNS = [
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
@@ -88,6 +94,12 @@ function check(id, ok, detail = {}) {
 
 function freshnessReady(checks, id) {
   return findById(checks, id)?.status === "ready";
+}
+
+function warnOnlyStaleCountedSource(check, enabled = PUBLIC_BUNDLE_MODE) {
+  return enabled
+    && COUNTED_DAILY_SOURCE_FRESHNESS_IDS.has(check?.id)
+    && check?.status === "stale";
 }
 
 function fullSourceCoverage(row) {
@@ -266,6 +278,7 @@ const etfCoreReadinessTrack = readinessTracks.find((track) => track?.id === "etf
 const etfCoreEvidence = etfCoreReadinessTrack?.evidence_based_readiness ?? index.etf_universe?.core_daily_basket?.evidence_based_readiness ?? null;
 const freshnessChecks = asArray(index.freshness_gate?.checks);
 const activeS0Evidence = buildActiveS0Evidence(index, activeTotal, activeS0ReadinessTrack, sourceRows, composites, freshnessChecks);
+const publicBundleDegradedChecks = [];
 
 if (!activeTotal) add(errors, "active_scoring_universe.total must be derived and non-zero");
 if (activeMarketTotal && activeMarketTotal !== activeTotal) {
@@ -406,13 +419,22 @@ if (REQUIRE_ACTIVE_S0_DAILY_GATED) {
 
 for (const check of freshnessChecks) {
   if (check.status === "stale" || check.status === "missing") {
-    add(errors, `${check.id}: ${check.status}`, check);
+    if (warnOnlyStaleCountedSource(check)) {
+      publicBundleDegradedChecks.push(check.id);
+      add(warnings, `${check.id}: ${check.status} (public deploy warn-only)`, {
+        ...check,
+        warn_only_for_public_bundle: true,
+      });
+    } else {
+      add(errors, `${check.id}: ${check.status}`, check);
+    }
   } else if (check.status !== "ready") {
     add(warnings, `${check.id}: ${check.status}`, check);
   }
 }
 
 const result = {
+  mode: PUBLIC_BUNDLE_MODE ? "public-bundle" : REQUIRE_ACTIVE_S0_DAILY_GATED ? "strict-s0-daily-gated" : "strict",
   ok: errors.length === 0,
   generated_at: index.generated_at,
   active_scoring_universe: {
@@ -443,6 +465,10 @@ const result = {
     public_done_claim_allowed: activeS0ReadinessTrack?.public_done_claim_allowed === true,
     requirements: activeS0ReadinessTrack?.requirements ?? null,
   } : null,
+  public_deploy_warn_only: {
+    stale_counted_sources: PUBLIC_BUNDLE_MODE,
+    degraded_checks: publicBundleDegradedChecks,
+  },
   active_s0_daily_gated_evidence: activeS0Evidence,
   etf_scoring_lane_evidence: etfEvidence,
   etf_core_daily_basket_evidence: etfCoreEvidence,
@@ -473,6 +499,9 @@ if (JSON_MODE) {
     const strict = result.strict_s0_daily_gated;
     console.log(`strict S0 DAILY/GATED: ${strict.ok ? "PASS" : "FAIL"} track=${strict.track_id} active=${strict.active_stock_count}/${strict.expected_active_stock_count}`);
   }
+  if (PUBLIC_BUNDLE_MODE) {
+    console.log(`public bundle mode: ${publicBundleDegradedChecks.length ? `WARN-ONLY ${publicBundleDegradedChecks.join(",")}` : "no degraded checks"}`);
+  }
   for (const check of result.checks) {
     console.log(`- ${check.result} ${check.id}${check.source_date ? ` source_date=${check.source_date}` : ""}${check.age_days != null ? ` age_days=${check.age_days}` : ""}`);
   }
@@ -497,4 +526,5 @@ export {
   freshnessReady,
   fullSourceCoverage,
   requirementsReady,
+  warnOnlyStaleCountedSource,
 };

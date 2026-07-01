@@ -291,6 +291,19 @@ function checkEqual(errors, id, actual, expected, detail = {}) {
   }
 }
 
+function checkAtLeast(errors, id, actual, expectedMinimum, detail = {}) {
+  if (expectedMinimum == null) return;
+  if (Number(actual) < Number(expectedMinimum)) {
+    errors.push({
+      id,
+      message: `${id}: expected at least ${expectedMinimum}, got ${actual}`,
+      actual,
+      expected_minimum: expectedMinimum,
+      ...detail,
+    });
+  }
+}
+
 function buildAudit({ full }) {
   const signals = readJson("data/computed/fenok_signals.json");
   const flowProxies = readJson("data/computed/fenok_flow_proxies.json");
@@ -353,7 +366,9 @@ function buildAudit({ full }) {
 
   checkEqual(errors, "active_us_bucket_matches_rows", activeUsRows.length, coverageIndex?.active_scoring_universe?.buckets?.us);
   checkEqual(errors, "finra_present_matches_source_row", expectedFinraSourceCovered, finraSource?.covered_count);
-  checkEqual(errors, "finra_strict_present_matches_payload_coverage", finraStrictPresent.length, flowProxies?.coverage?.with_finra);
+  checkAtLeast(errors, "finra_payload_metric_ready_covers_active", flowProxies?.coverage?.with_finra, finraStrictPresent.length, {
+    detail: "flow proxy payload coverage is artifact-wide and may exceed the current active S0 universe after stock_action_index shrinks.",
+  });
   checkEqual(errors, "finra_denominator_matches_source_row", expectedFinraSourceDenominator, finraSource?.denominator);
   checkEqual(errors, "occ_source_ready_matches_source_row", occPlainSourceReady.length, occSource?.covered_count);
   checkEqual(errors, "occ_plain_denominator_matches_source_row", occDailyEligibleRows.length, occSource?.denominator);
@@ -446,6 +461,8 @@ function buildAudit({ full }) {
       finra_metric_ready_missing_or_placeholder: finraStrictMissing.length,
       finra_metric_ready_coverage_pct: pct(finraStrictPresent.length, activeUsRows.length),
       finra_placeholder_low_confidence_rows: finraPlaceholderRows.length,
+      finra_payload_metric_ready_rows: asNumber(flowProxies?.coverage?.with_finra),
+      finra_payload_metric_ready_extra_vs_active: Math.max(0, asNumber(flowProxies?.coverage?.with_finra) - finraStrictPresent.length),
       occ_present: occPresent.length,
       occ_missing: occMissing.length,
       occ_coverage_pct: pct(occPresent.length, activeUsRows.length),
@@ -470,7 +487,7 @@ function buildAudit({ full }) {
         current_gap_count: finraStrictMissing.length,
         collectable_plain_us_count: finraStrictMissing.filter((row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row))) === "plain_us_finra_metric_gap").length,
         mapping_or_denominator_policy_count: finraStrictMissing.filter((row) => classifyFinraStrictGap(row, finraRowsByTicker.get(rowTicker(row))) !== "plain_us_finra_metric_gap").length,
-        next_action: "Choose and encode S0 FINRA criterion: row-existence=587 or metric-ready with_finra/coverage_ratio>0=579. If strict, update coverage index blocker counts.",
+        next_action: "S0 FINRA readiness uses current active plain-US metric-ready rows. Artifact-wide flow coverage may include non-active rows and must not be compared 1:1 to the current active denominator.",
       },
       {
         id: "finra_us_class_mapping_policy",

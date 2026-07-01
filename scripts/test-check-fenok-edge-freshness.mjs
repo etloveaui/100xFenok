@@ -6,6 +6,7 @@ import {
   freshnessReady,
   fullSourceCoverage,
   requirementsReady,
+  warnOnlyStaleCountedSource,
 } from "./check-fenok-edge-freshness.mjs";
 
 const freshOccChecks = [{ id: "us_occ_source_date", status: "ready" }];
@@ -47,5 +48,10 @@ const readyTrack = {
 assert.equal(activeS0DailyGatedReady(readyTrack, 1066), true);
 assert.equal(activeS0DailyGatedReady({ ...readyTrack, requirements: { ...completeRequirements, daily: false } }, 1066), false);
 assert.equal(activeS0DailyGatedReady({ ...readyTrack, denominator: 1065 }, 1066), false);
+
+assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "stale" }), false);
+assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "stale" }, true), true);
+assert.equal(warnOnlyStaleCountedSource({ id: "us_occ_source_date", status: "missing" }, true), false);
+assert.equal(warnOnlyStaleCountedSource({ id: "etf_signal_summary_freshness", status: "stale" }, true), false);
 
 console.log("test-check-fenok-edge-freshness: ok");

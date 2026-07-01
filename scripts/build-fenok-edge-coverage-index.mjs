@@ -23,6 +23,7 @@ const PUBLIC_OUT_PATH = path.join(
   "admin",
   "fenok-edge-coverage-index.json",
 );
+const MAX_COUNTED_DAILY_SOURCE_AGE_DAYS = 4;
 
 function readJson(relPath, fallback = null) {
   const absPath = path.join(REPO_ROOT, relPath);
@@ -227,6 +228,16 @@ function ageDays(date, now = Date.now()) {
   const time = new Date(`${iso}T00:00:00Z`).getTime();
   if (!Number.isFinite(time)) return null;
   return Math.max(0, Math.floor((now - time) / 86400000));
+}
+
+function countedDailySourceFresh(date) {
+  const age = ageDays(date);
+  return age !== null && age <= MAX_COUNTED_DAILY_SOURCE_AGE_DAYS;
+}
+
+function countedDailySourceStatus({ coverageReady, sourceDate }) {
+  if (!coverageReady) return "blocked";
+  return countedDailySourceFresh(sourceDate) ? "ready" : "stale";
 }
 
 function ageHours(timestamp, now = Date.now()) {
@@ -670,15 +681,31 @@ function activeS0BlockingEvidence() {
   const finraRowBreakdown = countByCategory(finraMissingRows, classifyFinraRowGap);
   const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
   const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
+  const krxCoverageReady = koreaIntersection.length === koreaRows.length;
+  const finraCoverageReady = finraEligibleMetricReadyRows.length === finraEligibleRows.length;
   const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
   const checks = [
     {
+      id: "krx_full_daily_source_ready",
+      status: countedDailySourceStatus({ coverageReady: krxCoverageReady, sourceDate: koreaCountedSourceDate }),
+      covered_count: koreaIntersection.length,
+      denominator: koreaRows.length,
+      missing_count: Math.max(0, koreaRows.length - koreaIntersection.length),
+      source_date: koreaCountedSourceDate,
+      age_days: ageDays(koreaCountedSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+      eligibility_policy: "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
+      caveat: "Empty KRX calendar runs are not counted as issuer daily coverage.",
+    },
+    {
       id: "finra_full_us_source_ready",
-      status: finraEligibleMetricReadyRows.length === finraEligibleRows.length ? "ready" : "blocked",
+      status: countedDailySourceStatus({ coverageReady: finraCoverageReady, sourceDate: flowSourceDate }),
       covered_count: finraEligibleMetricReadyRows.length,
       denominator: finraEligibleRows.length,
       missing_count: Math.max(0, finraEligibleRows.length - finraEligibleMetricReadyRows.length),
       source_date: flowSourceDate,
+      age_days: ageDays(flowSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
       eligibility_policy: "active_scoring_universe rows where market=US; US_CLASS foreign/class rows stay in active US bucket but are excluded from FINRA plain-US readiness until mapped or rebucketed.",
       excluded_us_class_count: usRows.length - finraEligibleRows.length,
       row_existence_count: flowIntersection.length,
@@ -707,11 +734,13 @@ function activeS0BlockingEvidence() {
     },
     {
       id: "occ_full_us_source_ready",
-      status: occDailyReady ? "ready" : "blocked",
+      status: countedDailySourceStatus({ coverageReady: occDailyReady, sourceDate: occSourceDate }),
       covered_count: occPlainSourceReadyRows.length,
       denominator: occDailyEligibleRows.length,
       missing_count: occPlainBlockingRows.length,
       source_date: occSourceDate,
+      age_days: ageDays(occSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
       eligibility_policy: "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
       derived_gap_breakdown: {
         missing_categories: {
@@ -1139,7 +1168,7 @@ const index = {
     },
   },
   freshness_gate: {
-    max_calendar_age_days_for_counted_daily_sources: 4,
+    max_calendar_age_days_for_counted_daily_sources: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
     checks: [
       {
         id: "coverage_index_generated",
@@ -1150,20 +1179,20 @@ const index = {
         id: "korea_counted_source_date",
         source_date: koreaCountedSourceDate,
         age_days: ageDays(koreaCountedSourceDate),
-        status: ageDays(koreaCountedSourceDate) <= 4 ? "ready" : "stale",
+        status: countedDailySourceFresh(koreaCountedSourceDate) ? "ready" : "stale",
         caveat: "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date.",
       },
       {
         id: "us_flow_source_date",
         source_date: flowSourceDate,
         age_days: ageDays(flowSourceDate),
-        status: ageDays(flowSourceDate) <= 4 ? "ready" : "stale",
+        status: countedDailySourceFresh(flowSourceDate) ? "ready" : "stale",
       },
       {
         id: "us_occ_source_date",
         source_date: occSourceDate,
         age_days: ageDays(occSourceDate),
-        status: ageDays(occSourceDate) <= 4 ? "ready" : "stale",
+        status: countedDailySourceFresh(occSourceDate) ? "ready" : "stale",
       },
       {
         id: "etf_public_surface",
