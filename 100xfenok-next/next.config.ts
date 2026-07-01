@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/briefing",
+        destination: "/",
+        permanent: false,
+      },
+      {
         source: "/filings/nvda-10k",
         destination: "/stock/NVDA?tab=filings",
         permanent: false,

@@ -32,7 +32,6 @@ import { ROUTES } from "@/lib/routes";
 export type ShellPage =
   | "explore"
   | "workbench"
-  | "briefing"
   | "market"
   | "regime"
   | "sectors"

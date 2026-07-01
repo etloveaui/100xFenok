@@ -200,9 +200,11 @@ function assertSourceTokens(source, tokens, label, errors) {
 function assertRouteIaContracts(errors) {
   const productNavSource = readAppSource("src/lib/product-nav.ts");
   const shellSource = readAppSource("src/components/shell/AppShell.tsx");
+  const nextConfigSource = readAppSource("next.config.ts");
   const homeRouteSource = readAppSource("src/app/page.tsx");
   const homeV1Source = readAppSource("src/app/HomeV1Client.tsx");
   const homeV5Source = readAppSource("src/app/HomeV5Client.tsx");
+  const briefingPageSource = readAppSource("src/app/briefing/page.tsx");
   const workbenchSource = readAppSource("src/components/workbench/WorkbenchView.tsx");
   const explorePageSource = readAppSource("src/app/explore/page.tsx");
   const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
@@ -218,6 +220,8 @@ function assertRouteIaContracts(errors) {
     "CHART_ROUTE = ROUTES.macroChart",
     'CHART_NAV_LABEL = "차트"',
   ], "product-nav PRO IA", errors);
+  assert(!productNavSource.includes("BRIEFING_NAV_LABEL"), "product-nav PRO IA: briefing alias must not be a separate nav product", errors);
+  assert(!productNavSource.includes("BRIEFING_PRODUCT_TITLE"), "product-nav PRO IA: briefing alias must not be a separate product title", errors);
 
   assertSourceTokens(shellSource, [
     'id: "explore"',
@@ -238,6 +242,12 @@ function assertRouteIaContracts(errors) {
     '"etfs"',
     '"superinvestors"',
   ], "AppShell PRO IA", errors);
+  assert(!shellSource.includes('| "briefing"'), "AppShell PRO IA: briefing alias must not be a shell nav page", errors);
+  assertSourceTokens(nextConfigSource, [
+    'source: "/briefing"',
+    'destination: "/"',
+    "permanent: false",
+  ], "briefing HTTP redirect alias", errors);
 
   assert(
     !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"]'),
@@ -259,6 +269,9 @@ function assertRouteIaContracts(errors) {
     "data-home-search-first",
     "data-home-feature-tile",
   ], "Home V5 PRO IA", errors);
+  assertSourceTokens(briefingPageSource, [
+    "redirect(ROUTES.home)",
+  ], "briefing alias PRO IA", errors);
 
   assertSourceTokens(workbenchSource, [
     'type WorkbenchSurface = "workbench" | "explore"',

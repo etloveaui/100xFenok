@@ -6,6 +6,7 @@ export const ROUTES = {
   home: "/",
   explore: "/explore",
   workbench: "/workbench",
+  // Legacy alias only. It redirects to home and must not appear as a separate nav/sitemap product.
   briefing: "/briefing",
   market: "/market-valuation",
   // Legacy bookmark target only; `/market` redirects to `ROUTES.market`.
@@ -84,7 +85,6 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.home,
   ROUTES.explore,
   ROUTES.workbench,
-  ROUTES.briefing,
   ROUTES.market,
   ROUTES.marketStructure,
   ROUTES.regime,
@@ -113,7 +113,6 @@ export const PRIMARY_PRODUCT_ROUTES = [
   ROUTES.home,
   ROUTES.explore,
   ROUTES.workbench,
-  ROUTES.briefing,
   ROUTES.market,
   ROUTES.regime,
   ROUTES.sectors,
@@ -126,7 +125,6 @@ export const PRIMARY_PRODUCT_ROUTES = [
 
 export const DOCK_PRODUCT_ROUTES = [
   ROUTES.home,
-  ROUTES.briefing,
   ROUTES.workbench,
   ROUTES.market,
   ROUTES.alphaScout,
@@ -154,7 +152,6 @@ export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.home, changeFrequency: "daily", priority: 1 },
   { path: ROUTES.explore, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.workbench, changeFrequency: "daily", priority: 0.9 },
-  { path: ROUTES.briefing, changeFrequency: "daily", priority: 0.8 },
   { path: ROUTES.market, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.marketStructure, changeFrequency: "daily", priority: 0.8 },
   { path: ROUTES.regime, changeFrequency: "daily", priority: 0.8 },
