@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import Link from 'next/link';
 import AppShell from '@/components/shell/AppShell';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import { ROUTES } from '@/lib/routes';
@@ -82,7 +83,58 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
   return (
     <div className="fnk-shell">
       <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
-        {frame}
+        <div
+          className="space-y-[var(--s4)]"
+          data-alpha-scout-report-surface="true"
+          data-alpha-scout-route-owner="legacy-report-html"
+        >
+          <section className="panel" data-alpha-scout-boundary="true">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
+                data-alpha-scout-boundary-chip="legacy-html"
+              >
+                레거시 HTML
+              </span>
+              <span
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
+                data-alpha-scout-boundary-chip="report-deeplink"
+              >
+                리포트 딥링크
+              </span>
+              <span
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
+                data-alpha-scout-boundary-chip="v2-owner"
+              >
+                V2 아카이브
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <Link
+                href={ROUTES.alphaScout}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+                data-alpha-scout-owner-link="v2-archive"
+              >
+                V2 아카이브
+              </Link>
+              <Link
+                href={ROUTES.posts}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+                data-alpha-scout-owner-link="posts"
+              >
+                분석 아카이브
+              </Link>
+              <Link
+                href={ROUTES.dailyWrap}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+                data-alpha-scout-owner-link="daily-wrap"
+              >
+                Daily Wrap
+              </Link>
+            </div>
+          </section>
+          <div data-alpha-scout-legacy-frame="true">{frame}</div>
+        </div>
       </AppShell>
     </div>
   );

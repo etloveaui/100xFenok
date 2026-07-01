@@ -66,6 +66,48 @@
   border-color: color-mix(in srgb, var(--brand-interactive) 24%, transparent) !important;
   background: color-mix(in srgb, var(--brand-interactive) 8%, transparent) !important;
 }
+.as-route-owner {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-top: 8px;
+  border: 1px solid var(--stroke-light);
+  border-radius: 10px;
+  background: var(--paper-1);
+  padding: 8px 12px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+.as-route-owner strong {
+  color: var(--ink-1);
+}
+.as-route-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.as-route-actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--stroke-light);
+  border-radius: 10px;
+  background: var(--paper-1);
+  padding: 8px 12px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.as-route-actions a:hover {
+  border-color: var(--brand-interactive);
+  color: var(--brand-interactive);
+}
 
 /* ===== Filter ===== */
 .as-filter {

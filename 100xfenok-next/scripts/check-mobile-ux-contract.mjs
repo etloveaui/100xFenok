@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/tools/stock-analyzer/native,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/tools/stock-analyzer/native,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/alpha-scout?report=2025-08-24_100x-alpha-scout.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1556,56 +1556,162 @@ async function collectRouteChecks(page, route) {
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/alpha-scout") {
-      const surface = document.querySelector("[data-alpha-scout-surface]");
-      const previewStrip = document.querySelector("[data-alpha-scout-preview-strip]");
-      const filter = document.querySelector("[data-alpha-scout-filter]");
-      const search = document.querySelector("[data-alpha-scout-search]");
-      const tags = Array.from(document.querySelectorAll("[data-alpha-scout-tag]"))
+      const alphaUrl = new URL(currentRoute, window.location.origin);
+      const hasLegacyDeepLink = Boolean(alphaUrl.searchParams.get("report") || alphaUrl.searchParams.get("path"));
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+      const owner = document.querySelector("[data-alpha-scout-route-owner]");
+      const ownerLinks = Array.from(document.querySelectorAll("[data-alpha-scout-owner-link]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const featured = document.querySelector("[data-alpha-scout-featured]");
-      const cards = Array.from(document.querySelectorAll("[data-alpha-scout-card]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
+      const linkTargets = ownerLinks.map((node) => {
+        const href = node instanceof HTMLAnchorElement ? new URL(node.href, window.location.origin) : null;
+        const pathname = href && href.pathname !== "/" ? href.pathname.replace(/\/+$/, "") : href?.pathname;
+        return href ? `${pathname}${href.search}` : "";
+      });
 
-      if (!surface || surface.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "alpha-scout-surface-visible", detail: "missing alpha scout surface" });
-      }
-      if (!previewStrip || !(previewStrip.textContent || "").includes("미리보기") || !(previewStrip.textContent || "").includes("정적")) {
-        failures.push({ check: "alpha-scout-preview-honesty", detail: `text=${previewStrip?.textContent || ""}` });
-      }
-      if (!filter || filter.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "alpha-scout-filter-visible", detail: "missing alpha scout filter" });
-      }
-      if (!search || search.getBoundingClientRect().height < 44) {
-        failures.push({ check: "alpha-scout-search-target", detail: `height=${Math.round(search?.getBoundingClientRect().height || 0)}` });
-      }
-      if (tags.length < 4) {
-        failures.push({ check: "alpha-scout-tag-count", detail: `visible tags=${tags.length}` });
-      }
-      tags.slice(0, 8).forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "alpha-scout-tag-target", detail: `tag ${index} height=${Math.round(rect.height)}` });
+      if (hasLegacyDeepLink) {
+        const surface = document.querySelector("[data-alpha-scout-report-surface]");
+        const boundary = document.querySelector("[data-alpha-scout-boundary]");
+        const chips = Array.from(document.querySelectorAll("[data-alpha-scout-boundary-chip]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const legacyFrame = document.querySelector("[data-alpha-scout-legacy-frame] iframe");
+        const frameSrc = legacyFrame instanceof HTMLIFrameElement
+          ? new URL(legacyFrame.src, window.location.origin)
+          : null;
+
+        if (!surface || surface.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "alpha-scout-report-surface-visible", detail: "missing alpha scout report surface" });
         }
-      });
-      if (!featured || featured.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "alpha-scout-featured-visible", detail: "missing featured issue" });
-      }
-      const cardKinds = cards.map((node) => node.getAttribute("data-alpha-scout-card"));
-      if (!cardKinds.includes("featured") || !cardKinds.includes("archive")) {
-        failures.push({ check: "alpha-scout-card-kinds", detail: `kinds=${JSON.stringify(cardKinds)}` });
-      }
-      cards.slice(0, 6).forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "alpha-scout-card-target", detail: `card ${index} height=${Math.round(rect.height)}` });
+        if (!owner || owner.getAttribute("data-alpha-scout-route-owner") !== "legacy-report-html") {
+          failures.push({
+            check: "alpha-scout-report-route-owner",
+            detail: `owner=${owner?.getAttribute("data-alpha-scout-route-owner") || "missing"}`,
+          });
         }
-      });
+        if (!boundary || boundary.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "alpha-scout-report-boundary-visible", detail: "missing report boundary" });
+        }
+        const actualChips = chips.map((node) => node.getAttribute("data-alpha-scout-boundary-chip"));
+        const expectedChips = ["legacy-html", "report-deeplink", "v2-owner"];
+        if (JSON.stringify(actualChips) !== JSON.stringify(expectedChips)) {
+          failures.push({
+            check: "alpha-scout-report-boundary-chip-order",
+            detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+          });
+        }
+        chips.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "alpha-scout-report-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+        const expectedLinks = ["/alpha-scout", "/posts", "/100x/daily-wrap"];
+        if (JSON.stringify(linkTargets) !== JSON.stringify(expectedLinks)) {
+          failures.push({
+            check: "alpha-scout-report-owner-link-order",
+            detail: `actual=${JSON.stringify(linkTargets)} expected=${JSON.stringify(expectedLinks)}`,
+          });
+        }
+        ownerLinks.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "alpha-scout-report-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+        if (!frameSrc || frameSrc.pathname !== "/alpha-scout/reports/2025-08-24_100x-alpha-scout.html") {
+          failures.push({
+            check: "alpha-scout-report-legacy-frame-src",
+            detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,
+          });
+        }
+      } else {
+        const surface = document.querySelector("[data-alpha-scout-surface]");
+        const previewStrip = document.querySelector("[data-alpha-scout-preview-strip]");
+        const actionRail = document.querySelector("[data-alpha-scout-action-rail]");
+        const filter = document.querySelector("[data-alpha-scout-filter]");
+        const search = document.querySelector("[data-alpha-scout-search]");
+        const tags = Array.from(document.querySelectorAll("[data-alpha-scout-tag]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const featured = document.querySelector("[data-alpha-scout-featured]");
+        const cards = Array.from(document.querySelectorAll("[data-alpha-scout-card]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+
+        if (!surface || surface.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "alpha-scout-surface-visible", detail: "missing alpha scout surface" });
+        }
+        if (!owner || owner.getAttribute("data-alpha-scout-route-owner") !== "v2-report-archive") {
+          failures.push({
+            check: "alpha-scout-route-owner",
+            detail: `owner=${owner?.getAttribute("data-alpha-scout-route-owner") || "missing"}`,
+          });
+        }
+        if (!previewStrip || !(previewStrip.textContent || "").includes("미리보기") || !(previewStrip.textContent || "").includes("정적")) {
+          failures.push({ check: "alpha-scout-preview-honesty", detail: `text=${previewStrip?.textContent || ""}` });
+        }
+        if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "alpha-scout-action-rail-visible", detail: "missing action rail" });
+        }
+        const expectedLinks = ["/posts", "/100x/daily-wrap", "/alpha-scout?report=2025-08-24_100x-alpha-scout.html"];
+        if (JSON.stringify(linkTargets) !== JSON.stringify(expectedLinks)) {
+          failures.push({
+            check: "alpha-scout-owner-link-order",
+            detail: `actual=${JSON.stringify(linkTargets)} expected=${JSON.stringify(expectedLinks)}`,
+          });
+        }
+        ownerLinks.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "alpha-scout-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+        if (!filter || filter.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "alpha-scout-filter-visible", detail: "missing alpha scout filter" });
+        }
+        if (!search || search.getBoundingClientRect().height < 44) {
+          failures.push({ check: "alpha-scout-search-target", detail: `height=${Math.round(search?.getBoundingClientRect().height || 0)}` });
+        }
+        if (tags.length < 4) {
+          failures.push({ check: "alpha-scout-tag-count", detail: `visible tags=${tags.length}` });
+        }
+        tags.slice(0, 8).forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "alpha-scout-tag-target", detail: `tag ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+        if (!featured || featured.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "alpha-scout-featured-visible", detail: "missing featured issue" });
+        }
+        const cardKinds = cards.map((node) => node.getAttribute("data-alpha-scout-card"));
+        if (!cardKinds.includes("featured") || !cardKinds.includes("archive")) {
+          failures.push({ check: "alpha-scout-card-kinds", detail: `kinds=${JSON.stringify(cardKinds)}` });
+        }
+        cards.slice(0, 6).forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "alpha-scout-card-target", detail: `card ${index} height=${Math.round(rect.height)}` });
+          }
+        });
+      }
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "alpha-scout-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "Alpha Scout") {
+        failures.push({ check: "alpha-scout-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation") {

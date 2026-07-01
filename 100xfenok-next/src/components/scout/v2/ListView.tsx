@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { v2cx } from "@/components/dashboard/v2/types";
+import { ROUTES, withQuery } from "@/lib/routes";
 import CoverCard from "./CoverCard";
 import { ISSUES } from "./mockData";
 import type { Issue } from "./types";
@@ -54,6 +56,24 @@ export default function ListView({
           <span>정적 샘플 리포트 기반</span>
           <span>{ISSUES.length}개 리포트</span>
         </div>
+        <div className="as-route-owner" data-alpha-scout-route-owner="v2-report-archive">
+          <span>아카이브 기준</span>
+          <strong>V2 리포트 아카이브</strong>
+        </div>
+        <nav className="as-route-actions" aria-label="Alpha Scout 연결" data-alpha-scout-action-rail>
+          <Link href={ROUTES.posts} data-alpha-scout-owner-link="posts">
+            분석 아카이브
+          </Link>
+          <Link href={ROUTES.dailyWrap} data-alpha-scout-owner-link="daily-wrap">
+            Daily Wrap
+          </Link>
+          <Link
+            href={withQuery(ROUTES.alphaScout, { report: "2025-08-24_100x-alpha-scout.html" })}
+            data-alpha-scout-owner-link="legacy-report"
+          >
+            레거시 리포트
+          </Link>
+        </nav>
       </header>
       <div className="as-filter" data-alpha-scout-filter>
         <div className="as-filter__search" data-alpha-scout-search>
