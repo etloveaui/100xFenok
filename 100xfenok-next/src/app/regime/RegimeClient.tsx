@@ -1,6 +1,7 @@
 "use client";
 
 import MarketSectionNav from "@/components/market/MarketSectionNav";
+import TransitionLink from "@/components/TransitionLink";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
 import type {
@@ -13,6 +14,7 @@ import type {
   MarketTone,
   ValuationDataSource,
 } from "@/lib/market-valuation/types";
+import { ROUTES } from "@/lib/routes";
 
 type Pulse = {
   id: string;
@@ -30,6 +32,40 @@ type Axis = {
   tone: MarketTone;
   pulses: Pulse[];
 };
+
+type RegimeAction = {
+  key: string;
+  label: string;
+  detail: string;
+  href: string;
+};
+
+const REGIME_ACTIONS: RegimeAction[] = [
+  {
+    key: "events",
+    label: "이벤트",
+    detail: "이번 주 리스크 일정 확인",
+    href: ROUTES.marketEvents,
+  },
+  {
+    key: "sectors",
+    label: "섹터",
+    detail: "국면과 맞는 업종 강도 확인",
+    href: ROUTES.sectors,
+  },
+  {
+    key: "screener",
+    label: "스크리너",
+    detail: "조건에 맞는 종목 후보 압축",
+    href: ROUTES.screener,
+  },
+  {
+    key: "portfolio",
+    label: "포트폴리오",
+    detail: "내 보유와 위험 노출 점검",
+    href: ROUTES.portfolio,
+  },
+];
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -447,6 +483,30 @@ export default function RegimeClient() {
               <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">{axis.pulses.length}개 신호</p>
             </div>
           ))}
+        </div>
+        <div className="mt-4 border-t border-[var(--c-line)] pt-4" data-regime-action-rail>
+          <div className="mb-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-ink-4)]">오늘 확인 순서</p>
+            <p className="text-xs font-semibold text-[var(--c-ink-3)]">판독 후 바로 이어갈 작업</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {REGIME_ACTIONS.map((action, index) => (
+              <TransitionLink
+                key={action.key}
+                href={action.href}
+                className="group flex min-h-14 min-w-0 items-center gap-3 rounded-[1rem] border border-[var(--c-line)] bg-white/75 px-3 py-3 text-left transition hover:border-[var(--c-brand)] hover:bg-[var(--c-surface-2)]"
+                data-regime-action={action.key}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-surface)] text-xs font-black text-[var(--c-ink)] group-hover:border-[var(--c-brand)] group-hover:text-[var(--c-brand)]">
+                  {index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-black text-[var(--c-ink)]">{action.label}</span>
+                  <span className="block text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{action.detail}</span>
+                </span>
+              </TransitionLink>
+            ))}
+          </div>
         </div>
       </section>
 

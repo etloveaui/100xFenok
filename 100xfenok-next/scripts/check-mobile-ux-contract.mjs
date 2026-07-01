@@ -834,6 +834,12 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
+      const actionRail = document.querySelector("[data-regime-action-rail]");
+      const actionLinks = Array.from(document.querySelectorAll("[data-regime-action]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
       const axisCards = Array.from(document.querySelectorAll("[data-regime-axis-card]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
@@ -853,6 +859,9 @@ async function collectRouteChecks(page, route) {
       }
       if (!activeNav) {
         failures.push({ check: "regime-market-nav-active", detail: "regime nav link is not aria-current page" });
+      }
+      if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "regime-action-rail-visible", detail: "missing regime action rail" });
       }
 
       const expectedNav = ["valuation", "regime", "events", "sectors"];
@@ -895,6 +904,35 @@ async function collectRouteChecks(page, route) {
           detail: `actual=${JSON.stringify(actualDetailAxes)} expected=${JSON.stringify(expectedAxes)}`,
         });
       }
+
+      const expectedActions = [
+        { key: "events", path: "/market/events" },
+        { key: "sectors", path: "/sectors" },
+        { key: "screener", path: "/screener" },
+        { key: "portfolio", path: "/portfolio" },
+      ];
+      const actualActions = actionLinks.map((node) => node.getAttribute("data-regime-action"));
+      if (
+        actionLinks.length !== expectedActions.length ||
+        !expectedActions.every((action, index) => actualActions[index] === action.key)
+      ) {
+        failures.push({
+          check: "regime-action-order",
+          detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions.map((action) => action.key))}`,
+        });
+      }
+      actionLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        const href = node.getAttribute("href") || "";
+        const expectedPath = expectedActions[index]?.path;
+        const actualPath = href ? new URL(href, window.location.origin).pathname.replace(/\/$/, "") || "/" : "";
+        if (rect.height < 44) {
+          failures.push({ check: "regime-action-touch-target", detail: `action ${index} height=${Math.round(rect.height)}` });
+        }
+        if (expectedPath && actualPath !== expectedPath) {
+          failures.push({ check: "regime-action-href", detail: `action ${index} href=${href} expected=${expectedPath}` });
+        }
+      });
 
       axisCards.forEach((card, cardIndex) => {
         const axis = card.getAttribute("data-regime-axis-card") || "";
@@ -1862,7 +1900,6 @@ async function collectRouteChecks(page, route) {
         const panelAsOf = panel?.querySelector("[data-superinvestor-ticker-asof]");
         const panelLag = panel?.querySelector("[data-superinvestor-ticker-lag]");
         const kpis = Array.from(document.querySelectorAll("[data-superinvestor-ticker-kpi]"));
-        const actions = Array.from(document.querySelectorAll("[data-superinvestor-ticker-action]"));
         const stockLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-stock-link]"));
         const screenerLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-screener-link]"));
         const investorLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-investor-link], [data-superinvestor-ticker-holder-link]"));
