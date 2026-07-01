@@ -795,6 +795,12 @@ function PickerButton({
 }
 
 export default function MacroChartClient({ initialMode = "macro" }: { initialMode?: MacroChartInitialMode }) {
+  const stockCompareMode = initialMode === "stock-compare";
+  const headerEyebrow = stockCompareMode ? "Multi Chart" : "Macro Chart";
+  const headerTitle = stockCompareMode ? "시장 비교" : "매크로 차트";
+  const headerDescription = stockCompareMode
+    ? "주식, ETF, 지수, 매크로 시리즈를 같은 시간축으로 맞춰 수익률·가격·상대강도를 비교합니다."
+    : "지수, 유동성, 금리, 신용, 심리, 경기지표와 시장 심볼을 같은 시간축으로 맞춰 비교합니다.";
   const [{
     selected: initialSelected,
     rangeId: initialRangeId,
@@ -824,7 +830,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [stooqTickerNotice, setStooqTickerNotice] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [loadRetryKey, setLoadRetryKey] = useState(0);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(stockCompareMode);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   const selectedDefinitions = useMemo(
@@ -1199,14 +1205,23 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   );
 
   return (
-    <div className="space-y-5" data-macro-chart-workbench="true">
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" data-macro-chart-header="true">
+    <div
+      className="space-y-5"
+      data-macro-chart-workbench="true"
+      data-multichart-workbench={stockCompareMode ? "true" : undefined}
+      data-multichart-mode={stockCompareMode ? "stock-compare" : undefined}
+    >
+      <section
+        className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+        data-macro-chart-header="true"
+        data-multichart-header={stockCompareMode ? "true" : undefined}
+      >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Macro Chart</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">매크로 차트</h1>
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{headerEyebrow}</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">{headerTitle}</h1>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              지수, 유동성, 금리, 신용, 심리, 경기지표와 시장 심볼을 같은 시간축으로 맞춰 비교합니다.
+              {headerDescription}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

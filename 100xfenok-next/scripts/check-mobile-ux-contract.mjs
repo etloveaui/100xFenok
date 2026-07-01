@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -468,6 +468,94 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "macro-chart-formula-control-target", detail: `control ${index} height=${Math.round(rect.height)}` });
         }
       });
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/multichart") {
+      const surface = document.querySelector("[data-multichart-surface]");
+      const workbench = document.querySelector("[data-multichart-workbench]");
+      const header = document.querySelector("[data-multichart-header]");
+      const chartCanvas = document.querySelector("canvas");
+      const marketLensButtons = Array.from(document.querySelectorAll("[data-macro-chart-market-lens]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const mobileChips = Array.from(document.querySelectorAll("[data-macro-chart-mobile-chip]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const symbolInput = document.querySelector("[data-macro-chart-symbol-input]");
+      const symbolAdd = document.querySelector("[data-macro-chart-symbol-add]");
+      const mobileStatus = document.querySelector("[data-macro-chart-mobile-status]");
+      const appTitle = document.querySelector(".fnk-shell .appbar .title");
+      const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "multichart-surface-visible", detail: "missing multichart surface" });
+      }
+      if (!workbench || workbench.getAttribute("data-multichart-mode") !== "stock-compare") {
+        failures.push({
+          check: "multichart-stock-compare-mode",
+          detail: `mode=${workbench?.getAttribute("data-multichart-mode") || "missing"}`,
+        });
+      }
+      if (!header || header.getBoundingClientRect().height <= 0 || !(header.textContent || "").includes("시장 비교")) {
+        failures.push({ check: "multichart-header-visible", detail: "missing visible 시장 비교 header" });
+      }
+      if (!chartCanvas || chartCanvas.getBoundingClientRect().width < 260 || chartCanvas.getBoundingClientRect().height < 240) {
+        const rect = chartCanvas?.getBoundingClientRect();
+        failures.push({ check: "multichart-canvas-visible", detail: rect ? `${Math.round(rect.width)}x${Math.round(rect.height)}` : "missing canvas" });
+      }
+
+      const expectedMarketLenses = ["returns", "price", "benchmark", "macro-stock"];
+      const actualMarketLenses = marketLensButtons.map((node) => node.getAttribute("data-macro-chart-market-lens"));
+      if (
+        marketLensButtons.length !== expectedMarketLenses.length ||
+        !expectedMarketLenses.every((lens, index) => actualMarketLenses[index] === lens)
+      ) {
+        failures.push({
+          check: "multichart-market-lens-order",
+          detail: `actual=${JSON.stringify(actualMarketLenses)} expected=${JSON.stringify(expectedMarketLenses)}`,
+        });
+      }
+      marketLensButtons.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "multichart-market-lens-target", detail: `lens ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const expectedDefaultChips = ["stq~SPY.US", "stq~QQQ.US", "stq~IWM.US"];
+      const actualChips = mobileChips.map((node) => node.getAttribute("data-macro-chart-mobile-chip"));
+      if (
+        viewportWidth < 1280 &&
+        (mobileChips.length < expectedDefaultChips.length ||
+          !expectedDefaultChips.every((chip, index) => actualChips[index] === chip))
+      ) {
+        failures.push({
+          check: "multichart-default-symbol-chips",
+          detail: `actual=${JSON.stringify(actualChips.slice(0, 3))} expected=${JSON.stringify(expectedDefaultChips)}`,
+        });
+      }
+
+      if (viewportWidth < 1280 && (!mobileStatus || mobileStatus.getBoundingClientRect().height <= 0)) {
+        failures.push({ check: "multichart-mobile-status-visible", detail: "missing mobile status rail" });
+      }
+      if (!symbolInput || symbolInput.getBoundingClientRect().height < 44) {
+        failures.push({ check: "multichart-symbol-input-target", detail: symbolInput ? `height=${Math.round(symbolInput.getBoundingClientRect().height)}` : "missing symbol input" });
+      }
+      if (!symbolAdd || symbolAdd.getBoundingClientRect().height < 44) {
+        failures.push({ check: "multichart-symbol-add-target", detail: symbolAdd ? `height=${Math.round(symbolAdd.getBoundingClientRect().height)}` : "missing symbol add" });
+      }
+
+      const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+      if (!activeTabLabel.includes("더보기")) {
+        failures.push({ check: "multichart-mobile-tab-active", detail: `active=${activeTabLabel}` });
+      }
+      if ((appTitle?.textContent || "").trim() !== "시장 비교") {
+        failures.push({ check: "multichart-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation") {
