@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -840,6 +840,85 @@ async function collectRouteChecks(page, route) {
       }
       if ((appTitle?.textContent || "").trim() !== "VR 전략 가이드") {
         failures.push({ check: "vr-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab") {
+      const surface = document.querySelector("[data-admin-data-lab-surface]");
+      const owner = document.querySelector("[data-admin-data-lab-route-owner]");
+      const boundary = document.querySelector("[data-admin-data-lab-boundary]");
+      const chips = Array.from(document.querySelectorAll("[data-admin-data-lab-boundary-chip]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const ownerLinks = Array.from(document.querySelectorAll("[data-admin-data-lab-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const legacyFrame = document.querySelector("[data-admin-data-lab-legacy-frame] iframe");
+      const tabbar = document.querySelector(".fnk-shell .tabbar");
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "admin-data-lab-surface-visible", detail: "missing admin data lab surface" });
+      }
+      if (!owner || owner.getAttribute("data-admin-data-lab-route-owner") !== "legacy-admin-data-lab") {
+        failures.push({
+          check: "admin-data-lab-route-owner",
+          detail: `owner=${owner?.getAttribute("data-admin-data-lab-route-owner") || "missing"}`,
+        });
+      }
+      if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Data Lab (레거시)")) {
+        failures.push({ check: "admin-data-lab-boundary-visible", detail: "missing visible data lab boundary" });
+      }
+
+      const expectedChips = ["admin-only", "legacy-html", "source-audit"];
+      const actualChips = chips.map((node) => node.getAttribute("data-admin-data-lab-boundary-chip"));
+      if (
+        chips.length !== expectedChips.length ||
+        !expectedChips.every((chip, index) => actualChips[index] === chip)
+      ) {
+        failures.push({
+          check: "admin-data-lab-boundary-chip-order",
+          detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+        });
+      }
+
+      const expectedLinks = [
+        "/admin",
+        "/market-valuation",
+        "/explore",
+      ];
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((link, index) => actualLinks[index] === link)
+      ) {
+        failures.push({
+          check: "admin-data-lab-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "admin-data-lab-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      const frameSrc = legacyFrame instanceof HTMLIFrameElement
+        ? new URL(legacyFrame.src, window.location.origin)
+        : null;
+      if (!frameSrc || frameSrc.pathname !== "/admin/data-lab/index.html") {
+        failures.push({
+          check: "admin-data-lab-legacy-frame-src",
+          detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,
+        });
+      }
+      if (tabbar) {
+        failures.push({ check: "admin-data-lab-admin-shell", detail: "admin route should not render product mobile tabbar" });
       }
     }
 
