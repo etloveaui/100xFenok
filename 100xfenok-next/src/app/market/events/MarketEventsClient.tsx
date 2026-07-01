@@ -339,7 +339,7 @@ export default function MarketEventsClient({
   }, []);
 
   return (
-    <div className="data-shell-page">
+    <div className="data-shell-page" data-market-events-surface="true">
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">시장 이벤트</p>
@@ -354,13 +354,13 @@ export default function MarketEventsClient({
         </div>
       </section>
 
-      <section className="panel">
+      <section className="panel" data-market-events-overview="true">
         <div className="panel-h">
           <h2>시장 이벤트</h2>
           <span className="desc">{loaded ? `${totalEventCount.toLocaleString("ko-KR")}개 이벤트` : "확인 중"}</span>
         </div>
         <div className="panel-b">
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="시장 이벤트 분류">
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="시장 이벤트 분류" data-market-events-tabs="true">
             {TABS.map((item) => {
               const selected = tab === item.key;
               return (
@@ -369,11 +369,12 @@ export default function MarketEventsClient({
                   type="button"
                   role="tab"
                   aria-selected={selected}
+                  data-market-event-tab={item.key}
                   onClick={() => {
                     setTab(item.key);
                     syncTab(item.key);
                   }}
-                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
+                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
                     selected
                       ? "border-brand-interactive bg-brand-interactive text-white shadow-sm"
                       : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
@@ -720,7 +721,7 @@ function EventDrilldown({
 }) {
   const visible = rows.slice(0, limit);
   return (
-    <section className="panel">
+    <section className="panel" data-market-events-drilldown="true">
       <div className="panel-h">
         <h2>전체 이벤트 검색</h2>
         <span className="desc">{rows.length.toLocaleString("ko-KR")} / {totalRows.toLocaleString("ko-KR")}개</span>
@@ -735,7 +736,8 @@ function EventDrilldown({
               setLimit(40);
             }}
             placeholder="티커, 기업명, 이벤트 검색"
-            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-brand-interactive"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-brand-interactive"
+            data-market-events-search="true"
           />
           <select
             value={sectionFilter}
@@ -744,8 +746,9 @@ function EventDrilldown({
               syncParams({ sectionFilter: event.target.value });
               setLimit(40);
             }}
-            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
             aria-label="분류"
+            data-market-events-section-filter="true"
           >
             <option value="전체">전체 분류</option>
             {sections.map((item) => (
@@ -762,8 +765,9 @@ function EventDrilldown({
               syncParams({ dateRange: value });
               setLimit(40);
             }}
-            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
             aria-label="기간"
+            data-market-events-range-filter="true"
           >
             <option value="all">전체 기간</option>
             <option value="7">최근 7일</option>
@@ -777,8 +781,9 @@ function EventDrilldown({
               setSort(value);
               syncParams({ sort: value });
             }}
-            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-brand-interactive"
             aria-label="정렬"
+            data-market-events-sort="true"
           >
             <option value="date">날짜순</option>
             <option value="symbol">티커순</option>
@@ -788,13 +793,17 @@ function EventDrilldown({
             type="button"
             onClick={() => downloadDrilldownCsv(rows)}
             disabled={!rows.length}
-            className="min-h-10 rounded-lg border border-slate-200 bg-slate-900 px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 rounded-lg border border-slate-200 bg-slate-900 px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+            data-market-events-csv-action="true"
           >
             CSV 저장
           </button>
         </div>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <label className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500">
+          <label
+            className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500"
+            data-market-events-from-date="true"
+          >
             <span className="shrink-0">시작일</span>
             <input
               type="date"
@@ -808,7 +817,10 @@ function EventDrilldown({
               className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-700 outline-none"
             />
           </label>
-          <label className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500">
+          <label
+            className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500"
+            data-market-events-to-date="true"
+          >
             <span className="shrink-0">종료일</span>
             <input
               type="date"
@@ -827,7 +839,11 @@ function EventDrilldown({
       <div className="mv-col">
         {visible.length ? visible.map((row) => {
           return (
-            <div key={row.id} className="mv-row">
+            <div
+              key={row.id}
+              className="mv-row"
+              data-market-events-drilldown-row={row.section}
+            >
               <span className="co">
                 <div className="n">{rowTitle(row.title, row.symbol)}</div>
                 <div className="tk">{row.section} · {row.date} · {row.detail}</div>
@@ -842,7 +858,8 @@ function EventDrilldown({
           <button
             type="button"
             onClick={() => setLimit(limit + 40)}
-            className="min-h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 hover:border-brand-interactive hover:text-brand-interactive"
+            className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 hover:border-brand-interactive hover:text-brand-interactive"
+            data-market-events-load-more="true"
           >
             더 보기 {visible.length.toLocaleString("ko-KR")} / {rows.length.toLocaleString("ko-KR")}
           </button>

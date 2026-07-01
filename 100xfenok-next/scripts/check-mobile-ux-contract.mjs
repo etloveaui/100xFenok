@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/regime,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/market-valuation,/regime,/market/events,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -402,6 +402,116 @@ async function collectRouteChecks(page, route) {
       if (sourceCards.length < 4) {
         failures.push({ check: "regime-source-card-count", detail: `visible source cards=${sourceCards.length}` });
       }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/market/events") {
+      const surface = document.querySelector("[data-market-events-surface]");
+      const activeNav = document.querySelector('[data-market-section-link="events"][aria-current="page"]');
+      const navLinks = Array.from(document.querySelectorAll("[data-market-section-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const overview = document.querySelector("[data-market-events-overview]");
+      const tabs = Array.from(document.querySelectorAll("[data-market-event-tab]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const drilldown = document.querySelector("[data-market-events-drilldown]");
+      const drilldownRows = Array.from(document.querySelectorAll("[data-market-events-drilldown-row]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      const controls = [
+        { key: "search", node: document.querySelector("[data-market-events-search]") },
+        { key: "section", node: document.querySelector("[data-market-events-section-filter]") },
+        { key: "range", node: document.querySelector("[data-market-events-range-filter]") },
+        { key: "sort", node: document.querySelector("[data-market-events-sort]") },
+        { key: "csv", node: document.querySelector("[data-market-events-csv-action]") },
+        { key: "from", node: document.querySelector("[data-market-events-from-date]") },
+        { key: "to", node: document.querySelector("[data-market-events-to-date]") },
+      ];
+
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-events-surface-visible", detail: "missing market events surface" });
+      }
+      if (!activeNav) {
+        failures.push({ check: "market-events-nav-active", detail: "events nav link is not aria-current page" });
+      }
+
+      const expectedNav = ["valuation", "regime", "events", "sectors"];
+      const actualNav = navLinks.map((node) => node.getAttribute("data-market-section-link"));
+      if (
+        navLinks.length !== expectedNav.length ||
+        !expectedNav.every((key, index) => actualNav[index] === key)
+      ) {
+        failures.push({
+          check: "market-events-nav-order",
+          detail: `actual=${JSON.stringify(actualNav)} expected=${JSON.stringify(expectedNav)}`,
+        });
+      }
+
+      navLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "market-events-nav-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!overview || overview.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-events-overview-visible", detail: "missing events overview panel" });
+      }
+
+      const expectedTabs = ["earnings", "actions", "ipo", "movers"];
+      const actualTabs = tabs.map((node) => node.getAttribute("data-market-event-tab"));
+      if (
+        tabs.length !== expectedTabs.length ||
+        !expectedTabs.every((key, index) => actualTabs[index] === key)
+      ) {
+        failures.push({
+          check: "market-events-tab-order",
+          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
+        });
+      }
+      const selectedTab = tabs.find((node) => node.getAttribute("aria-selected") === "true");
+      if (selectedTab?.getAttribute("data-market-event-tab") !== "earnings") {
+        failures.push({
+          check: "market-events-default-tab",
+          detail: `selected=${selectedTab?.getAttribute("data-market-event-tab") || ""}`,
+        });
+      }
+      tabs.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "market-events-tab-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      if (!drilldown || drilldown.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-events-drilldown-visible", detail: "missing drilldown panel" });
+      }
+      if (drilldownRows.length === 0) {
+        failures.push({ check: "market-events-drilldown-populated", detail: "no visible drilldown rows" });
+      }
+      drilldownRows.slice(0, 5).forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "market-events-drilldown-row-target", detail: `row ${index} height=${Math.round(rect.height)}` });
+        }
+      });
+
+      controls.forEach(({ key, node }) => {
+        if (!node || node.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "market-events-control-present", detail: `control=${key}` });
+          return;
+        }
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 32) {
+          failures.push({ check: "market-events-control-target", detail: `control=${key} height=${Math.round(rect.height)}` });
+        }
+      });
     }
 
     if (currentRoute.startsWith("/screener")) {
