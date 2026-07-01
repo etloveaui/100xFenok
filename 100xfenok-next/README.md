@@ -287,6 +287,16 @@ only rollback readiness with
 `rollback_ready=true`, `rollback_applied=false`, and
 `rollback_performed_by_this_command=false`; the next runtime gate is
 `post_live_redirect_delete_owner_closeout_record`.
+After a valid rollback readiness record,
+`--rank2-post-live-redirect-delete-owner-closeout-template` prints the final
+owner closeout skeleton. A supplied
+`--rank2-post-live-redirect-delete-owner-closeout-json=...` or
+`--rank2-post-live-redirect-delete-owner-closeout <file>` record may satisfy
+only record-chain closeout with
+`closeout_scope=record_only_owner_closeout_no_additional_runtime`,
+`owner_closeout_accepted=true`, `additional_runtime_required=false`, and
+`closeout_performed_by_this_command=false`; the next runtime gate is
+`none_record_chain_closed`.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary

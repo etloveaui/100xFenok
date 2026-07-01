@@ -6087,6 +6087,7 @@ function printText(packet) {
   console.log(`rank2_post_live_redirect_delete_execution_record_status=${packet.rank2_post_live_redirect_delete_execution_record_status}`);
   console.log(`rank2_post_live_redirect_delete_post_execution_smoke_record_status=${packet.rank2_post_live_redirect_delete_post_execution_smoke_record_status}`);
   console.log(`rank2_post_live_redirect_delete_rollback_readiness_record_status=${packet.rank2_post_live_redirect_delete_rollback_readiness_record_status}`);
+  console.log(`rank2_post_live_redirect_delete_owner_closeout_record_status=${packet.rank2_post_live_redirect_delete_owner_closeout_record_status}`);
   console.log(`rank2_execution_readiness=${packet.rank2_execution_readiness.status}`);
   console.log(`local_live_equivalence=${packet.evidence.local_live_equivalence_proof_status} rows=${packet.evidence.local_live_equivalence_rows_checked}/${packet.evidence.local_live_equivalence_rows_expected}`);
   console.log(`next_gated_slice=${packet.next_gated_slice.id}`);
@@ -6124,6 +6125,7 @@ function printText(packet) {
   console.log("rank2_post_live_redirect_delete_execution_record_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-execution-record-template");
   console.log("rank2_post_live_redirect_delete_post_execution_smoke_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-post-execution-smoke-template");
   console.log("rank2_post_live_redirect_delete_rollback_readiness_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-rollback-readiness-template");
+  console.log("rank2_post_live_redirect_delete_owner_closeout_template_command=node scripts/build-macro-owner-decision-packet.mjs --rank2-post-live-redirect-delete-owner-closeout-template");
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");
 }
@@ -6160,6 +6162,7 @@ function main() {
   let rank2PostLiveRedirectDeleteExecutionRecord;
   let rank2PostLiveRedirectDeletePostExecutionSmokeRecord;
   let rank2PostLiveRedirectDeleteRollbackReadinessRecord;
+  let rank2PostLiveRedirectDeleteOwnerCloseoutRecord;
   try {
     decisionRecord = readDecisionRecord(args.decisionRecordPath, args.decisionRecordJson);
   } catch (error) {
@@ -6288,6 +6291,14 @@ function main() {
   } catch (error) {
     fail(`rank2 post-live redirect/delete rollback readiness record read/parse failed: ${errorMessage(error)}`, null, false);
   }
+  try {
+    rank2PostLiveRedirectDeleteOwnerCloseoutRecord = readDecisionRecord(
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordPath,
+      args.rank2PostLiveRedirectDeleteOwnerCloseoutRecordJson,
+    );
+  } catch (error) {
+    fail(`rank2 post-live redirect/delete owner closeout record read/parse failed: ${errorMessage(error)}`, null, false);
+  }
 
   const packet = buildDecisionPacket(
     inventory,
@@ -6314,6 +6325,7 @@ function main() {
     rank2PostLiveRedirectDeleteExecutionRecord,
     rank2PostLiveRedirectDeletePostExecutionSmokeRecord,
     rank2PostLiveRedirectDeleteRollbackReadinessRecord,
+    rank2PostLiveRedirectDeleteOwnerCloseoutRecord,
   );
   const errors = validatePacket(packet);
 
@@ -6497,6 +6509,14 @@ function main() {
       fail("--rank2-post-live-redirect-delete-rollback-readiness-template requires rank2_post_live_redirect_delete_post_execution_smoke_record_status=valid_post_live_redirect_delete_post_execution_smoke_recorded", packet, args.json);
     }
     console.log(JSON.stringify(packet.rank2_post_live_redirect_delete_rollback_readiness_template, null, 2));
+    return;
+  }
+
+  if (args.rank2PostLiveRedirectDeleteOwnerCloseoutTemplate) {
+    if (packet.rank2_post_live_redirect_delete_rollback_readiness_record_status !== "valid_post_live_redirect_delete_rollback_readiness_recorded") {
+      fail("--rank2-post-live-redirect-delete-owner-closeout-template requires rank2_post_live_redirect_delete_rollback_readiness_record_status=valid_post_live_redirect_delete_rollback_readiness_recorded", packet, args.json);
+    }
+    console.log(JSON.stringify(packet.rank2_post_live_redirect_delete_owner_closeout_template, null, 2));
     return;
   }
 
