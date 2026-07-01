@@ -186,6 +186,91 @@ function extractStringLiterals(source) {
   return literals;
 }
 
+function readAppSource(relativePath) {
+  return fs.readFileSync(path.join(APP_ROOT, relativePath), "utf8");
+}
+
+function assertSourceTokens(source, tokens, label, errors) {
+  for (const token of tokens) {
+    assert(source.includes(token), `${label}: missing ${token}`, errors);
+  }
+}
+
+function assertRouteIaContracts(errors) {
+  const productNavSource = readAppSource("src/lib/product-nav.ts");
+  const shellSource = readAppSource("src/components/shell/AppShell.tsx");
+  const homeRouteSource = readAppSource("src/app/page.tsx");
+  const homeV1Source = readAppSource("src/app/HomeV1Client.tsx");
+  const homeV5Source = readAppSource("src/app/HomeV5Client.tsx");
+  const workbenchSource = readAppSource("src/components/workbench/WorkbenchView.tsx");
+  const explorePageSource = readAppSource("src/app/explore/page.tsx");
+  const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
+
+  assertSourceTokens(productNavSource, [
+    "EXPLORE_ROUTE = ROUTES.home",
+    'EXPLORE_NAV_LABEL = "홈"',
+    'EXPLORE_PRODUCT_TITLE = "홈"',
+    "WORKBENCH_ROUTE = ROUTES.workbench",
+    'WORKBENCH_NAV_LABEL = "워크벤치"',
+    'WORKBENCH_PRODUCT_TITLE = "워크벤치"',
+    "CHART_ROUTE = ROUTES.macroChart",
+    'CHART_NAV_LABEL = "차트"',
+  ], "product-nav PRO IA", errors);
+
+  assertSourceTokens(shellSource, [
+    'id: "explore"',
+    'label: EXPLORE_NAV_LABEL',
+    "href: EXPLORE_ROUTE",
+    'id: "workbench"',
+    'group: "더보기"',
+    "href: ROUTES.workbench",
+    'label: WORKBENCH_NAV_LABEL',
+    'id: "chart"',
+    "href: CHART_ROUTE",
+    "label: CHART_NAV_LABEL",
+    'const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"]',
+    "const MORE_TAB_IDS: ShellPage[] = [",
+    '"chart"',
+    '"workbench"',
+    '"sectors"',
+    '"etfs"',
+    '"superinvestors"',
+  ], "AppShell PRO IA", errors);
+
+  assert(
+    !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"]'),
+    "AppShell PRO IA: chart must stay out of the mobile primary tab bar",
+    errors,
+  );
+
+  assertSourceTokens(homeRouteSource, [
+    "HomeV5Client",
+    "HomeV1Client",
+  ], "home route PRO IA", errors);
+  assert(!homeRouteSource.includes("WorkbenchView"), "home route PRO IA: root must not render WorkbenchView directly", errors);
+
+  assertSourceTokens(homeV1Source, [
+    "data-home-search-first",
+    "data-home-feature-tile",
+  ], "Home V1 PRO IA", errors);
+  assertSourceTokens(homeV5Source, [
+    "data-home-search-first",
+    "data-home-feature-tile",
+  ], "Home V5 PRO IA", errors);
+
+  assertSourceTokens(workbenchSource, [
+    '<AppShell active="workbench"',
+    "data-workbench-gateway",
+    "WORKBENCH_GATEWAY_LINKS",
+  ], "Workbench PRO IA", errors);
+  assertSourceTokens(explorePageSource, [
+    "WorkbenchView",
+  ], "Explore compatibility route", errors);
+  assertSourceTokens(workbenchPageSource, [
+    "WorkbenchView",
+  ], "Workbench route", errors);
+}
+
 function pathPart(literal) {
   if (!literal.startsWith("/")) return null;
   return literal.split(/[?#]/, 1)[0];
@@ -200,6 +285,8 @@ assert(routesSource.includes("export const ROUTES"), "src/lib/routes.ts must exp
 for (const key of REQUIRED_ROUTE_KEYS) {
   assert(Boolean(routeExports.routes?.[key]), `ROUTES.${key} is missing`, errors);
 }
+
+assertRouteIaContracts(errors);
 
 for (const routePattern of routeExports.appRoutePatterns ?? []) {
   const pagePath = routePatternPage(routePattern);

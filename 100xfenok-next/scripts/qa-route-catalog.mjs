@@ -104,7 +104,6 @@ export const NEGATIVE_ROUTES = [
 
 // ---- Expected iframe-embed routes (playwright inner-shell checks) ----
 export const EXPECTED_IFRAME_ROUTES = new Set([
-  "/market",
   "/ib",
   "/infinite-buying",
   vrDeepLinkRoute,
@@ -124,13 +123,11 @@ export const EXPECTED_IFRAME_ROUTES = new Set([
 
 // ---- Expected inner-shell clean routes (no v5 chrome wrapping) ----
 export const EXPECTED_INNER_SHELL_CLEAN_ROUTES = new Set([
-  "/market",
   vrDeepLinkRoute,
 ]);
 
 // ---- Expected iframe src map (route -> embed target path) ----
 export const EXPECTED_IFRAME_SRC_BY_ROUTE = {
-  "/market": "/100x/100x-main.html",
   [alphaReportDeepLinkRoute]: "/alpha-scout/reports/2025-08-24_100x-alpha-scout.html",
   [postsDeepLinkRoute]: "/posts-raw/2026-02-21_tariff-ruling-comprehensive.html",
   [vrDeepLinkRoute]: "/vr/vr-complete-system.html",

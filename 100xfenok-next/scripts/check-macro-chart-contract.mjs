@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MACRO_CHART_STRICT !== "0";
+const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
+const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
 const expectedMaxSeries = 8;
 const sharedRoute =
   process.env.QA_MACRO_CHART_ROUTE ||
@@ -19,6 +21,13 @@ function routeUrl(route) {
 
 function addFailure(failures, check, detail) {
   failures.push({ check, detail });
+}
+
+function chromiumLaunchOptions() {
+  const options = { headless: true };
+  if (browserExecutablePath) options.executablePath = browserExecutablePath;
+  else if (browserChannel) options.channel = browserChannel;
+  return options;
 }
 
 function watchHydrationErrors(page, failures) {
@@ -213,14 +222,15 @@ async function inspectStaticContracts() {
     }
   }
   if (
-    !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "chart", "screener", "more"]') ||
+    !shellSource.includes('const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"]') ||
     !shellSource.includes('const MORE_TAB_IDS: ShellPage[] = [') ||
+    !shellSource.includes('"chart"') ||
     !shellSource.includes('"workbench"') ||
-    !shellSource.includes('"briefing"') ||
     !shellSource.includes('"sectors"') ||
-    !shellSource.includes('"portfolio"')
+    !shellSource.includes('"etfs"') ||
+    !shellSource.includes('"superinvestors"')
   ) {
-    addFailure(failures, "app-shell-mobile-tabs", "mobile primary starts at home; workbench/briefing live under more");
+    addFailure(failures, "app-shell-mobile-tabs", "mobile primary starts at home/market/screener/portfolio; chart/workbench live under more");
   }
 
   return { route: "static:macro-chart", viewport: "static", status: null, failures };
@@ -677,9 +687,8 @@ async function inspectConnectedSurfaces(page) {
   if (presetPressed !== "true") {
     addFailure(failures, "screener-preset-state", `aria-pressed=${presetPressed}`);
   }
-  const connectionValue = await page.getByLabel("연결 범위").inputValue();
-  if (connectionValue !== "indexMembership") {
-    addFailure(failures, "screener-connection-state", `value=${connectionValue}`);
+  if (!(await page.getByText("연결: 지수 편입 연결").isVisible())) {
+    addFailure(failures, "screener-connection-state", "indexMembership filter chip missing");
   }
 
   response = await page.goto(routeUrl("/etfs?macro=crypto-liquidity&digital=1"), {
@@ -870,7 +879,7 @@ async function inspectMultichartRoute(page) {
 }
 
 const results = [await inspectStaticContracts()];
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch(chromiumLaunchOptions());
 
 try {
   const desktopContext = await browser.newContext({

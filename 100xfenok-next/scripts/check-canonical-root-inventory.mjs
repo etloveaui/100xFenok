@@ -226,10 +226,11 @@ function legacyHtmlClassification(legacyHtml) {
   );
   const rows = legacyHtml.map((item) => {
     const publicPath = publicPathFromFile(item.file);
+    const baseItem = { ...item, public_path: publicPath };
     const route = iframeTargets.get(publicPath) ?? null;
     if (publicPath === "/tools/stock_analyzer/CLEAR_CACHE.html") {
       return {
-        ...item,
+        ...baseItem,
         class: "low_risk_retire_candidate",
         route: "/tools/stock-analyzer",
         reason: "cache helper page is not an iframe target; smoke stock-analyzer direct URL before redirect/delete",
@@ -237,10 +238,18 @@ function legacyHtmlClassification(legacyHtml) {
     }
     if (route) {
       return {
-        ...item,
+        ...baseItem,
         class: "route_backed_preserve_until_equivalence",
         route,
         reason: "expected iframe target for a live Next route",
+      };
+    }
+    if (publicPath === "/100x/100x-main.html") {
+      return {
+        ...baseItem,
+        class: "legacy_market_archive_high_risk",
+        route: "/market",
+        reason: "/market is a legacy bookmark route to the native market screen; preserve this archive until owner-approved retirement",
       };
     }
     if (
@@ -251,7 +260,7 @@ function legacyHtmlClassification(legacyHtml) {
       || publicPath.startsWith("/vr/")
     ) {
       return {
-        ...item,
+        ...baseItem,
         class: "dynamic_bridge_reachable_high_risk",
         route: null,
         reason: "legacyPublicFileExists or dynamic bridge route can still resolve this path family",
@@ -259,14 +268,14 @@ function legacyHtmlClassification(legacyHtml) {
     }
     if (publicPath.startsWith("/100x/daily-wrap/") && publicPath !== "/100x/daily-wrap/daily-wrap-viewer.html") {
       return {
-        ...item,
+        ...baseItem,
         class: "daily_wrap_archive_high_risk",
         route: "/100x/daily-wrap",
         reason: "daily-wrap route uses viewer/data path; dated legacy HTML needs equivalence proof before redirect",
       };
     }
     return {
-      ...item,
+      ...baseItem,
       class: "unclassified_high_risk",
       route: null,
       reason: "no safe redirect/delete proof in the canonical inventory gate",
@@ -282,6 +291,396 @@ function legacyHtmlClassification(legacyHtml) {
     safe_first_candidates: rows.filter((row) => row.class === "low_risk_retire_candidate"),
     route_backed: rows.filter((row) => row.class === "route_backed_preserve_until_equivalence"),
     high_risk_count: rows.filter((row) => row.class.endsWith("_high_risk")).length,
+    rows,
+  };
+}
+
+function routeBackedEquivalenceMatrix(legacyHtml, legacyClassification) {
+  const legacyByPublicPath = new Map(legacyHtml.map((item) => [publicPathFromFile(item.file), item]));
+  const routesByTarget = new Map();
+  for (const [route, targetPath] of Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE)) {
+    const routes = routesByTarget.get(targetPath) ?? [];
+    routes.push(route);
+    routesByTarget.set(targetPath, routes);
+  }
+
+  const catalogRows = Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE)
+    .map(([route, targetPath]) => {
+      const targetFile = legacyByPublicPath.get(targetPath) ?? null;
+      const sharedRoutes = routesByTarget.get(targetPath) ?? [];
+      return {
+        route,
+        target_path: targetPath,
+        target_file: targetFile?.file ?? null,
+        target_exists: Boolean(targetFile),
+        shared_target_routes: sharedRoutes,
+        live_equivalence_required: true,
+        first_action: "run qa:route-iframe-contract locally; preserve until owner-approved redirect/delete and soak",
+      };
+    })
+    .sort((left, right) => left.route.localeCompare(right.route));
+
+  const routeBackedPublicPaths = new Set(legacyClassification.route_backed.map((row) => row.public_path));
+  const catalogTargetPaths = new Set(Object.values(EXPECTED_IFRAME_SRC_BY_ROUTE));
+  const rowsWithoutCatalogTarget = legacyClassification.route_backed
+    .filter((row) => !catalogTargetPaths.has(row.public_path))
+    .map((row) => row.public_path)
+    .sort();
+  const missingTargetAssets = catalogRows
+    .filter((row) => !row.target_exists)
+    .map((row) => row.target_path)
+    .sort();
+  const catalogTargetsMissingRouteBackedClass = [...catalogTargetPaths]
+    .filter((targetPath) => !routeBackedPublicPaths.has(targetPath))
+    .sort();
+  const sharedTargets = [...routesByTarget.entries()]
+    .filter(([, routes]) => routes.length > 1)
+    .map(([targetPath, routes]) => ({ target_path: targetPath, routes: routes.sort() }))
+    .sort((left, right) => left.target_path.localeCompare(right.target_path));
+
+  return {
+    schema_version: "route-backed-equivalence/v0.1",
+    catalog_route_count: Object.keys(EXPECTED_IFRAME_SRC_BY_ROUTE).length,
+    catalog_unique_target_count: catalogTargetPaths.size,
+    inventory_route_backed_target_count: legacyClassification.route_backed.length,
+    shared_targets: sharedTargets,
+    missing_target_assets: missingTargetAssets,
+    catalog_targets_missing_route_backed_class: catalogTargetsMissingRouteBackedClass,
+    route_backed_rows_without_catalog_target: rowsWithoutCatalogTarget,
+    rows: catalogRows,
+  };
+}
+
+function lowRiskRetireReadiness(legacyClassification, appRoutes, routeBackedEquivalence) {
+  const appRouteSet = new Set(appRoutes.map((item) => item.route));
+  const targetByRoute = new Map(routeBackedEquivalence.rows.map((row) => [row.route, row]));
+  const candidates = legacyClassification.safe_first_candidates.map((candidate) => {
+    const routeBackedTarget = targetByRoute.get(candidate.route) ?? null;
+    const replacementRoutePresent = appRouteSet.has(candidate.route);
+    const replacementAssetPresent = Boolean(routeBackedTarget?.target_exists);
+    const staticReadyForOwnerReview = replacementRoutePresent && replacementAssetPresent;
+    const replacementRouteSmokePath = `${candidate.route}/`;
+    const replacementTargetSmokePath = routeBackedTarget?.target_path ?? "/tools/stock_analyzer/stock_analyzer.html";
+    const localSmokeCommand = (smokePath) => (
+      `curl -L -sS -o /dev/null -w 'status=%{http_code}\\n' http://127.0.0.1:3105${smokePath}`
+    );
+    const ownerApprovalPacket = {
+      schema_version: "owner-approval-packet/v0.1",
+      approval_packet_ready: staticReadyForOwnerReview,
+      proposed_action: "retire legacy helper after owner approval and soak",
+      mutation_status: "not_executed",
+      blocked_actions: ["delete", "redirect", "deploy"],
+      approval_required: true,
+      owner_decision_required_before_mutation: true,
+      proposed_delete_scope: [candidate.public_path],
+      rollback_restore_source: `public${candidate.public_path}`,
+      rollback_restore_command: `git restore -- public${candidate.public_path}`,
+      soak_plan_required_before_delete: true,
+      post_delete_soak_required: true,
+      pre_approval_local_commands: [
+        "npm run qa:canonical-root-inventory",
+        "npm run qa:route-iframe-contract",
+        localSmokeCommand(replacementRouteSmokePath),
+        localSmokeCommand(replacementTargetSmokePath),
+        localSmokeCommand(candidate.public_path),
+      ],
+      post_delete_required_smoke: [
+        "npm run qa:canonical-root-inventory",
+        "npm run qa:route-iframe-contract",
+        localSmokeCommand(replacementRouteSmokePath),
+        localSmokeCommand(replacementTargetSmokePath),
+      ],
+    };
+    return {
+      file: candidate.file,
+      public_path: candidate.public_path,
+      size_bytes: candidate.size_bytes,
+      class: candidate.class,
+      replacement_route: candidate.route,
+      replacement_route_present: replacementRoutePresent,
+      replacement_route_backed_target: routeBackedTarget?.target_path ?? null,
+      replacement_target_exists: replacementAssetPresent,
+      delete_authorized: false,
+      static_ready_for_owner_review: staticReadyForOwnerReview,
+      approval_packet_ready: ownerApprovalPacket.approval_packet_ready,
+      owner_gate: "explicit owner approval required before deleting this legacy helper",
+      required_local_smoke: [
+        replacementRouteSmokePath,
+        replacementTargetSmokePath,
+        candidate.public_path,
+      ],
+      required_before_delete: [
+        "local direct route smoke passes",
+        "route-backed iframe target smoke passes",
+        "owner approves helper retirement",
+        "post-delete soak window is defined",
+        "rollback path keeps the original helper file available until soak clears",
+      ],
+      first_action: "prepare owner-review packet only; do not delete without explicit owner approval",
+      owner_approval_packet: ownerApprovalPacket,
+    };
+  });
+
+  return {
+    schema_version: "low-risk-retire-readiness/v0.1",
+    candidate_count: candidates.length,
+    static_ready_for_owner_review_count: candidates.filter((candidate) => candidate.static_ready_for_owner_review).length,
+    approval_packet_ready_count: candidates.filter((candidate) => candidate.approval_packet_ready).length,
+    delete_authorized_count: candidates.filter((candidate) => candidate.delete_authorized).length,
+    candidates,
+  };
+}
+
+function ownerFamilyForHighRisk(row) {
+  const pathName = row.public_path;
+  const sharedGate = {
+    blocked_actions: ["delete", "redirect", "deploy"],
+    owner_gate: "explicit owner approval required before redirect/delete/deploy",
+    mutation_status: "not_executed",
+    pro_route_ia_acceptance: "legacy HTML must stay behind its owner route; it must not become a Home primary module or mobile primary tab",
+    required_before_redirect_or_delete: [
+      "owner route smoke passes",
+      "legacy path smoke passes",
+      "PRO route IA owner accepts the destination",
+      "live-equivalence proof is recorded",
+      "soak and rollback plan are defined",
+    ],
+  };
+  const family = (config) => ({
+    ...sharedGate,
+    ...config,
+    owner_route_required: config.owner_route_required ?? true,
+  });
+
+  if (pathName === "/100x/100x-main.html") {
+    return family({
+      id: "market_legacy_archive",
+      owner_route: "/market-valuation",
+      compatibility_route: "/market",
+      owner_area: "market_native_screen",
+      first_action: "preserve archive; review only after native market route live-equivalence and bookmark smoke",
+    });
+  }
+  if (pathName.startsWith("/100x/daily-wrap/")) {
+    return family({
+      id: "daily_wrap_archive",
+      owner_route: "/100x/daily-wrap",
+      owner_area: "daily_wrap_archive_viewer",
+      first_action: "prove viewer/data equivalence before any dated wrap redirect or retirement proposal",
+    });
+  }
+  if (pathName.startsWith("/admin/design-lab/")) {
+    return family({
+      id: "admin_design_lab_prototypes",
+      owner_route: "/admin/design-lab",
+      owner_area: "admin_design_lab",
+      first_action: "preserve prototype gallery behind admin owner route; do not promote to product IA",
+    });
+  }
+  if (pathName.startsWith("/admin/data-lab/")) {
+    return family({
+      id: "admin_data_lab_legacy",
+      owner_route: "/admin/data-lab",
+      owner_area: "admin_data_lab",
+      first_action: "preserve behind data-lab owner route until admin replacement equivalence is proven",
+    });
+  }
+  if (pathName.startsWith("/admin/market-radar/")) {
+    return family({
+      id: "admin_market_radar_legacy",
+      owner_route: "/admin/market-radar",
+      owner_area: "admin_market_radar",
+      first_action: "preserve behind market-radar admin route until route-backed equivalence and owner approval",
+    });
+  }
+  if (pathName.startsWith("/admin/valuation-lab/")) {
+    return family({
+      id: "admin_valuation_lab_legacy",
+      owner_route: "/admin/valuation-lab",
+      owner_area: "admin_valuation_lab",
+      first_action: "preserve valuation-lab expansion pages behind admin owner route until replacement mapping exists",
+    });
+  }
+  if (pathName.startsWith("/admin/ib-helper/")) {
+    return family({
+      id: "admin_ib_helper_legacy",
+      owner_route: "/admin/ib-helper",
+      owner_area: "admin_ib_helper",
+      first_action: "preserve admin helper route; compare with /ib before any retirement proposal",
+    });
+  }
+  if (pathName === "/admin/index.html") {
+    return family({
+      id: "admin_root_legacy",
+      owner_route: "/admin",
+      owner_area: "admin_root",
+      first_action: "preserve admin root legacy shell until admin route smoke and owner approval",
+    });
+  }
+  if (pathName.startsWith("/admin/personal/")) {
+    return family({
+      id: "admin_personal_legacy",
+      owner_route: "/admin/personal",
+      owner_area: "admin_personal",
+      first_action: "preserve personal admin content behind admin owner route; do not expose in product IA",
+    });
+  }
+  if (pathName.startsWith("/alpha-scout/")) {
+    return family({
+      id: "alpha_scout_archive",
+      owner_route: "/alpha-scout",
+      owner_area: "alpha_scout",
+      first_action: "preserve report archive until alpha-scout route equivalence and report deep-link smoke are proven",
+    });
+  }
+  if (pathName.startsWith("/posts-raw/")) {
+    return family({
+      id: "posts_raw_archive",
+      owner_route: "/posts",
+      owner_area: "posts_archive",
+      first_action: "preserve raw post archive until posts route and deep-link smoke prove equivalence",
+    });
+  }
+  if (pathName.startsWith("/tools/macro-monitor/")) {
+    return family({
+      id: "macro_monitor_legacy_tools",
+      owner_route: "/macro-chart",
+      compatibility_route: "/admin/macro-monitor",
+      owner_area: "macro_chart_workbench",
+      first_action: "preserve macro-monitor legacy tools until native macro-chart owner accepts route equivalence",
+    });
+  }
+  if (pathName.startsWith("/vr/")) {
+    return family({
+      id: "vr_legacy_tools",
+      owner_route: "/vr",
+      owner_area: "vr_tools",
+      first_action: "preserve VR tools behind VR route until route-backed smoke and owner approval",
+    });
+  }
+  if (pathName === "/404.html") {
+    return family({
+      id: "system_fallback_page",
+      owner_route: null,
+      owner_route_required: false,
+      owner_area: "system_fallback",
+      pro_route_ia_acceptance: "fallback HTML is deployment infrastructure, not product navigation; do not redirect/delete without deploy-owner approval",
+      first_action: "preserve fallback page until deployment fallback behavior is owner-approved and smoke-tested",
+    });
+  }
+  if (pathName === "/ib-helper/index.html" || pathName === "/ib/ib-total-guide-calculator.html") {
+    return family({
+      id: "ib_legacy_tools",
+      owner_route: "/ib",
+      owner_area: "ib_helper",
+      first_action: "preserve IB helper legacy assets until /ib replacement route and guide equivalence are proven",
+    });
+  }
+  if (pathName === "/llm-guide.html") {
+    return family({
+      id: "workbench_orphan_guide",
+      owner_route: "/workbench",
+      owner_area: "workbench_secondary_entry",
+      first_action: "review as a secondary workbench guide; do not surface on Home or mobile primary IA",
+    });
+  }
+  if (pathName === "/tools/asset/multichart.html") {
+    return family({
+      id: "multichart_legacy_tool",
+      owner_route: "/multichart",
+      compatibility_route: "/macro-chart",
+      owner_area: "macro_chart_workbench",
+      first_action: "compare legacy multichart tool with macro/multichart owners before any redirect proposal",
+    });
+  }
+  return null;
+}
+
+function routeResolutionFor(route, appRouteSet) {
+  if (!route) return "not_required";
+  if (appRouteSet.has(route)) return "exact_app_route";
+  if (route.startsWith("/admin/") && appRouteSet.has("/admin/[...slug]")) return "admin_catch_all";
+  if (route.startsWith("/posts/") && appRouteSet.has("/posts/[...slug]")) return "posts_catch_all";
+  return "missing";
+}
+
+function highRiskOwnerMatrix(legacyClassification, appRoutes) {
+  const appRouteSet = new Set(appRoutes.map((item) => item.route));
+  const highRiskRows = legacyClassification.rows.filter((row) => row.class.endsWith("_high_risk"));
+  const rows = highRiskRows.map((row) => {
+    const ownerFamily = ownerFamilyForHighRisk(row);
+    const ownerRouteResolution = routeResolutionFor(ownerFamily?.owner_route ?? null, appRouteSet);
+    return {
+      public_path: row.public_path,
+      file: row.file,
+      class: row.class,
+      owner_family: ownerFamily?.id ?? null,
+      owner_area: ownerFamily?.owner_area ?? null,
+      owner_route: ownerFamily?.owner_route ?? null,
+      owner_route_resolution: ownerRouteResolution,
+      owner_route_present: ownerRouteResolution !== "missing",
+      owner_route_required: ownerFamily?.owner_route_required ?? true,
+      compatibility_route: ownerFamily?.compatibility_route ?? null,
+      pro_route_ia_acceptance: ownerFamily?.pro_route_ia_acceptance ?? null,
+      blocked_actions: ownerFamily?.blocked_actions ?? [],
+      owner_gate: ownerFamily?.owner_gate ?? null,
+      mutation_status: ownerFamily?.mutation_status ?? "not_executed",
+      required_before_redirect_or_delete: ownerFamily?.required_before_redirect_or_delete ?? [],
+      first_action: ownerFamily?.first_action ?? "add an explicit owner family before any redirect/delete/deploy proposal",
+    };
+  });
+  const familiesById = new Map();
+  for (const row of rows) {
+    if (!row.owner_family) continue;
+    const current = familiesById.get(row.owner_family) ?? {
+      id: row.owner_family,
+      owner_area: row.owner_area,
+      owner_route: row.owner_route,
+      owner_route_resolution: row.owner_route_resolution,
+      owner_route_present: row.owner_route_present,
+      owner_route_required: row.owner_route_required,
+      compatibility_route: row.compatibility_route,
+      pro_route_ia_acceptance: row.pro_route_ia_acceptance,
+      blocked_actions: row.blocked_actions,
+      owner_gate: row.owner_gate,
+      mutation_status: row.mutation_status,
+      required_before_redirect_or_delete: row.required_before_redirect_or_delete,
+      first_action: row.first_action,
+      row_count: 0,
+      class_counts: {},
+      sample_public_paths: [],
+    };
+    current.row_count += 1;
+    current.class_counts[row.class] = (current.class_counts[row.class] ?? 0) + 1;
+    if (current.sample_public_paths.length < 8) current.sample_public_paths.push(row.public_path);
+    familiesById.set(row.owner_family, current);
+  }
+  const unmappedRows = rows.filter((row) => !row.owner_family).map((row) => row.public_path).sort();
+  const missingOwnerRouteRows = rows
+    .filter((row) => row.owner_route_required && !row.owner_route_present)
+    .map((row) => row.public_path)
+    .sort();
+  const unsafeRows = rows
+    .filter((row) => (
+      row.mutation_status !== "not_executed"
+      || !row.blocked_actions.includes("delete")
+      || !row.blocked_actions.includes("redirect")
+      || !row.blocked_actions.includes("deploy")
+    ))
+    .map((row) => row.public_path)
+    .sort();
+
+  return {
+    schema_version: "high-risk-owner-matrix/v0.1",
+    high_risk_row_count: highRiskRows.length,
+    owner_family_count: familiesById.size,
+    unmapped_count: unmappedRows.length,
+    missing_owner_route_count: missingOwnerRouteRows.length,
+    unsafe_row_count: unsafeRows.length,
+    unmapped_rows: unmappedRows,
+    missing_owner_route_rows: missingOwnerRouteRows,
+    unsafe_rows: unsafeRows,
+    families: [...familiesById.values()].sort((left, right) => left.id.localeCompare(right.id)),
     rows,
   };
 }
@@ -515,6 +914,9 @@ function main() {
   const oldUrlConsumers = collectOldUrlConsumers(textFiles);
   const oldUrlConsumerFiles = [...new Set(Object.values(oldUrlConsumers).flat())].sort();
   const legacyClassification = legacyHtmlClassification(legacyHtml);
+  const routeBackedEquivalence = routeBackedEquivalenceMatrix(legacyHtml, legacyClassification);
+  const retireReadiness = lowRiskRetireReadiness(legacyClassification, appRoutes, routeBackedEquivalence);
+  const highRiskOwners = highRiskOwnerMatrix(legacyClassification, appRoutes);
   const oldUrlClassification = oldUrlConsumerClassification(oldUrlConsumers);
 
   const workflowDir = path.join(repoRoot, ".github", "workflows");
@@ -538,6 +940,46 @@ function main() {
   if (!deployInventory.deploy_worker_workflow) errors.push("deploy-worker workflow missing");
   if (!deployInventory.github_pages_workflow) errors.push("GitHub Pages workflow missing");
   if (!deployInventory.wrangler_config) errors.push("wrangler config missing");
+  if (Object.hasOwn(EXPECTED_IFRAME_SRC_BY_ROUTE, "/market")) {
+    errors.push("/market must not be in the route-backed iframe catalog; it is a native /market-valuation bookmark route");
+  }
+  if (routeBackedEquivalence.missing_target_assets.length > 0) {
+    errors.push(`route-backed catalog targets missing public assets: ${routeBackedEquivalence.missing_target_assets.join(", ")}`);
+  }
+  if (routeBackedEquivalence.catalog_targets_missing_route_backed_class.length > 0) {
+    errors.push(`route-backed catalog targets missing inventory class: ${routeBackedEquivalence.catalog_targets_missing_route_backed_class.join(", ")}`);
+  }
+  if (routeBackedEquivalence.route_backed_rows_without_catalog_target.length > 0) {
+    errors.push(`inventory route-backed rows missing catalog target: ${routeBackedEquivalence.route_backed_rows_without_catalog_target.join(", ")}`);
+  }
+  const retireCandidatesMissingProof = retireReadiness.candidates.filter((candidate) => !candidate.static_ready_for_owner_review);
+  if (retireCandidatesMissingProof.length > 0) {
+    errors.push(`low-risk retire candidates missing static replacement proof: ${retireCandidatesMissingProof.map((candidate) => candidate.public_path).join(", ")}`);
+  }
+  if (retireReadiness.delete_authorized_count > 0) {
+    errors.push("low-risk retire readiness must not authorize deletion; owner approval is required outside this gate");
+  }
+  const unsafeApprovalPackets = retireReadiness.candidates.filter((candidate) => (
+    !candidate.owner_approval_packet
+    || candidate.owner_approval_packet.mutation_status !== "not_executed"
+    || candidate.owner_approval_packet.approval_required !== true
+    || candidate.owner_approval_packet.owner_decision_required_before_mutation !== true
+    || !candidate.owner_approval_packet.blocked_actions.includes("delete")
+    || !candidate.owner_approval_packet.blocked_actions.includes("redirect")
+    || !candidate.owner_approval_packet.blocked_actions.includes("deploy")
+  ));
+  if (unsafeApprovalPackets.length > 0) {
+    errors.push(`low-risk retire approval packets must remain owner-gated and non-mutating: ${unsafeApprovalPackets.map((candidate) => candidate.public_path).join(", ")}`);
+  }
+  if (highRiskOwners.unmapped_count > 0) {
+    errors.push(`high-risk legacy HTML rows missing owner family: ${highRiskOwners.unmapped_rows.join(", ")}`);
+  }
+  if (highRiskOwners.missing_owner_route_count > 0) {
+    errors.push(`high-risk legacy HTML rows missing owner route proof: ${highRiskOwners.missing_owner_route_rows.join(", ")}`);
+  }
+  if (highRiskOwners.unsafe_row_count > 0) {
+    errors.push(`high-risk legacy owner rows must remain owner-gated and non-mutating: ${highRiskOwners.unsafe_rows.join(", ")}`);
+  }
 
   const report = {
     schema_version: "canonical-root-inventory/v0.1",
@@ -556,8 +998,15 @@ function main() {
       old_url_unresolved_requires_owner_triage: oldUrlClassification.unresolved_requires_owner_triage.length,
       old_url_owner_approval_required_before_url_change: oldUrlClassification.owner_approval_required_before_url_change.length,
       legacy_html_low_risk_candidates: legacyClassification.safe_first_candidates.length,
+      legacy_html_low_risk_ready_for_owner_review: retireReadiness.static_ready_for_owner_review_count,
+      legacy_html_low_risk_approval_packets_ready: retireReadiness.approval_packet_ready_count,
+      route_backed_catalog_routes: routeBackedEquivalence.catalog_route_count,
+      route_backed_catalog_unique_targets: routeBackedEquivalence.catalog_unique_target_count,
       legacy_html_route_backed: legacyClassification.route_backed.length,
       legacy_html_high_risk: legacyClassification.high_risk_count,
+      legacy_html_high_risk_owner_families: highRiskOwners.owner_family_count,
+      legacy_html_high_risk_unmapped: highRiskOwners.unmapped_count,
+      legacy_html_high_risk_owner_route_missing: highRiskOwners.missing_owner_route_count,
     },
     samples: {
       app_routes: appRoutes.slice(0, 12),
@@ -568,6 +1017,9 @@ function main() {
       legacy_html_route_backed: legacyClassification.route_backed.slice(0, 20),
     },
     legacy_html_classification: legacyClassification,
+    route_backed_equivalence: routeBackedEquivalence,
+    low_risk_retire_readiness: retireReadiness,
+    high_risk_owner_matrix: highRiskOwners,
     deploy_inventory: deployInventory,
     old_url_consumers: oldUrlConsumers,
     old_url_consumer_classification: oldUrlClassification,

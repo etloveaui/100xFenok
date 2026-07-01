@@ -20,6 +20,33 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Local QA
+
+Run `npm run qa:canonical-root-inventory` before any #296 canonical-root
+redirect, legacy delete, or deploy proposal. It is static and makes no network
+or runtime mutation. The report also checks route-backed iframe catalog drift:
+catalog routes, unique public HTML targets, missing assets, shared targets, and
+low-risk helper retirement readiness. A readiness row never authorizes deletion;
+its owner-approval packet records non-mutating pre-approval commands, proposed
+scope, soak, and rollback fields for review. High-risk legacy HTML rows are
+also grouped into owner-route families so PRO IA review starts from the owning
+screen instead of a raw file-delete list.
+
+Run `npm run qa:route-iframe-contract` only against a local Next.js server. It
+defaults to `http://127.0.0.1:3105` and checks the route-backed iframe catalog:
+route HTML must expose the expected iframe `src`, and that iframe asset must
+serve with `?embed=1`. Non-local `QA_BASE_URL` values are refused by default;
+set `QA_ROUTE_IFRAME_ALLOW_REMOTE=1` only for an explicitly approved live smoke.
+
+Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
+changes. It includes the PRO route IA contract: home stays the primary
+search-first entry, Workbench stays secondary, and mobile primary tabs stay
+`홈 / 시장 / 스크리너 / 포트폴리오 / 더보기`.
+
+Run `npm run qa:macro-chart` for the macro-chart/Explore connected-surface
+contract. When bundled Playwright browsers are unavailable, pass local Chrome
+with `QA_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
