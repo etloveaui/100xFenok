@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/100x/daily-wrap,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/ib,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/alpha-scout,/market-valuation,/regime,/market/events,/etfs,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -1012,6 +1012,182 @@ async function collectRouteChecks(page, route) {
       }
       if ((appTitle?.textContent || "").trim() !== "100x Daily Wrap") {
         failures.push({ check: "daily-wrap-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      }
+    }
+
+    {
+      const postsUrl = new URL(currentRoute, window.location.origin);
+      const postsPath = postsUrl.pathname.replace(/\/+$/, "") || "/";
+      if (postsPath === "/posts") {
+        const legacyPath = postsUrl.searchParams.get("path");
+        const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+        const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
+        const appTitle = document.querySelector(".fnk-shell .appbar .title");
+
+        if (legacyPath) {
+          const surface = document.querySelector("[data-posts-detail-surface]");
+          const owner = document.querySelector("[data-posts-detail-route-owner]");
+          const boundary = document.querySelector("[data-posts-detail-boundary]");
+          const chips = Array.from(document.querySelectorAll("[data-posts-detail-boundary-chip]"))
+            .filter((node) => {
+              const rect = node.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+          const ownerLinks = Array.from(document.querySelectorAll("[data-posts-detail-owner-link]"))
+            .filter((node) => {
+              const rect = node.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+          const legacyFrame = document.querySelector("[data-posts-detail-legacy-frame] iframe");
+
+          if (!surface || surface.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "posts-detail-surface-visible", detail: "missing posts detail surface" });
+          }
+          if (!owner || owner.getAttribute("data-posts-detail-route-owner") !== "legacy-post-html") {
+            failures.push({
+              check: "posts-detail-route-owner",
+              detail: `owner=${owner?.getAttribute("data-posts-detail-route-owner") || "missing"}`,
+            });
+          }
+          if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("레거시 리포트")) {
+            failures.push({ check: "posts-detail-boundary-visible", detail: "missing visible posts detail boundary" });
+          }
+
+          const expectedChips = ["archive", "legacy-html", "research"];
+          const actualChips = chips.map((node) => node.getAttribute("data-posts-detail-boundary-chip"));
+          if (
+            chips.length !== expectedChips.length ||
+            !expectedChips.every((chip, index) => actualChips[index] === chip)
+          ) {
+            failures.push({
+              check: "posts-detail-boundary-chip-order",
+              detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+            });
+          }
+          chips.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "posts-detail-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+
+          const expectedLinks = ["/posts", "/alpha-scout", "/100x/daily-wrap"];
+          const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+          if (
+            ownerLinks.length !== expectedLinks.length ||
+            !expectedLinks.every((link, index) => actualLinks[index] === link)
+          ) {
+            failures.push({
+              check: "posts-detail-owner-link-order",
+              detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+            });
+          }
+          ownerLinks.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "posts-detail-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+
+          const frameSrc = legacyFrame instanceof HTMLIFrameElement
+            ? new URL(legacyFrame.src, window.location.origin)
+            : null;
+          if (!frameSrc || frameSrc.pathname !== "/posts-raw/2026-02-21_tariff-ruling-comprehensive.html") {
+            failures.push({
+              check: "posts-detail-legacy-frame-src",
+              detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,
+            });
+          }
+          const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+          if (!activeTabLabel.includes("더보기")) {
+            failures.push({ check: "posts-detail-mobile-tab-active", detail: `active=${activeTabLabel}` });
+          }
+          if ((appTitle?.textContent || "").trim() !== "분석 아카이브 상세") {
+            failures.push({ check: "posts-detail-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+          }
+        } else {
+          const surface = document.querySelector("[data-posts-surface]");
+          const owner = document.querySelector("[data-posts-route-owner]");
+          const boundary = document.querySelector("[data-posts-boundary]");
+          const chips = Array.from(document.querySelectorAll("[data-posts-boundary-chip]"))
+            .filter((node) => {
+              const rect = node.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+          const ownerLinks = Array.from(document.querySelectorAll("[data-posts-owner-link]"))
+            .filter((node) => {
+              const rect = node.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+          const featured = document.querySelector("[data-posts-featured-card]");
+          const archiveCards = Array.from(document.querySelectorAll("[data-posts-card]"))
+            .filter((node) => {
+              const rect = node.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+
+          if (!surface || surface.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "posts-surface-visible", detail: "missing posts landing surface" });
+          }
+          if (!owner || owner.getAttribute("data-posts-route-owner") !== "analysis-archive") {
+            failures.push({
+              check: "posts-route-owner",
+              detail: `owner=${owner?.getAttribute("data-posts-route-owner") || "missing"}`,
+            });
+          }
+          if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("분석 아카이브")) {
+            failures.push({ check: "posts-boundary-visible", detail: "missing visible posts boundary" });
+          }
+
+          const expectedChips = ["archive", "legacy-html", "research"];
+          const actualChips = chips.map((node) => node.getAttribute("data-posts-boundary-chip"));
+          if (
+            chips.length !== expectedChips.length ||
+            !expectedChips.every((chip, index) => actualChips[index] === chip)
+          ) {
+            failures.push({
+              check: "posts-boundary-chip-order",
+              detail: `actual=${JSON.stringify(actualChips)} expected=${JSON.stringify(expectedChips)}`,
+            });
+          }
+          chips.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "posts-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+
+          const expectedLinks = ["/posts", "/alpha-scout", "/100x/daily-wrap"];
+          const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+          if (
+            ownerLinks.length !== expectedLinks.length ||
+            !expectedLinks.every((link, index) => actualLinks[index] === link)
+          ) {
+            failures.push({
+              check: "posts-owner-link-order",
+              detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+            });
+          }
+          ownerLinks.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "posts-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+          if (!featured || featured.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "posts-featured-card-visible", detail: "missing featured post card" });
+          }
+          if (archiveCards.length === 0) {
+            failures.push({ check: "posts-archive-card-visible", detail: "missing archive post cards" });
+          }
+          const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
+          if (!activeTabLabel.includes("더보기")) {
+            failures.push({ check: "posts-mobile-tab-active", detail: `active=${activeTabLabel}` });
+          }
+          if ((appTitle?.textContent || "").trim() !== "분석 아카이브") {
+            failures.push({ check: "posts-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+          }
+        }
       }
     }
 
