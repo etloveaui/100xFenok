@@ -4,8 +4,26 @@ import assert from "node:assert/strict";
 import {
   ETF_CORE_DAILY_BASKET_CONFIG,
   buildEtfCoreDailyBasket,
+  selectBasketRows,
   validateEtfCoreDailyBasket,
 } from "./build-fenok-etf-core-daily-basket.mjs";
+
+function fixtureCandidates(count, { status, scoreBase, prefix }) {
+  const candidates = [];
+  for (const [category, cap] of Object.entries(ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps)) {
+    for (let index = 0; index < cap && candidates.length < count; index += 1) {
+      candidates.push({
+        ticker: `${prefix}${String(candidates.length + 1).padStart(3, "0")}`,
+        category,
+        status,
+        action_score: scoreBase - candidates.length,
+        aum: 1_000_000_000 - candidates.length,
+      });
+    }
+    if (candidates.length >= count) break;
+  }
+  return candidates;
+}
 
 const generatedAt = new Date("2026-06-30T00:00:00.000Z");
 const { admin, summary } = buildEtfCoreDailyBasket({ generatedAt, now: generatedAt });
@@ -50,6 +68,47 @@ if (admin.readiness.core_daily_basket_ready) {
   assert.equal(admin.readiness.blockers.length, 0);
 } else {
   assert.ok(admin.readiness.blockers.length > 0);
+}
+
+{
+  const fresh = fixtureCandidates(ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount, {
+    status: "fresh",
+    scoreBase: 100,
+    prefix: "F",
+  });
+  const stale = [
+    {
+      ticker: "S001",
+      category: "Fixed Income",
+      status: "needs_refresh",
+      action_score: 1_000,
+      aum: 1_000_000_000,
+    },
+  ];
+  const { selected } = selectBasketRows([...stale, ...fresh]);
+  assert.equal(selected.length, ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount);
+  assert.equal(selected.filter((row) => row.status !== "fresh").length, 0);
+  assert.equal(selected.some((row) => row.ticker.startsWith("S")), false);
+}
+
+{
+  const fresh = fixtureCandidates(ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount - 1, {
+    status: "fresh",
+    scoreBase: 100,
+    prefix: "F",
+  });
+  const stale = [
+    {
+      ticker: "S001",
+      category: "Fixed Income",
+      status: "needs_refresh",
+      action_score: 1_000,
+      aum: 1_000_000_000,
+    },
+  ];
+  const { selected } = selectBasketRows([...stale, ...fresh]);
+  assert.equal(selected.length, ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount);
+  assert.ok(selected.some((row) => row.status === "needs_refresh"));
 }
 
 console.log("test-build-fenok-etf-core-daily-basket: ok");

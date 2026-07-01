@@ -346,15 +346,24 @@ function buildRows({ signalSummary, actionIndex, detailCoverage, newEtfs, now })
   };
 }
 
-function selectBasketRows(structuralCandidates) {
+export function selectBasketRows(structuralCandidates) {
   const selected = [];
   const selectedByCategory = {};
-  for (const row of [...structuralCandidates].sort(basketSort)) {
+  const sortedCandidates = [...structuralCandidates].sort(basketSort);
+  const addRow = (row) => {
     const category = categoryKey(row.category);
-    if ((selectedByCategory[category] ?? 0) >= categoryCap(category)) continue;
+    if ((selectedByCategory[category] ?? 0) >= categoryCap(category)) return false;
     selectedByCategory[category] = (selectedByCategory[category] ?? 0) + 1;
     selected.push({ ...row, category });
+    return true;
+  };
+
+  for (const row of sortedCandidates.filter((candidate) => candidate.status === "fresh")) addRow(row);
+
+  if (selected.length < ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount) {
+    for (const row of sortedCandidates.filter((candidate) => candidate.status !== "fresh")) addRow(row);
   }
+
   return {
     selected,
     selectedByCategory: Object.fromEntries(Object.entries(selectedByCategory).sort(([a], [b]) => a.localeCompare(b))),
@@ -481,6 +490,8 @@ export function buildEtfCoreDailyBasket({
       detail_stockanalysis_files: Number(sourceDetailCoverage?.counts?.stockanalysis_detail_files) || null,
       detail_yahoo_fallback_files: Number(sourceDetailCoverage?.counts?.yahoo_fallback_files) || null,
       structural_candidate_count: structuralCandidates.length,
+      fresh_structural_candidate_count: structuralCandidates.filter((row) => row.status === "fresh").length,
+      stale_structural_candidate_count: structuralCandidates.filter((row) => row.status !== "fresh").length,
       selected_count: selected.length,
       fresh_selected_count: freshRows.length,
       stale_selected_count: staleRows.length,
