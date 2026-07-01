@@ -517,6 +517,26 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "superinvestors-insights-scroll-regions", detail: `visible regions=${regions.length}` });
       }
       if (currentRoute.includes("tab=insights")) {
+        const status = document.querySelector("[data-superinvestor-insights-status]");
+        const quarter = document.querySelector("[data-superinvestor-insights-quarter]");
+        const lag = document.querySelector("[data-superinvestor-insights-lag]");
+        const stale = document.querySelector("[data-superinvestor-insights-stale]");
+        const excludedCount = Number.parseInt(status?.getAttribute("data-superinvestor-insights-excluded-count") || "", 10);
+        if (!status || status.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-insights-status-visible", detail: "missing visible insights status strip" });
+        }
+        if (!quarter || !/\d{4}-Q\d/.test(quarter.textContent || "")) {
+          failures.push({ check: "superinvestors-insights-quarter", detail: `quarter=${quarter?.textContent || ""}` });
+        }
+        if (!lag || !(lag.textContent || "").includes("45")) {
+          failures.push({ check: "superinvestors-insights-13f-lag", detail: `lag=${lag?.textContent || ""}` });
+        }
+        if (!Number.isFinite(excludedCount) || excludedCount < 0) {
+          failures.push({ check: "superinvestors-insights-excluded-count", detail: `excluded=${status?.getAttribute("data-superinvestor-insights-excluded-count") || ""}` });
+        }
+        if (Number.isFinite(excludedCount) && excludedCount > 0 && (!stale || !/\d+명/.test(stale.textContent || ""))) {
+          failures.push({ check: "superinvestors-insights-stale-chip", detail: `stale=${stale?.textContent || ""}` });
+        }
         const heatmap = document.querySelector("[data-superinvestor-accumulation-heatmap]");
         const tiles = Array.from(document.querySelectorAll("[data-superinvestor-accumulation-tile]"))
           .filter((node) => {

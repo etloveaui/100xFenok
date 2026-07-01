@@ -140,6 +140,98 @@ function SkeletonCard() {
   );
 }
 
+function UnavailablePanel({ label }: { label: string }) {
+  return (
+    <div data-superinvestor-insights-empty-state className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-500">
+      {label} 데이터를 불러오지 못했습니다. 다른 인사이트는 계속 확인할 수 있습니다.
+    </div>
+  );
+}
+
+type InsightMetadata = {
+  quarter?: string;
+  investors_included?: string[];
+  investors_excluded?: Array<{ id: string; latest_quarter?: string }>;
+  excluded_stale_investors?: string[];
+  current_cohort_investors?: number;
+  investors_count?: number;
+  cohort_count?: number;
+  generated_at?: string;
+  disclaimer?: string;
+};
+
+function formatGeneratedAt(value?: string): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return `${parsed.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
+
+function SuperinvestorInsightsStatus({ metadata }: { metadata: Array<InsightMetadata | undefined> }) {
+  const available = metadata.filter((item): item is InsightMetadata => Boolean(item));
+  const quarter = available.find((item) => item.quarter)?.quarter ?? "";
+  const cohortCount =
+    available.find((item) => item.current_cohort_investors)?.current_cohort_investors ??
+    available.find((item) => item.investors_included?.length)?.investors_included?.length ??
+    available.find((item) => item.cohort_count)?.cohort_count ??
+    available.find((item) => item.investors_count)?.investors_count ??
+    null;
+  const generatedAt = formatGeneratedAt(available.find((item) => item.generated_at)?.generated_at);
+  const disclaimer = available.find((item) => item.disclaimer)?.disclaimer;
+  const excluded = new Map<string, string | undefined>();
+  for (const item of available) {
+    for (const investor of item.investors_excluded ?? []) {
+      excluded.set(investor.id, investor.latest_quarter);
+    }
+    for (const id of item.excluded_stale_investors ?? []) {
+      if (!excluded.has(id)) excluded.set(id, undefined);
+    }
+  }
+  const excludedSummary = [...excluded.entries()]
+    .map(([id, latest]) => (latest ? `${id} ${latest}` : id))
+    .slice(0, 4)
+    .join(", ");
+
+  return (
+    <div
+      data-superinvestor-insights-status
+      data-superinvestor-insights-excluded-count={excluded.size}
+      className="rounded-[1.2rem] border border-emerald-100 bg-emerald-50/70 px-3 py-3 shadow-[var(--sh-sm)]"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          data-superinvestor-insights-quarter
+          className="inline-flex min-h-8 items-center rounded-full border border-emerald-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700"
+        >
+          {quarter ? `${quarter} 기준` : "분기 확인 중"}
+        </span>
+        <span
+          data-superinvestor-insights-cohort
+          className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black text-slate-700"
+        >
+          {cohortCount ? `${cohortCount}명 반영` : "코호트 확인 중"}
+        </span>
+        <span
+          data-superinvestor-insights-lag
+          className="inline-flex min-h-8 items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 text-[10px] font-black text-amber-700"
+        >
+          13F 최대 45일 지연
+        </span>
+        <span
+          data-superinvestor-insights-stale
+          className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black text-slate-600"
+          title={excludedSummary || undefined}
+        >
+          stale 제외 {excluded.size}명
+        </span>
+      </div>
+      <p className="mt-2 text-[10px] font-semibold leading-relaxed text-[var(--c-ink-3)]">
+        {generatedAt ? `생성 ${generatedAt}` : "생성 시각 미표기"} · {disclaimer ?? "13F 분기 스냅샷 기반으로 장중 매매, 숏 포지션, 비13F 자산은 제외됩니다."}
+      </p>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Card 1: 매수 압력
 // ---------------------------------------------------------------------------
@@ -584,7 +676,7 @@ export default function InsightsTab() {
 
   if (failed) {
     return (
-        <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+        <div data-superinvestor-insights-error className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
           기관 공시 인사이트 데이터를 불러오지 못했습니다.
         </div>
     );
@@ -615,38 +707,40 @@ export default function InsightsTab() {
         </div>
       ) : (
         <div className="space-y-4">
+          <SuperinvestorInsightsStatus metadata={[tr?.metadata, pv?.metadata, bp?.metadata, np?.metadata, hhi?.metadata, ce?.metadata]} />
+
           {/* 0. 리스크-수익 분포 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">리스크-수익 분포</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">거장 포트폴리오의 연수익률 대비 연변동성 — SPY와 비교</p>
-            {pv ? <RiskReturnScatter data={pv} /> : <SkeletonCard />}
+            {pv ? <RiskReturnScatter data={pv} /> : <UnavailablePanel label="리스크-수익 분포" />}
           </div>
 
           {/* 0b. 동일기간 누적 수익 오버레이 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">2021-Q1 기준 누적 수익 (동일기간)</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">22개 분기 전체 데이터를 가진 투자자만 대상으로 2021-Q1 기준 100에서 누적 성과 비교</p>
-            {pv ? <CumulativeReturnOverlay data={pv} /> : <SkeletonCard />}
+            {pv ? <CumulativeReturnOverlay data={pv} /> : <UnavailablePanel label="동일기간 누적 수익" />}
           </div>
 
           {/* 0c. Fama-French 파생 팩터 틸트 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">팩터 틸트 레이더</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">FF-derived factor tilt · confidence · coverage · as_of</p>
-            {fx ? <FactorExposureRadar data={fx} /> : <SkeletonCard />}
+            {fx ? <FactorExposureRadar data={fx} /> : <UnavailablePanel label="팩터 틸트" />}
           </div>
 
           {/* 1. 매수 압력 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
-            {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <SkeletonCard />}
+            {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <UnavailablePanel label="매수 압력" />}
           </div>
 
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">거장 누적 매수 heat-map</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">매수 참여 투자자 수로 정렬한 종목 heat-map — 진할수록 더 많은 투자자가 같은 분기에 매수</p>
-            {tr ? <AccumulationHeatmap trades={tr} /> : <SkeletonCard />}
+            {tr ? <AccumulationHeatmap trades={tr} /> : <UnavailablePanel label="거장 누적 매수 heat-map" />}
             <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
               {tr?.metadata.quarter ?? quarterLabel} 기준 · 순매수 금액은 막대 길이, 참여 투자자 수는 타일 진하기로 표시합니다.
             </p>
@@ -657,20 +751,20 @@ export default function InsightsTab() {
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">신규 편입 빅베팅</h3>
               <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
-              {np ? <NewPositionsCard data={np} /> : <SkeletonCard />}
+              {np ? <NewPositionsCard data={np} /> : <UnavailablePanel label="신규 편입 빅베팅" />}
             </div>
 
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">고확신 신규 편입</h3>
               <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
-              {ce ? <HighConvictionNewCard data={ce} /> : <SkeletonCard />}
+              {ce ? <HighConvictionNewCard data={ce} /> : <UnavailablePanel label="고확신 신규 편입" />}
             </div>
 
             {/* 3. 확신 베팅 */}
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">확신 베팅 (TOP5)</h3>
               <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
-              {cv ? <ConvictionCard data={cv} /> : <SkeletonCard />}
+              {cv ? <ConvictionCard data={cv} /> : <UnavailablePanel label="확신 베팅" />}
             </div>
           </div>
 
@@ -678,7 +772,7 @@ export default function InsightsTab() {
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">집중도 (HHI)</h3>
             <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
-            {hhi ? <HhiCard data={hhi} /> : <SkeletonCard />}
+            {hhi ? <HhiCard data={hhi} /> : <UnavailablePanel label="집중도" />}
           </div>
         </div>
       )}
