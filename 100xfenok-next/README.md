@@ -81,6 +81,26 @@ it must stay `active=false` and no-mutation until rank 1 has both a valid owner
 record and a recorded no-mutation follow-up. The inactive preview also carries
 a prep-only local smoke matrix for the rank-2 owner route, compatibility route,
 and legacy sample; that matrix is not rank release or live production proof.
+The safe enforcement slices must also include
+`rank2_pre_activation_local_smoke_prep`, which is still no-mutation and only
+allows recording those inactive local smoke commands before rank-2 owner review.
+To print the inactive rank-2 local smoke record skeleton, use `node
+scripts/build-macro-owner-decision-packet.mjs --rank2-pre-activation-template`;
+the skeleton must keep runtime status blank and `mutation_approved=false`. Rank-2
+smoke commands are matched by exact local URL path, so `/market` and
+`/market-valuation` stay distinct. To validate a filled rank-2 pre-activation
+record without activating rank 2, call `node
+scripts/build-macro-owner-decision-packet.mjs
+--rank2-pre-activation-record-json=...` or use
+`--rank2-pre-activation-record <file>`; the record must match the template rows,
+report `local_runtime_smoke_passed`, keep every row `ok=true`, and keep
+`mutation_approved=false`.
+For the rank-1 follow-up gate after a valid owner decision record, use `node
+scripts/build-macro-owner-decision-packet.mjs --decision-record-json=...
+--decision-followup-record-template` to print the selected no-mutation follow-up
+record skeleton, then validate a filled record with
+`--decision-followup-record-json=...` or `--decision-followup-record <file>`.
+The follow-up record still cannot request rank-2 release or mutation.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary
