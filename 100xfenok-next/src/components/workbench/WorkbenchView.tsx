@@ -1,4 +1,5 @@
 import AppShell from "@/components/shell/AppShell";
+import TransitionLink from "@/components/TransitionLink";
 import ExploreHotTopics from "@/app/explore/ExploreHotTopics";
 import ExploreDashboard from "@/app/explore/ExploreDashboard";
 import MarketThermometer from "@/app/explore/MarketThermometer";
@@ -8,12 +9,41 @@ import StockWorkbenchCard from "@/app/explore/StockWorkbenchCard";
 import MacroPlaybookCard from "@/app/explore/MacroPlaybookCard";
 import EtfUniverseCard from "@/app/explore/EtfUniverseCard";
 import { WORKBENCH_PRODUCT_TITLE } from "@/lib/product-nav";
+import { ROUTES } from "@/lib/routes";
+
+const WORKBENCH_GATEWAY_LINKS = [
+  { label: "시장", meta: "밸류·구조", href: ROUTES.market },
+  { label: "섹터", meta: "흐름·ETF", href: ROUTES.sectors },
+  { label: "ETF", meta: "유니버스", href: ROUTES.etfs },
+  { label: "스크리너", meta: "조건 검색", href: ROUTES.screener },
+  { label: "13F", meta: "수급 변화", href: ROUTES.superinvestors },
+  { label: "포트폴리오", meta: "보유·현금", href: ROUTES.portfolio },
+  { label: "차트", meta: "매크로", href: ROUTES.macroChart },
+] as const;
 
 export default function WorkbenchView() {
   return (
     <div className="fnk-shell">
       <AppShell active="workbench" title={WORKBENCH_PRODUCT_TITLE}>
         <SignalStrip />
+
+        <nav
+          aria-label="워크벤치 전용 화면"
+          data-workbench-gateway
+          className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7"
+        >
+          {WORKBENCH_GATEWAY_LINKS.map((link) => (
+            <TransitionLink
+              key={link.href}
+              href={link.href}
+              data-workbench-owner-link
+              className="min-h-14 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 transition hover:border-brand-interactive hover:bg-[var(--c-surface-2)]"
+            >
+              <span className="block text-sm font-black text-[var(--c-ink)]">{link.label}</span>
+              <span className="mt-0.5 block text-[10px] font-semibold text-[var(--c-ink-3)]">{link.meta}</span>
+            </TransitionLink>
+          ))}
+        </nav>
 
         <div className="cols" style={{ marginTop: "var(--s4)" }}>
           <div className="col-a">

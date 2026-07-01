@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/workbench,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/superinvestors?tab=insights")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -134,6 +134,47 @@ async function collectRouteChecks(page, route) {
       if (featureTiles.length < 4 || featureTiles.length > 6) {
         failures.push({ check: "home-feature-tile-count", detail: `visible tiles=${featureTiles.length}` });
       }
+    }
+
+    if (currentRoute.startsWith("/workbench")) {
+      const gateway = document.querySelector("[data-workbench-gateway]");
+      const ownerLinks = Array.from(document.querySelectorAll("[data-workbench-owner-link]"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+
+      if (!gateway || gateway.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "workbench-gateway-visible", detail: "missing visible workbench gateway" });
+      }
+
+      const expectedLinks = [
+        "/market-valuation",
+        "/sectors",
+        "/etfs",
+        "/screener",
+        "/superinvestors",
+        "/portfolio",
+        "/macro-chart",
+      ];
+      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+      const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
+      if (
+        ownerLinks.length !== expectedLinks.length ||
+        !expectedLinks.every((href, index) => actualLinks[index] === href)
+      ) {
+        failures.push({
+          check: "workbench-owner-link-order",
+          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
+        });
+      }
+
+      ownerLinks.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "workbench-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
+        }
+      });
     }
 
     if (currentRoute.startsWith("/screener")) {
