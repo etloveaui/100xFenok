@@ -268,6 +268,53 @@ function selectedDecisionFollowup(packet) {
   };
 }
 
+function inactiveNextCandidatePreview(inventory, review) {
+  const nextCandidate = review.next_queue_candidate_after_owner_decision;
+  if (!nextCandidate) return null;
+
+  const queueItem = inventory.high_risk_owner_matrix?.owner_review_queue
+    ?.find((item) => item.family_id === nextCandidate.family_id) ?? null;
+  const packet = queueItem?.packet ?? null;
+
+  return {
+    schema_version: "inactive-owner-review-preview/v0.1",
+    active: false,
+    activation_status: "blocked_until_rank1_owner_record_and_no_mutation_followup",
+    mutation: "none",
+    mutation_allowed: false,
+    owner_record_required: true,
+    separate_mutation_approval_required: true,
+    blocked_by: [
+      `${review.family_id} owner decision record is still required`,
+      `${review.family_id} no-mutation follow-up packet is still required`,
+      "redirect/delete/deploy require separate explicit owner approval",
+    ],
+    rank1_family_id: review.family_id,
+    candidate: {
+      rank: nextCandidate.rank,
+      family_id: nextCandidate.family_id,
+      owner_route: nextCandidate.owner_route,
+      compatibility_route: nextCandidate.compatibility_route,
+      legacy_row_count: nextCandidate.legacy_row_count,
+      packet_ready: nextCandidate.packet_ready,
+      blocked_actions: nextCandidate.blocked_actions,
+      priority_reason: queueItem?.priority_reason ?? null,
+      recommended_slice: queueItem?.recommended_slice ?? null,
+      pro_screen_model_acceptance_ready: Boolean(queueItem?.pro_screen_model_acceptance?.acceptance_ready),
+      home_primary_allowed: queueItem?.pro_screen_model_acceptance?.home_primary_allowed ?? null,
+      mobile_primary_allowed: queueItem?.pro_screen_model_acceptance?.mobile_primary_allowed ?? null,
+      local_smoke_paths: packet?.local_smoke_paths ?? [],
+      pre_approval_local_commands: packet?.pre_approval_local_commands ?? [],
+    },
+    release_requirements: [
+      "rank 1 owner decision record validates as valid_no_mutation",
+      "rank 1 selected decision follow-up is recorded without mutation",
+      "rank 2 local commands pass before owner review",
+      "rank 2 owner decision is still required before any redirect/delete/deploy proposal",
+    ],
+  };
+}
+
 function validateDecisionRecord(record, packet) {
   const errors = [];
   if (!record) return errors;
@@ -369,6 +416,7 @@ function buildDecisionPacket(inventory, liveProof, decisionRecord) {
     safe_enforcement_slices: safeEnforcementSlices(review, nextCandidate),
     decision_followup_plans: decisionFollowupPlans(review, nextCandidate),
     selected_decision_followup: null,
+    inactive_next_candidate_preview: inactiveNextCandidatePreview(inventory, review),
     next_queue_candidate_after_owner_decision: nextCandidate,
   };
 }
@@ -451,6 +499,29 @@ function validatePacket(packet) {
       errors.push(`decision followup plans missing decisions: ${Array.from(expectedDecisions).join(",")}`);
     }
   }
+  if (!packet.inactive_next_candidate_preview) {
+    errors.push("inactive next candidate preview must stay visible");
+  } else {
+    const preview = packet.inactive_next_candidate_preview;
+    if (preview.active !== false || preview.mutation !== "none" || preview.mutation_allowed !== false) {
+      errors.push("inactive next candidate preview must remain inactive and no-mutation");
+    }
+    if (preview.owner_record_required !== true || preview.separate_mutation_approval_required !== true) {
+      errors.push("inactive next candidate preview must require owner record and separate mutation approval");
+    }
+    if (preview.candidate?.family_id !== packet.next_queue_candidate_after_owner_decision?.family_id) {
+      errors.push(`inactive next candidate preview family mismatch: ${preview.candidate?.family_id}`);
+    }
+    if (preview.candidate?.pro_screen_model_acceptance_ready !== true) {
+      errors.push("inactive next candidate preview must carry ready PRO screen-model acceptance");
+    }
+    if (preview.candidate?.home_primary_allowed !== false || preview.candidate?.mobile_primary_allowed !== false) {
+      errors.push("inactive next candidate preview must keep legacy content out of Home/mobile primary IA");
+    }
+    if (!Array.isArray(preview.candidate?.local_smoke_paths) || preview.candidate.local_smoke_paths.length === 0) {
+      errors.push("inactive next candidate preview must expose local smoke paths");
+    }
+  }
   const decisionRecordErrors = validateDecisionRecord(packet.supplied_decision_record, packet);
   errors.push(...decisionRecordErrors);
   if (packet.supplied_decision_record && decisionRecordErrors.length === 0) {
@@ -481,6 +552,7 @@ function printText(packet) {
   if (packet.selected_decision_followup) {
     console.log(`selected_decision_followup=${packet.selected_decision_followup.id}`);
   }
+  console.log(`inactive_next_candidate_preview=${packet.inactive_next_candidate_preview.candidate.family_id}`);
   console.log("decision_record_template_command=node scripts/build-macro-owner-decision-packet.mjs --decision-record-template");
   console.log(`next_queue_candidate=${packet.next_queue_candidate_after_owner_decision.family_id}`);
   console.log("decision_options=preserve,remap,retire");

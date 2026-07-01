@@ -76,7 +76,9 @@ no-mutation and must require a valid owner record before queue release. After a
 valid owner record is supplied, the packet still selects only a decision-specific
 no-mutation follow-up plan: preserve documentation, remap dry-run proposal, or
 retire readiness packet. Redirect, delete, and deploy remain separate explicit
-owner approvals.
+owner approvals. Rank 2 is exposed only as an inactive next-candidate preview;
+it must stay `active=false` and no-mutation until rank 1 has both a valid owner
+record and a recorded no-mutation follow-up.
 
 Run `npm run qa:routes` after route/key, AppShell IA, or Home/Workbench owner
 changes. It includes the PRO route IA contract: home stays the primary
