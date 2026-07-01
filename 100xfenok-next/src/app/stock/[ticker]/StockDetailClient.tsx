@@ -964,6 +964,83 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
   );
 }
 
+function StockEstimatesPanel({
+  detail,
+  years,
+  currency,
+}: {
+  detail: any;
+  years: string[];
+  currency: string;
+}) {
+  const [granularity, setGranularity] = useState<"annual" | "quarterly">("annual");
+  const fy1Per = detail.valuation_estimates?.per?.fy1;
+  const fy1Revenue = detail.income_statement_estimates?.revenue?.fy1;
+  const fy1Eps = detail.per_share_estimates?.eps?.fy1;
+  const fy1RevenueGrowth = detail.growth_estimates?.revenue_growth?.fy1;
+  const fy1EpsGrowth = detail.growth_estimates?.eps_growth?.fy1;
+  const epsChange = detail.eps_consensus?.weekly_change?.fy_plus_1;
+  const consensusCards = [
+    { label: "FY+1 PER", value: isFiniteNumber(fy1Per) ? `${fy1Per.toFixed(1)}x` : "—", note: "밸류 컨센서스" },
+    { label: "FY+1 매출", value: isFiniteNumber(fy1Revenue) ? fmtLarge(fy1Revenue) : "—", note: "연간 추정" },
+    { label: "FY+1 EPS", value: isFiniteNumber(fy1Eps) ? formatMoney(fy1Eps, currency) : "—", note: "비GAAP 여부 원문 확인" },
+    { label: "매출 성장", value: fmtWholeSignedPct(fy1RevenueGrowth), note: "FY+1 YoY" },
+    { label: "EPS 성장", value: fmtWholeSignedPct(fy1EpsGrowth), note: "FY+1 YoY" },
+    { label: "EPS 변화", value: isFiniteNumber(epsChange) ? fmtPct(epsChange) : "—", note: "최근 주간 변화" },
+  ];
+
+  return (
+    <SectionCard title="추정치 변화">
+      <div data-stock-estimates-consensus-summary className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {consensusCards.map((card) => (
+          <div key={card.label} data-stock-estimates-consensus-card className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
+            <p className="orbitron mt-1 text-base font-black tabular-nums text-slate-950">{card.value}</p>
+            <p className="mt-1 text-[10px] font-semibold text-slate-500">{card.note}</p>
+          </div>
+        ))}
+      </div>
+      <div data-stock-estimates-granularity-control className="mt-4 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+        {[
+          { key: "annual" as const, label: "연간" },
+          { key: "quarterly" as const, label: "분기" },
+        ].map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            data-stock-estimates-granularity={item.key}
+            aria-pressed={granularity === item.key}
+            onClick={() => setGranularity(item.key)}
+            className={`min-h-9 rounded-md px-3 text-[11px] font-black transition ${
+              granularity === item.key
+                ? "bg-white text-slate-950 shadow-sm"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {granularity === "annual" ? (
+        <div data-stock-estimates-annual-panel data-stock-estimates-detail-table className="mt-3">
+          <RevisionPulse detail={detail} />
+          <CompactFinancialTable detail={detail} years={years} />
+        </div>
+      ) : (
+        <div data-stock-estimates-quarterly-panel className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3">
+          <p className="text-[11px] font-black text-slate-800">분기 추정치 연결 대기</p>
+          <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+            현재 공개 추정치 정규화는 FY+1~3 연간 축을 우선 표시합니다. 분기 컨센서스가 들어오면 같은 순서로 요약 → 변화 → 상세 표를 채웁니다.
+          </p>
+        </div>
+      )}
+      <p data-stock-estimate-disclosure="true" className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
+        출처: StockAnalysis/Yahoo 계열 추정치 정규화 데이터. EPS 기준(희석/조정 여부)은 제공자 원문 확인이 필요합니다.
+      </p>
+    </SectionCard>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // GuruSection
 // ---------------------------------------------------------------------------
@@ -1686,13 +1763,7 @@ export default function StockDetailClient({
             ) : null}
 
             {activeStockTab === "estimates" ? (
-              <SectionCard title="추정치 변화">
-                <RevisionPulse detail={detail} />
-                <CompactFinancialTable detail={detail} years={years} />
-                <p data-stock-estimate-disclosure="true" className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
-                  출처: StockAnalysis/Yahoo 계열 추정치 정규화 데이터. EPS 기준(희석/조정 여부)은 제공자 원문 확인이 필요합니다.
-                </p>
-              </SectionCard>
+              <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} />
             ) : null}
 
             {activeStockTab === "ownership" ? (

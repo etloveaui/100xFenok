@@ -415,6 +415,48 @@ async function collectRouteChecks(page, route) {
         if (!disclosure || disclosure.getBoundingClientRect().height <= 0) {
           failures.push({ check: "stock-estimate-disclosure-present", detail: "missing visible estimate source/EPS basis disclosure" });
         }
+        const consensusSummary = document.querySelector("[data-stock-estimates-consensus-summary]");
+        const consensusCards = Array.from(document.querySelectorAll("[data-stock-estimates-consensus-card]"))
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        const granularityControl = document.querySelector("[data-stock-estimates-granularity-control]");
+        const granularityButtons = Array.from(document.querySelectorAll("[data-stock-estimates-granularity]"))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        const annualPanel = document.querySelector("[data-stock-estimates-annual-panel]");
+        const detailTable = document.querySelector("[data-stock-estimates-detail-table]");
+        if (!consensusSummary || consensusSummary.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "stock-estimates-consensus-summary-visible", detail: "missing visible consensus summary" });
+        }
+        if (consensusCards.length < 4) {
+          failures.push({ check: "stock-estimates-consensus-card-count", detail: `cards=${consensusCards.length}` });
+        }
+        const expectedGranularity = ["annual", "quarterly"];
+        const actualGranularity = granularityButtons.map((node) => node.getAttribute("data-stock-estimates-granularity"));
+        if (
+          !granularityControl ||
+          granularityButtons.length !== expectedGranularity.length ||
+          !expectedGranularity.every((key, index) => actualGranularity[index] === key)
+        ) {
+          failures.push({
+            check: "stock-estimates-granularity-control",
+            detail: `actual=${JSON.stringify(actualGranularity)} expected=${JSON.stringify(expectedGranularity)}`,
+          });
+        }
+        if (consensusSummary && detailTable) {
+          const summaryTop = consensusSummary.getBoundingClientRect().top;
+          const detailTop = detailTable.getBoundingClientRect().top;
+          if (summaryTop > detailTop + 1) {
+            failures.push({
+              check: "stock-estimates-consensus-before-detail",
+              detail: `summaryTop=${summaryTop} detailTop=${detailTop}`,
+            });
+          }
+        }
+        if (!annualPanel || annualPanel.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "stock-estimates-annual-panel-visible", detail: "missing visible annual estimates panel" });
+        }
       }
       if (stockTab === "financials" || stockTab === "estimates") {
         const financialTables = Array.from(document.querySelectorAll("[data-stock-financial-table]"))
@@ -569,6 +611,52 @@ async function collectStockFinancialChartChecks(page, route) {
   }, route);
 }
 
+async function collectStockEstimatesToggleChecks(page, route) {
+  const button = page.locator('[data-stock-estimates-granularity="quarterly"]').first();
+  if ((await button.count()) === 0) {
+    return {
+      route,
+      viewportWidth: null,
+      scrollWidth: null,
+      failures: [{ check: "stock-estimates-quarterly-toggle-click", detail: "no quarterly estimates toggle" }],
+    };
+  }
+
+  await button.click({ timeout: 10000 });
+  await page.waitForTimeout(250);
+
+  return page.evaluate((currentRoute) => {
+    const failures = [];
+    const viewportWidth = window.innerWidth;
+    const scrollWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    );
+    const panel = document.querySelector("[data-stock-estimates-quarterly-panel]");
+    const quarterlyButton = document.querySelector('[data-stock-estimates-granularity="quarterly"]');
+
+    if (!panel || panel.getBoundingClientRect().height <= 0) {
+      failures.push({ check: "stock-estimates-quarterly-panel-visible", detail: "quarterly estimates panel not visible after click" });
+    }
+    if (quarterlyButton?.getAttribute("aria-pressed") !== "true") {
+      failures.push({ check: "stock-estimates-quarterly-toggle-state", detail: "quarterly toggle not pressed after click" });
+    }
+    if (scrollWidth > viewportWidth + 1) {
+      failures.push({
+        check: "stock-estimates-quarterly-no-horizontal-overflow",
+        detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+      });
+    }
+
+    return {
+      route: currentRoute,
+      viewportWidth,
+      scrollWidth,
+      failures,
+    };
+  }, route);
+}
+
 if (routes.length === 0) {
   throw new Error("No QA_MOBILE_UX_ROUTES configured.");
 }
@@ -618,6 +706,11 @@ try {
           const financialChartChecks = await collectStockFinancialChartChecks(page, route);
           result.failures.push(...financialChartChecks.failures);
           result.financialChartScrollWidth = financialChartChecks.scrollWidth;
+        }
+        if (route.startsWith("/stock/") && route.includes("tab=estimates")) {
+          const estimatesToggleChecks = await collectStockEstimatesToggleChecks(page, route);
+          result.failures.push(...estimatesToggleChecks.failures);
+          result.estimatesToggleScrollWidth = estimatesToggleChecks.scrollWidth;
         }
       } catch (error) {
         result.failures = [{ check: "navigation", detail: String(error) }];
