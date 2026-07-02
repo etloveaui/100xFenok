@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import CpScreenerTanstackLab from "@/components/canvas-plus/CpScreenerTanstackLab";
+import CpScreenerTanstackLabClient from "@/components/canvas-plus/CpScreenerTanstackLabClient";
 
 export const metadata: Metadata = {
   title: "CANVAS+ TanStack Screener Lab | 100xFenok",
@@ -12,7 +12,7 @@ export default function CanvasPlusScreenerTanstackPage() {
   return (
     <div className="canvas-plus" data-canvas-plus data-canvas-plus-screener-tanstack-page>
       <main className="cp-lab">
-        <CpScreenerTanstackLab />
+        <CpScreenerTanstackLabClient />
       </main>
     </div>
   );

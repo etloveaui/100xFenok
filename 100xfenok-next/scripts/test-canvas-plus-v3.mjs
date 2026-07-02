@@ -53,8 +53,8 @@ assert.ok(mobileCardMinHeight, "mobile card min-height must be declared");
 assert.ok(Number(mobileCardMinHeight) >= 320 && Number(mobileCardMinHeight) <= 420, "mobile card target height must stay 320-420px");
 
 const routeContract = fs.readFileSync(path.join(appRoot, "scripts/check-route-key-contract.mjs"), "utf8");
-assert.ok(routeContract.includes("page_route_count: 49"), "route contract page count must include V3 lab routes");
-assert.ok(routeContract.includes("out_of_scope_count: 8"), "route contract must classify V3 lab routes as out of scope");
+assert.ok(routeContract.includes("page_route_count: 51"), "route contract page count must include V3 lab routes");
+assert.ok(routeContract.includes("out_of_scope_count: 10"), "route contract must classify V3 lab routes as out of scope");
 
 const routesSource = fs.readFileSync(path.join(appRoot, "src/lib/routes.ts"), "utf8");
 const sitemapSource = fs.readFileSync(path.join(appRoot, "src/app/sitemap.ts"), "utf8");

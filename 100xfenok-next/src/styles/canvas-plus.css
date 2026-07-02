@@ -402,6 +402,118 @@
   border-radius: var(--cp-radius-lg);
 }
 
+.cp-lab__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cp-chart-shell {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-chart-bg);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent),
+    0 12px 30px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
+}
+
+.cp-chart-shell[data-density="compact"] {
+  gap: 8px;
+  padding: 12px;
+}
+
+.cp-chart-shell[data-density="comfy"] {
+  gap: 16px;
+  padding: 22px;
+}
+
+.cp-chart-shell__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 14px;
+}
+
+.cp-chart-shell__title {
+  color: var(--cp-text-strong);
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.cp-chart-shell__range {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  color: var(--cp-text-muted);
+  background: var(--cp-surface-muted);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.cp-chart-summary {
+  max-width: 720px;
+  margin-top: 4px;
+  color: var(--cp-text-muted);
+  font-size: 13px;
+}
+
+.cp-chart-shell__canvas {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--cp-chart-grid);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-chart-bg);
+}
+
+.cp-chart-skeleton {
+  min-height: 180px;
+  border: 1px solid var(--cp-chart-grid);
+  border-radius: var(--cp-radius-md);
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent),
+    var(--cp-surface-muted);
+  background-size: 220px 100%, auto;
+  animation: cp-chart-skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+.cp-chart-fallback {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  padding: 18px;
+  border: 1px dashed var(--cp-border-strong);
+  border-radius: var(--cp-radius-md);
+  color: var(--cp-text-muted);
+  background: var(--cp-surface-muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+@keyframes cp-chart-skeleton-sweep {
+  from {
+    background-position: -220px 0, 0 0;
+  }
+
+  to {
+    background-position: calc(100% + 220px) 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-chart-skeleton {
+    animation: none;
+  }
+}
+
 .cp-poc {
   display: grid;
   gap: 18px;
