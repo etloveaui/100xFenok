@@ -343,18 +343,23 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
         const investorIntensity = row.investors_count / maxInvestors;
         const amountIntensity = Math.min(1, Math.abs(row.amount) / maxAmount);
         const heat = Math.round(18 + investorIntensity * 34);
+        const stockHref = ROUTES.stock(row.ticker);
         return (
-          <TransitionLink
+          <div
             key={`${row.rank}-${row.ticker}`}
-            href={ROUTES.stock(row.ticker)}
             data-superinvestor-accumulation-tile
             data-superinvestor-accumulation-investors={row.investors_count}
-            data-superinvestor-accumulation-link
             className="block min-h-[44px] min-w-0 rounded-xl border border-emerald-200 px-3 py-3 transition hover:border-emerald-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             style={{ backgroundColor: `color-mix(in srgb, var(--c-up) ${heat}%, var(--c-panel))` }}
           >
             <div className="flex min-w-0 items-start justify-between gap-2">
-              <TickerChip ticker={row.ticker} variant="inline" />
+              <TransitionLink
+                href={stockHref}
+                data-superinvestor-accumulation-link
+                className="inline-flex min-h-11 items-center py-1 font-black text-brand-interactive touch-manipulation hover:underline"
+              >
+                {row.ticker}
+              </TransitionLink>
               <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-black tabular-nums text-emerald-700">
                 #{row.rank}
               </span>
@@ -373,7 +378,7 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
             <p className="mt-1 truncate text-[9px] font-semibold text-slate-600">
               대표 {row.top_investor?.name ?? row.top_investor?.id ?? "—"}
             </p>
-          </TransitionLink>
+          </div>
         );
       })}
     </div>

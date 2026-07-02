@@ -3113,11 +3113,15 @@ async function collectRouteChecks(page, route) {
           });
         }
         const stockLinks = tiles
-          .filter((node) => node.matches("a[data-superinvestor-accumulation-link]"))
-          .map((node) => ({
-            href: node instanceof HTMLAnchorElement ? new URL(node.href, window.location.origin).pathname : "",
-            rect: node.getBoundingClientRect(),
-          }));
+          .map((node) => {
+            const link = node.matches("a[data-superinvestor-accumulation-link]")
+              ? node
+              : node.querySelector("a[data-superinvestor-accumulation-link]");
+            return {
+              href: link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin).pathname : "",
+              rect: link instanceof HTMLElement ? link.getBoundingClientRect() : new DOMRect(),
+            };
+          });
         if (stockLinks.length !== tiles.length || stockLinks.some((link) => !link.href.startsWith("/stock/"))) {
           failures.push({
             check: "superinvestors-accumulation-heatmap-stock-links",
