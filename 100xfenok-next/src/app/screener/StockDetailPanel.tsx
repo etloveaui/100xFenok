@@ -2383,7 +2383,7 @@ function W4ScoreDonut({ score }: { score: number | null }) {
     <div
       className="cpw4-detail-donut"
       style={{
-        background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, #e8edf6 ${value * 3.6}deg 360deg)`,
+        background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, var(--cp-divider) ${value * 3.6}deg 360deg)`,
       }}
       aria-label={`Fenok Edge ${w4ScoreText(score)}점`}
     >

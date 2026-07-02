@@ -12,6 +12,16 @@ export type CpChartDatum = {
   volume?: number;
 };
 
+export type CpW4AnnualReturn = {
+  year: string;
+  returnPct: number;
+};
+
+export type CpW4IndexComparison = {
+  label: string;
+  returnPct: number;
+};
+
 export type CpPriceChartProps = {
   kind: CpChartKind;
   data: readonly CpChartDatum[];
@@ -25,6 +35,14 @@ export type CpPriceChartProps = {
   showGrid?: boolean;
   showCrosshair?: boolean;
   showVolume?: boolean;
+  volumeTone?: "directional" | "muted";
+  hideHeader?: boolean;
+  composition?: "default" | "w4";
+  symbol?: string;
+  currency?: string;
+  annualReturns?: readonly CpW4AnnualReturn[];
+  indexComparisons?: readonly CpW4IndexComparison[];
+  footnote?: string;
   className?: string;
   emptyLabel?: string;
 };

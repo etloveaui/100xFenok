@@ -1,1 +1,362 @@
 /* W4 price-chart composition styles — owned by the chart track. Additive, namespaced .cpw4-* */
+
+.cpw4-price-section {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cpw4-verdict {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1.38;
+  letter-spacing: 0;
+  word-break: keep-all;
+}
+
+.cpw4-num,
+.cpw4-range-value.positive,
+.cpw4-year-cell .positive,
+.cpw4-index-row .positive,
+.cpw4-table .positive {
+  color: var(--cp-positive);
+}
+
+.cpw4-num.negative,
+.cpw4-range-value.negative,
+.cpw4-year-cell .negative,
+.cpw4-index-row .negative,
+.cpw4-table .negative {
+  color: var(--cp-negative);
+}
+
+.cpw4-num.neutral {
+  color: var(--cp-text-muted);
+}
+
+.cpw4-range-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+}
+
+.cpw4-range-cell {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 16px 20px;
+  border-right: 1px solid var(--cp-divider);
+}
+
+.cpw4-range-cell:last-child {
+  border-right: 0;
+}
+
+.cpw4-range-label {
+  overflow: hidden;
+  color: var(--cp-text-soft);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw4-range-value {
+  overflow: hidden;
+  color: var(--cp-text-strong);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw4-range-value.muted {
+  color: var(--cp-text-muted);
+  font-size: 15px;
+}
+
+.cpw4-range-sub {
+  min-height: 16px;
+  overflow: hidden;
+  color: var(--cp-text-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw4-range-sub.positive {
+  color: var(--cp-positive);
+}
+
+.cpw4-range-sub.negative {
+  color: var(--cp-negative);
+}
+
+.cpw4-card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow-card);
+}
+
+.cpw4-chart-card {
+  padding: 22px;
+}
+
+.cpw4-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.cpw4-eyebrow {
+  margin: 0;
+  color: var(--cp-accent-strong);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.cpw4-chart-sub,
+.cpw4-section-sub,
+.cpw4-footnote,
+.cpw4-skip-note {
+  margin: 0;
+  color: var(--cp-text-soft);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.cpw4-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.cpw4-chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cpw4-chart-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.cpw4-chart-legend i.positive {
+  background: var(--cp-chart-positive-line);
+}
+
+.cpw4-chart-legend i.negative {
+  background: var(--cp-chart-negative-line);
+}
+
+.cpw4-chart-legend i.volume {
+  background: var(--cp-chart-volume, #c9d3df);
+}
+
+.cpw4-chart-shell.cp-chart-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.cpw4-chart-shell .cp-chart-shell__canvas {
+  min-height: 420px;
+  border-color: var(--cp-chart-grid);
+  border-radius: var(--cp-radius-sm);
+}
+
+.cpw4-tier2,
+.cpw4-tier3 {
+  display: grid;
+  gap: 18px;
+}
+
+.cpw4-tier2 {
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.cpw4-tier3 {
+  grid-template-columns: 1.3fr 1fr;
+}
+
+.cpw4-section-title {
+  margin: 0;
+  color: var(--cp-text-strong);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.cpw4-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+}
+
+.cpw4-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--cp-text);
+  font-size: 13px;
+}
+
+.cpw4-table th,
+.cpw4-table td {
+  height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--cp-divider);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cpw4-table th:first-child,
+.cpw4-table td:first-child {
+  text-align: left;
+}
+
+.cpw4-table th {
+  color: var(--cp-text-muted);
+  background: var(--cp-surface-muted);
+  font-weight: 900;
+}
+
+.cpw4-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.cpw4-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cpw4-year-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--cp-divider);
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface-muted);
+}
+
+.cpw4-year-cell span,
+.cpw4-index-row span {
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw4-year-cell strong,
+.cpw4-index-row strong {
+  color: var(--cp-text-strong);
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cpw4-index-strip {
+  display: grid;
+  gap: 0;
+}
+
+.cpw4-index-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 34px;
+  border-bottom: 1px solid var(--cp-divider);
+}
+
+.cpw4-index-row:last-child {
+  border-bottom: 0;
+}
+
+.cpw4-skip-note {
+  align-self: start;
+  padding: 12px 14px;
+  border: 1px dashed var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface-muted);
+}
+
+.cpw4-footnote {
+  text-align: center;
+}
+
+@media (max-width: 1180px) {
+  .cpw4-range-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cpw4-range-cell:nth-child(4n) {
+    border-right: 0;
+  }
+
+  .cpw4-range-cell:nth-child(n + 5) {
+    border-top: 1px solid var(--cp-divider);
+  }
+}
+
+@media (max-width: 760px) {
+  .cpw4-verdict {
+    font-size: 18px;
+  }
+
+  .cpw4-range-strip,
+  .cpw4-tier2,
+  .cpw4-tier3,
+  .cpw4-year-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cpw4-range-cell,
+  .cpw4-range-cell:nth-child(4n) {
+    border-right: 0;
+    border-top: 1px solid var(--cp-divider);
+  }
+
+  .cpw4-range-cell:first-child {
+    border-top: 0;
+  }
+
+  .cpw4-chart-head {
+    display: grid;
+  }
+
+  .cpw4-chart-legend {
+    justify-content: flex-start;
+  }
+}

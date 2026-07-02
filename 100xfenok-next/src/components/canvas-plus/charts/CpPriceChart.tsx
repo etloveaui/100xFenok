@@ -21,6 +21,21 @@ const CpPriceChart = dynamic<CpPriceChartProps>(
   },
 );
 
-export type { CpChartDatum, CpChartKind, CpChartRange, CpPriceChartProps } from "@/components/canvas-plus/charts/types";
+export const CpW4PriceSection = dynamic<CpPriceChartProps>(
+  () => import("@/components/canvas-plus/charts/CpPriceChartImpl.client").then((mod) => mod.CpW4PriceSectionImpl),
+  {
+    ssr: false,
+    loading: CpPriceChartLoading,
+  },
+);
+
+export type {
+  CpChartDatum,
+  CpChartKind,
+  CpChartRange,
+  CpPriceChartProps,
+  CpW4AnnualReturn,
+  CpW4IndexComparison,
+} from "@/components/canvas-plus/charts/types";
 
 export default CpPriceChart;

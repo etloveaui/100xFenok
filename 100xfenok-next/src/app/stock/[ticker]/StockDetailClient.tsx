@@ -1941,11 +1941,11 @@ function ValuationHeroCp({ detailPerBands }: { detailPerBands: { current: number
             </linearGradient>
           </defs>
           <rect x={trackX} y={trackY} width={trackW} height={trackH} rx={trackH / 2} fill="url(#cpw4-val-band-grad)" />
-          <line x1={avgX} y1={trackY} x2={avgX} y2={trackY + trackH} stroke="#ffffff" strokeWidth={2} opacity={0.85} />
+          <line x1={avgX} y1={trackY} x2={avgX} y2={trackY + trackH} stroke="var(--cp-surface)" strokeWidth={2} opacity={0.85} />
           <line x1={markerX} y1={40} x2={markerX} y2={trackY} stroke="var(--cp-text-strong)" strokeWidth={1.5} strokeDasharray="2 3" />
           <rect x={Math.max(0, markerX - 65)} y={8} width={130} height={30} rx={8} fill="var(--cp-text-strong)" />
-          <text x={markerX} y={28} textAnchor="middle" fontSize="14" fontWeight="800" fill="#fff">현재 {current.toFixed(1)}x</text>
-          <circle cx={markerX} cy={trackY + trackH / 2} r={9} fill="#fff" stroke="var(--cp-text-strong)" strokeWidth={3} />
+          <text x={markerX} y={28} textAnchor="middle" fontSize="14" fontWeight="800" fill="var(--cp-surface)">현재 {current.toFixed(1)}x</text>
+          <circle cx={markerX} cy={trackY + trackH / 2} r={9} fill="var(--cp-surface)" stroke="var(--cp-text-strong)" strokeWidth={3} />
           <line x1={trackX} y1={trackY + trackH} x2={trackX} y2={trackY + trackH + 10} stroke="var(--cp-border-strong)" strokeWidth={1.5} />
           <line x1={trackX + trackW} y1={trackY + trackH} x2={trackX + trackW} y2={trackY + trackH + 10} stroke="var(--cp-border-strong)" strokeWidth={1.5} />
           <text x={trackX} y={140} fontSize="16" fontWeight="800" fill="var(--cp-text-strong)">{min_8y.toFixed(1)}x</text>
@@ -2228,11 +2228,11 @@ function EstimatesBandCp({ yfData, currency }: { yfData: any; currency: string }
           <rect x={trackX} y={trackY} width={Math.max(0, currentX - trackX)} height={trackH} rx={5} fill="var(--cp-border-strong)" />
           <rect x={currentX} y={trackY} width={Math.max(0, meanX - currentX)} height={trackH} fill="var(--cp-positive)" />
           <rect x={meanX} y={trackY} width={Math.max(0, trackX + trackW - meanX)} height={trackH} rx={5} fill="var(--cp-warning-soft)" />
-          <circle cx={currentX} cy={trackY + trackH / 2} r={9} fill="var(--cp-text-strong)" stroke="#fff" strokeWidth={3} />
+          <circle cx={currentX} cy={trackY + trackH / 2} r={9} fill="var(--cp-text-strong)" stroke="var(--cp-surface)" strokeWidth={3} />
           <text x={currentX} y={98} textAnchor="middle" fontSize="12" fill="var(--cp-text-soft)">현재가</text>
           <text x={currentX} y={113} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--cp-text-strong)">{formatMoney(current, currency)}</text>
           <line x1={meanX} y1={20} x2={meanX} y2={trackY} stroke="var(--cp-positive)" strokeWidth={2} />
-          <circle cx={meanX} cy={trackY + trackH / 2} r={10} fill="var(--cp-positive)" stroke="#fff" strokeWidth={3} />
+          <circle cx={meanX} cy={trackY + trackH / 2} r={10} fill="var(--cp-positive)" stroke="var(--cp-surface)" strokeWidth={3} />
           <text x={meanX} y={16} textAnchor="middle" fontSize="14" fontWeight="850" fill="var(--cp-positive)">평균 목표 {formatMoney(mean, currency)}</text>
           {upsidePct !== null ? <text x={meanX} y={113} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--cp-positive)">{fmtPct(upsidePct)}</text> : null}
           <text x={trackX} y={34} fontSize="12" fontWeight="700" fill="var(--cp-text-muted)">최저 {formatMoney(low, currency)}</text>
@@ -2295,9 +2295,9 @@ function EstimatesRecoCp({ yfData }: { yfData: any }) {
   if (!lastRec) return null;
   const segs: Array<[string, string, string]> = [
     ["strongBuy", "적극매수", "var(--cp-positive)"],
-    ["buy", "매수", "color-mix(in srgb, var(--cp-positive) 46%, #ffffff)"],
+    ["buy", "매수", "color-mix(in srgb, var(--cp-positive) 46%, var(--cp-surface))"],
     ["hold", "보유", "var(--cp-surface-strong)"],
-    ["sell", "매도", "color-mix(in srgb, var(--cp-negative) 46%, #ffffff)"],
+    ["sell", "매도", "color-mix(in srgb, var(--cp-negative) 46%, var(--cp-surface))"],
     ["strongSell", "적극매도", "var(--cp-negative)"],
   ];
   const total = segs.reduce((s, [key]) => s + (Number(lastRec[key]) || 0), 0);
@@ -2444,7 +2444,7 @@ function OwnershipHeroCp({
               {soldAmount !== null ? (
                 <>
                   <rect x={500 - (sellWidthPct / 100) * 460} y="48" width={(sellWidthPct / 100) * 460} height="24" rx="6" fill="var(--cp-negative)" />
-                  <text x={500 - (sellWidthPct / 100) * 460 + 10} y="65" fontSize="13" fontWeight="800" fill="#fff">매도 {formatCompactMoney(soldAmount, "USD")}</text>
+                  <text x={500 - (sellWidthPct / 100) * 460 + 10} y="65" fontSize="13" fontWeight="800" fill="var(--cp-surface)">매도 {formatCompactMoney(soldAmount, "USD")}</text>
                   <text x={500 - (sellWidthPct / 100) * 460} y="42" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
                     참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳{isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}곳` : ""}
                   </text>
@@ -2453,7 +2453,7 @@ function OwnershipHeroCp({
               {boughtAmount !== null ? (
                 <>
                   <rect x="500" y="48" width={(buyWidthPct / 100) * 460} height="24" rx="6" fill="var(--cp-positive)" />
-                  <text x={500 + (buyWidthPct / 100) * 460 - 10} y="65" fontSize="13" fontWeight="800" fill="#fff" textAnchor="end">매수 {formatCompactMoney(boughtAmount, "USD")}</text>
+                  <text x={500 + (buyWidthPct / 100) * 460 - 10} y="65" fontSize="13" fontWeight="800" fill="var(--cp-surface)" textAnchor="end">매수 {formatCompactMoney(boughtAmount, "USD")}</text>
                   <text x="500" y="42" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
                     참여 {isFiniteNumber(tradesChip?.bought?.investors_count) ? tradesChip.bought.investors_count : "—"}곳{isFiniteNumber(tradesChip?.bought?.new_count) && tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}곳` : ""}
                   </text>
@@ -3553,6 +3553,8 @@ export default function StockDetailClient({
                   headingLevel="h3"
                   data={rangedStockChartData}
                   showVolume
+                  composition="w4"
+                  volumeTone="muted"
                   className="cp-stock-price-chart"
                   emptyLabel={stockAuxData === undefined ? "가격 이력 로딩 중..." : "표시할 가격 이력이 없습니다."}
                 />
