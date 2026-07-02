@@ -53,7 +53,7 @@ export function getDesignVersionFromSearchParams(
   if (readFlag(searchParams?.v2)) return "v2";
   if (persistedVersion === "v6") return "v6";
   if (persistedVersion === "v5") return "v5";
-  return "v5"; // default promoted v1 -> v5 (2026-06-26 owner mandate)
+  return "v6"; // default promoted v5 -> v6 (2026-07-03 owner P4 flip)
 }
 
 /**
@@ -69,5 +69,5 @@ export function getDesignVersionFromQuery(
   if (query?.get("v4") === "1") return "v4";
   if (query?.get("v3") === "1") return "v3";
   if (query?.get("v2") === "1") return "v2";
-  return "v5"; // default promoted v1 -> v5 (2026-06-26 owner mandate)
+  return "v6"; // default promoted v5 -> v6 (2026-07-03 owner P4 flip)
 }
