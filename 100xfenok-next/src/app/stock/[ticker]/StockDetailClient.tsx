@@ -1355,10 +1355,12 @@ function StockEstimatesPanel({
   detail,
   years,
   currency,
+  variant = "default",
 }: {
   detail: any;
   years: string[];
   currency: string;
+  variant?: "default" | "canvasPlus";
 }) {
   const [granularity, setGranularity] = useState<"annual" | "quarterly">("annual");
   const fy1Per = detail.valuation_estimates?.per?.fy1;
@@ -1376,8 +1378,8 @@ function StockEstimatesPanel({
     { label: "EPS 변화", value: isFiniteNumber(epsChange) ? fmtPct(epsChange) : "—", note: "최근 주간 변화" },
   ];
 
-  return (
-    <SectionCard title="추정치 변화">
+  const body = (
+    <>
       <div data-stock-estimates-consensus-summary className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {consensusCards.map((card) => (
           <div key={card.label} data-stock-estimates-consensus-card className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
@@ -1424,8 +1426,12 @@ function StockEstimatesPanel({
       <p data-stock-estimate-disclosure="true" className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
         출처: StockAnalysis/Yahoo 계열 추정치 정규화 데이터. EPS 기준(희석/조정 여부)은 제공자 원문 확인이 필요합니다.
       </p>
-    </SectionCard>
+    </>
   );
+
+  if (variant === "canvasPlus") return body;
+
+  return <SectionCard title="추정치 변화">{body}</SectionCard>;
 }
 
 // ---------------------------------------------------------------------------
@@ -2210,7 +2216,13 @@ export default function StockDetailClient({
             className="cp-stock-detail-body cp-stock-tab-shell"
           >
             <main className="cp-stock-detail-main cp-stock-tab-body">
-              {activeStockTab === "financials" ? renderFinancialsCpTab() : renderStockDataTab(false)}
+              {activeStockTab === "financials"
+                ? renderFinancialsCpTab()
+                : activeStockTab === "statistics"
+                ? renderStatisticsCpTab()
+                : activeStockTab === "estimates"
+                ? renderEstimatesCpTab()
+                : renderStockDataTab(false)}
             </main>
           </div>
         )}
@@ -2481,6 +2493,206 @@ export default function StockDetailClient({
             </div>
           </section>
         )}
+      </div>
+    );
+  }
+
+  // Canvas-plus S2: 밸류(statistics) tab restyled with cp-stock-tab-* card surfaces.
+  // PER-band chart + band position bars are the tab hero; profitability/growth and
+  // price/dividend history follow. Reuses PerBandChart / MetricWithSpark /
+  // PriceDividendHistoryDepth and the yf StatisticsTab block verbatim.
+  function renderStatisticsCpTab() {
+    return (
+      <div className="cp-stock-tab-financials">
+        {detailLoading ? (
+          <div className="cp-stock-tab-loading">
+            <SkeletonSection />
+            <SkeletonSection />
+          </div>
+        ) : detail ? (
+          <>
+            <section className="cp-stock-tab-card" data-stock-tab-card="valuation-band">
+              <header className="cp-stock-tab-card__header">
+                <div>
+                  <p className="cp-stock-rail-eyebrow">Valuation</p>
+                  <h2>PER 밸류에이션</h2>
+                </div>
+              </header>
+              <div className="cp-stock-tab-card__body">
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <h3 className="cp-stock-tab-card__subheading">PER 밴드 (8Y)</h3>
+                    {finiteValues(detail.valuation?.per).length >= 2 ? (
+                      <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
+                    ) : <span className="text-xs text-slate-300">—</span>}
+                  </div>
+                  {detailPerBands ? (
+                    <div>
+                      <h3 className="cp-stock-tab-card__subheading">PER 밴드 위치</h3>
+                      <div className="space-y-2">
+                        {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
+                          const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
+                          const pct = Math.min(100, Math.max(0, ((v - detailPerBands.min_8y) / range) * 100));
+                          const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
+                          const textColor = highlight ? "text-slate-900" : "text-slate-500";
+                          return (
+                            <div key={label} className="flex items-center gap-2">
+                              <span className={`w-10 text-right text-[10px] font-semibold ${highlight ? "font-black text-brand-interactive" : "text-slate-500"}`}>{label}</span>
+                              <div className="relative h-3 flex-1 rounded-full bg-slate-100">
+                                <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
+                              </div>
+                              <span className={`w-14 text-xs orbitron tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+
+            <section className="cp-stock-tab-card" data-stock-tab-card="profitability-growth">
+              <header className="cp-stock-tab-card__header">
+                <div>
+                  <p className="cp-stock-rail-eyebrow">Profitability &amp; Growth</p>
+                  <h2>수익성·성장</h2>
+                </div>
+              </header>
+              <div className="cp-stock-tab-card__body">
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <h3 className="cp-stock-tab-card__subheading">수익성</h3>
+                    <div className="space-y-3">
+                      <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={profitabilityEstimates?.gross_margin} color="var(--c-up)" years={years} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={profitabilityEstimates?.operating_margin} color="var(--c-info)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="순이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.net_margin))} data={(detail.profitability as any)?.net_margin ?? []} estimates={profitabilityEstimates?.net_margin} color="var(--c-brand)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.net_margin) } : null} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="ROE" value={fmtWholePct(lastFinite((detail.profitability as any)?.roe))} data={(detail.profitability as any)?.roe ?? []} estimates={profitabilityEstimates?.roe} color="var(--c-recovery)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.roe) } : null} formatValue={fmtWholePct} />
+                      <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="var(--c-info)" years={years} formatValue={fmtWholePct} />
+                    </div>
+                    {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
+                      <p className="mt-2 text-[10px] font-semibold text-slate-500">
+                        다모다란 산업 자본비용 {fmtWholePct(industryBench.cost_of_capital * 100)}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <h3 className="cp-stock-tab-card__subheading">성장률 (YoY)</h3>
+                    <div className="space-y-3">
+                      <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} estimates={estimateSeries(detail.growth_estimates?.revenue_growth, 100)} color="var(--c-up)" years={years} formatValue={fmtPct} />
+                      <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} estimates={estimateSeries(detail.growth_estimates?.eps_growth, 100)} color="var(--c-warn)" years={years} formatValue={fmtPct} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="cp-stock-tab-card cp-stock-tab-card--secondary" data-stock-tab-card="price-dividend">
+              <header className="cp-stock-tab-card__header">
+                <div>
+                  <p className="cp-stock-rail-eyebrow">Price &amp; Dividend</p>
+                  <h2>가격·수익률·배당</h2>
+                </div>
+              </header>
+              <div className="cp-stock-tab-card__body">
+                {hasSlickChartsTicker ? (
+                  <PriceDividendHistoryDepth ticker={symbol} showUnavailable />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-500">
+                    일부 보조 통계는 미국 티커 중심으로 수집됩니다.
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="cp-stock-tab-card">
+            <div className="cp-stock-tab-card__body">
+              <div className="py-8 text-center">
+                <DataStateNotice
+                  state={makeDataState({
+                    status: "unavailable",
+                    label: "상세 데이터 준비 중",
+                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                  })}
+                />
+                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {yfAvailable ? (
+          <section className="cp-stock-tab-card" data-stock-tab-card="statistics-yf">
+            <header className="cp-stock-tab-card__header">
+              <div>
+                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
+                <h2>밸류 지표 상세</h2>
+              </div>
+            </header>
+            <div className="cp-stock-tab-card__body">
+              {renderYfTab("statistics", yfData, industryBench)}
+            </div>
+          </section>
+        ) : null}
+      </div>
+    );
+  }
+
+  // Canvas-plus S2: 추정치(estimates) tab restyled with cp-stock-tab-* card surfaces.
+  // Reuses StockEstimatesPanel (variant="canvasPlus" drops its own SectionCard box,
+  // content/data-stock-* attrs unchanged) and the yf EstimatesTab block verbatim.
+  // The 분기 추정치 연결 대기 deferred panel + data-stock-estimate-disclosure survive as-is.
+  function renderEstimatesCpTab() {
+    return (
+      <div className="cp-stock-tab-financials">
+        {detailLoading ? (
+          <div className="cp-stock-tab-loading">
+            <SkeletonSection />
+            <SkeletonSection />
+          </div>
+        ) : detail ? (
+          <section className="cp-stock-tab-card" data-stock-tab-card="estimates-consensus">
+            <header className="cp-stock-tab-card__header">
+              <div>
+                <p className="cp-stock-rail-eyebrow">Estimates</p>
+                <h2>추정치 변화</h2>
+              </div>
+            </header>
+            <div className="cp-stock-tab-card__body">
+              <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} variant="canvasPlus" />
+            </div>
+          </section>
+        ) : (
+          <section className="cp-stock-tab-card">
+            <div className="cp-stock-tab-card__body">
+              <div className="py-8 text-center">
+                <DataStateNotice
+                  state={makeDataState({
+                    status: "unavailable",
+                    label: "상세 데이터 준비 중",
+                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                  })}
+                />
+                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {yfAvailable ? (
+          <section className="cp-stock-tab-card" data-stock-tab-card="estimates-yf">
+            <header className="cp-stock-tab-card__header">
+              <div>
+                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
+                <h2>애널리스트 추정치 상세</h2>
+              </div>
+            </header>
+            <div className="cp-stock-tab-card__body">
+              {renderYfTab("estimates", yfData, industryBench)}
+            </div>
+          </section>
+        ) : null}
       </div>
     );
   }

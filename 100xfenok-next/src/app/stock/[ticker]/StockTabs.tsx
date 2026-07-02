@@ -296,8 +296,8 @@ function FinancialsTab({ data }: { data: YfData }) {
 
 function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; industry: IndustryBench }) {
   const rows: Array<{ label: string; stock: number | null; ind: number | null; isFraction: boolean; lowerBetter: boolean }> = [
-    { label: "Trailing P/E", stock: finiteNumber(info.trailingPE), ind: finiteNumber(industry.trailing_pe), isFraction: false, lowerBetter: true },
-    { label: "Forward P/E", stock: finiteNumber(info.forwardPE), ind: finiteNumber(industry.forward_pe), isFraction: false, lowerBetter: true },
+    { label: "PER (TTM)", stock: finiteNumber(info.trailingPE), ind: finiteNumber(industry.trailing_pe), isFraction: false, lowerBetter: true },
+    { label: "FY+1 PER", stock: finiteNumber(info.forwardPE), ind: finiteNumber(industry.forward_pe), isFraction: false, lowerBetter: true },
     { label: "ROE", stock: finiteNumber(info.returnOnEquity), ind: finiteNumber(industry.roe), isFraction: true, lowerBetter: false },
     { label: "영업이익률", stock: finiteNumber(info.operatingMargins), ind: finiteNumber(industry.operating_margin), isFraction: true, lowerBetter: false },
     { label: "순이익률", stock: finiteNumber(info.profitMargins), ind: finiteNumber(industry.net_margin), isFraction: true, lowerBetter: false },
@@ -344,8 +344,8 @@ function StatisticsTab({ data, industry }: { data: YfData; industry?: IndustryBe
     {
       title: "밸류에이션",
       items: [
-        ["trailingPE", "Trailing P/E"], ["forwardPE", "Forward P/E"],
-        ["priceToBook", "P/B"], ["pegRatio", "PEG"],
+        ["trailingPE", "PER (TTM)"], ["forwardPE", "FY+1 PER"],
+        ["priceToBook", "PBR"], ["pegRatio", "PEG"],
         ["enterpriseToRevenue", "EV/매출"], ["enterpriseToEbitda", "EV/EBITDA"],
         ["bookValue", "주당 장부가"], ["enterpriseValue", "EV"],
       ],
@@ -522,9 +522,9 @@ function EstimatesTab({ data }: { data: YfData }) {
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 목표가</h3>
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500">
-              <span>Low {formatMoney(targetLow, infoCurrency)}</span>
-              <span>Mean {formatMoney(targetMean, infoCurrency)}</span>
-              <span>High {formatMoney(targetHigh, infoCurrency)}</span>
+              <span>최저 {formatMoney(targetLow, infoCurrency)}</span>
+              <span>평균 {formatMoney(targetMean, infoCurrency)}</span>
+              <span>최고 {formatMoney(targetHigh, infoCurrency)}</span>
             </div>
             <div className="relative mt-2 h-3 rounded-full bg-slate-100">
               {targetPct !== null ? (
@@ -554,9 +554,9 @@ function EstimatesTab({ data }: { data: YfData }) {
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="px-2 py-1.5 text-left" />
-                    <th className="px-2 py-1.5 text-right">Avg</th>
-                    <th className="px-2 py-1.5 text-right">Low</th>
-                    <th className="px-2 py-1.5 text-right">High</th>
+                    <th className="px-2 py-1.5 text-right">평균</th>
+                    <th className="px-2 py-1.5 text-right">최저</th>
+                    <th className="px-2 py-1.5 text-right">최고</th>
                     <th className="px-2 py-1.5 text-right">전년</th>
                     <th className="px-2 py-1.5 text-right">분석가</th>
                     <th className="px-2 py-1.5 text-right">성장률</th>
@@ -594,9 +594,9 @@ function EstimatesTab({ data }: { data: YfData }) {
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="px-2 py-1.5 text-left" />
-                    <th className="px-2 py-1.5 text-right">Avg</th>
-                    <th className="px-2 py-1.5 text-right">Low</th>
-                    <th className="px-2 py-1.5 text-right">High</th>
+                    <th className="px-2 py-1.5 text-right">평균</th>
+                    <th className="px-2 py-1.5 text-right">최저</th>
+                    <th className="px-2 py-1.5 text-right">최고</th>
                     <th className="px-2 py-1.5 text-right">전년</th>
                     <th className="px-2 py-1.5 text-right">분석가</th>
                     <th className="px-2 py-1.5 text-right">성장률</th>
@@ -652,11 +652,11 @@ function EstimatesTab({ data }: { data: YfData }) {
               })}
             </div>
             <div className="mt-2 flex justify-between text-[9px] font-bold text-slate-500">
-              <span>Strong Buy</span>
-              <span>Buy</span>
-              <span>Hold</span>
-              <span>Sell</span>
-              <span>Strong Sell</span>
+              <span>적극매수</span>
+              <span>매수</span>
+              <span>보유</span>
+              <span>매도</span>
+              <span>적극매도</span>
             </div>
           </div>
         </div>
