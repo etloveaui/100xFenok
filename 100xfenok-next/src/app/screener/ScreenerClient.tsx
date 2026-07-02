@@ -1913,95 +1913,250 @@ export default function ScreenerClient({
   const densityClass = DENSITY_TABLE_CLASS[density];
 
   return (
-    <div className="data-shell-page">
-      <section className="panel data-shell-header">
-        <div className="data-shell-head-main">
-          <p className="data-shell-kicker">종목 스크리너</p>
-          <h1 className="data-shell-title">종목 스크리너</h1>
-          <p className="data-shell-desc">
-            글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
-          </p>
-        </div>
-        <div className="data-shell-head-actions">
-          <DataStateBadge state={screenerDataState} />
-          <button
-            type="button"
-            onClick={() => downloadConnectionCsv(sorted)}
-            disabled={!connectionIndexReady || sorted.length === 0}
-            className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
-          >
-            필터 CSV
-          </button>
-          {singleStockEtfCompareHref ? (
-            <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
-              필터 ETF 비교
-            </TransitionLink>
-          ) : null}
-          <TransitionLink href={ROUTES.sectors} className="data-shell-link">
-            섹터
-          </TransitionLink>
-          <MarketQuickLinks />
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setPresetMenuOpen((v) => !v)}
-              className="data-shell-link"
-              aria-expanded={presetMenuOpen}
-              aria-haspopup="menu"
-            >
-              필터 저장
-            </button>
-            {presetMenuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={presetName}
-                    onChange={(event) => setPresetName(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") handleSavePreset();
-                    }}
-                    placeholder="프리셋 이름"
-                    className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSavePreset}
-                    disabled={!presetName.trim()}
-                    className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-xs font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
-                  >
-                    저장
-                  </button>
-                </div>
-                {savedPresets.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    {savedPresets.map((p) => (
-                      <div key={p.name} className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleLoadPreset(p.state)}
-                          className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-                          title={p.name}
-                        >
-                          {p.name}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePreset(p.name)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
-                          aria-label={`${p.name} 삭제`}
-                        >
-                          ×
-                        </button>
+    <div
+      className={enableCanvasPlusPreview ? "canvas-plus cp-screener-service" : "data-shell-page"}
+      data-canvas-plus-screener-service={enableCanvasPlusPreview ? "true" : undefined}
+    >
+      {enableCanvasPlusPreview ? (
+        <section className="cp-card cp-screener-header-card" data-density="compact">
+          <div className="cp-screener-header-card__top">
+            <div className="cp-screener-title-stack">
+              <p className="cp-screener-kicker">종목 스크리너</p>
+              <h1 className="cp-card__title cp-screener-title">고급 스크리너</h1>
+              <p className="cp-card__meta cp-screener-summary">
+                글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
+              </p>
+            </div>
+            <div className="cp-screener-state">
+              <DataStateBadge state={screenerDataState} />
+            </div>
+          </div>
+
+          <div className="cp-card__body cp-screener-header-body">
+            <div className="cp-tabs cp-screener-tabs">
+              <div className="cp-tabs__list cp-screener-tabs__list" role="tablist" aria-label="스크리너 범위">
+                <button type="button" className="cp-tabs__tab cp-screener-tabs__tab" role="tab" aria-selected={true}>
+                  주식
+                </button>
+                <TransitionLink href={ROUTES.etfs} className="cp-tabs__tab cp-screener-tabs__tab" role="tab" aria-selected={false}>
+                  ETF
+                </TransitionLink>
+                <button
+                  type="button"
+                  className="cp-tabs__tab cp-screener-tabs__tab"
+                  role="tab"
+                  aria-selected={false}
+                  aria-expanded={presetMenuOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setPresetMenuOpen((v) => !v)}
+                >
+                  사용자 정의
+                </button>
+              </div>
+            </div>
+
+            <form className="cp-screener-search" onSubmit={(event) => event.preventDefault()}>
+              <label className="cp-hero-search__label cp-screener-search__label" htmlFor="cp-screener-search-input">
+                티커 또는 종목명 검색
+              </label>
+              <div className="cp-hero-search__control cp-screener-search__control">
+                <input
+                  id="cp-screener-search-input"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="예: NVDA, Microsoft"
+                  className="cp-hero-search__input cp-screener-search__input"
+                  data-canvas-plus-screener-search="true"
+                />
+                <button
+                  type="button"
+                  className="cp-button cp-screener-pill"
+                  data-variant="ghost"
+                  disabled={!search.trim()}
+                  onClick={() => setSearch("")}
+                >
+                  초기화
+                </button>
+              </div>
+            </form>
+
+            <div className="cp-screener-header-actions">
+              <button
+                type="button"
+                onClick={() => downloadConnectionCsv(sorted)}
+                disabled={!connectionIndexReady || sorted.length === 0}
+                className="cp-button cp-screener-pill"
+                data-variant="ghost"
+              >
+                필터 CSV
+              </button>
+              {singleStockEtfCompareHref ? (
+                <TransitionLink href={singleStockEtfCompareHref} className="cp-button cp-screener-pill" data-variant="ghost">
+                  필터 ETF 비교
+                </TransitionLink>
+              ) : null}
+              <TransitionLink href={ROUTES.sectors} className="cp-button cp-screener-pill" data-variant="ghost">
+                섹터
+              </TransitionLink>
+              <div className="cp-screener-preset">
+                <button
+                  type="button"
+                  onClick={() => setPresetMenuOpen((v) => !v)}
+                  className="cp-button cp-screener-pill"
+                  data-variant="secondary"
+                  aria-expanded={presetMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  조건 저장
+                </button>
+                {presetMenuOpen && (
+                  <div className="cp-screener-preset-menu">
+                    <div className="cp-screener-preset-row">
+                      <input
+                        type="text"
+                        value={presetName}
+                        onChange={(event) => setPresetName(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") handleSavePreset();
+                        }}
+                        placeholder="프리셋 이름"
+                        className="cp-screener-preset-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSavePreset}
+                        disabled={!presetName.trim()}
+                        className="cp-button cp-screener-preset-save"
+                        data-variant="primary"
+                        data-density="compact"
+                      >
+                        저장
+                      </button>
+                    </div>
+                    {savedPresets.length > 0 && (
+                      <div className="cp-screener-preset-list">
+                        {savedPresets.map((p) => (
+                          <div key={p.name} className="cp-screener-preset-item">
+                            <button
+                              type="button"
+                              onClick={() => handleLoadPreset(p.state)}
+                              className="cp-screener-preset-load"
+                              title={p.name}
+                            >
+                              {p.name}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePreset(p.name)}
+                              className="cp-screener-preset-delete"
+                              aria-label={`${p.name} 삭제`}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            </div>
+            <div className="cp-screener-header-quicklinks">
+              <MarketQuickLinks />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="panel data-shell-header">
+          <div className="data-shell-head-main">
+            <p className="data-shell-kicker">종목 스크리너</p>
+            <h1 className="data-shell-title">종목 스크리너</h1>
+            <p className="data-shell-desc">
+              글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
+            </p>
+          </div>
+          <div className="data-shell-head-actions">
+            <DataStateBadge state={screenerDataState} />
+            <button
+              type="button"
+              onClick={() => downloadConnectionCsv(sorted)}
+              disabled={!connectionIndexReady || sorted.length === 0}
+              className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
+            >
+              필터 CSV
+            </button>
+            {singleStockEtfCompareHref ? (
+              <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
+                필터 ETF 비교
+              </TransitionLink>
+            ) : null}
+            <TransitionLink href={ROUTES.sectors} className="data-shell-link">
+              섹터
+            </TransitionLink>
+            <MarketQuickLinks />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setPresetMenuOpen((v) => !v)}
+                className="data-shell-link"
+                aria-expanded={presetMenuOpen}
+                aria-haspopup="menu"
+              >
+                필터 저장
+              </button>
+              {presetMenuOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={presetName}
+                      onChange={(event) => setPresetName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") handleSavePreset();
+                      }}
+                      placeholder="프리셋 이름"
+                      className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSavePreset}
+                      disabled={!presetName.trim()}
+                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-xs font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
+                    >
+                      저장
+                    </button>
+                  </div>
+                  {savedPresets.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {savedPresets.map((p) => (
+                        <div key={p.name} className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadPreset(p.state)}
+                            className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                            title={p.name}
+                          >
+                            {p.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePreset(p.name)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
+                            aria-label={`${p.name} 삭제`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {screenerDataState.status !== "ready" ? (
         <DataStateNotice state={screenerDataState} />
@@ -2087,17 +2242,19 @@ export default function ScreenerClient({
               </span>
             </button>
             {scaleOpen && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="티커 또는 종목명"
-                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                  />
-                </label>
+              <div className={cx("mt-3 grid gap-3 sm:grid-cols-2", enableCanvasPlusPreview ? "lg:grid-cols-4" : "lg:grid-cols-5")}>
+                {!enableCanvasPlusPreview ? (
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="티커 또는 종목명"
+                      className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                    />
+                  </label>
+                ) : null}
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
                   <select
