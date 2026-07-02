@@ -860,7 +860,7 @@ async function collectRouteChecks(page, route) {
       const frameSrc = legacyFrame instanceof HTMLIFrameElement
         ? new URL(legacyFrame.src, window.location.origin)
         : null;
-      if (!frameSrc || frameSrc.pathname !== "/ib-helper/index.html") {
+      if (!frameSrc || frameSrc.pathname !== "/ib/ib-helper/index.html") {
         failures.push({
           check: "ib-legacy-frame-src",
           detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"}`,

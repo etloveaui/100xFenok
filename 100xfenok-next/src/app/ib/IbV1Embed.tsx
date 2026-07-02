@@ -11,7 +11,7 @@ type IbV1EmbedProps = {
 export default function IbV1Embed({ shellClassName }: IbV1EmbedProps) {
   return (
     <RouteEmbedFrame
-      src="/ib-helper/index.html"
+      src="/ib/ib-helper/index.html"
       title="100x IB Helper"
       loading="eager"
       shellClassName={shellClassName}

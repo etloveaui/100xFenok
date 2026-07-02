@@ -131,6 +131,7 @@ export const EXPECTED_IFRAME_SRC_BY_ROUTE = {
   [alphaReportDeepLinkRoute]: "/alpha-scout/reports/2025-08-24_100x-alpha-scout.html",
   [postsDeepLinkRoute]: "/posts-raw/2026-02-21_tariff-ruling-comprehensive.html",
   [vrDeepLinkRoute]: "/vr/vr-complete-system.html",
+  "/ib": "/ib/ib-helper/index.html",
   "/admin/design-lab": "/admin/design-lab/index.html",
   "/admin/data-lab": "/admin/data-lab/index.html",
   "/admin/macro-monitor": "/admin/market-radar/index.html",
