@@ -259,9 +259,9 @@ function legacyHtmlClassification(legacyHtml) {
     if (publicPath === "/100x/100x-main.html") {
       return {
         ...baseItem,
-        class: "legacy_market_archive_high_risk",
-        route: "/market",
-        reason: "/market is a legacy bookmark route to the native market screen; preserve this archive until owner-approved retirement",
+        class: "daily_wrap_landing_archive_high_risk",
+        route: "/100x/daily-wrap",
+        reason: "100x Market Wrap report archive landing page; preserve behind the Daily Wrap owner route until owner-approved retirement",
       };
     }
     if (
@@ -464,10 +464,9 @@ function ownerFamilyForHighRisk(row) {
   if (pathName === "/100x/100x-main.html") {
     return family({
       id: "market_legacy_archive",
-      owner_route: "/market-valuation",
-      compatibility_route: "/market",
-      owner_area: "market_native_screen",
-      first_action: "preserve archive; review only after native market route live-equivalence and bookmark smoke",
+      owner_route: "/100x/daily-wrap",
+      owner_area: "daily_wrap_archive_viewer",
+      first_action: "preserve Market Wrap archive landing; review only after Daily Wrap owner route and legacy landing smoke",
     });
   }
   if (pathName.startsWith("/100x/daily-wrap/")) {
@@ -706,7 +705,7 @@ function legacyBridgeSmokePathsForFamily(family) {
 function ownerReviewPriority(family) {
   const priorityByFamily = new Map([
     ["macro_monitor_legacy_tools", [10, "route-ia convergence: legacy macro-monitor tools must converge under the native macro-chart owner"]],
-    ["market_legacy_archive", [20, "route-ia convergence: legacy /market bookmark must stay tied to the native market screen"]],
+    ["market_legacy_archive", [20, "route-ia convergence: legacy Market Wrap landing must stay tied to the Daily Wrap archive owner"]],
     ["daily_wrap_archive", [30, "large public archive with an exact owner route and dated legacy pages"]],
     ["admin_design_lab_prototypes", [40, "largest admin prototype family; preserve behind admin owner route and keep out of product IA"]],
     ["admin_valuation_lab_legacy", [50, "large admin valuation-lab family; requires owner mapping before any retirement proposal"]],

@@ -1639,7 +1639,8 @@ function safeEnforcementSlices(review, liveProof, nextCandidate, rank2PreActivat
       acceptance: [
         `rank 2 candidate remains ${nextCandidate?.family_id ?? "unavailable"}`,
         "rank-2 owner decision record schema is rank2-owner-decision-record/v0.1",
-        "record stays tied to /market-valuation owner route and /market compatibility route",
+        `record stays tied to owner route ${nextCandidate?.owner_route ?? "unavailable"}`
+          + (nextCandidate?.compatibility_route ? ` and compatibility route ${nextCandidate.compatibility_route}` : ""),
         "record keeps rank2_active=false, mutation=none, mutation_approved=false",
         "route_patch/redirect/delete/deploy/public mutation/rank-2 release remain blocked until separate explicit owner approval",
       ],
@@ -5587,6 +5588,13 @@ function rank2OwnerReviewTemplate(packet) {
   const readiness = packet.rank2_review_readiness;
   const candidate = preview?.candidate ?? {};
   const blockedActions = routePatchBlockedActions();
+  const ownerRoute = candidate.owner_route ?? null;
+  const compatibilityRoute = candidate.compatibility_route ?? null;
+  const legacySamplePaths = preview?.live_equivalence_prep?.rows
+    ?.filter((row) => row.role === "legacy_sample")
+    .map((row) => row.path) ?? [];
+  const routeIdentity = [ownerRoute, compatibilityRoute].filter(Boolean).join(" and ") || "the corrected owner route";
+  const legacyIdentity = legacySamplePaths.join(", ") || "the legacy sample path";
   return {
     schema_version: "rank2-owner-review-packet/v0.1",
     issue: packet.issue,
@@ -5598,11 +5606,9 @@ function rank2OwnerReviewTemplate(packet) {
     mutation_allowed: false,
     separate_mutation_approval_required: true,
     blocked_actions: blockedActions,
-    owner_route: candidate.owner_route ?? null,
-    compatibility_route: candidate.compatibility_route ?? null,
-    legacy_sample_paths: preview?.live_equivalence_prep?.rows
-      ?.filter((row) => row.role === "legacy_sample")
-      .map((row) => row.path) ?? [],
+    owner_route: ownerRoute,
+    compatibility_route: compatibilityRoute,
+    legacy_sample_paths: legacySamplePaths,
     pro_screen_model_acceptance: {
       ready: candidate.pro_screen_model_acceptance_ready ?? false,
       home_primary_allowed: candidate.home_primary_allowed ?? null,
@@ -5625,11 +5631,9 @@ function rank2OwnerReviewTemplate(packet) {
       mutation: "none",
       mutation_approved: false,
       separate_mutation_approval_required: true,
-      owner_route: candidate.owner_route ?? null,
-      compatibility_route: candidate.compatibility_route ?? null,
-      legacy_sample_paths: preview?.live_equivalence_prep?.rows
-        ?.filter((row) => row.role === "legacy_sample")
-        .map((row) => row.path) ?? [],
+      owner_route: ownerRoute,
+      compatibility_route: compatibilityRoute,
+      legacy_sample_paths: legacySamplePaths,
       pro_screen_model_acceptance: {
         ready: candidate.pro_screen_model_acceptance_ready ?? false,
         home_primary_allowed: candidate.home_primary_allowed ?? null,
@@ -5641,13 +5645,13 @@ function rank2OwnerReviewTemplate(packet) {
     decision_options: [
       {
         decision: "preserve",
-        meaning: "keep legacy market archive behind current owner/compatibility routes; no route patch, public mutation, rank-2 release, redirect/delete, or deploy",
+        meaning: `keep ${legacyIdentity} behind ${routeIdentity}; no route patch, public mutation, rank-2 release, redirect/delete, or deploy`,
         mutation_allowed: false,
         blocked_actions: blockedActions,
       },
       {
         decision: "remap",
-        meaning: "prepare a dry-run proposal that keeps /market tied to the native /market-valuation owner route",
+        meaning: `prepare a dry-run proposal toward ${ownerRoute ?? "the corrected owner route"} without editing routes or public assets`,
         mutation_allowed: false,
         blocked_actions: blockedActions,
       },
@@ -5716,6 +5720,8 @@ function validateRank2OwnerDecisionRecord(record, template, packet) {
 
 function rank2OwnerFollowupPlans(packet) {
   const template = packet.rank2_owner_review_template?.decision_record_template ?? {};
+  const routeIdentity = [template.owner_route, template.compatibility_route].filter(Boolean).join(" and ") || "the corrected owner route";
+  const legacyIdentity = template.legacy_sample_paths?.join(", ") || "the legacy sample path";
   const common = {
     candidate_family_id: template.candidate_family_id ?? null,
     mutation: "none",
@@ -5735,11 +5741,11 @@ function rank2OwnerFollowupPlans(packet) {
       id: "rank2_preserve_decision_documentation_packet",
       gate: "after_valid_rank2_preserve_record_before_any_route_mutation",
       decision: "preserve",
-      allowed_next_action: "document the owner-approved preserve decision and keep /market compatibility behind /market-valuation",
+      allowed_next_action: `document the owner-approved preserve decision and keep ${legacyIdentity} behind ${routeIdentity}`,
       required_evidence: [
         "rank-2 owner decision record remains valid_no_mutation_owner_review_recorded",
-        "owner route /market-valuation and compatibility route /market remain unchanged",
-        "legacy sample /100x/100x-main.html remains smoke-available before any mutation request",
+        `route identity remains unchanged: ${routeIdentity}`,
+        `legacy sample remains smoke-available before any mutation request: ${legacyIdentity}`,
       ],
     },
     {
@@ -5747,10 +5753,10 @@ function rank2OwnerFollowupPlans(packet) {
       id: "rank2_remap_dry_run_proposal_packet",
       gate: "after_valid_rank2_remap_record_before_any_href_or_route_edit",
       decision: "remap",
-      allowed_next_action: "prepare a dry-run remap proposal from /market compatibility toward /market-valuation without editing routes or public assets",
+      allowed_next_action: `prepare a dry-run remap proposal toward ${template.owner_route ?? "the corrected owner route"} without editing routes or public assets`,
       required_evidence: [
         "rank-2 owner decision record remains valid_no_mutation_owner_review_recorded",
-        "proposed destination remains /market-valuation",
+        `proposed destination remains ${template.owner_route ?? "the corrected owner route"}`,
         "rollback and route smoke commands are listed before any href, redirect, or route edit",
       ],
     },
@@ -5762,7 +5768,7 @@ function rank2OwnerFollowupPlans(packet) {
       allowed_next_action: "prepare retire readiness, soak, rollback, and post-change smoke evidence without deleting, redirecting, or deploying",
       required_evidence: [
         "rank-2 owner decision record remains valid_no_mutation_owner_review_recorded",
-        "local live-equivalence remains green for /market-valuation, /market, and /100x/100x-main.html",
+        `local live-equivalence remains green for ${routeIdentity} and ${legacyIdentity}`,
         "separate mutation approval, soak, rollback, and deployment smoke remain explicit future gates",
       ],
     },
