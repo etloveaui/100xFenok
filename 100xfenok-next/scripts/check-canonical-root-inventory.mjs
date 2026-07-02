@@ -264,6 +264,14 @@ function legacyHtmlClassification(legacyHtml) {
         reason: "100x Market Wrap report archive landing page; preserve behind the Daily Wrap owner route until owner-approved retirement",
       };
     }
+    if (publicPath === "/llm-guide.html") {
+      return {
+        ...baseItem,
+        class: "llm_site_guide_stale_high_risk",
+        route: "/",
+        reason: "machine-readable LLM site guide hardcodes retired GitHub Pages hosting and old main.html map; retire or replace with current facts",
+      };
+    }
     if (
       publicPath.startsWith("/admin/")
       || publicPath.startsWith("/alpha-scout/")
@@ -586,10 +594,11 @@ function ownerFamilyForHighRisk(row) {
   }
   if (pathName === "/llm-guide.html") {
     return family({
-      id: "workbench_orphan_guide",
-      owner_route: "/workbench",
-      owner_area: "workbench_secondary_entry",
-      first_action: "review as a secondary workbench guide; do not surface on Home or mobile primary IA",
+      id: "llm_site_guide_stale",
+      owner_route: "/",
+      owner_area: "site_metadata",
+      pro_route_ia_acceptance: "stale machine-readable site guide must not be treated as Workbench content; retire or replace only after current-facts owner review",
+      first_action: "prepare retire-or-replace candidate record for the stale LLM guide; do not route through Workbench as a cleanup shortcut",
     });
   }
   if (pathName === "/tools/asset/multichart.html") {
@@ -715,7 +724,7 @@ function ownerReviewPriority(family) {
     ["ib_legacy_tools", [90, "legacy IB tools need /ib owner comparison before proposal"]],
     ["vr_legacy_tools", [100, "legacy VR tools need /vr owner comparison before proposal"]],
     ["multichart_legacy_tool", [110, "legacy multichart asset needs macro/multichart owner decision"]],
-    ["workbench_orphan_guide", [120, "orphan guide must remain a secondary Workbench concern, not primary IA"]],
+    ["llm_site_guide_stale", [120, "stale machine-readable LLM site guide must be retired or replaced with current facts, not routed through Workbench"]],
     ["admin_data_lab_legacy", [130, "single admin data-lab legacy row with exact owner route"]],
     ["admin_ib_helper_legacy", [140, "admin helper catch-all route requires admin owner confirmation"]],
     ["admin_personal_legacy", [150, "personal admin content must stay outside product IA"]],
