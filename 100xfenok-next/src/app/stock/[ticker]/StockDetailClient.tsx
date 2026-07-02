@@ -2222,6 +2222,10 @@ export default function StockDetailClient({
                 ? renderStatisticsCpTab()
                 : activeStockTab === "estimates"
                 ? renderEstimatesCpTab()
+                : activeStockTab === "ownership"
+                ? renderOwnershipCpTab()
+                : activeStockTab === "filings"
+                ? renderFilingsCpTab()
                 : renderStockDataTab(false)}
             </main>
           </div>
@@ -2693,6 +2697,85 @@ export default function StockDetailClient({
             </div>
           </section>
         ) : null}
+      </div>
+    );
+  }
+
+  // Canvas-plus S3: 보유기관(ownership) tab restyled with cp-stock-tab-* card surfaces.
+  // Reuses GuruSection (13F table; internal markup + 45-day-lag disclosure line
+  // untouched) — holder count surfaces as a header stat on the wrapping cp card.
+  // yf OwnershipTab block wrapped in its own cp card, verbatim.
+  function renderOwnershipCpTab() {
+    const holderCount = f13Entries
+      ? new Set(f13Entries.map((e) => e.investor).filter((investor) => typeof investor === "string" && investor.trim() !== "")).size
+      : 0;
+    return (
+      <div className="cp-stock-tab-financials">
+        {detailLoading ? (
+          <div className="cp-stock-tab-loading">
+            <SkeletonSection />
+            <SkeletonSection />
+          </div>
+        ) : detail ? (
+          <section className="cp-stock-tab-card" data-stock-tab-card="ownership-guru" id="guru-section">
+            <header className="cp-stock-tab-card__header">
+              <div>
+                <p className="cp-stock-rail-eyebrow">13F Guru</p>
+                <h2>보유기관</h2>
+              </div>
+              {holderCount > 0 ? (
+                <div className="cp-stock-tab-card__stat">
+                  <strong>{holderCount}</strong>
+                  <em>보유 투자자</em>
+                </div>
+              ) : null}
+            </header>
+            <div className="cp-stock-tab-card__body cp-stock-tab-card__body--flush">
+              <GuruSection f13Entries={f13Entries} ticker={symbol} />
+            </div>
+          </section>
+        ) : (
+          <section className="cp-stock-tab-card">
+            <div className="cp-stock-tab-card__body">
+              <div className="py-8 text-center">
+                <DataStateNotice
+                  state={makeDataState({
+                    status: "unavailable",
+                    label: "상세 데이터 준비 중",
+                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                  })}
+                />
+                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {yfAvailable ? (
+          <section className="cp-stock-tab-card" data-stock-tab-card="ownership-yf">
+            <header className="cp-stock-tab-card__header">
+              <div>
+                <p className="cp-stock-rail-eyebrow">Yahoo Finance</p>
+                <h2>기관 보유 상세</h2>
+              </div>
+            </header>
+            <div className="cp-stock-tab-card__body">
+              {renderYfTab("ownership", yfData, industryBench)}
+            </div>
+          </section>
+        ) : null}
+      </div>
+    );
+  }
+
+  // Canvas-plus S3: 공시(filings) tab — minimal cp body wrapper around EdgarSummaryClient.
+  // EdgarSummaryClient owns its own panel/panel-b styling internally (own fetch +
+  // internal sections); this pass only routes it through the cp-stock-tab-financials
+  // grid so hero/nav/background match the other cp tabs. No internal rewrite.
+  function renderFilingsCpTab() {
+    return (
+      <div className="cp-stock-tab-financials" data-stock-tab-card="filings">
+        <EdgarSummaryClient ticker={symbol} embedded />
       </div>
     );
   }

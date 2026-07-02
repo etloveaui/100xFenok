@@ -2984,6 +2984,32 @@
   padding-top: 0;
 }
 
+/* Header stat (P3 S3, additive) — big-number + muted micro-label pair for a
+   cp-stock-tab-card__header, e.g. ownership holder count. Reuses the frozen
+   18px/950 + 11px/750 pair already established by .cp-stock-showcase-metrics. */
+.cp-stock-tab-card__stat {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+
+.cp-stock-tab-card__stat strong {
+  color: var(--cp-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-stock-tab-card__stat em {
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
 /* ---------------------------------------------------------------------------
    Screener service — preview header shell (P2 S1, additive, namespaced)
 --------------------------------------------------------------------------- */

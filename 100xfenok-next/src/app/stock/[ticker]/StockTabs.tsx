@@ -455,9 +455,9 @@ function OwnershipTab({ data }: { data: YfData }) {
             <table className="w-full min-w-[640px] text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                  <th className="px-2 py-1.5 text-left">Holder</th>
+                  <th className="px-2 py-1.5 text-left">기관명</th>
                   <th className="px-2 py-1.5 text-right">지분율</th>
-                  <th className="px-2 py-1.5 text-right">Shares</th>
+                  <th className="px-2 py-1.5 text-right">주식수</th>
                   <th className="px-2 py-1.5 text-right">평가액</th>
                   <th className="px-2 py-1.5 text-right">증감</th>
                   <th className="px-2 py-1.5 text-right">보고일</th>
