@@ -25,6 +25,7 @@ type SortKey = "ticker" | "sector" | CpScreenerNumericField;
 type SortDir = "asc" | "desc";
 
 const DENSITY_OPTIONS: CpScreenerDensity[] = ["compact", "default", "comfy"];
+const SCREENER_PAGE_SIZE = 150;
 const NATIVE_COLUMNS: Array<{ key: SortKey; label: string; numeric?: true }> = [
   { key: "ticker", label: "Ticker" },
   { key: "sector", label: "Sector" },
@@ -104,6 +105,7 @@ export default function CpScreenerNativeLab() {
   const [sortKey, setSortKey] = useState<SortKey>("fenokEdge");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(SCREENER_PAGE_SIZE);
 
   useEffect(() => {
     let alive = true;
@@ -129,6 +131,16 @@ export default function CpScreenerNativeLab() {
       : sourceRows;
     return [...filteredRows].sort((left, right) => compareRows(left, right, sortKey, sortDir));
   }, [fixture?.rows, query, sortDir, sortKey]);
+
+  const filterSignature = `${query}|${sortKey}|${sortDir}`;
+  const [prevFilterSignature, setPrevFilterSignature] = useState(filterSignature);
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature);
+    setVisibleCount(SCREENER_PAGE_SIZE);
+  }
+
+  const visibleRows = useMemo(() => rows.slice(0, visibleCount), [rows, visibleCount]);
+  const canShowMore = visibleCount < rows.length;
 
   const numericTabularRatio = CP_SCREENER_NUMERIC_FIELDS.length / CP_SCREENER_NUMERIC_FIELDS.length;
 
@@ -212,7 +224,7 @@ export default function CpScreenerNativeLab() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {visibleRows.map((row) => (
               <tr key={row.id} data-fixture-kind={row.fixtureKind}>
                 <th scope="row">
                   <span className="cp-screener-ticker">{row.ticker}</span>
@@ -228,6 +240,25 @@ export default function CpScreenerNativeLab() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div
+        className="cp-screener-lab__loadmore"
+        data-screener-loadmore
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "12px 0" }}
+      >
+        <p style={{ margin: 0 }}>
+          {rows.length}개 중 {visibleRows.length}개 표시
+        </p>
+        {canShowMore ? (
+          <CpButton
+            density="compact"
+            variant="ghost"
+            onClick={() => setVisibleCount((current) => Math.min(rows.length, current + SCREENER_PAGE_SIZE))}
+          >
+            더 보기 (150개씩)
+          </CpButton>
+        ) : null}
       </div>
 
       <section className="cp-screener-card-grid" aria-label="Mobile screener cards">

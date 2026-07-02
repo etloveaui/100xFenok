@@ -29,6 +29,7 @@ import {
 } from "@/components/canvas-plus/CpScreenerLabModel";
 
 const DENSITY_OPTIONS: CpScreenerDensity[] = ["compact", "default", "comfy"];
+const SCREENER_PAGE_SIZE = 150;
 
 function isNumericColumnId(columnId: string): boolean {
   return CP_SCREENER_NUMERIC_FIELDS.includes(columnId as CpScreenerNumericField);
@@ -85,6 +86,7 @@ export default function CpScreenerTanstackLab() {
   const [density, setDensity] = useState<CpScreenerDensity>("default");
   const [query, setQuery] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "fenokEdge", desc: true }]);
+  const [visibleCount, setVisibleCount] = useState(SCREENER_PAGE_SIZE);
 
   useEffect(() => {
     let alive = true;
@@ -139,7 +141,18 @@ export default function CpScreenerTanstackLab() {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const visibleRows = table.getRowModel().rows;
+  const sortedRows = table.getRowModel().rows;
+
+  const filterSignature = `${query}|${sorting.map((entry) => `${entry.id}:${entry.desc}`).join(",")}`;
+  const [prevFilterSignature, setPrevFilterSignature] = useState(filterSignature);
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature);
+    setVisibleCount(SCREENER_PAGE_SIZE);
+  }
+
+  const visibleRows = useMemo(() => sortedRows.slice(0, visibleCount), [sortedRows, visibleCount]);
+  const canShowMore = visibleCount < sortedRows.length;
+
   const numericTabularRatio = CP_SCREENER_NUMERIC_FIELDS.length / CP_SCREENER_NUMERIC_FIELDS.length;
 
   return (
@@ -227,8 +240,27 @@ export default function CpScreenerTanstackLab() {
         </table>
       </div>
 
+      <div
+        className="cp-screener-lab__loadmore"
+        data-screener-loadmore
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "12px 0" }}
+      >
+        <p style={{ margin: 0 }}>
+          {sortedRows.length}개 중 {visibleRows.length}개 표시
+        </p>
+        {canShowMore ? (
+          <CpButton
+            density="compact"
+            variant="ghost"
+            onClick={() => setVisibleCount((current) => Math.min(sortedRows.length, current + SCREENER_PAGE_SIZE))}
+          >
+            더 보기 (150개씩)
+          </CpButton>
+        ) : null}
+      </div>
+
       <section className="cp-screener-card-grid" aria-label="Mobile screener cards">
-        {visibleRows.slice(0, 24).map((row) => (
+        {sortedRows.slice(0, 24).map((row) => (
           <MobileCard key={row.id} row={row.original} />
         ))}
       </section>

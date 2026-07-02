@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MacroContextCard from "@/components/macro/MacroContextCard";
@@ -572,6 +572,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
             title={fenokEdgeTitle(stock)}
+            aria-label={`Fenok 엣지 점수 ${fenokEdgeDirectionLabel(stock.fenokEdgeDirection)} ${score ?? "정보 없음"}`}
           >
             <span aria-hidden="true">{fenokEdgeDirectionMark(stock.fenokEdgeDirection)}</span>
             {score ?? "—"}
@@ -593,6 +594,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             <span
               className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
               title="단기 Fenok 점수 · 매수권유 아님"
+              aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"}`}
             >
               <span aria-hidden="true">단기</span>
               {shortScore ?? "—"}
@@ -600,6 +602,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
             <span
               className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(longScore))}
               title="장기 Fenok 점수 · 매수권유 아님"
+              aria-label={`장기 컨빅션 ${longScore ?? "정보 없음"}`}
             >
               <span aria-hidden="true">장기</span>
               {longScore ?? "—"}
@@ -621,6 +624,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
                     key={item.label}
                     className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", item.tone === "risk" ? downsideRiskTone(itemScore) : signalScoreTone(itemScore))}
                     title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
+                    aria-label={`${item.label} ${itemScore ?? "정보 없음"}`}
                   >
                     <span aria-hidden="true">{item.label}</span>
                     {itemScore ?? "—"}
@@ -653,6 +657,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
             title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
+            aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
             <span aria-hidden="true">{signalDirectionLabel(direction)}</span>
             {score ?? "—"}
@@ -669,6 +674,7 @@ function renderCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnP
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", downsideRiskTone(score))}
             title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · Fenok 파생 신호 · 매수권유 아님`}
+            aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
             {score ?? "—"}
           </span>
@@ -1585,7 +1591,7 @@ export default function ScreenerClient({
     });
   }, [connectionIndexDate, connectionIndexReady, dataReady, failed, sourceDate, stocks]);
 
-  function toggleSort(key: ScreenerSortKey) {
+  const toggleSort = useCallback((key: ScreenerSortKey) => {
     if (key === sortKey) {
       setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
     } else {
@@ -1593,32 +1599,41 @@ export default function ScreenerClient({
       const textColumn = key === "ticker" || key === "name" || key === "sector" || key === "country";
       setSortDir(textColumn || key === "rank" ? "asc" : "desc");
     }
-  }
+  }, [sortKey]);
 
-  function toggleSelectedTicker(ticker: string) {
+  const toggleSelectedTicker = useCallback((ticker: string) => {
     setSelectedTickers((prev) => {
       const next = new Set(prev);
       if (next.has(ticker)) next.delete(ticker);
       else next.add(ticker);
       return next;
     });
-  }
+  }, []);
 
-  function selectPageRows() {
+  const selectPageRows = useCallback(() => {
     setSelectedTickers((prev) => {
       const next = new Set(prev);
       for (const stock of pageRows) next.add(stock.ticker);
       return next;
     });
-  }
+  }, [pageRows]);
 
-  function deselectPageRows() {
+  const deselectPageRows = useCallback(() => {
     setSelectedTickers((prev) => {
       const next = new Set(prev);
       for (const stock of pageRows) next.delete(stock.ticker);
       return next;
     });
-  }
+  }, [pageRows]);
+
+  const onToggleExpandedTicker = useCallback((ticker: string) => {
+    setExpandedTicker((prev) => (prev === ticker ? null : ticker));
+  }, []);
+
+  const renderGuruHolderBadge = useCallback(
+    (stock: ScreenerStock) => <GuruHolderBadge stock={stock} compact />,
+    [],
+  );
 
   function selectFilteredRows() {
     setSelectedTickers(new Set(sorted.map((stock) => stock.ticker)));
@@ -2698,9 +2713,9 @@ export default function ScreenerClient({
                   sortDir={sortDir}
                   sortKey={sortKey}
                   deselectPageRows={deselectPageRows}
-                  onToggleExpandedTicker={(ticker) => setExpandedTicker((prev) => (prev === ticker ? null : ticker))}
+                  onToggleExpandedTicker={onToggleExpandedTicker}
                   renderCell={renderCell}
-                  renderGuruHolderBadge={(stock) => <GuruHolderBadge stock={stock} compact />}
+                  renderGuruHolderBadge={renderGuruHolderBadge}
                   selectPageRows={selectPageRows}
                   toggleSelectedTicker={toggleSelectedTicker}
                   toggleSort={toggleSort}
@@ -2712,9 +2727,9 @@ export default function ScreenerClient({
               sortDir={sortDir}
               sortKey={sortKey}
               deselectPageRows={deselectPageRows}
-              onToggleExpandedTicker={(ticker) => setExpandedTicker((prev) => (prev === ticker ? null : ticker))}
+              onToggleExpandedTicker={onToggleExpandedTicker}
               renderCell={renderCell}
-              renderGuruHolderBadge={(stock) => <GuruHolderBadge stock={stock} compact />}
+              renderGuruHolderBadge={renderGuruHolderBadge}
               selectPageRows={selectPageRows}
               toggleSelectedTicker={toggleSelectedTicker}
               toggleSort={toggleSort}

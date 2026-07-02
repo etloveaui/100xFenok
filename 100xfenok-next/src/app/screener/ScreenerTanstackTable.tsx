@@ -362,6 +362,9 @@ function ScreenerTanstackTableInner({
       data-canvas-plus-scroll-at-end={canvasPlusPreview ? String(canvasPlusScrollState.atEnd) : undefined}
       data-canvas-plus-scroll-at-start={canvasPlusPreview ? String(canvasPlusScrollState.atStart) : undefined}
       data-screener-density={density}
+      tabIndex={canvasPlusPreview && canvasPlusScrollState.overflow ? 0 : undefined}
+      role={canvasPlusPreview && canvasPlusScrollState.overflow ? "region" : undefined}
+      aria-label={canvasPlusPreview && canvasPlusScrollState.overflow ? "종목 표, 좌우 스크롤 가능" : undefined}
     >
       <table
         className={canvasPlusPreview ? "cp-screener-table" : cx("w-full min-w-[760px]", densityClass.table)}
