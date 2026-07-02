@@ -24,7 +24,8 @@ function firstParam(value: string | string[] | undefined): string {
 }
 
 function readFlag(value: string | string[] | undefined): boolean {
-  return firstParam(value) === "1";
+  // P4 flip (2026-07-03 owner instruction): CANVAS+ is the default; ?v2=0 keeps the legacy escape hatch.
+  return firstParam(value) !== "0";
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
