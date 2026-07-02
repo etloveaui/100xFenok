@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
 import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
+import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 import {
   createInitialLessonState,
   pickNextExpression,
@@ -38,22 +39,6 @@ import {
 import type { MonaVnextLogEvent } from "@/features/mona-vnext/logging/voiceLogSchema";
 import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import { buildMonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvisory";
-import { buildTeacherRealtimeTextInput } from "@/features/mona-vnext/teacher/effectEmitter";
-import {
-  mapAnswerMatchToTeacherVerdict,
-  monaExpressionToTeacherCard,
-  teacherSessionToLessonState,
-} from "@/features/mona-vnext/teacher/teacherAdapter";
-import { shouldFlagTeacherModelDrift } from "@/features/mona-vnext/teacher/teacherDriftGuard";
-import {
-  createTeacherSession,
-  teacherTransition,
-} from "@/features/mona-vnext/teacher/teacherMachine";
-import type {
-  TeacherEffect,
-  TeacherEvent,
-  TeacherTransitionResult,
-} from "@/features/mona-vnext/teacher/teacherSession";
 import {
   applyMonaVnextServerContent,
   createMonaVnextTranscriptState,
@@ -94,15 +79,6 @@ type FinalizeReason = "manual-stop" | "strict-stop" | "reconnect-failed" | "page
 
 type FinalizeOptions = {
   reason: FinalizeReason;
-};
-
-type ExpressionCard = {
-  state: "prompt" | "reveal" | "drill";
-  ko: string;
-  en?: string;
-  pron?: string;
-  drillHint?: string;
-  updatedAt: number;
 };
 
 export type MonaVnextAnswerVerdict = {
@@ -195,7 +171,6 @@ function shouldInjectPedagogyControl(evaluation: MonaVnextPostTurnEvaluation) {
 }
 
 export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
-  const teacherActive = surface === "debug";
   const activeExperimentalFeatures = useMemo(() => listActiveExperimentalFeatures(surface), [surface]);
   const p15Gates = useMemo(() => ({
     answerMatcher: isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, surface),
@@ -224,9 +199,6 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     expressionBank: MonaVnextSessionExpressionBank;
   } | null>(null);
   const lessonStateRef = useRef(lessonState);
-  const teacherSessionRef = useRef<TeacherTransitionResult["session"] | null>(null);
-  const pendingTeacherEffectsRef = useRef<TeacherEffect[]>([]);
-  const lastTeacherTargetEffectRef = useRef<TeacherEffect | null>(null);
   const transcriptStateRef = useRef(transcriptState);
   const metricsRef = useRef<MonaVnextSessionMetrics | null>(null);
   const sendControlTextRef = useRef<(text: string) => boolean>(() => false);
@@ -311,125 +283,6 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     pendingEventsRef.current = [];
     return drained;
   }, []);
-
-  const sendTeacherEffects = useCallback((effects: TeacherEffect[]) => {
-    let allSent = true;
-    for (const effect of effects) {
-      bufferEvent({
-        type: "teacher_effect",
-        message: `TSM effect: ${effect.type}`,
-        atIso: new Date().toISOString(),
-        detail: {
-          effectType: effect.type,
-          stateSeq: effect.stateSeq,
-          expressionId: effect.expressionId,
-          targetEn: effect.targetEn ?? null,
-          expectedModelAction: effect.expectedModelAction,
-          praiseArmed: teacherSessionRef.current?.praiseArmed ?? null,
-        },
-      });
-      if (effect.expectedModelAction === "log_only") continue;
-      const realtimeInput = buildTeacherRealtimeTextInput(effect);
-      const sent = sendControlTextRef.current(realtimeInput.realtimeInput.text);
-      allSent = allSent && sent;
-      if (
-        sent
-        && effect.targetEn
-        && (
-          effect.expectedModelAction === "speak_target"
-          || effect.expectedModelAction === "reveal_target"
-          || effect.expectedModelAction === "present_card"
-        )
-      ) {
-        lastTeacherTargetEffectRef.current = effect;
-      }
-    }
-    return allSent;
-  }, [bufferEvent]);
-
-  const commitTeacherResult = useCallback((
-    result: TeacherTransitionResult,
-    options: { sendEffects?: boolean; queueEffects?: boolean; trigger?: string } = {},
-  ) => {
-    teacherSessionRef.current = result.session;
-    const expressionBank = sessionRef.current?.expressionBank.entries ?? lessonStateRef.current.expressionBank;
-    const nextLesson = teacherSessionToLessonState(result.session, expressionBank);
-    lessonStateRef.current = nextLesson;
-    setLessonState(nextLesson);
-    if (options.trigger) {
-      bufferEvent({
-        type: "teacher_transition",
-        message: `TSM transition: ${options.trigger}`,
-        atIso: new Date().toISOString(),
-        detail: {
-          trigger: options.trigger,
-          phase: result.session.phase,
-          stateSeq: result.session.stateSeq,
-          expressionId: result.session.card?.expressionId ?? null,
-        },
-      });
-    }
-    if (options.queueEffects && result.effects.length > 0) {
-      pendingTeacherEffectsRef.current = [...pendingTeacherEffectsRef.current, ...result.effects];
-    } else if (options.sendEffects !== false && result.effects.length > 0) {
-      sendTeacherEffects(result.effects);
-    }
-    return nextLesson;
-  }, [bufferEvent, sendTeacherEffects]);
-
-  const dispatchTeacherEvent = useCallback((
-    event: TeacherEvent,
-    options: { sendEffects?: boolean; trigger?: string } = {},
-  ) => {
-    const current = teacherSessionRef.current;
-    if (!current) return null;
-    return commitTeacherResult(teacherTransition(current, event), {
-      sendEffects: options.sendEffects,
-      trigger: options.trigger ?? event.type,
-    });
-  }, [commitTeacherResult]);
-
-  const flushPendingTeacherEffects = useCallback(() => {
-    const pending = pendingTeacherEffectsRef.current;
-    if (pending.length === 0) return true;
-    const sent = sendTeacherEffects(pending);
-    if (sent) pendingTeacherEffectsRef.current = [];
-    return sent;
-  }, [sendTeacherEffects]);
-
-  const sendTeacherStart = useCallback(() => {
-    if (flushPendingTeacherEffects()) return;
-    const current = teacherSessionRef.current;
-    if (!current) return;
-    commitTeacherResult(teacherTransition(current, { type: "SESSION_READY" }), {
-      sendEffects: true,
-      trigger: "SESSION_READY",
-    });
-  }, [commitTeacherResult, flushPendingTeacherEffects]);
-
-  const handleTeacherOutputDrift = useCallback((observedText: string | null | undefined) => {
-    if (!teacherActive) return;
-    const expected = lastTeacherTargetEffectRef.current;
-    if (!shouldFlagTeacherModelDrift(expected, observedText)) return;
-    lastTeacherTargetEffectRef.current = null;
-    bufferEvent({
-      type: "model_drift",
-      message: "Teacher target speech drift detected.",
-      atIso: new Date().toISOString(),
-      detail: {
-        kind: "word_drop",
-        expressionId: expected?.expressionId ?? null,
-        targetEn: expected?.targetEn ?? null,
-        observedText: observedText ?? null,
-        flagged: true,
-      },
-    });
-    dispatchTeacherEvent({
-      type: "MODEL_DRIFT",
-      kind: "word_drop",
-      observedText: observedText ?? undefined,
-    }, { trigger: "MODEL_DRIFT" });
-  }, [bufferEvent, dispatchTeacherEvent, teacherActive]);
 
   const buildPostTurnArtifacts = useCallback((
     turn: MonaVnextTurn,
@@ -557,79 +410,6 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     const session = sessionRef.current;
     if (!session || sessionFinalizedRef.current) return;
     const { evaluation, advisory, nextLesson, event, controlEvent } = buildPostTurnArtifacts(turn, currentLesson);
-
-    if (teacherActive && teacherSessionRef.current) {
-      setAnswerVerdict(p15Gates.answerMatcher ? buildAnswerVerdict(evaluation.answerMatch) : null);
-      if (evaluation.stopRequested) {
-        dispatchTeacherEvent({ type: "LEARNER_STOP" }, { trigger: "LEARNER_STOP" });
-      } else if (evaluation.nextMaterialRequested) {
-        dispatchTeacherEvent({ type: "LEARNER_NEXT" }, { trigger: "LEARNER_NEXT" });
-      } else if (evaluation.englishVisibilityRequested) {
-        dispatchTeacherEvent({ type: "LEARNER_REVEAL" }, { trigger: "LEARNER_REVEAL" });
-      } else if (
-        evaluation.metaQuestionRequested
-        || evaluation.holdCurrentRequested
-        || evaluation.difficultyRequested
-        || evaluation.repairRequested
-      ) {
-        dispatchTeacherEvent({
-          type: "LEARNER_QUESTION",
-          text: turn.userText ?? undefined,
-        }, { trigger: "LEARNER_QUESTION" });
-      } else if (evaluation.lessonAttempt) {
-        dispatchTeacherEvent({
-          type: "LEARNER_ATTEMPT",
-          text: turn.userText ?? "",
-        }, { sendEffects: false, trigger: "LEARNER_ATTEMPT" });
-        dispatchTeacherEvent({
-          type: "EVAL_RESULT",
-          verdict: mapAnswerMatchToTeacherVerdict(evaluation.answerMatch),
-        }, { trigger: `EVAL_RESULT_${evaluation.answerMatch?.tier ?? "miss"}` });
-      } else {
-        dispatchTeacherEvent({ type: "MODEL_TURN_COMPLETE" }, { trigger: "MODEL_TURN_COMPLETE" });
-      }
-
-      const teacherLesson = lessonStateRef.current;
-      const teacherEvent: MonaVnextLogEvent = {
-        ...event,
-        detail: {
-          ...event.detail,
-          nextPromptId: teacherLesson.expression.id,
-          materialChanged: teacherLesson.expression.id !== currentLesson.expression.id,
-          teacherPhase: teacherSessionRef.current.phase,
-          teacherStateSeq: teacherSessionRef.current.stateSeq,
-        },
-      };
-      bufferEvent(teacherEvent);
-      const flushed = drainPendingEvents();
-      postConversationLog("turn", {
-        sessionId: session.sessionId,
-        conversationId: session.conversationId,
-        startedAt: session.startedAt,
-        turn,
-        events: flushed,
-        settings: {
-          ...sessionSettings,
-          activeExpressionId: teacherLesson.expression.id,
-          promptId: teacherLesson.expression.id,
-          englishVisible: teacherLesson.englishVisible,
-          expressionBank: buildExpressionBankLogSettings(session.expressionBank),
-        },
-        metrics: metricsRef.current ?? {},
-      });
-      postMemoryAdvisory({
-        conversationId: session.conversationId,
-        turnSeq: turn.turnSeq,
-        advisory,
-      });
-      if (evaluation.stopRequested) {
-        queueMicrotask(() => {
-          finalizeSessionRef.current({ reason: "strict-stop" });
-        });
-      }
-      return;
-    }
-
     setAnswerVerdict(p15Gates.answerMatcher ? buildAnswerVerdict(evaluation.answerMatch) : null);
     setEvents((current) => appendEvent(current, event));
     if (controlEvent) {
@@ -678,14 +458,11 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     buildNextLessonPrompt,
     buildPedagogyControlPrompt,
     buildPostTurnArtifacts,
-    bufferEvent,
-    dispatchTeacherEvent,
     drainPendingEvents,
     postConversationLog,
     postMemoryAdvisory,
     p15Gates,
     sessionSettings,
-    teacherActive,
   ]);
 
   const live = useGeminiLiveSession({
@@ -701,25 +478,11 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       const nextTranscript = createMonaVnextTranscriptState(session.conversationId);
       transcriptStateRef.current = nextTranscript;
       setTranscriptState(nextTranscript);
-      const materialQuarantine = session.expressionBank.metadata.materialQuarantine ?? [];
-      const materialWarnings = session.expressionBank.metadata.materialWarnings ?? [];
-      const nextLesson = teacherActive
-        ? (() => {
-          const created = createTeacherSession({
-            mode: "drill",
-            cards: session.expressionBank.entries.map(monaExpressionToTeacherCard),
-            seed: session.expressionBank.metadata.seed,
-          });
-          const ready = teacherTransition(created.session, { type: "SESSION_READY" });
-          teacherSessionRef.current = ready.session;
-          pendingTeacherEffectsRef.current = ready.effects;
-          return teacherSessionToLessonState(ready.session, session.expressionBank.entries);
-        })()
-        : createInitialLessonState({
-          expressionBank: session.expressionBank.entries,
-          activeExpressionId: session.settings.activeExpressionId,
-          englishVisible: surface === "winddown" ? PRODUCT_INITIAL_ENGLISH_VISIBLE : DEFAULT_SETTINGS.englishVisible,
-        });
+      const nextLesson = createInitialLessonState({
+        expressionBank: session.expressionBank.entries,
+        activeExpressionId: session.settings.activeExpressionId,
+        englishVisible: surface === "winddown" ? PRODUCT_INITIAL_ENGLISH_VISIBLE : DEFAULT_SETTINGS.englishVisible,
+      });
       lessonStateRef.current = nextLesson;
       setLessonState(nextLesson);
       pendingEventsRef.current = [];
@@ -738,28 +501,6 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
           expressionBank: buildExpressionBankLogSettings(session.expressionBank),
         },
       });
-      if (materialQuarantine.length > 0) {
-        bufferEvent({
-          type: "material_quarantine",
-          message: "Teacher material gate quarantined session-bank entries.",
-          atIso: new Date().toISOString(),
-          detail: {
-            count: materialQuarantine.length,
-            entries: materialQuarantine,
-          },
-        });
-      }
-      if (materialWarnings.length > 0) {
-        bufferEvent({
-          type: "material_warning",
-          message: "Teacher material gate flagged non-blocking session-bank warnings.",
-          atIso: new Date().toISOString(),
-          detail: {
-            count: materialWarnings.length,
-            entries: materialWarnings,
-          },
-        });
-      }
     },
     onEvent: bufferEvent,
     onRecoverFailed: (reason) => {
@@ -773,7 +514,6 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       });
     },
     onServerContent: (serverContent) => {
-      handleTeacherOutputDrift(serverContent.outputTranscription?.text);
       setTranscriptState((current) => {
         const result = applyMonaVnextServerContent(current, serverContent);
         transcriptStateRef.current = result.state;
@@ -918,20 +658,6 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   const revealAnswer = useCallback(() => {
     const session = sessionRef.current;
     if (!session || sessionFinalizedRef.current) return;
-    if (teacherActive) {
-      dispatchTeacherEvent({ type: "LEARNER_REVEAL" }, { trigger: "LEARNER_REVEAL" });
-      bufferEvent({
-        type: "manual-answer-reveal",
-        message: "Mona vNext answer reveal button pressed.",
-        atIso: new Date().toISOString(),
-        detail: {
-          promptId: teacherSessionRef.current?.card?.expressionId ?? lessonStateRef.current.expression.id,
-          englishVisible: true,
-          teacherStateSeq: teacherSessionRef.current?.stateSeq ?? null,
-        },
-      });
-      return;
-    }
     const currentLesson = lessonStateRef.current;
     const nextLesson: MonaVnextLessonState = {
       ...currentLesson,
@@ -957,29 +683,11 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       `자연스러운 영어는 "${currentLesson.expression.en}"야.`,
       "짧게 한 번 따라 말하게 도와줘.",
     ].join(" "));
-  }, [bufferEvent, dispatchTeacherEvent, teacherActive]);
+  }, [bufferEvent]);
 
   const advanceLesson = useCallback(() => {
     const session = sessionRef.current;
     if (!session || sessionFinalizedRef.current) return;
-    if (teacherActive) {
-      const before = teacherSessionRef.current?.card?.expressionId ?? lessonStateRef.current.expression.id;
-      dispatchTeacherEvent({ type: "LEARNER_NEXT" }, { trigger: "LEARNER_NEXT" });
-      const after = teacherSessionRef.current?.card?.expressionId ?? lessonStateRef.current.expression.id;
-      setAnswerVerdict(null);
-      bufferEvent({
-        type: "manual-next",
-        message: "Mona vNext next button advanced prompt.",
-        atIso: new Date().toISOString(),
-        detail: {
-          promptId: before,
-          nextPromptId: after,
-          materialChanged: after !== before,
-          teacherStateSeq: teacherSessionRef.current?.stateSeq ?? null,
-        },
-      });
-      return;
-    }
     const currentLesson = lessonStateRef.current;
     const nextExpression = pickNextExpression(
       currentLesson.expression.id,
@@ -1007,24 +715,16 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       },
     });
     sendControlTextRef.current(buildNextLessonPrompt(nextLesson, p15Gates.appOwnedNextMaterial));
-  }, [bufferEvent, buildNextLessonPrompt, dispatchTeacherEvent, p15Gates.appOwnedNextMaterial, surface, teacherActive]);
+  }, [bufferEvent, buildNextLessonPrompt, p15Gates.appOwnedNextMaterial, surface]);
 
   useEffect(() => {
-    if (teacherActive) {
-      if (live.status !== "listening" || !live.session) return;
-      if (autoStartConversationRef.current === live.session.conversationId) return;
-      if (flushPendingTeacherEffects()) {
-        autoStartConversationRef.current = live.session.conversationId;
-      }
-      return;
-    }
     if (surface !== "winddown") return;
     if (live.status !== "listening" || !live.session) return;
     if (autoStartConversationRef.current === live.session.conversationId) return;
     if (live.sendText("시작. 한 문장씩 천천히 해줘.")) {
       autoStartConversationRef.current = live.session.conversationId;
     }
-  }, [flushPendingTeacherEffects, live, surface, teacherActive]);
+  }, [live, surface]);
 
   const windDownCard = useMemo(() => buildWindDownCard(lessonState), [lessonState]);
   const latestCoachLine = transcriptState.current.modelText
@@ -1077,7 +777,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       answerVerdict={p15Gates.answerMatcher ? answerVerdict : null}
       onStart={live.start}
       onStop={stopSession}
-      onSendStart={sendTeacherStart}
+      onSendStart={() => live.sendText("시작. 한 문장씩 천천히 해줘.")}
       onRevealAnswer={revealAnswer}
       onNext={advanceLesson}
     />
